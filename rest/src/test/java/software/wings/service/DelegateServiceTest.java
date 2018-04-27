@@ -6,6 +6,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.head;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -33,7 +34,6 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import org.apache.commons.compress.archivers.zip.ZipExtraField;
 import org.apache.commons.io.IOUtils;
-import org.assertj.core.util.Lists;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.junit.Before;
@@ -80,7 +80,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                                       .withHostName("localhost")
                                                       .withVersion("1.0.0")
                                                       .withStatus(Status.ENABLED)
-                                                      .withSupportedTaskTypes(Lists.newArrayList(TaskType.HTTP))
+                                                      .withSupportedTaskTypes(singletonList(TaskType.HTTP.name()))
                                                       .withLastHeartBeat(System.currentTimeMillis());
   @Mock private WaitNotifyEngine waitNotifyEngine;
   @Mock private AccountService accountService;

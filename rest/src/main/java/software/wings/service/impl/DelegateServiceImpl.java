@@ -825,7 +825,7 @@ public class DelegateServiceImpl implements DelegateService {
             .addFilter("status", EQ, Status.ENABLED)
             .build());
 
-    if (delegate != null && delegate.getSupportedTaskTypes().contains(task.getTaskType())) {
+    if (delegate != null && delegate.getSupportedTaskTypes().contains(task.getTaskType().name())) {
       qualifies = true;
     }
 

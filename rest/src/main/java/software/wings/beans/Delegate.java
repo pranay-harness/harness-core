@@ -27,7 +27,7 @@ public class Delegate extends Base {
   private String hostName;
   private long lastHeartBeat;
   private String version;
-  private List<TaskType> supportedTaskTypes;
+  private List<String> supportedTaskTypes;
 
   @Transient private List<DelegateTask> currentlyExecutingDelegateTasks;
 
@@ -45,7 +45,7 @@ public class Delegate extends Base {
     private String hostName;
     private long lastHeartBeat;
     private String version;
-    private List<TaskType> supportedTaskTypes;
+    private List<String> supportedTaskTypes;
     private List<DelegateScope> includeScopes;
     private List<DelegateScope> excludeScopes;
     private List<DelegateTask> currentlyExecutingDelegateTasks;
@@ -102,7 +102,7 @@ public class Delegate extends Base {
       return this;
     }
 
-    public Builder withSupportedTaskTypes(List<TaskType> supportedTaskTypes) {
+    public Builder withSupportedTaskTypes(List<String> supportedTaskTypes) {
       this.supportedTaskTypes = supportedTaskTypes;
       return this;
     }
