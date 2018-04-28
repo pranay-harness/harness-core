@@ -129,7 +129,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     executor.init(configBuilder.but().withHost("INVALID_HOST").build());
     assertThatThrownBy(() -> executor.executeCommandString("ls"))
         .isInstanceOf(WingsException.class)
-        .hasMessage(UNKNOWN_HOST.getCode());
+        .hasMessage(UNKNOWN_HOST.name());
   }
 
   /**
@@ -140,7 +140,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     executor.init(configBuilder.but().withPort(3333).build());
     assertThatThrownBy(() -> executor.executeCommandString("ls"))
         .isInstanceOf(WingsException.class)
-        .hasMessage(SOCKET_CONNECTION_ERROR.getCode());
+        .hasMessage(SOCKET_CONNECTION_ERROR.name());
   }
 
   /**
@@ -153,7 +153,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     executor.init(configBuilder.but().withPassword("INVALID_PASSWORD".toCharArray()).build());
     Assertions.assertThatThrownBy(() -> executor.executeCommandString("ls"))
         .isInstanceOf(WingsException.class)
-        .hasMessageContaining(INVALID_CREDENTIAL.getCode());
+        .hasMessageContaining(INVALID_CREDENTIAL.name());
   }
 
   /**
@@ -191,7 +191,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     executor.init(configBuilder.but().withSshConnectionTimeout(1).build());
     assertThatThrownBy(() -> executor.executeCommandString("ls"))
         .isInstanceOf(WingsException.class)
-        .hasMessage(SOCKET_CONNECTION_TIMEOUT.getCode());
+        .hasMessage(SOCKET_CONNECTION_TIMEOUT.name());
   }
 
   /**
@@ -203,7 +203,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     executor.init(configBuilder.but().withSshSessionTimeout(1).build());
     assertThatThrownBy(() -> executor.executeCommandString("sleep 10"))
         .isInstanceOf(WingsException.class)
-        .hasMessage(SSH_SESSION_TIMEOUT.getCode());
+        .hasMessage(SSH_SESSION_TIMEOUT.name());
   }
 
   /**
@@ -214,7 +214,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     executor.init(configBuilder.but().withHost("host1.app.com").withPort(22).withSocketConnectTimeout(2000).build());
     assertThatThrownBy(() -> executor.executeCommandString("ls"))
         .isInstanceOf(WingsException.class)
-        .hasMessage(SOCKET_CONNECTION_TIMEOUT.getCode());
+        .hasMessage(SOCKET_CONNECTION_TIMEOUT.name());
   }
 
   /**

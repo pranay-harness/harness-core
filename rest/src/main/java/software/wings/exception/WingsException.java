@@ -106,7 +106,7 @@ public class WingsException extends WingsApiException {
   }
 
   public WingsException(ErrorCode errorCode, String message, Throwable cause) {
-    super(message == null ? errorCode.getCode() : message, cause);
+    super(message == null ? errorCode.name() : message, cause);
     responseMessage = aResponseMessage().code(errorCode).message(message).build();
   }
 

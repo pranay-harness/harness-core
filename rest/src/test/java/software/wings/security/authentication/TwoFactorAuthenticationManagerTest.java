@@ -56,7 +56,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
         twoFactorAuthenticationManager.authenticate(encryptedCode);
         Assertions.failBecauseExceptionWasNotThrown(WingsException.class);
       } catch (WingsException e) {
-        Assertions.assertThat(e).hasMessage(ErrorCode.USER_DOES_NOT_EXIST.getCode());
+        Assertions.assertThat(e).hasMessage(ErrorCode.USER_DOES_NOT_EXIST.name());
       }
 
       try {
@@ -66,7 +66,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
         twoFactorAuthenticationManager.authenticate(encryptedCode);
         Assertions.failBecauseExceptionWasNotThrown(WingsException.class);
       } catch (WingsException e) {
-        Assertions.assertThat(e).hasMessage(ErrorCode.INVALID_TWO_FACTOR_AUTHENTICATION_CONFIGURATION.getCode());
+        Assertions.assertThat(e).hasMessage(ErrorCode.INVALID_TWO_FACTOR_AUTHENTICATION_CONFIGURATION.name());
       }
 
       try {
@@ -78,7 +78,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
         twoFactorAuthenticationManager.authenticate(encryptedCode);
         Assertions.failBecauseExceptionWasNotThrown(WingsException.class);
       } catch (WingsException e) {
-        Assertions.assertThat(e).hasMessage(ErrorCode.INVALID_TOTP_TOKEN.getCode());
+        Assertions.assertThat(e).hasMessage(ErrorCode.INVALID_TOTP_TOKEN.name());
       }
 
     } catch (GeneralSecurityException e) {

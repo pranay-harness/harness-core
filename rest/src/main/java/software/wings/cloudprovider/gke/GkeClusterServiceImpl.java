@@ -4,7 +4,6 @@ import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.beans.ErrorCode.ARGS;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.service.impl.GcpHelperService.ALL_ZONES;
 import static software.wings.service.impl.GcpHelperService.ZONE_DELIMITER;
@@ -37,6 +36,7 @@ import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.KubernetesConfig.KubernetesConfigBuilder;
 import software.wings.beans.SettingAttribute;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.GcpHelperService;
@@ -200,11 +200,10 @@ public class GkeClusterServiceImpl implements GkeClusterService {
       logger.info("Cluster status: {}", cluster.getStatus());
       logger.debug("Master endpoint: {}", cluster.getEndpoint());
       return configFromCluster(cluster, namespace);
-    } catch (IOException e) {
-      logNotFoundOrError(e, projectId, zone, clusterName, "getting");
-      throw new WingsException(INVALID_ARGUMENT, e)
-          .addParam(
-              ARGS, String.format("Error getting cluster %s in zone %s for project %s", clusterName, zone, projectId));
+    } catch (IOException exception) {
+      logNotFoundOrError(exception, projectId, zone, clusterName, "getting");
+      throw new InvalidRequestException(
+          String.format("Error getting cluster %s in zone %s for project %s", clusterName, zone, projectId), exception);
     }
   }
 

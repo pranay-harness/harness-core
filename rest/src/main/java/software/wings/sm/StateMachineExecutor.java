@@ -39,6 +39,7 @@ import static software.wings.sm.ExecutionStatus.STARTING;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.ExecutionStatus.WAITING;
 import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -94,6 +95,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
+import javax.validation.constraints.NotNull;
 
 /**
  * Class responsible for executing state machine.
@@ -207,17 +209,14 @@ public class StateMachineExecutor {
    * @param stateExecutionInstance the state execution instance
    * @return the state execution instance
    */
-  public StateExecutionInstance queue(StateMachine stateMachine, StateExecutionInstance stateExecutionInstance) {
-    if (stateExecutionInstance == null) {
-      throw new WingsException(INVALID_ARGUMENT).addParam(ErrorCode.ARGS, "stateExecutionInstance");
-    }
-    if (stateMachine == null) {
-      throw new WingsException(INVALID_ARGUMENT).addParam(ErrorCode.ARGS, "rootStateMachine");
-    }
+  public StateExecutionInstance queue(
+      @NotNull StateMachine stateMachine, @NotNull StateExecutionInstance stateExecutionInstance) {
     if (stateExecutionInstance.getChildStateMachineId() != null
         && !stateExecutionInstance.getChildStateMachineId().equals(stateMachine.getUuid())
         && stateMachine.getChildStateMachines().get(stateExecutionInstance.getChildStateMachineId()) == null) {
-      throw new WingsException(INVALID_ARGUMENT).addParam(ErrorCode.ARGS, "stateMachine");
+      throw new InvalidRequestException(
+          String.format("State instance %s child machine does not exist in the state machine %s",
+              stateExecutionInstance.getUuid(), stateMachine.getUuid()));
     }
     StateMachine sm;
     if (stateExecutionInstance.getChildStateMachineId() == null) {
@@ -234,13 +233,8 @@ public class StateMachineExecutor {
 
   private StateExecutionInstance saveStateExecutionInstance(
       StateMachine stateMachine, StateExecutionInstance stateExecutionInstance) {
-    if (stateExecutionInstance.getDisplayName() == null) {
-      throw new WingsException(INVALID_ARGUMENT).addParam(ErrorCode.ARGS, "displayName");
-    }
-
-    if (stateExecutionInstance.getStateName() == null) {
-      throw new WingsException(INVALID_ARGUMENT).addParam(ErrorCode.ARGS, "stateName");
-    }
+    notNullCheck("displayName", stateExecutionInstance.getDisplayName());
+    notNullCheck("stateName", stateExecutionInstance.getStateName());
 
     stateExecutionInstance.setAppId(stateMachine.getAppId());
     stateExecutionInstance.setStateMachineId(stateMachine.getUuid());

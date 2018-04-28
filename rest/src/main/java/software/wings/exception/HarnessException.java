@@ -100,7 +100,7 @@ public class HarnessException extends Exception {
    * @param cause     the cause
    */
   public HarnessException(ErrorCode errorCode, Throwable cause) {
-    this(errorCode, errorCode.getCode(), cause);
+    this(errorCode, errorCode.name(), cause);
   }
 
   /**
