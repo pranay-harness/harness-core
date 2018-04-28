@@ -114,6 +114,7 @@ import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.KubernetesPayload;
+import software.wings.dl.HQuery;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -198,7 +199,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
   @Mock private UpdateOperations<Service> updateOperations;
 
-  @Mock private Query<ServiceCommand> serviceCommandQuery;
+  @Mock private HQuery<ServiceCommand> serviceCommandQuery;
 
   private static ServiceBuilder getServiceBuilder() {
     return Service.builder()

@@ -43,6 +43,7 @@ import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.beans.alert.NoEligibleDelegatesAlert;
+import software.wings.dl.HQuery;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -58,7 +59,7 @@ public class AlertServiceTest extends WingsBaseTest {
 
   @Inject @InjectMocks private AlertService alertService;
 
-  @Mock private Query<Alert> query;
+  @Mock private HQuery<Alert> query;
   @Mock private FieldEnd end;
   @Mock private UpdateOperations updateOperations;
   @Mock private DBCollection alertsCollection;

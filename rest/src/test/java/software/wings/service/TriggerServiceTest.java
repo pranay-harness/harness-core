@@ -56,7 +56,6 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.FieldEnd;
-import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.quartz.JobDetail;
 import org.quartz.TriggerKey;
@@ -81,6 +80,7 @@ import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.beans.trigger.WebhookParameters;
 import software.wings.common.Constants;
+import software.wings.dl.HQuery;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -106,7 +106,7 @@ import java.util.Map;
  */
 public class TriggerServiceTest extends WingsBaseTest {
   @Mock private WingsPersistence wingsPersistence;
-  @Mock private Query query;
+  @Mock private HQuery query;
   @Mock private FieldEnd end;
   @Mock private JobScheduler jobScheduler;
   @Mock private PipelineService pipelineService;

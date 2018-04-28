@@ -63,6 +63,7 @@ import software.wings.beans.stats.ServiceInstanceStatistics;
 import software.wings.beans.stats.TopConsumersStatistics;
 import software.wings.beans.stats.UserStatistics;
 import software.wings.beans.stats.UserStatistics.AppDeployment;
+import software.wings.dl.HQuery;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.UserThreadLocal;
@@ -98,7 +99,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
 
   @Inject @InjectMocks private StatisticsService statisticsService;
 
-  @Mock private Query<WorkflowExecution> workflowExecutionQuery;
+  @Mock private HQuery<WorkflowExecution> workflowExecutionQuery;
   @Mock private FieldEnd workflowExecutionQueryFieldEnd;
   @Mock private AggregationPipeline aggregationPipeline;
 

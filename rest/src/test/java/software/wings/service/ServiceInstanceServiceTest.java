@@ -49,6 +49,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.infrastructure.Host;
+import software.wings.dl.HQuery;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -65,7 +66,7 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
   private final ServiceTemplate serviceTemplate = aServiceTemplate().withUuid(TEMPLATE_ID).withUuid(SERVICE_ID).build();
   private final Host host = aHost().withUuid(HOST_ID).build();
   @Mock private WingsPersistence wingsPersistence;
-  @Mock private Query<ServiceInstance> query;
+  @Mock private HQuery<ServiceInstance> query;
   @Mock private UpdateOperations<ServiceInstance> updateOperations;
   @Mock private FieldEnd end;
   @InjectMocks @Inject private ServiceInstanceService serviceInstanceService;

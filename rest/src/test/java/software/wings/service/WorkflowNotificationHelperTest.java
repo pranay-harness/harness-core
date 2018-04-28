@@ -42,7 +42,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mongodb.morphia.query.FieldEnd;
-import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
@@ -58,6 +57,7 @@ import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.Service;
 import software.wings.beans.WorkflowExecution;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
+import software.wings.dl.HQuery;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.WorkflowNotificationHelper;
 import software.wings.service.intfc.NotificationService;
@@ -86,9 +86,9 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   @Inject @InjectMocks private WorkflowNotificationHelper workflowNotificationHelper;
 
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private ExecutionContextImpl executionContext;
-  @Mock private Query<StateExecutionInstance> stateExecutionInstanceQuery;
+  @Mock private HQuery<StateExecutionInstance> stateExecutionInstanceQuery;
   @Mock private FieldEnd stateExecutionInstanceEnd;
-  @Mock private Query<WorkflowExecution> workflowExecutionQuery;
+  @Mock private HQuery<WorkflowExecution> workflowExecutionQuery;
   @Mock private FieldEnd workflowExecutionEnd;
 
   @Before

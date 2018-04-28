@@ -71,7 +71,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.FieldEnd;
-import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
@@ -95,6 +94,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder;
 import software.wings.beans.infrastructure.Host;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.dl.HQuery;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -156,7 +156,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   @Inject @InjectMocks private InfrastructureMappingService infrastructureMappingService;
 
   @Mock private SecretManager secretManager;
-  @Mock private Query<InfrastructureMapping> query;
+  @Mock private HQuery<InfrastructureMapping> query;
   @Mock private UpdateOperations<InfrastructureMapping> updateOperations;
   @Mock private FieldEnd end;
   @Mock private Application app;

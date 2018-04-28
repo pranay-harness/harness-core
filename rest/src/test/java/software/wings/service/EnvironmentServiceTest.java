@@ -69,6 +69,7 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.common.Constants;
+import software.wings.dl.HQuery;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -115,7 +116,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Spy @InjectMocks private EnvironmentService spyEnvService = new EnvironmentServiceImpl();
 
   @Mock private JobScheduler jobScheduler;
-  @Mock private Query<Environment> query;
+  @Mock private HQuery<Environment> query;
   @Mock private FieldEnd end;
   @Mock private UpdateOperations<Environment> updateOperations;
 
