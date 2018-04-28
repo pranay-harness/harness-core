@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static java.util.stream.Collectors.toMap;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import software.wings.beans.EntityType;
@@ -16,8 +17,8 @@ import java.util.Map;
 
 @Singleton
 public class WinRmConnectionAttributesDataProvider implements DataProvider {
-  @javax.inject.Inject private SettingsService settingsService;
-  @javax.inject.Inject private AppService appService;
+  @Inject private SettingsService settingsService;
+  @Inject private AppService appService;
 
   @Override
   public Map<String, String> getData(String appId, Map<String, String> params) {

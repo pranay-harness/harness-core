@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.groupingBy;
 import static software.wings.beans.HostConnectionAttributes.AccessType;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import software.wings.beans.HostConnectionAttributes;
@@ -23,8 +24,8 @@ import java.util.stream.Stream;
 
 @Singleton
 public class SSHKeyDataProvider implements DataProvider {
-  @javax.inject.Inject private SettingsService settingsService;
-  @javax.inject.Inject private AppService appService;
+  @Inject private SettingsService settingsService;
+  @Inject private AppService appService;
 
   @Override
   public Map<String, String> getData(String appId, Map<String, String> params) {

@@ -61,7 +61,7 @@ public class ArtifactCollectionState extends State {
   @Transient @Inject private ArtifactStreamService artifactStreamService;
   @Transient @Inject private ArtifactService artifactService;
   @Transient @Inject private WorkflowExecutionService workflowExecutionService;
-  @javax.inject.Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
   public ArtifactCollectionState(String name) {
     super(name, ARTIFACT_COLLECTION.name());
