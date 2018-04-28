@@ -29,7 +29,8 @@ import org.mockito.Spy;
 import software.wings.WingsBaseTest;
 import software.wings.api.AwsAutoScalingGroupDeploymentInfo;
 import software.wings.api.AwsCodeDeployDeploymentInfo;
-import software.wings.api.ContainerDeploymentInfo;
+import software.wings.api.ContainerDeploymentInfoWithLabels;
+import software.wings.api.ContainerDeploymentInfoWithNames;
 import software.wings.api.DeploymentEvent;
 import software.wings.api.DeploymentInfo;
 import software.wings.api.DeploymentType;
@@ -63,6 +64,7 @@ import software.wings.sm.WorkflowStandardParams;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class InstanceHelperTest extends WingsBaseTest {
@@ -367,11 +369,11 @@ public class InstanceHelperTest extends WingsBaseTest {
     assertNotNull(event);
     assertEquals(0, event.getRetries());
     DeploymentInfo deploymentInfo = event.getDeploymentInfo();
-    assertTrue(deploymentInfo instanceof ContainerDeploymentInfo);
+    assertTrue(deploymentInfo instanceof ContainerDeploymentInfoWithNames);
     assertDeploymentInfoObject(deploymentInfo);
-    assertEquals(CLUSTER_NAME, ((ContainerDeploymentInfo) event.getDeploymentInfo()).getClusterName());
+    assertEquals(CLUSTER_NAME, ((ContainerDeploymentInfoWithNames) event.getDeploymentInfo()).getClusterName());
     Set<String> containerServiceNameSet =
-        ((ContainerDeploymentInfo) event.getDeploymentInfo()).getContainerSvcNameSet();
+        ((ContainerDeploymentInfoWithNames) event.getDeploymentInfo()).getContainerSvcNameSet();
     assertEquals(2, containerServiceNameSet.size());
     assertTrue(containerServiceNameSet.contains("ecsNew"));
     assertTrue(containerServiceNameSet.contains("ecsOld"));
@@ -380,8 +382,9 @@ public class InstanceHelperTest extends WingsBaseTest {
   @Test
   public void testExtractInstanceOrContainerInfoBaseOnType_For_Kubernetes() {
     endsAtTime = System.currentTimeMillis();
-    stateExecutionData = instaceHelperTestHelper.initExecutionSummary(InfrastructureMappingType.GCP_KUBERNETES,
-        Constants.DEPLOY_CONTAINERS, endsAtTime, DeploymentType.KUBERNETES.getDisplayName());
+    stateExecutionData =
+        instaceHelperTestHelper.initKubernetesExecutionSummary(InfrastructureMappingType.GCP_KUBERNETES,
+            Constants.DEPLOY_CONTAINERS, endsAtTime, DeploymentType.KUBERNETES.getDisplayName(), false);
     doReturn(GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping()
                  .withUuid(INFRA_MAP_ID)
                  .withInfraMappingType(InfrastructureMappingType.GCP_KUBERNETES.getName())
@@ -407,14 +410,52 @@ public class InstanceHelperTest extends WingsBaseTest {
     assertNotNull(event);
     assertEquals(0, event.getRetries());
     DeploymentInfo deploymentInfo = event.getDeploymentInfo();
-    assertTrue(deploymentInfo instanceof ContainerDeploymentInfo);
+    assertTrue(deploymentInfo instanceof ContainerDeploymentInfoWithNames);
     assertDeploymentInfoObject(deploymentInfo);
-    assertEquals(CLUSTER_NAME, ((ContainerDeploymentInfo) event.getDeploymentInfo()).getClusterName());
+    assertEquals(CLUSTER_NAME, ((ContainerDeploymentInfoWithNames) event.getDeploymentInfo()).getClusterName());
     Set<String> containerServiceNameSet =
-        ((ContainerDeploymentInfo) event.getDeploymentInfo()).getContainerSvcNameSet();
+        ((ContainerDeploymentInfoWithNames) event.getDeploymentInfo()).getContainerSvcNameSet();
     assertEquals(2, containerServiceNameSet.size());
     assertTrue(containerServiceNameSet.contains("kubernetesNew"));
     assertTrue(containerServiceNameSet.contains("kubernetesOld"));
+  }
+
+  @Test
+  public void testExtractInstanceOrContainerInfoBaseOnType_For_Helm_Kubernetes() {
+    endsAtTime = System.currentTimeMillis();
+    stateExecutionData =
+        instaceHelperTestHelper.initKubernetesExecutionSummary(InfrastructureMappingType.GCP_KUBERNETES,
+            Constants.DEPLOY_CONTAINERS, endsAtTime, DeploymentType.KUBERNETES.getDisplayName(), true);
+    doReturn(GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping()
+                 .withUuid(INFRA_MAP_ID)
+                 .withInfraMappingType(InfrastructureMappingType.GCP_KUBERNETES.getName())
+                 .withAppId(APP_ID)
+                 .build())
+        .when(infraMappingService)
+        .get(anyString(), anyString());
+
+    instanceHelper.extractInstanceOrContainerInfoBaseOnType(
+        STATE_EXECUTION_INSTANCE_ID, stateExecutionData, workflowStandardParams, APP_ID, workflowExecution);
+
+    // Capture the argument of the doSomething function
+    ArgumentCaptor<DeploymentEvent> captor = ArgumentCaptor.forClass(DeploymentEvent.class);
+    verify(deploymentEventQueue).send(captor.capture());
+
+    /*
+     * The way we test here is,
+     * We have mocked deploymentQueueEvent.send(DeploymentEvent) to doNothing as we dont want to process queue.
+     * We capture the argument i.e. deploymentEvent that is generated and sent to deploymentEventQueue, and
+     * validate to check its valid
+     * */
+    DeploymentEvent event = captor.getValue();
+    assertNotNull(event);
+    assertEquals(0, event.getRetries());
+    DeploymentInfo deploymentInfo = event.getDeploymentInfo();
+    assertTrue(deploymentInfo instanceof ContainerDeploymentInfoWithLabels);
+    assertDeploymentInfoObject(deploymentInfo);
+    Map<String, String> labels = ((ContainerDeploymentInfoWithLabels) event.getDeploymentInfo()).getLabels();
+    assertEquals(1, labels.size());
+    assertEquals(labels.get("release"), "version1");
   }
 
   @Test

@@ -8,6 +8,7 @@ import com.google.common.collect.Lists;
 import software.wings.api.AmiStepExecutionSummary;
 import software.wings.api.CommandStepExecutionSummary;
 import software.wings.api.ContainerServiceData;
+import software.wings.api.HelmSetupExecutionSummary;
 import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseExecutionData;
@@ -192,25 +193,46 @@ public class InstanceHelperTestHelper {
               commandStepExecutionSummary);
 
       instanceStatusSummaries = getInstanceStatusSummariesForAws();
-    } else if (InfrastructureMappingType.GCP_KUBERNETES.equals(infrastructureMappingType)) {
-      CommandStepExecutionSummary commandStepExecutionSummary = new CommandStepExecutionSummary();
-      commandStepExecutionSummary.setCodeDeployDeploymentId(InstanceHelperTest.CODE_DEPLOY_DEPLOYMENT_ID);
-      commandStepExecutionSummary.setClusterName(InstanceHelperTest.CLUSTER_NAME);
-      commandStepExecutionSummary.setNewInstanceData(
-          asList(ContainerServiceData.builder().desiredCount(1).name("kubernetesNew").previousCount(1).build()));
-      commandStepExecutionSummary.setOldInstanceData(
-          asList(ContainerServiceData.builder().desiredCount(1).name("kubernetesOld").previousCount(1).build()));
-
-      stepExecutionSummaries =
-          asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
-              commandStepExecutionSummary);
-
-      instanceStatusSummaries = getInstanceStatusSummariesForAws();
     }
 
     return initExecutionSummary(
         instanceStatusSummaries, stepExecutionSummaries, phaseStepExecutionSummaryString, endTime, deploymentType);
   }
+
+  public PhaseExecutionData initKubernetesExecutionSummary(InfrastructureMappingType infrastructureMappingType,
+      String phaseStepExecutionSummaryString, long endTime, String deploymentType, boolean helm) {
+    List<InstanceStatusSummary> instanceStatusSummaries = null;
+    List<StepExecutionSummary> stepExecutionSummaries = null;
+
+    if (InfrastructureMappingType.GCP_KUBERNETES.equals(infrastructureMappingType)) {
+      if (helm) {
+        HelmSetupExecutionSummary helmSetupExecutionSummary =
+            new HelmSetupExecutionSummary("version1", Integer.valueOf(1), Integer.valueOf(0));
+
+        stepExecutionSummaries =
+            asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
+                helmSetupExecutionSummary);
+
+      } else {
+        CommandStepExecutionSummary commandStepExecutionSummary = new CommandStepExecutionSummary();
+        commandStepExecutionSummary.setClusterName(InstanceHelperTest.CLUSTER_NAME);
+        commandStepExecutionSummary.setNewInstanceData(
+            asList(ContainerServiceData.builder().desiredCount(1).name("kubernetesNew").previousCount(1).build()));
+        commandStepExecutionSummary.setOldInstanceData(
+            asList(ContainerServiceData.builder().desiredCount(1).name("kubernetesOld").previousCount(1).build()));
+
+        stepExecutionSummaries =
+            asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
+                commandStepExecutionSummary);
+      }
+
+      instanceStatusSummaries = getInstanceStatusSummariesForGCP();
+    }
+
+    return initExecutionSummary(
+        instanceStatusSummaries, stepExecutionSummaries, phaseStepExecutionSummaryString, endTime, deploymentType);
+  }
+
   private PhaseExecutionData initExecutionSummary(List<InstanceStatusSummary> instanceStatusSummaries,
       List<StepExecutionSummary> stepExecutionSummaries, String phaseStepExecutionSummaryString, long endTime,
       String deploymentType) {

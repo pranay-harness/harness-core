@@ -1,11 +1,12 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.infrastructure.instance.info.EcsContainerInfo.Builder.anEcsContainerInfo;
-import static software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo.Builder.aKubernetesContainerInfo;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.KubernetesConvention.DOT;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.amazonaws.services.ecs.model.DescribeTasksRequest;
@@ -25,6 +26,7 @@ import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.infrastructure.instance.info.ContainerInfo;
+import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.cloudprovider.gke.GkeClusterService;
@@ -39,6 +41,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class ContainerServiceImpl implements ContainerService {
@@ -116,11 +119,11 @@ public class ContainerServiceImpl implements ContainerService {
         for (Pod pod : kubernetesContainerService.getPods(
                  kubernetesConfig, containerServiceParams.getEncryptionDetails(), labels)) {
           if (pod.getStatus().getPhase().equals("Running")) {
-            result.add(aKubernetesContainerInfo()
-                           .withClusterName(containerServiceParams.getClusterName())
-                           .withPodName(pod.getMetadata().getName())
-                           .withControllerName(containerServiceName)
-                           .withServiceName(serviceName)
+            result.add(KubernetesContainerInfo.builder()
+                           .clusterName(containerServiceParams.getClusterName())
+                           .podName(pod.getMetadata().getName())
+                           .controllerName(containerServiceName)
+                           .serviceName(serviceName)
                            .build());
           }
         }
@@ -185,6 +188,23 @@ public class ContainerServiceImpl implements ContainerService {
       } while (nextToken != null);
     }
     return result;
+  }
+
+  @Override
+  public Set<String> getControllerNames(ContainerServiceParams containerServiceParams, Map<String, String> labels) {
+    SettingValue value = containerServiceParams.getSettingAttribute().getValue();
+    if (isKubernetesClusterConfig(value)) {
+      KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
+      Validator.notNullCheck("KubernetesConfig", kubernetesConfig);
+      List<? extends HasMetadata> controllers = kubernetesContainerService.getControllers(
+          kubernetesConfig, containerServiceParams.getEncryptionDetails(), labels);
+
+      if (isNotEmpty(controllers)) {
+        return controllers.stream().map(controller -> controller.getMetadata().getName()).collect(Collectors.toSet());
+      }
+    }
+
+    return Sets.newHashSet();
   }
 
   @Override

@@ -26,7 +26,6 @@ public class HelmInstallCommandRequest extends HelmCommandRequest {
   }
 
   @Builder
-
   public HelmInstallCommandRequest(String accountId, String appId, String kubeConfigLocation, String commandName,
       String activityId, ContainerServiceParams containerServiceParams, String releaseName,
       HelmChartSpecification chartSpecification, int newReleaseVersion, int prevReleaseVersion, String namespace,

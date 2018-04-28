@@ -36,6 +36,8 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Validator;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by brett on 9/6/17
@@ -82,9 +84,9 @@ public class ContainerSyncImpl implements ContainerSync {
           settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
           clusterName = containerInfraMapping.getClusterName();
           if (containerInfraMapping instanceof GcpKubernetesInfrastructureMapping) {
-            namespace = ((GcpKubernetesInfrastructureMapping) containerInfraMapping).getNamespace();
+            namespace = containerInfraMapping.getNamespace();
           } else if (containerInfraMapping instanceof AzureKubernetesInfrastructureMapping) {
-            namespace = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getNamespace();
+            namespace = containerInfraMapping.getNamespace();
             subscriptionId = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getSubscriptionId();
             resourceGroup = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getResourceGroup();
           } else if (containerInfraMapping instanceof EcsInfrastructureMapping) {
@@ -128,51 +130,11 @@ public class ContainerSyncImpl implements ContainerSync {
     List<ContainerInfo> result = Lists.newArrayList();
     containerSvcNameList.stream().forEach(containerSvcName -> {
       try {
-        SettingAttribute settingAttribute;
-        String clusterName = null;
-        String namespace = null;
-        String region = null;
-        String resourceGroup = null;
-        String subscriptionId = null;
-        if (containerInfraMapping instanceof DirectKubernetesInfrastructureMapping) {
-          DirectKubernetesInfrastructureMapping directInfraMapping =
-              (DirectKubernetesInfrastructureMapping) containerInfraMapping;
-          settingAttribute = (directInfraMapping.getComputeProviderType().equals(SettingVariableTypes.DIRECT.name()))
-              ? aSettingAttribute().withValue(directInfraMapping.createKubernetesConfig()).build()
-              : settingsService.get(directInfraMapping.getComputeProviderSettingId());
-          namespace = directInfraMapping.getNamespace();
-        } else {
-          settingAttribute = settingsService.get(containerInfraMapping.getComputeProviderSettingId());
-          clusterName = containerInfraMapping.getClusterName();
-          if (containerInfraMapping instanceof GcpKubernetesInfrastructureMapping) {
-            namespace = ((GcpKubernetesInfrastructureMapping) containerInfraMapping).getNamespace();
-          } else if (containerInfraMapping instanceof AzureKubernetesInfrastructureMapping) {
-            subscriptionId = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getSubscriptionId();
-            resourceGroup = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getResourceGroup();
-            namespace = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getNamespace();
-          } else if (containerInfraMapping instanceof EcsInfrastructureMapping) {
-            region = ((EcsInfrastructureMapping) containerInfraMapping).getRegion();
-          }
-        }
-        Validator.notNullCheck("SettingAttribute", settingAttribute);
-
-        List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(
-            (Encryptable) settingAttribute.getValue(), containerInfraMapping.getAppId(), null);
-
+        ContainerServiceParams containerServiceParams =
+            getContainerServiceParams(containerInfraMapping, containerSvcName);
         Application app = appService.get(containerInfraMapping.getAppId());
-
         SyncTaskContext syncTaskContext = aContext().withAccountId(app.getAccountId()).withAppId(app.getUuid()).build();
         syncTaskContext.setTimeout(Constants.DEFAULT_SYNC_CALL_TIMEOUT * 2);
-        ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
-                                                            .settingAttribute(settingAttribute)
-                                                            .containerServiceName(containerSvcName)
-                                                            .encryptionDetails(encryptionDetails)
-                                                            .clusterName(clusterName)
-                                                            .namespace(namespace)
-                                                            .region(region)
-                                                            .subscriptionId(subscriptionId)
-                                                            .resourceGroup(resourceGroup)
-                                                            .build();
 
         result.addAll(delegateProxyFactory.get(ContainerService.class, syncTaskContext)
                           .getContainerInfos(containerServiceParams));
@@ -182,5 +144,63 @@ public class ContainerSyncImpl implements ContainerSync {
       }
     });
     return ContainerSyncResponse.builder().containerInfoList(result).build();
+  }
+
+  @Override
+  public Set<String> getControllerNames(
+      ContainerInfrastructureMapping containerInfraMapping, Map<String, String> labels) {
+    ContainerServiceParams containerServiceParams = getContainerServiceParams(containerInfraMapping, null);
+
+    Application app = appService.get(containerInfraMapping.getAppId());
+    SyncTaskContext syncTaskContext = aContext().withAccountId(app.getAccountId()).withAppId(app.getUuid()).build();
+    syncTaskContext.setTimeout(Constants.DEFAULT_SYNC_CALL_TIMEOUT * 2);
+
+    return delegateProxyFactory.get(ContainerService.class, syncTaskContext)
+        .getControllerNames(containerServiceParams, labels);
+  }
+
+  private ContainerServiceParams getContainerServiceParams(
+      ContainerInfrastructureMapping containerInfraMapping, String containerSvcName) {
+    SettingAttribute settingAttribute;
+    String clusterName = null;
+    String namespace = null;
+    String region = null;
+    String resourceGroup = null;
+    String subscriptionId = null;
+    if (containerInfraMapping instanceof DirectKubernetesInfrastructureMapping) {
+      DirectKubernetesInfrastructureMapping directInfraMapping =
+          (DirectKubernetesInfrastructureMapping) containerInfraMapping;
+      settingAttribute = (directInfraMapping.getComputeProviderType().equals(SettingVariableTypes.DIRECT.name()))
+          ? aSettingAttribute().withValue(directInfraMapping.createKubernetesConfig()).build()
+          : settingsService.get(directInfraMapping.getComputeProviderSettingId());
+      namespace = directInfraMapping.getNamespace();
+    } else {
+      settingAttribute = settingsService.get(containerInfraMapping.getComputeProviderSettingId());
+      clusterName = containerInfraMapping.getClusterName();
+      if (containerInfraMapping instanceof GcpKubernetesInfrastructureMapping) {
+        namespace = containerInfraMapping.getNamespace();
+      } else if (containerInfraMapping instanceof AzureKubernetesInfrastructureMapping) {
+        subscriptionId = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getSubscriptionId();
+        resourceGroup = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getResourceGroup();
+        namespace = containerInfraMapping.getNamespace();
+      } else if (containerInfraMapping instanceof EcsInfrastructureMapping) {
+        region = ((EcsInfrastructureMapping) containerInfraMapping).getRegion();
+      }
+    }
+    Validator.notNullCheck("SettingAttribute", settingAttribute);
+
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(
+        (Encryptable) settingAttribute.getValue(), containerInfraMapping.getAppId(), null);
+
+    return ContainerServiceParams.builder()
+        .settingAttribute(settingAttribute)
+        .containerServiceName(containerSvcName)
+        .encryptionDetails(encryptionDetails)
+        .clusterName(clusterName)
+        .namespace(namespace)
+        .region(region)
+        .subscriptionId(subscriptionId)
+        .resourceGroup(resourceGroup)
+        .build();
   }
 }

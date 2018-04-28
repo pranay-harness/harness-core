@@ -11,7 +11,8 @@ import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import software.wings.api.ContainerDeploymentInfo;
+import software.wings.api.ContainerDeploymentInfoWithLabels;
+import software.wings.api.ContainerDeploymentInfoWithNames;
 import software.wings.api.DeploymentInfo;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
@@ -50,18 +51,10 @@ public class ContainerInstanceHandler extends InstanceHandler {
     syncInstancesInternal(appId, infraMappingId, containerSvcNameInstanceMap, null);
   }
 
-  /**
-   *
-   * @param appId
-   * @param infraMappingId
-   * @param containerSvcNameInstanceMap  key - containerSvcName     value - Instances
-   * @throws HarnessException
-   */
-  private void syncInstancesInternal(String appId, String infraMappingId,
-      Multimap<String, Instance> containerSvcNameInstanceMap, DeploymentInfo newDeploymentInfo)
+  protected ContainerInfrastructureMapping getContainerInfraMapping(String appId, String inframappingId)
       throws HarnessException {
-    InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
-    Validator.notNullCheck("Infra mapping is null for id:" + infraMappingId, infrastructureMapping);
+    InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, inframappingId);
+    Validator.notNullCheck("Infra mapping is null for id:" + inframappingId, infrastructureMapping);
 
     if (!(infrastructureMapping instanceof ContainerInfrastructureMapping)) {
       String msg = "Incompatible infra mapping type. Expecting container type. Found:"
@@ -70,9 +63,22 @@ public class ContainerInstanceHandler extends InstanceHandler {
       throw new HarnessException(msg);
     }
 
+    return (ContainerInfrastructureMapping) infrastructureMapping;
+  }
+
+  /**
+   *
+   * @param appId
+   * @param infraMappingId
+   * @param containerSvcNameInstanceMap  key - containerSvcName     value - Instances
+   * @throws HarnessException
+   */
+  protected void syncInstancesInternal(String appId, String infraMappingId,
+      Multimap<String, Instance> containerSvcNameInstanceMap, DeploymentInfo newDeploymentInfo)
+      throws HarnessException {
     loadContainerSvcNameInstanceMap(appId, infraMappingId, containerSvcNameInstanceMap);
 
-    ContainerInfrastructureMapping containerInfraMapping = (ContainerInfrastructureMapping) infrastructureMapping;
+    ContainerInfrastructureMapping containerInfraMapping = getContainerInfraMapping(appId, infraMappingId);
 
     // This is to handle the case of the instances stored in the new schema.
     if (containerSvcNameInstanceMap.size() > 0) {
@@ -166,10 +172,24 @@ public class ContainerInstanceHandler extends InstanceHandler {
 
   @Override
   public void handleNewDeployment(DeploymentInfo deploymentInfo) throws HarnessException {
-    ContainerDeploymentInfo containerDeploymentInfo = (ContainerDeploymentInfo) deploymentInfo;
     Multimap<String, Instance> containerSvcNameInstanceMap = ArrayListMultimap.create();
-    containerDeploymentInfo.getContainerSvcNameSet().stream().forEach(
-        containerSvcName -> containerSvcNameInstanceMap.put(containerSvcName, null));
+
+    if (deploymentInfo instanceof ContainerDeploymentInfoWithLabels) {
+      ContainerDeploymentInfoWithLabels containerDeploymentInfo = (ContainerDeploymentInfoWithLabels) deploymentInfo;
+
+      ContainerInfrastructureMapping containerInfraMapping =
+          getContainerInfraMapping(deploymentInfo.getAppId(), deploymentInfo.getInfraMappingId());
+      Set<String> controllerNames =
+          containerSync.getControllerNames(containerInfraMapping, containerDeploymentInfo.getLabels());
+      controllerNames.stream().forEach(containerSvcName -> containerSvcNameInstanceMap.put(containerSvcName, null));
+
+    } else if (deploymentInfo instanceof ContainerDeploymentInfoWithNames) {
+      ContainerDeploymentInfoWithNames containerDeploymentInfo = (ContainerDeploymentInfoWithNames) deploymentInfo;
+      containerDeploymentInfo.getContainerSvcNameSet().stream().forEach(
+          containerSvcName -> containerSvcNameInstanceMap.put(containerSvcName, null));
+    } else {
+      throw new HarnessException("Incompatible deployment info type: " + deploymentInfo.getClass().getName());
+    }
 
     syncInstancesInternal(
         deploymentInfo.getAppId(), deploymentInfo.getInfraMappingId(), containerSvcNameInstanceMap, deploymentInfo);

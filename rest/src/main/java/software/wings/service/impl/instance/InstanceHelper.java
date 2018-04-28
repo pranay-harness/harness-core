@@ -40,7 +40,6 @@ import software.wings.beans.EmbeddedUser;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
-import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WorkflowExecution;
@@ -300,7 +299,6 @@ public class InstanceHelper {
       throw new WingsException(msg);
     }
 
-    PcfInfrastructureMapping pcfInfrastructureMapping = (PcfInfrastructureMapping) infrastructureMapping;
     PcfDeploymentInfo pcfDeploymentInfo = PcfDeploymentInfo.builder().pcfApplicationNameSet(pcfSvcNameSet).build();
 
     // builder pattern doesn't quite work well here since we will have to duplicate the same setter code in multiple

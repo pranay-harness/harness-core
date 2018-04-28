@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -24,10 +25,13 @@ import static software.wings.service.impl.instance.InstanceSyncTestConstants.HOS
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INSTANCE_1_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INSTANCE_2_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.KUBE_CLUSTER;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_NAME;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.US_EAST;
 
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import de.danielbechler.util.Collections;
@@ -39,16 +43,21 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import software.wings.WingsBaseTest;
-import software.wings.api.ContainerDeploymentInfo;
+import software.wings.api.ContainerDeploymentInfoWithLabels;
+import software.wings.api.ContainerDeploymentInfoWithNames;
 import software.wings.beans.Application;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.GcpKubernetesInfrastructureMapping;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.Service;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.beans.infrastructure.instance.info.EcsContainerInfo;
+import software.wings.beans.infrastructure.instance.info.EcsContainerInfo.Builder;
+import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
 import software.wings.beans.infrastructure.instance.key.ContainerInstanceKey;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.cloudprovider.aws.AwsCodeDeployService;
@@ -65,7 +74,9 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.security.SecretManager;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class ContainerInstanceHandlerTest extends WingsBaseTest {
@@ -89,26 +100,6 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
   public void setUp() {
     MockitoAnnotations.initMocks(this);
 
-    doReturn(EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping()
-                 .withAppId(APP_ID)
-                 .withRegion(US_EAST)
-                 .withComputeProviderSettingId(COMPUTE_PROVIDER_SETTING_ID)
-                 .withUuid(INFRA_MAPPING_ID)
-                 .withClusterName(ECS_CLUSTER)
-                 .withEnvId(ENV_ID)
-                 .withInfraMappingType(InfrastructureMappingType.AWS_ECS.getName())
-                 .withServiceId(SERVICE_ID)
-                 .withUuid(INFRA_MAPPING_ID)
-                 .withAccountId(ACCOUNT_ID)
-                 .withAppId(APP_ID)
-                 .withInfraMappingType(InfrastructureMappingType.AWS_ECS.getName())
-                 .withComputeProviderSettingId(COMPUTE_PROVIDER_SETTING_ID)
-                 .withRegion(US_EAST)
-                 .withServiceId(SERVICE_ID)
-                 .build())
-        .when(infraMappingService)
-        .get(anyString(), anyString());
-
     // catpure arg
     doReturn(true).when(instanceService).delete(anySet());
     // capture arg
@@ -125,10 +116,43 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     doReturn(Service.builder().name(SERVICE_NAME).build()).when(serviceResourceService).get(anyString(), anyString());
   }
 
+  private InfrastructureMapping getInframapping(String inframappingType) {
+    if (inframappingType.equals(InfrastructureMappingType.AWS_ECS.getName())) {
+      return EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping()
+          .withAppId(APP_ID)
+          .withRegion(US_EAST)
+          .withComputeProviderSettingId(COMPUTE_PROVIDER_SETTING_ID)
+          .withUuid(INFRA_MAPPING_ID)
+          .withClusterName(ECS_CLUSTER)
+          .withEnvId(ENV_ID)
+          .withInfraMappingType(InfrastructureMappingType.AWS_ECS.getName())
+          .withServiceId(SERVICE_ID)
+          .withUuid(INFRA_MAPPING_ID)
+          .withAccountId(ACCOUNT_ID)
+          .build();
+    } else {
+      return GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping()
+          .withAppId(APP_ID)
+          .withComputeProviderSettingId(COMPUTE_PROVIDER_SETTING_ID)
+          .withUuid(INFRA_MAPPING_ID)
+          .withClusterName("k")
+          .withEnvId(ENV_ID)
+          .withInfraMappingType(InfrastructureMappingType.GCP_KUBERNETES.getName())
+          .withServiceId(SERVICE_ID)
+          .withUuid(INFRA_MAPPING_ID)
+          .withAccountId(ACCOUNT_ID)
+          .build();
+    }
+  }
+
   // 2 existing ECS instances,
   // expected 1 Delete, 1 Update
   @Test
-  public void testSyncInstances() throws Exception {
+  public void testSyncInstances_ECS() throws Exception {
+    doReturn(getInframapping(InfrastructureMappingType.AWS_ECS.name()))
+        .when(infraMappingService)
+        .get(anyString(), anyString());
+
     PageResponse<Instance> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(
         Instance.builder()
@@ -178,24 +202,34 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                               .build())
             .build()));
 
+    ContainerSyncResponse containerSyncResponse = ContainerSyncResponse.builder()
+                                                      .containerInfoList(asList(Builder.anEcsContainerInfo()
+                                                                                    .withClusterName(ECS_CLUSTER)
+                                                                                    .withServiceName("service_b_1")
+                                                                                    .withTaskArn("taskARN:1")
+                                                                                    .withStartedAt(0)
+                                                                                    .withStartedBy("user1")
+                                                                                    .build()))
+                                                      .build();
+
+    testSyncInstances(pageResponse, containerSyncResponse, "taskARN:1", InstanceType.ECS_CONTAINER_INSTANCE);
+  }
+
+  private void testSyncInstances(PageResponse<Instance> pageResponse, ContainerSyncResponse containerSyncResponse,
+      String containerId, InstanceType instanceType) throws Exception {
     doReturn(pageResponse).when(instanceService).list(any());
 
-    ContainerSyncResponse instanceSyncResponse =
-        doReturn(ContainerSyncResponse.builder().containerInfoList(asList()).build())
-            .doReturn(ContainerSyncResponse.builder()
-                          .containerInfoList(asList(EcsContainerInfo.Builder.anEcsContainerInfo()
-                                                        .withClusterName(ECS_CLUSTER)
-                                                        .withServiceName("service_b_1")
-                                                        .withTaskArn("taskARN:1")
-                                                        .withStartedAt(0)
-                                                        .withStartedBy("user1")
-                                                        .build()))
-                          .build())
-            .when(containerSync)
-            .getInstances(any(), anyList());
+    doReturn(ContainerSyncResponse.builder().containerInfoList(asList()).build())
+        .doReturn(containerSyncResponse)
+        .when(containerSync)
+        .getInstances(any(), anyList());
 
     containerInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID);
 
+    assertions(containerId, instanceType);
+  }
+
+  private void assertions(String containerId, InstanceType instanceType) throws Exception {
     ArgumentCaptor<Set> captor = ArgumentCaptor.forClass(Set.class);
     verify(instanceService).delete(captor.capture());
     Set idTobeDeleted = captor.getValue();
@@ -206,12 +240,16 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     verify(instanceService, times(1)).saveOrUpdate(captorInstance.capture());
 
     List<Instance> capturedInstances = captorInstance.getAllValues();
-    assertEquals("taskARN:1", capturedInstances.get(0).getContainerInstanceKey().getContainerId());
-    assertEquals(InstanceType.ECS_CONTAINER_INSTANCE, capturedInstances.get(0).getInstanceType());
+    assertEquals(containerId, capturedInstances.get(0).getContainerInstanceKey().getContainerId());
+    assertEquals(instanceType, capturedInstances.get(0).getInstanceType());
   }
 
   @Test
-  public void testSyncInstances_2() throws Exception {
+  public void testNewDeployment_ECS() throws Exception {
+    doReturn(getInframapping(InfrastructureMappingType.AWS_ECS.name()))
+        .when(infraMappingService)
+        .get(anyString(), anyString());
+
     PageResponse<Instance> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(
         Instance.builder()
@@ -240,22 +278,21 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
 
     doReturn(pageResponse).when(instanceService).list(any());
 
-    ContainerSyncResponse instanceSyncResponse =
-        doReturn(ContainerSyncResponse.builder().containerInfoList(asList()).build())
-            .doReturn(ContainerSyncResponse.builder()
-                          .containerInfoList(asList(EcsContainerInfo.Builder.anEcsContainerInfo()
-                                                        .withClusterName(ECS_CLUSTER)
-                                                        .withServiceName("service_b_2")
-                                                        .withTaskArn("taskARN:2")
-                                                        .withStartedAt(0)
-                                                        .withStartedBy("user1")
-                                                        .build()))
-                          .build())
-            .when(containerSync)
-            .getInstances(any(), anyList());
+    doReturn(ContainerSyncResponse.builder().containerInfoList(asList()).build())
+        .doReturn(ContainerSyncResponse.builder()
+                      .containerInfoList(asList(EcsContainerInfo.Builder.anEcsContainerInfo()
+                                                    .withClusterName(ECS_CLUSTER)
+                                                    .withServiceName("service_b_2")
+                                                    .withTaskArn("taskARN:2")
+                                                    .withStartedAt(0)
+                                                    .withStartedBy("user1")
+                                                    .build()))
+                      .build())
+        .when(containerSync)
+        .getInstances(any(), anyList());
 
     containerInstanceHandler.handleNewDeployment(
-        ContainerDeploymentInfo.builder()
+        ContainerDeploymentInfoWithNames.builder()
             .clusterName(ECS_CLUSTER)
             .containerSvcNameSet(Collections.setOf(asList("service_b_1", "service_b_2")))
             .accountId(ACCOUNT_ID)
@@ -264,17 +301,190 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
             .stateExecutionInstanceId("stateExecutionInstanceId")
             .build());
 
-    ArgumentCaptor<Set> captor = ArgumentCaptor.forClass(Set.class);
-    verify(instanceService).delete(captor.capture());
-    Set idTobeDeleted = captor.getValue();
-    assertEquals(1, idTobeDeleted.size());
-    assertTrue(idTobeDeleted.contains(INSTANCE_1_ID));
+    assertions("taskARN:2", InstanceType.ECS_CONTAINER_INSTANCE);
+  }
 
-    ArgumentCaptor<Instance> captorInstance = ArgumentCaptor.forClass(Instance.class);
-    verify(instanceService, times(1)).saveOrUpdate(captorInstance.capture());
+  // 2 existing Kubernetes instances,
+  // expected 1 Delete, 1 Update
+  @Test
+  public void testSyncInstances_Kubernetes() throws Exception {
+    doReturn(getInframapping(InfrastructureMappingType.GCP_KUBERNETES.name()))
+        .when(infraMappingService)
+        .get(anyString(), anyString());
 
-    List<Instance> capturedInstances = captorInstance.getAllValues();
-    assertEquals("taskARN:2", capturedInstances.get(0).getContainerInstanceKey().getContainerId());
-    assertEquals(InstanceType.ECS_CONTAINER_INSTANCE, capturedInstances.get(0).getInstanceType());
+    PageResponse<Instance> pageResponse = new PageResponse<>();
+    pageResponse.setResponse(asList(
+        Instance.builder()
+            .uuid(INSTANCE_1_ID)
+            .accountId(ACCOUNT_ID)
+            .appId(APP_ID)
+            .computeProviderId(COMPUTE_PROVIDER_NAME)
+            .appName(APP_NAME)
+            .envId(ENV_ID)
+            .envName(ENV_NAME)
+            .envType(EnvironmentType.PROD)
+            .infraMappingId(INFRA_MAPPING_ID)
+            .infraMappingType(InfrastructureMappingType.GCP_KUBERNETES.getName())
+            .hostInstanceKey(HostInstanceKey.builder().infraMappingId(INFRA_MAPPING_ID).hostName(HOST_NAME_IP1).build())
+            .instanceType(InstanceType.KUBERNETES_CONTAINER_INSTANCE)
+            .containerInstanceKey(ContainerInstanceKey.builder().containerId("pod:0").build())
+            .instanceInfo(KubernetesContainerInfo.builder()
+                              .clusterName(KUBE_CLUSTER)
+                              .serviceName("service_a_0")
+                              .controllerName("controllerName:0")
+                              .podName("pod:0")
+                              .build())
+            .build(),
+        Instance.builder()
+            .uuid(INSTANCE_2_ID)
+            .accountId(ACCOUNT_ID)
+            .appId(APP_ID)
+            .computeProviderId(COMPUTE_PROVIDER_NAME)
+            .appName(APP_NAME)
+            .envId(ENV_ID)
+            .envName(ENV_NAME)
+            .envType(EnvironmentType.PROD)
+            .infraMappingId(INFRA_MAPPING_ID)
+            .infraMappingType(InfrastructureMappingType.GCP_KUBERNETES.getName())
+            .hostInstanceKey(HostInstanceKey.builder().infraMappingId(INFRA_MAPPING_ID).hostName(HOST_NAME_IP2).build())
+            .instanceType(InstanceType.KUBERNETES_CONTAINER_INSTANCE)
+            .containerInstanceKey(ContainerInstanceKey.builder().containerId("pod:1").build())
+            .instanceInfo(KubernetesContainerInfo.builder()
+                              .clusterName(KUBE_CLUSTER)
+                              .serviceName("service_a_1")
+                              .controllerName("controllerName:1")
+                              .podName("pod:1")
+                              .build())
+            .build()));
+
+    ContainerSyncResponse containerSyncResponse = ContainerSyncResponse.builder()
+                                                      .containerInfoList(asList(KubernetesContainerInfo.builder()
+                                                                                    .clusterName(KUBE_CLUSTER)
+                                                                                    .controllerName("controllerName:1")
+                                                                                    .podName("pod:1")
+                                                                                    .serviceName("service_a_1")
+                                                                                    .build()))
+                                                      .build();
+
+    testSyncInstances(pageResponse, containerSyncResponse, "pod:1", InstanceType.KUBERNETES_CONTAINER_INSTANCE);
+  }
+
+  @Test
+  public void testNewDeployment_Kubernetes() throws Exception {
+    doReturn(getInframapping(InfrastructureMappingType.GCP_KUBERNETES.name()))
+        .when(infraMappingService)
+        .get(anyString(), anyString());
+
+    PageResponse<Instance> pageResponse = new PageResponse<>();
+    pageResponse.setResponse(asList(
+        Instance.builder()
+            .uuid(INSTANCE_1_ID)
+            .accountId(ACCOUNT_ID)
+            .appId(APP_ID)
+            .computeProviderId(COMPUTE_PROVIDER_NAME)
+            .appName(APP_NAME)
+            .envId(ENV_ID)
+            .envName(ENV_NAME)
+            .envType(EnvironmentType.PROD)
+            .infraMappingId(INFRA_MAPPING_ID)
+            .infraMappingType(InfrastructureMappingType.GCP_KUBERNETES.getName())
+            .hostInstanceKey(HostInstanceKey.builder().infraMappingId(INFRA_MAPPING_ID).hostName(HOST_NAME_IP1).build())
+            .instanceType(InstanceType.KUBERNETES_CONTAINER_INSTANCE)
+            .containerInstanceKey(ContainerInstanceKey.builder().containerId("pod:0").build())
+            .instanceInfo(KubernetesContainerInfo.builder()
+                              .clusterName(KUBE_CLUSTER)
+                              .serviceName("service_a_0")
+                              .controllerName("controllerName:0")
+                              .podName("pod:0")
+                              .build())
+            .build()));
+
+    doReturn(pageResponse).when(instanceService).list(any());
+
+    doReturn(ContainerSyncResponse.builder().containerInfoList(asList()).build())
+        .doReturn(ContainerSyncResponse.builder()
+                      .containerInfoList(asList(KubernetesContainerInfo.builder()
+                                                    .clusterName(KUBE_CLUSTER)
+                                                    .controllerName("controllerName:1")
+                                                    .podName("pod:1")
+                                                    .serviceName("service_a_1")
+                                                    .build()))
+                      .build())
+        .when(containerSync)
+        .getInstances(any(), anyList());
+
+    containerInstanceHandler.handleNewDeployment(
+        ContainerDeploymentInfoWithNames.builder()
+            .clusterName(KUBE_CLUSTER)
+            .containerSvcNameSet(Collections.setOf(asList("controllerName:0", "controllerName:1")))
+            .accountId(ACCOUNT_ID)
+            .infraMappingId(INFRA_MAPPING_ID)
+            .workflowExecutionId("workfloeExecution_1")
+            .stateExecutionInstanceId("stateExecutionInstanceId")
+            .build());
+
+    assertions("pod:1", InstanceType.KUBERNETES_CONTAINER_INSTANCE);
+  }
+
+  @Test
+  public void testNewDeployment_Helm_Kubernetes() throws Exception {
+    doReturn(getInframapping(InfrastructureMappingType.GCP_KUBERNETES.name()))
+        .when(infraMappingService)
+        .get(anyString(), anyString());
+
+    PageResponse<Instance> pageResponse = new PageResponse<>();
+    pageResponse.setResponse(asList(
+        Instance.builder()
+            .uuid(INSTANCE_1_ID)
+            .accountId(ACCOUNT_ID)
+            .appId(APP_ID)
+            .computeProviderId(COMPUTE_PROVIDER_NAME)
+            .appName(APP_NAME)
+            .envId(ENV_ID)
+            .envName(ENV_NAME)
+            .envType(EnvironmentType.PROD)
+            .infraMappingId(INFRA_MAPPING_ID)
+            .infraMappingType(InfrastructureMappingType.GCP_KUBERNETES.getName())
+            .hostInstanceKey(HostInstanceKey.builder().infraMappingId(INFRA_MAPPING_ID).hostName(HOST_NAME_IP1).build())
+            .instanceType(InstanceType.KUBERNETES_CONTAINER_INSTANCE)
+            .containerInstanceKey(ContainerInstanceKey.builder().containerId("pod:0").build())
+            .instanceInfo(KubernetesContainerInfo.builder()
+                              .clusterName(KUBE_CLUSTER)
+                              .serviceName("service_a_0")
+                              .controllerName("controllerName:0")
+                              .podName("pod:0")
+                              .build())
+            .build()));
+
+    doReturn(pageResponse).when(instanceService).list(any());
+
+    HashSet<Object> hashSet = Sets.newHashSet();
+    hashSet.add("controllerName:1");
+    doReturn(hashSet).when(containerSync).getControllerNames(any(), anyMap());
+
+    doReturn(ContainerSyncResponse.builder().containerInfoList(asList()).build())
+        .doReturn(ContainerSyncResponse.builder()
+                      .containerInfoList(asList(KubernetesContainerInfo.builder()
+                                                    .clusterName(KUBE_CLUSTER)
+                                                    .controllerName("controllerName:1")
+                                                    .podName("pod:1")
+                                                    .serviceName("service_a_1")
+                                                    .build()))
+                      .build())
+        .when(containerSync)
+        .getInstances(any(), anyList());
+
+    Map<String, String> labelMap = Maps.newHashMap();
+    labelMap.put("release", "version1");
+    containerInstanceHandler.handleNewDeployment(ContainerDeploymentInfoWithLabels.builder()
+                                                     .clusterName(KUBE_CLUSTER)
+                                                     .labels(labelMap)
+                                                     .accountId(ACCOUNT_ID)
+                                                     .infraMappingId(INFRA_MAPPING_ID)
+                                                     .workflowExecutionId("workfloeExecution_1")
+                                                     .stateExecutionInstanceId("stateExecutionInstanceId")
+                                                     .build());
+
+    assertions("pod:1", InstanceType.KUBERNETES_CONTAINER_INSTANCE);
   }
 }

@@ -9,10 +9,16 @@ import software.wings.sm.StepExecutionSummary;
  * Created by anubhaw on 4/3/18.
  */
 @Data
-@Builder
 @EqualsAndHashCode(callSuper = false)
 public class HelmSetupExecutionSummary extends StepExecutionSummary {
   private String releaseName;
   private Integer prevVersion;
   private Integer newVersion;
+
+  @Builder
+  public HelmSetupExecutionSummary(String releaseName, Integer prevVersion, Integer newVersion) {
+    this.releaseName = releaseName;
+    this.prevVersion = prevVersion;
+    this.newVersion = newVersion;
+  }
 }
