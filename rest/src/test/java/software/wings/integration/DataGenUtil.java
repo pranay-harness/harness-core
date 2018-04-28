@@ -595,7 +595,7 @@ public class DataGenUtil extends BaseIntegrationTest {
     Environment environment = environmentGenerator.ensurePredefined(seed, Environments.GENERIC_TEST);
     owners.add(environment);
 
-    Service service = serviceGenerator.ensurePredefined(seed, Services.GENERIC_TEST);
+    Service service = serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST);
     owners.add(service);
 
     InfrastructureMapping infrastructureMapping =
@@ -604,13 +604,10 @@ public class DataGenUtil extends BaseIntegrationTest {
     ArtifactStream artifactStream =
         artifactStreamGenerator.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_ECHO_WAR);
 
-    Workflow workflow1 = workflowGenerator.ensureWorkflow(seed,
+    Workflow workflow1 = workflowGenerator.ensureWorkflow(seed, owners,
         aWorkflow()
             .withName("Basic - simple")
-            .withAppId(environment.getAppId())
-            .withEnvId(environment.getUuid())
             .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withServiceId(service.getUuid())
             .withInfraMappingId(infrastructureMapping.getUuid())
             .withOrchestrationWorkflow(
                 aBasicOrchestrationWorkflow()
@@ -619,13 +616,10 @@ public class DataGenUtil extends BaseIntegrationTest {
                     .build())
             .build());
 
-    Workflow workflow2 = workflowGenerator.ensureWorkflow(seed,
+    Workflow workflow2 = workflowGenerator.ensureWorkflow(seed, owners,
         aWorkflow()
             .withName("Basic - 10 nodes")
-            .withAppId(environment.getAppId())
-            .withEnvId(environment.getUuid())
             .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withServiceId(service.getUuid())
             .withInfraMappingId(infrastructureMapping.getUuid())
             .withOrchestrationWorkflow(
                 aBasicOrchestrationWorkflow()
@@ -636,13 +630,10 @@ public class DataGenUtil extends BaseIntegrationTest {
 
     workflow2 = workflowGenerator.postProcess(workflow2, PostProcessInfo.builder().selectNodeCount(10).build());
 
-    Workflow workflow3 = workflowGenerator.ensureWorkflow(seed,
+    Workflow workflow3 = workflowGenerator.ensureWorkflow(seed, owners,
         aWorkflow()
             .withName("Barrier Parallel Section 2-1")
-            .withAppId(environment.getAppId())
-            .withEnvId(environment.getUuid())
             .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withServiceId(service.getUuid())
             .withInfraMappingId(infrastructureMapping.getUuid())
             .withOrchestrationWorkflow(
                 aBasicOrchestrationWorkflow()
@@ -653,13 +644,10 @@ public class DataGenUtil extends BaseIntegrationTest {
 
     workflow3 = workflowGenerator.postProcess(workflow3, PostProcessInfo.builder().selectNodeCount(2).build());
 
-    Workflow workflow4 = workflowGenerator.ensureWorkflow(seed,
+    Workflow workflow4 = workflowGenerator.ensureWorkflow(seed, owners,
         aWorkflow()
             .withName("Barrier Parallel Section 2-2")
-            .withAppId(environment.getAppId())
-            .withEnvId(environment.getUuid())
             .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withServiceId(service.getUuid())
             .withInfraMappingId(infrastructureMapping.getUuid())
             .withOrchestrationWorkflow(
                 aBasicOrchestrationWorkflow()

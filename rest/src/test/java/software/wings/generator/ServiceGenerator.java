@@ -14,6 +14,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Service;
 import software.wings.dl.WingsPersistence;
 import software.wings.generator.ApplicationGenerator.Applications;
+import software.wings.generator.OwnerManager.Owners;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.ArtifactType;
 
@@ -28,10 +29,10 @@ public class ServiceGenerator {
     GENERIC_TEST,
   }
 
-  public Service ensurePredefined(Randomizer.Seed seed, Services predefined) {
+  public Service ensurePredefined(Randomizer.Seed seed, Owners owners, Services predefined) {
     switch (predefined) {
       case GENERIC_TEST:
-        return ensureGenericTest(seed);
+        return ensureGenericTest(seed, owners);
       default:
         unhandled(predefined);
     }
@@ -39,18 +40,21 @@ public class ServiceGenerator {
     return null;
   }
 
-  private Service ensureGenericTest(Randomizer.Seed seed) {
-    final Application application = applicationGenerator.ensurePredefined(seed, Applications.GENERIC_TEST);
-    return ensureService(
-        seed, builder().appId(application.getAppId()).name("Test Service").artifactType(ArtifactType.WAR).build());
+  private Service ensureGenericTest(Randomizer.Seed seed, Owners owners) {
+    Application application = owners.obtainApplication();
+    if (application != null) {
+      application = applicationGenerator.ensurePredefined(seed, Applications.GENERIC_TEST);
+      owners.add(application);
+    }
+    return ensureService(seed, owners, builder().name("Test Service").artifactType(ArtifactType.WAR).build());
   }
 
-  public Service ensureRandom(Randomizer.Seed seed) {
+  public Service ensureRandom(Randomizer.Seed seed, Owners owners) {
     EnhancedRandom random = Randomizer.instance(seed);
 
     Services predefined = random.nextObject(Services.class);
 
-    return ensurePredefined(seed, predefined);
+    return ensurePredefined(seed, owners, predefined);
   }
 
   public Service exists(Service service) {
@@ -60,7 +64,7 @@ public class ServiceGenerator {
         .get();
   }
 
-  public Service ensureService(Randomizer.Seed seed, Service service) {
+  public Service ensureService(Randomizer.Seed seed, Owners owners, Service service) {
     EnhancedRandom random = Randomizer.instance(seed);
 
     ServiceBuilder builder = Service.builder();
@@ -68,7 +72,8 @@ public class ServiceGenerator {
     if (service != null && service.getAppId() != null) {
       builder.appId(service.getAppId());
     } else {
-      throw new UnsupportedOperationException();
+      final Application application = owners.obtainApplication();
+      builder.appId(application.getUuid());
     }
 
     if (service != null && service.getName() != null) {

@@ -10,8 +10,11 @@ import com.google.inject.Singleton;
 import io.github.benas.randombeans.api.EnhancedRandom;
 import lombok.Builder;
 import lombok.Value;
+import software.wings.beans.Application;
 import software.wings.beans.BasicOrchestrationWorkflow;
+import software.wings.beans.Environment;
 import software.wings.beans.GraphNode;
+import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.service.intfc.WorkflowService;
@@ -23,7 +26,7 @@ public class WorkflowGenerator {
   @Inject ApplicationGenerator applicationGenerator;
   @Inject OrchestrationWorkflowGenerator orchestrationWorkflowGenerator;
 
-  public Workflow ensureWorkflow(Randomizer.Seed seed, Workflow workflow) {
+  public Workflow ensureWorkflow(Randomizer.Seed seed, OwnerManager.Owners owners, Workflow workflow) {
     EnhancedRandom random = Randomizer.instance(seed);
 
     WorkflowBuilder builder = aWorkflow();
@@ -31,13 +34,22 @@ public class WorkflowGenerator {
     if (workflow != null && workflow.getAppId() != null) {
       builder.withAppId(workflow.getAppId());
     } else {
-      throw new UnsupportedOperationException();
+      final Application application = owners.obtainApplication();
+      builder.withAppId(application.getUuid());
     }
 
     if (workflow != null && workflow.getEnvId() != null) {
       builder.withEnvId(workflow.getEnvId());
     } else {
-      throw new UnsupportedOperationException();
+      Environment environment = owners.obtainEnvironment();
+      builder.withEnvId(environment.getUuid());
+    }
+
+    if (workflow != null && workflow.getServiceId() != null) {
+      builder.withServiceId(workflow.getServiceId());
+    } else {
+      Service service = owners.obtainService();
+      builder.withServiceId(service.getUuid());
     }
 
     if (workflow != null && workflow.getName() != null) {
@@ -54,12 +66,6 @@ public class WorkflowGenerator {
 
     if (workflow != null && workflow.getOrchestrationWorkflow() != null) {
       builder.withOrchestrationWorkflow(workflow.getOrchestrationWorkflow());
-    } else {
-      throw new UnsupportedOperationException();
-    }
-
-    if (workflow != null && workflow.getServiceId() != null) {
-      builder.withServiceId(workflow.getServiceId());
     } else {
       throw new UnsupportedOperationException();
     }
