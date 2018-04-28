@@ -1,7 +1,5 @@
 package software.wings.helpers.ext.mail;
 
-import com.google.common.collect.Lists;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,6 +8,7 @@ import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.core.queue.Queuable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -23,8 +22,8 @@ import java.util.List;
 @Builder
 public class EmailData extends Queuable {
   private String accountId;
-  @Builder.Default private List<String> to = Lists.newArrayList();
-  @Builder.Default private List<String> cc = Lists.newArrayList();
+  @Builder.Default private List<String> to = new ArrayList<>();
+  @Builder.Default private List<String> cc = new ArrayList<>();
   private String subject;
   private String body;
   private String templateName;

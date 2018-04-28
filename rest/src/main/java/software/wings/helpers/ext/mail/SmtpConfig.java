@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.mail;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -55,6 +56,10 @@ public class SmtpConfig extends SettingValue implements Encryptable {
     this.password = password;
     this.accountId = accountId;
     this.encryptedPassword = encryptedPassword;
+  }
+
+  public boolean valid() {
+    return isNotEmpty(host) && isNotEmpty(username) && (isNotEmpty(password) || isNotEmpty(encryptedPassword));
   }
 
   @Data

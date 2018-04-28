@@ -214,6 +214,15 @@
                 </configuration>
             </plugin>
         </plugins>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+            <resource>
+                <directory>../rest/src/main/resources/mailtemplates</directory>
+                <targetPath>mailtemplates/</targetPath>
+            </resource>
+        </resources>
     </build>
 
     <profiles>

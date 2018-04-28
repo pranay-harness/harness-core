@@ -19,7 +19,6 @@ import software.wings.service.intfc.UserService;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
-import java.util.Optional;
 import javax.validation.constraints.NotNull;
 
 @Singleton
@@ -56,12 +55,8 @@ public class AuthenticationUtil {
     return wingsPersistence.createQuery(User.class).field("email").equal(userName.trim().toLowerCase()).get();
   }
 
-  public Optional<Account> getPrimaryAccount(User user) {
-    Optional<Account> account = Optional.empty();
-    if (user.getAccounts() != null && user.getAccounts().size() > 0) {
-      account = Optional.of(user.getAccounts().get(0));
-    }
-    return account;
+  public Account getPrimaryAccount(User user) {
+    return user.getAccounts().get(0);
   }
 
   public URI buildAbsoluteUrl(String path, Map<String, String> params) {

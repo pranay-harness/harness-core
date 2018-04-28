@@ -4,7 +4,7 @@
 
 package software.wings.sm.states;
 
-import static java.util.Collections.emptyList;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.api.EmailStateExecutionData.Builder.anEmailStateExecutionData;
 
 import com.google.common.base.Splitter;
@@ -23,6 +23,9 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The Class EmailState.
@@ -71,12 +74,11 @@ public class EmailState extends State {
       emailStateExecutionData.setBody(evaluatedBody);
       logger.debug("Email Notification - subject:{}, body:{}", evaluatedSubject, evaluatedBody);
       emailNotificationService.send(EmailData.builder()
-                                        .to(toAddress == null ? emptyList() : COMMA_SPLITTER.splitToList(toAddress))
-                                        .cc(ccAddress == null ? emptyList() : COMMA_SPLITTER.splitToList(ccAddress))
+                                        .to(getEmailAddressList(toAddress))
+                                        .cc(getEmailAddressList(ccAddress))
                                         .subject(evaluatedSubject)
                                         .body(evaluatedBody)
                                         .accountId(((ExecutionContextImpl) context).getApp().getAccountId())
-                                        .system(true)
                                         .build());
       executionResponse.setExecutionStatus(ExecutionStatus.SUCCESS);
     } catch (Exception e) {
@@ -88,6 +90,14 @@ public class EmailState extends State {
     executionResponse.setStateExecutionData(emailStateExecutionData);
 
     return executionResponse;
+  }
+
+  private List<String> getEmailAddressList(String address) {
+    List addressList = new ArrayList();
+    if (isNotEmpty(address)) {
+      addressList.addAll(COMMA_SPLITTER.splitToList(address));
+    }
+    return addressList;
   }
 
   /**

@@ -25,7 +25,6 @@ import software.wings.service.intfc.UserService;
 
 import java.security.GeneralSecurityException;
 import java.util.Base64;
-import java.util.Optional;
 
 public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   @Mock UserService userService;
@@ -92,7 +91,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
     User user = spy(new User());
     Account account = mock(Account.class);
     when(account.getCompanyName()).thenReturn("TestCompany");
-    when(authenticationUtil.getPrimaryAccount(user)).thenReturn(Optional.of(account));
+    when(authenticationUtil.getPrimaryAccount(user)).thenReturn(account);
 
     TwoFactorAuthenticationSettings settings = twoFactorAuthenticationManager.createTwoFactorAuthenticationSettings(
         user, TwoFactorAuthenticationMechanism.TOTP);

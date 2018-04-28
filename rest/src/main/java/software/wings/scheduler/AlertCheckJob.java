@@ -17,14 +17,17 @@ import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Delegate;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.DelegatesDownAlert;
+import software.wings.beans.alert.InvalidSMTPConfigAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.utils.EmailHelperUtil;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -46,7 +49,8 @@ public class AlertCheckJob implements Job {
   @Inject private AlertService alertService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject DelegateService delegateService;
-
+  @Inject EmailHelperUtil emailHelperUtil;
+  @Inject MainConfiguration mainConfiguration;
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
   @Inject private ExecutorService executorService;
@@ -92,10 +96,21 @@ public class AlertCheckJob implements Job {
     } else {
       checkIfAnyDelegatesAreDown(accountId, delegates);
     }
+    checkForInvalidValidSMTP(accountId);
   }
 
   List<Delegate> getDelegatesForAccount(String accountId) {
     return wingsPersistence.createQuery(Delegate.class).filter(Delegate.ACCOUNT_ID_KEY, accountId).asList();
+  }
+
+  public void checkForInvalidValidSMTP(String accountId) {
+    if (!emailHelperUtil.isSmtpConfigValid(mainConfiguration.getSmtpConfig())
+        && !emailHelperUtil.isSmtpConfigValid(emailHelperUtil.getSmtpConfig(accountId))) {
+      alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.INVALID_SMTP_CONFIGURATION,
+          InvalidSMTPConfigAlert.builder().accountId(accountId).build());
+    } else {
+      alertService.closeAlertsOfType(accountId, GLOBAL_APP_ID, AlertType.INVALID_SMTP_CONFIGURATION);
+    }
   }
 
   /**

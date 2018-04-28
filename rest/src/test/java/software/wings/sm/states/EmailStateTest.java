@@ -51,7 +51,6 @@ public class EmailStateTest extends WingsBaseTest {
                                           .cc(Lists.newArrayList("cc1", "cc2"))
                                           .subject("subject")
                                           .body("body")
-                                          .system(true)
                                           .build();
   @Inject private Injector injector;
 
@@ -139,7 +138,6 @@ public class EmailStateTest extends WingsBaseTest {
                 .cc(Lists.newArrayList("cc1", "cc2"))
                 .subject("Deployed app123.application.com")
                 .body("Deployed to host app123.application.com")
-                .system(true)
                 .build());
   }
 

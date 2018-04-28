@@ -18,6 +18,8 @@ import org.apache.commons.mail.HtmlEmail;
 import org.apache.commons.mail.SimpleEmail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.ErrorCode;
+import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.Misc;
@@ -108,8 +110,10 @@ public class Mailer {
       email.send();
     } catch (EmailException | IOException e) {
       logger.warn("Failed to send email. Reason: " + e.getMessage());
+      throw new WingsException(ErrorCode.EMAIL_FAILED, e);
     } catch (TemplateException e) {
       logger.warn("Failed to parse email template . Reason: " + e.getMessage());
+      throw new WingsException(ErrorCode.EMAIL_FAILED, e);
     }
   }
 }

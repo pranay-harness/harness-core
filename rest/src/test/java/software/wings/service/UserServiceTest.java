@@ -102,6 +102,7 @@ import software.wings.utils.CacheHelper;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -605,7 +606,9 @@ public class UserServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldSendResetPasswordEmail() throws EmailException, TemplateException, IOException {
-    when(query.get()).thenReturn(userBuilder.withUuid(USER_ID).build());
+    ArrayList<Account> accounts = new ArrayList<>();
+    accounts.add(new Account());
+    when(query.get()).thenReturn(userBuilder.withUuid(USER_ID).withAccounts(accounts).build());
     when(configuration.getPortal().getJwtPasswordSecret()).thenReturn("SECRET");
     when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
     userService.resetPassword(USER_EMAIL);

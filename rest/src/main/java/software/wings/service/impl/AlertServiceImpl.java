@@ -91,6 +91,11 @@ public class AlertServiceImpl implements AlertService {
   }
 
   @Override
+  public void closeAlertsOfType(String accountId, String appId, AlertType alertType) {
+    executorService.submit(() -> findExistingAlertsOfType(accountId, appId, alertType).forEach(alert -> close(alert)));
+  }
+
+  @Override
   public void activeDelegateUpdated(String accountId, String delegateId) {
     executorService.submit(() -> activeDelegateUpdatedInternal(accountId, delegateId));
   }
@@ -176,6 +181,13 @@ public class AlertServiceImpl implements AlertService {
           return alertData.matches(alert.getAlertData());
         })
         .findFirst();
+  }
+
+  private List<Alert> findExistingAlertsOfType(String accountId, String appId, AlertType alertType) {
+    Query<Alert> query = wingsPersistence.createQuery(Alert.class).filter("type", alertType).filter("status", Open);
+    query = appId == null || appId.equals(GLOBAL_APP_ID) ? query.filter("accountId", accountId)
+                                                         : query.filter(Alert.APP_ID_KEY, appId);
+    return query.asList();
   }
 
   private void close(Alert alert) {
