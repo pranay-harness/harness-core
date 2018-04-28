@@ -14,6 +14,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.JenkinsArtifactStream;
+import software.wings.generator.OwnerManager.Owners;
 import software.wings.generator.SettingGenerator.Settings;
 import software.wings.service.intfc.ArtifactStreamService;
 

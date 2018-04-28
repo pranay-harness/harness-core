@@ -23,7 +23,7 @@ public class WorkflowGenerator {
   @Inject ApplicationGenerator applicationGenerator;
   @Inject OrchestrationWorkflowGenerator orchestrationWorkflowGenerator;
 
-  public Workflow createWorkflow(Randomizer.Seed seed, Workflow workflow) {
+  public Workflow ensureWorkflow(Randomizer.Seed seed, Workflow workflow) {
     EnhancedRandom random = Randomizer.instance(seed);
 
     WorkflowBuilder builder = aWorkflow();

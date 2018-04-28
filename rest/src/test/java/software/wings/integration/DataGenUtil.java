@@ -65,7 +65,6 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
-import software.wings.beans.GitConfig;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.License;
@@ -78,7 +77,6 @@ import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
-import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.SplunkConfig;
@@ -101,7 +99,8 @@ import software.wings.generator.EnvironmentGenerator.Environments;
 import software.wings.generator.InfrastructureMappingGenerator;
 import software.wings.generator.LicenseGenerator;
 import software.wings.generator.LicenseGenerator.Licenses;
-import software.wings.generator.Owners;
+import software.wings.generator.OwnerManager;
+import software.wings.generator.OwnerManager.Owners;
 import software.wings.generator.PipelineGenerator;
 import software.wings.generator.Randomizer.Seed;
 import software.wings.generator.ServiceGenerator;
@@ -158,8 +157,6 @@ public class DataGenUtil extends BaseIntegrationTest {
   public static final String HARNESS_BAMBOO_SERVICE = "Harness BambooService";
   public static final String HARNESS_DOCKER_REGISTRY = "Harness Docker Registry";
   public static final String TESTING_ENVIRONMENT = "Testing Environment";
-  public static final String TERRAFORM_TEST_SCRIPTS = "Terraform test scripts";
-  public static final String GIT_REPO_TERRAFORM_TEST = "Git Repo terraform test";
   public static final String AWS_NON_PROD = "Aws non-prod";
   public static final String WINGS_KEY = "Wings Key";
 
@@ -184,6 +181,7 @@ public class DataGenUtil extends BaseIntegrationTest {
   @Inject private UserGroupService userGroupService;
   @Inject private UserService userService;
 
+  @Inject private OwnerManager ownerManager;
   @Inject private AccountGenerator accountGenerator;
   @Inject private ApplicationGenerator applicationGenerator;
   @Inject private ArtifactStreamGenerator artifactStreamGenerator;
@@ -194,6 +192,7 @@ public class DataGenUtil extends BaseIntegrationTest {
   @Inject private ServiceGenerator serviceGenerator;
   @Inject private ServiceTemplateGenerator serviceTemplateGenerator;
   @Inject private WorkflowGenerator workflowGenerator;
+
   @Inject private AppResourceRestClient appResourceRestClient;
   @Inject private ServiceResourceRestClient serviceResourceRestClient;
   @Inject private SettingsResourceRestClient settingsResourceRestClient;
@@ -533,21 +532,6 @@ public class DataGenUtil extends BaseIntegrationTest {
 
     wingsPersistence.save(newRelicSettingAttribute);
 
-    SettingAttribute terraformGitRepoAttribute =
-        aSettingAttribute()
-            .withCategory(Category.CONNECTOR)
-            .withName(GIT_REPO_TERRAFORM_TEST)
-            .withAppId(GLOBAL_APP_ID)
-            .withEnvId(GLOBAL_ENV_ID)
-            .withAccountId(accountId)
-            .withValue(GitConfig.builder()
-                           .repoUrl("https://github.com/wings-software/terraform-test.git")
-                           .branch("master")
-                           .accountId(accountId)
-                           .build())
-            .build();
-    wingsPersistence.save(terraformGitRepoAttribute);
-
     SettingAttribute awsNonProdAttribute =
         aSettingAttribute()
             .withCategory(Category.CLOUD_PROVIDER)
@@ -606,7 +590,7 @@ public class DataGenUtil extends BaseIntegrationTest {
   private void createTestApplication(Account account) {
     final Seed seed = new Seed(0);
 
-    final Owners owners = new Owners();
+    final Owners owners = ownerManager.create();
 
     Environment environment = environmentGenerator.ensurePredefined(seed, Environments.GENERIC_TEST);
     owners.add(environment);
@@ -614,15 +598,13 @@ public class DataGenUtil extends BaseIntegrationTest {
     Service service = serviceGenerator.ensurePredefined(seed, Services.GENERIC_TEST);
     owners.add(service);
 
-    ServiceTemplate serviceTemplate =
-        serviceTemplateService.get(service.getAppId(), service.getUuid(), environment.getUuid());
-
-    InfrastructureMapping infrastructureMapping = infrastructureMappingGenerator.ensurePredefined(seed, AWS_SSH_TEST);
+    InfrastructureMapping infrastructureMapping =
+        infrastructureMappingGenerator.ensurePredefined(seed, owners, AWS_SSH_TEST);
 
     ArtifactStream artifactStream =
         artifactStreamGenerator.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_ECHO_WAR);
 
-    Workflow workflow1 = workflowGenerator.createWorkflow(seed,
+    Workflow workflow1 = workflowGenerator.ensureWorkflow(seed,
         aWorkflow()
             .withName("Basic - simple")
             .withAppId(environment.getAppId())
@@ -637,7 +619,7 @@ public class DataGenUtil extends BaseIntegrationTest {
                     .build())
             .build());
 
-    Workflow workflow2 = workflowGenerator.createWorkflow(seed,
+    Workflow workflow2 = workflowGenerator.ensureWorkflow(seed,
         aWorkflow()
             .withName("Basic - 10 nodes")
             .withAppId(environment.getAppId())
@@ -654,7 +636,7 @@ public class DataGenUtil extends BaseIntegrationTest {
 
     workflow2 = workflowGenerator.postProcess(workflow2, PostProcessInfo.builder().selectNodeCount(10).build());
 
-    Workflow workflow3 = workflowGenerator.createWorkflow(seed,
+    Workflow workflow3 = workflowGenerator.ensureWorkflow(seed,
         aWorkflow()
             .withName("Barrier Parallel Section 2-1")
             .withAppId(environment.getAppId())
@@ -671,7 +653,7 @@ public class DataGenUtil extends BaseIntegrationTest {
 
     workflow3 = workflowGenerator.postProcess(workflow3, PostProcessInfo.builder().selectNodeCount(2).build());
 
-    Workflow workflow4 = workflowGenerator.createWorkflow(seed,
+    Workflow workflow4 = workflowGenerator.ensureWorkflow(seed,
         aWorkflow()
             .withName("Barrier Parallel Section 2-2")
             .withAppId(environment.getAppId())

@@ -65,6 +65,10 @@ import javax.validation.Valid;
 @Data
 @EqualsAndHashCode(callSuper = false)
 public class SettingAttribute extends Base {
+  public static final String CATEGORY_KEY = "category";
+  public static final String ENV_ID_KEY = "envId";
+  public static final String NAME_KEY = "name";
+
   @NotEmpty private String envId = GLOBAL_ENV_ID;
   @NotEmpty private String accountId;
   @NotEmpty private String name;

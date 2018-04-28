@@ -2,15 +2,18 @@ package software.wings.generator;
 
 import static io.harness.govern.Switch.unhandled;
 import static software.wings.beans.Account.Builder.anAccount;
-import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import lombok.Setter;
 import software.wings.beans.Account;
+import software.wings.service.intfc.AccountService;
 
 @Singleton
 public class AccountGenerator {
+  @Inject AccountService accountService;
+
   @Setter Account account;
 
   public enum Accounts {
@@ -30,7 +33,7 @@ public class AccountGenerator {
 
   private Account ensureGenericTest(Randomizer.Seed seed) {
     if (account == null) {
-      account = anAccount().withUuid(GLOBAL_ACCOUNT_ID).build();
+      account = accountService.save(anAccount().withAccountName("Harness").withCompanyName("Harness").build());
     }
     return account;
   }
