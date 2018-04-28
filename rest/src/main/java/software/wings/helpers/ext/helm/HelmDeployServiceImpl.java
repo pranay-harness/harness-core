@@ -6,8 +6,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.data.structure.EmptyPredicate;
-import lombok.Builder;
-import lombok.Data;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -206,14 +204,5 @@ public class HelmDeployServiceImpl implements HelmDeployService {
         .status(releaseRecord.get("STATUS"))
         .chart(releaseRecord.get("CHART"))
         .build();
-  }
-
-  @Data
-  @Builder
-  public static class KubeControllerStatus {
-    private String name;
-    private String kind;
-    private int runningCount;
-    private int desiredCount;
   }
 }

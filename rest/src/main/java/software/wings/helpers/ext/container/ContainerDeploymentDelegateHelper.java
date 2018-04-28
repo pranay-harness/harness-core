@@ -12,16 +12,6 @@ import com.google.inject.Inject;
 
 import groovy.lang.Singleton;
 import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.ReplicationController;
-import io.fabric8.kubernetes.api.model.ReplicationControllerStatus;
-import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
-import io.fabric8.kubernetes.api.model.extensions.DaemonSetStatus;
-import io.fabric8.kubernetes.api.model.extensions.Deployment;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentStatus;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSetStatus;
-import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
-import io.fabric8.kubernetes.api.model.extensions.StatefulSetStatus;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,10 +25,8 @@ import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
-import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.azure.AzureHelperService;
-import software.wings.helpers.ext.helm.HelmDeployServiceImpl.KubeControllerStatus;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.security.EncryptionService;
@@ -158,77 +146,27 @@ public class ContainerDeploymentDelegateHelper {
     return kubernetesConfig;
   }
 
-  public KubeControllerStatus getControllerStatus(HasMetadata hasMetadata) {
-    if ("Deployment".equals(hasMetadata.getKind())) {
-      DeploymentStatus status = ((Deployment) hasMetadata).getStatus();
-      return KubeControllerStatus.builder()
-          .name(hasMetadata.getMetadata().getName())
-          .kind(hasMetadata.getKind())
-          .runningCount(status.getReadyReplicas() == null ? 0 : status.getReadyReplicas())
-          .desiredCount(status.getReplicas() == null ? 0 : status.getReplicas())
-          .build();
-    } else if ("StatefulSet".equals(hasMetadata.getKind())) {
-      StatefulSetStatus status = ((StatefulSet) hasMetadata).getStatus();
-      return KubeControllerStatus.builder()
-          .name(hasMetadata.getMetadata().getName())
-          .kind(hasMetadata.getKind())
-          .runningCount(status.getReadyReplicas() == null ? 0 : status.getReadyReplicas())
-          .desiredCount(status.getReplicas() == null ? 0 : status.getReplicas())
-          .build();
-    } else if ("ReplicaSet".equals(hasMetadata.getKind())) {
-      ReplicaSetStatus status = ((ReplicaSet) hasMetadata).getStatus();
-      return KubeControllerStatus.builder()
-          .name(hasMetadata.getMetadata().getName())
-          .kind(hasMetadata.getKind())
-          .runningCount(status.getReadyReplicas() == null ? 0 : status.getReadyReplicas())
-          .desiredCount(status.getReplicas() == null ? 0 : status.getReplicas())
-          .build();
-    } else if ("ReplicationController".equals(hasMetadata.getKind())) {
-      ReplicationControllerStatus status = ((ReplicationController) hasMetadata).getStatus();
-      return KubeControllerStatus.builder()
-          .name(hasMetadata.getMetadata().getName())
-          .kind(hasMetadata.getKind())
-          .runningCount(status.getReadyReplicas() == null ? 0 : status.getReadyReplicas())
-          .desiredCount(status.getReplicas() == null ? 0 : status.getReplicas())
-          .build();
-    } else if ("DaemonSet".equals(hasMetadata.getKind())) {
-      DaemonSetStatus status = ((DaemonSet) hasMetadata).getStatus();
-      return KubeControllerStatus.builder()
-          .name(hasMetadata.getMetadata().getName())
-          .kind(hasMetadata.getKind())
-          .runningCount(status.getNumberReady() == null ? 0 : status.getNumberReady())
-          .desiredCount(status.getDesiredNumberScheduled() == null ? 0 : status.getDesiredNumberScheduled())
-          .build();
-    } else {
-      throw new InvalidRequestException("Unhandled resource type" + hasMetadata.getKind());
-    }
-  }
-
   public List<ContainerInfo> getContainerInfosWhenReadyByLabels(ContainerServiceParams containerServiceParams,
       KubernetesConfig kubernetesConfig, ExecutionLogCallback executionLogCallback, Map<String, String> labels) {
     List<? extends HasMetadata> controllers = kubernetesContainerService.getControllers(
         kubernetesConfig, containerServiceParams.getEncryptionDetails(), labels);
 
-    List<KubeControllerStatus> controllerStatuses = controllers.stream()
-                                                        .map(this ::getControllerStatus)
-                                                        .filter(this ::steadyStateCheckRequired)
-                                                        .collect(Collectors.toList());
-
-    executionLogCallback.saveExecutionLog(String.format("Deployed Controllers [%s]:", controllerStatuses.size()));
-    controllerStatuses.forEach(kubeControllerStatus
-        -> executionLogCallback.saveExecutionLog(String.format("Kind:%s, Name:%s (desired: %s)",
-            kubeControllerStatus.getKind(), kubeControllerStatus.getName(), kubeControllerStatus.getDesiredCount())));
+    executionLogCallback.saveExecutionLog(String.format("Deployed Controllers [%s]:", controllers.size()));
+    controllers.forEach(controller
+        -> executionLogCallback.saveExecutionLog(String.format("Kind:%s, Name:%s (desired: %s)", controller.getKind(),
+            controller.getMetadata().getName(), kubernetesContainerService.getControllerPodCount(controller))));
 
     List<ContainerInfo> containerInfoList = new ArrayList<>();
-    if (controllerStatuses.size() > 0) {
+    if (controllers.size() > 0) {
       containerInfoList =
-          controllerStatuses.stream()
-              .flatMap(controllerStatus
+          controllers.stream()
+              .flatMap(controller
                   -> kubernetesContainerService
                          .getContainerInfosWhenReady(kubernetesConfig, containerServiceParams.getEncryptionDetails(),
-                             controllerStatus.getName(), 0, controllerStatus.getDesiredCount(),
+                             controller.getMetadata().getName(), 0,
+                             kubernetesContainerService.getControllerPodCount(controller),
                              (int) TimeUnit.MINUTES.toMinutes(30), new ArrayList<>(),
-                             controllerStatus.getKind().equals("DaemonSet"), executionLogCallback, true, 0)
+                             controller.getKind().equals("DaemonSet"), executionLogCallback, true, 0)
                          .stream())
               .collect(Collectors.toList());
     }
@@ -240,15 +178,5 @@ public class ContainerDeploymentDelegateHelper {
       ExecutionLogCallback executionLogCallback) {
     return getContainerInfosWhenReadyByLabels(
         containerServiceParams, kubernetesConfig, executionLogCallback, ImmutableMap.of(labelName, labelValue));
-  }
-
-  private boolean steadyStateCheckRequired(KubeControllerStatus controllerStatus) {
-    boolean noSteadyCheckRequire = (controllerStatus.getDesiredCount() == 0 && controllerStatus.getRunningCount() == 0)
-        || "Deployment".equals(controllerStatus.getKind());
-
-    if (noSteadyCheckRequire) {
-      logger.info("Controller doesn't need steady state check. [{}]", controllerStatus);
-    }
-    return !noSteadyCheckRequire;
   }
 }
