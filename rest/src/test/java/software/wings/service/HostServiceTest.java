@@ -35,12 +35,12 @@ import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.FieldEnd;
-import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.HostConnectionCredential;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
+import software.wings.dl.HQuery;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -69,7 +69,7 @@ public class HostServiceTest extends WingsBaseTest {
 
   @Inject @InjectMocks private HostService hostService;
 
-  @Mock private Query<Host> hostQuery;
+  @Mock private HQuery<Host> hostQuery;
   @Mock private FieldEnd hostQueryEnd;
   @Mock private UpdateOperations<Host> updateOperations;
 

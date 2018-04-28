@@ -12,11 +12,11 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.FieldEnd;
-import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
 import software.wings.beans.SearchFilter;
+import software.wings.dl.HQuery;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.FeatureFlagServiceImpl;
@@ -32,7 +32,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   private static final String TEST_ACCOUNT_ID_X = "TEST_ACCOUNT_ID_X";
   private static final String TEST_ACCOUNT_ID_Y = "TEST_ACCOUNT_ID_Y";
 
-  @Mock private Query<FeatureFlag> query;
+  @Mock private HQuery<FeatureFlag> query;
   @Mock private FieldEnd end;
   @Mock private WingsPersistence wingsPersistence;
 

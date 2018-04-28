@@ -2,12 +2,13 @@ package software.wings.dl;
 
 import static java.lang.String.format;
 
+import com.google.common.base.Throwables;
 import com.google.common.collect.Sets;
 
 import com.mongodb.DBCollection;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Key;
-import org.mongodb.morphia.query.CountOptions;
+import org.mongodb.morphia.query.Criteria;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.MorphiaKeyIterator;
@@ -81,18 +82,6 @@ public class HQuery<T> extends QueryImpl<T> {
   }
 
   @Override
-  public long count(CountOptions options) {
-    enforceHarnessRules();
-    return super.count(options);
-  }
-
-  @Override
-  public MorphiaIterator<T, T> fetch(FindOptions options) {
-    enforceHarnessRules();
-    return super.fetch(options);
-  }
-
-  @Override
   public MorphiaIterator<T, T> fetchEmptyEntities(FindOptions options) {
     enforceHarnessRules();
     return super.fetchEmptyEntities(options);
@@ -102,18 +91,6 @@ public class HQuery<T> extends QueryImpl<T> {
   public MorphiaKeyIterator<T> fetchKeys(FindOptions options) {
     enforceHarnessRules();
     return super.fetchKeys(options);
-  }
-
-  @Override
-  public T get(FindOptions options) {
-    enforceHarnessRules();
-    return super.get(options);
-  }
-
-  @Override
-  public Key<T> getKey(FindOptions options) {
-    enforceHarnessRules();
-    return super.getKey(options);
   }
 
   @Override
@@ -129,13 +106,14 @@ public class HQuery<T> extends QueryImpl<T> {
   }
 
   private void enforceHarnessRules() {
-    /* TODO:: Enable when across accounts queries are handled
     boolean requiredArgFound = exemptedRequest
         || this.getChildren().stream().map(Criteria::getFieldName).anyMatch(requiredFilterArgs::contains);
     if (!requiredArgFound) {
-      throw new WingsException(INVALID_REQUEST,
-          "appId or accountId must be present in any List(Object/Key)/Get/Count/Search operation");
+      //      throw new WingsException(INVALID_REQUEST,
+      //          "appId or accountId must be present in any List(Object/Key)/Get/Count/Search query");
+      logger.warn(
+          "HQUERY-ENFORCEMENT: appId or accountId must be present in any List(Object/Key)/Get/Count/Search query. ST: [{}]",
+          Throwables.getStackTraceAsString(new Throwable()));
     }
-    */
   }
 }

@@ -8,10 +8,12 @@ import static java.util.stream.Collectors.toSet;
 import com.google.api.client.repackaged.com.google.common.base.Throwables;
 import com.google.inject.Inject;
 
+import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
+import software.wings.dl.HQuery;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FeatureFlagService;
 
@@ -27,7 +29,10 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
 
   @Override
   public boolean isEnabled(@NotNull FeatureName featureName, String accountId) {
-    FeatureFlag featureFlag = wingsPersistence.createQuery(FeatureFlag.class).filter("name", featureName.name()).get();
+    Query<FeatureFlag> query = wingsPersistence.createQuery(FeatureFlag.class);
+    ((HQuery) query).setExemptedRequest(true);
+
+    FeatureFlag featureFlag = query.filter("name", featureName.name()).get();
 
     if (featureFlag == null) {
       // we don't want to throw an exception - we just want to log the error

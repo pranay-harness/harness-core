@@ -72,6 +72,7 @@ import software.wings.WingsTestModule;
 import software.wings.app.CacheModule;
 import software.wings.app.DatabaseModule;
 import software.wings.app.ExecutorModule;
+import software.wings.app.HQueryFactory;
 import software.wings.app.LicenseModule;
 import software.wings.app.MainConfiguration;
 import software.wings.app.QueueModule;
@@ -199,6 +200,7 @@ public class WingsRule implements MethodRule {
     Morphia morphia = new Morphia();
     morphia.getMapper().getOptions().setObjectFactory(new NoDefaultConstructorMorphiaObjectFactory());
     datastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, dbName);
+    datastore.setQueryFactory(new HQueryFactory());
     DistributedLockSvcOptions distributedLockSvcOptions = new DistributedLockSvcOptions(mongoClient, dbName, "locks");
     distributedLockSvcOptions.setEnableHistory(false);
     distributedLockSvc =

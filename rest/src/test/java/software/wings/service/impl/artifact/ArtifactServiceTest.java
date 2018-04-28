@@ -39,7 +39,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
-import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.EmbeddedUser;
@@ -60,6 +59,7 @@ import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.collect.CollectEvent;
 import software.wings.common.Constants;
 import software.wings.core.queue.Queue;
+import software.wings.dl.HQuery;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -84,7 +84,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Mock private FileService fileService;
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private AppService appService;
-  @Mock private Query<Application> appQuery;
+  @Mock private HQuery<Application> appQuery;
   @Mock private Queue<CollectEvent> collectQueue;
   @Mock private ServiceResourceService serviceResourceService;
 

@@ -48,7 +48,6 @@ import org.mockito.Captor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
@@ -65,6 +64,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.common.Constants;
+import software.wings.dl.HQuery;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -95,8 +95,8 @@ public class PipelineServiceTest extends WingsBaseTest {
   @Mock private WorkflowService workflowService;
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private UpdateOperations<Pipeline> updateOperations;
-  @Mock private Query<PipelineExecution> query;
-  @Mock private Query<Pipeline> pipelineQuery;
+  @Mock private HQuery<PipelineExecution> query;
+  @Mock private HQuery<Pipeline> pipelineQuery;
   @Mock private JobScheduler jobScheduler;
   @Mock private YamlDirectoryService yamlDirectoryService;
 

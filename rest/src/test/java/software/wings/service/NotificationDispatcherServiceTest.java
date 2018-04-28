@@ -26,7 +26,6 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.FieldEnd;
-import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.InformationNotification;
@@ -38,6 +37,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SlackConfig;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.common.NotificationMessageResolver.ChannelTemplate.EmailTemplate;
+import software.wings.dl.HQuery;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.NotificationDispatcherService;
@@ -62,7 +62,7 @@ public class NotificationDispatcherServiceTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
   @Mock private NotificationMessageResolver notificationMessageResolver;
 
-  @Mock private Query<NotificationBatch> query;
+  @Mock private HQuery<NotificationBatch> query;
   @Mock private FieldEnd end;
   @Mock private UpdateOperations<NotificationBatch> updateOperations;
 

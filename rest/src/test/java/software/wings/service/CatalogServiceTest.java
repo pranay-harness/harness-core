@@ -4,15 +4,14 @@ import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.CatalogItem.Builder.aCatalogItem;
 import static software.wings.beans.FeatureName.WINRM_SUPPORT;
 
 import com.google.inject.Inject;
 
-import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +23,6 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.utils.JsonUtils;
 import software.wings.utils.YamlUtils;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -36,12 +34,7 @@ import java.util.Map;
 public class CatalogServiceTest extends WingsBaseTest {
   private static final Logger logger = LoggerFactory.getLogger(JsonUtils.class);
   @Mock private FeatureFlagService mockFeatureFlagService;
-  @Inject private CatalogService catalogService;
-
-  @Before
-  public void setup() throws IOException {
-    initMocks(this);
-  }
+  @Inject @InjectMocks private CatalogService catalogService;
 
   /**
    * Should get cardview sort by.
