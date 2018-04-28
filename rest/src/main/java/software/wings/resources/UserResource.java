@@ -173,7 +173,7 @@ public class UserResource {
    * @return the rest response
    */
   @PUT
-  @Path("{userId}")
+  @Path("user/{userId}")
   @Scope(value = ResourceType.USER, scope = PermissionType.LOGGED_IN)
   @Timed
   @ExceptionMetered

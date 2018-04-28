@@ -109,7 +109,6 @@ public class PauseStateTest extends WingsBaseTest {
                   .cc(Lists.newArrayList("cc1", "cc2"))
                   .subject("subject")
                   .body("body")
-                  .system(true)
                   .build());
   }
 }

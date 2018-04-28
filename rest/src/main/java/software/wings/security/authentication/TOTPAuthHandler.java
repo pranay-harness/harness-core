@@ -1,10 +1,8 @@
 package software.wings.security.authentication;
 
-import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.exception.WingsException.USER;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -17,7 +15,11 @@ import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.UserService;
 
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Singleton
 public class TOTPAuthHandler implements TwoFactorAuthHandler {
@@ -54,7 +56,7 @@ public class TOTPAuthHandler implements TwoFactorAuthHandler {
   public TwoFactorAuthenticationSettings createTwoFactorAuthenticationSettings(User user) {
     String secretKey = generateTotpSecret();
     String otpUrl =
-        generateOtpUrl(authenticationUtil.getPrimaryAccount(user).get().getCompanyName(), user.getEmail(), secretKey);
+        generateOtpUrl(authenticationUtil.getPrimaryAccount(user).getCompanyName(), user.getEmail(), secretKey);
     return TwoFactorAuthenticationSettings.builder()
         .mechanism(getAuthenticationMechanism())
         .totpqrurl(otpUrl)
@@ -94,12 +96,18 @@ public class TOTPAuthHandler implements TwoFactorAuthHandler {
   public boolean resetAndSendEmail(User user) {
     TwoFactorAuthenticationSettings settings = createTwoFactorAuthenticationSettings(user);
     applyTwoFactorAuthenticationSettings(user, settings);
+    Map<String, String> templateModel = new HashMap<>();
+    templateModel.put("name", user.getName());
+    templateModel.put("totpSecret", settings.getTotpSecretKey());
+    templateModel.put("totpUrl", settings.getTotpqrurl());
+
+    List<String> toList = new ArrayList();
+    toList.add(user.getEmail());
     EmailData emailData = EmailData.builder()
-                              .to(asList(user.getEmail()))
+                              .to(toList)
                               .templateName("reset_2fa")
-                              .templateModel(ImmutableMap.of("name", user.getName(), "totpSecret",
-                                  settings.getTotpSecretKey(), "totpUrl", settings.getTotpqrurl()))
-                              .system(true)
+                              .templateModel(templateModel)
+                              .accountId(authenticationUtil.getPrimaryAccount(user).getUuid())
                               .build();
     emailData.setCc(Collections.emptyList());
     emailData.setRetries(2);

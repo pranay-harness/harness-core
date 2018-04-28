@@ -335,5 +335,11 @@ software.wings.api.pcf.PcfSwapRouteMapStateExecutionData, 5299
 software.wings.api.pcf.PcfRouteSwapExecutionSummary, 5300
 software.wings.helpers.ext.pcf.request.PcfInstanceSyncRequest, 5301
 software.wings.helpers.ext.pcf.response.PcfInstanceSyncResponse, 5302
-
-
+software.wings.helpers.ext.mail.EmailData, 5303
+software.wings.helpers.ext.mail.SmtpConfig, 5304
+software.wings.service.intfc.security.EncryptionConfig, 5305
+software.wings.helpers.ext.external.comm.CollaborationProviderRequest, 5306
+software.wings.helpers.ext.external.comm.CollaborationProviderRequest$CommunicationType, 5307
+software.wings.helpers.ext.external.comm.CollaborationProviderResponse, 5308
+software.wings.helpers.ext.external.comm.EmailRequest,5309
+software.wings.beans.Permission,5310

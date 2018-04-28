@@ -31,5 +31,6 @@ public enum TaskGroup {
   CONTAINER,
   AMI,
   HELM,
+  COLLABORATION_PROVIDER,
   PCF
 }

@@ -47,7 +47,7 @@ public class SamlClientService {
   }
 
   public SamlRequest generateSamlRequest(User user) {
-    Account primaryAccount = authenticationUtil.getPrimaryAccount(user).get();
+    Account primaryAccount = authenticationUtil.getPrimaryAccount(user);
     if (primaryAccount.getAuthenticationMechanism().equals(AuthenticationMechanism.SAML)) {
       SamlRequest samlRequest = new SamlRequest();
       try {

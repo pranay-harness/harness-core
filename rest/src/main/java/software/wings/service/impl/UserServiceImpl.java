@@ -100,6 +100,7 @@ import software.wings.utils.KryoUtils;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -193,11 +194,17 @@ public class UserServiceImpl implements UserService {
       String loginUrl = buildAbsoluteUrl(String.format("/login?company=%s&account=%s&email=%s",
           account.getCompanyName(), account.getCompanyName(), user.getEmail()));
 
+      Map<String, String> templateModel = new HashMap<>();
+      templateModel.put("name", user.getName());
+      templateModel.put("url", loginUrl);
+      templateModel.put("company", account.getCompanyName());
+      List<String> toList = new ArrayList();
+      toList.add(user.getEmail());
       EmailData emailData = EmailData.builder()
-                                .to(asList(user.getEmail()))
+                                .to(toList)
                                 .templateName("add_account")
-                                .templateModel(ImmutableMap.of(
-                                    "name", user.getName(), "url", loginUrl, "company", account.getCompanyName()))
+                                .templateModel(templateModel)
+                                .accountId(account.getUuid())
                                 .system(true)
                                 .build();
       emailData.setCc(Collections.emptyList());
@@ -247,11 +254,16 @@ public class UserServiceImpl implements UserService {
       String verificationUrl =
           buildAbsoluteUrl(configuration.getPortal().getVerificationUrl() + "/" + emailVerificationToken.getToken());
 
+      Map<String, String> templateModel = new HashMap();
+      templateModel.put("name", user.getName());
+      templateModel.put("url", verificationUrl);
+      List<String> toList = new ArrayList();
+      toList.add(user.getEmail());
       EmailData emailData = EmailData.builder()
-                                .to(asList(user.getEmail()))
+                                .to(toList)
                                 .templateName(SIGNUP_EMAIL_TEMPLATE_NAME)
-                                .templateModel(ImmutableMap.of("name", user.getName(), "url", verificationUrl))
-                                .system(true)
+                                .templateModel(templateModel)
+                                .accountId(getPrimaryAccount(user).getUuid())
                                 .build();
       emailData.setCc(Collections.emptyList());
       emailData.setRetries(2);
@@ -260,6 +272,10 @@ public class UserServiceImpl implements UserService {
     } catch (URISyntaxException e) {
       logger.error("Verification email couldn't be sent", e);
     }
+  }
+
+  private Account getPrimaryAccount(User user) {
+    return user.getAccounts().get(0);
   }
 
   private String buildAbsoluteUrl(String fragment) throws URISyntaxException {
@@ -389,11 +405,16 @@ public class UserServiceImpl implements UserService {
           String.format("/invite?accountId=%s&account=%s&company=%s&email=%s&inviteId=%s", account.getUuid(),
               account.getAccountName(), account.getCompanyName(), userInvite.getEmail(), userInvite.getUuid()));
 
+      Map<String, String> templateModel = new HashMap<>();
+      templateModel.put("url", inviteUrl);
+      templateModel.put("company", account.getCompanyName());
+      List<String> toList = new ArrayList();
+      toList.add(userInvite.getEmail());
       EmailData emailData = EmailData.builder()
-                                .to(asList(userInvite.getEmail()))
+                                .to(toList)
                                 .templateName(INVITE_EMAIL_TEMPLATE_NAME)
-                                .templateModel(ImmutableMap.of("url", inviteUrl, "company", account.getCompanyName()))
-                                .system(true)
+                                .templateModel(templateModel)
+                                .accountId(account.getUuid())
                                 .build();
       emailData.setCc(Collections.emptyList());
       emailData.setRetries(2);
@@ -409,12 +430,18 @@ public class UserServiceImpl implements UserService {
       String loginUrl = buildAbsoluteUrl(String.format("/login?company=%s&account=%s&email=%s",
           account.getCompanyName(), account.getCompanyName(), user.getEmail()));
 
+      Map<String, Object> templateModel = new HashMap<>();
+      templateModel.put("name", user.getName());
+      templateModel.put("url", loginUrl);
+      templateModel.put("company", account.getCompanyName());
+      templateModel.put("roles", roles);
+      List<String> toList = new ArrayList();
+      toList.add(user.getEmail());
       EmailData emailData = EmailData.builder()
-                                .to(asList(user.getEmail()))
+                                .to(toList)
                                 .templateName(ADD_ROLE_EMAIL_TEMPLATE_NAME)
-                                .templateModel(ImmutableMap.of("name", user.getName(), "url", loginUrl, "company",
-                                    account.getCompanyName(), "roles", roles))
-                                .system(true)
+                                .templateModel(templateModel)
+                                .accountId(account.getUuid())
                                 .build();
       emailData.setCc(Collections.emptyList());
       emailData.setRetries(2);
@@ -552,11 +579,16 @@ public class UserServiceImpl implements UserService {
     try {
       String resetPasswordUrl = buildAbsoluteUrl("/reset-password/" + token);
 
+      Map<String, String> templateModel = new HashMap<>();
+      templateModel.put("name", user.getName());
+      templateModel.put("url", resetPasswordUrl);
+      List<String> toList = new ArrayList();
+      toList.add(user.getEmail());
       EmailData emailData = EmailData.builder()
-                                .to(asList(user.getEmail()))
+                                .to(toList)
                                 .templateName("reset_password")
-                                .templateModel(ImmutableMap.of("name", user.getName(), "url", resetPasswordUrl))
-                                .system(true)
+                                .templateModel(templateModel)
+                                .accountId(getPrimaryAccount(user).getUuid())
                                 .build();
       emailData.setCc(Collections.emptyList());
       emailData.setRetries(2);
