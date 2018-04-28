@@ -34,7 +34,7 @@ public class SshJumpboxExecutor extends AbstractSshExecutor {
     try {
       return SshSessionFactory.getSSHSessionWithJumpbox(config);
     } catch (JSchException jschEx) {
-      throw new WingsException(normalizeError(jschEx), normalizeError(jschEx).getCode(), jschEx);
+      throw new WingsException(normalizeError(jschEx), normalizeError(jschEx).name(), jschEx);
     }
   }
 }

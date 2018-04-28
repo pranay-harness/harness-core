@@ -152,10 +152,10 @@ public class ContainerServiceImpl implements ContainerService {
           ResponseMessage responseMessage = ex.getResponseMessage();
           ErrorCode errorCode = responseMessage.getCode();
           if (errorCode != null) {
-            if (ErrorCode.AWS_CLUSTER_NOT_FOUND.getCode().equals(errorCode.getCode())) {
+            if (ErrorCode.AWS_CLUSTER_NOT_FOUND == errorCode) {
               logger.info("ECS Cluster not found for service name:" + containerServiceName);
               continue;
-            } else if (ErrorCode.AWS_SERVICE_NOT_FOUND.getCode().equals(errorCode.getCode())) {
+            } else if (ErrorCode.AWS_SERVICE_NOT_FOUND == errorCode) {
               logger.info("ECS Service not found for service name:" + containerServiceName);
               continue;
             }

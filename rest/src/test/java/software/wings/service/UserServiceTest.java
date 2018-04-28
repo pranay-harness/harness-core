@@ -340,7 +340,7 @@ public class UserServiceTest extends WingsBaseTest {
   public void shouldThrowExceptionIfUserDoesNotExist() {
     assertThatThrownBy(() -> userService.get("INVALID_USER_ID"))
         .isInstanceOf(WingsException.class)
-        .hasMessage(USER_DOES_NOT_EXIST.getCode());
+        .hasMessage(USER_DOES_NOT_EXIST.name());
   }
 
   /**

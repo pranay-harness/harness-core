@@ -61,7 +61,7 @@ public class HostValidationServiceImpl implements HostValidationService {
           } catch (JSchException jschEx) {
             ErrorCode errorCode = normalizeError(jschEx);
             response.setStatus(ExecutionStatus.FAILED.name());
-            response.setErrorCode(errorCode.getCode());
+            response.setErrorCode(errorCode.name());
             response.setErrorDescription(errorCode.getDescription());
           }
           hostValidationResponses.add(response);
@@ -75,7 +75,7 @@ public class HostValidationServiceImpl implements HostValidationService {
         hostValidationResponses.add(HostValidationResponse.Builder.aHostValidationResponse()
                                         .withHostName(hostNames.get(idx))
                                         .withStatus(ExecutionStatus.FAILED.name())
-                                        .withErrorCode(ErrorCode.REQUEST_TIMEOUT.getCode())
+                                        .withErrorCode(ErrorCode.REQUEST_TIMEOUT.name())
                                         .withErrorDescription(ErrorCode.REQUEST_TIMEOUT.getDescription())
                                         .build());
       }
@@ -86,7 +86,7 @@ public class HostValidationServiceImpl implements HostValidationService {
         hostValidationResponses.add(HostValidationResponse.Builder.aHostValidationResponse()
                                         .withHostName(hostNames.get(idx))
                                         .withStatus(ExecutionStatus.FAILED.name())
-                                        .withErrorCode(ErrorCode.UNKNOWN_ERROR.getCode())
+                                        .withErrorCode(ErrorCode.UNKNOWN_ERROR.name())
                                         .withErrorDescription(ErrorCode.UNKNOWN_ERROR.getDescription())
                                         .build());
       }

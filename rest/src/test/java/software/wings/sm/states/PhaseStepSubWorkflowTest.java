@@ -116,7 +116,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
       assertThat(response).isNotNull();
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(INVALID_REQUEST.getCode());
+      assertThat(exception).hasMessage(INVALID_REQUEST.name());
       assertThat(exception.getParams()).hasSize(1);
       assertThat(exception.getParams()).containsKey("message");
       assertThat(exception.getParams().get("message")).asString().contains("null phaseStepType");
@@ -234,7 +234,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
     try {
       phaseStepSubWorkflow.handleAsyncResponse(context, notifyResponse);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(INVALID_REQUEST.getCode());
+      assertThat(exception).hasMessage(INVALID_REQUEST.name());
       assertThat(exception.getParams()).hasSize(1);
       assertThat(exception.getParams()).containsKey("message");
       assertThat(exception.getParams().get("message")).asString().contains("Missing response");
@@ -301,7 +301,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
     try {
       phaseStepSubWorkflow.handleAsyncResponse(context, notifyResponse);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(INVALID_REQUEST.getCode());
+      assertThat(exception).hasMessage(INVALID_REQUEST.name());
       assertThat(exception.getParams()).hasSize(1);
       assertThat(exception.getParams()).containsKey("message");
       assertThat(exception.getParams().get("message")).asString().contains("Missing response");

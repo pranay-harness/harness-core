@@ -60,9 +60,9 @@ public class ResponseCodeCache {
   }
 
   public String prepareMessage(ErrorCode errorCode, Map<String, Object> params) {
-    String message = messages.getProperty(errorCode.getCode());
+    String message = messages.getProperty(errorCode.name());
     if (message == null) {
-      logger.error("Response message for error code {} is not provided!", errorCode.getCode());
+      logger.error("Response message for error code {} is not provided!", errorCode.name());
       message = errorCode.name();
     }
     return prepareMessage(message, params);
