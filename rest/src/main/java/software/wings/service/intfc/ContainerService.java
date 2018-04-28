@@ -7,6 +7,7 @@ import software.wings.service.impl.ContainerServiceParams;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public interface ContainerService {
   @DelegateTaskType(TaskType.CONTAINER_ACTIVE_SERVICE_COUNTS)
@@ -14,6 +15,9 @@ public interface ContainerService {
 
   @DelegateTaskType(TaskType.CONTAINER_INFO)
   List<ContainerInfo> getContainerInfos(ContainerServiceParams containerServiceParams);
+
+  @DelegateTaskType(TaskType.CONTROLLER_NAMES_WITH_LABELS)
+  Set<String> getControllerNames(ContainerServiceParams containerServiceParams, Map<String, String> labels);
 
   @DelegateTaskType(TaskType.CONTAINER_CONNECTION_VALIDATION)
   Boolean validate(ContainerServiceParams containerServiceParams);

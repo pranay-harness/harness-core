@@ -168,6 +168,7 @@ public enum TaskType {
   CONTAINER_SERVICE_DESIRED_COUNT(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class, true),
   CONTAINER_ACTIVE_SERVICE_COUNTS(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
   CONTAINER_INFO(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
+  CONTROLLER_NAMES_WITH_LABELS(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
   AMI_GET_BUILDS(TaskGroup.AMI, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   CONTAINER_DAEMON_SET_YAML(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class, true),
   CONTAINER_ACTIVE_AUTOSCALERS(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class, true),
