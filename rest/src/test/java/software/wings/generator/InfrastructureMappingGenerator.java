@@ -74,7 +74,7 @@ public class InfrastructureMappingGenerator {
 
     Service service = owners.obtainService();
     if (service == null) {
-      service = serviceGenerator.ensurePredefined(seed, Services.GENERIC_TEST);
+      service = serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST);
       owners.add(service);
     }
 
@@ -198,9 +198,8 @@ public class InfrastructureMappingGenerator {
           builder.withServiceId(infrastructureMapping.getServiceId());
         } else {
           Service service = owners.obtainService();
-
           if (service == null) {
-            service = serviceGenerator.ensureRandom(seed);
+            service = serviceGenerator.ensureRandom(seed, owners);
             owners.add(service);
           }
           builder.withServiceId(service.getUuid());
