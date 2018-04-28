@@ -51,8 +51,8 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private WorkflowNotificationHelper workflowNotificationHelper;
-  @javax.inject.Inject private Queue<ExecutionEvent> executionEventQueue;
-  @javax.inject.Inject private AlertService alertService;
+  @Inject private Queue<ExecutionEvent> executionEventQueue;
+  @Inject private AlertService alertService;
   @Inject private TriggerService triggerService;
   @Inject private BarrierService barrierService;
 
