@@ -82,7 +82,7 @@ public class JenkinsStateTest {
     verify(delegateService).queueTask(delegateTaskArgumentCaptor.capture());
     assertThat(delegateTaskArgumentCaptor.getValue())
         .isNotNull()
-        .hasFieldOrPropertyWithValue("taskType", JENKINS)
+        .hasFieldOrPropertyWithValue("taskType", JENKINS.name())
         .hasFieldOrProperty("parameters");
   }
 

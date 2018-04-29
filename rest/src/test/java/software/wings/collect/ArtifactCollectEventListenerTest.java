@@ -101,7 +101,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
     verify(delegateService).queueTask(delegateTaskArgumentCaptor.capture());
     assertThat(delegateTaskArgumentCaptor.getValue())
         .isNotNull()
-        .hasFieldOrPropertyWithValue("taskType", JENKINS_COLLECTION)
+        .hasFieldOrPropertyWithValue("taskType", JENKINS_COLLECTION.name())
         .hasFieldOrProperty("parameters");
   }
 
@@ -135,7 +135,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
     verify(delegateService).queueTask(delegateTaskArgumentCaptor.capture());
     assertThat(delegateTaskArgumentCaptor.getValue())
         .isNotNull()
-        .hasFieldOrPropertyWithValue("taskType", BAMBOO_COLLECTION)
+        .hasFieldOrPropertyWithValue("taskType", BAMBOO_COLLECTION.name())
         .hasFieldOrProperty("parameters");
   }
 

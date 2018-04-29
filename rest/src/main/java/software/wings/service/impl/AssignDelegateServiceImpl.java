@@ -19,6 +19,7 @@ import software.wings.beans.DelegateScope;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.TaskGroup;
+import software.wings.beans.TaskType;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
@@ -46,8 +47,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   @Override
   public boolean canAssign(String delegateId, DelegateTask task) {
     return canAssign(delegateId, task.getAccountId(), task.getAppId(), task.getEnvId(),
-        task.getInfrastructureMappingId(), task.getTaskType() != null ? task.getTaskType().getTaskGroup() : null,
-        task.getTags());
+        task.getInfrastructureMappingId(),
+        isNotBlank(task.getTaskType()) ? TaskType.valueOf(task.getTaskType()).getTaskGroup() : null, task.getTags());
   }
 
   @Override
@@ -112,7 +113,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   @Override
   public boolean isWhitelisted(DelegateTask task, String delegateId) {
     try {
-      for (String criteria : task.getTaskType().getCriteria(task, injector)) {
+      for (String criteria : TaskType.valueOf(task.getTaskType()).getCriteria(task, injector)) {
         if (isNotBlank(criteria)) {
           DelegateConnectionResult result = wingsPersistence.createQuery(DelegateConnectionResult.class)
                                                 .filter("accountId", task.getAccountId())
@@ -143,7 +144,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
                                             .map(key -> key.getId().toString())
                                             .collect(toList());
 
-      for (String criteria : task.getTaskType().getCriteria(task, injector)) {
+      for (String criteria : TaskType.valueOf(task.getTaskType()).getCriteria(task, injector)) {
         if (isNotBlank(criteria)) {
           DelegateConnectionResult result = wingsPersistence.createQuery(DelegateConnectionResult.class)
                                                 .filter("accountId", task.getAccountId())
