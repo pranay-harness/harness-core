@@ -1,6 +1,5 @@
 package software.wings.beans;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.common.Constants.DEFAULT_SYNC_CALL_TIMEOUT;
 
@@ -31,8 +30,7 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "delegateTasks", noClassnameStored = true)
 @Converters(Converter.class)
 public class DelegateTask extends Base {
-  @NotNull private TaskType taskType;
-  private String taskTypeName;
+  @NotNull private String taskType;
   private Object[] parameters;
   private List<String> tags = new ArrayList<>();
   @NotEmpty private String accountId;
@@ -55,26 +53,12 @@ public class DelegateTask extends Base {
     return getLastUpdatedAt() + timeout <= System.currentTimeMillis();
   }
 
-  public TaskType getTaskType() {
-    if (isNotBlank(taskTypeName)) {
-      return TaskType.valueOf(taskTypeName);
-    }
+  public String getTaskType() {
     return taskType;
   }
 
-  public void setTaskType(TaskType taskType) {
+  public void setTaskType(String taskType) {
     this.taskType = taskType;
-    if (taskType != null) {
-      this.taskTypeName = taskType.name();
-    }
-  }
-
-  public String getTaskTypeName() {
-    return taskTypeName;
-  }
-
-  public void setTaskTypeName(String taskTypeName) {
-    this.taskTypeName = taskTypeName;
   }
 
   public Object[] getParameters() {
@@ -224,11 +208,11 @@ public class DelegateTask extends Base {
       return false;
     }
     DelegateTask that = (DelegateTask) o;
-    return timeout == that.timeout && async == that.async && taskType == that.taskType
-        && Objects.equals(taskTypeName, that.taskTypeName) && Arrays.equals(parameters, that.parameters)
-        && Objects.equals(tags, that.tags) && Objects.equals(accountId, that.accountId)
-        && Objects.equals(waitId, that.waitId) && status == that.status && Objects.equals(delegateId, that.delegateId)
-        && Objects.equals(envId, that.envId) && Objects.equals(infrastructureMappingId, that.infrastructureMappingId)
+    return timeout == that.timeout && async == that.async && Objects.equals(taskType, that.taskType)
+        && Arrays.equals(parameters, that.parameters) && Objects.equals(tags, that.tags)
+        && Objects.equals(accountId, that.accountId) && Objects.equals(waitId, that.waitId) && status == that.status
+        && Objects.equals(delegateId, that.delegateId) && Objects.equals(envId, that.envId)
+        && Objects.equals(infrastructureMappingId, that.infrastructureMappingId)
         && Objects.equals(delegateRunnableTask, that.delegateRunnableTask)
         && Objects.equals(notifyResponse, that.notifyResponse)
         && Arrays.equals(serializedNotifyResponseData, that.serializedNotifyResponseData);
@@ -236,18 +220,17 @@ public class DelegateTask extends Base {
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), taskType, taskTypeName, parameters, tags, accountId, waitId, status,
-        delegateId, timeout, async, envId, infrastructureMappingId, delegateRunnableTask, notifyResponse,
-        serializedNotifyResponseData);
+    return Objects.hash(super.hashCode(), taskType, parameters, tags, accountId, waitId, status, delegateId, timeout,
+        async, envId, infrastructureMappingId, delegateRunnableTask, notifyResponse, serializedNotifyResponseData);
   }
 
   @Override
   public String toString() {
     return "DelegateTask{"
-        + "taskType=" + taskType + "taskTypeName=" + taskTypeName + ", parameters=" + Arrays.toString(parameters)
-        + ", tag='" + tags + '\'' + ", accountId='" + accountId + '\'' + ", waitId='" + waitId + '\'' + '\''
-        + ", status=" + status + ", delegateId='" + delegateId + '\'' + ", timeout=" + timeout + ", async=" + async
-        + ", envId='" + envId + '\'' + ", infrastructureMappingId='" + infrastructureMappingId + '\''
+        + "taskType=" + taskType + ", parameters=" + Arrays.toString(parameters) + ", tag='" + tags + '\''
+        + ", accountId='" + accountId + '\'' + ", waitId='" + waitId + '\'' + '\'' + ", status=" + status
+        + ", delegateId='" + delegateId + '\'' + ", timeout=" + timeout + ", async=" + async + ", envId='" + envId
+        + '\'' + ", infrastructureMappingId='" + infrastructureMappingId + '\''
         + ", delegateRunnableTask=" + delegateRunnableTask + ", notifyResponse=" + notifyResponse + '}';
   }
 
@@ -478,7 +461,7 @@ public class DelegateTask extends Base {
 
     public DelegateTask build() {
       DelegateTask delegateTask = new DelegateTask();
-      delegateTask.setTaskType(taskType);
+      delegateTask.setTaskType(taskType != null ? taskType.name() : null);
       delegateTask.setParameters(parameters);
       delegateTask.setTags(tags);
       delegateTask.setAccountId(accountId);

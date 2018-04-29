@@ -7,7 +7,6 @@ import com.google.inject.name.Named;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
-import software.wings.beans.TaskType;
 import software.wings.waitnotify.ErrorNotifyResponseData;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -35,7 +34,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
   private String accountId;
   private String appId;
   private String taskId;
-  private TaskType taskType;
+  private String taskType;
   private boolean isAsync;
   private Object[] parameters;
   private Consumer<NotifyResponseData> consumer;
@@ -132,7 +131,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
     return parameters;
   }
 
-  public TaskType getTaskType() {
+  public String getTaskType() {
     return taskType;
   }
 

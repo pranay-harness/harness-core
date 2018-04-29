@@ -76,6 +76,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.Event.Type;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
+import software.wings.beans.TaskType;
 import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.DelegatesDownAlert;
@@ -578,7 +579,7 @@ public class DelegateServiceImpl implements DelegateService {
                                        .filter("connected", true)
                                        .filter("status", Status.ENABLED)
                                        .field("supportedTaskTypes")
-                                       .hasAllOf(asList(task.getTaskType().name()))
+                                       .hasAllOf(asList(task.getTaskType()))
                                        .field("lastHeartBeat")
                                        .greaterThan(clock.millis() - MAX_DELEGATE_LAST_HEARTBEAT)
                                        .asKeyList()
@@ -604,7 +605,7 @@ public class DelegateServiceImpl implements DelegateService {
               .withAppId(task.getAppId())
               .withEnvId(task.getEnvId())
               .withInfraMappingId(task.getInfrastructureMappingId())
-              .withTaskGroup(task.getTaskType().getTaskGroup())
+              .withTaskGroup(TaskType.valueOf(task.getTaskType()).getTaskGroup())
               .build());
     }
 
@@ -800,7 +801,7 @@ public class DelegateServiceImpl implements DelegateService {
         if (waitId != null) {
           waitNotifyEngine.notify(waitId, response.getResponse());
         } else {
-          logger.error("Async task {} with type {} has no wait ID", task.getUuid(), task.getTaskType().name());
+          logger.error("Async task {} with type {} has no wait ID", task.getUuid(), task.getTaskType());
         }
         wingsPersistence.delete(wingsPersistence.createQuery(DelegateTask.class)
                                     .filter("accountId", response.getAccountId())
@@ -825,7 +826,7 @@ public class DelegateServiceImpl implements DelegateService {
             .addFilter("status", EQ, Status.ENABLED)
             .build());
 
-    if (delegate != null && delegate.getSupportedTaskTypes().contains(task.getTaskType().name())) {
+    if (delegate != null && delegate.getSupportedTaskTypes().contains(task.getTaskType())) {
       qualifies = true;
     }
 

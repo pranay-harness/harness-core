@@ -784,8 +784,9 @@ public class DelegateServiceImpl implements DelegateService {
 
       if (isEmpty(delegateTask.getDelegateId())) {
         // Not whitelisted. Perform validation.
-        DelegateValidateTask delegateValidateTask = delegateTask.getTaskType().getDelegateValidateTask(
-            delegateId, delegateTask, getPostValidationFunction(delegateTaskEvent, delegateTask));
+        DelegateValidateTask delegateValidateTask = TaskType.valueOf(delegateTask.getTaskType())
+                                                        .getDelegateValidateTask(delegateId, delegateTask,
+                                                            getPostValidationFunction(delegateTaskEvent, delegateTask));
         injector.injectMembers(delegateValidateTask);
         currentlyValidatingTasks.put(delegateTask.getUuid(), delegateTask);
         currentlyExecutingFutures.put(delegateTask.getUuid(), executorService.submit(delegateValidateTask));
@@ -847,8 +848,10 @@ public class DelegateServiceImpl implements DelegateService {
   private void executeTask(DelegateTaskEvent delegateTaskEvent, @NotNull DelegateTask delegateTask) {
     logger.info("DelegateTask acquired - uuid: {}, accountId: {}, taskType: {}", delegateTask.getUuid(), accountId,
         delegateTask.getTaskType());
-    DelegateRunnableTask delegateRunnableTask = delegateTask.getTaskType().getDelegateRunnableTask(delegateId,
-        delegateTask, getPostExecutionFunction(delegateTask), getPreExecutionFunction(delegateTaskEvent, delegateTask));
+    DelegateRunnableTask delegateRunnableTask =
+        TaskType.valueOf(delegateTask.getTaskType())
+            .getDelegateRunnableTask(delegateId, delegateTask, getPostExecutionFunction(delegateTask),
+                getPreExecutionFunction(delegateTaskEvent, delegateTask));
     injector.injectMembers(delegateRunnableTask);
     currentlyExecutingFutures.put(delegateTask.getUuid(), executorService.submit(delegateRunnableTask));
     executorService.submit(() -> enforceDelegateTaskTimeout(delegateTask));

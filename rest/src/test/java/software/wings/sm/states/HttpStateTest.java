@@ -52,6 +52,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.TaskType;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.sm.ContextElementType;
@@ -474,7 +475,7 @@ public class HttpStateTest extends WingsBaseTest {
 
     doAnswer(invocation -> {
       DelegateTask task = invocation.getArgumentAt(0, DelegateTask.class);
-      task.getTaskType()
+      TaskType.valueOf(task.getTaskType())
           .getDelegateRunnableTask(DELEGATE_ID, task,
               o
               -> asyncExecutionResponse = httpState.handleAsyncResponse(context, ImmutableMap.of(task.getWaitId(), o)),
