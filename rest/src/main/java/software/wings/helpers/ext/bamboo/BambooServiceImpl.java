@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.bamboo;
 
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
@@ -522,7 +523,7 @@ public class BambooServiceImpl implements BambooService {
       return artifactPathMap;
     } catch (IOException e) {
       throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR,
-          String.format("Retrieving artifacts from plan %s and build number %s failed", planKey, buildNumber), e);
+          format("Retrieving artifacts from plan %s and build number %s failed", planKey, buildNumber), e);
     }
   }
 

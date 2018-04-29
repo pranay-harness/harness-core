@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.threading.Morpheus.sleep;
+import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -165,7 +166,7 @@ public class AlertServiceImpl implements AlertService {
 
   public Optional<Alert> findExistingAlert(String accountId, String appId, AlertType alertType, AlertData alertData) {
     if (!alertType.getAlertDataClass().isAssignableFrom(alertData.getClass())) {
-      String errorMsg = String.format("Alert type %s requires alert data of class %s but was %s", alertType.name(),
+      String errorMsg = format("Alert type %s requires alert data of class %s but was %s", alertType.name(),
           alertType.getAlertDataClass().getName(), alertData.getClass().getName());
       logger.error(errorMsg);
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", errorMsg);

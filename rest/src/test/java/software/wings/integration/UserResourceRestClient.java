@@ -148,7 +148,8 @@ public class UserResourceRestClient {
       Account finalAccount = account;
       if (isEmpty(user.getAccounts())
           || !user.getAccounts().stream().anyMatch(account1 -> finalAccount.getUuid().equals(account1.getUuid()))) {
-        wingsPersistence.update(user, wingsPersistence.createUpdateOperations(User.class).add("accounts", account));
+        wingsPersistence.update(
+            user, wingsPersistence.createUpdateOperations(User.class).addToSet("accounts", account));
       }
     }
 

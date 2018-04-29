@@ -2,6 +2,7 @@ package software.wings.cloudprovider.gke;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
+import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparingInt;
@@ -277,9 +278,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     long startTime = clock.millis();
     List<Pod> originalPods = getRunningPods(kubernetesConfig, encryptedDataDetails, controllerName);
     if (sizeChanged) {
-      executionLogCallback.saveExecutionLog(
-          String.format("Resizing controller [%s] in cluster [%s] from %s to %s instances", controllerName, clusterName,
-              previousCount, desiredCount));
+      executionLogCallback.saveExecutionLog(format("Resizing controller [%s] in cluster [%s] from %s to %s instances",
+          controllerName, clusterName, previousCount, desiredCount));
       HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, controllerName);
       if (controller instanceof ReplicationController) {
         rcOperations(kubernetesConfig, encryptedDataDetails).withName(controllerName).scale(desiredCount);
@@ -297,8 +297,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       logger.info("Scaled controller {} in cluster {} from {} to {} instances", controllerName, clusterName,
           previousCount, desiredCount);
     } else {
-      executionLogCallback.saveExecutionLog(String.format(
-          "Controller [%s] in cluster [%s] stays at %s instances", controllerName, clusterName, previousCount));
+      executionLogCallback.saveExecutionLog(
+          format("Controller [%s] in cluster [%s] stays at %s instances", controllerName, clusterName, previousCount));
     }
     return getContainerInfosWhenReady(kubernetesConfig, encryptedDataDetails, controllerName, previousCount,
         desiredCount, serviceSteadyStateTimeout, originalPods, false, executionLogCallback, sizeChanged, startTime);
@@ -317,7 +317,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     boolean hasErrors = false;
     if (pods.size() != desiredCount) {
       hasErrors = true;
-      String msg = String.format("Pod count did not reach desired count (%d/%d)", pods.size(), desiredCount);
+      String msg = format("Pod count did not reach desired count (%d/%d)", pods.size(), desiredCount);
       logger.error(msg);
       executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
     }
@@ -332,7 +332,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
       if (desiredCount > 0 && !podHasImages(pod, images)) {
         hasErrors = true;
-        String msg = String.format("Pod %s does not have image %s", podName, images);
+        String msg = format("Pod %s does not have image %s", podName, images);
         logger.error(msg);
         executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
       }
@@ -340,14 +340,14 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       if (isDaemonSet || desiredCount > previousCount) {
         if (!isRunning(pod)) {
           hasErrors = true;
-          String msg = String.format("Pod %s failed to start", podName);
+          String msg = format("Pod %s failed to start", podName);
           logger.error(msg);
           executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
         }
 
         if (!inSteadyState(pod)) {
           hasErrors = true;
-          String msg = String.format("Pod %s failed to reach steady state", podName);
+          String msg = format("Pod %s failed to reach steady state", podName);
           logger.error(msg);
           executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
         }
@@ -356,7 +356,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       if (!hasErrors) {
         containerInfoBuilder.status(Status.SUCCESS);
         logger.info("Pod {} started successfully", podName);
-        executionLogCallback.saveExecutionLog(String.format("Pod [%s] is running. Host IP: %s. Pod IP: %s", podName,
+        executionLogCallback.saveExecutionLog(format("Pod [%s] is running. Host IP: %s. Pod IP: %s", podName,
             pod.getStatus().getHostIP(), pod.getStatus().getPodIP()));
       } else {
         containerInfoBuilder.status(Status.FAILURE);
@@ -374,9 +374,9 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
                                                                ? containerStatus.getState().getWaiting().getReason()
                                                                : RUNNING)
                                                    .collect(toList()));
-        String msg = String.format(
-            "Pod [%s] has state [%s]. Current status: phase - %s. Container status: [%s]. Condition: [%s].", podName,
-            reason, pod.getStatus().getPhase(), containerMessage, conditionMessage);
+        String msg =
+            format("Pod [%s] has state [%s]. Current status: phase - %s. Container status: [%s]. Condition: [%s].",
+                podName, reason, pod.getStatus().getPhase(), containerMessage, conditionMessage);
         logger.error(msg);
         executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
         executionLogCallback.saveExecutionLog("\nCheck Kubernetes console for more information");
@@ -707,7 +707,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         client.customResourceDefinitions().withName(crdName).get();
     if (customResourceDefinition == null) {
       throw new IllegalArgumentException(
-          String.format("Custom Resource Definition %s is not found in cluster %s", crdName, client.getMasterUrl()));
+          format("Custom Resource Definition %s is not found in cluster %s", crdName, client.getMasterUrl()));
     }
     return customResourceDefinition;
   }
@@ -893,29 +893,27 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           // Check current state
           if (pods.size() != desiredCount) {
             executionLogCallback.saveExecutionLog(
-                String.format("Waiting for desired number of pods [%d/%d]", pods.size(), desiredCount));
+                format("Waiting for desired number of pods [%d/%d]", pods.size(), desiredCount));
             sleep(ofSeconds(5));
             continue;
           }
           if (!countReached.getAndSet(true)) {
             executionLogCallback.saveExecutionLog(
-                String.format("Desired number of pods reached [%d/%d]", pods.size(), desiredCount));
+                format("Desired number of pods reached [%d/%d]", pods.size(), desiredCount));
           }
 
           if (desiredCount > 0) {
             int haveImages = (int) pods.stream().filter(pod -> podHasImages(pod, images)).count();
             if (haveImages != desiredCount) {
               executionLogCallback.saveExecutionLog(
-                  String.format(
-                      "Waiting for pods to be updated with image %s [%d/%d]", images, haveImages, desiredCount),
+                  format("Waiting for pods to be updated with image %s [%d/%d]", images, haveImages, desiredCount),
                   LogLevel.INFO);
               sleep(ofSeconds(5));
               continue;
             }
             if (!haveImagesCountReached.getAndSet(true)) {
               executionLogCallback.saveExecutionLog(
-                  String.format("Pods are updated with image %s [%d/%d]", images, haveImages, desiredCount),
-                  LogLevel.INFO);
+                  format("Pods are updated with image %s [%d/%d]", images, haveImages, desiredCount), LogLevel.INFO);
             }
           }
 
@@ -923,25 +921,24 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
             int running = (int) pods.stream().filter(this ::isRunning).count();
             if (running != desiredCount) {
               executionLogCallback.saveExecutionLog(
-                  String.format("Waiting for pods to be running [%d/%d]", running, desiredCount));
+                  format("Waiting for pods to be running [%d/%d]", running, desiredCount));
               sleep(ofSeconds(10));
               continue;
             }
             if (!runningCountReached.getAndSet(true)) {
-              executionLogCallback.saveExecutionLog(String.format("Pods are running [%d/%d]", running, desiredCount));
+              executionLogCallback.saveExecutionLog(format("Pods are running [%d/%d]", running, desiredCount));
             }
 
             int steadyState = (int) pods.stream().filter(this ::inSteadyState).count();
             if (steadyState != desiredCount) {
               executionLogCallback.saveExecutionLog(
-                  String.format("Waiting for pods to reach steady state [%d/%d]", steadyState, desiredCount),
-                  LogLevel.INFO);
+                  format("Waiting for pods to reach steady state [%d/%d]", steadyState, desiredCount), LogLevel.INFO);
               sleep(ofSeconds(15));
               continue;
             }
             if (!steadyStateCountReached.getAndSet(true)) {
               executionLogCallback.saveExecutionLog(
-                  String.format("Pods have reached steady state [%d/%d]", steadyState, desiredCount));
+                  format("Pods have reached steady state [%d/%d]", steadyState, desiredCount));
             }
           }
           return pods;

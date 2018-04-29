@@ -2,6 +2,7 @@ package software.wings.beans.command;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -110,7 +111,7 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
           cloudProviderSetting, encryptedDataDetails, setupParams, taskDefinition, containerServiceName);
 
       executionLogCallback.saveExecutionLog(
-          String.format("Creating ECS service %s in cluster %s ", containerServiceName, setupParams.getClusterName()),
+          format("Creating ECS service %s in cluster %s ", containerServiceName, setupParams.getClusterName()),
           LogLevel.INFO);
 
       // create and register service with aws
@@ -356,8 +357,8 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
       registerTaskDefinitionRequest.withMemory(taskDefinition.getMemory());
     }
 
-    executionLogCallback.saveExecutionLog(String.format("Creating task definition %s with container image %s",
-                                              ecsSetupParams.getTaskFamily(), dockerImageName),
+    executionLogCallback.saveExecutionLog(
+        format("Creating task definition %s with container image %s", ecsSetupParams.getTaskFamily(), dockerImageName),
         LogLevel.INFO);
     return awsClusterService.createTask(
         ecsSetupParams.getRegion(), settingAttribute, encryptedDataDetails, registerTaskDefinitionRequest);

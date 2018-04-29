@@ -5,6 +5,7 @@ import static com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature.WRITE_
 import static io.fabric8.kubernetes.client.utils.Utils.isNotNullOrEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.network.Http.getOkHttpClientBuilder;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static okhttp3.ConnectionSpec.CLEARTEXT;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -150,7 +151,7 @@ public class KubernetesHelperService {
       for (DestinationWeight destinationWeight : sorted) {
         int weight = destinationWeight.getWeight();
         String rev = destinationWeight.getLabels().get(HARNESS_REVISION);
-        executionLogCallback.saveExecutionLog(String.format("   %s%s: %d%%", controllerPrefix, rev, weight));
+        executionLogCallback.saveExecutionLog(format("   %s%s: %d%%", controllerPrefix, rev, weight));
       }
     } else {
       executionLogCallback.saveExecutionLog("   None specified");

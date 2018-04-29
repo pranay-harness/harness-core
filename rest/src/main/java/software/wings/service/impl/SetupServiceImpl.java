@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static software.wings.beans.Setup.Builder.aSetup;
 import static software.wings.beans.Setup.SetupStatus.COMPLETE;
 import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
@@ -83,7 +84,7 @@ public class SetupServiceImpl implements SetupService {
       return SetupAction.Builder.aSetupAction()
           .withCode("NO_ARTIFACT_STREAM_FOUND")
           .withDisplayText("Setup complete: now you can add artifact stream and deployment.")
-          .withUrl(String.format("/#/app/%s/artifact-streams", application.getUuid()))
+          .withUrl(format("/#/app/%s/artifact-streams", application.getUuid()))
           .build();
     }
 
@@ -96,16 +97,14 @@ public class SetupServiceImpl implements SetupService {
       return SetupAction.Builder.aSetupAction()
           .withCode("NO_ARTIFACT_FOUND")
           .withDisplayText("Setup complete: Please add an artifact")
-          .withUrl(
-              String.format("/#/app/%s/artifact-streams/%s/detail", application.getUuid(), artifactStream.getUuid()))
+          .withUrl(format("/#/app/%s/artifact-streams/%s/detail", application.getUuid(), artifactStream.getUuid()))
           .build();
     }
     if (artRes.getTotal() == 1 && artRes.get(0).getStatus() == Status.QUEUED) {
       return SetupAction.Builder.aSetupAction()
           .withCode("ARTIFACT_NOT_READY")
           .withDisplayText("Setup complete: Please wait for the artifact to finish downloading.")
-          .withUrl(
-              String.format("/#/app/%s/artifact-streams/%s/detail", application.getUuid(), artifactStream.getUuid()))
+          .withUrl(format("/#/app/%s/artifact-streams/%s/detail", application.getUuid(), artifactStream.getUuid()))
           .build();
     }
     return null;
@@ -124,7 +123,7 @@ public class SetupServiceImpl implements SetupService {
         return SetupAction.Builder.aSetupAction()
             .withCode("NO_DEPLOYMENT_FOUND")
             .withDisplayText("Setup complete: you can create a deployment.")
-            .withUrl(String.format("/#/app/%s/env/%s/executions", application.getUuid(), env.getUuid()))
+            .withUrl(format("/#/app/%s/env/%s/executions", application.getUuid(), env.getUuid()))
             .build();
       }
     }
@@ -157,7 +156,7 @@ public class SetupServiceImpl implements SetupService {
       return aSetupAction()
           .withCode("NO_HOST_CONFIGURED")
           .withDisplayText("Setup required: Please add at least one host to the environment.")
-          .withUrl(String.format("/#/app/%s/env/%s/detail", environment.getAppId(), environment.getUuid()))
+          .withUrl(format("/#/app/%s/env/%s/detail", environment.getAppId(), environment.getUuid()))
           .build();
     }
     return null;
@@ -168,7 +167,7 @@ public class SetupServiceImpl implements SetupService {
       return aSetupAction()
           .withCode("SERVICE_NOT_CONFIGURED")
           .withDisplayText("Setup required: Please configure at least one service.")
-          .withUrl(String.format("/#/app/%s/services", app.getUuid()))
+          .withUrl(format("/#/app/%s/services", app.getUuid()))
           .build();
     }
 
@@ -176,7 +175,7 @@ public class SetupServiceImpl implements SetupService {
       return aSetupAction()
           .withCode("ENVIRONMENT_NOT_CONFIGURED")
           .withDisplayText("Setup required: Please configure at least one environment.")
-          .withUrl(String.format("/#/app/%s/environments", app.getUuid()))
+          .withUrl(format("/#/app/%s/environments", app.getUuid()))
           .build();
     } else {
       Map<String, SetupAction> setupActions = new HashMap<>();

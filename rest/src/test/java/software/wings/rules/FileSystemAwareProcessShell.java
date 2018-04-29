@@ -1,5 +1,6 @@
 package software.wings.rules;
 
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 
 import org.apache.sshd.common.channel.PtyMode;
@@ -97,8 +98,8 @@ public class FileSystemAwareProcessShell extends AbstractLoggingBean implements 
         Map<String, String> procEnv = builder.environment();
         procEnv.putAll(varsMap);
       } catch (Exception e) {
-        log.warn(String.format(
-                     "start() - Failed (%s) to set environment for command=%s", e.getClass().getSimpleName(), cmdValue),
+        log.warn(
+            format("start() - Failed (%s) to set environment for command=%s", e.getClass().getSimpleName(), cmdValue),
             e);
         if (log.isDebugEnabled()) {
           log.debug("start(" + cmdValue + ") failure details: " + e.getMessage(), e);

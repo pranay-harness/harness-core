@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.beans.Log.Builder.aLog;
@@ -199,7 +200,7 @@ public class AwsLambdaState extends State {
     Artifact artifact =
         getArtifact(app.getUuid(), serviceId, context.getWorkflowExecutionId(), (DeploymentExecutionContext) context);
     if (artifact == null) {
-      throw new StateExecutionException(String.format("Unable to find artifact for service %s", service.getName()));
+      throw new StateExecutionException(format("Unable to find artifact for service %s", service.getName()));
     }
     ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
 
@@ -332,8 +333,7 @@ public class AwsLambdaState extends State {
     FunctionMeta functionMeta = null;
 
     if (functionResult == null) {
-      logService.save(
-          logBuilder.but().withLogLine(String.format("Function [%s] doesn't exist.", functionName)).build());
+      logService.save(logBuilder.but().withLogLine(format("Function [%s] doesn't exist.", functionName)).build());
 
       CreateFunctionRequest createFunctionRequest =
           new CreateFunctionRequest()
@@ -351,8 +351,8 @@ public class AwsLambdaState extends State {
       CreateFunctionResult createFunctionResult =
           awsHelperService.createFunction(region, accessKey, secretKey, createFunctionRequest);
       logService.save(logBuilder.but()
-                          .withLogLine(String.format("Function [%s] published with version [%s] successfully",
-                              functionName, createFunctionResult.getVersion()))
+                          .withLogLine(format("Function [%s] published with version [%s] successfully", functionName,
+                              createFunctionResult.getVersion()))
                           .build());
       logService.save(logBuilder.but()
                           .withLogLine("Created Function Code Sha256: " + createFunctionResult.getCodeSha256())
@@ -465,7 +465,7 @@ public class AwsLambdaState extends State {
       UpdateAliasResult updateAliasResult = awsHelperService.updateAlias(region, accessKey, secretKey,
           new UpdateAliasRequest().withFunctionName(functionName).withFunctionVersion(functionArn).withName(alias));
       logService.save(logBuilder.but()
-                          .withLogLine(String.format("Updated Function Alias with name:[%s], arn:[%s]",
+                          .withLogLine(format("Updated Function Alias with name:[%s], arn:[%s]",
                               updateAliasResult.getName(), updateAliasResult.getAliasArn()))
                           .build());
     });
@@ -478,7 +478,7 @@ public class AwsLambdaState extends State {
       CreateAliasResult createAliasResult = awsHelperService.createAlias(region, accessKey, secretKey,
           new CreateAliasRequest().withFunctionName(functionName).withFunctionVersion(functionVersion).withName(alias));
       logService.save(logBuilder.but()
-                          .withLogLine(String.format("Created Function Alias with name:[%s], arn:[%s]",
+                          .withLogLine(format("Created Function Alias with name:[%s], arn:[%s]",
                               createAliasResult.getName(), createAliasResult.getAliasArn()))
                           .build());
     });

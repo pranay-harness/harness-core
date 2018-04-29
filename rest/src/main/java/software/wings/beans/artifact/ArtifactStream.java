@@ -39,6 +39,7 @@ import java.util.List;
     @Index(fields = { @Field("appId")
                       , @Field("serviceId"), @Field("name") }, options = @IndexOptions(unique = true)))
 @Data
+@EqualsAndHashCode(callSuper = false)
 @AllArgsConstructor
 public abstract class ArtifactStream extends Base {
   protected static final DateFormat dateFormat = new SimpleDateFormat("HHMMSS");

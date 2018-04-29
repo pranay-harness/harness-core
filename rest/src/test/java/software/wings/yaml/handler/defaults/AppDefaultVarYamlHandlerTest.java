@@ -1,6 +1,7 @@
 package software.wings.yaml.handler.defaults;
 
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -12,7 +13,6 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import com.google.inject.Inject;
 
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -184,6 +184,6 @@ public class AppDefaultVarYamlHandlerTest extends BaseYamlHandlerTest {
 
   private void compareSettingAttributes(List<SettingAttribute> lhs, List<SettingAttribute> rhs) {
     assertEquals(lhs.size(), rhs.size());
-    Assertions.assertThat(lhs).containsAll(rhs);
+    assertThat(lhs).containsAll(rhs);
   }
 }

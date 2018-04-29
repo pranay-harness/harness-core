@@ -2,6 +2,7 @@ package software.wings.service.impl.artifact;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.lang.Integer.parseInt;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static software.wings.beans.artifact.Artifact.Status.APPROVED;
 import static software.wings.beans.artifact.Artifact.Status.FAILED;
@@ -251,7 +252,7 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
     if (service == null) {
       artifactStreamService.delete(appId, artifactStream.getUuid());
       throw new WingsException(ErrorCode.GENERAL_ERROR)
-          .addParam("message", String.format("Artifact stream %s is a zombie.", artifactStream.getUuid()));
+          .addParam("message", format("Artifact stream %s is a zombie.", artifactStream.getUuid()));
     }
     return service;
   }

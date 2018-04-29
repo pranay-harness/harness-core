@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -159,7 +160,7 @@ public class ActivityResourceTest {
 
     RestResponse<List<CommandUnitDetails>> restResponse =
         RESOURCES.client()
-            .target(String.format("/activities/%s/units?appId=%s", ACTIVITY_ID, APP_ID))
+            .target(format("/activities/%s/units?appId=%s", ACTIVITY_ID, APP_ID))
             .request()
             .get(new GenericType<RestResponse<List<CommandUnitDetails>>>() {});
     assertThat(restResponse.getResource()).isInstanceOf(List.class);
@@ -183,7 +184,7 @@ public class ActivityResourceTest {
 
     RestResponse<PageResponse<Log>> restResponse =
         RESOURCES.client()
-            .target(String.format("/activities/%s/logs?appId=%s&unitName=%s", ACTIVITY_ID, APP_ID, COMMAND_UNIT_NAME))
+            .target(format("/activities/%s/logs?appId=%s&unitName=%s", ACTIVITY_ID, APP_ID, COMMAND_UNIT_NAME))
             .request()
             .get(new GenericType<RestResponse<PageResponse<Log>>>() {});
 
@@ -203,10 +204,8 @@ public class ActivityResourceTest {
   @Test
   public void shouldDownloadActivityLogFile() throws IOException {
     when(LOG_SERVICE.exportLogs(APP_ID, ACTIVITY_ID)).thenReturn(testFolder.newFile("FILE_NAME"));
-    Response response = RESOURCES.client()
-                            .target(String.format("/activities/%s/all-logs?appId=%s", ACTIVITY_ID, APP_ID))
-                            .request()
-                            .get();
+    Response response =
+        RESOURCES.client().target(format("/activities/%s/all-logs?appId=%s", ACTIVITY_ID, APP_ID)).request().get();
     assertThat(response.getStatus()).isEqualTo(200);
     assertThat(response.getHeaderString("Content-Disposition")).isEqualTo("attachment; filename=FILE_NAME");
     assertThat(response.getHeaderString("Content-type")).isEqualTo("application/x-unknown");

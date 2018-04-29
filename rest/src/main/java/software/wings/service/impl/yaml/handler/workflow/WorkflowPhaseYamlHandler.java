@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.Validator.notNullCheck;
@@ -183,8 +184,8 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
 
       // when templatized infraMappings used, we do expect infraMapping can be null, so don't perform this check
       if (infrastructureMapping == null && !bean.checkInfraTemplatized()) {
-        String message = String.format("Infra-mapping:%s could not be found for workflowPhase:%s, for app:%s",
-            infraMappingId, bean.getName(), appId);
+        String message = format("Infra-mapping:%s could not be found for workflowPhase:%s, for app:%s", infraMappingId,
+            bean.getName(), appId);
         throw new WingsException(ErrorCode.GENERAL_ERROR, USER).addParam("message", message);
       }
     }

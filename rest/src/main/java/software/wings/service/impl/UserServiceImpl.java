@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static java.net.URLEncoder.encode;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -191,8 +192,8 @@ public class UserServiceImpl implements UserService {
 
   private void sendSuccessfullyAddedToNewAccountEmail(User user, Account account) {
     try {
-      String loginUrl = buildAbsoluteUrl(String.format("/login?company=%s&account=%s&email=%s",
-          account.getCompanyName(), account.getCompanyName(), user.getEmail()));
+      String loginUrl = buildAbsoluteUrl(format("/login?company=%s&account=%s&email=%s", account.getCompanyName(),
+          account.getCompanyName(), user.getEmail()));
 
       Map<String, String> templateModel = new HashMap<>();
       templateModel.put("name", user.getName());
@@ -401,8 +402,8 @@ public class UserServiceImpl implements UserService {
 
   private void sendNewInvitationMail(UserInvite userInvite, Account account) {
     try {
-      String inviteUrl = buildAbsoluteUrl(
-          String.format("/invite?accountId=%s&account=%s&company=%s&email=%s&inviteId=%s", account.getUuid(),
+      String inviteUrl =
+          buildAbsoluteUrl(format("/invite?accountId=%s&account=%s&company=%s&email=%s&inviteId=%s", account.getUuid(),
               account.getAccountName(), account.getCompanyName(), userInvite.getEmail(), userInvite.getUuid()));
 
       Map<String, String> templateModel = new HashMap<>();
@@ -427,8 +428,8 @@ public class UserServiceImpl implements UserService {
 
   private void sendAddedRoleEmail(User user, Account account, List<Role> roles) {
     try {
-      String loginUrl = buildAbsoluteUrl(String.format("/login?company=%s&account=%s&email=%s",
-          account.getCompanyName(), account.getCompanyName(), user.getEmail()));
+      String loginUrl = buildAbsoluteUrl(format("/login?company=%s&account=%s&email=%s", account.getCompanyName(),
+          account.getCompanyName(), user.getEmail()));
 
       Map<String, Object> templateModel = new HashMap<>();
       templateModel.put("name", user.getName());

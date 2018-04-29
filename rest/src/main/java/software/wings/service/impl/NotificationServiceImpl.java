@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static java.lang.String.format;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.ARTIFACT_APPROVAL_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.ARTIFACT_APPROVAL_NOTIFICATION_STATUS;
 
@@ -116,8 +117,7 @@ public class NotificationServiceImpl implements NotificationService {
     } else if (notification instanceof ApprovalNotification) {
       ApprovalNotification approvalNotification = (ApprovalNotification) notification;
       String actionUrl = configuration.getPortal().getUrl()
-          + String.format(
-                configuration.getPortal().getApplicationOverviewUrlPattern(), approvalNotification.getAppId());
+          + format(configuration.getPortal().getApplicationOverviewUrlPattern(), approvalNotification.getAppId());
       Map<String, String> placeHolderData = new HashMap<>();
       placeHolderData.put("ENTITY_TYPE", approvalNotification.getEntityType().name());
       placeHolderData.put("ENTITY_NAME", approvalNotification.getEntityName());

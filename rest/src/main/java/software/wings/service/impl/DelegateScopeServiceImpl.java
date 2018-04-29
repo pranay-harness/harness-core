@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
@@ -145,9 +146,8 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
                                      .map(Delegate::getHostName)
                                      .collect(toList());
     if (isNotEmpty(delegateNames)) {
-      String message =
-          String.format("Delegate scope [%s] could not be deleted because it's used by these delegates [%s]",
-              delegateScope.getName(), Joiner.on(", ").join(delegateNames));
+      String message = format("Delegate scope [%s] could not be deleted because it's used by these delegates [%s]",
+          delegateScope.getName(), Joiner.on(", ").join(delegateNames));
       throw new InvalidRequestException(message, USER);
     }
   }

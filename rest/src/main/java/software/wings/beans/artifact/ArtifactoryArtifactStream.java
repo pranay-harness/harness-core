@@ -1,5 +1,6 @@
 package software.wings.beans.artifact;
 
+import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
@@ -52,8 +53,8 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
   @Override
   public String getArtifactDisplayName(String buildNo) {
     return isBlank(getImageName())
-        ? String.format("%s_%s_%s", getSourceName(), buildNo, dateFormat.format(new Date()))
-        : String.format("%s_%s_%s", getJobname() + "/" + getImageName(), buildNo, dateFormat.format(new Date()));
+        ? format("%s_%s_%s", getSourceName(), buildNo, dateFormat.format(new Date()))
+        : format("%s_%s_%s", getJobname() + "/" + getImageName(), buildNo, dateFormat.format(new Date()));
   }
 
   /**

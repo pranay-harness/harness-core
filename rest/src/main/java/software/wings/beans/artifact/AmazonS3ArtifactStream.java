@@ -1,5 +1,6 @@
 package software.wings.beans.artifact;
 
+import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
@@ -41,8 +42,8 @@ public class AmazonS3ArtifactStream extends ArtifactStream {
 
   @Override
   public String getArtifactDisplayName(String buildNo) {
-    return isBlank(getSourceName()) ? String.format("%s_%s_%s", getSourceName(), buildNo, dateFormat.format(new Date()))
-                                    : String.format("%s_%s_%s", getJobname(), buildNo, dateFormat.format(new Date()));
+    return isBlank(getSourceName()) ? format("%s_%s_%s", getSourceName(), buildNo, dateFormat.format(new Date()))
+                                    : format("%s_%s_%s", getJobname(), buildNo, dateFormat.format(new Date()));
   }
 
   @Override

@@ -5,6 +5,7 @@ import static com.amazonaws.services.codedeploy.model.DeploymentStatus.Stopped;
 import static com.amazonaws.services.codedeploy.model.DeploymentStatus.Succeeded;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
+import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -127,7 +128,7 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
           awsHelperService.createCodeDeployDeployment(awsConfig, encryptedDataDetails, region, createDeploymentRequest);
 
       executionLogCallback.saveExecutionLog(
-          String.format("Deployment started deployment id: [%s]", deploymentResult.getDeploymentId()), LogLevel.INFO);
+          format("Deployment started deployment id: [%s]", deploymentResult.getDeploymentId()), LogLevel.INFO);
       waitForDeploymentToComplete(awsConfig, encryptedDataDetails, region, deploymentResult.getDeploymentId());
       DeploymentInfo deploymentInfo =
           awsHelperService
@@ -139,7 +140,7 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
       ErrorInformation errorInformation = deploymentInfo.getErrorInformation();
       if (errorInformation != null) {
         executionLogCallback.saveExecutionLog(
-            String.format("Deployment Error: [%s] [%s]", errorInformation.getCode(), errorInformation.getMessage()),
+            format("Deployment Error: [%s] [%s]", errorInformation.getCode(), errorInformation.getMessage()),
             LogLevel.ERROR);
       }
 

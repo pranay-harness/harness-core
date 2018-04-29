@@ -1,5 +1,6 @@
 package software.wings.beans.artifact;
 
+import static java.lang.String.format;
 import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 
@@ -41,8 +42,7 @@ public class AcrArtifactStream extends ArtifactStream {
 
   @Override
   public String getArtifactDisplayName(String buildNo) {
-    return String.format(
-        "%s_%s_%s", getRegistryName() + "/" + getRepositoryName(), buildNo, dateFormat.format(new Date()));
+    return format("%s_%s_%s", getRegistryName() + "/" + getRepositoryName(), buildNo, dateFormat.format(new Date()));
   }
 
   @Override

@@ -1,5 +1,6 @@
 package software.wings.integration;
 
+import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -161,6 +162,6 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   private WebTarget getListWebTarget(String accountId) {
-    return client.target(String.format("%s/settings/?accountId=%s", API_BASE, accountId));
+    return client.target(format("%s/settings/?accountId=%s", API_BASE, accountId));
   }
 }

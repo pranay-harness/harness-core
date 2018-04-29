@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
@@ -45,7 +46,7 @@ public class BuildWorkflow extends CanaryOrchestrationWorkflow {
         invalid += invalidChildren.toString();
       }
       if (!invalid.isEmpty()) {
-        setValidationMessage(String.format(WORKFLOW_VALIDATION_MESSAGE, invalid));
+        setValidationMessage(format(WORKFLOW_VALIDATION_MESSAGE, invalid));
       }
     }
     return isValid();

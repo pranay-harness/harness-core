@@ -1,6 +1,7 @@
 package software.wings.cloudprovider.gke;
 
 import static io.harness.threading.Morpheus.sleep;
+import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -203,7 +204,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
     } catch (IOException exception) {
       logNotFoundOrError(exception, projectId, zone, clusterName, "getting");
       throw new InvalidRequestException(
-          String.format("Error getting cluster %s in zone %s for project %s", clusterName, zone, projectId), exception);
+          format("Error getting cluster %s in zone %s for project %s", clusterName, zone, projectId), exception);
     }
   }
 
@@ -263,11 +264,10 @@ public class GkeClusterServiceImpl implements GkeClusterService {
   private void logNotFoundOrError(IOException e, String projectId, String zone, String clusterName, String actionVerb) {
     if (e instanceof GoogleJsonResponseException
         && ((GoogleJsonResponseException) e).getDetails().getCode() == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
-      logger.warn(
-          String.format("Cluster %s does not exist in zone %s for project %s", clusterName, zone, projectId), e);
+      logger.warn(format("Cluster %s does not exist in zone %s for project %s", clusterName, zone, projectId), e);
     } else {
       logger.error(
-          String.format("Error %s cluster %s in zone %s for project %s", actionVerb, clusterName, zone, projectId), e);
+          format("Error %s cluster %s in zone %s for project %s", actionVerb, clusterName, zone, projectId), e);
     }
   }
 

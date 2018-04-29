@@ -3,6 +3,7 @@ package software.wings.beans;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
@@ -562,7 +563,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         }
       }
       if (!invalid.isEmpty()) {
-        setValidationMessage(String.format(WORKFLOW_VALIDATION_MESSAGE, invalid));
+        setValidationMessage(format(WORKFLOW_VALIDATION_MESSAGE, invalid));
       }
       validateInframapping();
     }
@@ -582,7 +583,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       }
       if (isNotEmpty(invalidInfraPhaseIds)) {
         setValid(false);
-        setValidationMessage(String.format(WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE, invalidInfraPhaseIds.toString()));
+        setValidationMessage(format(WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE, invalidInfraPhaseIds.toString()));
       }
     }
   }

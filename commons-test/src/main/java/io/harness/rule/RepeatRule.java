@@ -1,5 +1,7 @@
 package io.harness.rule;
 
+import static java.lang.String.format;
+
 import io.harness.rule.RepeatRule.RepeatStatement.RepeatStatementBuilder;
 import lombok.Getter;
 import org.junit.experimental.categories.Category;
@@ -63,9 +65,8 @@ public class RepeatRule implements TestRule {
       }
       if (successfulCount != successes) {
         throw new AssertionError(
-            String.format(
-                "Test failed more number of times than expected, Run count: Total: %s, Expected: %s, Actual: %s", times,
-                successes, successfulCount),
+            format("Test failed more number of times than expected, Run count: Total: %s, Expected: %s, Actual: %s",
+                times, successes, successfulCount),
             lastException);
       }
     }

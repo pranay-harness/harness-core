@@ -1,5 +1,7 @@
 package software.wings.core.winrm.executors;
 
+import static java.lang.String.format;
+
 import io.cloudsoft.winrm4j.client.ShellCommand;
 import io.cloudsoft.winrm4j.client.WinRmClient;
 import software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme;
@@ -31,7 +33,7 @@ public class WinRmSession implements AutoCloseable {
   }
 
   private static String getEndpoint(String hostname, int port, boolean useHttps) {
-    return String.format("%s://%s:%d/wsman", useHttps ? "https" : "http", hostname, port);
+    return format("%s://%s:%d/wsman", useHttps ? "https" : "http", hostname, port);
   }
 
   private static String getAuthSchemeString(AuthenticationScheme authenticationScheme) {

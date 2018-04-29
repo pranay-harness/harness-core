@@ -1,10 +1,10 @@
 package software.wings.delegatetasks;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doThrow;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
-import org.assertj.core.api.Assertions;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -54,9 +54,8 @@ public class CollaborationProviderTaskTest extends WingsBaseTest {
         .send(any(SmtpConfig.class), any(List.class), any(EmailData.class));
     EmailRequest emailRequest = new EmailRequest();
     NotifyResponseData response = collaborationProviderTask.run(new Object[] {emailRequest});
-    Assertions.assertThat(response).isInstanceOf(CollaborationProviderResponse.class);
-    Assertions.assertThat(((CollaborationProviderResponse) response).getStatus())
-        .isEqualTo(CommandExecutionStatus.FAILURE);
+    assertThat(response).isInstanceOf(CollaborationProviderResponse.class);
+    assertThat(((CollaborationProviderResponse) response).getStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
   }
 
   @Test

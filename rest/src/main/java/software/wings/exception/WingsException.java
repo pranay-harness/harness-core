@@ -9,7 +9,6 @@ import static software.wings.exception.WingsException.ReportTarget.LOG_SYSTEM;
 import static software.wings.exception.WingsException.ReportTarget.RED_BELL_ALERT;
 import static software.wings.exception.WingsException.ReportTarget.REST_API;
 
-import lombok.Builder;
 import lombok.Getter;
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
@@ -55,7 +54,7 @@ public class WingsException extends WingsApiException {
   public static final ReportTarget[] USER = {REST_API};
   public static final ReportTarget[] NOBODY = {};
 
-  @Builder.Default private ReportTarget[] reportTargets = USER_SRE;
+  private ReportTarget[] reportTargets = USER_SRE;
 
   public enum ExecutionContext { MANAGER, DELEGATE }
 

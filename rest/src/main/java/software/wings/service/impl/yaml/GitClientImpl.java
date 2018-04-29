@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml;
 
 import static io.harness.govern.Switch.unhandled;
+import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.OK;
 import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.UP_TO_DATE;
@@ -297,7 +298,7 @@ public class GitClientImpl implements GitClient {
                 writer.write(gitFileChange.getFileContent());
               }
               git.add().addFilepattern(".").call();
-              //              commitMessage.append(String.format("%s: %s\n", gitFileChange.getChangeType(),
+              //              commitMessage.append(format("%s: %s\n", gitFileChange.getChangeType(),
               //              gitFileChange.getFilePath()));
             } catch (IOException | GitAPIException ex) {
               logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType())
@@ -324,7 +325,7 @@ public class GitClientImpl implements GitClient {
                 git.add().addFilepattern(gitFileChange.getFilePath()).call();
                 git.rm().addFilepattern(gitFileChange.getOldFilePath()).call();
                 //                commitMessage.append(
-                //                    String.format("%s: %s -> %s\n", gitFileChange.getChangeType(),
+                //                    format("%s: %s -> %s\n", gitFileChange.getChangeType(),
                 //                    gitFileChange.getOldFilePath(), gitFileChange.getFilePath()));
               } else {
                 logger.warn(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "File doesn't exist. path: [{}]",
@@ -344,7 +345,7 @@ public class GitClientImpl implements GitClient {
                 logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Deleting git file "
                     + gitFileChange.toString());
                 git.rm().addFilepattern(gitFileChange.getFilePath()).call();
-                //                commitMessage.append(String.format("%s: %s\n", gitFileChange.getChangeType(),
+                //                commitMessage.append(format("%s: %s\n", gitFileChange.getChangeType(),
                 //                gitFileChange.getFilePath()));
               } else {
                 logger.warn(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "File already deleted. path: [{}]",
@@ -368,11 +369,11 @@ public class GitClientImpl implements GitClient {
         return GitCommitResult.builder().build(); // do nothing
       } else {
         status.getAdded().forEach(
-            filePath -> commitMessage.append(String.format("%s: %s\n", DiffEntry.ChangeType.ADD, filePath)));
+            filePath -> commitMessage.append(format("%s: %s\n", DiffEntry.ChangeType.ADD, filePath)));
         status.getChanged().forEach(
-            filePath -> commitMessage.append(String.format("%s: %s\n", DiffEntry.ChangeType.MODIFY, filePath)));
+            filePath -> commitMessage.append(format("%s: %s\n", DiffEntry.ChangeType.MODIFY, filePath)));
         status.getRemoved().forEach(
-            filePath -> commitMessage.append(String.format("%s: %s\n", DiffEntry.ChangeType.DELETE, filePath)));
+            filePath -> commitMessage.append(format("%s: %s\n", DiffEntry.ChangeType.DELETE, filePath)));
       }
       RevCommit revCommit = git.commit()
                                 .setCommitter("Harness.io", "support@harness.io")
@@ -412,7 +413,7 @@ public class GitClientImpl implements GitClient {
       if (remoteRefUpdate.getStatus() == OK || remoteRefUpdate.getStatus() == UP_TO_DATE) {
         return GitPushResult.builder().refUpdate(refUpdate).build();
       } else {
-        String errorMsg = String.format("Unable to push changes to git repository. "
+        String errorMsg = format("Unable to push changes to git repository. "
                 + "Status reported by Remote is: %s and message is: %s. "
                 + "Other info: Force push: %s. Fast forward: %s",
             remoteRefUpdate.getStatus(), remoteRefUpdate.getMessage(), remoteRefUpdate.isForceUpdate(),

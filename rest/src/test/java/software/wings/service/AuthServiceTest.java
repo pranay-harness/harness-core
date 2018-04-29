@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
@@ -19,7 +20,6 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 import com.google.inject.Inject;
 
 import org.apache.commons.codec.binary.Hex;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -97,7 +97,7 @@ public class AuthServiceTest extends WingsBaseTest {
   @Test
   public void shouldValidateValidToken() {
     AuthToken authToken = authService.validateToken(VALID_TOKEN);
-    Assertions.assertThat(authToken).isNotNull().isInstanceOf(AuthToken.class);
+    assertThat(authToken).isNotNull().isInstanceOf(AuthToken.class);
   }
 
   /**

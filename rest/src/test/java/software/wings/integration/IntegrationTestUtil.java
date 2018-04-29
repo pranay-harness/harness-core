@@ -1,6 +1,7 @@
 package software.wings.integration;
 
 import static java.lang.Integer.MAX_VALUE;
+import static java.lang.String.format;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
@@ -35,7 +36,7 @@ public class IntegrationTestUtil {
     try (BufferedWriter out = new BufferedWriter(new FileWriter(file))) {
       out.write("HOST\n"); // Header
       for (int idx = 1; idx <= numHosts; idx++) {
-        out.write(String.format("host%s.app.com\n", idx));
+        out.write(format("host%s.app.com\n", idx));
       }
     }
     return file;

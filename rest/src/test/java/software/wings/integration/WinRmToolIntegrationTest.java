@@ -1,5 +1,7 @@
 package software.wings.integration;
 
+import static java.lang.String.format;
+
 import io.cloudsoft.winrm4j.client.ShellCommand;
 import io.cloudsoft.winrm4j.client.WinRmClient;
 import io.cloudsoft.winrm4j.client.WinRmClientContext;
@@ -36,12 +38,12 @@ public class WinRmToolIntegrationTest {
   private static String azureHost = "https://104.209.40.95:5986/wsman";
 
   private static String getEndpoint(String hostname, int port, boolean useHttps) {
-    return String.format("%s://%s:%d/wsman", useHttps ? "https" : "http", hostname, port);
+    return format("%s://%s:%d/wsman", useHttps ? "https" : "http", hostname, port);
   }
 
   private static String psWrappedCommand(String command) {
     String normalizedCommand = command.replace("\r", "").replace("\n", ";");
-    return String.format("Powershell Invoke-Command -command {%s}", normalizedCommand);
+    return format("Powershell Invoke-Command -command {%s}", normalizedCommand);
   }
 
   private static void test2() {

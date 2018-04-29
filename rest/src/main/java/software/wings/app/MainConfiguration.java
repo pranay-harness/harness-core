@@ -21,6 +21,7 @@ import io.dropwizard.server.DefaultServerFactory;
 import io.dropwizard.server.ServerFactory;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import software.wings.beans.security.access.GlobalWhitelistConfig;
 import software.wings.dl.MongoConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
@@ -35,6 +36,7 @@ import java.util.Optional;
  * @author Rishi
  */
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class MainConfiguration extends Configuration implements AssetsBundleConfiguration {
   @JsonProperty
   private AssetsConfiguration assetsConfiguration =

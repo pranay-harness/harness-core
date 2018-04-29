@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static com.google.common.collect.ImmutableMap.of;
+import static java.lang.String.format;
 import static org.atteo.evo.inflector.English.plural;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
@@ -167,8 +168,7 @@ public class AppContainerServiceImpl implements AppContainerService {
     if (!services.isEmpty()) {
       throw new WingsException(INVALID_REQUEST)
           .addParam("message",
-              String.format(
-                  "Application Stack is in use by %d %s.", services.size(), plural("service", services.size())));
+              format("Application Stack is in use by %d %s.", services.size(), plural("service", services.size())));
     }
   }
 

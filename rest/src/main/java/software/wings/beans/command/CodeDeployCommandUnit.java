@@ -1,5 +1,6 @@
 package software.wings.beans.command;
 
+import static java.lang.String.format;
 import static software.wings.beans.command.CodeDeployCommandExecutionData.Builder.aCodeDeployCommandExecutionData;
 
 import com.google.common.base.Joiner;
@@ -73,28 +74,24 @@ public class CodeDeployCommandUnit extends AbstractCommandUnit {
 
     try {
       executionLogCallback.saveExecutionLog(
-          String.format("Deploying application [%s] with following configuration.", applicationName), LogLevel.INFO);
-      executionLogCallback.saveExecutionLog(String.format("Application Name: [%s]", applicationName), LogLevel.INFO);
+          format("Deploying application [%s] with following configuration.", applicationName), LogLevel.INFO);
+      executionLogCallback.saveExecutionLog(format("Application Name: [%s]", applicationName), LogLevel.INFO);
+      executionLogCallback.saveExecutionLog(format("Aws Region: [%s]", codeDeployParams.getRegion()), LogLevel.INFO);
+      executionLogCallback.saveExecutionLog(format("Deployment Group: [%s]", deploymentGroupName), LogLevel.INFO);
       executionLogCallback.saveExecutionLog(
-          String.format("Aws Region: [%s]", codeDeployParams.getRegion()), LogLevel.INFO);
-      executionLogCallback.saveExecutionLog(
-          String.format("Deployment Group: [%s]", deploymentGroupName), LogLevel.INFO);
-      executionLogCallback.saveExecutionLog(
-          String.format("Deployment Configuration: [%s]", Optional.of(deploymentConfigurationName).orElse("DEFAULT")),
+          format("Deployment Configuration: [%s]", Optional.of(deploymentConfigurationName).orElse("DEFAULT")),
           LogLevel.INFO);
-      executionLogCallback.saveExecutionLog(
-          String.format("Enable Auto Rollback: [%s]", enableAutoRollback), LogLevel.INFO);
+      executionLogCallback.saveExecutionLog(format("Enable Auto Rollback: [%s]", enableAutoRollback), LogLevel.INFO);
       if (enableAutoRollback) {
         executionLogCallback.saveExecutionLog(
-            String.format("Auto Rollback Configurations: [%s]", Joiner.on(",").join(autoRollbackConfigurations)),
+            format("Auto Rollback Configurations: [%s]", Joiner.on(",").join(autoRollbackConfigurations)),
             LogLevel.INFO);
       }
       executionLogCallback.saveExecutionLog(
-          String.format("Ignore ApplicationStop lifecycle event failure: [%s]", ignoreApplicationStopFailures),
-          LogLevel.INFO);
-      executionLogCallback.saveExecutionLog(String.format("Content options : [%s]", fileExistsBehavior), LogLevel.INFO);
+          format("Ignore ApplicationStop lifecycle event failure: [%s]", ignoreApplicationStopFailures), LogLevel.INFO);
+      executionLogCallback.saveExecutionLog(format("Content options : [%s]", fileExistsBehavior), LogLevel.INFO);
       executionLogCallback.saveExecutionLog(
-          String.format("Revision: [Type: %s, Bucket: %s, Bundle: %s, Key: %s]", revision.getRevisionType(),
+          format("Revision: [Type: %s, Bucket: %s, Bundle: %s, Key: %s]", revision.getRevisionType(),
               revision.getS3Location().getBucket(), revision.getS3Location().getBundleType(),
               revision.getS3Location().getKey()),
           LogLevel.INFO);
@@ -128,7 +125,7 @@ public class CodeDeployCommandUnit extends AbstractCommandUnit {
       throw new WingsException(ErrorCode.UNKNOWN_ERROR, ex.getMessage(), ex);
     }
     executionLogCallback.saveExecutionLog(
-        String.format("Deployment finished with status [%s]", commandExecutionStatus), LogLevel.INFO);
+        format("Deployment finished with status [%s]", commandExecutionStatus), LogLevel.INFO);
     return commandExecutionStatus;
   }
 

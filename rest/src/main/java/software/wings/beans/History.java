@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static java.lang.String.format;
 import static software.wings.utils.JsonUtils.asObject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -277,7 +278,7 @@ public class History extends Base {
       try {
         entityOldValue = (Base) asObject(entityOldValueStr, Class.forName(entityOldValueClass));
       } catch (Exception e) {
-        logger.error(String.format("Error in Json conversion- entityOldValueClass: %s, entityOldValueStr: %s",
+        logger.error(format("Error in Json conversion- entityOldValueClass: %s, entityOldValueStr: %s",
                          entityOldValueClass, entityOldValueStr),
             e);
       }
@@ -287,7 +288,7 @@ public class History extends Base {
       try {
         entityNewValue = (Base) asObject(entityNewValueStr, Class.forName(entityNewValueClass));
       } catch (Exception e) {
-        logger.error(String.format("Error in Json conversion- entityNewValueClass: %s, entityNewValueStr: %s",
+        logger.error(format("Error in Json conversion- entityNewValueClass: %s, entityNewValueStr: %s",
                          entityNewValueClass, entityNewValueStr),
             e);
       }

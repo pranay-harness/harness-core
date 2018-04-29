@@ -2,6 +2,7 @@ package software.wings.sm;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static org.apache.commons.lang3.RandomUtils.nextInt;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.common.Constants.ARTIFACT_FILE_NAME_VARIABLE;
@@ -106,8 +107,8 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     map.put(TIMESTAMP_ID, timestampId);
 
     map.put(DEPLOYMENT_URL,
-        buildAbsoluteUrl(String.format("/account/%s/app/%s/env/%s/executions/%s/details", app.getAccountId(),
-            app.getUuid(), BUILD.equals(context.getOrchestrationWorkflowType()) ? "build" : env.getUuid(),
+        buildAbsoluteUrl(format("/account/%s/app/%s/env/%s/executions/%s/details", app.getAccountId(), app.getUuid(),
+            BUILD.equals(context.getOrchestrationWorkflowType()) ? "build" : env.getUuid(),
             context.getWorkflowExecutionId())));
 
     ServiceElement serviceElement = fetchServiceElement(context);

@@ -1,8 +1,10 @@
 package software.wings.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
+
 import com.google.inject.Inject;
 
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.sso.SamlSettings;
@@ -23,32 +25,32 @@ public class SSOSettingServiceTest extends WingsBaseTest {
                                     .build();
 
     samlSettings = ssoSettingService.saveSamlSettings(samlSettings);
-    Assertions.assertThat(samlSettings.getUrl()).isEqualTo("TestURL");
-    Assertions.assertThat(samlSettings.getAccountId()).isEqualTo("TestAccountID");
-    Assertions.assertThat(samlSettings.getMetaDataFile()).isEqualTo("TestMetaDataFile");
-    Assertions.assertThat(samlSettings.getDisplayName()).isEqualTo("Okta");
-    Assertions.assertThat(samlSettings.getOrigin()).isEqualTo("TestOrigin");
+    assertThat(samlSettings.getUrl()).isEqualTo("TestURL");
+    assertThat(samlSettings.getAccountId()).isEqualTo("TestAccountID");
+    assertThat(samlSettings.getMetaDataFile()).isEqualTo("TestMetaDataFile");
+    assertThat(samlSettings.getDisplayName()).isEqualTo("Okta");
+    assertThat(samlSettings.getOrigin()).isEqualTo("TestOrigin");
 
     samlSettings = ssoSettingService.getSamlSettingsByIdpUrl("TestURL");
-    Assertions.assertThat(samlSettings.getUrl()).isEqualTo("TestURL");
-    Assertions.assertThat(samlSettings.getAccountId()).isEqualTo("TestAccountID");
-    Assertions.assertThat(samlSettings.getMetaDataFile()).isEqualTo("TestMetaDataFile");
-    Assertions.assertThat(samlSettings.getDisplayName()).isEqualTo("Okta");
-    Assertions.assertThat(samlSettings.getOrigin()).isEqualTo("TestOrigin");
+    assertThat(samlSettings.getUrl()).isEqualTo("TestURL");
+    assertThat(samlSettings.getAccountId()).isEqualTo("TestAccountID");
+    assertThat(samlSettings.getMetaDataFile()).isEqualTo("TestMetaDataFile");
+    assertThat(samlSettings.getDisplayName()).isEqualTo("Okta");
+    assertThat(samlSettings.getOrigin()).isEqualTo("TestOrigin");
 
     samlSettings = ssoSettingService.getSamlSettingsByAccountId("TestAccountID");
-    Assertions.assertThat(samlSettings.getUrl()).isEqualTo("TestURL");
-    Assertions.assertThat(samlSettings.getAccountId()).isEqualTo("TestAccountID");
-    Assertions.assertThat(samlSettings.getMetaDataFile()).isEqualTo("TestMetaDataFile");
-    Assertions.assertThat(samlSettings.getDisplayName()).isEqualTo("Okta");
-    Assertions.assertThat(samlSettings.getOrigin()).isEqualTo("TestOrigin");
+    assertThat(samlSettings.getUrl()).isEqualTo("TestURL");
+    assertThat(samlSettings.getAccountId()).isEqualTo("TestAccountID");
+    assertThat(samlSettings.getMetaDataFile()).isEqualTo("TestMetaDataFile");
+    assertThat(samlSettings.getDisplayName()).isEqualTo("Okta");
+    assertThat(samlSettings.getOrigin()).isEqualTo("TestOrigin");
 
     samlSettings = ssoSettingService.getSamlSettingsByOrigin("TestOrigin");
-    Assertions.assertThat(samlSettings.getUrl()).isEqualTo("TestURL");
-    Assertions.assertThat(samlSettings.getAccountId()).isEqualTo("TestAccountID");
-    Assertions.assertThat(samlSettings.getMetaDataFile()).isEqualTo("TestMetaDataFile");
-    Assertions.assertThat(samlSettings.getDisplayName()).isEqualTo("Okta");
-    Assertions.assertThat(samlSettings.getOrigin()).isEqualTo("TestOrigin");
+    assertThat(samlSettings.getUrl()).isEqualTo("TestURL");
+    assertThat(samlSettings.getAccountId()).isEqualTo("TestAccountID");
+    assertThat(samlSettings.getMetaDataFile()).isEqualTo("TestMetaDataFile");
+    assertThat(samlSettings.getDisplayName()).isEqualTo("Okta");
+    assertThat(samlSettings.getOrigin()).isEqualTo("TestOrigin");
 
     samlSettings = SamlSettings.builder()
                        .metaDataFile("TestMetaDataFile2")
@@ -59,42 +61,42 @@ public class SSOSettingServiceTest extends WingsBaseTest {
                        .build();
 
     samlSettings = ssoSettingService.saveSamlSettings(samlSettings);
-    Assertions.assertThat(samlSettings.getUrl()).isEqualTo("TestURL2");
-    Assertions.assertThat(samlSettings.getAccountId()).isEqualTo("TestAccountID");
-    Assertions.assertThat(samlSettings.getMetaDataFile()).isEqualTo("TestMetaDataFile2");
-    Assertions.assertThat(samlSettings.getDisplayName()).isEqualTo("Okta");
-    Assertions.assertThat(samlSettings.getOrigin()).isEqualTo("TestOrigin2");
+    assertThat(samlSettings.getUrl()).isEqualTo("TestURL2");
+    assertThat(samlSettings.getAccountId()).isEqualTo("TestAccountID");
+    assertThat(samlSettings.getMetaDataFile()).isEqualTo("TestMetaDataFile2");
+    assertThat(samlSettings.getDisplayName()).isEqualTo("Okta");
+    assertThat(samlSettings.getOrigin()).isEqualTo("TestOrigin2");
 
     samlSettings = ssoSettingService.getSamlSettingsByIdpUrl("TestURL2");
-    Assertions.assertThat(samlSettings.getUrl()).isEqualTo("TestURL2");
-    Assertions.assertThat(samlSettings.getAccountId()).isEqualTo("TestAccountID");
-    Assertions.assertThat(samlSettings.getMetaDataFile()).isEqualTo("TestMetaDataFile2");
-    Assertions.assertThat(samlSettings.getDisplayName()).isEqualTo("Okta");
-    Assertions.assertThat(samlSettings.getOrigin()).isEqualTo("TestOrigin2");
+    assertThat(samlSettings.getUrl()).isEqualTo("TestURL2");
+    assertThat(samlSettings.getAccountId()).isEqualTo("TestAccountID");
+    assertThat(samlSettings.getMetaDataFile()).isEqualTo("TestMetaDataFile2");
+    assertThat(samlSettings.getDisplayName()).isEqualTo("Okta");
+    assertThat(samlSettings.getOrigin()).isEqualTo("TestOrigin2");
 
     samlSettings = ssoSettingService.getSamlSettingsByAccountId("TestAccountID");
-    Assertions.assertThat(samlSettings.getUrl()).isEqualTo("TestURL2");
-    Assertions.assertThat(samlSettings.getAccountId()).isEqualTo("TestAccountID");
-    Assertions.assertThat(samlSettings.getMetaDataFile()).isEqualTo("TestMetaDataFile2");
-    Assertions.assertThat(samlSettings.getDisplayName()).isEqualTo("Okta");
-    Assertions.assertThat(samlSettings.getOrigin()).isEqualTo("TestOrigin2");
+    assertThat(samlSettings.getUrl()).isEqualTo("TestURL2");
+    assertThat(samlSettings.getAccountId()).isEqualTo("TestAccountID");
+    assertThat(samlSettings.getMetaDataFile()).isEqualTo("TestMetaDataFile2");
+    assertThat(samlSettings.getDisplayName()).isEqualTo("Okta");
+    assertThat(samlSettings.getOrigin()).isEqualTo("TestOrigin2");
 
     samlSettings = ssoSettingService.getSamlSettingsByOrigin("TestOrigin2");
-    Assertions.assertThat(samlSettings.getUrl()).isEqualTo("TestURL2");
-    Assertions.assertThat(samlSettings.getAccountId()).isEqualTo("TestAccountID");
-    Assertions.assertThat(samlSettings.getMetaDataFile()).isEqualTo("TestMetaDataFile2");
-    Assertions.assertThat(samlSettings.getDisplayName()).isEqualTo("Okta");
-    Assertions.assertThat(samlSettings.getOrigin()).isEqualTo("TestOrigin2");
+    assertThat(samlSettings.getUrl()).isEqualTo("TestURL2");
+    assertThat(samlSettings.getAccountId()).isEqualTo("TestAccountID");
+    assertThat(samlSettings.getMetaDataFile()).isEqualTo("TestMetaDataFile2");
+    assertThat(samlSettings.getDisplayName()).isEqualTo("Okta");
+    assertThat(samlSettings.getOrigin()).isEqualTo("TestOrigin2");
 
-    Assertions.assertThat(ssoSettingService.getSamlSettingsByAccountId("TestAccountID3")).isNull();
+    assertThat(ssoSettingService.getSamlSettingsByAccountId("TestAccountID3")).isNull();
 
-    Assertions.assertThat(ssoSettingService.getSamlSettingsByIdpUrl("FakeURL")).isNull();
-    Assertions.assertThat(ssoSettingService.getSamlSettingsByOrigin("FakeOrigin")).isNull();
+    assertThat(ssoSettingService.getSamlSettingsByIdpUrl("FakeURL")).isNull();
+    assertThat(ssoSettingService.getSamlSettingsByOrigin("FakeOrigin")).isNull();
 
-    Assertions.assertThat(ssoSettingService.deleteSamlSettings("TestAccountID3")).isFalse();
-    Assertions.assertThat(ssoSettingService.deleteSamlSettings("TestAccountID")).isTrue();
-    Assertions.assertThat(ssoSettingService.getSamlSettingsByAccountId("TestAccountID")).isNull();
-    Assertions.assertThat(ssoSettingService.getSamlSettingsByIdpUrl("TestURL2")).isNull();
+    assertThat(ssoSettingService.deleteSamlSettings("TestAccountID3")).isFalse();
+    assertThat(ssoSettingService.deleteSamlSettings("TestAccountID")).isTrue();
+    assertThat(ssoSettingService.getSamlSettingsByAccountId("TestAccountID")).isNull();
+    assertThat(ssoSettingService.getSamlSettingsByIdpUrl("TestURL2")).isNull();
   }
 
   @Test
@@ -102,9 +104,9 @@ public class SSOSettingServiceTest extends WingsBaseTest {
     try {
       SamlSettings samlSettings = SamlSettings.builder().build();
       samlSettings = ssoSettingService.saveSamlSettings(samlSettings);
-      Assertions.failBecauseExceptionWasNotThrown(ConstraintViolationException.class);
+      failBecauseExceptionWasNotThrown(ConstraintViolationException.class);
     } catch (javax.validation.ConstraintViolationException e) {
-      Assertions.assertThat(e.getConstraintViolations().size()).isEqualTo(5);
+      assertThat(e.getConstraintViolations().size()).isEqualTo(5);
     }
   }
 }

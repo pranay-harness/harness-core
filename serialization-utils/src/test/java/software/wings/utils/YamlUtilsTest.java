@@ -1,10 +1,11 @@
 package software.wings.utils;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -34,10 +35,10 @@ public class YamlUtilsTest {
     Map<String, List<CatalogItem>> catalogs =
         yamlUtils.read(yaml, new TypeReference<Map<String, List<CatalogItem>>>() {});
 
-    Assertions.assertThat(catalogs).isNotNull();
+    assertThat(catalogs).isNotNull();
 
     List<CatalogItem> cardViewSortBy = catalogs.get("CARD_VIEW_SORT_BY");
-    Assertions.assertThat(cardViewSortBy).isNotNull().hasSize(3);
+    assertThat(cardViewSortBy).isNotNull().hasSize(3);
   }
 
   public static class CatalogItem {

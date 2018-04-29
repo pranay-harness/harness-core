@@ -3,6 +3,7 @@ package software.wings.beans.command;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
+import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -421,7 +422,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
       if (autoscalerDefinition != null) {
         executionLogCallback.saveExecutionLog(
-            String.format("Creating autoscaler %s - disabled until 100%% deployed", hpaName), LogLevel.INFO);
+            format("Creating autoscaler %s - disabled until 100%% deployed", hpaName), LogLevel.INFO);
 
         hpa = kubernetesContainerService.createAutoscaler(kubernetesConfig, encryptedDataDetails, autoscalerDefinition);
       }
@@ -652,7 +653,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           getCustomMetricHorizontalPodAutoscaler(autoscalerName, namespace, serviceLabels, setupParams);
     } else {
       executionLogCallback.saveExecutionLog(
-          String.format("Setting autoscaler min instances %d, max instances %d, with target CPU utilization %d%%",
+          format("Setting autoscaler min instances %d, max instances %d, with target CPU utilization %d%%",
               setupParams.getMinAutoscaleInstances(), setupParams.getMaxAutoscaleInstances(),
               setupParams.getTargetCpuUtilizationPercentage()),
           LogLevel.INFO);
@@ -774,19 +775,19 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);
     if (containerInfos.size() != desiredCount || !allContainersSuccess) {
       if (containerInfos.size() != desiredCount) {
-        String message = String.format("Expected data for %d %s but got %d", desiredCount,
-            plural("container", desiredCount), containerInfos.size());
+        String message = format("Expected data for %d %s but got %d", desiredCount, plural("container", desiredCount),
+            containerInfos.size());
         executionLogCallback.saveExecutionLog(message, LogLevel.ERROR);
       }
       if (!allContainersSuccess) {
         List<ContainerInfo> failed =
             containerInfos.stream().filter(info -> info.getStatus() != ContainerInfo.Status.SUCCESS).collect(toList());
-        String message = String.format("The following %s did not have success status: %s",
-            plural("container", failed.size()), failed.stream().map(ContainerInfo::getContainerId).collect(toList()));
+        String message = format("The following %s did not have success status: %s", plural("container", failed.size()),
+            failed.stream().map(ContainerInfo::getContainerId).collect(toList()));
         executionLogCallback.saveExecutionLog(message, LogLevel.ERROR);
       }
       executionLogCallback.saveExecutionLog(
-          String.format("Completed operation with errors\n%s\n", DASH_STRING), LogLevel.ERROR);
+          format("Completed operation with errors\n%s\n", DASH_STRING), LogLevel.ERROR);
       throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE)
           .addParam("message", "DaemonSet pods failed to reach desired count");
     }
@@ -795,7 +796,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         info -> executionLogCallback.saveExecutionLog("  " + info.getHostName() + " - " + info.getContainerId()));
     executionLogCallback.saveExecutionLog("");
     if (!isRollback) {
-      executionLogCallback.saveExecutionLog(String.format("Completed operation\n%s\n", DASH_STRING));
+      executionLogCallback.saveExecutionLog(format("Completed operation\n%s\n", DASH_STRING));
     }
   }
 
@@ -867,7 +868,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   private Secret createRegistrySecret(
       String secretName, String namespace, ImageDetails imageDetails, ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog("Setting image pull secret " + secretName);
-    String credentialData = String.format(DOCKER_REGISTRY_CREDENTIAL_TEMPLATE, imageDetails.getRegistryUrl(),
+    String credentialData = format(DOCKER_REGISTRY_CREDENTIAL_TEMPLATE, imageDetails.getRegistryUrl(),
         imageDetails.getUsername(), imageDetails.getPassword());
     Map<String, String> data =
         ImmutableMap.of(".dockercfg", new String(Base64.getEncoder().encode(credentialData.getBytes())));
@@ -906,7 +907,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         }, 5L, TimeUnit.MINUTES, true);
       } catch (UncheckedTimeoutException e) {
         executionLogCallback.saveExecutionLog(
-            String.format("Timed out waiting for service [%s] load balancer to be ready", serviceName), LogLevel.ERROR);
+            format("Timed out waiting for service [%s] load balancer to be ready", serviceName), LogLevel.ERROR);
       } catch (Exception e) {
         Misc.logAllMessages(e, executionLogCallback);
       }
@@ -922,7 +923,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     String loadBalancerEndpoint =
         isNotEmpty(loadBalancerIngress.getHostname()) ? loadBalancerIngress.getHostname() : loadBalancerIngress.getIp();
     executionLogCallback.saveExecutionLog(
-        String.format("Service [%s] load balancer is ready with endpoint [%s]", serviceName, loadBalancerEndpoint),
+        format("Service [%s] load balancer is ready with endpoint [%s]", serviceName, loadBalancerEndpoint),
         LogLevel.INFO);
     return loadBalancerEndpoint;
   }
@@ -1025,7 +1026,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           secretEnvVars.put(key, new EnvVarBuilder().withName(key).withValueFrom(varSource).build());
         } else {
           String msg =
-              String.format("Key name [%s] from secret map is not a valid environment variable name. Skipping...", key);
+              format("Key name [%s] from secret map is not a valid environment variable name. Skipping...", key);
           executionLogCallback.saveExecutionLog(msg, LogLevel.WARN);
         }
       }

@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.container;
 
+import static java.lang.String.format;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
@@ -243,7 +244,7 @@ public class ContainerDeploymentManagerHelper {
           artifactoryConfig, secretManager.getEncryptionDetails(artifactoryConfig, appId, workflowExecutionId));
       String url = artifactoryConfig.getArtifactoryUrl();
       if (artifactoryArtifactStream.getDockerRepositoryServer() != null) {
-        String registryUrl = String.format(
+        String registryUrl = format(
             "http%s://%s", url.startsWith("https") ? "s" : "", artifactoryArtifactStream.getDockerRepositoryServer());
 
         imageDetails

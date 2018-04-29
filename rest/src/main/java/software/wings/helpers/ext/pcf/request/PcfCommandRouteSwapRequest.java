@@ -2,6 +2,7 @@ package software.wings.helpers.ext.pcf.request;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import software.wings.beans.PcfConfig;
 
 import java.util.List;
@@ -10,6 +11,7 @@ import java.util.List;
  * This class contains all required data for PCFCommandTask.SETUP to perform setup task
  */
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class PcfCommandRouteSwapRequest extends PcfCommandRequest {
   /**
    * releasePrefixName is (appId_serviceId_envId), while creating new version of app,

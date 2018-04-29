@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.network.Http.getOkHttpClientBuilder;
 import static io.harness.network.Http.getOkHttpClientBuilderWithReadtimeOut;
+import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -75,7 +76,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
       ElkLogFetchRequest logFetchRequest) throws IOException {
     final Call<Object> request = elkConfig.getElkConnector() == ElkConnector.KIBANA_SERVER
         ? getKibanaRestClient(elkConfig, encryptedDataDetails)
-              .getLogSample(String.format(KibanaRestClient.searchPathPattern, logFetchRequest.getIndices(), 10000),
+              .getLogSample(format(KibanaRestClient.searchPathPattern, logFetchRequest.getIndices(), 10000),
                   KibanaRestClient.searchMethod, logFetchRequest.toElasticSearchJsonObject())
         : getElkRestClient(elkConfig, encryptedDataDetails)
               .search(logFetchRequest.getIndices(), logFetchRequest.toElasticSearchJsonObject());
@@ -133,7 +134,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
       throws IOException {
     final Call<Object> request = elkConfig.getElkConnector() == ElkConnector.KIBANA_SERVER
         ? getKibanaRestClient(elkConfig, encryptedDataDetails)
-              .getLogSample(String.format(KibanaRestClient.searchPathPattern, index, 1), KibanaRestClient.searchMethod,
+              .getLogSample(format(KibanaRestClient.searchPathPattern, index, 1), KibanaRestClient.searchMethod,
                   ElkLogFetchRequest.lastInsertedRecordObject())
         : getElkRestClient(elkConfig, encryptedDataDetails)
               .getLogSample(index, ElkLogFetchRequest.lastInsertedRecordObject());
@@ -231,7 +232,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
   private String getHeaderWithCredentials(ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     encryptionService.decrypt(elkConfig, encryptedDataDetails);
     return "Basic "
-        + Base64.encodeBase64String(String.format("%s:%s", elkConfig.getUsername(), new String(elkConfig.getPassword()))
+        + Base64.encodeBase64String(format("%s:%s", elkConfig.getUsername(), new String(elkConfig.getPassword()))
                                         .getBytes(StandardCharsets.UTF_8));
   }
 

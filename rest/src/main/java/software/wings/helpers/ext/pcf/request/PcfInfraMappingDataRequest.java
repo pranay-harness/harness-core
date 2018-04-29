@@ -2,9 +2,11 @@ package software.wings.helpers.ext.pcf.request;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import software.wings.beans.PcfConfig;
 
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class PcfInfraMappingDataRequest extends PcfCommandRequest {
   private PcfConfig pcfConfig;
 

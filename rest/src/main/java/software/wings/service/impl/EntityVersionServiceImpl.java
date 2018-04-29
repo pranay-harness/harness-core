@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.EntityVersionCollection.Builder.anEntityVersionCollection;
@@ -89,8 +90,8 @@ public class EntityVersionServiceImpl implements EntityVersionService {
         entityVersion = wingsPersistence.saveAndGet(EntityVersionCollection.class, entityVersion);
         done = true;
       } catch (Exception e) {
-        logger.warn(String.format("EntityVersion save failed for entityType: %s, entityUuid: %s- attemptNo: %s",
-                        entityType, entityUuid, i),
+        logger.warn(format("EntityVersion save failed for entityType: %s, entityUuid: %s- attemptNo: %s", entityType,
+                        entityUuid, i),
             e);
         i++;
       }

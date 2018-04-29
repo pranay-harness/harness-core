@@ -2,6 +2,7 @@ package software.wings.helpers.ext.helm.request;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.service.impl.ContainerServiceParams;
 
@@ -12,6 +13,7 @@ import java.util.Map;
  * Created by anubhaw on 3/22/18.
  */
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class HelmInstallCommandRequest extends HelmCommandRequest {
   private HelmChartSpecification chartSpecification;
   private Integer newReleaseVersion;

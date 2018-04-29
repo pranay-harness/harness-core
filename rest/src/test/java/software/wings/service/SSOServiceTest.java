@@ -1,5 +1,7 @@
 package software.wings.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -7,7 +9,6 @@ import com.google.inject.Inject;
 
 import com.coveo.saml.SamlException;
 import org.apache.commons.io.IOUtils;
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -54,15 +55,15 @@ public class SSOServiceTest extends WingsBaseTest {
     SSOConfig settings = ssoService.uploadSamlConfiguration(
         "testAccountID", getClass().getResourceAsStream("/okta-IDP-metadata.xml"), "Okta");
     String idpRedirectUrl = ((SamlSettings) settings.getSsoSettings().get(0)).getUrl();
-    Assertions.assertThat(idpRedirectUrl)
+    assertThat(idpRedirectUrl)
         .isEqualTo("https://dev-274703.oktapreview.com/app/harnessiodev274703_testapp_1/exkefa5xlgHhrU1Mc0h7/sso/saml");
-    Assertions.assertThat(settings.getSsoSettings().get(0).getDisplayName()).isEqualTo("Okta");
+    assertThat(settings.getSsoSettings().get(0).getDisplayName()).isEqualTo("Okta");
 
     try {
       ssoService.uploadSamlConfiguration("testAccountID", getClass().getResourceAsStream("/SamlResponse.txt"), "Okta");
-      Assertions.failBecauseExceptionWasNotThrown(WingsException.class);
+      failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException e) {
-      Assertions.assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_SAML_CONFIGURATION.name());
+      assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_SAML_CONFIGURATION.name());
     }
   }
 
@@ -72,9 +73,9 @@ public class SSOServiceTest extends WingsBaseTest {
     when(ACCOUNT_SERVICE.get(anyString())).thenReturn(account);
     when(ACCOUNT_SERVICE.update(account)).thenReturn(account);
     SSOConfig settings = ssoService.setAuthenticationMechanism("testAccount", AuthenticationMechanism.SAML);
-    Assertions.assertThat(settings.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.SAML);
+    assertThat(settings.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.SAML);
 
     settings = ssoService.setAuthenticationMechanism("testAccount", AuthenticationMechanism.USER_PASSWORD);
-    Assertions.assertThat(settings.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.USER_PASSWORD);
+    assertThat(settings.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.USER_PASSWORD);
   }
 }

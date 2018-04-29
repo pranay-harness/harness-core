@@ -2,6 +2,7 @@ package software.wings.helpers.ext.container;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static software.wings.helpers.ext.helm.HelmConstants.KUBE_CONFIG_TEMPLATE;
 
 import com.google.common.cache.CacheBuilder;
@@ -151,9 +152,9 @@ public class ContainerDeploymentDelegateHelper {
     List<? extends HasMetadata> controllers = kubernetesContainerService.getControllers(
         kubernetesConfig, containerServiceParams.getEncryptionDetails(), labels);
 
-    executionLogCallback.saveExecutionLog(String.format("Deployed Controllers [%s]:", controllers.size()));
+    executionLogCallback.saveExecutionLog(format("Deployed Controllers [%s]:", controllers.size()));
     controllers.forEach(controller
-        -> executionLogCallback.saveExecutionLog(String.format("Kind:%s, Name:%s (desired: %s)", controller.getKind(),
+        -> executionLogCallback.saveExecutionLog(format("Kind:%s, Name:%s (desired: %s)", controller.getKind(),
             controller.getMetadata().getName(), kubernetesContainerService.getControllerPodCount(controller))));
 
     List<ContainerInfo> containerInfoList = new ArrayList<>();

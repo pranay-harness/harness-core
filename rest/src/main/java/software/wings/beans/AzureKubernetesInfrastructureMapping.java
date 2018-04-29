@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import static java.lang.String.format;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -25,7 +27,7 @@ public class AzureKubernetesInfrastructureMapping extends ContainerInfrastructur
   @SchemaIgnore
   @Override
   public String getDefaultName() {
-    return Util.normalize(String.format("%s_AZURE_Kubernetes_%s_%s", this.getClusterName(),
+    return Util.normalize(format("%s_AZURE_Kubernetes_%s_%s", this.getClusterName(),
         Optional.ofNullable(this.getComputeProviderName())
             .orElse(this.getComputeProviderType().toLowerCase())
             .replace(':', '_'),

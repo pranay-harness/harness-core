@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -780,7 +781,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (!referencingWorkflowNames.isEmpty()) {
       throw new WingsException(INVALID_REQUEST, USER)
           .addParam("message",
-              String.format("Service Infrastructure is in use by %d %s [%s].", referencingWorkflowNames.size(),
+              format("Service Infrastructure is in use by %d %s [%s].", referencingWorkflowNames.size(),
                   plural("workflow", referencingWorkflowNames.size()), Joiner.on(", ").join(referencingWorkflowNames)));
     }
   }

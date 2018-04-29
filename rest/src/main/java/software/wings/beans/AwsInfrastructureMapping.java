@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 
@@ -210,7 +211,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
   @SchemaIgnore
   @Override
   public String getDefaultName() {
-    return Util.normalize(String.format("%s%s (AWS_SSH) %s", isNotEmpty(customName) ? (customName + " - ") : "",
+    return Util.normalize(format("%s%s (AWS_SSH) %s", isNotEmpty(customName) ? (customName + " - ") : "",
         Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
         this.getRegion()));
   }

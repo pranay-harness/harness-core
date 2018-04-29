@@ -3,6 +3,7 @@ package software.wings.watcher.service;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
+import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.synchronizedList;
@@ -641,7 +642,7 @@ public class WatcherServiceImpl implements WatcherService {
     try {
       cleanup(new File(System.getProperty("user.dir")), version, newVersion, "watcherBackup.");
     } catch (Exception ex) {
-      logger.error(String.format("Failed to clean watcher version [%s] from Backup", newVersion), ex);
+      logger.error(format("Failed to clean watcher version [%s] from Backup", newVersion), ex);
     }
   }
 
@@ -649,7 +650,7 @@ public class WatcherServiceImpl implements WatcherService {
     try {
       cleanup(new File(System.getProperty("capsule.dir")).getParentFile(), version, newVersion, "watcher-");
     } catch (Exception ex) {
-      logger.error(String.format("Failed to clean watcher version [%s] from Capsule", newVersion), ex);
+      logger.error(format("Failed to clean watcher version [%s] from Capsule", newVersion), ex);
     }
   }
 

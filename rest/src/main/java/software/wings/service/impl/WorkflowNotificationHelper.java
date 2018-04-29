@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
+import static java.lang.String.format;
 import static java.util.Collections.emptySet;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.ExecutionScope.WORKFLOW;
@@ -213,23 +214,21 @@ public class WorkflowNotificationHelper {
       endTs = clock.millis();
     }
 
-    String workflowUrl =
-        buildAbsoluteUrl(String.format("/account/%s/app/%s/env/%s/executions/%s/details", app.getAccountId(),
-            app.getUuid(), BUILD.equals(context.getOrchestrationWorkflowType()) ? "build" : env.getUuid(),
-            context.getWorkflowExecutionId()));
+    String workflowUrl = buildAbsoluteUrl(format("/account/%s/app/%s/env/%s/executions/%s/details", app.getAccountId(),
+        app.getUuid(), BUILD.equals(context.getOrchestrationWorkflowType()) ? "build" : env.getUuid(),
+        context.getWorkflowExecutionId()));
 
     String pipelineMsg = "";
     if (workflowExecution.getPipelineExecutionId() != null) {
       String pipelineName = workflowExecution.getPipelineSummary().getPipelineName();
       if (isNotBlank(pipelineName)) {
-        String pipelineUrl = buildAbsoluteUrl(String.format("/account/%s/app/%s/deployments/%s/details",
-            app.getAccountId(), app.getUuid(), workflowExecution.getPipelineExecutionId()));
-        pipelineMsg = String.format(" as part of <<<%s|-|%s>>> pipeline", pipelineUrl, pipelineName);
+        String pipelineUrl = buildAbsoluteUrl(format("/account/%s/app/%s/deployments/%s/details", app.getAccountId(),
+            app.getUuid(), workflowExecution.getPipelineExecutionId()));
+        pipelineMsg = format(" as part of <<<%s|-|%s>>> pipeline", pipelineUrl, pipelineName);
       }
     }
 
-    String startTime =
-        String.format("%s at %s", dateFormat.format(new Date(startTs)), timeFormat.format(new Date(startTs)));
+    String startTime = format("%s at %s", dateFormat.format(new Date(startTs)), timeFormat.format(new Date(startTs)));
     String endTime = timeFormat.format(new Date(endTs));
 
     Map<String, String> placeHolderValues = new HashMap<>();

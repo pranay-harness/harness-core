@@ -110,7 +110,7 @@ public class DirectKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandler
     when(serviceResourceService.getServiceByName(anyString(), anyString())).thenReturn(getService());
     when(serviceResourceService.get(anyString(), anyString())).thenReturn(getService());
     when(serviceTemplateService.getTemplateRefKeysByService(anyString(), anyString(), anyString()))
-        .thenReturn(asList(new Key(ServiceTemplate.class, "serviceTemplates", SERVICE_ID)));
+        .thenReturn(asList(new Key<ServiceTemplate>(ServiceTemplate.class, "serviceTemplates", SERVICE_ID)));
     when(serviceTemplateService.get(anyString(), anyString())).thenReturn(serviceTemplate);
   }
 
@@ -195,7 +195,7 @@ public class DirectKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandler
                                       .withFileContent(yamlContent)
                                       .build();
 
-    ChangeContext<Y> changeContext = new ChangeContext();
+    ChangeContext<Y> changeContext = new ChangeContext<Y>();
     changeContext.setChange(gitFileChange);
     changeContext.setYamlType(YamlType.INFRA_MAPPING);
     changeContext.setYamlSyncHandler(yamlHandler);
