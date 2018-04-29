@@ -31,7 +31,6 @@ import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
@@ -98,7 +97,7 @@ public class DelegateResourceTest {
   @Before
   public void setUp() {
     initMocks(this);
-    Mockito.when(mainConfiguration.getApiUrl()).thenReturn(apiUrl);
+    when(mainConfiguration.getApiUrl()).thenReturn(apiUrl);
   }
 
   @Test

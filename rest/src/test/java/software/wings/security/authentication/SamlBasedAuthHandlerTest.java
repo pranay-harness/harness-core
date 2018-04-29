@@ -18,7 +18,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.Spy;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
@@ -63,8 +62,8 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
       String samlResponse =
           IOUtils.toString(getClass().getResourceAsStream("/SamlResponse.txt"), Charset.defaultCharset());
       account.setAuthenticationMechanism(AuthenticationMechanism.SAML);
-      Mockito.when(authenticationUtil.getUser(anyString())).thenReturn(user);
-      Mockito.when(authenticationUtil.getPrimaryAccount(any(User.class))).thenReturn(account);
+      when(authenticationUtil.getUser(anyString())).thenReturn(user);
+      when(authenticationUtil.getPrimaryAccount(any(User.class))).thenReturn(account);
       assertThat(authHandler.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.SAML);
       authHandler.authenticate(idpUrl, samlResponse);
       failBecauseExceptionWasNotThrown(WingsException.class);
@@ -82,8 +81,8 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
     String samlResponseString =
         IOUtils.toString(getClass().getResourceAsStream("/SamlResponse.txt"), Charset.defaultCharset());
     account.setAuthenticationMechanism(AuthenticationMechanism.SAML);
-    Mockito.when(authenticationUtil.getUser(anyString())).thenReturn(user);
-    Mockito.when(authenticationUtil.getPrimaryAccount(any(User.class))).thenReturn(account);
+    when(authenticationUtil.getUser(anyString())).thenReturn(user);
+    when(authenticationUtil.getPrimaryAccount(any(User.class))).thenReturn(account);
     SamlResponse samlResponse = mock(SamlResponse.class);
     when(samlResponse.getNameID()).thenReturn("rushabh@harness.io");
     SamlClient samlClient = mock(SamlClient.class);

@@ -12,7 +12,6 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Matchers;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
@@ -50,7 +49,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
     Account account2 = mock(Account.class);
 
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1, account2));
-    Mockito.when(AUTHENTICATION_UTL.getUser("testUser")).thenReturn(mockUser);
+    when(AUTHENTICATION_UTL.getUser("testUser")).thenReturn(mockUser);
     assertThat(authenticationManager.getAuthenticationMechanism("testUser"))
         .isEqualTo(AuthenticationMechanism.USER_PASSWORD);
 
@@ -71,14 +70,13 @@ public class AuthenticationManagerTest extends WingsBaseTest {
     Account account2 = mock(Account.class);
 
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1, account2));
-    Mockito.when(AUTHENTICATION_UTL.getUser(Matchers.anyString(), Matchers.any(ReportTarget[].class)))
-        .thenReturn(mockUser);
+    when(AUTHENTICATION_UTL.getUser(Matchers.anyString(), Matchers.any(ReportTarget[].class))).thenReturn(mockUser);
     LoginTypeResponse loginTypeResponse = authenticationManager.getLoginTypeResponse("testUser");
     assertThat(loginTypeResponse.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.USER_PASSWORD);
     assertThat(loginTypeResponse.getSamlRequest()).isNull();
 
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1, account2));
-    Mockito.when(AUTHENTICATION_UTL.getUser("testUser")).thenReturn(mockUser);
+    when(AUTHENTICATION_UTL.getUser("testUser")).thenReturn(mockUser);
     assertThat(authenticationManager.getAuthenticationMechanism("testUser"))
         .isEqualTo(AuthenticationMechanism.USER_PASSWORD);
 
@@ -107,7 +105,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
     when(MAIN_CONFIGURATION.getPortal()).thenReturn(portalConfig);
     Account account1 = mock(Account.class);
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1));
-    Mockito.when(AUTHENTICATION_UTL.getUser("testUser@test.com")).thenReturn(mockUser);
+    when(AUTHENTICATION_UTL.getUser("testUser@test.com")).thenReturn(mockUser);
 
     when(PASSWORD_BASED_AUTH_HANDLER.authenticate(Matchers.anyString())).thenReturn(mockUser);
     User authenticatedUser = mock(User.class);

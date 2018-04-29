@@ -214,9 +214,8 @@ public class StateMachineExecutor {
     if (stateExecutionInstance.getChildStateMachineId() != null
         && !stateExecutionInstance.getChildStateMachineId().equals(stateMachine.getUuid())
         && stateMachine.getChildStateMachines().get(stateExecutionInstance.getChildStateMachineId()) == null) {
-      throw new InvalidRequestException(
-          String.format("State instance %s child machine does not exist in the state machine %s",
-              stateExecutionInstance.getUuid(), stateMachine.getUuid()));
+      throw new InvalidRequestException(format("State instance %s child machine does not exist in the state machine %s",
+          stateExecutionInstance.getUuid(), stateMachine.getUuid()));
     }
     StateMachine sm;
     if (stateExecutionInstance.getChildStateMachineId() == null) {
