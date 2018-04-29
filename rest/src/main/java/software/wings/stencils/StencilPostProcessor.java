@@ -2,6 +2,7 @@ package software.wings.stencils;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -173,8 +174,7 @@ public class StencilPostProcessor {
       }
     } catch (Exception e) {
       logger.warn(
-          String.format("Unable to set default value for stencil %s:field %s with value %s", stencil, fieldName, value),
-          e);
+          format("Unable to set default value for stencil %s:field %s with value %s", stencil, fieldName, value), e);
     }
     return stencil;
   }
@@ -208,8 +208,7 @@ public class StencilPostProcessor {
         });
       }
     } catch (Exception e) {
-      logger.warn(
-          String.format("Unable to fill in values for stencil %s:field %s with data %s", t, fieldName, data), e);
+      logger.warn(format("Unable to fill in values for stencil %s:field %s with data %s", t, fieldName, data), e);
     }
     return Stream.of(t);
   }
@@ -226,8 +225,7 @@ public class StencilPostProcessor {
         return overridingStencil;
       }
     } catch (Exception e) {
-      logger.warn(
-          String.format("Unable to fill in values for stencil %s:field %s with data %s", t, fieldName, data), e);
+      logger.warn(format("Unable to fill in values for stencil %s:field %s with data %s", t, fieldName, data), e);
     }
     return t;
   }

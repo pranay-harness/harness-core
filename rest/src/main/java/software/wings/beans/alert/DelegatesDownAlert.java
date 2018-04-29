@@ -1,5 +1,7 @@
 package software.wings.beans.alert;
 
+import static java.lang.String.format;
+
 import lombok.Builder;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
@@ -21,6 +23,6 @@ public class DelegatesDownAlert implements AlertData {
 
   @Override
   public String buildTitle() {
-    return String.format("Delegate %s with IP %s is down", hostName, ip);
+    return format("Delegate %s with IP %s is down", hostName, ip);
   }
 }

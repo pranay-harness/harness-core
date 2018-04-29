@@ -1,5 +1,6 @@
 package software.wings.sm.states.pcf;
 
+import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
@@ -162,7 +163,7 @@ public class PcfSetupState extends State {
     ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
     // Observed NPE in alerts
     if (artifactStream == null) {
-      throw new StateExecutionException(String.format(
+      throw new StateExecutionException(format(
           "Unable to find artifact stream for service %s, artifact %s", serviceElement.getName(), artifact.getUuid()));
     }
     PcfInfrastructureMapping pcfInfrastructureMapping =

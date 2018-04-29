@@ -4,7 +4,8 @@
 
 package software.wings.utils;
 
-import org.assertj.core.api.Assertions;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.junit.Test;
 import org.xml.sax.SAXException;
 
@@ -33,6 +34,6 @@ public class XmlUtilsTest {
     String expression = "//widget/manufacturer/text()";
     String text = XmlUtils.xpath(content, expression);
 
-    Assertions.assertThat(text).isEqualTo("abc");
+    assertThat(text).isEqualTo("abc");
   }
 }

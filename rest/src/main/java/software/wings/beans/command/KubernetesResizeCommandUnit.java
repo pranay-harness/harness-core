@@ -1,5 +1,6 @@
 package software.wings.beans.command;
 
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.atteo.evo.inflector.English.plural;
 import static software.wings.beans.ErrorCode.GENERAL_ERROR;
@@ -85,15 +86,14 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     if (containerInfos.size() != desiredCount || !allContainersSuccess) {
       try {
         if (containerInfos.size() != desiredCount) {
-          executionLogCallback.saveExecutionLog(String.format("Expected data for %d %s but got %d", desiredCount,
+          executionLogCallback.saveExecutionLog(format("Expected data for %d %s but got %d", desiredCount,
                                                     plural("container", desiredCount), containerInfos.size()),
               LogLevel.ERROR);
         }
         List<ContainerInfo> failedContainers =
             containerInfos.stream().filter(info -> info.getStatus() != ContainerInfo.Status.SUCCESS).collect(toList());
         executionLogCallback.saveExecutionLog(
-            String.format("The following %s did not have success status: %s",
-                plural("container", failedContainers.size()),
+            format("The following %s did not have success status: %s", plural("container", failedContainers.size()),
                 failedContainers.stream().map(ContainerInfo::getContainerId).collect(toList())),
             LogLevel.ERROR);
       } catch (Exception e) {

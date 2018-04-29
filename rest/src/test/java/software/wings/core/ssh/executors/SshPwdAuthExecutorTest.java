@@ -1,6 +1,7 @@
 package software.wings.core.ssh.executors;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -26,7 +27,6 @@ import com.google.common.io.CharStreams;
 
 import io.harness.rule.RepeatRule.Repeat;
 import org.apache.commons.lang3.tuple.Pair;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -151,7 +151,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   @Repeat(times = 3, successes = 1)
   public void shouldThrowExceptionForInvalidCredential() {
     executor.init(configBuilder.but().withPassword("INVALID_PASSWORD".toCharArray()).build());
-    Assertions.assertThatThrownBy(() -> executor.executeCommandString("ls"))
+    assertThatThrownBy(() -> executor.executeCommandString("ls"))
         .isInstanceOf(WingsException.class)
         .hasMessageContaining(INVALID_CREDENTIAL.name());
   }
@@ -166,8 +166,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
 
     executor.init(sshSessionConfig);
     String fileName = generateUuid();
-    CommandExecutionStatus execute =
-        executor.executeCommandString(String.format("touch %s && rm %s", fileName, fileName));
+    CommandExecutionStatus execute = executor.executeCommandString(format("touch %s && rm %s", fileName, fileName));
     assertEquals("ssh command result is " + execute.toString(), SUCCESS, execute);
   }
 
@@ -178,7 +177,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   @Repeat(times = 3, successes = 1)
   public void shouldReturnFailureForFailedCommandExecution() {
     executor.init(configBuilder.build());
-    CommandExecutionStatus execute = executor.executeCommandString(String.format("rm %s", "FILE_DOES_NOT_EXIST"));
+    CommandExecutionStatus execute = executor.executeCommandString(format("rm %s", "FILE_DOES_NOT_EXIST"));
     assertThat(execute).isEqualTo(FAILURE);
   }
 

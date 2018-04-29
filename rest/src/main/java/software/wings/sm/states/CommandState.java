@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static org.joor.Reflect.on;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
@@ -236,7 +237,7 @@ public class CommandState extends State {
 
       if (command == null) {
         throw new StateExecutionException(
-            String.format("Unable to find command %s for service %s", actualCommand, service.getUuid()));
+            format("Unable to find command %s for service %s", actualCommand, service.getUuid()));
       }
 
       command.setGraph(null);
@@ -335,7 +336,7 @@ public class CommandState extends State {
         ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
         // Observed NPE in alerts
         if (artifactStream == null) {
-          throw new StateExecutionException(String.format(
+          throw new StateExecutionException(format(
               "Unable to find artifact stream for service %s, artifact %s", service.getName(), artifact.getUuid()));
         }
 
@@ -354,7 +355,7 @@ public class CommandState extends State {
         commandExecutionContextBuilder.withArtifactFiles(artifact.getArtifactFiles());
         executionDataBuilder.withArtifactName(artifact.getDisplayName()).withActivityId(artifact.getUuid());
       } else if (command.isArtifactNeeded()) {
-        throw new StateExecutionException(String.format("Unable to find artifact for service %s", service.getName()));
+        throw new StateExecutionException(format("Unable to find artifact for service %s", service.getName()));
       }
       Activity act = activityBuilder.build();
       act.setAppId(application.getUuid());

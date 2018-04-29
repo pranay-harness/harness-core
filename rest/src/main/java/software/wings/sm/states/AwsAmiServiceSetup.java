@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -209,7 +210,7 @@ public class AwsAmiServiceSetup extends State {
       autoScalingSteadyStateTimeout = getAutoScalingSteadyStateTimeout() == 0 ? (int) TimeUnit.MINUTES.toMinutes(10)
                                                                               : autoScalingSteadyStateTimeout;
 
-      executionLogCallback.saveExecutionLog(String.format(
+      executionLogCallback.saveExecutionLog(format(
           "Setting up AWS AMI with old AutoScalingGroupName [%s] to new AutoScalingGroupName [%s], maxInstances [%s], autoScalingSteadyTimeout [%s] minutes in [%s] region",
           lastDeployedAsgName == null ? "N/A" : lastDeployedAsgName, newAutoScalingGroupName, maxInstances,
           autoScalingSteadyStateTimeout, region));
@@ -235,29 +236,28 @@ public class AwsAmiServiceSetup extends State {
       LaunchConfiguration oldLaunchConfiguration =
           awsHelperService.getLaunchConfiguration(awsConfig, encryptionDetails, region, newAutoScalingGroupName);
       if (oldLaunchConfiguration != null) {
-        executionLogCallback.saveExecutionLog(String.format(
-            "Deleting old launch configuration [%s]", oldLaunchConfiguration.getLaunchConfigurationName()));
+        executionLogCallback.saveExecutionLog(
+            format("Deleting old launch configuration [%s]", oldLaunchConfiguration.getLaunchConfigurationName()));
         awsHelperService.deleteLaunchConfig(awsConfig, encryptionDetails, region, newAutoScalingGroupName);
       }
       awsHelperService.createLaunchConfiguration(awsConfig, encryptionDetails, region,
           createNewLaunchConfigurationRequest(
               context, artifact, userDataSpecification, baseLaunchConfiguration, newAutoScalingGroupName));
-      executionLogCallback.saveExecutionLog(String.format(
-          "Creating new launch configuration [%s]", baseLaunchConfiguration.getLaunchConfigurationName()));
+      executionLogCallback.saveExecutionLog(
+          format("Creating new launch configuration [%s]", baseLaunchConfiguration.getLaunchConfigurationName()));
       awsHelperService.createAutoScalingGroup(awsConfig, encryptionDetails, region,
           createNewAutoScalingGroupRequest(
               infrastructureMapping, newAutoScalingGroupName, baseAutoScalingGroup, harnessRevision),
           executionLogCallback);
-      executionLogCallback.saveExecutionLog(
-          String.format("Creating new AutoScalingGroup [%s]", newAutoScalingGroupName));
+      executionLogCallback.saveExecutionLog(format("Creating new AutoScalingGroup [%s]", newAutoScalingGroupName));
       deleteOldHarnessManagedAutoScalingGroups(encryptionDetails, region, awsConfig, harnessManagedAutoScalingGroups,
           amiServiceElement.getOldAutoScalingGroupName(), executionLogCallback);
 
       executionLogCallback.saveExecutionLog(
-          String.format("Deleting old AutoScalingGroup [%s]", amiServiceElement.getOldAutoScalingGroupName()));
+          format("Deleting old AutoScalingGroup [%s]", amiServiceElement.getOldAutoScalingGroupName()));
 
       executionLogCallback.saveExecutionLog(
-          String.format("Completed AWS AMI Setup with new autoScalingGroupName [%s]", newAutoScalingGroupName));
+          format("Completed AWS AMI Setup with new autoScalingGroupName [%s]", newAutoScalingGroupName));
     } catch (Exception exception) {
       logger.error("Ami setup step failed with error ", exception);
       executionStatus = ExecutionStatus.FAILED;
@@ -290,7 +290,7 @@ public class AwsAmiServiceSetup extends State {
     if (baseAutoScalingGroupLaunchConfiguration == null) {
       throw new WingsException(INVALID_REQUEST)
           .addParam("message",
-              String.format(
+              format(
                   "LaunchConfiguration [%s] for referenced AutoScaling Group [%s] provided in Service Infrastructure couldn't be found in AWS region [%s]",
                   baseAutoScalingGroup.getAutoScalingGroupName(), infrastructureMapping.getAutoScalingGroupName(),
                   infrastructureMapping.getRegion()));
@@ -307,7 +307,7 @@ public class AwsAmiServiceSetup extends State {
       logger.error("Couldn't find reference AutoScalingGroup: {}", infrastructureMapping.getAutoScalingGroupName());
       throw new WingsException(INVALID_REQUEST)
           .addParam("message",
-              String.format(
+              format(
                   "Reference AutoScaling Group [%s] provided in Service Infrastructure couldn't be found in AWS region [%s]",
                   infrastructureMapping.getAutoScalingGroupName(), infrastructureMapping.getRegion()));
     }

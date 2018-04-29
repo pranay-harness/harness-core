@@ -2,11 +2,13 @@ package software.wings.helpers.ext.pcf.response;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 
 import java.util.List;
 
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class PcfInfraMappingDataResponse extends PcfCommandResponse {
   private List<String> organizations;
   private List<String> spaces;

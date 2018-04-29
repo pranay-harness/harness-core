@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.inject.Inject;
@@ -51,17 +52,17 @@ public class WebHookServiceImpl implements WebHookService {
   private String getUiUrl(
       boolean isPipeline, String accountId, String appId, String envId, String workflowExecutionId) {
     if (isPipeline) {
-      return String.format("%s#/account/%s/app/%s/pipeline-execution/%s/workflow-execution/undefined/details",
-          getBaseUrl(), accountId, appId, workflowExecutionId);
+      return format("%s#/account/%s/app/%s/pipeline-execution/%s/workflow-execution/undefined/details", getBaseUrl(),
+          accountId, appId, workflowExecutionId);
     } else {
-      return String.format("%s#/account/%s/app/%s/env/%s/executions/%s/details", getBaseUrl(), accountId, appId, envId,
+      return format("%s#/account/%s/app/%s/env/%s/executions/%s/details", getBaseUrl(), accountId, appId, envId,
           workflowExecutionId);
     }
   }
 
   private String getApiUrl(String accountId, String appId, String workflowExecutionId) {
-    return String.format("%sapi/external/v1/executions/%s/status?accountId=%s&appId=%s", getBaseUrl(),
-        workflowExecutionId, accountId, appId);
+    return format("%sapi/external/v1/executions/%s/status?accountId=%s&appId=%s", getBaseUrl(), workflowExecutionId,
+        accountId, appId);
   }
 
   @Override

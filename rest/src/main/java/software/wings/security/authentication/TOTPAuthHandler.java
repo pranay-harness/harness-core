@@ -1,5 +1,6 @@
 package software.wings.security.authentication;
 
+import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.exception.WingsException.USER;
 
@@ -88,7 +89,7 @@ public class TOTPAuthHandler implements TwoFactorAuthHandler {
   }
 
   private String generateOtpUrl(String companyName, String userEmailAddress, String secret) {
-    return String.format(
+    return format(
         "otpauth://totp/%s:%s?secret=%s&issuer=Harness-Inc", companyName.replace(" ", "-"), userEmailAddress, secret);
   }
 

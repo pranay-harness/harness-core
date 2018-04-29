@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtil.trimList;
+import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -341,8 +342,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
       List<String> pipelineNames = pipelines.stream().map(Pipeline::getName).collect(toList());
       throw new WingsException(INVALID_REQUEST, USER)
           .addParam("message",
-              String.format("Environment is referenced by %d %s [%s].", pipelines.size(),
-                  plural("pipeline", pipelines.size()), Joiner.on(", ").join(pipelineNames)));
+              format("Environment is referenced by %d %s [%s].", pipelines.size(), plural("pipeline", pipelines.size()),
+                  Joiner.on(", ").join(pipelineNames)));
     }
   }
 

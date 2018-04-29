@@ -1,5 +1,8 @@
 package software.wings.security.authentication;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -10,7 +13,6 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import com.j256.twofactorauth.TimeBasedOneTimePasswordUtil;
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -49,14 +51,14 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
 
       Mockito.when(authenticationUtil.generateBearerTokenForUser(user)).thenReturn(authenticatedUser);
       String encryptedCode = Base64.getEncoder().encodeToString(("testJWTToken:" + code).getBytes());
-      Assertions.assertThat(twoFactorAuthenticationManager.authenticate(encryptedCode)).isEqualTo(authenticatedUser);
+      assertThat(twoFactorAuthenticationManager.authenticate(encryptedCode)).isEqualTo(authenticatedUser);
 
       try {
         Mockito.when(userService.verifyJWTToken(anyString(), any(JWT_CATEGORY.class))).thenReturn(null);
         twoFactorAuthenticationManager.authenticate(encryptedCode);
-        Assertions.failBecauseExceptionWasNotThrown(WingsException.class);
+        failBecauseExceptionWasNotThrown(WingsException.class);
       } catch (WingsException e) {
-        Assertions.assertThat(e).hasMessage(ErrorCode.USER_DOES_NOT_EXIST.name());
+        assertThat(e).hasMessage(ErrorCode.USER_DOES_NOT_EXIST.name());
       }
 
       try {
@@ -64,25 +66,23 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
         user.setTotpSecretKey(null);
 
         twoFactorAuthenticationManager.authenticate(encryptedCode);
-        Assertions.failBecauseExceptionWasNotThrown(WingsException.class);
+        failBecauseExceptionWasNotThrown(WingsException.class);
       } catch (WingsException e) {
-        Assertions.assertThat(e).hasMessage(ErrorCode.INVALID_TWO_FACTOR_AUTHENTICATION_CONFIGURATION.name());
+        assertThat(e).hasMessage(ErrorCode.INVALID_TWO_FACTOR_AUTHENTICATION_CONFIGURATION.name());
       }
 
       try {
         Mockito.when(userService.verifyJWTToken(anyString(), any(JWT_CATEGORY.class))).thenReturn(user);
         user.setTotpSecretKey(totpSecretKey);
-        encryptedCode = Base64.getEncoder().encodeToString(("testJWTToken:"
-            + "invalid_code")
-                                                               .getBytes());
+        encryptedCode = Base64.getEncoder().encodeToString("testJWTToken:invalid_code".getBytes());
         twoFactorAuthenticationManager.authenticate(encryptedCode);
-        Assertions.failBecauseExceptionWasNotThrown(WingsException.class);
+        failBecauseExceptionWasNotThrown(WingsException.class);
       } catch (WingsException e) {
-        Assertions.assertThat(e).hasMessage(ErrorCode.INVALID_TOTP_TOKEN.name());
+        assertThat(e).hasMessage(ErrorCode.INVALID_TOTP_TOKEN.name());
       }
 
     } catch (GeneralSecurityException e) {
-      Assertions.fail(e.getMessage());
+      fail(e.getMessage());
     }
   }
 
@@ -95,9 +95,9 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
 
     TwoFactorAuthenticationSettings settings = twoFactorAuthenticationManager.createTwoFactorAuthenticationSettings(
         user, TwoFactorAuthenticationMechanism.TOTP);
-    Assertions.assertThat(settings.getMechanism()).isEqualTo(TwoFactorAuthenticationMechanism.TOTP);
-    Assertions.assertThat(settings.isTwoFactorAuthenticationEnabled()).isFalse();
-    Assertions.assertThat(settings.getTotpSecretKey()).isNotEmpty();
-    Assertions.assertThat(settings.getTotpqrurl()).isNotEmpty();
+    assertThat(settings.getMechanism()).isEqualTo(TwoFactorAuthenticationMechanism.TOTP);
+    assertThat(settings.isTwoFactorAuthenticationEnabled()).isFalse();
+    assertThat(settings.getTotpSecretKey()).isNotEmpty();
+    assertThat(settings.getTotpqrurl()).isNotEmpty();
   }
 }

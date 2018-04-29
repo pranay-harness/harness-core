@@ -1,6 +1,7 @@
 package software.wings.beans.command;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
@@ -111,7 +112,7 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
       Misc.logAllMessages(ex, executionLogCallback);
       logger.error("Completed operation with errors");
       executionLogCallback.saveExecutionLog(
-          String.format("Completed operation with errors\n%s\n", DASH_STRING), LogLevel.ERROR);
+          format("Completed operation with errors\n%s\n", DASH_STRING), LogLevel.ERROR);
     } finally {
       context.setCommandExecutionData(executionDataBuilder.build());
     }
@@ -149,7 +150,7 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
       }
       logContainerInfos(containerInfos, executionLogCallback);
       logger.info("Successfully completed resize operation");
-      executionLogCallback.saveExecutionLog(String.format("Completed operation\n%s\n", DASH_STRING));
+      executionLogCallback.saveExecutionLog(format("Completed operation\n%s\n", DASH_STRING));
     }
   }
 

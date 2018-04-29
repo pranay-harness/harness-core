@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -1034,17 +1035,16 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .hasFieldOrProperty("preDeploymentSteps")
         .hasFieldOrProperty("postDeploymentSteps")
         .hasFieldOrProperty("graph")
-        .hasFieldOrPropertyWithValue("validationMessage", String.format(WORKFLOW_VALIDATION_MESSAGE, "[Phase 1]"));
+        .hasFieldOrPropertyWithValue("validationMessage", format(WORKFLOW_VALIDATION_MESSAGE, "[Phase 1]"));
     assertThat(orchestrationWorkflow.getWorkflowPhases().get(0))
         .isNotNull()
         .hasFieldOrPropertyWithValue("valid", false)
-        .hasFieldOrPropertyWithValue(
-            "validationMessage", String.format(PHASE_VALIDATION_MESSAGE, asList(DEPLOY_CONTAINERS)));
+        .hasFieldOrPropertyWithValue("validationMessage", format(PHASE_VALIDATION_MESSAGE, asList(DEPLOY_CONTAINERS)));
     assertThat(orchestrationWorkflow.getWorkflowPhases().get(0).getPhaseSteps().get(0))
         .isNotNull()
         .hasFieldOrPropertyWithValue("valid", false)
         .hasFieldOrPropertyWithValue(
-            "validationMessage", String.format(PHASE_STEP_VALIDATION_MESSAGE, asList(UPGRADE_CONTAINERS)));
+            "validationMessage", format(PHASE_STEP_VALIDATION_MESSAGE, asList(UPGRADE_CONTAINERS)));
     assertThat(orchestrationWorkflow.getWorkflowPhases()
                    .get(0)
                    .getPhaseSteps()
@@ -1057,7 +1057,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .isNotNull()
         .hasFieldOrPropertyWithValue("valid", false)
         .hasFieldOrPropertyWithValue(
-            "validationMessage", String.format(STEP_VALIDATION_MESSAGE, asList("commandName, instanceCount")));
+            "validationMessage", format(STEP_VALIDATION_MESSAGE, asList("commandName, instanceCount")));
     assertThat(orchestrationWorkflow.getWorkflowPhases()
                    .get(0)
                    .getPhaseSteps()
@@ -1106,7 +1106,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(orchestrationWorkflow.isValid()).isFalse();
     assertThat(orchestrationWorkflow)
         .hasFieldOrPropertyWithValue(
-            "validationMessage", String.format(WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE, "[Phase 1]"));
+            "validationMessage", format(WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE, "[Phase 1]"));
 
     List<WorkflowPhase> workflowPhases =
         ((BasicOrchestrationWorkflow) workflow3.getOrchestrationWorkflow()).getWorkflowPhases();
@@ -1274,7 +1274,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(orchestrationWorkflow.isValid()).isFalse();
     assertThat(orchestrationWorkflow)
         .hasFieldOrPropertyWithValue(
-            "validationMessage", String.format(WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE, "[Phase 1]"));
+            "validationMessage", format(WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE, "[Phase 1]"));
 
     List<WorkflowPhase> workflowPhases =
         ((CanaryOrchestrationWorkflow) workflow3.getOrchestrationWorkflow()).getWorkflowPhases();
@@ -1451,7 +1451,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(orchestrationWorkflow.isValid()).isFalse();
     assertThat(orchestrationWorkflow)
         .hasFieldOrPropertyWithValue(
-            "validationMessage", String.format(WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE, "[Phase 1]"));
+            "validationMessage", format(WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE, "[Phase 1]"));
 
     List<WorkflowPhase> workflowPhases =
         ((CanaryOrchestrationWorkflow) workflow3.getOrchestrationWorkflow()).getWorkflowPhases();

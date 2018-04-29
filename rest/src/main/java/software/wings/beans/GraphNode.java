@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static java.lang.String.format;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -79,7 +80,7 @@ public class GraphNode {
       validationMessage = null;
     } else {
       valid = false;
-      validationMessage = String.format(Constants.STEP_VALIDATION_MESSAGE, inValidFieldMessages.keySet());
+      validationMessage = format(Constants.STEP_VALIDATION_MESSAGE, inValidFieldMessages.keySet());
     }
     return valid;
   }

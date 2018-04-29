@@ -3,6 +3,7 @@ package software.wings.security;
 import static com.google.common.collect.ImmutableList.copyOf;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.HttpMethod.OPTIONS;
@@ -377,7 +378,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
         if (!invalidAppIdList.isEmpty()) {
           String msg = "The appIds from request %s do not belong to the given account :" + accountId;
-          String formattedMsg = String.format(msg, (Object[]) invalidAppIdList.toArray());
+          String formattedMsg = format(msg, (Object[]) invalidAppIdList.toArray());
           throw new WingsException(INVALID_ARGUMENT, USER).addParam("args", formattedMsg);
         }
       }

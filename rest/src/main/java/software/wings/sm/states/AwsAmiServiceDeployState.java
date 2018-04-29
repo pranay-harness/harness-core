@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -159,7 +160,7 @@ public class AwsAmiServiceDeployState extends State {
 
     Artifact artifact = ((DeploymentExecutionContext) context).getArtifactForService(serviceId);
     if (artifact == null) {
-      throw new StateExecutionException(String.format("Unable to find artifact for service %s", service.getName()));
+      throw new StateExecutionException(format("Unable to find artifact for service %s", service.getName()));
     }
     ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
 
@@ -349,7 +350,7 @@ public class AwsAmiServiceDeployState extends State {
     activityService.updateStatus(activity.getUuid(), activity.getAppId(), executionStatus);
 
     executionLogCallback.saveExecutionLog(
-        String.format("AutoScaling Group resize operation completed with status:[%s]", executionStatus),
+        format("AutoScaling Group resize operation completed with status:[%s]", executionStatus),
         ExecutionStatus.SUCCESS.equals(executionStatus) ? LogLevel.INFO : LogLevel.ERROR,
         ExecutionStatus.SUCCESS.equals(executionStatus) ? CommandExecutionStatus.SUCCESS
                                                         : CommandExecutionStatus.FAILURE);
@@ -388,7 +389,7 @@ public class AwsAmiServiceDeployState extends State {
 
     Artifact artifact = ((DeploymentExecutionContext) context).getArtifactForService(serviceId);
     if (artifact == null) {
-      throw new StateExecutionException(String.format("Unable to find artifact for service %s", service.getName()));
+      throw new StateExecutionException(format("Unable to find artifact for service %s", service.getName()));
     }
 
     boolean resizeNewFirst = serviceSetupElement.getResizeStrategy().equals(ResizeStrategy.RESIZE_NEW_FIRST);
@@ -450,26 +451,24 @@ public class AwsAmiServiceDeployState extends State {
     }
     if (resizeNewFirst) {
       if (isNotBlank(newAutoScalingGroupName)) {
-        executionLogCallback.saveExecutionLog(String.format("Upscale AutoScaling Group [%s]", newAutoScalingGroupName));
+        executionLogCallback.saveExecutionLog(format("Upscale AutoScaling Group [%s]", newAutoScalingGroupName));
         awsHelperService.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, encryptionDetails, region,
             newAutoScalingGroupName, newAsgFinalDesiredCount, executionLogCallback, autoScalingSteadyStateTimeout);
       }
       if (isNotBlank(oldAutoScalingGroupName)) {
-        executionLogCallback.saveExecutionLog(
-            String.format("Downscale AutoScaling Group [%s]", oldAutoScalingGroupName));
+        executionLogCallback.saveExecutionLog(format("Downscale AutoScaling Group [%s]", oldAutoScalingGroupName));
         awsHelperService.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, encryptionDetails, region,
             oldAutoScalingGroupName, oldAsgFinalDesiredCount, executionLogCallback);
       }
     } else {
       if (isNotBlank(oldAutoScalingGroupName)) {
-        executionLogCallback.saveExecutionLog(
-            String.format("Downscale AutoScaling Group [%s]", oldAutoScalingGroupName));
+        executionLogCallback.saveExecutionLog(format("Downscale AutoScaling Group [%s]", oldAutoScalingGroupName));
         awsHelperService.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, encryptionDetails, region,
             oldAutoScalingGroupName, oldAsgFinalDesiredCount, executionLogCallback);
       }
 
       if (isNotBlank(newAutoScalingGroupName)) {
-        executionLogCallback.saveExecutionLog(String.format("Upscale AutoScaling Group [%s]", newAutoScalingGroupName));
+        executionLogCallback.saveExecutionLog(format("Upscale AutoScaling Group [%s]", newAutoScalingGroupName));
         awsHelperService.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, encryptionDetails, region,
             newAutoScalingGroupName, newAsgFinalDesiredCount, executionLogCallback);
       }

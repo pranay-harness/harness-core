@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtil.trimList;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -521,7 +522,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     if (isNotEmpty(serviceWorkflows)) {
       String workflowNames = serviceWorkflows.stream().map(Workflow::getName).collect(joining(","));
       String message =
-          String.format("Service [%s] couldn't be deleted. Remove Service reference from the following workflows ["
+          format("Service [%s] couldn't be deleted. Remove Service reference from the following workflows ["
                   + workflowNames + "]",
               service.getName());
       throw new InvalidRequestException(message, USER);
@@ -604,7 +605,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       }
     }
     if (sb.length() > 0) {
-      String message = String.format(
+      String message = format(
           "Command [%s] couldn't be deleted. Remove reference from the following workflows [" + sb.toString() + "]",
           serviceCommand.getName());
       throw new InvalidRequestException(message, USER);

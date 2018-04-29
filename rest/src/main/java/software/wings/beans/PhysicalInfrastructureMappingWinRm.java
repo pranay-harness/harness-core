@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import static java.lang.String.format;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -28,7 +30,7 @@ public class PhysicalInfrastructureMappingWinRm extends PhysicalInfrastructureMa
   @SchemaIgnore
   @Override
   public String getDefaultName() {
-    return Util.normalize(String.format(
+    return Util.normalize(format(
         "%s (DataCenter_WinRM)", Optional.ofNullable(this.getComputeProviderName()).orElse("data-center-winrm")));
   }
 

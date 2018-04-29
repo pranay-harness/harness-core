@@ -3,6 +3,7 @@ package software.wings.cloudprovider.aws;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
+import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -948,7 +949,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     logger.info(
         "Waiting for pending tasks to finish. {}/{} running ...", service.getRunningCount(), service.getDesiredCount());
 
-    executionLogCallback.saveExecutionLog(String.format("Waiting for pending tasks to finish. %s/%s running ...",
+    executionLogCallback.saveExecutionLog(format("Waiting for pending tasks to finish. %s/%s running ...",
                                               service.getRunningCount(), service.getDesiredCount()),
         LogLevel.INFO);
     return !desiredCount.equals(service.getRunningCount());
@@ -1243,8 +1244,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     } catch (UncheckedTimeoutException e) {
       logger.warn("Service update failed {}", service[0]);
       executionLogCallback.saveExecutionLog(
-          String.format("Timed out waiting for service desired count to match. expected: [%s], found [%s]",
-              desiredCount, service[0].getDesiredCount()),
+          format("Timed out waiting for service desired count to match. expected: [%s], found [%s]", desiredCount,
+              service[0].getDesiredCount()),
           LogLevel.ERROR);
       executionLogCallback.saveExecutionLog("Service resize operation failed.", LogLevel.ERROR);
       throw new InvalidRequestException("Service update timed out");

@@ -2,6 +2,7 @@ package software.wings.service.impl.artifact;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -494,7 +495,7 @@ public class ArtifactServiceImpl implements ArtifactService {
             .remove(new BasicDBObject("files_id", new BasicDBObject("$in", artifactFileUuids.toArray())));
       }
     } catch (Exception ex) {
-      logger.warn(String.format("Failed to purge(delete) artifacts for artifactStreamId %s of size: %s for appId %s",
+      logger.warn(format("Failed to purge(delete) artifacts for artifactStreamId %s of size: %s for appId %s",
                       artifactStreamId, toBeDeletedArtifacts.size(), appId),
           ex);
     }

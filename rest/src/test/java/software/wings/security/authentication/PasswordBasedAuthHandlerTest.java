@@ -11,7 +11,6 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import com.google.inject.Inject;
 
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -42,25 +41,25 @@ public class PasswordBasedAuthHandlerTest {
   @Test
   public void testInvalidArgument() {
     try {
-      Assertions.assertThat(authHandler.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.USER_PASSWORD);
-      authHandler.authenticate(null);
+      assertThat(authHandler.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.USER_PASSWORD);
+      authHandler.authenticate();
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException e) {
-      Assertions.assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_ARGUMENT.name());
+      assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_ARGUMENT.name());
     }
 
     try {
       authHandler.authenticate("test");
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException e) {
-      Assertions.assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_ARGUMENT.name());
+      assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_ARGUMENT.name());
     }
 
     try {
       authHandler.authenticate("test", "test1", "test2");
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException e) {
-      Assertions.assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_ARGUMENT.name());
+      assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_ARGUMENT.name());
     }
   }
 
@@ -71,7 +70,7 @@ public class PasswordBasedAuthHandlerTest {
       authHandler.authenticate("admin@harness.io", "admin");
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException e) {
-      Assertions.assertThat(e.getMessage()).isEqualTo(ErrorCode.USER_DOES_NOT_EXIST.name());
+      assertThat(e.getMessage()).isEqualTo(ErrorCode.USER_DOES_NOT_EXIST.name());
     }
   }
 
@@ -83,7 +82,7 @@ public class PasswordBasedAuthHandlerTest {
       authHandler.authenticate("admin@harness.io", "admin");
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException e) {
-      Assertions.assertThat(e.getMessage()).isEqualTo(ErrorCode.EMAIL_NOT_VERIFIED.name());
+      assertThat(e.getMessage()).isEqualTo(ErrorCode.EMAIL_NOT_VERIFIED.name());
     }
   }
 
@@ -97,7 +96,7 @@ public class PasswordBasedAuthHandlerTest {
       authHandler.authenticate("admin@harness.io", "admintest");
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException e) {
-      Assertions.assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_CREDENTIAL.name());
+      assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_CREDENTIAL.name());
     }
   }
 

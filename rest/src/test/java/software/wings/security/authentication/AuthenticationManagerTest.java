@@ -1,5 +1,6 @@
 package software.wings.security.authentication;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -50,18 +51,17 @@ public class AuthenticationManagerTest extends WingsBaseTest {
 
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1, account2));
     Mockito.when(AUTHENTICATION_UTL.getUser("testUser")).thenReturn(mockUser);
-    Assertions.assertThat(authenticationManager.getAuthenticationMechanism("testUser"))
+    assertThat(authenticationManager.getAuthenticationMechanism("testUser"))
         .isEqualTo(AuthenticationMechanism.USER_PASSWORD);
 
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1));
     when(account1.getAuthenticationMechanism()).thenReturn(AuthenticationMechanism.USER_PASSWORD);
-    Assertions.assertThat(authenticationManager.getAuthenticationMechanism("testUser"))
+    assertThat(authenticationManager.getAuthenticationMechanism("testUser"))
         .isEqualTo(AuthenticationMechanism.USER_PASSWORD);
 
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1));
     when(account1.getAuthenticationMechanism()).thenReturn(AuthenticationMechanism.SAML);
-    Assertions.assertThat(authenticationManager.getAuthenticationMechanism("testUser"))
-        .isEqualTo(AuthenticationMechanism.SAML);
+    assertThat(authenticationManager.getAuthenticationMechanism("testUser")).isEqualTo(AuthenticationMechanism.SAML);
   }
 
   @Test
@@ -74,19 +74,17 @@ public class AuthenticationManagerTest extends WingsBaseTest {
     Mockito.when(AUTHENTICATION_UTL.getUser(Matchers.anyString(), Matchers.any(ReportTarget[].class)))
         .thenReturn(mockUser);
     LoginTypeResponse loginTypeResponse = authenticationManager.getLoginTypeResponse("testUser");
-    Assertions.assertThat(loginTypeResponse.getAuthenticationMechanism())
-        .isEqualTo(AuthenticationMechanism.USER_PASSWORD);
-    Assertions.assertThat(loginTypeResponse.getSamlRequest()).isNull();
+    assertThat(loginTypeResponse.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.USER_PASSWORD);
+    assertThat(loginTypeResponse.getSamlRequest()).isNull();
 
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1, account2));
     Mockito.when(AUTHENTICATION_UTL.getUser("testUser")).thenReturn(mockUser);
-    Assertions.assertThat(authenticationManager.getAuthenticationMechanism("testUser"))
+    assertThat(authenticationManager.getAuthenticationMechanism("testUser"))
         .isEqualTo(AuthenticationMechanism.USER_PASSWORD);
 
     loginTypeResponse = authenticationManager.getLoginTypeResponse("testUser");
-    Assertions.assertThat(loginTypeResponse.getAuthenticationMechanism())
-        .isEqualTo(AuthenticationMechanism.USER_PASSWORD);
-    Assertions.assertThat(loginTypeResponse.getSamlRequest()).isNull();
+    assertThat(loginTypeResponse.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.USER_PASSWORD);
+    assertThat(loginTypeResponse.getSamlRequest()).isNull();
 
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1));
     when(account1.getAuthenticationMechanism()).thenReturn(AuthenticationMechanism.SAML);
@@ -94,10 +92,10 @@ public class AuthenticationManagerTest extends WingsBaseTest {
     samlRequest.setIdpRedirectUrl("TestURL");
     when(SAML_CLIENT_SERVICE.generateSamlRequest(mockUser)).thenReturn(samlRequest);
     loginTypeResponse = authenticationManager.getLoginTypeResponse("testUser");
-    Assertions.assertThat(loginTypeResponse.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.SAML);
-    Assertions.assertThat(loginTypeResponse.getSamlRequest()).isNotNull();
+    assertThat(loginTypeResponse.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.SAML);
+    assertThat(loginTypeResponse.getSamlRequest()).isNotNull();
     SamlRequest receivedRequest = loginTypeResponse.getSamlRequest();
-    Assertions.assertThat(receivedRequest.getIdpRedirectUrl()).isEqualTo("TestURL");
+    assertThat(receivedRequest.getIdpRedirectUrl()).isEqualTo("TestURL");
   }
 
   @Test
@@ -116,7 +114,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
     when(authenticatedUser.getToken()).thenReturn("TestToken");
     when(AUTHENTICATION_UTL.generateBearerTokenForUser(mockUser)).thenReturn(authenticatedUser);
     User user = authenticationManager.defaultLogin("testUser@test.com");
-    Assertions.assertThat(user.getToken()).isEqualTo("TestToken");
+    assertThat(user.getToken()).isEqualTo("TestToken");
   }
 
   @Test
@@ -125,10 +123,10 @@ public class AuthenticationManagerTest extends WingsBaseTest {
       authenticationManager.extractToken("fakeData", "Basic");
       Assertions.failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException e) {
-      Assertions.assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_TOKEN.name());
+      assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_TOKEN.name());
     }
 
     String token = authenticationManager.extractToken("Basic testData", "Basic");
-    Assertions.assertThat(token).isEqualTo("testData");
+    assertThat(token).isEqualTo("testData");
   }
 }

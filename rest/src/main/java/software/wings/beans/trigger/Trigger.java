@@ -4,7 +4,6 @@ import static software.wings.beans.WorkflowType.PIPELINE;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
-import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -41,7 +40,7 @@ public class Trigger extends Base {
   private String pipelineName;
   private String workflowId;
   private String workflowName;
-  @Default private List<ArtifactSelection> artifactSelections = new ArrayList<>();
+  private List<ArtifactSelection> artifactSelections = new ArrayList<>();
   @JsonIgnore @Indexed private String webHookToken;
   private WorkflowType workflowType;
   private Map<String, String> workflowVariables;

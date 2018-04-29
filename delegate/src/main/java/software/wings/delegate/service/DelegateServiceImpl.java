@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.network.Localhost.getLocalHostAddress;
 import static io.harness.network.Localhost.getLocalHostName;
 import static io.harness.threading.Morpheus.sleep;
+import static java.lang.String.format;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
@@ -949,7 +950,7 @@ public class DelegateServiceImpl implements DelegateService {
     try {
       cleanup(new File(System.getProperty("user.dir")), getVersion(), upgradeVersion, "backup.");
     } catch (Exception ex) {
-      logger.error(String.format("Failed to clean delegate version [%s] from Backup", upgradeVersion), ex);
+      logger.error(format("Failed to clean delegate version [%s] from Backup", upgradeVersion), ex);
     }
   }
 
@@ -957,7 +958,7 @@ public class DelegateServiceImpl implements DelegateService {
     try {
       cleanup(new File(System.getProperty("capsule.dir")).getParentFile(), getVersion(), upgradeVersion, "delegate-");
     } catch (Exception ex) {
-      logger.error(String.format("Failed to clean delegate version [%s] from Capsule", upgradeVersion), ex);
+      logger.error(format("Failed to clean delegate version [%s] from Capsule", upgradeVersion), ex);
     }
   }
 

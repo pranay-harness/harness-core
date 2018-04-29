@@ -1,5 +1,6 @@
 package software.wings.beans.artifact;
 
+import static java.lang.String.format;
 import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.beans.artifact.ArtifactStreamType.BAMBOO;
 
@@ -17,6 +18,7 @@ import java.util.List;
 
 @JsonTypeName("BAMBOO")
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class BambooArtifactStream extends ArtifactStream {
   @NotEmpty private String jobname;
   @NotEmpty private List<String> artifactPaths;
@@ -38,7 +40,7 @@ public class BambooArtifactStream extends ArtifactStream {
 
   @Override
   public String getArtifactDisplayName(String buildNo) {
-    return String.format("%s_%s_%s", getSourceName(), buildNo, dateFormat.format(new Date()));
+    return format("%s_%s_%s", getSourceName(), buildNo, dateFormat.format(new Date()));
   }
 
   @Override

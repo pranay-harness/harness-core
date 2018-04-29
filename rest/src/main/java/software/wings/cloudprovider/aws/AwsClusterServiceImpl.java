@@ -1,5 +1,6 @@
 package software.wings.cloudprovider.aws;
 
+import static java.lang.String.format;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 import static software.wings.utils.EcsConvention.getRevisionFromServiceName;
@@ -60,11 +61,11 @@ public class AwsClusterServiceImpl implements AwsClusterService {
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName, int previousCount,
       int desiredCount, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
     if (previousCount != desiredCount) {
-      executionLogCallback.saveExecutionLog(String.format("Resize service [%s] in cluster [%s] from %s to %s instances",
+      executionLogCallback.saveExecutionLog(format("Resize service [%s] in cluster [%s] from %s to %s instances",
           serviceName, clusterName, previousCount, desiredCount));
     } else {
       executionLogCallback.saveExecutionLog(
-          String.format("Service [%s] in cluster [%s] stays at %s instances", serviceName, clusterName, previousCount));
+          format("Service [%s] in cluster [%s] stays at %s instances", serviceName, clusterName, previousCount));
     }
     return ecsContainerService.provisionTasks(region, cloudProviderSetting, encryptedDataDetails, clusterName,
         serviceName, previousCount, desiredCount, serviceSteadyStateTimeout, executionLogCallback);

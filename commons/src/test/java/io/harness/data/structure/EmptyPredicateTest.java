@@ -33,7 +33,7 @@ public class EmptyPredicateTest extends CategoryTest {
     assertTrue(isEmpty(custom));
     assertFalse(isNotEmpty(custom));
 
-    List list = null;
+    List<Integer> list = null;
     assertTrue(isEmpty(list));
     assertFalse(isNotEmpty(list));
 

@@ -1,5 +1,6 @@
 package software.wings.beans.artifact;
 
+import static java.lang.String.format;
 import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 
@@ -16,6 +17,7 @@ import java.util.List;
 
 @JsonTypeName("ECR")
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class EcrArtifactStream extends ArtifactStream {
   @NotEmpty private String region;
   @NotEmpty private String imageName;
@@ -38,7 +40,7 @@ public class EcrArtifactStream extends ArtifactStream {
 
   @Override
   public String getArtifactDisplayName(String buildNo) {
-    return String.format("%s_%s_%s", getImageName(), buildNo, dateFormat.format(new Date()));
+    return format("%s_%s_%s", getImageName(), buildNo, dateFormat.format(new Date()));
   }
 
   @Override

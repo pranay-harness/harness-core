@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.atteo.evo.inflector.English.plural;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
@@ -160,7 +161,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
     if (!inUse.isEmpty()) {
       throw new WingsException(INVALID_REQUEST)
           .addParam("message",
-              String.format("'%s' is in use by %d workflow%s: '%s'", notificationGroup.getName(), inUse.size(),
+              format("'%s' is in use by %d workflow%s: '%s'", notificationGroup.getName(), inUse.size(),
                   plural("workflow", inUse.size()), Joiner.on("', '").join(inUse)));
     }
 

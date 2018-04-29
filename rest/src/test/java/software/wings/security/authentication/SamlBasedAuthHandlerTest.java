@@ -1,5 +1,7 @@
 package software.wings.security.authentication;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -12,7 +14,6 @@ import com.coveo.saml.SamlClient;
 import com.coveo.saml.SamlException;
 import com.coveo.saml.SamlResponse;
 import org.apache.commons.io.IOUtils;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -64,11 +65,11 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
       account.setAuthenticationMechanism(AuthenticationMechanism.SAML);
       Mockito.when(authenticationUtil.getUser(anyString())).thenReturn(user);
       Mockito.when(authenticationUtil.getPrimaryAccount(any(User.class))).thenReturn(account);
-      Assertions.assertThat(authHandler.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.SAML);
+      assertThat(authHandler.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.SAML);
       authHandler.authenticate(idpUrl, samlResponse);
-      Assertions.failBecauseExceptionWasNotThrown(WingsException.class);
+      failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException e) {
-      Assertions.assertThat(e.getMessage()).isEqualTo("Saml Authentication Failed");
+      assertThat(e.getMessage()).isEqualTo("Saml Authentication Failed");
     }
   }
 
@@ -90,6 +91,6 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
     when(samlClient.decodeAndValidateSamlResponse(anyString())).thenReturn(samlResponse);
 
     User returnedUser = authHandler.authenticate(idpUrl, samlResponseString);
-    Assertions.assertThat(returnedUser).isEqualTo(user);
+    assertThat(returnedUser).isEqualTo(user);
   }
 }

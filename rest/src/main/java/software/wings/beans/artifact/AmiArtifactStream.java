@@ -1,6 +1,7 @@
 package software.wings.beans.artifact;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
@@ -50,8 +51,7 @@ public class AmiArtifactStream extends ArtifactStream {
 
   @Override
   public String getArtifactDisplayName(String amiName) {
-    return isEmpty(tags) ? String.format("%s_%s", getRegion(), amiName)
-                         : String.format("%s_%s", getSourceName(), amiName);
+    return isEmpty(tags) ? format("%s_%s", getRegion(), amiName) : format("%s_%s", getSourceName(), amiName);
   }
 
   @Override

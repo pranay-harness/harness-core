@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -98,7 +99,7 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
       nameBuilder.append(" (Direct Kubernetes)");
       return Util.normalize(nameBuilder.toString());
     } else {
-      return Util.normalize(String.format("%s_DIRECT_Kubernetes_%s",
+      return Util.normalize(format("%s_DIRECT_Kubernetes_%s",
           Optional.ofNullable(getComputeProviderName())
               .orElse(getComputeProviderType().toLowerCase())
               .replace(':', '_'),

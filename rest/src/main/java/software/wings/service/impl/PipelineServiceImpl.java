@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtil.trimList;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -215,11 +216,10 @@ public class PipelineServiceImpl implements PipelineService {
       List<String> triggerNames = triggers.stream().map(Trigger::getName).collect(toList());
       throw new WingsException(INVALID_REQUEST, USER)
           .addParam("message",
-              String.format(
-                  "Pipeline associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)));
+              format("Pipeline associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)));
     }
     throw new WingsException(PIPELINE_EXECUTION_IN_PROGRESS, USER)
-        .addParam("message", String.format("Pipeline:[%s] couldn't be deleted", pipeline.getName()));
+        .addParam("message", format("Pipeline:[%s] couldn't be deleted", pipeline.getName()));
   }
 
   @Override
@@ -353,14 +353,13 @@ public class PipelineServiceImpl implements PipelineService {
         if (!invalidStageWorkflows.isEmpty()) {
           pipelineStage.setValid(false);
           pipelineStage.setValidationMessage(
-              String.format(PIPELINE_ENV_STATE_VALIDATION_MESSAGE, invalidStageWorkflows.toString()));
+              format(PIPELINE_ENV_STATE_VALIDATION_MESSAGE, invalidStageWorkflows.toString()));
         }
         invalidWorkflows.addAll(invalidStageWorkflows);
       }
       if (!invalidWorkflows.isEmpty()) {
         pipeline.setValid(false);
-        pipeline.setValidationMessage(
-            String.format(PIPELINE_ENV_STATE_VALIDATION_MESSAGE, invalidWorkflows.toString()));
+        pipeline.setValidationMessage(format(PIPELINE_ENV_STATE_VALIDATION_MESSAGE, invalidWorkflows.toString()));
       }
       pipeline.setHasSshInfraMapping(hasSshInfraMapping);
     }

@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
+import static java.lang.String.format;
 import static software.wings.common.Constants.ABORTED_COLOR;
 import static software.wings.common.Constants.COMPLETED_COLOR;
 import static software.wings.common.Constants.FAILED_COLOR;
@@ -41,8 +42,7 @@ public class SlackNotificationServiceImpl implements SlackNotificationService {
       attachment.setText(processText(parts[1]));
       attachment.setFooter(processText(parts[2]));
       attachment.setColor(getColor(parts[3]));
-      attachment.setFooter_icon(
-          String.format("https://api.harness.io/storage/wings-assets/slackicons/%s.png", parts[3]));
+      attachment.setFooter_icon(format("https://api.harness.io/storage/wings-assets/slackicons/%s.png", parts[3]));
       attachment.setMrkdwn_in(ImmutableList.of("text"));
       payload.setAttachments(ImmutableList.of(attachment));
     } else {

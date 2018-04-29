@@ -40,18 +40,18 @@ class Record<T> {
  * InprocIdempotentRegistry implements IdempotentRegistry with in-process synchronization primitive.
  */
 public class InprocIdempotentRegistry<T> implements IdempotentRegistry<T> {
-  private Map<IdempotentId, Record> map = synchronizedMap(new LRUMap(1000));
+  @SuppressWarnings("unchecked") private Map<IdempotentId, Record<T>> map = synchronizedMap(new LRUMap(1000));
 
   @Override
   public Response register(IdempotentId id) throws UnableToRegisterIdempotentOperationException {
     final Record<T> record = map.compute(id, (k, v) -> {
       if (v == null) {
-        return Record.builder().state(InternalState.TENTATIVE).build();
+        return Record.<T>builder().state(InternalState.TENTATIVE).build();
       }
       switch (v.getState()) {
         case TENTATIVE:
         case TENTATIVE_ALREADY:
-          return Record.builder().state(InternalState.TENTATIVE_ALREADY).build();
+          return Record.<T>builder().state(InternalState.TENTATIVE_ALREADY).build();
         case FINISHED:
           return v;
         default:
@@ -92,6 +92,6 @@ public class InprocIdempotentRegistry<T> implements IdempotentRegistry<T> {
 
   @Override
   public void finish(IdempotentId id, T result) {
-    map.put(id, Record.builder().state(InternalState.FINISHED).result(result).build());
+    map.put(id, Record.<T>builder().state(InternalState.FINISHED).result(result).build());
   }
 }

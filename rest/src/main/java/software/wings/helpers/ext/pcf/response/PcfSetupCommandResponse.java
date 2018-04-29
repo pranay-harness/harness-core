@@ -2,6 +2,7 @@ package software.wings.helpers.ext.pcf.response;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.List;
  * It returns guid for new application created, name and
  */
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class PcfSetupCommandResponse extends PcfCommandResponse {
   private String newApplicationId;
   private String newApplicationName;

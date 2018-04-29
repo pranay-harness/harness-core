@@ -9,7 +9,6 @@ import static software.wings.beans.WorkflowType.PIPELINE;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -37,15 +36,15 @@ import javax.validation.constraints.NotNull;
 public class Pipeline extends Base {
   @NotNull private String name;
   private String description;
-  @Default @NotNull private List<PipelineStage> pipelineStages = new ArrayList<>();
-  @Default private Map<String, Long> stateEtaMap = new HashMap<>();
+  @NotNull private List<PipelineStage> pipelineStages = new ArrayList<>();
+  private Map<String, Long> stateEtaMap = new HashMap<>();
   @Transient private List<Service> services = new ArrayList<>();
   @Transient private List<WorkflowExecution> workflowExecutions = new ArrayList<>();
   @Transient private boolean valid = true;
   @Transient private String validationMessage;
   @Transient private boolean templatized;
   private transient boolean hasSshInfraMapping;
-  @Default @Embedded private List<FailureStrategy> failureStrategies = new ArrayList<>();
+  @Embedded private List<FailureStrategy> failureStrategies = new ArrayList<>();
 
   @Builder
   public Pipeline(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,

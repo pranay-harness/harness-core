@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -18,7 +19,6 @@ import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.ListMetricsRequest;
 import com.amazonaws.services.cloudwatch.model.ListMetricsResult;
 import com.amazonaws.services.cloudwatch.model.Metric;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -60,18 +60,18 @@ public class CloudWatchServiceTest extends WingsBaseTest {
   @Test
   public void shouldListNamespaces() {
     List<String> namespaces = cloudWatchService.listNamespaces(SETTING_ID, "us-east-1");
-    Assertions.assertThat(namespaces).hasSize(1).containsExactly(NAMESPACE);
+    assertThat(namespaces).hasSize(1).containsExactly(NAMESPACE);
   }
 
   @Test
   public void shouldListMetrics() {
     List<String> namespaces = cloudWatchService.listMetrics(SETTING_ID, "us-east-1", NAMESPACE);
-    Assertions.assertThat(namespaces).hasSize(1).containsExactly(METRIC_NAME);
+    assertThat(namespaces).hasSize(1).containsExactly(METRIC_NAME);
   }
 
   @Test
   public void shouldListDimensions() {
     List<String> namespaces = cloudWatchService.listDimensions(SETTING_ID, "us-east-1", NAMESPACE, METRIC_NAME);
-    Assertions.assertThat(namespaces).hasSize(1).containsExactly(METRIC_DIMENSION);
+    assertThat(namespaces).hasSize(1).containsExactly(METRIC_DIMENSION);
   }
 }

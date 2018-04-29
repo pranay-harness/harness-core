@@ -1,5 +1,6 @@
 package software.wings.scheduler;
 
+import static java.lang.String.format;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 
 import com.google.inject.Inject;
@@ -146,7 +147,7 @@ public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceList
       try {
         return scheduler.deleteJob(new JobKey(jobName, groupName));
       } catch (SchedulerException ex) {
-        logger.error(String.format("Couldn't delete cron job [%s %s] ", groupName, jobName), ex);
+        logger.error(format("Couldn't delete cron job [%s %s] ", groupName, jobName), ex);
       }
     }
     return false;

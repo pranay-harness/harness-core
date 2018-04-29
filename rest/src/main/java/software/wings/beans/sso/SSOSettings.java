@@ -3,6 +3,7 @@ package software.wings.beans.sso;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Base;
@@ -12,6 +13,7 @@ import javax.validation.constraints.NotNull;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @Entity(value = "ssoSettings")
 @Data
+@EqualsAndHashCode(callSuper = false)
 public abstract class SSOSettings extends Base {
   @NotNull protected SSOType type;
   @NotEmpty protected String displayName;

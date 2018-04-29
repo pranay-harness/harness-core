@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.external.comm.handlers;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -7,7 +8,6 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -35,7 +35,7 @@ public class EmailHandlerTest extends WingsBaseTest {
     EmailRequest emailRequest = Mockito.mock(EmailRequest.class);
     when(emailRequest.getEmailData()).thenReturn(mock(EmailData.class));
     CollaborationProviderResponse response = emailHandler.handle(emailRequest);
-    Assertions.assertThat(response.getStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+    assertThat(response.getStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     verify(mailer).send(emailRequest.getSmtpConfig(), emailRequest.getEncryptionDetails(), emailRequest.getEmailData());
   }
 
@@ -50,7 +50,7 @@ public class EmailHandlerTest extends WingsBaseTest {
         .send(any(SmtpConfig.class), any(List.class), any(EmailData.class));
 
     CollaborationProviderResponse response = emailHandler.handle(emailRequest);
-    Assertions.assertThat(response.getStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
+    assertThat(response.getStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
     verify(mailer).send(emailRequest.getSmtpConfig(), emailRequest.getEncryptionDetails(), emailRequest.getEmailData());
   }
 
@@ -65,7 +65,7 @@ public class EmailHandlerTest extends WingsBaseTest {
             .useSSL(true)
             .build();
     EmailRequest emailRequest = EmailRequest.builder().smtpConfig(smtpConfig).build();
-    Assertions.assertThat(emailHandler.validateDelegateConnection(emailRequest)).isTrue();
+    assertThat(emailHandler.validateDelegateConnection(emailRequest)).isTrue();
 
     /**
      * Without SSL=true
@@ -77,7 +77,7 @@ public class EmailHandlerTest extends WingsBaseTest {
                      .password("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".toCharArray())
                      .build();
     emailRequest = EmailRequest.builder().smtpConfig(smtpConfig).build();
-    Assertions.assertThat(emailHandler.validateDelegateConnection(emailRequest)).isTrue();
+    assertThat(emailHandler.validateDelegateConnection(emailRequest)).isTrue();
 
     /**
      * wrong port
@@ -90,7 +90,7 @@ public class EmailHandlerTest extends WingsBaseTest {
                      .useSSL(true)
                      .build();
     emailRequest = EmailRequest.builder().smtpConfig(smtpConfig).build();
-    Assertions.assertThat(emailHandler.validateDelegateConnection(emailRequest)).isFalse();
+    assertThat(emailHandler.validateDelegateConnection(emailRequest)).isFalse();
 
     smtpConfig = SmtpConfig.builder()
                      .host("smtp.sendgrid.net")
@@ -100,7 +100,7 @@ public class EmailHandlerTest extends WingsBaseTest {
                      .useSSL(true)
                      .build();
     emailRequest = EmailRequest.builder().smtpConfig(smtpConfig).build();
-    Assertions.assertThat(emailHandler.validateDelegateConnection(emailRequest)).isFalse();
+    assertThat(emailHandler.validateDelegateConnection(emailRequest)).isFalse();
 
     smtpConfig = SmtpConfig.builder()
                      .host("fakewebsite.com")
@@ -110,6 +110,6 @@ public class EmailHandlerTest extends WingsBaseTest {
                      .useSSL(true)
                      .build();
     emailRequest = EmailRequest.builder().smtpConfig(smtpConfig).build();
-    Assertions.assertThat(emailHandler.validateDelegateConnection(emailRequest)).isFalse();
+    assertThat(emailHandler.validateDelegateConnection(emailRequest)).isFalse();
   }
 }

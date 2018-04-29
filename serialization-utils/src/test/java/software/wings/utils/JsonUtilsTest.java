@@ -10,7 +10,6 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.jayway.jsonpath.DocumentContext;
 import net.javacrumbs.jsonunit.fluent.JsonFluentAssert;
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +38,7 @@ public class JsonUtilsTest {
   public void shouldGetAuthors() {
     List<String> authors = JsonUtils.jsonPath(json, "$.store.book[*].author");
     logger.debug("authors: {}", authors);
-    Assertions.assertThat(authors).isNotNull().hasSize(4);
+    assertThat(authors).isNotNull().hasSize(4);
   }
 
   /**
@@ -50,11 +49,11 @@ public class JsonUtilsTest {
     DocumentContext ctx = JsonUtils.parseJson(json);
     List<String> titles = JsonUtils.jsonPath(ctx, "$.store.book[*].title");
     logger.debug("authors: {}", titles);
-    Assertions.assertThat(titles).isNotNull().hasSize(4);
+    assertThat(titles).isNotNull().hasSize(4);
 
     List<Object> cheapBooks = JsonUtils.jsonPath(ctx, "$.store.book[?(@.price < 10)]");
     logger.debug("cheapBooks: {}", cheapBooks);
-    Assertions.assertThat(cheapBooks).isNotNull().hasSize(2);
+    assertThat(cheapBooks).isNotNull().hasSize(2);
   }
 
   /**

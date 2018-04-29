@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.atteo.evo.inflector.English.plural;
@@ -280,7 +281,7 @@ public class SettingsServiceImpl implements SettingsService {
     if (settingAttribute != null) {
       return validateInternal(settingAttribute);
     } else {
-      return new ValidationResult(false, String.format("Setting Attribute with id: %s does not exist.", varId));
+      return new ValidationResult(false, format("Setting Attribute with id: %s does not exist.", varId));
     }
   }
 
@@ -458,7 +459,7 @@ public class SettingsServiceImpl implements SettingsService {
       if (!infraMappingNames.isEmpty()) {
         throw new WingsException(INVALID_REQUEST)
             .addParam("message",
-                String.format("Connector [%s] is referenced by %d Service %s [%s].", connectorSetting.getName(),
+                format("Connector [%s] is referenced by %d Service %s [%s].", connectorSetting.getName(),
                     infraMappingNames.size(), plural("Infrastructure", infraMappingNames.size()),
                     Joiner.on(", ").join(infraMappingNames)));
       }
@@ -473,7 +474,7 @@ public class SettingsServiceImpl implements SettingsService {
                                                .collect(toList());
         throw new WingsException(INVALID_REQUEST, USER)
             .addParam("message",
-                String.format("Connector [%s] is referenced by %d Artifact %s [%s].", connectorSetting.getName(),
+                format("Connector [%s] is referenced by %d Artifact %s [%s].", connectorSetting.getName(),
                     artifactStreamNames.size(), plural("Source", artifactStreamNames.size()),
                     Joiner.on(", ").join(artifactStreamNames)));
       }
@@ -495,7 +496,7 @@ public class SettingsServiceImpl implements SettingsService {
           infrastructureMappings.stream().map(InfrastructureMapping::getName).collect(toList());
       throw new WingsException(INVALID_REQUEST, USER)
           .addParam("message",
-              String.format("Cloud provider [%s] is referenced by %d Service %s [%s].", cloudProviderSetting.getName(),
+              format("Cloud provider [%s] is referenced by %d Service %s [%s].", cloudProviderSetting.getName(),
                   infraMappingNames.size(), plural("Infrastructure", infraMappingNames.size()),
                   Joiner.on(", ").join(infraMappingNames)));
     }
@@ -510,7 +511,7 @@ public class SettingsServiceImpl implements SettingsService {
       List<String> artifactStreamNames = artifactStreams.stream().map(ArtifactStream::getName).collect(toList());
       throw new WingsException(INVALID_REQUEST, USER)
           .addParam("message",
-              String.format("Cloud provider [%s] is referenced by %d Artifact %s [%s].", cloudProviderSetting.getName(),
+              format("Cloud provider [%s] is referenced by %d Artifact %s [%s].", cloudProviderSetting.getName(),
                   artifactStreamNames.size(), plural("Source", artifactStreamNames.size()),
                   Joiner.on(", ").join(artifactStreamNames)));
     }

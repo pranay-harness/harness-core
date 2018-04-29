@@ -2,10 +2,12 @@ package software.wings.beans.sso;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.NotNull;
 
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class SamlSettings extends SSOSettings {
   @NotNull private String metaDataFile;
   @NotNull private String accountId;

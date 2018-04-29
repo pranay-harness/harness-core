@@ -83,10 +83,10 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
 
   private String psWrappedCommand(String command) {
     String base64Command = encodeBase64String(command.getBytes(StandardCharsets.UTF_8));
-    String wrappedCommand = String.format(
+    String wrappedCommand = format(
         "$decoded = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(\\\"%s\\\")); Invoke-Expression $decoded",
         base64Command);
-    return String.format("Powershell Invoke-Command -command {%s}", wrappedCommand);
+    return format("Powershell Invoke-Command -command {%s}", wrappedCommand);
   }
 
   private void saveExecutionLog(String line, LogLevel level) {

@@ -1,10 +1,10 @@
 package software.wings.service.impl.yaml.service;
 
 import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -37,13 +37,12 @@ public class YamlServiceImplTest {
     InputStream zipfile = getClass().getResourceAsStream("yaml_zip_test.zip");
 
     List<GitFileChange> changeList = yamlService.getChangesForZipFile("TestAccountID", zipfile, null);
-    Assertions.assertThat(changeList.size()).isEqualTo(59);
-    Assertions
-        .assertThat(changeList.stream()
-                        .filter(change
-                            -> change.getFilePath().equals(
-                                "Setup_Master_Copy/Applications/Harness-on-prem/Services/MongoDB/Config Files/"))
-                        .collect(toList()))
+    assertThat(changeList.size()).isEqualTo(59);
+    assertThat(changeList.stream()
+                   .filter(change
+                       -> change.getFilePath().equals(
+                           "Setup_Master_Copy/Applications/Harness-on-prem/Services/MongoDB/Config Files/"))
+                   .collect(toList()))
         .isEmpty();
   }
 }

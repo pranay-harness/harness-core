@@ -4,7 +4,6 @@ import static software.wings.common.Constants.BUILD_NO;
 
 import com.google.inject.Inject;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +46,6 @@ public class JenkinsCollectionTask extends AbstractDelegateRunnableTask {
 
   public ListNotifyResponseData run(JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptionDetails,
       String jobName, List<String> artifactPaths, Map<String, String> arguments) {
-    InputStream in = null;
     ListNotifyResponseData res = new ListNotifyResponseData();
 
     try {
@@ -76,8 +74,6 @@ public class JenkinsCollectionTask extends AbstractDelegateRunnableTask {
       //      }
       //      executionStatus = executionStatus.FAILED;
       //      jenkinsExecutionResponse.setErrorMessage(errorMessage);
-    } finally {
-      IOUtils.closeQuietly(in);
     }
 
     return res;

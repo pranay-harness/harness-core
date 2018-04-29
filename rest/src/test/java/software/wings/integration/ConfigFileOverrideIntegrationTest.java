@@ -1,5 +1,6 @@
 package software.wings.integration;
 
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Account.Builder.anAccount;
@@ -231,7 +232,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     //        FileInputStream(createHostsFile(sshRoot.newFile("host.csv"), 10))));
     List<String> hostNames = new ArrayList<>();
     for (int i = 1; i <= 10; i++) {
-      hostNames.add(String.format("host%s.app.com", i));
+      hostNames.add(format("host%s.app.com", i));
     }
     // TODO:: HOST refactoring
     // baseHost.setHostNames(hostNames);

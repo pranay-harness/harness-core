@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -1290,7 +1291,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     if (!pipelines.isEmpty()) {
       List<String> pipelineNames = pipelines.stream().map(Pipeline::getName).collect(toList());
-      String message = String.format("Workflow is referenced by %d %s [%s].", pipelines.size(),
+      String message = format("Workflow is referenced by %d %s [%s].", pipelines.size(),
           plural("pipeline", pipelines.size()), Joiner.on(", ").join(pipelineNames));
       throw new InvalidRequestException(message, USER);
     }
@@ -1298,7 +1299,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (workflowExecutionService.workflowExecutionsRunning(
             workflow.getWorkflowType(), workflow.getAppId(), workflow.getUuid())) {
       throw new WingsException(WORKFLOW_EXECUTION_IN_PROGRESS, USER)
-          .addParam("message", String.format("Workflow: [%s] couldn't be deleted", workflow.getName()));
+          .addParam("message", format("Workflow: [%s] couldn't be deleted", workflow.getName()));
     }
 
     List<Trigger> triggers = triggerService.getTriggersHasWorkflowAction(workflow.getAppId(), workflow.getUuid());
@@ -1309,8 +1310,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     throw new WingsException(INVALID_REQUEST, USER)
         .addParam("message",
-            String.format(
-                "Workflow associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)));
+            format("Workflow associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)));
   }
 
   private boolean pruneWorkflow(String appId, String workflowId) {
@@ -1708,7 +1708,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       if (!workflowPhase.checkInfraTemplatized()) {
         if (infraMappingId == null) {
           throw new InvalidRequestException(
-              String.format(WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE, workflowPhase.getName()), USER);
+              format(WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE, workflowPhase.getName()), USER);
         }
         infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
         notNullCheck("InfraMapping", infrastructureMapping);

@@ -1,5 +1,7 @@
 package software.wings.utils;
 
+import static java.lang.String.format;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.UndeclaredThrowableException;
 import javax.xml.ws.soap.SOAPFaultException;
@@ -19,7 +21,7 @@ public class WinRmHelperUtil {
         continue;
       }
       if (e1 instanceof java.net.ConnectException) {
-        message = String.format("Cannot reach remote host. Details: %s", e1.getMessage());
+        message = format("Cannot reach remote host. Details: %s", e1.getMessage());
         break;
       } else if (e1 instanceof javax.net.ssl.SSLHandshakeException) {
         message = "Error in SSL negotiation. Check if server certificate is correct. You may try with skipCertChecks";

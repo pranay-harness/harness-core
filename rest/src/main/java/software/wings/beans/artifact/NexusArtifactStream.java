@@ -1,6 +1,7 @@
 package software.wings.beans.artifact;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static java.lang.String.format;
 import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 
@@ -47,9 +48,9 @@ public class NexusArtifactStream extends ArtifactStream {
 
   public String getArtifactDisplayName(String buildNo) {
     if (!isEmpty(artifactPaths)) {
-      return String.format("%s_%s_%s", getSourceName(), buildNo, dateFormat.format(new Date()));
+      return format("%s_%s_%s", getSourceName(), buildNo, dateFormat.format(new Date()));
     }
-    return String.format("%s_%s_%s", getJobname() + "/" + getImageName(), buildNo, dateFormat.format(new Date()));
+    return format("%s_%s_%s", getJobname() + "/" + getImageName(), buildNo, dateFormat.format(new Date()));
   }
 
   @Override

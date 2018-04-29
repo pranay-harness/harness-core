@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
+import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -1254,7 +1255,7 @@ public class AwsHelperService {
         getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
     try {
       executionLogCallback.saveExecutionLog(
-          String.format("Set AutoScaling Group: [%s] desired capacity to [%s]", autoScalingGroupName, desiredCapacity));
+          format("Set AutoScaling Group: [%s] desired capacity to [%s]", autoScalingGroupName, desiredCapacity));
       amazonAutoScalingClient.setDesiredCapacity(new SetDesiredCapacityRequest()
                                                      .withAutoScalingGroupName(autoScalingGroupName)
                                                      .withDesiredCapacity(desiredCapacity));
@@ -1645,12 +1646,12 @@ public class AwsHelperService {
               String activityDescription = activity.getDescription();
               String statuscode = activity.getStatusCode();
               String statusMessage = activity.getStatusMessage();
-              String logStatement = String.format(
-                  "AutoScalingGroup [%s] activity [%s] progress [%d percent] , statuscode [%s]  details [%s]",
-                  autoScalingGroupName, activityDescription, progress, statuscode, details);
+              String logStatement =
+                  format("AutoScalingGroup [%s] activity [%s] progress [%d percent] , statuscode [%s]  details [%s]",
+                      autoScalingGroupName, activityDescription, progress, statuscode, details);
               if (withCause) {
                 String cause = activity.getCause();
-                logStatement = String.format(logStatement + " cause [%s]", cause);
+                logStatement = format(logStatement + " cause [%s]", cause);
               }
 
               callback.saveExecutionLog(logStatement);

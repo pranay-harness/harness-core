@@ -9,7 +9,6 @@ import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDeta
 
 import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import org.assertj.core.api.Assertions;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -86,7 +85,7 @@ public class BambooServiceTest extends WingsBaseTest {
                         "{\"results\":{\"result\":[{\"vcsRevisionKey\":\"REV_11\",\"buildNumber\":11}, {\"vcsRevisionKey\":\"REV_12\",\"buildNumber\":12}]}}")
                     .withHeader("Content-Type", "application/json")));
     List<BuildDetails> bamboo_plan_key = bambooService.getBuilds(bambooConfig, null, "BAMBOO_PLAN_KEY", 50);
-    Assertions.assertThat(bamboo_plan_key)
+    assertThat(bamboo_plan_key)
         .containsExactly(aBuildDetails().withNumber("11").withRevision("REV_11").build(),
             aBuildDetails().withNumber("12").withRevision("REV_12").build());
   }

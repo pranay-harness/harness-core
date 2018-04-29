@@ -2,6 +2,7 @@ package software.wings.helpers.ext.pcf.request;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import software.wings.api.pcf.PcfServiceData;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.ResizeStrategy;
@@ -12,6 +13,7 @@ import java.util.List;
  * This class contains all required data for PCFCommandTask.DEPLOY to perform setup task
  */
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class PcfCommandRollbackRequest extends PcfCommandRequest {
   private List<PcfServiceData> instanceData;
   private List<String> routeMaps;

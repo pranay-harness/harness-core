@@ -2,6 +2,7 @@ package software.wings.helpers.ext.external.comm;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,7 @@ import java.util.List;
 
 @Data
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 public class EmailRequest extends CollaborationProviderRequest {
   private EmailData emailData;
   private SmtpConfig smtpConfig;

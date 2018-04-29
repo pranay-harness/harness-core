@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.eq;
@@ -57,10 +58,10 @@ public class WebHookServiceTest extends WingsBaseTest {
     assertThat(response.getRequestId()).isEqualTo(WORKFLOW_EXECUTION_ID);
     assertThat(response.getStatus()).isEqualTo(ExecutionStatus.RUNNING.name());
     assertThat(response.getApiUrl())
-        .isEqualTo(String.format("%s/api/external/v1/executions/%s/status?accountId=%s&appId=%s", PORTAL_URL,
+        .isEqualTo(format("%s/api/external/v1/executions/%s/status?accountId=%s&appId=%s", PORTAL_URL,
             WORKFLOW_EXECUTION_ID, ACCOUNT_ID, APP_ID));
     assertThat(response.getUiUrl())
-        .isEqualTo(String.format("%s/#/account/%s/app/%s/env/%s/executions/%s/details", PORTAL_URL, ACCOUNT_ID, APP_ID,
-            ENV_ID, WORKFLOW_EXECUTION_ID));
+        .isEqualTo(format("%s/#/account/%s/app/%s/env/%s/executions/%s/details", PORTAL_URL, ACCOUNT_ID, APP_ID, ENV_ID,
+            WORKFLOW_EXECUTION_ID));
   }
 }

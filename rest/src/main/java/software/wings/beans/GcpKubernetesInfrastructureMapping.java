@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import static java.lang.String.format;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -29,7 +31,7 @@ public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureM
   @SchemaIgnore
   @Override
   public String getDefaultName() {
-    return Util.normalize(String.format("%s (GCP/Kubernetes::%s) %s", this.getClusterName(),
+    return Util.normalize(format("%s (GCP/Kubernetes::%s) %s", this.getClusterName(),
         Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
         Optional.ofNullable(this.getNamespace()).orElse("default")));
   }
