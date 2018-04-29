@@ -16,7 +16,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
@@ -750,7 +749,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       PcfServiceSpecification pcfServiceSpecification, boolean isCreate) {
     boolean exist = exist(pcfServiceSpecification.getAppId(), pcfServiceSpecification.getServiceId());
     if (!exist) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "Service doesn't exist");
+      throw new InvalidRequestException("Service doesn't exist");
     }
 
     serviceHelper.addPlaceholderTexts(pcfServiceSpecification);
@@ -787,7 +786,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       PcfServiceSpecification pcfServiceSpecification) {
     boolean exist = exist(pcfServiceSpecification.getAppId(), pcfServiceSpecification.getServiceId());
     if (!exist) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "Service doesn't exist");
+      throw new InvalidRequestException("Service doesn't exist");
     }
     pcfServiceSpecification.resetToDefaultManifestSpecification();
     return upsertPcfServiceSpecification(pcfServiceSpecification, false);
@@ -1225,10 +1224,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     List<String> duplicateFunctionName =
         getFunctionAttributeDuplicateValues(lambdaSpecification, FunctionSpecification::getFunctionName);
     if (isNotEmpty(duplicateFunctionName)) {
-      throw new WingsException(INVALID_REQUEST)
-          .addParam("message",
-              "Function name should be unique. Duplicate function names: [" + Joiner.on(",").join(duplicateFunctionName)
-                  + "]");
+      throw new InvalidRequestException("Function name should be unique. Duplicate function names: ["
+          + Joiner.on(",").join(duplicateFunctionName) + "]");
     }
 
     /** Removed validation to check for duplicate handler names as part of HAR-3209 */

@@ -619,11 +619,6 @@ public class UserServiceImpl implements UserService {
    */
   @Override
   public User update(User user) {
-    // TODO: access control has to be done at the upper layer
-    //    if (!user.getUuid().equals(UserThreadLocal.get().getUuid())) {
-    //      throw new WingsException(INVALID_REQUEST, "message", "Modifying other user's profile not allowed");
-    //    }
-
     UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
 
     if (user.getPassword() != null && user.getPassword().length > 0) {

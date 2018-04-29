@@ -19,7 +19,6 @@ import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.ErrorCode.GENERAL_ERROR;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
@@ -57,6 +56,7 @@ import software.wings.common.NotificationMessageResolver.NotificationMessageType
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
@@ -340,10 +340,9 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
     if (!pipelines.isEmpty()) {
       List<String> pipelineNames = pipelines.stream().map(Pipeline::getName).collect(toList());
-      throw new WingsException(INVALID_REQUEST, USER)
-          .addParam("message",
-              format("Environment is referenced by %d %s [%s].", pipelines.size(), plural("pipeline", pipelines.size()),
-                  Joiner.on(", ").join(pipelineNames)));
+      throw new InvalidRequestException(format("Environment is referenced by %d %s [%s].", pipelines.size(),
+                                            plural("pipeline", pipelines.size()), Joiner.on(", ").join(pipelineNames)),
+          USER);
     }
   }
 
@@ -657,10 +656,9 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
           notNullCheck("targetService", newService, USER);
           if (oldService.getArtifactType() != null
               && !oldService.getArtifactType().equals(newService.getArtifactType())) {
-            throw new WingsException(INVALID_REQUEST, USER)
-                .addParam("message",
-                    "Target service  [" + oldService.getName() + " ] is not compatible with service ["
-                        + newService.getName() + "]");
+            throw new InvalidRequestException("Target service  [" + oldService.getName()
+                    + " ] is not compatible with service [" + newService.getName() + "]",
+                USER);
           }
         }
       }

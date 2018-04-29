@@ -11,7 +11,6 @@ import static java.util.stream.Collectors.toSet;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.PIPELINE_EXECUTION_IN_PROGRESS;
 import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
@@ -57,6 +56,7 @@ import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
@@ -214,9 +214,8 @@ public class PipelineServiceImpl implements PipelineService {
         return;
       }
       List<String> triggerNames = triggers.stream().map(Trigger::getName).collect(toList());
-      throw new WingsException(INVALID_REQUEST, USER)
-          .addParam("message",
-              format("Pipeline associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)));
+      throw new InvalidRequestException(
+          format("Pipeline associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)), USER);
     }
     throw new WingsException(PIPELINE_EXECUTION_IN_PROGRESS, USER)
         .addParam("message", format("Pipeline:[%s] couldn't be deleted", pipeline.getName()));

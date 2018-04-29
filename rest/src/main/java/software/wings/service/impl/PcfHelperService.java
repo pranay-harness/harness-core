@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -14,7 +13,7 @@ import software.wings.beans.PcfConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.infrastructure.instance.info.PcfInstanceInfo;
-import software.wings.exception.WingsException;
+import software.wings.exception.InvalidRequestException;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
 import software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest;
 import software.wings.helpers.ext.pcf.request.PcfInstanceSyncRequest;
@@ -67,7 +66,7 @@ public class PcfHelperService {
 
     if (CommandExecutionStatus.FAILURE.equals(pcfCommandExecutionResponse.getCommandExecutionStatus())) {
       logger.warn(pcfCommandExecutionResponse.getErrorMessage());
-      throw new WingsException(INVALID_REQUEST).addParam("message", pcfCommandExecutionResponse.getErrorMessage());
+      throw new InvalidRequestException(pcfCommandExecutionResponse.getErrorMessage());
     }
   }
 
@@ -120,7 +119,7 @@ public class PcfHelperService {
                                         .errorMessage(e.getMessage())
                                         .build();
 
-      throw new WingsException(INVALID_REQUEST).addParam("message", pcfCommandExecutionResponse.getErrorMessage());
+      throw new InvalidRequestException(pcfCommandExecutionResponse.getErrorMessage());
     }
 
     return Collections.EMPTY_LIST;
@@ -155,7 +154,7 @@ public class PcfHelperService {
       return ((PcfInfraMappingDataResponse) pcfCommandExecutionResponse.getPcfCommandResponse()).getOrganizations();
     } else {
       logger.warn(pcfCommandExecutionResponse.getErrorMessage());
-      throw new WingsException(INVALID_REQUEST).addParam("message", pcfCommandExecutionResponse.getErrorMessage());
+      throw new InvalidRequestException(pcfCommandExecutionResponse.getErrorMessage());
     }
   }
 
@@ -189,7 +188,7 @@ public class PcfHelperService {
       return ((PcfInfraMappingDataResponse) pcfCommandExecutionResponse.getPcfCommandResponse()).getSpaces();
     } else {
       logger.warn(pcfCommandExecutionResponse.getErrorMessage());
-      throw new WingsException(INVALID_REQUEST).addParam("message", pcfCommandExecutionResponse.getErrorMessage());
+      throw new InvalidRequestException(pcfCommandExecutionResponse.getErrorMessage());
     }
   }
 
@@ -224,7 +223,7 @@ public class PcfHelperService {
       return ((PcfInfraMappingDataResponse) pcfCommandExecutionResponse.getPcfCommandResponse()).getRouteMaps();
     } else {
       logger.warn(pcfCommandExecutionResponse.getErrorMessage());
-      throw new WingsException(INVALID_REQUEST).addParam("message", pcfCommandExecutionResponse.getErrorMessage());
+      throw new InvalidRequestException(pcfCommandExecutionResponse.getErrorMessage());
     }
   }
 }

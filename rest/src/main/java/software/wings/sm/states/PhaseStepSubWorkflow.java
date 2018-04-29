@@ -10,7 +10,6 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.api.AwsCodeDeployRequestElement.AwsCodeDeployRequestElementBuilder.anAwsCodeDeployRequestElement;
 import static software.wings.api.PhaseStepExecutionData.PhaseStepExecutionDataBuilder.aPhaseStepExecutionData;
 import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.EXISTS;
 import static software.wings.beans.SearchFilter.Operator.NOT_EQ;
@@ -47,7 +46,6 @@ import software.wings.beans.PhaseStepType;
 import software.wings.common.Constants;
 import software.wings.dl.PageResponse;
 import software.wings.exception.InvalidRequestException;
-import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElement;
@@ -345,9 +343,8 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
             .findFirst();
 
     if (!containerServiceElement.isPresent()) {
-      throw new WingsException(INVALID_REQUEST)
-          .addParam("message",
-              "containerServiceElement not present for the service " + phaseElement.getServiceElement().getUuid());
+      throw new InvalidRequestException(
+          "containerServiceElement not present for the service " + phaseElement.getServiceElement().getUuid());
     }
   }
 
