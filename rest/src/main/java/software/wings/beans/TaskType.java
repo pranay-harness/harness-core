@@ -99,7 +99,6 @@ public enum TaskType {
   NEXUS_GET_PLANS(TaskGroup.NEXUS, ServiceImplDelegateTask.class, NexusValidation.class),
   NEXUS_GET_ARTIFACT_PATHS(TaskGroup.NEXUS, ServiceImplDelegateTask.class, NexusValidation.class),
   NEXUS_GET_GROUP_IDS(TaskGroup.NEXUS, ServiceImplDelegateTask.class, NexusValidation.class),
-  NEXUS_GET_ARTIFACT_NAMES(TaskGroup.NEXUS, ServiceImplDelegateTask.class, NexusValidation.class, true),
   NEXUS_GET_BUILDS(TaskGroup.NEXUS, ServiceImplDelegateTask.class, NexusValidation.class),
   NEXUS_LAST_SUCCESSFUL_BUILD(TaskGroup.NEXUS, ServiceImplDelegateTask.class, NexusValidation.class),
   NEXUS_COLLECTION(TaskGroup.NEXUS, NexusCollectionTask.class, NexusValidation.class),
@@ -108,21 +107,11 @@ public enum TaskType {
   AMAZON_S3_GET_ARTIFACT_PATHS(TaskGroup.S3, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   AMAZON_S3_LAST_SUCCESSFUL_BUILD(TaskGroup.S3, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   AMAZON_S3_GET_BUILDS(TaskGroup.S3, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
-  AMAZON_S3_GET_ARTIFACT_NAMES(TaskGroup.S3, ServiceImplDelegateTask.class, AlwaysTrueValidation.class, true),
   AMAZON_S3_GET_PLANS(TaskGroup.S3, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
-  AMAZON_S3_VALIDATE_ARTIFACT_SERVER(TaskGroup.S3, ServiceImplDelegateTask.class, AlwaysTrueValidation.class, true),
-  APP_DYNAMICS(TaskGroup.APPDYNAMICS, HttpTask.class, AppdynamicsValidation.class, true),
   APPDYNAMICS_CONFIGURATION_VALIDATE_TASK(
       TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class, AppdynamicsValidation.class),
-  APPDYNAMICS_GET_BUSINESS_TRANSACTION_TASK(
-      TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class, AppdynamicsValidation.class, true),
   APPDYNAMICS_GET_APP_TASK(TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class, AppdynamicsValidation.class),
   APPDYNAMICS_GET_TIER_TASK(TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class, AppdynamicsValidation.class),
-  APPDYNAMICS_GET_NODES_TASK(TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class, AppdynamicsValidation.class, true),
-  APPDYNAMICS_GET_METRICES_OF_BT(
-      TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class, AppdynamicsValidation.class, true),
-  APPDYNAMICS_GET_METRICES_DATA(
-      TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class, AppdynamicsValidation.class, true),
   APPDYNAMICS_COLLECT_METRIC_DATA(
       TaskGroup.APPDYNAMICS, AppdynamicsDataCollectionTask.class, AppdynamicsValidation.class),
   NEWRELIC_VALIDATE_CONFIGURATION_TASK(TaskGroup.NEWRELIC, ServiceImplDelegateTask.class, NewRelicValidation.class),
@@ -150,8 +139,6 @@ public enum TaskType {
   ARTIFACTORY_GET_PLANS(TaskGroup.ARTIFACTORY, ServiceImplDelegateTask.class, ArtifactoryValidation.class),
   ARTIFACTORY_GET_ARTIFACTORY_PATHS(TaskGroup.ARTIFACTORY, ServiceImplDelegateTask.class, ArtifactoryValidation.class),
   ARTIFACTORY_GET_GROUP_IDS(TaskGroup.ARTIFACTORY, ServiceImplDelegateTask.class, ArtifactoryValidation.class),
-  ARTIFACTORY_GET_ARTIFACT_NAMES(
-      TaskGroup.ARTIFACTORY, ServiceImplDelegateTask.class, ArtifactoryValidation.class, true),
   ARTIFACTORY_LAST_SUCCSSFUL_BUILD(TaskGroup.ARTIFACTORY, ServiceImplDelegateTask.class, ArtifactoryValidation.class),
   ARTIFACTORY_COLLECTION(TaskGroup.ARTIFACTORY, ArtifactoryCollectionTask.class, ArtifactoryValidation.class),
   ARTIFACTORY_VALIDATE_ARTIFACT_SERVER(
@@ -161,17 +148,13 @@ public enum TaskType {
   KMS_ENCRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   KMS_DECRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   GIT_COMMAND(TaskGroup.GIT, GitCommandTask.class, GitValidation.class),
-  GIT_VALIDATE(TaskGroup.GIT, ServiceImplDelegateTask.class, GitValidation.class, true),
   VAULT_ENCRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   VAULT_DECRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   HOST_VALIDATION(TaskGroup.HOST_VALIDATION, ServiceImplDelegateTask.class, HostValidationValidation.class),
-  CONTAINER_SERVICE_DESIRED_COUNT(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class, true),
   CONTAINER_ACTIVE_SERVICE_COUNTS(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
   CONTAINER_INFO(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
   CONTROLLER_NAMES_WITH_LABELS(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
   AMI_GET_BUILDS(TaskGroup.AMI, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
-  CONTAINER_DAEMON_SET_YAML(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class, true),
-  CONTAINER_ACTIVE_AUTOSCALERS(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class, true),
   CONTAINER_CONNECTION_VALIDATION(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
   FETCH_CONTAINER_INFO(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
   DYNA_TRACE_VALIDATE_CONFIGURATION_TASK(
@@ -188,19 +171,12 @@ public enum TaskType {
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;
   private final Class<? extends DelegateValidateTask> delegateValidateTaskClass;
-  private final boolean deprecated;
 
   TaskType(TaskGroup taskGroup, Class<? extends DelegateRunnableTask> delegateRunnableTaskClass,
       Class<? extends DelegateValidateTask> delegateValidateTaskClass) {
-    this(taskGroup, delegateRunnableTaskClass, delegateValidateTaskClass, false);
-  }
-
-  TaskType(TaskGroup taskGroup, Class<? extends DelegateRunnableTask> delegateRunnableTaskClass,
-      Class<? extends DelegateValidateTask> delegateValidateTaskClass, boolean deprecated) {
     this.taskGroup = taskGroup;
     this.delegateRunnableTaskClass = delegateRunnableTaskClass;
     this.delegateValidateTaskClass = delegateValidateTaskClass;
-    this.deprecated = deprecated;
   }
 
   public TaskGroup getTaskGroup() {
@@ -221,9 +197,5 @@ public enum TaskType {
     DelegateValidateTask delegateValidateTask = on(delegateValidateTaskClass).create(null, delegateTask, null).get();
     injector.injectMembers(delegateValidateTask);
     return delegateValidateTask.getCriteria();
-  }
-
-  public boolean isDeprecated() {
-    return deprecated;
   }
 }

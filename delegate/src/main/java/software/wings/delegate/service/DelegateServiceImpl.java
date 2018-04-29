@@ -106,6 +106,7 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.time.Clock;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -337,15 +338,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private List<String> getSupportedTaskTypes() {
-    List<String> suppportedTaskTypes = new ArrayList<>();
-    for (TaskType taskType : TaskType.values()) {
-      if (!taskType.isDeprecated()) {
-        suppportedTaskTypes.add(taskType.name());
-      } else {
-        logger.warn("Task type [{}] is deprecated", taskType.name());
-      }
-    }
-    return suppportedTaskTypes;
+    return Arrays.stream(TaskType.values()).map(TaskType::name).collect(toList());
   }
 
   private void handleClose(Object o) {
