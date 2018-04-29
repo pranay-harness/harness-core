@@ -300,8 +300,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       if (setupParams.getServiceType() != null && setupParams.getServiceType() != KubernetesServiceType.None) {
         Service serviceDefinition = setupParams.getServiceType() == KubernetesServiceType.Yaml
             ? createdServiceDefinitionFromYaml(
-                  kubernetesServiceName, setupParams.getNamespace(), serviceLabels, setupParams)
-            : createServiceDefinition(kubernetesServiceName, setupParams.getNamespace(), serviceLabels, setupParams);
+                  kubernetesServiceName, setupParams.getNamespace(), serviceLabels, setupParams, executionLogCallback)
+            : createServiceDefinition(
+                  kubernetesServiceName, setupParams.getNamespace(), serviceLabels, setupParams, executionLogCallback);
         if (service != null) {
           // Keep the previous load balancer IP if it exists and a new one was not specified
           LoadBalancerStatus loadBalancer = service.getStatus().getLoadBalancer();
@@ -617,6 +618,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       }
       labels.putAll(service.getSpec().getSelector());
       ingress.getMetadata().setLabels(labels);
+      executionLogCallback.saveExecutionLog("Creating ingress:\n\n" + toDisplayYaml(ingress));
       return ingress;
     } catch (IOException e) {
       executionLogCallback.saveExecutionLog(
@@ -647,8 +649,6 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     HorizontalPodAutoscaler horizontalPodAutoscaler;
 
     if (isNotEmpty(setupParams.getCustomMetricYamlConfig())) {
-      executionLogCallback.saveExecutionLog(
-          "Creating autoscaler with custom metrics:\n\n" + setupParams.getCustomMetricYamlConfig() + "\n");
       horizontalPodAutoscaler =
           getCustomMetricHorizontalPodAutoscaler(autoscalerName, namespace, serviceLabels, setupParams);
     } else {
@@ -661,6 +661,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       horizontalPodAutoscaler = getBasicHorizontalPodAutoscaler(autoscalerName, namespace, serviceLabels, setupParams);
     }
 
+    executionLogCallback.saveExecutionLog(
+        "Creating horizontal pod autoscaler:\n\n" + toDisplayYaml(horizontalPodAutoscaler));
     return horizontalPodAutoscaler;
   }
 
@@ -965,6 +967,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
     configureTypeSpecificSpecs(controllerLabels, controller, configMap, secretMap, executionLogCallback);
 
+    executionLogCallback.saveExecutionLog("Creating controller:\n\n" + toDisplayYaml(controller));
     return controller;
   }
 
@@ -1056,8 +1059,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
   }
 
-  private io.fabric8.kubernetes.api.model.Service createServiceDefinition(
-      String serviceName, String namespace, Map<String, String> serviceLabels, KubernetesSetupParams setupParams) {
+  private io.fabric8.kubernetes.api.model.Service createServiceDefinition(String serviceName, String namespace,
+      Map<String, String> serviceLabels, KubernetesSetupParams setupParams, ExecutionLogCallback executionLogCallback) {
     ServiceSpecBuilder spec =
         new ServiceSpecBuilder().addToSelector(serviceLabels).withType(setupParams.getServiceType().name());
 
@@ -1091,24 +1094,27 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       spec.withExternalIPs(Arrays.stream(setupParams.getExternalIPs().split(",")).map(String::trim).collect(toList()));
     }
 
-    return new ServiceBuilder()
-        .withNewMetadata()
-        .withName(serviceName)
-        .withNamespace(namespace)
-        .addToLabels(serviceLabels)
-        .endMetadata()
-        .withSpec(spec.build())
-        .build();
+    Service service = new ServiceBuilder()
+                          .withNewMetadata()
+                          .withName(serviceName)
+                          .withNamespace(namespace)
+                          .addToLabels(serviceLabels)
+                          .endMetadata()
+                          .withSpec(spec.build())
+                          .build();
+    executionLogCallback.saveExecutionLog("Creating service:\n\n" + toDisplayYaml(service));
+    return service;
   }
 
-  private io.fabric8.kubernetes.api.model.Service createdServiceDefinitionFromYaml(
-      String serviceName, String namespace, Map<String, String> serviceLabels, KubernetesSetupParams setupParams) {
+  private io.fabric8.kubernetes.api.model.Service createdServiceDefinitionFromYaml(String serviceName, String namespace,
+      Map<String, String> serviceLabels, KubernetesSetupParams setupParams, ExecutionLogCallback executionLogCallback) {
     try {
       Service service = KubernetesHelper.loadYaml(setupParams.getServiceYaml());
       service.getMetadata().setLabels(serviceLabels);
       service.getMetadata().setName(serviceName);
       service.getMetadata().setNamespace(namespace);
       service.getSpec().setSelector(serviceLabels);
+      executionLogCallback.saveExecutionLog("Creating service:\n\n" + toDisplayYaml(service));
       return service;
     } catch (IOException e) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, e).addParam("args", e.getMessage());
