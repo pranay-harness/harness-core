@@ -1,7 +1,6 @@
 package software.wings.expression;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 
 import com.google.inject.Singleton;
@@ -19,7 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.exception.WingsException;
 
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -102,9 +100,6 @@ public class ExpressionEvaluator {
     }
 
     JexlContext jc = prepareContext(context);
-
-    List<String> list = context.values().stream().map(String::valueOf).collect(toList());
-    list.addAll(context.keySet());
 
     String prefix = IdentifierName.random();
     String suffix = IdentifierName.random();

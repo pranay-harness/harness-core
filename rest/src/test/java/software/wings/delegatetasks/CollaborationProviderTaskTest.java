@@ -3,6 +3,7 @@ package software.wings.delegatetasks;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
 import org.junit.Rule;
@@ -62,7 +63,7 @@ public class CollaborationProviderTaskTest extends WingsBaseTest {
   public void testAllSupportedCommunicationTypes() {
     CollaborationProviderRequest request = Mockito.mock(CollaborationProviderRequest.class);
     for (CommunicationType type : CommunicationType.values()) {
-      Mockito.when(request.getCommunicationType()).thenReturn(type);
+      when(request.getCommunicationType()).thenReturn(type);
       collaborationProviderTask.run(new Object[] {request});
     }
   }

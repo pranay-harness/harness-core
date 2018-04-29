@@ -104,13 +104,12 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     EnvFilter envFilter = new EnvFilter();
     envFilter.setFilterTypes(Sets.newHashSet(PROD));
 
-    AppPermission envPermission = AppPermission.builder()
-                                      .permissionType(ENV)
-                                      .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
-                                      .entityFilter(envFilter)
-                                      .actions(new HashSet(allActions))
-                                      .build();
-    return envPermission;
+    return AppPermission.builder()
+        .permissionType(ENV)
+        .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+        .entityFilter(envFilter)
+        .actions(new HashSet(allActions))
+        .build();
   }
 
   private void compare(UserGroup lhs, UserGroup rhs) {

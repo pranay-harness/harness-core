@@ -16,7 +16,6 @@ import com.j256.twofactorauth.TimeBasedOneTimePasswordUtil;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.ErrorCode;
@@ -40,7 +39,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
       TwoFactorAuthHandler handler =
           twoFactorAuthenticationManager.getTwoFactorAuthHandler(TwoFactorAuthenticationMechanism.TOTP);
       User user = spy(new User());
-      Mockito.when(userService.verifyJWTToken(anyString(), any(JWT_CATEGORY.class))).thenReturn(user);
+      when(userService.verifyJWTToken(anyString(), any(JWT_CATEGORY.class))).thenReturn(user);
       String totpSecretKey = TimeBasedOneTimePasswordUtil.generateBase32Secret();
       user.setTotpSecretKey(totpSecretKey);
       doReturn(TwoFactorAuthenticationMechanism.TOTP).when(user).getTwoFactorAuthenticationMechanism();
@@ -49,12 +48,12 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
       User authenticatedUser = spy(new User());
       authenticatedUser.setToken("ValidToken");
 
-      Mockito.when(authenticationUtil.generateBearerTokenForUser(user)).thenReturn(authenticatedUser);
+      when(authenticationUtil.generateBearerTokenForUser(user)).thenReturn(authenticatedUser);
       String encryptedCode = Base64.getEncoder().encodeToString(("testJWTToken:" + code).getBytes());
       assertThat(twoFactorAuthenticationManager.authenticate(encryptedCode)).isEqualTo(authenticatedUser);
 
       try {
-        Mockito.when(userService.verifyJWTToken(anyString(), any(JWT_CATEGORY.class))).thenReturn(null);
+        when(userService.verifyJWTToken(anyString(), any(JWT_CATEGORY.class))).thenReturn(null);
         twoFactorAuthenticationManager.authenticate(encryptedCode);
         failBecauseExceptionWasNotThrown(WingsException.class);
       } catch (WingsException e) {
@@ -62,7 +61,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
       }
 
       try {
-        Mockito.when(userService.verifyJWTToken(anyString(), any(JWT_CATEGORY.class))).thenReturn(user);
+        when(userService.verifyJWTToken(anyString(), any(JWT_CATEGORY.class))).thenReturn(user);
         user.setTotpSecretKey(null);
 
         twoFactorAuthenticationManager.authenticate(encryptedCode);
@@ -72,7 +71,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
       }
 
       try {
-        Mockito.when(userService.verifyJWTToken(anyString(), any(JWT_CATEGORY.class))).thenReturn(user);
+        when(userService.verifyJWTToken(anyString(), any(JWT_CATEGORY.class))).thenReturn(user);
         user.setTotpSecretKey(totpSecretKey);
         encryptedCode = Base64.getEncoder().encodeToString("testJWTToken:invalid_code".getBytes());
         twoFactorAuthenticationManager.authenticate(encryptedCode);
