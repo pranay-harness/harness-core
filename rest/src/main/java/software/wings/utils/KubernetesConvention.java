@@ -119,4 +119,14 @@ public class KubernetesConvention {
         ? releaseName.substring(releaseName.length() - 15)
         : null;
   }
+
+  public static String getAccountIdentifier(String accountId) {
+    StringBuilder identifier = new StringBuilder();
+    for (char c : accountId.toLowerCase().toCharArray()) {
+      if (identifier.length() < 10 && c >= 'a' && c <= 'z') {
+        identifier.append(c);
+      }
+    }
+    return identifier.toString();
+  }
 }

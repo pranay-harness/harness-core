@@ -34,6 +34,7 @@ import static software.wings.common.NotificationMessageResolver.NotificationMess
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.exception.WingsException.USER_ADMIN;
+import static software.wings.utils.KubernetesConvention.getAccountIdentifier;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
@@ -331,7 +332,7 @@ public class DelegateServiceImpl implements DelegateService {
           .put("delegateStorageUrl", delegateStorageUrl)
           .put("delegateCheckLocation", delegateCheckLocation)
           .put("deployMode", mainConfiguration.getDeployMode())
-          .put("kubernetesDelegateName", "harness-delegate-" + accountId.toLowerCase())
+          .put("kubernetesDelegateName", "harness-delegate-" + getAccountIdentifier(accountId))
           .build();
     }
     return null;
@@ -477,7 +478,7 @@ public class DelegateServiceImpl implements DelegateService {
                                         .filter("hostName", delegate.getHostName());
     // For delegates running in a kubernetes cluster we include lowercase account ID in the hostname to identify it.
     // We ignore IP address because that can change with every restart of the pod.
-    if (!delegate.getHostName().contains(delegate.getAccountId().toLowerCase())) {
+    if (!delegate.getHostName().contains(getAccountIdentifier(delegate.getAccountId()))) {
       delegateQuery.filter("ip", delegate.getIp());
     }
     Delegate existingDelegate = delegateQuery.project("status", true).get();
