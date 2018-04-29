@@ -4,7 +4,6 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
@@ -93,8 +92,7 @@ public class KubernetesSteadyStateCheck extends State {
     try {
       return executeInternal(context);
     } catch (Exception e) {
-      logger.error("KubernetesSteadyStateCheck execute failed.", e);
-      throw new WingsException(INVALID_REQUEST, e).addParam("message", e.getMessage());
+      throw new InvalidRequestException(e.getMessage(), e);
     }
   }
 

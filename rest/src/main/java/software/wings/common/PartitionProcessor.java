@@ -6,12 +6,12 @@ package software.wings.common;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.PartitionElement;
 import software.wings.beans.ErrorCode;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.sm.ContextElement;
 
@@ -97,17 +97,15 @@ public interface PartitionProcessor {
       try {
         finalCounts = computeCounts(elements.size());
         if (isEmpty(finalCounts)) {
-          throw new WingsException(INVALID_REQUEST)
-              .addParam("message",
-                  "Incorrect partition breakdown expressions- breakdowns:" + Arrays.toString(breakdowns)
-                      + "percentages:" + Arrays.toString(percentages) + ", counts:" + Arrays.toString(counts));
+          throw new InvalidRequestException(
+              "Incorrect partition breakdown expressions- breakdowns:" + Arrays.toString(breakdowns)
+              + "percentages:" + Arrays.toString(percentages) + ", counts:" + Arrays.toString(counts));
         }
       } catch (Exception e) {
         log().error(e.getMessage(), e);
-        throw new WingsException(INVALID_REQUEST, e)
-            .addParam("message",
-                "Incorrect partition expressions- breakdowns:" + Arrays.toString(breakdowns)
-                    + "percentages:" + Arrays.toString(percentages) + ", counts:" + Arrays.toString(counts));
+        throw new InvalidRequestException("Incorrect partition expressions- breakdowns:" + Arrays.toString(breakdowns)
+                + "percentages:" + Arrays.toString(percentages) + ", counts:" + Arrays.toString(counts),
+            e);
       }
 
       List<PartitionElement> partLists = new ArrayList<>();

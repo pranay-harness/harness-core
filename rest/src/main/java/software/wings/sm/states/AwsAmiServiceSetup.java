@@ -5,7 +5,6 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
@@ -48,7 +47,7 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.common.Constants;
-import software.wings.exception.WingsException;
+import software.wings.exception.InvalidRequestException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.ActivityService;
@@ -288,12 +287,10 @@ public class AwsAmiServiceSetup extends State {
         awsConfig, encryptionDetails, region, baseAutoScalingGroup.getLaunchConfigurationName());
 
     if (baseAutoScalingGroupLaunchConfiguration == null) {
-      throw new WingsException(INVALID_REQUEST)
-          .addParam("message",
-              format(
-                  "LaunchConfiguration [%s] for referenced AutoScaling Group [%s] provided in Service Infrastructure couldn't be found in AWS region [%s]",
-                  baseAutoScalingGroup.getAutoScalingGroupName(), infrastructureMapping.getAutoScalingGroupName(),
-                  infrastructureMapping.getRegion()));
+      throw new InvalidRequestException(format(
+          "LaunchConfiguration [%s] for referenced AutoScaling Group [%s] provided in Service Infrastructure couldn't be found in AWS region [%s]",
+          baseAutoScalingGroup.getAutoScalingGroupName(), infrastructureMapping.getAutoScalingGroupName(),
+          infrastructureMapping.getRegion()));
     }
     return baseAutoScalingGroupLaunchConfiguration;
   }
@@ -305,11 +302,9 @@ public class AwsAmiServiceSetup extends State {
         awsHelperService.getAutoScalingGroup(awsConfig, encryptionDetails, region, baseAutoScalingGroupName);
     if (baseAutoScalingGroup == null) {
       logger.error("Couldn't find reference AutoScalingGroup: {}", infrastructureMapping.getAutoScalingGroupName());
-      throw new WingsException(INVALID_REQUEST)
-          .addParam("message",
-              format(
-                  "Reference AutoScaling Group [%s] provided in Service Infrastructure couldn't be found in AWS region [%s]",
-                  infrastructureMapping.getAutoScalingGroupName(), infrastructureMapping.getRegion()));
+      throw new InvalidRequestException(format(
+          "Reference AutoScaling Group [%s] provided in Service Infrastructure couldn't be found in AWS region [%s]",
+          infrastructureMapping.getAutoScalingGroupName(), infrastructureMapping.getRegion()));
     }
     return baseAutoScalingGroup;
   }

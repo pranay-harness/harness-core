@@ -9,7 +9,6 @@ import static org.atteo.evo.inflector.English.plural;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD_SUDO_APP_USER;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD_SU_APP_USER;
@@ -54,7 +53,6 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.InvalidRequestException;
-import software.wings.exception.WingsException;
 import software.wings.security.AppPermissionSummaryForUI;
 import software.wings.security.EnvFilter;
 import software.wings.security.GenericEntityFilter;
@@ -457,11 +455,9 @@ public class SettingsServiceImpl implements SettingsService {
       List<String> infraMappingNames =
           infrastructureMappings.stream().map(InfrastructureMapping::getName).collect(toList());
       if (!infraMappingNames.isEmpty()) {
-        throw new WingsException(INVALID_REQUEST)
-            .addParam("message",
-                format("Connector [%s] is referenced by %d Service %s [%s].", connectorSetting.getName(),
-                    infraMappingNames.size(), plural("Infrastructure", infraMappingNames.size()),
-                    Joiner.on(", ").join(infraMappingNames)));
+        throw new InvalidRequestException(format("Connector [%s] is referenced by %d Service %s [%s].",
+            connectorSetting.getName(), infraMappingNames.size(), plural("Infrastructure", infraMappingNames.size()),
+            Joiner.on(", ").join(infraMappingNames)));
       }
     } else {
       List<ArtifactStream> artifactStreams =
@@ -472,11 +468,11 @@ public class SettingsServiceImpl implements SettingsService {
                                                .map(ArtifactStream::getSourceName)
                                                .filter(java.util.Objects::nonNull)
                                                .collect(toList());
-        throw new WingsException(INVALID_REQUEST, USER)
-            .addParam("message",
-                format("Connector [%s] is referenced by %d Artifact %s [%s].", connectorSetting.getName(),
-                    artifactStreamNames.size(), plural("Source", artifactStreamNames.size()),
-                    Joiner.on(", ").join(artifactStreamNames)));
+        throw new InvalidRequestException(
+            format("Connector [%s] is referenced by %d Artifact %s [%s].", connectorSetting.getName(),
+                artifactStreamNames.size(), plural("Source", artifactStreamNames.size()),
+                Joiner.on(", ").join(artifactStreamNames)),
+            USER);
       }
     }
 
@@ -494,11 +490,11 @@ public class SettingsServiceImpl implements SettingsService {
     if (!infrastructureMappings.isEmpty()) {
       List<String> infraMappingNames =
           infrastructureMappings.stream().map(InfrastructureMapping::getName).collect(toList());
-      throw new WingsException(INVALID_REQUEST, USER)
-          .addParam("message",
-              format("Cloud provider [%s] is referenced by %d Service %s [%s].", cloudProviderSetting.getName(),
-                  infraMappingNames.size(), plural("Infrastructure", infraMappingNames.size()),
-                  Joiner.on(", ").join(infraMappingNames)));
+      throw new InvalidRequestException(
+          format("Cloud provider [%s] is referenced by %d Service %s [%s].", cloudProviderSetting.getName(),
+              infraMappingNames.size(), plural("Infrastructure", infraMappingNames.size()),
+              Joiner.on(", ").join(infraMappingNames)),
+          USER);
     }
 
     List<ArtifactStream> artifactStreams = artifactStreamService
@@ -509,11 +505,11 @@ public class SettingsServiceImpl implements SettingsService {
                                                .getResponse();
     if (!artifactStreams.isEmpty()) {
       List<String> artifactStreamNames = artifactStreams.stream().map(ArtifactStream::getName).collect(toList());
-      throw new WingsException(INVALID_REQUEST, USER)
-          .addParam("message",
-              format("Cloud provider [%s] is referenced by %d Artifact %s [%s].", cloudProviderSetting.getName(),
-                  artifactStreamNames.size(), plural("Source", artifactStreamNames.size()),
-                  Joiner.on(", ").join(artifactStreamNames)));
+      throw new InvalidRequestException(
+          format("Cloud provider [%s] is referenced by %d Artifact %s [%s].", cloudProviderSetting.getName(),
+              artifactStreamNames.size(), plural("Source", artifactStreamNames.size()),
+              Joiner.on(", ").join(artifactStreamNames)),
+          USER);
     }
 
     // TODO:: workflow scan for finding out usage in Steps ???

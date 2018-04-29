@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.FeatureName.AZURE_SUPPORT;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.STARTS_WITH;
@@ -38,7 +37,6 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.InvalidRequestException;
-import software.wings.exception.WingsException;
 import software.wings.scheduler.ArtifactCollectionJob;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
@@ -211,10 +209,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
     List<String> triggerNames =
         triggers.stream().map(software.wings.beans.trigger.Trigger::getName).collect(Collectors.toList());
-    throw new WingsException(INVALID_REQUEST, USER)
-        .addParam("message",
-            format(
-                "Artifact Source associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)));
+    throw new InvalidRequestException(
+        format("Artifact Source associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)),
+        USER);
   }
 
   @Override

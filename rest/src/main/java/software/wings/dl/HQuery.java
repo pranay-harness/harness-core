@@ -109,8 +109,6 @@ public class HQuery<T> extends QueryImpl<T> {
     boolean requiredArgFound = exemptedRequest
         || this.getChildren().stream().map(Criteria::getFieldName).anyMatch(requiredFilterArgs::contains);
     if (!requiredArgFound) {
-      //      throw new WingsException(INVALID_REQUEST,
-      //          "appId or accountId must be present in any List(Object/Key)/Get/Count/Search query");
       logger.warn(
           "HQUERY-ENFORCEMENT: appId or accountId must be present in any List(Object/Key)/Get/Count/Search query. ST: [{}]",
           Throwables.getStackTraceAsString(new Throwable()));

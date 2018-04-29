@@ -4,7 +4,6 @@ import static java.lang.String.format;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
@@ -53,7 +52,7 @@ import software.wings.beans.container.ImageDetails.ImageDetailsBuilder;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.ContainerInfo.Status;
 import software.wings.common.Constants;
-import software.wings.exception.WingsException;
+import software.wings.exception.InvalidRequestException;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.helpers.ext.ecr.EcrClassicService;
 import software.wings.helpers.ext.ecr.EcrService;
@@ -286,9 +285,8 @@ public class ContainerDeploymentManagerHelper {
           .username(nexusConfig.getUsername())
           .password(new String(nexusConfig.getPassword()));
     } else {
-      throw new WingsException(INVALID_REQUEST)
-          .addParam(
-              "message", artifactStream.getArtifactStreamType() + " artifact source can't be used for containers");
+      throw new InvalidRequestException(
+          artifactStream.getArtifactStreamType() + " artifact source can't be used for containers");
     }
     return imageDetails.build();
   }

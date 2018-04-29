@@ -23,7 +23,6 @@ import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.WORKFLOW;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.WORKFLOW_EXECUTION_IN_PROGRESS;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
@@ -1221,10 +1220,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Service newService = serviceResourceService.get(appId, serviceId, false);
     notNullCheck("service", newService);
     if (oldService.getArtifactType() != null && !oldService.getArtifactType().equals(newService.getArtifactType())) {
-      throw new WingsException(INVALID_REQUEST)
-          .addParam("message",
-              "Service [" + newService.getName() + "] is not compatible with the service [" + oldService.getName()
-                  + "]");
+      throw new InvalidRequestException(
+          "Service [" + newService.getName() + "] is not compatible with the service [" + oldService.getName() + "]");
     }
   }
 
@@ -1308,9 +1305,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
     List<String> triggerNames = triggers.stream().map(Trigger::getName).collect(toList());
 
-    throw new WingsException(INVALID_REQUEST, USER)
-        .addParam("message",
-            format("Workflow associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)));
+    throw new InvalidRequestException(
+        format("Workflow associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)), USER);
   }
 
   private boolean pruneWorkflow(String appId, String workflowId) {
@@ -1515,10 +1511,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       throw new InvalidRequestException("Service Infrastructure [" + inframappingId + "] does not exist");
     }
     if (!service.getUuid().equals(infrastructureMapping.getServiceId())) {
-      throw new WingsException(INVALID_REQUEST)
-          .addParam("message",
-              "Service Infrastructure [" + infrastructureMapping.getName() + "] not mapped to Service ["
-                  + service.getName() + "]");
+      throw new InvalidRequestException("Service Infrastructure [" + infrastructureMapping.getName()
+          + "] not mapped to Service [" + service.getName() + "]");
     }
   }
 
@@ -1713,10 +1707,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
         notNullCheck("InfraMapping", infrastructureMapping);
         if (!service.getUuid().equals(infrastructureMapping.getServiceId())) {
-          throw new WingsException(INVALID_REQUEST, USER)
-              .addParam("message",
-                  "Service Infrastructure [" + infrastructureMapping.getName() + "] not mapped to Service ["
-                      + service.getName() + "]");
+          throw new InvalidRequestException("Service Infrastructure [" + infrastructureMapping.getName()
+                  + "] not mapped to Service [" + service.getName() + "]",
+              USER);
         }
       }
       if (infrastructureMapping != null) {
@@ -1924,10 +1917,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         notNullCheck("targetService", newService);
         if (oldService.getArtifactType() != null
             && !oldService.getArtifactType().equals(newService.getArtifactType())) {
-          throw new WingsException(INVALID_REQUEST, USER)
-              .addParam("message",
-                  "Target service  [" + oldService.getName() + " ] is not compatible with service ["
-                      + newService.getName() + "]");
+          throw new InvalidRequestException("Target service  [" + oldService.getName()
+                  + " ] is not compatible with service [" + newService.getName() + "]",
+              USER);
         }
       }
     }

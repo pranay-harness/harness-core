@@ -21,7 +21,6 @@ import static software.wings.api.DeploymentType.SSH;
 import static software.wings.api.DeploymentType.WINRM;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.FeatureName.AZURE_SUPPORT;
 import static software.wings.beans.FeatureName.ECS_CREATE_CLUSTER;
 import static software.wings.beans.FeatureName.KUBERNETES_CREATE_CLUSTER;
@@ -779,10 +778,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
             .collect(toList());
 
     if (!referencingWorkflowNames.isEmpty()) {
-      throw new WingsException(INVALID_REQUEST, USER)
-          .addParam("message",
-              format("Service Infrastructure is in use by %d %s [%s].", referencingWorkflowNames.size(),
-                  plural("workflow", referencingWorkflowNames.size()), Joiner.on(", ").join(referencingWorkflowNames)));
+      throw new InvalidRequestException(
+          format("Service Infrastructure is in use by %d %s [%s].", referencingWorkflowNames.size(),
+              plural("workflow", referencingWorkflowNames.size()), Joiner.on(", ").join(referencingWorkflowNames)),
+          USER);
     }
   }
 

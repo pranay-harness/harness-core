@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.lang.String.format;
 import static org.atteo.evo.inflector.English.plural;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 
@@ -21,7 +20,6 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.InvalidRequestException;
-import software.wings.exception.WingsException;
 import software.wings.scheduler.PruneFileJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.intfc.AppContainerService;
@@ -166,9 +164,8 @@ public class AppContainerServiceImpl implements AppContainerService {
             .list(aPageRequest().addFilter("appContainer", Operator.EQ, appContainerId).build(), false, true)
             .getResponse();
     if (!services.isEmpty()) {
-      throw new WingsException(INVALID_REQUEST)
-          .addParam("message",
-              format("Application Stack is in use by %d %s.", services.size(), plural("service", services.size())));
+      throw new InvalidRequestException(
+          format("Application Stack is in use by %d %s.", services.size(), plural("service", services.size())));
     }
   }
 

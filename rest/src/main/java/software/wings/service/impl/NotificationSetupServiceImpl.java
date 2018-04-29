@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.atteo.evo.inflector.English.plural;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.common.base.Joiner;
@@ -25,7 +24,6 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.InvalidRequestException;
-import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.SettingsService;
@@ -159,10 +157,8 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
                              .map(Workflow::getName)
                              .collect(toList());
     if (!inUse.isEmpty()) {
-      throw new WingsException(INVALID_REQUEST)
-          .addParam("message",
-              format("'%s' is in use by %d workflow%s: '%s'", notificationGroup.getName(), inUse.size(),
-                  plural("workflow", inUse.size()), Joiner.on("', '").join(inUse)));
+      throw new InvalidRequestException(format("'%s' is in use by %d workflow%s: '%s'", notificationGroup.getName(),
+          inUse.size(), plural("workflow", inUse.size()), Joiner.on("', '").join(inUse)));
     }
 
     yamlChangeSetHelper.notificationGroupYamlChangeSet(notificationGroup, ChangeType.DELETE);
