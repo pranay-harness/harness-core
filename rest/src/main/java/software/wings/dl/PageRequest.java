@@ -70,7 +70,7 @@ public class PageRequest<T> {
 
   @JsonIgnore private boolean isOr;
 
-  @JsonIgnore private ReadPref readPref;
+  @JsonIgnore private ReadPref readPref = ReadPref.NORMAL;
 
   @JsonIgnore private List<Option> options;
   /**
@@ -495,7 +495,7 @@ public class PageRequest<T> {
     private List<String> fieldsIncluded = new ArrayList<>();
     private List<String> fieldsExcluded = new ArrayList<>();
     private UriInfo uriInfo;
-    private ReadPref readPref;
+    private ReadPref readPref = ReadPref.NORMAL;
 
     private PageRequestBuilder() {}
 

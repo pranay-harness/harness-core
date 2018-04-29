@@ -64,9 +64,12 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
       return;
     }
 
-    PageRequest<WaitQueue> req =
-        aPageRequest().withLimit(UNLIMITED).addFilter("waitInstanceId", EQ, waitInstanceId).build();
-    PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class, req, ReadPref.CRITICAL);
+    PageRequest<WaitQueue> req = aPageRequest()
+                                     .withLimit(UNLIMITED)
+                                     .withReadPref(ReadPref.CRITICAL)
+                                     .addFilter("waitInstanceId", EQ, waitInstanceId)
+                                     .build();
+    PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class, req);
 
     if (isEmpty(waitQueuesResponse)) {
       logger.warn("No entry in the waitQueue found for the waitInstanceId:[{}] skipping ...", waitInstanceId);
@@ -91,12 +94,14 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
     Map<String, NotifyResponse> notifyResponseMap = new HashMap<>();
     Map<String, NotifyResponseData> responseMap = new HashMap<>();
 
-    PageRequest<NotifyResponse> notifyResponseReq = new PageRequest<>();
-    notifyResponseReq.addFilter(
-        ID_KEY, Operator.IN, waitQueuesResponse.stream().map(WaitQueue::getCorrelationId).collect(toList()).toArray());
-    notifyResponseReq.setLimit(PageRequest.UNLIMITED);
-    PageResponse<NotifyResponse> notifyResponses =
-        wingsPersistence.query(NotifyResponse.class, notifyResponseReq, ReadPref.CRITICAL);
+    PageRequest<NotifyResponse> notifyResponseReq =
+        aPageRequest()
+            .withReadPref(ReadPref.CRITICAL)
+            .addFilter(ID_KEY, Operator.IN,
+                waitQueuesResponse.stream().map(WaitQueue::getCorrelationId).collect(toList()).toArray())
+            .withLimit(PageRequest.UNLIMITED)
+            .build();
+    PageResponse<NotifyResponse> notifyResponses = wingsPersistence.query(NotifyResponse.class, notifyResponseReq);
 
     correlationIds = notifyResponses.stream().map(NotifyResponse::getUuid).collect(toList());
 
