@@ -875,7 +875,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private List<DelegateTaskEvent> getQueuedEvents(boolean sync) {
-    return wingsPersistence.createQuery(DelegateTask.class)
+    return wingsPersistence.createAuthExemptedQuery(DelegateTask.class)
         .filter("status", QUEUED)
         .filter("async", !sync)
         .field("delegateId")
@@ -893,7 +893,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private List<DelegateTaskEvent> getAbortedEvents(String delegateId) {
-    Query<DelegateTask> abortedQuery = wingsPersistence.createQuery(DelegateTask.class)
+    Query<DelegateTask> abortedQuery = wingsPersistence.createAuthExemptedQuery(DelegateTask.class)
                                            .filter("status", ABORTED)
                                            .filter("async", true)
                                            .filter("delegateId", delegateId);
@@ -925,7 +925,7 @@ public class DelegateServiceImpl implements DelegateService {
         while (true) {
           List<Key<DelegateTask>> delegateTaskKeys = new ArrayList<>();
           try {
-            Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
+            Query<DelegateTask> query = wingsPersistence.createAuthExemptedQuery(DelegateTask.class)
                                             .field("createdAt")
                                             .lessThan(clock.millis() - retentionMillis);
             delegateTaskKeys.addAll(query.asKeyList(new FindOptions().limit(limit).batchSize(batchSize)));

@@ -556,6 +556,13 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     return createQuery(cls, ReadPref.NORMAL);
   }
 
+  @Override
+  public <T> Query<T> createAuthExemptedQuery(Class<T> cls) {
+    Query<T> query = createQuery(cls, ReadPref.NORMAL);
+    ((HQuery) query).setExemptedRequest(true);
+    return query;
+  }
+
   /**
    * {@inheritDoc}
    */

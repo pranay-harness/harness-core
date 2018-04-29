@@ -79,6 +79,16 @@ public interface WingsPersistence {
    */
   <T extends Base> T get(Class<T> cls, String appId, String id);
 
+  /**
+   * Get t.
+   *
+   * @param <T>      the type parameter
+   * @param cls      the cls
+   * @param appId    the app id
+   * @param id       the id
+   * @param readPref the read pref
+   * @return the t
+   */
   <T extends Base> T get(Class<T> cls, String appId, String id, ReadPref readPref);
 
   /**
@@ -101,6 +111,15 @@ public interface WingsPersistence {
    */
   <T extends Base> T executeGetOneQuery(Query<T> query);
 
+  /**
+   * Find and modify t.
+   *
+   * @param <T>                  the type parameter
+   * @param query                the query
+   * @param updateOperations     the update operations
+   * @param findAndModifyOptions the find and modify options
+   * @return the t
+   */
   <T extends Base> T findAndModify(
       Query<T> query, UpdateOperations<T> updateOperations, FindAndModifyOptions findAndModifyOptions);
 
@@ -151,8 +170,26 @@ public interface WingsPersistence {
    */
   <T extends Base> T saveAndGet(Class<T> cls, T t);
 
+  /**
+   * Gets count.
+   *
+   * @param <T> the type parameter
+   * @param cls the cls
+   * @param req the req
+   * @return the count
+   */
   <T> long getCount(Class<T> cls, PageRequest<T> req);
 
+  /**
+   * Query page response.
+   *
+   * @param <T>               the type parameter
+   * @param cls               the cls
+   * @param req               the req
+   * @param readPref          the read pref
+   * @param disableValidation the disable validation
+   * @return the page response
+   */
   <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, ReadPref readPref, boolean disableValidation);
 
   /**
@@ -164,6 +201,14 @@ public interface WingsPersistence {
    */
   <T> UpdateOperations<T> createUpdateOperations(Class<T> cls);
 
+  /**
+   * Upsert t.
+   *
+   * @param <T>              the type parameter
+   * @param query            the query
+   * @param updateOperations the update operations
+   * @return the t
+   */
   <T> T upsert(Query<T> query, UpdateOperations<T> updateOperations);
 
   /**
@@ -209,11 +254,12 @@ public interface WingsPersistence {
 
   /**
    * Update fields
-   * @param cls
-   * @param entityId
-   * @param keyValuePairs
-   * @param fieldsToRemove
-   * @param <T>
+   *
+   * @param <T>            the type parameter
+   * @param cls            the cls
+   * @param entityId       the entity id
+   * @param keyValuePairs  the key value pairs
+   * @param fieldsToRemove the fields to remove
    */
   <T> void updateFields(Class<T> cls, String entityId, Map<String, Object> keyValuePairs, Set<String> fieldsToRemove);
 
@@ -227,6 +273,15 @@ public interface WingsPersistence {
    */
   <T extends Base> boolean delete(Class<T> cls, String uuid);
 
+  /**
+   * Delete boolean.
+   *
+   * @param <T>   the type parameter
+   * @param cls   the cls
+   * @param appId the app id
+   * @param uuid  the uuid
+   * @return the boolean
+   */
   <T extends Base> boolean delete(Class<T> cls, String appId, String uuid);
 
   /**
@@ -267,6 +322,15 @@ public interface WingsPersistence {
    */
   <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req);
 
+  /**
+   * Query page response.
+   *
+   * @param <T>               the type parameter
+   * @param cls               the cls
+   * @param req               the req
+   * @param disableValidation the disable validation
+   * @return the page response
+   */
   <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, boolean disableValidation);
 
   /**
@@ -288,6 +352,15 @@ public interface WingsPersistence {
    * @return the query
    */
   <T> Query<T> createQuery(Class<T> cls);
+
+  /**
+   * Create query query.
+   *
+   * @param <T>          the type parameter
+   * @param cls          the cls
+   * @return the query
+   */
+  <T> Query<T> createAuthExemptedQuery(Class<T> cls);
 
   /**
    * Creates the query.
@@ -330,8 +403,9 @@ public interface WingsPersistence {
   /**
    * Creates a query and runs the authFilter to it.
    * This api is preferred over createQuery() api.
-   * @param collectionClass
-   * @return
+   *
+   * @param collectionClass the collection class
+   * @return query
    */
   Query createAuthorizedQuery(Class collectionClass);
 
@@ -343,9 +417,10 @@ public interface WingsPersistence {
    * 1) If the query looks up a field which is part of an embedded object,
    * but that embedded object is a base class and if we are referring to a field from the derived class, validation
    * fails right now. This is a stop gap solution until that is fixed.
-   * @param collectionClass
-   * @param disableValidation
-   * @return
+   *
+   * @param collectionClass   the collection class
+   * @param disableValidation the disable validation
+   * @return query
    */
   Query createAuthorizedQuery(Class collectionClass, boolean disableValidation);
 }
