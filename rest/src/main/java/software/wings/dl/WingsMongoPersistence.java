@@ -30,9 +30,11 @@ import com.mongodb.client.gridfs.GridFSBuckets;
 import io.dropwizard.lifecycle.Managed;
 import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.AdvancedDatastore;
+import org.mongodb.morphia.DatastoreImpl;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.InsertOptions;
 import org.mongodb.morphia.Key;
+import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
@@ -139,7 +141,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T extends Base> T get(Class<T> cls, String appId, String id) {
-    return createQuery(cls).filter("appId", appId).filter(ID_KEY, id).get();
+    return get(cls, appId, id, ReadPref.NORMAL);
   }
 
   /**
@@ -155,7 +157,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T extends Base> T get(Class<T> cls, String id, ReadPref readPref) {
-    return datastoreMap.get(readPref).get(cls, id);
+    return createQuery(cls, readPref).filter(ID_KEY, id).get();
   }
 
   @Override
@@ -168,16 +170,8 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T extends Base> T get(Class<T> cls, PageRequest<T> req) {
-    return get(cls, req, ReadPref.NORMAL);
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public <T extends Base> T get(Class<T> cls, PageRequest<T> req, ReadPref readPref) {
     req.setLimit("1");
-    PageResponse<T> res = query(cls, req, readPref);
+    PageResponse<T> res = query(cls, req);
     if (isEmpty(res)) {
       return null;
     }
@@ -496,7 +490,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req) {
-    return query(cls, req, ReadPref.NORMAL);
+    return query(cls, req, false);
   }
 
   /**
@@ -504,21 +498,24 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, boolean disableValidation) {
-    return query(cls, req, ReadPref.NORMAL, disableValidation);
+    return query(cls, req, disableValidation, false);
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
-  public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, ReadPref readPref) {
+  public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, boolean disableValidation, boolean authExempted) {
     if (!authFilters(req, cls)) {
       return aPageResponse().withTotal(0).build();
     }
-    if (readPref == ReadPref.NORMAL && req.getReadPref() == ReadPref.CRITICAL) {
-      readPref = ReadPref.CRITICAL;
+    ReadPref readPref = req.getReadPref() != null ? req.getReadPref() : ReadPref.NORMAL;
+    AdvancedDatastore advancedDatastore = datastoreMap.get(readPref);
+    Query<T> query = advancedDatastore.createQuery(cls);
+    ((HQuery) query).setExemptedRequest(authExempted);
+    if (disableValidation) {
+      query.disableValidation();
     }
-    return MongoHelper.queryPageRequest(datastoreMap.get(readPref), cls, req, false);
+    Mapper mapper = ((DatastoreImpl) advancedDatastore).getMapper();
+
+    return MongoHelper.queryPageRequest(query, mapper, cls, req);
   }
 
   /**
@@ -526,18 +523,12 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T> long getCount(Class<T> cls, PageRequest<T> req) {
-    return MongoHelper.getCount(datastoreMap.get(ReadPref.NORMAL), cls, req);
-  }
+    AdvancedDatastore advancedDatastore =
+        datastoreMap.get(req.getReadPref() != null ? req.getReadPref() : ReadPref.NORMAL);
+    Query<T> query = advancedDatastore.createQuery(cls);
+    Mapper mapper = ((DatastoreImpl) advancedDatastore).getMapper();
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, ReadPref readPref, boolean disableValidation) {
-    if (!authFilters(req, cls)) {
-      return aPageResponse().withTotal(0).build();
-    }
-    return MongoHelper.queryPageRequest(datastoreMap.get(readPref), cls, req, disableValidation);
+    return MongoHelper.getCount(query, mapper, cls, req);
   }
 
   /**

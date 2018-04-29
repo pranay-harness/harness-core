@@ -15,8 +15,6 @@ import static software.wings.beans.SortOrder.OrderType.DESC;
 
 import com.google.common.base.Preconditions;
 
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.DatastoreImpl;
 import org.mongodb.morphia.mapping.MappedClass;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Criteria;
@@ -45,22 +43,15 @@ public class MongoHelper {
   /**
    * Query page request.
    *
-   * @param <T>       the generic type
-   * @param datastore the datastore
-   * @param cls       the cls
-   * @param req       the req
+   * @param <T>    the generic type
+   * @param q      the q
+   * @param mapper the mapper
+   * @param cls    the cls
+   * @param req    the req
    * @return the page response
    */
-  public static <T> PageResponse<T> queryPageRequest(
-      Datastore datastore, Class<T> cls, PageRequest<T> req, boolean disableValidation) {
-    Query q = datastore.createQuery(cls);
-    if (disableValidation) {
-      q.disableValidation();
-    }
-
-    Mapper mapper = ((DatastoreImpl) datastore).getMapper();
-    MappedClass mappedClass = mapper.addMappedClass(cls);
-    q = MongoHelper.applyPageRequest(q, req, mappedClass, mapper);
+  public static <T> PageResponse<T> queryPageRequest(Query<T> q, Mapper mapper, Class<T> cls, PageRequest<T> req) {
+    q = MongoHelper.applyPageRequest(q, req, cls, mapper);
 
     PageResponse<T> response = new PageResponse<>(req);
 
@@ -86,17 +77,15 @@ public class MongoHelper {
   /**
    * Get count.
    *
-   * @param <T>       the generic type
-   * @param datastore the datastore
-   * @param cls       the cls
+   * @param <T>    the generic type
+   * @param q      the q
+   * @param mapper the mapper
+   * @param cls    the cls
+   * @param req    the req
    * @return the page response
    */
-  public static <T> long getCount(Datastore datastore, Class<T> cls, PageRequest<T> req) {
-    Query q = datastore.createQuery(cls);
-
-    Mapper mapper = ((DatastoreImpl) datastore).getMapper();
-    MappedClass mappedClass = mapper.addMappedClass(cls);
-    q = MongoHelper.applyPageRequest(q, req, mappedClass, mapper);
+  public static <T> long getCount(Query<T> q, Mapper mapper, Class<T> cls, PageRequest<T> req) {
+    q = MongoHelper.applyPageRequest(q, req, cls, mapper);
 
     return q.count();
   }
@@ -104,18 +93,19 @@ public class MongoHelper {
   /**
    * Apply page request.
    *
-   * @param <T>         the generic type
-   * @param query       the query
-   * @param req         the req
-   * @param mappedClass the mapped class
-   * @param mapper      the mapper
+   * @param <T>    the generic type
+   * @param query  the query
+   * @param req    the req
+   * @param cls    the cls
+   * @param mapper the mapper
    * @return the query
    */
-  public static <T> Query<T> applyPageRequest(
-      Query<T> query, PageRequest<T> req, MappedClass mappedClass, Mapper mapper) {
+  public static <T> Query<T> applyPageRequest(Query<T> query, PageRequest<T> req, Class<T> cls, Mapper mapper) {
     if (req == null) {
       return query;
     }
+
+    MappedClass mappedClass = mapper.addMappedClass(cls);
 
     Preconditions.checkNotNull(query, "Query cannot be null");
     req.populateFilters(mappedClass, mapper);

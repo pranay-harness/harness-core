@@ -50,17 +50,6 @@ public interface WingsPersistence {
   /**
    * Gets the.
    *
-   * @param <T>      the generic type
-   * @param cls      the cls
-   * @param req      the req
-   * @param readPref the read pref
-   * @return the t
-   */
-  <T extends Base> T get(Class<T> cls, PageRequest<T> req, ReadPref readPref);
-
-  /**
-   * Gets the.
-   *
    * @param <T> the generic type
    * @param cls the cls
    * @param id  the id
@@ -179,18 +168,6 @@ public interface WingsPersistence {
    * @return the count
    */
   <T> long getCount(Class<T> cls, PageRequest<T> req);
-
-  /**
-   * Query page response.
-   *
-   * @param <T>               the type parameter
-   * @param cls               the cls
-   * @param req               the req
-   * @param readPref          the read pref
-   * @param disableValidation the disable validation
-   * @return the page response
-   */
-  <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, ReadPref readPref, boolean disableValidation);
 
   /**
    * Creates the update operations.
@@ -334,15 +311,16 @@ public interface WingsPersistence {
   <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, boolean disableValidation);
 
   /**
-   * Query.
+   * Query page response.
    *
-   * @param <T>      the generic type
-   * @param cls      the cls
-   * @param req      the req
-   * @param readPref the read pref
+   * @param <T>               the type parameter
+   * @param cls               the cls
+   * @param req               the req
+   * @param disableValidation the disable validation
+   * @param authExempted      the auth exempted
    * @return the page response
    */
-  <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, ReadPref readPref);
+  <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, boolean disableValidation, boolean authExempted);
 
   /**
    * Creates the query.
@@ -356,8 +334,13 @@ public interface WingsPersistence {
   /**
    * Create query query.
    *
+<<<<<<< HEAD
+   * @param <T> the type parameter
+   * @param cls the cls
+=======
    * @param <T>          the type parameter
    * @param cls          the cls
+>>>>>>> master
    * @return the query
    */
   <T> Query<T> createAuthExemptedQuery(Class<T> cls);
@@ -405,7 +388,11 @@ public interface WingsPersistence {
    * This api is preferred over createQuery() api.
    *
    * @param collectionClass the collection class
+<<<<<<< HEAD
+   * @return query query
+=======
    * @return query
+>>>>>>> master
    */
   Query createAuthorizedQuery(Class collectionClass);
 
@@ -420,7 +407,11 @@ public interface WingsPersistence {
    *
    * @param collectionClass   the collection class
    * @param disableValidation the disable validation
+<<<<<<< HEAD
+   * @return query query
+=======
    * @return query
+>>>>>>> master
    */
   Query createAuthorizedQuery(Class collectionClass, boolean disableValidation);
 }
