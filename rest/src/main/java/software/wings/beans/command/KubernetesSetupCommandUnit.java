@@ -423,7 +423,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
       if (autoscalerDefinition != null) {
         executionLogCallback.saveExecutionLog(
-            format("Creating autoscaler %s - disabled until 100%% deployed", hpaName), LogLevel.INFO);
+            format("Autoscaler %s - disabled until 100%% deployed", hpaName), LogLevel.INFO);
 
         hpa = kubernetesContainerService.createAutoscaler(kubernetesConfig, encryptedDataDetails, autoscalerDefinition);
       }
@@ -444,13 +444,12 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     if (setupParams.isUseIstioRouteRule() && service != null) {
       if (routeRule == null || routeRule.getSpec() == null || isEmpty(((RouteRule) routeRule.getSpec()).getRoute())
           || !((RouteRule) routeRule.getSpec()).getRoute().get(0).getLabels().containsKey(HARNESS_REVISION)) {
-        IstioResource routeRuleDefinition = createRouteRuleDefinition(
-            setupParams, routeRuleName, service.getSpec().getSelector(), activeControllers, isStatefulSet);
-        executionLogCallback.saveExecutionLog("Creating Istio route rule " + routeRuleName);
+        IstioResource routeRuleDefinition = createRouteRuleDefinition(setupParams, routeRuleName,
+            service.getSpec().getSelector(), activeControllers, isStatefulSet, executionLogCallback);
         routeRule = kubernetesContainerService.createOrReplaceRouteRule(
             kubernetesConfig, encryptedDataDetails, routeRuleDefinition);
       } else {
-        executionLogCallback.saveExecutionLog("Istio route rule exists " + routeRuleName);
+        executionLogCallback.saveExecutionLog("Istio route rule exists:\n\n" + toDisplayYaml(routeRule));
       }
     } else if (routeRule != null) {
       try {
@@ -618,7 +617,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       }
       labels.putAll(service.getSpec().getSelector());
       ingress.getMetadata().setLabels(labels);
-      executionLogCallback.saveExecutionLog("Creating ingress:\n\n" + toDisplayYaml(ingress));
+      executionLogCallback.saveExecutionLog("Setting ingress:\n\n" + toDisplayYaml(ingress));
       return ingress;
     } catch (IOException e) {
       executionLogCallback.saveExecutionLog(
@@ -706,7 +705,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
       return horizontalPodAutoscaler;
     } catch (IOException e) {
-      throw new WingsException("Error while loading customMetricYaml for horizontal pod autoscaling", e);
+      throw new WingsException("Error while loading custom yaml for horizontal pod autoscaler", e);
     }
   }
 
@@ -732,7 +731,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   }
 
   private IstioResource createRouteRuleDefinition(KubernetesSetupParams setupParams, String kubernetesServiceName,
-      Map<String, String> serviceLabels, Map<String, Integer> activeControllers, boolean isStatefulSet) {
+      Map<String, String> serviceLabels, Map<String, Integer> activeControllers, boolean isStatefulSet,
+      ExecutionLogCallback executionLogCallback) {
     RouteRuleSpecNested<IstioResourceBuilder> routeRuleSpecNested = new IstioResourceBuilder()
                                                                         .withNewMetadata()
                                                                         .withName(kubernetesServiceName)
@@ -757,8 +757,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         }
       }
     }
-
-    return routeRuleSpecNested.endRouteRuleSpec().build();
+    IstioResource routeRule = routeRuleSpecNested.endRouteRuleSpec().build();
+    executionLogCallback.saveExecutionLog("Creating istio route rule:\n\n" + toDisplayYaml(routeRule));
+    return routeRule;
   }
 
   private void listDaemonSetContainerInfosWhenReady(List<EncryptedDataDetail> encryptedDataDetails,
@@ -1062,7 +1063,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   private io.fabric8.kubernetes.api.model.Service createServiceDefinition(String serviceName, String namespace,
       Map<String, String> serviceLabels, KubernetesSetupParams setupParams, ExecutionLogCallback executionLogCallback) {
     ServiceSpecBuilder spec =
-        new ServiceSpecBuilder().addToSelector(serviceLabels).withType(setupParams.getServiceType().name());
+        new ServiceSpecBuilder().withSelector(serviceLabels).withType(setupParams.getServiceType().name());
 
     if (setupParams.getServiceType() != KubernetesServiceType.ExternalName) {
       ServicePortBuilder servicePort =
@@ -1102,7 +1103,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                           .endMetadata()
                           .withSpec(spec.build())
                           .build();
-    executionLogCallback.saveExecutionLog("Creating service:\n\n" + toDisplayYaml(service));
+    executionLogCallback.saveExecutionLog("Setting service:\n\n" + toDisplayYaml(service));
     return service;
   }
 
@@ -1114,7 +1115,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       service.getMetadata().setName(serviceName);
       service.getMetadata().setNamespace(namespace);
       service.getSpec().setSelector(serviceLabels);
-      executionLogCallback.saveExecutionLog("Creating service:\n\n" + toDisplayYaml(service));
+      executionLogCallback.saveExecutionLog("Setting service:\n\n" + toDisplayYaml(service));
       return service;
     } catch (IOException e) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, e).addParam("args", e.getMessage());
