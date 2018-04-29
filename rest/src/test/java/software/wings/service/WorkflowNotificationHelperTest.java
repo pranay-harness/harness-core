@@ -76,7 +76,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   private static final String EXPECTED_WORKFLOW_URL =
       "https://env.harness.io/#/account/ACCOUNT_ID/app/APP_ID/env/ENV_ID/executions/WORKFLOW_EXECUTION_ID/details";
   private static final String EXPECTED_PIPELINE_URL =
-      "https://env.harness.io/#/account/ACCOUNT_ID/app/APP_ID/deployments/PIPELINE_EXECUTION_ID/details";
+      "https://env.harness.io/#/account/ACCOUNT_ID/app/APP_ID/pipeline-execution/PIPELINE_EXECUTION_ID/workflow-execution/WORKFLOW_EXECUTION_ID/details";
 
   @Mock private NotificationService notificationService;
   @Mock private ServiceResourceService serviceResourceService;

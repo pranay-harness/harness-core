@@ -222,8 +222,9 @@ public class WorkflowNotificationHelper {
     if (workflowExecution.getPipelineExecutionId() != null) {
       String pipelineName = workflowExecution.getPipelineSummary().getPipelineName();
       if (isNotBlank(pipelineName)) {
-        String pipelineUrl = buildAbsoluteUrl(format("/account/%s/app/%s/deployments/%s/details", app.getAccountId(),
-            app.getUuid(), workflowExecution.getPipelineExecutionId()));
+        String pipelineUrl = buildAbsoluteUrl(
+            format("/account/%s/app/%s/pipeline-execution/%s/workflow-execution/%s/details", app.getAccountId(),
+                app.getUuid(), workflowExecution.getPipelineExecutionId(), context.getWorkflowExecutionId()));
         pipelineMsg = format(" as part of <<<%s|-|%s>>> pipeline", pipelineUrl, pipelineName);
       }
     }
