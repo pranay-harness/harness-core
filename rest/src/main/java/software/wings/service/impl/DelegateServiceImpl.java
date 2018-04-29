@@ -6,7 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
-import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -158,6 +157,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public Delegate update(Delegate delegate) {
     UpdateOperations<Delegate> updateOperations = wingsPersistence.createUpdateOperations(Delegate.class);
+    setUnset(updateOperations, "ip", delegate.getIp());
     setUnset(updateOperations, "status", delegate.getStatus());
     setUnset(updateOperations, "lastHeartBeat", delegate.getLastHeartBeat());
     setUnset(updateOperations, "connected", delegate.isConnected());
@@ -331,6 +331,7 @@ public class DelegateServiceImpl implements DelegateService {
           .put("delegateStorageUrl", delegateStorageUrl)
           .put("delegateCheckLocation", delegateCheckLocation)
           .put("deployMode", mainConfiguration.getDeployMode())
+          .put("kubernetesDelegateName", "harness-delegate-" + accountId.toLowerCase())
           .build();
     }
     return null;
@@ -471,12 +472,15 @@ public class DelegateServiceImpl implements DelegateService {
   public Delegate register(Delegate delegate) {
     logger.info("Registering delegate for account {}: Hostname: {} IP: {}", delegate.getAccountId(),
         delegate.getHostName(), delegate.getIp());
-    Delegate existingDelegate = wingsPersistence.createQuery(Delegate.class)
-                                    .filter("accountId", delegate.getAccountId())
-                                    .filter("ip", delegate.getIp())
-                                    .filter("hostName", delegate.getHostName())
-                                    .project("status", true)
-                                    .get();
+    Query<Delegate> delegateQuery = wingsPersistence.createQuery(Delegate.class)
+                                        .filter("accountId", delegate.getAccountId())
+                                        .filter("hostName", delegate.getHostName());
+    // For delegates running in a kubernetes cluster we include lowercase account ID in the hostname to identify it.
+    // We ignore IP address because that can change with every restart of the pod.
+    if (!delegate.getHostName().contains(delegate.getAccountId().toLowerCase())) {
+      delegateQuery.filter("ip", delegate.getIp());
+    }
+    Delegate existingDelegate = delegateQuery.project("status", true).get();
     Delegate registeredDelegate;
     if (existingDelegate == null) {
       logger.info("No existing delegate, adding for account {}: Hostname: {} IP: {}", delegate.getAccountId(),
@@ -579,7 +583,7 @@ public class DelegateServiceImpl implements DelegateService {
                                        .filter("connected", true)
                                        .filter("status", Status.ENABLED)
                                        .field("supportedTaskTypes")
-                                       .hasAllOf(asList(task.getTaskType()))
+                                       .hasAllOf(singletonList(task.getTaskType()))
                                        .field("lastHeartBeat")
                                        .greaterThan(clock.millis() - MAX_DELEGATE_LAST_HEARTBEAT)
                                        .asKeyList()
