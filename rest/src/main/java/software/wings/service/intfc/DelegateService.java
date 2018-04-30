@@ -36,7 +36,7 @@ public interface DelegateService {
 
   String getLatestDelegateVersion();
 
-  File downloadZip(String managerHost, String accountId) throws IOException, TemplateException;
+  File downloadScripts(String managerHost, String accountId) throws IOException, TemplateException;
   File downloadDocker(String managerHost, String accountId) throws IOException, TemplateException;
   File downloadKubernetes(String managerHost, String accountId) throws IOException, TemplateException;
 
