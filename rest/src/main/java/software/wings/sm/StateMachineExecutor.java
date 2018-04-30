@@ -416,7 +416,7 @@ public class StateMachineExecutor {
 
   private void startStateExecution(ExecutionContextImpl context, StateExecutionInstance stateExecutionInstance) {
     ExecutionResponse executionResponse = null;
-    Exception ex = null;
+    WingsException ex = null;
     try {
       StateMachine stateMachine = context.getStateMachine();
       State currentState =
@@ -428,11 +428,9 @@ public class StateMachineExecutor {
       invokeAdvisors(context, currentState);
       executionResponse = currentState.execute(context);
     } catch (WingsException exception) {
-      exception.logProcessedMessages(MANAGER, logger);
       ex = exception;
     } catch (Exception exception) {
-      logger.error("Error in {} execution: {}", stateExecutionInstance.getDisplayName(), exception);
-      ex = exception;
+      ex = new WingsException(exception);
     }
 
     if (ex == null) {
@@ -690,30 +688,27 @@ public class StateMachineExecutor {
    * @param e the exception
    * @return the state execution instance
    */
-  StateExecutionInstance handleExecuteResponseException(ExecutionContextImpl context, Exception e) {
+  StateExecutionInstance handleExecuteResponseException(ExecutionContextImpl context, WingsException exception) {
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
     StateMachine sm = context.getStateMachine();
     State currentState =
         sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
-    String errorMessage = Misc.getMessage(e);
-    logger.warn("Error seen in the state execution - currentState : {}, stateExecutionInstanceId: {} : {}",
-        currentState, stateExecutionInstance.getUuid(), errorMessage, e);
-
-    updateStateExecutionData(stateExecutionInstance, null, FAILED, errorMessage, null, null);
+    exception.logProcessedMessages(MANAGER, logger);
+    updateStateExecutionData(stateExecutionInstance, null, FAILED, Misc.getMessage(exception), null, null);
 
     try {
       ExecutionEventAdvice executionEventAdvice = invokeAdvisors(context, currentState);
       if (executionEventAdvice != null) {
         return handleExecutionEventAdvice(context, stateExecutionInstance, FAILED, executionEventAdvice);
       }
-    } catch (RuntimeException exception) {
-      logger.error("Error when trying to obtain the advice ", exception);
+    } catch (RuntimeException ex) {
+      logger.error("Error when trying to obtain the advice ", ex);
     }
 
     try {
-      return failedTransition(context, e);
-    } catch (RuntimeException exception) {
-      logger.error("Error in transitioning to failure state", exception);
+      return failedTransition(context, exception);
+    } catch (RuntimeException ex) {
+      logger.error("Error in transitioning to failure state", ex);
     }
     return null;
   }
@@ -1488,8 +1483,10 @@ public class StateMachineExecutor {
     public void run() {
       try {
         stateMachineExecutor.handleExecuteResponse(context, anExecutionResponse().withExecutionStatus(status).build());
-      } catch (Exception ex) {
+      } catch (WingsException ex) {
         stateMachineExecutor.handleExecuteResponseException(context, ex);
+      } catch (Exception ex) {
+        stateMachineExecutor.handleExecuteResponseException(context, new WingsException(ex));
       }
     }
   }
@@ -1524,14 +1521,7 @@ public class StateMachineExecutor {
     @Override
     public void run() {
       try {
-        if (!asyncError) {
-          StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
-          if (stateExecutionInstance.getStateParams() != null) {
-            MapperUtils.mapObject(stateExecutionInstance.getStateParams(), state);
-          }
-          ExecutionResponse executionResponse = state.handleAsyncResponse(context, response);
-          stateMachineExecutor.handleExecuteResponse(context, executionResponse);
-        } else {
+        if (asyncError) {
           StateExecutionData stateExecutionData = context.getStateExecutionInstance().getStateExecutionData();
           ErrorNotifyResponseData errorNotifyResponseData =
               (ErrorNotifyResponseData) response.values().iterator().next();
@@ -1543,9 +1533,19 @@ public class StateMachineExecutor {
                   .withStateExecutionData(stateExecutionData)
                   .withErrorMessage(errorNotifyResponseData.getErrorMessage())
                   .build());
+          return;
         }
-      } catch (Exception ex) {
+
+        StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
+        if (stateExecutionInstance.getStateParams() != null) {
+          MapperUtils.mapObject(stateExecutionInstance.getStateParams(), state);
+        }
+        ExecutionResponse executionResponse = state.handleAsyncResponse(context, response);
+        stateMachineExecutor.handleExecuteResponse(context, executionResponse);
+      } catch (WingsException ex) {
         stateMachineExecutor.handleExecuteResponseException(context, ex);
+      } catch (Exception ex) {
+        stateMachineExecutor.handleExecuteResponseException(context, new WingsException(ex));
       }
     }
   }
