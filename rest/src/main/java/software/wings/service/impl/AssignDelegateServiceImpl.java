@@ -58,53 +58,42 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     if (delegate == null) {
       return false;
     }
-    boolean assign = isEmpty(delegate.getIncludeScopes());
-    if (delegate.getIncludeScopes() != null) {
-      for (DelegateScope delegateScope : delegate.getIncludeScopes()) {
-        if (scopeMatch(delegateScope, appId, envId, infraMappingId, taskGroup, tags)) {
-          assign = true;
-          break;
-        }
-      }
-    }
-    if (assign && delegate.getExcludeScopes() != null) {
-      for (DelegateScope delegateScope : delegate.getExcludeScopes()) {
-        if (scopeMatch(delegateScope, appId, envId, infraMappingId, taskGroup, tags)) {
-          assign = false;
-          break;
-        }
-      }
-    }
-    return assign;
+    return (isEmpty(delegate.getIncludeScopes())
+               || delegate.getIncludeScopes().stream().anyMatch(
+                      scope -> scopeMatch(scope, appId, envId, infraMappingId, taskGroup, tags)))
+        && (isEmpty(delegate.getExcludeScopes())
+               || delegate.getExcludeScopes().stream().noneMatch(
+                      scope -> scopeMatch(scope, appId, envId, infraMappingId, taskGroup, tags)));
   }
 
-  private boolean scopeMatch(DelegateScope delegateScope, String appId, String envId, String infraMappingId,
-      TaskGroup taskGroup, List<String> tags) {
-    if (!delegateScope.isValid()) {
+  private boolean scopeMatch(
+      DelegateScope scope, String appId, String envId, String infraMappingId, TaskGroup taskGroup, List<String> tags) {
+    if (!scope.isValid()) {
       logger.error("Delegate scope cannot be empty.");
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Delegate scope cannot be empty.");
     }
     boolean match = true;
 
-    if (isNotEmpty(delegateScope.getEnvironmentTypes())) {
+    if (isNotEmpty(scope.getEnvironmentTypes())) {
       match = isNotBlank(appId) && isNotBlank(envId)
-          && delegateScope.getEnvironmentTypes().contains(
-                 environmentService.get(appId, envId, false).getEnvironmentType());
+          && scope.getEnvironmentTypes().contains(environmentService.get(appId, envId, false).getEnvironmentType());
     }
-    if (match && isNotEmpty(delegateScope.getTaskTypes())) {
-      match = delegateScope.getTaskTypes().contains(taskGroup);
+    if (match && isNotEmpty(scope.getTaskTypes())) {
+      match = scope.getTaskTypes().contains(taskGroup);
     }
-    if (match && isNotEmpty(delegateScope.getApplications())) {
-      match = isNotBlank(appId) && delegateScope.getApplications().contains(appId);
+    if (match && isNotEmpty(scope.getApplications())) {
+      match = isNotBlank(appId) && scope.getApplications().contains(appId);
     }
-    if (match && isNotEmpty(delegateScope.getEnvironments())) {
-      match = isNotBlank(envId) && delegateScope.getEnvironments().contains(envId);
+    if (match && isNotEmpty(scope.getEnvironments())) {
+      match = isNotBlank(envId) && scope.getEnvironments().contains(envId);
     }
-    if (match && isNotEmpty(delegateScope.getServiceInfrastructures())) {
-      match = isNotBlank(infraMappingId) && delegateScope.getServiceInfrastructures().contains(infraMappingId);
+    if (match && isNotEmpty(scope.getServiceInfrastructures())) {
+      match = isNotBlank(infraMappingId) && scope.getServiceInfrastructures().contains(infraMappingId);
     }
-    if (match && isNotEmpty(tags)) {
-      match = isNotEmpty(tags) && tags.stream().allMatch(tag -> tags.contains(delegateScope.getTags()));
+    if (match && isNotEmpty(scope.getTags())) {
+      // Match any tag. If it needs to match all tags change to:
+      // match = isNotEmpty(tags) && scope.getTags().containsAll(tags);
+      match = isNotEmpty(tags) && tags.stream().anyMatch(tag -> scope.getTags().contains(tag));
     }
 
     return match;
