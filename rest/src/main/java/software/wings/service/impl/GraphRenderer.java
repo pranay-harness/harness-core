@@ -491,7 +491,7 @@ public class GraphRenderer {
     final Multiset<ExecutionStatus> multiset = HashMultiset.create();
     instances.stream().map(StateExecutionInstance::getStatus).forEach(state -> multiset.add(state));
 
-    Map<String, ExecutionDataValue> executionDetails = new LinkedHashMap<String, ExecutionDataValue>();
+    Map<String, ExecutionDataValue> executionDetails = new LinkedHashMap<>();
 
     executionDetails.put(
         "Total instances", ExecutionDataValue.builder().displayName("Total instances").value(instances.size()).build());

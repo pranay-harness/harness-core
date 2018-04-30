@@ -195,7 +195,7 @@ public class DirectKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandler
                                       .withFileContent(yamlContent)
                                       .build();
 
-    ChangeContext<Y> changeContext = new ChangeContext<Y>();
+    ChangeContext<Y> changeContext = new ChangeContext<>();
     changeContext.setChange(gitFileChange);
     changeContext.setYamlType(YamlType.INFRA_MAPPING);
     changeContext.setYamlSyncHandler(yamlHandler);

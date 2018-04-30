@@ -396,7 +396,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       return cachedStencils;
     }
 
-    List<StateTypeDescriptor> stencils = new ArrayList<StateTypeDescriptor>();
+    List<StateTypeDescriptor> stencils = new ArrayList<>();
     Arrays.stream(values()).forEach(state -> stencils.add(state));
 
     List<StateTypeDescriptor> plugins = pluginManager.getExtensions(StateTypeDescriptor.class);
