@@ -126,6 +126,51 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldAssignTaskWithAllMatchingTags() {
+    DelegateTask delegateTask =
+        aDelegateTask().withAccountId(ACCOUNT_ID).withAppId(APP_ID).withTags(ImmutableList.of("a", "b")).build();
+    Delegate delegate =
+        aDelegate()
+            .withAccountId(ACCOUNT_ID)
+            .withUuid(DELEGATE_ID)
+            .withIncludeScopes(ImmutableList.of(DelegateScope.builder().tags(ImmutableList.of("a", "b", "c")).build()))
+            .withExcludeScopes(emptyList())
+            .build();
+    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID)).thenReturn(delegate);
+    assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isTrue();
+  }
+
+  @Test
+  public void shouldAssignTaskWithPartialMatchingTags() {
+    DelegateTask delegateTask =
+        aDelegateTask().withAccountId(ACCOUNT_ID).withAppId(APP_ID).withTags(ImmutableList.of("a", "b")).build();
+    Delegate delegate =
+        aDelegate()
+            .withAccountId(ACCOUNT_ID)
+            .withUuid(DELEGATE_ID)
+            .withIncludeScopes(ImmutableList.of(DelegateScope.builder().tags(ImmutableList.of("b", "c")).build()))
+            .withExcludeScopes(emptyList())
+            .build();
+    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID)).thenReturn(delegate);
+    assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isTrue();
+  }
+
+  @Test
+  public void shouldNotAssignTaskWithExcludedMatchingTags() {
+    DelegateTask delegateTask =
+        aDelegateTask().withAccountId(ACCOUNT_ID).withAppId(APP_ID).withTags(ImmutableList.of("a", "b")).build();
+    Delegate delegate =
+        aDelegate()
+            .withAccountId(ACCOUNT_ID)
+            .withUuid(DELEGATE_ID)
+            .withIncludeScopes(ImmutableList.of(DelegateScope.builder().tags(ImmutableList.of("b", "c")).build()))
+            .withExcludeScopes(ImmutableList.of(DelegateScope.builder().tags(ImmutableList.of("a", "f")).build()))
+            .build();
+    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID)).thenReturn(delegate);
+    assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isFalse();
+  }
+
+  @Test
   public void shouldSaveConnectionResults() {
     List<DelegateConnectionResult> results = singletonList(DelegateConnectionResult.builder()
                                                                .accountId(ACCOUNT_ID)
