@@ -16,7 +16,11 @@ import static software.wings.common.Constants.HTTP_RESPONSE_BODY;
 import static software.wings.common.Constants.HTTP_RESPONSE_CODE;
 import static software.wings.common.Constants.HTTP_RESPONSE_METHOD;
 import static software.wings.common.Constants.HTTP_URL;
+import static software.wings.common.Constants.INFRA_ROUTE;
+import static software.wings.common.Constants.INFRA_TEMP_ROUTE;
 import static software.wings.common.Constants.JSONPATH;
+import static software.wings.common.Constants.PCF_APP_NAME;
+import static software.wings.common.Constants.PCF_OLD_APP_NAME;
 import static software.wings.common.Constants.WINGS_BACKUP_PATH;
 import static software.wings.common.Constants.WINGS_RUNTIME_PATH;
 import static software.wings.common.Constants.WINGS_STAGING_PATH;
@@ -178,6 +182,15 @@ public abstract class ExpressionBuilder {
       case NEW_RELIC_DEPLOYMENT_MARKER:
       case KUBERNETES_DEPLOY:
         noop();
+        break;
+      case PCF_SETUP:
+      case PCF_RESIZE:
+      case PCF_ROLLBACK:
+        expressions.addAll(asList(INFRA_ROUTE, INFRA_TEMP_ROUTE));
+        break;
+      case PCF_MAP_ROUTE:
+      case PCF_UNMAP_ROUTE:
+        expressions.addAll(asList(INFRA_ROUTE, INFRA_TEMP_ROUTE, PCF_APP_NAME, PCF_OLD_APP_NAME));
         break;
       default:
         break;

@@ -35,6 +35,14 @@ import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.LogAnalysisStoreService;
 import software.wings.delegatetasks.MetricDataStoreService;
+import software.wings.delegatetasks.pcf.pcftaskhandler.PcfApplicationDetailsCommandTaskHandler;
+import software.wings.delegatetasks.pcf.pcftaskhandler.PcfCommandTaskHandler;
+import software.wings.delegatetasks.pcf.pcftaskhandler.PcfDataFetchCommandTaskHandler;
+import software.wings.delegatetasks.pcf.pcftaskhandler.PcfDeployCommandTaskHandler;
+import software.wings.delegatetasks.pcf.pcftaskhandler.PcfRollbackCommandTaskHandler;
+import software.wings.delegatetasks.pcf.pcftaskhandler.PcfRouteUpdateCommandTaskHandler;
+import software.wings.delegatetasks.pcf.pcftaskhandler.PcfSetupCommandTaskHandler;
+import software.wings.delegatetasks.pcf.pcftaskhandler.PcfValidationCommandTaskHandler;
 import software.wings.helpers.ext.amazons3.AmazonS3Service;
 import software.wings.helpers.ext.amazons3.AmazonS3ServiceImpl;
 import software.wings.helpers.ext.ami.AmiService;
@@ -67,6 +75,7 @@ import software.wings.helpers.ext.pcf.PcfClient;
 import software.wings.helpers.ext.pcf.PcfClientImpl;
 import software.wings.helpers.ext.pcf.PcfDeploymentManager;
 import software.wings.helpers.ext.pcf.PcfDeploymentManagerImpl;
+import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
 import software.wings.service.EcrClassicBuildServiceImpl;
 import software.wings.service.impl.AcrBuildServiceImpl;
 import software.wings.service.impl.AmazonS3BuildServiceImpl;
@@ -254,5 +263,19 @@ public class DelegateModule extends AbstractModule {
         .to(WinRMCommandUnitExecutorServiceImpl.class);
     serviceCommandExecutorServiceMapBinder.addBinding(DeploymentType.AWS_CODEDEPLOY.name())
         .to(CodeDeployCommandUnitExecutorServiceImpl.class);
+
+    MapBinder<String, PcfCommandTaskHandler> commandTaskTypeToTaskHandlerMap =
+        MapBinder.newMapBinder(binder(), String.class, PcfCommandTaskHandler.class);
+    commandTaskTypeToTaskHandlerMap.addBinding(PcfCommandType.SETUP.name()).to(PcfSetupCommandTaskHandler.class);
+    commandTaskTypeToTaskHandlerMap.addBinding(PcfCommandType.RESIZE.name()).to(PcfDeployCommandTaskHandler.class);
+    commandTaskTypeToTaskHandlerMap.addBinding(PcfCommandType.ROLLBACK.name()).to(PcfRollbackCommandTaskHandler.class);
+    commandTaskTypeToTaskHandlerMap.addBinding(PcfCommandType.UPDATE_ROUTE.name())
+        .to(PcfRouteUpdateCommandTaskHandler.class);
+    commandTaskTypeToTaskHandlerMap.addBinding(PcfCommandType.VALIDATE.name())
+        .to(PcfValidationCommandTaskHandler.class);
+    commandTaskTypeToTaskHandlerMap.addBinding(PcfCommandType.APP_DETAILS.name())
+        .to(PcfApplicationDetailsCommandTaskHandler.class);
+    commandTaskTypeToTaskHandlerMap.addBinding(PcfCommandType.DATAFETCH.name())
+        .to(PcfDataFetchCommandTaskHandler.class);
   }
 }

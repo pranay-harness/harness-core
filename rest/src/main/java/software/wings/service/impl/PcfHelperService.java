@@ -9,11 +9,13 @@ import com.google.inject.Singleton;
 import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.infrastructure.instance.info.PcfInstanceInfo;
 import software.wings.exception.InvalidRequestException;
+import software.wings.exception.WingsException;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
 import software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest;
 import software.wings.helpers.ext.pcf.request.PcfInstanceSyncRequest;
@@ -98,6 +100,15 @@ public class PcfHelperService {
       PcfInstanceSyncResponse pcfInstanceSyncResponse =
           (PcfInstanceSyncResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
 
+      if (CommandExecutionStatus.FAILURE.equals(pcfCommandExecutionResponse.getCommandExecutionStatus())) {
+        logger.error("Failed to fetch PCF application details for Instance Sync, check delegate logs");
+        throw new WingsException(ErrorCode.UNKNOWN_ERROR)
+            .addParam("args",
+                new StringBuilder()
+                    .append("Failed to fetch app details for PCF")
+                    .append(pcfInstanceSyncResponse.getOutput()));
+      }
+
       if (CollectionUtils.isNotEmpty(pcfInstanceSyncResponse.getInstanceIndices())) {
         return pcfInstanceSyncResponse.getInstanceIndices()
             .stream()
@@ -113,13 +124,8 @@ public class PcfHelperService {
             .collect(Collectors.toList());
       }
 
-    } catch (InterruptedException e) {
-      pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder()
-                                        .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-                                        .errorMessage(e.getMessage())
-                                        .build();
-
-      throw new InvalidRequestException(pcfCommandExecutionResponse.getErrorMessage());
+    } catch (Exception e) {
+      throw new WingsException(ErrorCode.UNKNOWN_ERROR).addParam("args", "Failed to fetch app details for PCF");
     }
 
     return Collections.EMPTY_LIST;

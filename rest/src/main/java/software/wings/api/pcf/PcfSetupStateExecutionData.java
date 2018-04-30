@@ -30,11 +30,8 @@ public class PcfSetupStateExecutionData extends StateExecutionData implements No
   private PcfCommandRequest pcfCommandRequest;
   private String commandName;
   private Integer maxInstanceCount;
-  private String manifestYaml;
-  private List<String> tempRouteMap;
   private List<String> routeMaps;
   private boolean rollback;
-  private boolean isBlueGreenDeployment;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
@@ -52,8 +49,8 @@ public class PcfSetupStateExecutionData extends StateExecutionData implements No
         ExecutionDataValue.builder().value(pcfCommandRequest.getOrganization()).displayName("Organization").build());
     putNotNull(executionDetails, "space",
         ExecutionDataValue.builder().value(pcfCommandRequest.getSpace()).displayName("Space").build());
-    putNotNull(executionDetails, "commandName",
-        ExecutionDataValue.builder().value(commandName).displayName("CommandName").build());
+    putNotNull(executionDetails, "routeMaps",
+        ExecutionDataValue.builder().value(String.valueOf(routeMaps)).displayName("Route Maps").build());
     // putting activityId is very important, as without it UI wont make call to fetch commandLogs that are shown
     // in activity window
     putNotNull(executionDetails, "activityId",

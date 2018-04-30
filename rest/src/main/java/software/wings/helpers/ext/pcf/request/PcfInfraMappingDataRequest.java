@@ -13,9 +13,9 @@ public class PcfInfraMappingDataRequest extends PcfCommandRequest {
   @Builder
   public PcfInfraMappingDataRequest(String accountId, String appId, String commandName, String activityId,
       PcfCommandType pcfCommandType, String organization, String space, PcfConfig pcfConfig, String workflowExecutionId,
-      Integer timeoutIntervalInMin, boolean isBlueGreenDeployment) {
+      Integer timeoutIntervalInMin) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
-        workflowExecutionId, timeoutIntervalInMin, isBlueGreenDeployment);
+        workflowExecutionId, timeoutIntervalInMin);
     this.pcfConfig = pcfConfig;
   }
 }

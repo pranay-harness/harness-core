@@ -20,16 +20,15 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PcfSwapRouteMapStateExecutionData extends StateExecutionData implements NotifyResponseData {
+public class PcfRouteUpdateStateExecutionData extends StateExecutionData implements NotifyResponseData {
   private String activityId;
   private String accountId;
   private String appId;
   private PcfCommandRequest pcfCommandRequest;
   private String commandName;
-  private Integer maxInstanceCount;
-  private List<String> tempRouteMap;
   private List<String> routeMaps;
-  private boolean isBlueGreenDeployment;
+  private List<String> appnames;
+  private String operation;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
@@ -50,7 +49,9 @@ public class PcfSwapRouteMapStateExecutionData extends StateExecutionData implem
     putNotNull(executionDetails, "commandName",
         ExecutionDataValue.builder().value(commandName).displayName("Command Name").build());
     putNotNull(executionDetails, "routeMaps",
-        ExecutionDataValue.builder().value(getRouteMapString(routeMaps)).displayName("Final Route Maps").build());
+        ExecutionDataValue.builder().value(getDisplayString(routeMaps)).displayName("Final Route Maps").build());
+    putNotNull(executionDetails, "appnames",
+        ExecutionDataValue.builder().value(getDisplayString(appnames)).displayName("Applications").build());
     // putting activityId is very important, as without it UI wont make call to fetch commandLogs that are shown
     // in activity window
     putNotNull(executionDetails, "activityId",
@@ -59,9 +60,9 @@ public class PcfSwapRouteMapStateExecutionData extends StateExecutionData implem
     return executionDetails;
   }
 
-  private String getRouteMapString(List<String> routes) {
+  private String getDisplayString(List<String> inputs) {
     StringBuilder builder = new StringBuilder();
-    routes.stream().forEach(route -> builder.append(route));
+    inputs.stream().forEach(input -> builder.append(input).append(" "));
     return builder.toString();
   }
 
@@ -71,7 +72,7 @@ public class PcfSwapRouteMapStateExecutionData extends StateExecutionData implem
         .organization(pcfCommandRequest.getOrganization())
         .space(pcfCommandRequest.getSpace())
         .routeMaps(routeMaps)
-        .tempRouteMaps(tempRouteMap)
+        // .tempRouteMaps(tempRouteMap)
         .build();
   }
 }
