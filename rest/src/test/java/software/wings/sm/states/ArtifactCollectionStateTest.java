@@ -7,7 +7,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
-import static software.wings.api.WorkflowElement.WorkflowElementBuilder.aWorkflowElement;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.common.Constants.DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS;
@@ -34,6 +33,7 @@ import org.mockito.junit.MockitoRule;
 import org.quartz.JobDetail;
 import org.quartz.Trigger;
 import software.wings.api.ArtifactCollectionExecutionData;
+import software.wings.api.WorkflowElement;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.Application;
@@ -51,6 +51,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.WorkflowStandardParams.Builder;
 
 import java.util.concurrent.TimeUnit;
 
@@ -82,11 +83,11 @@ public class ArtifactCollectionStateTest {
                                                             .artifactPaths(asList("*WAR"))
                                                             .build();
   private WorkflowStandardParams workflowStandardParams =
-      WorkflowStandardParams.Builder.aWorkflowStandardParams()
+      Builder.aWorkflowStandardParams()
           .withAppId(APP_ID)
           .withWorkflowElement(
-              aWorkflowElement()
-                  .withVariables(ImmutableMap.of("sourceCommitHash", "0fcb2caa537745f8228fb081aac2af55765d8e62"))
+              WorkflowElement.builder()
+                  .variables(ImmutableMap.of("sourceCommitHash", "0fcb2caa537745f8228fb081aac2af55765d8e62"))
                   .build())
           .build();
   private StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()

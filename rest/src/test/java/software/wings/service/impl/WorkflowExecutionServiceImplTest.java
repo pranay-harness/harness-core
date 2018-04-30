@@ -57,6 +57,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.api.PhaseElement;
+import software.wings.api.WorkflowElement;
 import software.wings.app.StaticConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
@@ -114,6 +115,7 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
+import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.NotifyEventListener;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -121,6 +123,7 @@ import software.wings.waitnotify.WaitNotifyEngine;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
 
 /**
@@ -747,6 +750,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     execution = workflowExecutionService.getExecutionDetails(appId, executionId, emptySet());
     assertThat(execution)
         .isNotNull()
+        .hasFieldOrProperty("displayName")
+        .hasFieldOrProperty("releaseNo")
         .extracting(WorkflowExecution::getUuid, WorkflowExecution::getStatus)
         .containsExactly(executionId, ExecutionStatus.SUCCESS);
 
@@ -765,6 +770,50 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   /**
+   * Should trigger workflow.
+   *
+   * @throws InterruptedException the interrupted exception
+   */
+  @Test
+  public void shouldTriggerWorkflowWithRelease() throws InterruptedException {
+    String appId = app.getUuid();
+    Workflow workflow = createExecutableWorkflow(appId, env);
+    WorkflowExecution workflowExecution = triggerWorkflow(workflow, env);
+    assertThat(workflowExecution).isNotNull().hasFieldOrPropertyWithValue("releaseNo", "1");
+
+    WorkflowElement workflowElement = getWorkflowElement(appId, workflowExecution);
+    assertThat(workflowElement).isNotNull().hasFieldOrPropertyWithValue("releaseNo", "1");
+
+    WorkflowExecution workflowExecution2 = triggerWorkflow(workflow, env);
+    assertThat(workflowExecution2).isNotNull().hasFieldOrPropertyWithValue("releaseNo", "2");
+    workflowElement = getWorkflowElement(appId, workflowExecution2);
+    assertThat(workflowElement)
+        .isNotNull()
+        .extracting("releaseNo", "lastGoodDeploymentUuid", "lastGoodDeploymentDisplayName", "lastGoodReleaseNo")
+        .containsExactly(workflowExecution2.getReleaseNo(), workflowExecution.getUuid(),
+            workflowExecution.getDisplayName(), workflowExecution.getReleaseNo());
+  }
+
+  private WorkflowElement getWorkflowElement(String appId, WorkflowExecution workflowExecution) {
+    StateExecutionInstance stateExecutionInstance = wingsPersistence.get(StateExecutionInstance.class,
+        PageRequestBuilder.aPageRequest()
+            .addFilter("appId", Operator.EQ, appId)
+            .addFilter("executionUuid", Operator.EQ, workflowExecution.getUuid())
+            .build());
+
+    assertThat(stateExecutionInstance).isNotNull();
+    assertThat(stateExecutionInstance.getContextElements()).isNotNull();
+    Optional<ContextElement> first =
+        stateExecutionInstance.getContextElements()
+            .stream()
+            .filter(contextElement -> contextElement.getElementType() == ContextElementType.STANDARD)
+            .findFirst();
+    assertThat(first.isPresent()).isTrue();
+    assertThat(first.get()).isInstanceOf(WorkflowStandardParams.class).hasFieldOrProperty("workflowElement");
+
+    return ((WorkflowStandardParams) first.get()).getWorkflowElement();
+  }
+  /**
    * Should get node details.
    *
    * @throws InterruptedException the interrupted exception
@@ -774,7 +823,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     String appId = app.getUuid();
 
     WorkflowExecution execution =
-        workflowExecutionService.getExecutionDetails(appId, triggerWorkflow(appId, env), emptySet());
+        workflowExecutionService.getExecutionDetails(appId, triggerWorkflow(appId, env).getUuid(), emptySet());
     GraphNode node0 = execution.getExecutionNode();
     assertThat(workflowExecutionService.getExecutionDetailsForNode(appId, execution.getUuid(), node0.getId()))
         .isEqualToIgnoringGivenFields(node0, "next");
@@ -804,8 +853,20 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @return the string
    * @throws InterruptedException the interrupted exception
    */
-  public String triggerWorkflow(String appId, Environment env) throws InterruptedException {
+  public WorkflowExecution triggerWorkflow(String appId, Environment env) throws InterruptedException {
     Workflow workflow = createExecutableWorkflow(appId, env);
+    return triggerWorkflow(workflow, env);
+  }
+
+  /**
+   * Trigger workflow.
+   *
+   * @param env   the env
+   * @return the string
+   * @throws InterruptedException the interrupted exception
+   */
+  public WorkflowExecution triggerWorkflow(Workflow workflow, Environment env) throws InterruptedException {
+    String appId = workflow.getAppId();
     ExecutionArgs executionArgs = new ExecutionArgs();
 
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
@@ -820,9 +881,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     execution = workflowExecutionService.getExecutionDetails(appId, executionId, emptySet());
     assertThat(execution)
         .isNotNull()
+        .hasFieldOrProperty("displayName")
+        .hasFieldOrProperty("releaseNo")
         .extracting(WorkflowExecution::getUuid, WorkflowExecution::getStatus)
         .containsExactly(executionId, ExecutionStatus.SUCCESS);
-    return executionId;
+    return execution;
   }
 
   /**
