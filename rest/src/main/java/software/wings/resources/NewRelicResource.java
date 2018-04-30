@@ -18,7 +18,6 @@ import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricHostAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
-import software.wings.service.impl.newrelic.NewRelicMetricNames;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.analysis.MetricAnalysisResource;
@@ -113,27 +112,6 @@ public class NewRelicResource implements MetricAnalysisResource {
       throws IOException {
     return new RestResponse<>(metricDataAnalysisService.saveMetricData(
         accountId, applicationId, stateExecutionId, delegateTaskId, metricData));
-  }
-
-  @POST
-  @Path("/save-metric-names")
-  @Timed
-  @DelegateAuth
-  @ExceptionMetered
-  public RestResponse<Boolean> saveMetricNames(
-      @QueryParam("accountId") final String accountId, NewRelicMetricNames metricNames) throws IOException {
-    return new RestResponse<>(metricDataAnalysisService.updateMetricNames(metricNames));
-  }
-
-  @POST
-  @Path("/get-metric-names")
-  @Timed
-  @DelegateAuth
-  @ExceptionMetered
-  public RestResponse<NewRelicMetricNames> getMetricNames(
-      @QueryParam("accountId") final String accountId, NewRelicMetricNames metricNames) throws IOException {
-    return new RestResponse<>(
-        metricDataAnalysisService.getMetricNames(metricNames.getNewRelicAppId(), metricNames.getNewRelicConfigId()));
   }
 
   @Produces({"application/json", "application/v1+json"})

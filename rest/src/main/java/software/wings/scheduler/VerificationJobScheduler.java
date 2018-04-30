@@ -47,7 +47,6 @@ public class VerificationJobScheduler extends AbstractQuartzScheduler {
       configuration.getSchedulerConfig().setThreadCount("15");
       //      configuration.getSchedulerConfig().setClustered(false);
       JobScheduler jobScheduler = new JobScheduler(injector, configuration);
-      addNewRelicMetricNameCollectionCron(jobScheduler);
       addLearningEngineCleaupJobCron(jobScheduler);
       return jobScheduler;
     }
@@ -75,41 +74,6 @@ public class VerificationJobScheduler extends AbstractQuartzScheduler {
                 .withIdentity("LEARNING_ENGINE_TASK_QUEUE_DEL_CRON", "LEARNING_ENGINE_TASK_QUEUE_DEL_CRON_GROUP")
                 .withSchedule(SimpleScheduleBuilder.simpleSchedule()
                                   .withIntervalInSeconds((int) TimeUnit.MINUTES.toSeconds(DEFAULT_CLEANUP_MINS))
-                                  .withMisfireHandlingInstructionNowWithExistingCount()
-                                  .repeatForever())
-                .startAt(startDate)
-                .build();
-
-        jobScheduler.scheduleJob(job, trigger);
-      } catch (SchedulerException e) {
-        logger.error("Unable to start new relic metric names cron", e);
-      }
-    }
-
-    private void addNewRelicMetricNameCollectionCron(JobScheduler jobScheduler) {
-      try {
-        if (jobScheduler.getScheduler() == null
-            || jobScheduler.getScheduler()
-                   .getJobKeys(GroupMatcher.anyGroup())
-                   .contains(
-                       jobKey("NEW_RELIC_METRIC_NAME_COLLECT_CRON", "NEW_RELIC_METRIC_NAME_COLLECT_CRON_GROUP"))) {
-          return;
-        }
-
-        Date startDate = new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(5));
-        JobDetail job =
-            JobBuilder.newJob(NewRelicMetricNameCollectionJob.class)
-                .withIdentity("NEW_RELIC_METRIC_NAME_COLLECT_CRON", "NEW_RELIC_METRIC_NAME_COLLECT_CRON_GROUP")
-                .usingJobData("timestamp", System.currentTimeMillis())
-                .withDescription(
-                    "Cron to collect metric names from New Relic for workflows configured with New Relic state")
-                .build();
-
-        Trigger trigger =
-            TriggerBuilder.newTrigger()
-                .withIdentity("NEW_RELIC_METRIC_NAME_COLLECT_CRON", "NEW_RELIC_METRIC_NAME_COLLECT_CRON_GROUP")
-                .withSchedule(SimpleScheduleBuilder.simpleSchedule()
-                                  .withIntervalInSeconds((int) TimeUnit.MINUTES.toSeconds(DEFAULT_COLLECTION_MINS))
                                   .withMisfireHandlingInstructionNowWithExistingCount()
                                   .repeatForever())
                 .startAt(startDate)

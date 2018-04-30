@@ -13,6 +13,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricData;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -43,6 +44,6 @@ public interface NewRelicDelegateService {
   String postDeploymentMarker(NewRelicConfig config, List<EncryptedDataDetail> encryptedDataDetails,
       long newRelicApplicationId, NewRelicDeploymentMarkerPayload body) throws IOException;
 
-  Collection<NewRelicMetric> getMetricsNameToCollect(NewRelicConfig newRelicConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, long newRelicAppId) throws IOException;
+  Set<NewRelicMetric> getTxnNameToCollect(NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      long newRelicAppId) throws IOException;
 }

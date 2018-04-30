@@ -18,7 +18,6 @@ public enum AlertType {
   InvalidKMS(Setup, Error, KmsSetupAlert.class),
   GitSyncError(Setup, Error, GitSyncErrorAlert.class),
   GitConnectionError(Setup, Error, GitConnectionErrorAlert.class),
-  NEW_RELIC_METRIC_NAMES_COLLECTION(Setup, Error, NewRelicMetricNameCollectionAlert.class),
   INVALID_SMTP_CONFIGURATION(Setup, Error, InvalidSMTPConfigAlert.class),
   EMAIL_NOT_SENT_ALERT(Setup, Warning, EmailSendingFailedAlert.class);
 
