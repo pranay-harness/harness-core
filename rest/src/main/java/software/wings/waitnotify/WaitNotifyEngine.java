@@ -82,11 +82,7 @@ public class WaitNotifyEngine {
    * @return id of notification response object.
    */
   public <T extends NotifyResponseData> String notify(String correlationId, T response) {
-    return notify(correlationId, response, false);
-  }
-
-  public String notify(String correlationId, ErrorNotifyResponseData response) {
-    return notify(correlationId, response, true);
+    return notify(correlationId, response, response instanceof ErrorNotifyResponseData);
   }
 
   private <T extends NotifyResponseData> String notify(String correlationId, T response, boolean error) {
