@@ -336,7 +336,7 @@ public class DelegateServiceImpl implements DelegateService {
           .put("delegateStorageUrl", delegateStorageUrl)
           .put("delegateCheckLocation", delegateCheckLocation)
           .put("deployMode", mainConfiguration.getDeployMode())
-          .put("kubernetesDelegateName", "harness-delegate-" + getAccountIdentifier(accountId))
+          .put("kubernetesAccountLabel", getAccountIdentifier(accountId))
           .build();
     }
     return null;
