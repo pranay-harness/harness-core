@@ -3,18 +3,21 @@ kind: StatefulSet
 metadata:
   labels:
     harness.io/app: harness-delegate
-  name: ${kubernetesDelegateName}
+    harness.io/account: ${kubernetesAccountLabel}
+  name: harness-delegate-${kubernetesAccountLabel}
   namespace: harness-delegate
 spec:
   replicas: 1
   selector:
     matchLabels:
       harness.io/app: harness-delegate
+      harness.io/account: ${kubernetesAccountLabel}
   serviceName: ""
   template:
     metadata:
       labels:
         harness.io/app: harness-delegate
+        harness.io/account: ${kubernetesAccountLabel}
     spec:
       containers:
       - image: harness/delegate:latest

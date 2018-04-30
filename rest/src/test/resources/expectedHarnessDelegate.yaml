@@ -3,6 +3,7 @@ kind: StatefulSet
 metadata:
   labels:
     harness.io/app: harness-delegate
+    harness.io/account: accoun
   name: harness-delegate-accoun
   namespace: harness-delegate
 spec:
@@ -10,11 +11,13 @@ spec:
   selector:
     matchLabels:
       harness.io/app: harness-delegate
+      harness.io/account: accoun
   serviceName: ""
   template:
     metadata:
       labels:
         harness.io/app: harness-delegate
+        harness.io/account: accoun
     spec:
       containers:
       - image: harness/delegate:latest
