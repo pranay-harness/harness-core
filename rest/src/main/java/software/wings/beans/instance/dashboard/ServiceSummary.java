@@ -18,9 +18,7 @@ public class ServiceSummary extends EntitySummary {
   public static final class Builder extends EntitySummary.Builder {
     private EntitySummary appSummary;
 
-    private Builder() {
-      super();
-    }
+    private Builder() {}
 
     public static Builder aServiceSummary() {
       return new Builder();

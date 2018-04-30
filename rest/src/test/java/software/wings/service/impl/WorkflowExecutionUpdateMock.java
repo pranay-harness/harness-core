@@ -26,7 +26,6 @@ public class WorkflowExecutionUpdateMock extends WorkflowExecutionUpdate {
    *
    */
   public WorkflowExecutionUpdateMock() {
-    super();
     this.signalId = generateUuid();
     signalIdsMap.put(signalId, new CountDownLatch(1));
   }

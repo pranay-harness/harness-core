@@ -6,7 +6,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 /**
  * ScalingQueue based on https://github.com/AndroidDeveloperLB/ListViewVariants/blob
  * /master/app/src/main /java/lb/listviewvariants/utils/async_task_thread_pool/ScalingQueue.java
- * used in the threadpool executor that forces the Java to raise the current pool size, if it has
+ * used in the thread pool executor that forces the Java to raise the current pool size, if it has
  * still not reached the max threshold, in case existing ones are busy processing other jobs.
  *
  * @param <E> the element type
@@ -22,9 +22,7 @@ public class ScalingQueue<E> extends LinkedBlockingQueue<E> {
   /**
    * Creates a TaskQueue with a capacity of {@link Integer#MAX_VALUE}.
    */
-  public ScalingQueue() {
-    super();
-  }
+  public ScalingQueue() {}
 
   /**
    * Creates a TaskQueue with the given (fixed) capacity.

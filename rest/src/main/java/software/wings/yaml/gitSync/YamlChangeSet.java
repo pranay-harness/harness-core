@@ -32,7 +32,6 @@ public class YamlChangeSet extends Base {
   @Builder
   public YamlChangeSet(String appId, String accountId, List<GitFileChange> gitFileChanges, Status status,
       boolean gitToHarness, boolean forcePush, long queuedOn) {
-    super();
     this.appId = appId;
     this.accountId = accountId;
     this.gitFileChanges = gitFileChanges;

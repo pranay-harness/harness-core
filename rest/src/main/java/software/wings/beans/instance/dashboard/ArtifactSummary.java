@@ -28,9 +28,7 @@ public class ArtifactSummary extends EntitySummary {
     private String artifactSourceName;
     private String buildNo;
 
-    private Builder() {
-      super();
-    }
+    private Builder() {}
 
     public static Builder anArtifactSummary() {
       return new Builder();

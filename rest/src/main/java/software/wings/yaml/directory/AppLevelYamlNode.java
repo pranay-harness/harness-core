@@ -6,9 +6,7 @@ import software.wings.yaml.YamlVersion.Type;
 public class AppLevelYamlNode extends YamlNode {
   private String appId;
 
-  public AppLevelYamlNode() {
-    super();
-  }
+  public AppLevelYamlNode() {}
 
   public AppLevelYamlNode(String accountId, String name, Class theClass) {
     super(accountId, name, theClass);

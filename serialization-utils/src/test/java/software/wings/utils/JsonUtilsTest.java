@@ -225,7 +225,6 @@ public class JsonUtilsTest {
      * Instantiates a new base a.
      */
     public BaseA() {
-      super();
       setBaseType(BaseType.A);
     }
 
@@ -259,7 +258,6 @@ public class JsonUtilsTest {
      * Instantiates a new base b.
      */
     public BaseB() {
-      super();
       setBaseType(BaseType.B);
     }
 
@@ -293,7 +291,6 @@ public class JsonUtilsTest {
      * Instantiates a new base c.
      */
     public BaseC() {
-      super();
       setBaseType(BaseType.C);
     }
 

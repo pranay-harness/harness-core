@@ -31,7 +31,6 @@ public class WaitQueue extends Base {
    * @param correlationId  correlationId WaitInstance is waiting on.
    */
   public WaitQueue(String waitInstanceId, String correlationId) {
-    super();
     this.waitInstanceId = waitInstanceId;
     this.correlationId = correlationId;
   }

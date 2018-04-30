@@ -872,7 +872,6 @@ public class StateMachineTest extends WingsBaseTest {
      * @param value the value
      */
     public TestStateExecutionData(String key, String value) {
-      super();
       this.key = key;
       this.value = value;
     }

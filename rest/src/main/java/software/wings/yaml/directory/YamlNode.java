@@ -8,7 +8,6 @@ public class YamlNode extends DirectoryNode {
   private Type yamlVersionType;
 
   public YamlNode() {
-    super();
     this.setType(NodeType.YAML);
   }
 

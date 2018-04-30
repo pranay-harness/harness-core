@@ -18,7 +18,6 @@ public class ProcessCheckRunningCommandUnit extends ExecCommandUnit {
    * Instantiates a new Process check command unit.
    */
   public ProcessCheckRunningCommandUnit() {
-    super();
     setCommandUnitType(CommandUnitType.PROCESS_CHECK_RUNNING);
   }
 

@@ -277,7 +277,6 @@ public class PartitionProcessorTest {
      * @param sampleElements the sample elements
      */
     public SamplePartitionProcessor(List<SampleElement> sampleElements) {
-      super();
       this.sampleElements = sampleElements;
     }
 

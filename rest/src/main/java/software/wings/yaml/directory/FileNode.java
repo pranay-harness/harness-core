@@ -4,7 +4,6 @@ import software.wings.service.intfc.yaml.YamlGitService;
 
 public class FileNode extends DirectoryNode {
   public FileNode() {
-    super();
     this.setType(NodeType.FILE);
   }
 

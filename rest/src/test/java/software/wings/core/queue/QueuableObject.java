@@ -18,9 +18,7 @@ public class QueuableObject extends Queuable {
   /**
    * Instantiates a new queuable object.
    */
-  public QueuableObject() {
-    super();
-  }
+  public QueuableObject() {}
 
   /**
    * Instantiates a new queuable object.
@@ -28,7 +26,6 @@ public class QueuableObject extends Queuable {
    * @param data the data
    */
   public QueuableObject(int data) {
-    super();
     this.data = data;
   }
 
