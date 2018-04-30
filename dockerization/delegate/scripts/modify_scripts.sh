@@ -13,7 +13,7 @@ if [[ -v "MANAGER_HOST_AND_PORT" ]]
 then
     sed -i "s|_managerHostAndPort_|${MANAGER_HOST_AND_PORT}|" /opt/harness-delegate/delegate.sh
 else
-    sed -i "s|_managerHostAndPort_|https://app.harness.io|" /opt/harness-delegate/delegate.sh
+    sed -i "s|_managerHostAndPort_|https://app.harness.io:443|" /opt/harness-delegate/delegate.sh
 fi
 
 if [[ -v "WATCHER_STORAGE_URL" ]]

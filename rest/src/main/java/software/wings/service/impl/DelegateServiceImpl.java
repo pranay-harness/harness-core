@@ -445,7 +445,11 @@ public class DelegateServiceImpl implements DelegateService {
 
       File launch = File.createTempFile("launch-harness-delegate", ".sh");
       try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(launch))) {
-        cfg.getTemplate("launch-harness-delegate.sh.ftl").process(scriptParams, fileWriter);
+        String templateName =
+            scriptParams != null && "https://app.harness.io:443".equals(scriptParams.get("managerHostAndPort"))
+            ? "launch-harness-delegate-prod.sh.ftl"
+            : "launch-harness-delegate.sh.ftl";
+        cfg.getTemplate(templateName).process(scriptParams, fileWriter);
       }
       launch = new File(launch.getAbsolutePath());
       ZipArchiveEntry launchZipArchiveEntry =
@@ -487,7 +491,11 @@ public class DelegateServiceImpl implements DelegateService {
 
       File yaml = File.createTempFile("harness-delegate", ".yaml");
       try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(yaml))) {
-        cfg.getTemplate("harness-delegate.yaml.ftl").process(scriptParams, fileWriter);
+        String templateName =
+            scriptParams != null && "https://app.harness.io:443".equals(scriptParams.get("managerHostAndPort"))
+            ? "harness-delegate-prod.yaml.ftl"
+            : "harness-delegate.yaml.ftl";
+        cfg.getTemplate(templateName).process(scriptParams, fileWriter);
       }
       yaml = new File(yaml.getAbsolutePath());
       ZipArchiveEntry yamlZipArchiveEntry = new ZipArchiveEntry(yaml, KUBERNETES_DELEGATE + "/harness-delegate.yaml");
