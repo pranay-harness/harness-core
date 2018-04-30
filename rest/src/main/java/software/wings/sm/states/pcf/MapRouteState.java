@@ -72,9 +72,9 @@ public class MapRouteState extends State {
 
   private static final Logger logger = LoggerFactory.getLogger(MapRouteState.class);
 
-  @DefaultValue("${" + Constants.PCF_APP_NAME + "}") @Attributes(title = "PCF App Name") protected String pcfAppName;
+  @DefaultValue("${" + Constants.PCF_APP_NAME + "}") @Attributes(title = "PCF App Name") private String pcfAppName;
 
-  @DefaultValue("${" + Constants.INFRA_ROUTE + "}") @Attributes(title = "Map Route") protected String route;
+  @DefaultValue("${" + Constants.INFRA_ROUTE + "}") @Attributes(title = "Map Route") private String route;
 
   public String getPcfAppName() {
     return pcfAppName;

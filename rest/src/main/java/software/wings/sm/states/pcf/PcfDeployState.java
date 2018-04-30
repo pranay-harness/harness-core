@@ -226,17 +226,29 @@ public class PcfDeployState extends State {
 
   private Integer getInstanceCountToBeUpdated(
       Integer maxInstanceCount, Integer instanceCountValue, InstanceUnitType unitType, boolean upsize) {
+    // final count after upsize or downsize in this deploy phase
     Integer updateCount;
     if (unitType == PERCENTAGE) {
       int percent = Math.min(instanceCountValue, 100);
       int count = (int) Math.round((percent * maxInstanceCount) / 100.0);
       if (upsize) {
+        // if use inputs 40%, means count after this phase deployment should be 40% of maxInstances
         updateCount = Math.max(count, 1);
       } else {
+        // if use inputs 40%, means 60% (100 - 40) of maxInstances should be downsized for old apps
+        // so only 40% of the max instances would remain
         updateCount = Math.max(count, 0);
+        updateCount = maxInstanceCount - updateCount;
       }
     } else {
-      updateCount = instanceCountValue;
+      if (upsize) {
+        // if use inputs 5, means count after this phase deployment should be 5
+        updateCount = instanceCountValue;
+      } else {
+        // if use inputs 5, means count after this phase deployment for old apps should be,
+        // so manxInstances - 5 should be downsized
+        updateCount = maxInstanceCount - instanceCountValue;
+      }
     }
     return updateCount;
   }
