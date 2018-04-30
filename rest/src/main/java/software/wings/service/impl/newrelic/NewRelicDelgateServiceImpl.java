@@ -29,7 +29,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
 /**
  * Created by rsingh on 8/28/17.
  */
@@ -102,7 +105,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   }
 
   @Override
-  public Collection<NewRelicMetric> getMetricsNameToCollect(NewRelicConfig newRelicConfig,
+  public Set<NewRelicMetric> getTxnNameToCollect(NewRelicConfig newRelicConfig,
       List<EncryptedDataDetail> encryptedDataDetails, long newRelicAppId) throws IOException {
     final Call<NewRelicMetricResponse> request =
         getNewRelicRestClient(newRelicConfig, encryptedDataDetails).listMetricNames(newRelicAppId);
@@ -110,9 +113,9 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     if (response.isSuccessful()) {
       List<NewRelicMetric> metrics = response.body().getMetrics();
       if (metrics == null) {
-        return Collections.emptyList();
+        return Collections.emptySet();
       }
-      List<NewRelicMetric> newRelicMetrics = new ArrayList<>();
+      Set<NewRelicMetric> newRelicMetrics = new HashSet<>();
       for (NewRelicMetric metric : metrics) {
         if (metric.getName().startsWith("WebTransaction/")) {
           newRelicMetrics.add(metric);

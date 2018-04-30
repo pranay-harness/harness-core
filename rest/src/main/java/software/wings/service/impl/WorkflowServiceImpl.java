@@ -86,7 +86,6 @@ import static software.wings.sm.StateType.KUBERNETES_DEPLOY;
 import static software.wings.sm.StateType.KUBERNETES_DEPLOY_ROLLBACK;
 import static software.wings.sm.StateType.KUBERNETES_SETUP;
 import static software.wings.sm.StateType.KUBERNETES_SETUP_ROLLBACK;
-import static software.wings.sm.StateType.NEW_RELIC;
 import static software.wings.sm.StateType.PCF_ROLLBACK;
 import static software.wings.sm.StateType.PHASE;
 import static software.wings.sm.StateType.ROLLING_NODE_SELECT;
@@ -171,8 +170,6 @@ import software.wings.exception.WingsException;
 import software.wings.expression.ExpressionEvaluator;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
-import software.wings.service.impl.newrelic.NewRelicMetricNames;
-import software.wings.service.impl.newrelic.NewRelicMetricNames.WorkflowInfo;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -614,9 +611,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Workflow newWorkflow = readWorkflow(workflow.getAppId(), key, workflow.getDefaultVersion());
     updateKeywords(newWorkflow);
 
-    Workflow finalWorkflow1 = newWorkflow;
-    executorService.submit(() -> notifyNewRelicMetricCollection(finalWorkflow1));
-
     executorService.submit(() -> {
       String accountId = appService.getAccountIdByAppId(workflow.getAppId());
       YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
@@ -677,86 +671,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       preDeploymentSteps.getSteps().add(
           GraphNodeBuilder.aGraphNode().withType(ARTIFACT_CHECK.name()).withName("Artifact Check").build());
       return true;
-    }
-  }
-
-  private void notifyNewRelicMetricCollection(Workflow workflow) {
-    try {
-      if (workflow.getOrchestrationWorkflow() == null
-          || !(workflow.getOrchestrationWorkflow() instanceof CanaryOrchestrationWorkflow)) {
-        return;
-      }
-
-      CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
-          (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-      if (isEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
-        return;
-      }
-
-      Map<String, NewRelicMetricNames> newRelicMetricNamesMap = new HashMap();
-      String accountId = appService.getAccountIdByAppId(workflow.getAppId());
-      for (WorkflowPhase workflowPhase : canaryOrchestrationWorkflow.getWorkflowPhases()) {
-        if (workflowPhase.getPhaseSteps() == null) {
-          continue;
-        }
-
-        for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
-          if (phaseStep.getSteps() == null) {
-            continue;
-          }
-          for (GraphNode node : phaseStep.getSteps()) {
-            if (!NEW_RELIC.name().equals(node.getType())) {
-              continue;
-            }
-
-            String newRelicAppId = (String) node.getProperties().get("applicationId");
-            String newRelicServerConfigId = (String) node.getProperties().get("analysisServerConfigId");
-            if (newRelicMetricNamesMap.containsKey(newRelicAppId + "-" + newRelicServerConfigId)) {
-              continue;
-            }
-
-            NewRelicMetricNames newRelicMetricNames =
-                NewRelicMetricNames.builder()
-                    .newRelicAppId(newRelicAppId)
-                    .newRelicConfigId(newRelicServerConfigId)
-                    .registeredWorkflows(Collections.singletonList(WorkflowInfo.builder()
-                                                                       .accountId(accountId)
-                                                                       .appId(workflow.getAppId())
-                                                                       .workflowId(workflow.getUuid())
-                                                                       .envId(workflow.getEnvId())
-                                                                       .infraMappingId(workflow.getInfraMappingId())
-                                                                       .build()))
-                    .build();
-            newRelicMetricNamesMap.put(newRelicAppId + "-" + newRelicServerConfigId, newRelicMetricNames);
-          }
-        }
-      }
-
-      if (newRelicMetricNamesMap.isEmpty()) {
-        return;
-      }
-
-      for (NewRelicMetricNames newRelicMetricNames : newRelicMetricNamesMap.values()) {
-        NewRelicMetricNames metricNames = metricDataAnalysisService.getMetricNames(
-            newRelicMetricNames.getNewRelicAppId(), newRelicMetricNames.getNewRelicConfigId());
-        if (metricNames == null) {
-          metricDataAnalysisService.saveMetricNames(newRelicMetricNames);
-          continue;
-        }
-        boolean foundWorkflowInfo = false;
-        for (WorkflowInfo workflowInfo : metricNames.getRegisteredWorkflows()) {
-          if (workflowInfo.getWorkflowId().equals(
-                  newRelicMetricNames.getRegisteredWorkflows().get(0).getWorkflowId())) {
-            foundWorkflowInfo = true;
-            break;
-          }
-        }
-        if (!foundWorkflowInfo) {
-          metricDataAnalysisService.addMetricNamesWorkflowInfo(newRelicMetricNames);
-        }
-      }
-    } catch (Exception ex) {
-      logger.error("Unable to register workflow with NewRelicMetricNames collection", ex);
     }
   }
 
@@ -838,9 +752,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         ops);
 
     workflow = readWorkflow(workflow.getAppId(), workflow.getUuid(), workflow.getDefaultVersion());
-
-    Workflow finalWorkflow1 = workflow;
-    executorService.submit(() -> notifyNewRelicMetricCollection(finalWorkflow1));
 
     Workflow finalWorkflow = workflow;
     executorService.submit(() -> {

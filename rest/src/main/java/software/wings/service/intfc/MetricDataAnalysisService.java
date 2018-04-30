@@ -7,7 +7,6 @@ import software.wings.service.impl.analysis.TimeSeriesMLScores;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricHostAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
-import software.wings.service.impl.newrelic.NewRelicMetricNames;
 import software.wings.sm.StateType;
 import software.wings.utils.validation.Create;
 
@@ -25,16 +24,6 @@ public interface MetricDataAnalysisService {
   @ValidationGroups(Create.class)
   boolean saveMetricData(@NotNull String accountId, String applicationId, String stateExecutionId,
       String delegateTaskId, @Valid List<NewRelicMetricDataRecord> metricData) throws IOException;
-
-  @ValidationGroups(Create.class) boolean saveMetricNames(@Valid NewRelicMetricNames metricNames) throws IOException;
-
-  boolean addMetricNamesWorkflowInfo(NewRelicMetricNames metricNames) throws IOException;
-
-  boolean updateMetricNames(NewRelicMetricNames metricNames) throws IOException;
-
-  NewRelicMetricNames getMetricNames(String newRelicAppId, String newRelicServerConfigId) throws IOException;
-
-  List<NewRelicMetricNames> listMetricNamesWithWorkflows();
 
   @ValidationGroups(Create.class) boolean saveAnalysisRecords(@Valid NewRelicMetricAnalysisRecord metricAnalysisRecord);
 

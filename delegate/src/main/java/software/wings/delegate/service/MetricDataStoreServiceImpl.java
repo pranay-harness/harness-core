@@ -11,7 +11,6 @@ import software.wings.delegatetasks.MetricDataStoreService;
 import software.wings.managerclient.ManagerClient;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
-import software.wings.service.impl.newrelic.NewRelicMetricNames;
 
 import java.io.IOException;
 import java.util.List;
@@ -51,32 +50,6 @@ public class MetricDataStoreServiceImpl implements MetricDataStoreService {
     } catch (IOException e) {
       logger.error("error saving new relic metrics", e);
       return false;
-    }
-  }
-
-  @Override
-  public boolean saveNewRelicMetricNames(String accountId, NewRelicMetricNames metricNames) {
-    try {
-      return execute(managerClient.saveNewRelicMetricNames(accountId, metricNames)).getResource();
-    } catch (IOException e) {
-      logger.error("error saving new relic metric names", e);
-      return false;
-    }
-  }
-
-  @Override
-  public NewRelicMetricNames getNewRelicMetricNames(
-      String accountId, String newRelicAppId, String newRelicServerConfigId) {
-    try {
-      return execute(managerClient.getNewRelicMetricNames(accountId,
-                         NewRelicMetricNames.builder()
-                             .newRelicAppId(newRelicAppId)
-                             .newRelicConfigId(newRelicServerConfigId)
-                             .build()))
-          .getResource();
-    } catch (IOException e) {
-      logger.error("error saving new relic metric names", e);
-      return null;
     }
   }
 }

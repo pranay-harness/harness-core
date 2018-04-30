@@ -27,13 +27,11 @@ import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
-import software.wings.service.impl.newrelic.NewRelicMetric;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricHostAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
-import software.wings.service.impl.newrelic.NewRelicMetricNames;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.MetricDataAnalysisService;
@@ -81,58 +79,6 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       logger.debug("inserted " + metricData.size() + " NewRelicMetricDataRecord to persistence layer.");
     }
     return true;
-  }
-
-  @Override
-  public boolean saveMetricNames(NewRelicMetricNames metricNames) throws IOException {
-    wingsPersistence.save(metricNames);
-    return true;
-  }
-
-  @Override
-  public boolean addMetricNamesWorkflowInfo(NewRelicMetricNames metricNames) throws IOException {
-    Query<NewRelicMetricNames> query = wingsPersistence.createQuery(NewRelicMetricNames.class)
-                                           .filter("newRelicAppId", metricNames.getNewRelicAppId())
-                                           .filter("newRelicConfigId", metricNames.getNewRelicConfigId());
-    wingsPersistence.update(query,
-        wingsPersistence.createUpdateOperations(NewRelicMetricNames.class)
-            .addToSet("registeredWorkflows", metricNames.getRegisteredWorkflows()));
-    return true;
-  }
-
-  @Override
-  public boolean updateMetricNames(NewRelicMetricNames metricNames) throws IOException {
-    if (logger.isDebugEnabled()) {
-      logger.debug("updating " + metricNames.getMetrics().size() + " pieces of new relic metric names for {}, {}",
-          metricNames.getNewRelicAppId(), metricNames.getNewRelicConfigId());
-    }
-    Query<NewRelicMetricNames> query = wingsPersistence.createQuery(NewRelicMetricNames.class)
-                                           .filter("newRelicAppId", metricNames.getNewRelicAppId())
-                                           .filter("newRelicConfigId", metricNames.getNewRelicConfigId());
-
-    List<NewRelicMetric> metrics = metricNames.getMetrics() == null ? Collections.EMPTY_LIST : metricNames.getMetrics();
-    wingsPersistence.update(query,
-        wingsPersistence.createUpdateOperations(NewRelicMetricNames.class)
-            .set("metrics", metrics)
-            .set("lastUpdatedTime", System.currentTimeMillis()));
-    return true;
-  }
-
-  @Override
-  public NewRelicMetricNames getMetricNames(String newRelicAppId, String newRelicServerConfigId) throws IOException {
-    return wingsPersistence.createQuery(NewRelicMetricNames.class)
-        .filter("newRelicAppId", newRelicAppId)
-        .filter("newRelicConfigId", newRelicServerConfigId)
-        .get();
-  }
-
-  @Override
-  public List<NewRelicMetricNames> listMetricNamesWithWorkflows() {
-    return wingsPersistence.createQuery(NewRelicMetricNames.class)
-        .field("registeredWorkflows")
-        .exists()
-        .project("metrics", false)
-        .asList();
   }
 
   @Override

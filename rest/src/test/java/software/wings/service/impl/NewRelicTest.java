@@ -67,7 +67,7 @@ public class NewRelicTest extends WingsBaseTest {
   public void getMetricsNameToCollect() throws IOException {
     NewRelicApplication demoApp = getDemoApp();
     Collection<NewRelicMetric> metricsNameToCollect =
-        newRelicDelegateService.getMetricsNameToCollect(newRelicConfig, Collections.emptyList(), demoApp.getId());
+        newRelicDelegateService.getTxnNameToCollect(newRelicConfig, Collections.emptyList(), demoApp.getId());
     assertFalse(metricsNameToCollect.isEmpty());
   }
 

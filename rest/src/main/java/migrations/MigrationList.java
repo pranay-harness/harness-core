@@ -11,6 +11,7 @@ import migrations.all.CreateDefaultUserGroupsAndAddToExistingUsers;
 import migrations.all.CreateSupportUserGroupsAndRenameAccountAdmin;
 import migrations.all.FixMaxInstancesFieldInContainerSetup;
 import migrations.all.GitSyncToAllAccounts;
+import migrations.all.NewRelicMetricNameCronRemoval;
 import migrations.all.ServiceKeywordsMigration;
 import migrations.all.SetDaemonSetInWorkflowPhase;
 import migrations.all.SetRollbackFlagToWorkflows;
@@ -47,6 +48,7 @@ public class MigrationList {
         .add(Pair.of(120, GitSyncToAllAccounts.class))
         .add(Pair.of(121, SetRollbackFlagToWorkflows.class))
         .add(Pair.of(122, AddValidUntilToWaitInstance.class))
+        .add(Pair.of(123, NewRelicMetricNameCronRemoval.class))
         .build();
   }
 }

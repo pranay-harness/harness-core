@@ -2,8 +2,10 @@ package software.wings.service.impl.newrelic;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by rsingh on 8/30/17.
@@ -14,12 +16,13 @@ public class NewRelicMetricData {
   private String from;
   private String to;
 
-  private List<String> metrics_not_found;
-  private List<String> metrics_found;
+  private Set<String> metrics_not_found;
+  private Set<String> metrics_found;
 
-  private List<NewRelicMetricSlice> metrics;
+  private Set<NewRelicMetricSlice> metrics;
 
   @Data
+  @EqualsAndHashCode(exclude = "timeslices")
   public static class NewRelicMetricSlice {
     private String name;
     private List<NewRelicMetricTimeSlice> timeslices;
