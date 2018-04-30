@@ -9,8 +9,4 @@ See startup logs with:
 
    sudo docker logs -f [container_ID]
 
-Get a shell in the running container with
-
-   sudo docker container exec -it [container ID] bash
-
 
