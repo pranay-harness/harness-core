@@ -22,10 +22,12 @@ import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.PcfInstanceInfo;
 import software.wings.beans.infrastructure.instance.key.PcfInstanceKey;
 import software.wings.exception.HarnessException;
+import software.wings.helpers.ext.pcf.PcfAppNotFoundException;
 import software.wings.service.impl.PcfHelperService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.utils.Validator;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -77,84 +79,101 @@ public class PcfInstanceHandler extends InstanceHandler {
         logger.info("Performing sync for PCFApplicationName: " + pcfApplicationName + "HarnessAppId: " + appId);
         // Get all the instances for the given containerSvcName (In kubernetes, this is replication Controller and in
         // ECS it is taskDefinition)
-        List<PcfInstanceInfo> latestpcfInstanceInfoList = pcfHelperService.getApplicationDetails(pcfApplicationName,
-            pcfInfrastructureMapping.getOrganization(), pcfInfrastructureMapping.getSpace(), pcfConfig);
+        boolean failedToRetrieveData = false;
+        List<PcfInstanceInfo> latestpcfInstanceInfoList = new ArrayList<>();
+        try {
+          latestpcfInstanceInfoList = pcfHelperService.getApplicationDetails(pcfApplicationName,
+              pcfInfrastructureMapping.getOrganization(), pcfInfrastructureMapping.getSpace(), pcfConfig);
+        } catch (Exception e) {
+          logger.warn("Error while fetching application details for PCFApplication", e);
 
-        Validator.notNullCheck("latestpcfInstanceInfoList", latestpcfInstanceInfoList);
-        logger.info("Received Instance details for Instance count: " + latestpcfInstanceInfoList.size());
-
-        Map<String, PcfInstanceInfo> latestPcfInstanceInfoMap = latestpcfInstanceInfoList.stream().collect(
-            Collectors.toMap(PcfInstanceInfo::getId, pcfInstanceInfo -> pcfInstanceInfo));
-
-        Collection<Instance> instancesInDB = pcfAppNameInstanceMap.get(pcfApplicationName);
-
-        Map<String, Instance> instancesInDBMap = Maps.newHashMap();
-
-        // If there are prior instances in db already
-        if (isNotEmpty(instancesInDB)) {
-          instancesInDB.forEach(instance -> {
-            if (instance != null) {
-              instancesInDBMap.put(instance.getPcfInstanceKey().getId(), instance);
-            }
-          });
-        }
-
-        SetView<String> instancesToBeUpdated =
-            Sets.intersection(latestPcfInstanceInfoMap.keySet(), instancesInDBMap.keySet());
-
-        // Find the instances that were yet to be added to db
-        SetView<String> instancesToBeAdded =
-            Sets.difference(latestPcfInstanceInfoMap.keySet(), instancesInDBMap.keySet());
-
-        SetView<String> instancesToBeDeleted =
-            Sets.difference(instancesInDBMap.keySet(), latestPcfInstanceInfoMap.keySet());
-
-        //        instancesToBeUpdated.stream().forEach(id -> {
-        //          PcfInstanceInfo pcfInstanceInfo = latestPcfInstanceInfoMap.get(id);
-        //          Instance instance = buildInstanceFromPCFInfo(pcfInfrastructureMapping, pcfInstanceInfo,
-        //          newDeploymentInfo); logger.info("Updating Instance: " + pcfInstanceInfo.getId() + ", for
-        //          PcfApplication:- " + pcfApplicationName); instanceService.saveOrUpdate(instance);
-        //        });
-
-        Set<String> instanceIdsToBeDeleted = new HashSet<>();
-        instancesToBeDeleted.stream().forEach(id -> {
-          Instance instance = instancesInDBMap.get(id);
-          if (instance != null) {
-            instanceIdsToBeDeleted.add(instance.getUuid());
+          if (e instanceof PcfAppNotFoundException) {
+            latestpcfInstanceInfoList = new ArrayList<>();
+          } else {
+            // skip processing this time, as app exists but we could not fetch data
+            failedToRetrieveData = true;
           }
-        });
-
-        logger.info("Total no of instances found in DB for InfraMappingId: {} and AppId: {}, "
-                + "No of instances in DB: {}, No of Running instances: {}, No of instances updated: {}, "
-                + "No of instances to be Added: {}, No of instances to be deleted: {}",
-            infraMappingId, appId, instancesInDB.size(), latestPcfInstanceInfoMap.keySet().size(),
-            instancesToBeUpdated.size(), instancesToBeAdded.size(), instanceIdsToBeDeleted.size());
-        if (isNotEmpty(instanceIdsToBeDeleted)) {
-          instanceService.delete(instanceIdsToBeDeleted);
         }
 
-        if (isNotEmpty(instancesToBeAdded)) {
-          instancesToBeAdded.forEach(id -> {
-            DeploymentInfo deploymentInfo = null;
+        if (!failedToRetrieveData) {
+          Validator.notNullCheck("latestpcfInstanceInfoList", latestpcfInstanceInfoList);
+          logger.info("Received Instance details for Instance count: " + latestpcfInstanceInfoList.size());
 
-            PcfInstanceInfo pcfInstanceInfo = latestPcfInstanceInfoMap.get(id);
-            logger.info("Adding Instance: " + pcfInstanceInfo.getId() + ", for PcfApplication:- " + pcfApplicationName);
-            /**
-             * If coming from Sync_Job, newDeploymentInfo will be null, so fetch previous instance
-             */
-            if (newDeploymentInfo == null) {
-              Optional<Instance> optional = instancesInDB.stream()
-                                                .filter(instance -> matchPcfApplicationGuid(instance, pcfInstanceInfo))
-                                                .findFirst();
-              deploymentInfo =
-                  optional.isPresent() ? generateDeploymentInfoFromEarlierDeployment(optional.get()) : null;
-            } else {
-              deploymentInfo = newDeploymentInfo;
+          Map<String, PcfInstanceInfo> latestPcfInstanceInfoMap = latestpcfInstanceInfoList.stream().collect(
+              Collectors.toMap(PcfInstanceInfo::getId, pcfInstanceInfo -> pcfInstanceInfo));
+
+          Collection<Instance> instancesInDB = pcfAppNameInstanceMap.get(pcfApplicationName);
+
+          Map<String, Instance> instancesInDBMap = Maps.newHashMap();
+
+          // If there are prior instances in db already
+          if (isNotEmpty(instancesInDB)) {
+            instancesInDB.forEach(instance -> {
+              if (instance != null) {
+                instancesInDBMap.put(instance.getPcfInstanceKey().getId(), instance);
+              }
+            });
+          }
+
+          SetView<String> instancesToBeUpdated =
+              Sets.intersection(latestPcfInstanceInfoMap.keySet(), instancesInDBMap.keySet());
+
+          // Find the instances that were yet to be added to db
+          SetView<String> instancesToBeAdded =
+              Sets.difference(latestPcfInstanceInfoMap.keySet(), instancesInDBMap.keySet());
+
+          SetView<String> instancesToBeDeleted =
+              Sets.difference(instancesInDBMap.keySet(), latestPcfInstanceInfoMap.keySet());
+
+          //        instancesToBeUpdated.stream().forEach(id -> {
+          //          PcfInstanceInfo pcfInstanceInfo = latestPcfInstanceInfoMap.get(id);
+          //          Instance instance = buildInstanceFromPCFInfo(pcfInfrastructureMapping, pcfInstanceInfo,
+          //          newDeploymentInfo); logger.info("Updating Instance: " + pcfInstanceInfo.getId() + ", for
+          //          PcfApplication:- " + pcfApplicationName); instanceService.saveOrUpdate(instance);
+          //        });
+
+          Set<String> instanceIdsToBeDeleted = new HashSet<>();
+          instancesToBeDeleted.stream().forEach(id -> {
+            Instance instance = instancesInDBMap.get(id);
+            if (instance != null) {
+              instanceIdsToBeDeleted.add(instance.getUuid());
             }
-
-            Instance instance = buildInstanceFromPCFInfo(pcfInfrastructureMapping, pcfInstanceInfo, deploymentInfo);
-            instanceService.saveOrUpdate(instance);
           });
+
+          logger.info("Total no of instances found in DB for InfraMappingId: {} and AppId: {}, "
+                  + "No of instances in DB: {}, No of Running instances: {}, No of instances updated: {}, "
+                  + "No of instances to be Added: {}, No of instances to be deleted: {}",
+              infraMappingId, appId, instancesInDB.size(), latestPcfInstanceInfoMap.keySet().size(),
+              instancesToBeUpdated.size(), instancesToBeAdded.size(), instanceIdsToBeDeleted.size());
+          if (isNotEmpty(instanceIdsToBeDeleted)) {
+            instanceService.delete(instanceIdsToBeDeleted);
+          }
+
+          if (isNotEmpty(instancesToBeAdded)) {
+            instancesToBeAdded.forEach(id -> {
+              DeploymentInfo deploymentInfo = null;
+
+              PcfInstanceInfo pcfInstanceInfo = latestPcfInstanceInfoMap.get(id);
+              logger.info(
+                  "Adding Instance: " + pcfInstanceInfo.getId() + ", for PcfApplication:- " + pcfApplicationName);
+              /**
+               * If coming from Sync_Job, newDeploymentInfo will be null, so fetch previous instance
+               */
+              if (newDeploymentInfo == null) {
+                Optional<Instance> optional =
+                    instancesInDB.stream()
+                        .filter(instance -> matchPcfApplicationGuid(instance, pcfInstanceInfo))
+                        .findFirst();
+                deploymentInfo =
+                    optional.isPresent() ? generateDeploymentInfoFromEarlierDeployment(optional.get()) : null;
+              } else {
+                deploymentInfo = newDeploymentInfo;
+              }
+
+              Instance instance = buildInstanceFromPCFInfo(pcfInfrastructureMapping, pcfInstanceInfo, deploymentInfo);
+              instanceService.saveOrUpdate(instance);
+            });
+          }
         }
       });
     }

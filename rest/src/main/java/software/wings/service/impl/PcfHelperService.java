@@ -16,6 +16,7 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.beans.infrastructure.instance.info.PcfInstanceInfo;
 import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
+import software.wings.helpers.ext.pcf.PcfAppNotFoundException;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
 import software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest;
 import software.wings.helpers.ext.pcf.request.PcfInstanceSyncRequest;
@@ -72,8 +73,8 @@ public class PcfHelperService {
     }
   }
 
-  public List<PcfInstanceInfo> getApplicationDetails(
-      String pcfApplicationName, String organization, String space, PcfConfig pcfConfig) {
+  public List<PcfInstanceInfo> getApplicationDetails(String pcfApplicationName, String organization, String space,
+      PcfConfig pcfConfig) throws PcfAppNotFoundException {
     PcfCommandExecutionResponse pcfCommandExecutionResponse;
 
     try {
@@ -102,11 +103,15 @@ public class PcfHelperService {
 
       if (CommandExecutionStatus.FAILURE.equals(pcfCommandExecutionResponse.getCommandExecutionStatus())) {
         logger.error("Failed to fetch PCF application details for Instance Sync, check delegate logs");
-        throw new WingsException(ErrorCode.UNKNOWN_ERROR)
-            .addParam("args",
-                new StringBuilder()
-                    .append("Failed to fetch app details for PCF")
-                    .append(pcfInstanceSyncResponse.getOutput()));
+        if (pcfCommandExecutionResponse.getErrorMessage().contains(pcfApplicationName + " does not exist")) {
+          throw new PcfAppNotFoundException(pcfCommandExecutionResponse.getErrorMessage());
+        } else {
+          throw new WingsException(ErrorCode.UNKNOWN_ERROR)
+              .addParam("args",
+                  new StringBuilder()
+                      .append("Failed to fetch app details for PCF")
+                      .append(pcfInstanceSyncResponse.getOutput()));
+        }
       }
 
       if (CollectionUtils.isNotEmpty(pcfInstanceSyncResponse.getInstanceIndices())) {
@@ -124,7 +129,7 @@ public class PcfHelperService {
             .collect(Collectors.toList());
       }
 
-    } catch (Exception e) {
+    } catch (InterruptedException e) {
       throw new WingsException(ErrorCode.UNKNOWN_ERROR).addParam("args", "Failed to fetch app details for PCF");
     }
 
