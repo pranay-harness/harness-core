@@ -18,7 +18,6 @@ public class ProcessCheckStoppedCommandUnit extends ExecCommandUnit {
    * Instantiates a new Process check command unit.
    */
   public ProcessCheckStoppedCommandUnit() {
-    super();
     setCommandUnitType(CommandUnitType.PROCESS_CHECK_STOPPED);
   }
 

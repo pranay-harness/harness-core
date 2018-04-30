@@ -18,9 +18,7 @@ public class EnvironmentSummary extends EntitySummary {
   public static final class Builder extends EntitySummary.Builder {
     private boolean prod;
 
-    private Builder() {
-      super();
-    }
+    private Builder() {}
 
     public static Builder anEnvironmentSummary() {
       return new Builder();

@@ -13,9 +13,7 @@ public class EcsContainerInfo extends ContainerInfo {
   private long startedAt;
   private String startedBy;
 
-  private EcsContainerInfo() {
-    super();
-  }
+  private EcsContainerInfo() {}
 
   public static final class Builder {
     private String taskArn;

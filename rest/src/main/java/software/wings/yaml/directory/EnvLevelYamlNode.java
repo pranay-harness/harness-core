@@ -6,9 +6,7 @@ import software.wings.yaml.YamlVersion.Type;
 public class EnvLevelYamlNode extends AppLevelYamlNode {
   private String envId;
 
-  public EnvLevelYamlNode() {
-    super();
-  }
+  public EnvLevelYamlNode() {}
 
   public EnvLevelYamlNode(String accountId, String name, Class theClass) {
     super(accountId, name, theClass);

@@ -120,6 +120,10 @@
 
         <module name="com.github.sevntu.checkstyle.checks.coding.ReturnNullInsteadOfBooleanCheck"/>
 
+        <module name="com.github.sevntu.checkstyle.checks.coding.UselessSuperCtorCallCheck"/>
+
+        <module name="com.github.sevntu.checkstyle.checks.coding.UselessSingleCatchCheck"/>
+
         <!-- TODO: Shadowing field could be a source of bugs, very hard to figure out
         <module name="HiddenField">
             <property name="tokens" value="VARIABLE_DEF"/>
@@ -200,4 +204,5 @@
         <module name="com.github.sevntu.checkstyle.checks.coding.DiamondOperatorForVariableDefinitionCheck"/>
 
     </module>
+
 </module>

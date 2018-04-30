@@ -18,7 +18,6 @@ public class DockerStopCommandUnit extends ExecCommandUnit {
    * Instantiates a new Docker run command unit.
    */
   public DockerStopCommandUnit() {
-    super();
     setCommandUnitType(CommandUnitType.DOCKER_STOP);
   }
 

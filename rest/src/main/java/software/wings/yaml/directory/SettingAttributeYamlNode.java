@@ -6,9 +6,7 @@ import software.wings.yaml.YamlVersion.Type;
 public class SettingAttributeYamlNode extends YamlNode {
   private String settingVariableType;
 
-  public SettingAttributeYamlNode() {
-    super();
-  }
+  public SettingAttributeYamlNode() {}
 
   public SettingAttributeYamlNode(String accountId, String uuid, String settingVariableType, String name,
       Class theClass, DirectoryPath directoryPath, YamlGitService yamlGitSyncService) {

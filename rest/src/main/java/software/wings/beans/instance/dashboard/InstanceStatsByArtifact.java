@@ -20,9 +20,7 @@ public class InstanceStatsByArtifact extends InstanceStatsByEntity {
   }
 
   public static final class Builder extends InstanceStatsByEntity.Builder {
-    private Builder() {
-      super();
-    }
+    private Builder() {}
 
     public static Builder anInstanceStatsByArtifact() {
       return new Builder();

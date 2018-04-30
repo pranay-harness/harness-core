@@ -29,7 +29,6 @@ public class SetupEnvCommandUnit extends ExecCommandUnit {
    * Instantiates a new Setup env command unit.
    */
   public SetupEnvCommandUnit() {
-    super();
     setCommandUnitType(CommandUnitType.SETUP_ENV);
   }
 

@@ -11,7 +11,6 @@ public class FolderNode extends DirectoryNode {
   private String appId;
 
   public FolderNode() {
-    super();
     this.setType(NodeType.FOLDER);
     this.setRestName("folders");
   }

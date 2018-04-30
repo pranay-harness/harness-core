@@ -28,9 +28,7 @@ public class HarnessException extends Exception {
   /**
    * Instantiates a new wings exception.
    */
-  public HarnessException() {
-    super();
-  }
+  public HarnessException() {}
 
   /*
    * Instantiates a new Wings exception.
