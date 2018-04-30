@@ -234,7 +234,7 @@ public class DelegateResource {
   public Response downloadZip(@Context HttpServletRequest request, @QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("token") @NotEmpty String token) throws IOException, TemplateException {
     downloadTokenService.validateDownloadToken("delegate." + accountId, token);
-    File delegateFile = delegateService.downloadZip(getManagerUrl(request), accountId);
+    File delegateFile = delegateService.downloadScripts(getManagerUrl(request), accountId);
     return Response.ok(delegateFile)
         .header("Content-Transfer-Encoding", "binary")
         .type("application/zip; charset=binary")

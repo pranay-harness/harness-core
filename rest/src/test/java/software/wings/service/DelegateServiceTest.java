@@ -270,7 +270,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldDownloadZip() throws IOException, TemplateException {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
-    File zipFile = delegateService.downloadZip("https://localhost:9090", ACCOUNT_ID);
+    File zipFile = delegateService.downloadScripts("https://localhost:9090", ACCOUNT_ID);
     try (ZipArchiveInputStream zipArchiveInputStream = new ZipArchiveInputStream(new FileInputStream(zipFile))) {
       assertThat(zipArchiveInputStream.getNextZipEntry().getName()).isEqualTo(DELEGATE_DIR + "/");
 
@@ -357,35 +357,6 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldDownloadDockerProd() throws IOException, TemplateException {
-    when(accountService.get(ACCOUNT_ID))
-        .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
-    File zipFile = delegateService.downloadDocker("https://app.harness.io:443", ACCOUNT_ID);
-    try (ZipArchiveInputStream zipArchiveInputStream = new ZipArchiveInputStream(new FileInputStream(zipFile))) {
-      assertThat(zipArchiveInputStream.getNextZipEntry().getName()).isEqualTo(DOCKER_DELEGATE + "/");
-
-      ZipArchiveEntry file = zipArchiveInputStream.getNextZipEntry();
-      assertThat(file)
-          .extracting(ZipArchiveEntry::getName)
-          .containsExactly(DOCKER_DELEGATE + "/launch-harness-delegate.sh");
-      assertThat(file)
-          .extracting(ZipArchiveEntry::getExtraFields)
-          .flatExtracting(input -> asList((ZipExtraField[]) input))
-          .extracting(o -> ((AsiExtraField) o).getMode())
-          .containsExactly(0755 | AsiExtraField.FILE_FLAG);
-
-      byte[] buffer = new byte[(int) file.getSize()];
-      IOUtils.read(zipArchiveInputStream, buffer);
-      assertThat(new String(buffer))
-          .isEqualTo(CharStreams.toString(
-              new InputStreamReader(getClass().getResourceAsStream("/expectedLaunchHarnessDelegateProd.sh"))));
-
-      file = zipArchiveInputStream.getNextZipEntry();
-      assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly(DOCKER_DELEGATE + "/README.txt");
-    }
-  }
-
-  @Test
   public void shouldDownloadKubernetes() throws IOException, TemplateException {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
@@ -402,29 +373,6 @@ public class DelegateServiceTest extends WingsBaseTest {
       assertThat(new String(buffer))
           .isEqualTo(CharStreams.toString(
               new InputStreamReader(getClass().getResourceAsStream("/expectedHarnessDelegate.yaml"))));
-
-      file = zipArchiveInputStream.getNextZipEntry();
-      assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly(KUBERNETES_DELEGATE + "/README.txt");
-    }
-  }
-
-  @Test
-  public void shouldDownloadKubernetesProd() throws IOException, TemplateException {
-    when(accountService.get(ACCOUNT_ID))
-        .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
-    File zipFile = delegateService.downloadKubernetes("https://app.harness.io:443", ACCOUNT_ID);
-    try (ZipArchiveInputStream zipArchiveInputStream = new ZipArchiveInputStream(new FileInputStream(zipFile))) {
-      assertThat(zipArchiveInputStream.getNextZipEntry().getName()).isEqualTo(KUBERNETES_DELEGATE + "/");
-
-      ZipArchiveEntry file = zipArchiveInputStream.getNextZipEntry();
-      assertThat(file)
-          .extracting(ZipArchiveEntry::getName)
-          .containsExactly(KUBERNETES_DELEGATE + "/harness-delegate.yaml");
-      byte[] buffer = new byte[(int) file.getSize()];
-      IOUtils.read(zipArchiveInputStream, buffer);
-      assertThat(new String(buffer))
-          .isEqualTo(CharStreams.toString(
-              new InputStreamReader(getClass().getResourceAsStream("/expectedHarnessDelegateProd.yaml"))));
 
       file = zipArchiveInputStream.getNextZipEntry();
       assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly(KUBERNETES_DELEGATE + "/README.txt");

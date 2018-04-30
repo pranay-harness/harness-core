@@ -12,44 +12,30 @@ fi
 if [[ -v "MANAGER_HOST_AND_PORT" ]]
 then
     sed -i "s|_managerHostAndPort_|${MANAGER_HOST_AND_PORT}|" /opt/harness-delegate/delegate.sh
-else
-    sed -i "s|_managerHostAndPort_|https://app.harness.io:443|" /opt/harness-delegate/delegate.sh
 fi
 
 if [[ -v "WATCHER_STORAGE_URL" ]]
 then
     sed -i "s|_watcherStorageUrl_|${WATCHER_STORAGE_URL}|" /opt/harness-delegate/start.sh
     sed -i "s|_watcherStorageUrl_|${WATCHER_STORAGE_URL}|" /opt/harness-delegate/delegate.sh
-else
-    sed -i "s|_watcherStorageUrl_|https://app.harness.io/storage/wingswatchers|" /opt/harness-delegate/start.sh
-    sed -i "s|_watcherStorageUrl_|https://app.harness.io/storage/wingswatchers|" /opt/harness-delegate/delegate.sh
 fi
 
 if [[ -v "WATCHER_CHECK_LOCATION" ]]
 then
     sed -i "s|_watcherCheckLocation_|${WATCHER_CHECK_LOCATION}|" /opt/harness-delegate/start.sh
     sed -i "s|_watcherCheckLocation_|${WATCHER_CHECK_LOCATION}|" /opt/harness-delegate/delegate.sh
-else
-    sed -i "s|_watcherCheckLocation_|watcherprod.txt|" /opt/harness-delegate/start.sh
-    sed -i "s|_watcherCheckLocation_|watcherprod.txt|" /opt/harness-delegate/delegate.sh
 fi
 
 if [[ -v "DELEGATE_STORAGE_URL" ]]
 then
     sed -i "s|_delegateStorageUrl_|${DELEGATE_STORAGE_URL}|" /opt/harness-delegate/start.sh
     sed -i "s|_delegateStorageUrl_|${DELEGATE_STORAGE_URL}|" /opt/harness-delegate/delegate.sh
-else
-    sed -i "s|_delegateStorageUrl_|https://app.harness.io/storage/wingsdelegates|" /opt/harness-delegate/start.sh
-    sed -i "s|_delegateStorageUrl_|https://app.harness.io/storage/wingsdelegates|" /opt/harness-delegate/delegate.sh
 fi
 
 if [[ -v "DELEGATE_CHECK_LOCATION" ]]
 then
     sed -i "s|_delegateCheckLocation_|${DELEGATE_CHECK_LOCATION}|" /opt/harness-delegate/start.sh
     sed -i "s|_delegateCheckLocation_|${DELEGATE_CHECK_LOCATION}|" /opt/harness-delegate/delegate.sh
-else
-    sed -i "s|_delegateCheckLocation_|delegateprod.txt|" /opt/harness-delegate/start.sh
-    sed -i "s|_delegateCheckLocation_|delegateprod.txt|" /opt/harness-delegate/delegate.sh
 fi
 
 if [[ -v "PROXY_HOST" ]]
