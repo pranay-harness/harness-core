@@ -781,5 +781,5 @@ public interface Constants {
    */
   String HARNESS_KUBE_CONFIG_PATH = "HARNESS_KUBE_CONFIG_PATH";
 
-  String WORKFLOW_NAME_DATE_FORMAT = "mm/dd/yyyy hh:MM aa";
+  String WORKFLOW_NAME_DATE_FORMAT = "MM/dd/yyyy hh:mm a";
 }
