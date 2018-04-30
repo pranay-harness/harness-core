@@ -3,7 +3,7 @@ kind: StatefulSet
 metadata:
   labels:
     harness.io/app: harness-delegate
-  name: ${kubernetesDelegateName}
+  name: harness-delegate-accoun
   namespace: harness-delegate
 spec:
   replicas: 1
@@ -26,19 +26,19 @@ spec:
             memory: 6000Mi
         env:
         - name: ACCOUNT_ID
-          value: ${accountId}
+          value: ACCOUNT_ID
         - name: ACCOUNT_SECRET
-          value: ${accountSecret}
+          value: ACCOUNT_KEY
         - name: MANAGER_HOST_AND_PORT
-          value: ${managerHostAndPort}
+          value: https://localhost:9090
         - name: WATCHER_STORAGE_URL
-          value: ${watcherStorageUrl}
+          value: http://localhost:8888
         - name: WATCHER_CHECK_LOCATION
-          value: ${watcherCheckLocation}
+          value: watcherci.txt
         - name: DELEGATE_STORAGE_URL
-          value: ${delegateStorageUrl}
+          value: http://localhost:8888
         - name: DELEGATE_CHECK_LOCATION
-          value: ${delegateCheckLocation}
+          value: delegateci.txt
         - name: DESCRIPTION
           value: description here
         - name: PROXY_HOST

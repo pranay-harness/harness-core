@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -29,6 +30,9 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 import static software.wings.beans.alert.NoEligibleDelegatesAlert.NoEligibleDelegatesAlertBuilder.aNoEligibleDelegatesAlert;
+import static software.wings.common.Constants.DELEGATE_DIR;
+import static software.wings.common.Constants.DOCKER_DELEGATE;
+import static software.wings.common.Constants.KUBERNETES_DELEGATE;
 import static software.wings.common.Constants.MAX_DELEGATE_LAST_HEARTBEAT;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.DELEGATE_STATE_NOTIFICATION;
 import static software.wings.dl.MongoHelper.setUnset;
@@ -339,11 +343,11 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  public File download(String managerHost, String accountId) throws IOException, TemplateException {
-    File delegateFile = File.createTempFile(Constants.DELEGATE_DIR, ".zip");
+  public File downloadZip(String managerHost, String accountId) throws IOException, TemplateException {
+    File delegateFile = File.createTempFile(DELEGATE_DIR, ".zip");
 
     try (ZipArchiveOutputStream out = new ZipArchiveOutputStream(delegateFile)) {
-      out.putArchiveEntry(new ZipArchiveEntry(Constants.DELEGATE_DIR + "/"));
+      out.putArchiveEntry(new ZipArchiveEntry(DELEGATE_DIR + "/"));
       out.closeArchiveEntry();
 
       Map scriptParams = getJarAndScriptRunTimeParamMap(accountId, "0.0.0", managerHost); // first version is 0.0.0
@@ -353,7 +357,7 @@ public class DelegateServiceImpl implements DelegateService {
         cfg.getTemplate("start.sh.ftl").process(scriptParams, fileWriter);
       }
       start = new File(start.getAbsolutePath());
-      ZipArchiveEntry startZipArchiveEntry = new ZipArchiveEntry(start, Constants.DELEGATE_DIR + "/start.sh");
+      ZipArchiveEntry startZipArchiveEntry = new ZipArchiveEntry(start, DELEGATE_DIR + "/start.sh");
       startZipArchiveEntry.setUnixMode(0755 << 16L);
       AsiExtraField permissions = new AsiExtraField();
       permissions.setMode(0755);
@@ -369,7 +373,7 @@ public class DelegateServiceImpl implements DelegateService {
         cfg.getTemplate("delegate.sh.ftl").process(scriptParams, fileWriter);
       }
       delegate = new File(delegate.getAbsolutePath());
-      ZipArchiveEntry delegateZipArchiveEntry = new ZipArchiveEntry(delegate, Constants.DELEGATE_DIR + "/delegate.sh");
+      ZipArchiveEntry delegateZipArchiveEntry = new ZipArchiveEntry(delegate, DELEGATE_DIR + "/delegate.sh");
       delegateZipArchiveEntry.setUnixMode(0755 << 16L);
       permissions = new AsiExtraField();
       permissions.setMode(0755);
@@ -385,7 +389,7 @@ public class DelegateServiceImpl implements DelegateService {
         cfg.getTemplate("stop.sh.ftl").process(scriptParams, fileWriter);
       }
       stop = new File(stop.getAbsolutePath());
-      ZipArchiveEntry stopZipArchiveEntry = new ZipArchiveEntry(stop, Constants.DELEGATE_DIR + "/stop.sh");
+      ZipArchiveEntry stopZipArchiveEntry = new ZipArchiveEntry(stop, DELEGATE_DIR + "/stop.sh");
       stopZipArchiveEntry.setUnixMode(0755 << 16L);
       permissions = new AsiExtraField();
       permissions.setMode(0755);
@@ -398,14 +402,15 @@ public class DelegateServiceImpl implements DelegateService {
 
       File readme = File.createTempFile("README", ".txt");
       try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(readme))) {
-        cfg.getTemplate("readme.txt.ftl").process(ImmutableMap.of("startScript", "start.sh"), fileWriter);
+        cfg.getTemplate("readme.txt.ftl").process(emptyMap(), fileWriter);
       }
       readme = new File(readme.getAbsolutePath());
-      ZipArchiveEntry readmeZipArchiveEntry = new ZipArchiveEntry(readme, Constants.DELEGATE_DIR + "/README.txt");
+      ZipArchiveEntry readmeZipArchiveEntry = new ZipArchiveEntry(readme, DELEGATE_DIR + "/README.txt");
       out.putArchiveEntry(readmeZipArchiveEntry);
       try (FileInputStream fis = new FileInputStream(readme)) {
         IOUtils.copy(fis, out);
       }
+      out.closeArchiveEntry();
 
       File proxyConfig = File.createTempFile("proxy", ".config");
       try (BufferedWriter fileWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(proxyConfig)))) {
@@ -417,21 +422,94 @@ public class DelegateServiceImpl implements DelegateService {
         fileWriter.newLine();
         fileWriter.write("NO_PROXY=");
       }
-
       proxyConfig = new File(proxyConfig.getAbsolutePath());
-      ZipArchiveEntry proxyZipArchiveEntry = new ZipArchiveEntry(proxyConfig, Constants.DELEGATE_DIR + "/proxy.config");
-      proxyZipArchiveEntry.setUnixMode(0644 << 16L);
-      permissions = new AsiExtraField();
-      permissions.setMode(0644);
-      proxyZipArchiveEntry.addExtraField(permissions);
+      ZipArchiveEntry proxyZipArchiveEntry = new ZipArchiveEntry(proxyConfig, DELEGATE_DIR + "/proxy.config");
       out.putArchiveEntry(proxyZipArchiveEntry);
       try (FileInputStream fis = new FileInputStream(proxyConfig)) {
         IOUtils.copy(fis, out);
       }
-
       out.closeArchiveEntry();
     }
     return delegateFile;
+  }
+
+  @Override
+  public File downloadDocker(String managerHost, String accountId) throws IOException, TemplateException {
+    File dockerDelegateFile = File.createTempFile(DOCKER_DELEGATE, ".zip");
+
+    try (ZipArchiveOutputStream out = new ZipArchiveOutputStream(dockerDelegateFile)) {
+      out.putArchiveEntry(new ZipArchiveEntry(DOCKER_DELEGATE + "/"));
+      out.closeArchiveEntry();
+
+      Map scriptParams = getJarAndScriptRunTimeParamMap(accountId, "0.0.0", managerHost); // first version is 0.0.0
+
+      File launch = File.createTempFile("launch-harness-delegate", ".sh");
+      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(launch))) {
+        cfg.getTemplate("launch-harness-delegate.sh.ftl").process(scriptParams, fileWriter);
+      }
+      launch = new File(launch.getAbsolutePath());
+      ZipArchiveEntry launchZipArchiveEntry =
+          new ZipArchiveEntry(launch, DOCKER_DELEGATE + "/launch-harness-delegate.sh");
+      launchZipArchiveEntry.setUnixMode(0755 << 16L);
+      AsiExtraField permissions = new AsiExtraField();
+      permissions.setMode(0755);
+      launchZipArchiveEntry.addExtraField(permissions);
+      out.putArchiveEntry(launchZipArchiveEntry);
+      try (FileInputStream fis = new FileInputStream(launch)) {
+        IOUtils.copy(fis, out);
+      }
+      out.closeArchiveEntry();
+
+      File readme = File.createTempFile("README", ".txt");
+      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(readme))) {
+        cfg.getTemplate("readme-docker.txt.ftl").process(emptyMap(), fileWriter);
+      }
+      readme = new File(readme.getAbsolutePath());
+      ZipArchiveEntry readmeZipArchiveEntry = new ZipArchiveEntry(readme, DOCKER_DELEGATE + "/README.txt");
+      out.putArchiveEntry(readmeZipArchiveEntry);
+      try (FileInputStream fis = new FileInputStream(readme)) {
+        IOUtils.copy(fis, out);
+      }
+      out.closeArchiveEntry();
+    }
+    return dockerDelegateFile;
+  }
+
+  @Override
+  public File downloadKubernetes(String managerHost, String accountId) throws IOException, TemplateException {
+    File kubernetesDelegateFile = File.createTempFile(KUBERNETES_DELEGATE, ".zip");
+
+    try (ZipArchiveOutputStream out = new ZipArchiveOutputStream(kubernetesDelegateFile)) {
+      out.putArchiveEntry(new ZipArchiveEntry(KUBERNETES_DELEGATE + "/"));
+      out.closeArchiveEntry();
+
+      Map scriptParams = getJarAndScriptRunTimeParamMap(accountId, "0.0.0", managerHost); // first version is 0.0.0
+
+      File yaml = File.createTempFile("harness-delegate", ".yaml");
+      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(yaml))) {
+        cfg.getTemplate("harness-delegate.yaml.ftl").process(scriptParams, fileWriter);
+      }
+      yaml = new File(yaml.getAbsolutePath());
+      ZipArchiveEntry yamlZipArchiveEntry = new ZipArchiveEntry(yaml, KUBERNETES_DELEGATE + "/harness-delegate.yaml");
+      out.putArchiveEntry(yamlZipArchiveEntry);
+      try (FileInputStream fis = new FileInputStream(yaml)) {
+        IOUtils.copy(fis, out);
+      }
+      out.closeArchiveEntry();
+
+      File readme = File.createTempFile("README", ".txt");
+      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(readme))) {
+        cfg.getTemplate("readme-kubernetes.txt.ftl").process(emptyMap(), fileWriter);
+      }
+      readme = new File(readme.getAbsolutePath());
+      ZipArchiveEntry readmeZipArchiveEntry = new ZipArchiveEntry(readme, KUBERNETES_DELEGATE + "/README.txt");
+      out.putArchiveEntry(readmeZipArchiveEntry);
+      try (FileInputStream fis = new FileInputStream(readme)) {
+        IOUtils.copy(fis, out);
+      }
+      out.closeArchiveEntry();
+    }
+    return kubernetesDelegateFile;
   }
 
   @Override

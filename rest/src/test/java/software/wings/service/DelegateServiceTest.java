@@ -18,6 +18,9 @@ import static software.wings.beans.Delegate.Builder.aDelegate;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskResponse;
 import static software.wings.beans.Event.Builder.anEvent;
+import static software.wings.common.Constants.DELEGATE_DIR;
+import static software.wings.common.Constants.DOCKER_DELEGATE;
+import static software.wings.common.Constants.KUBERNETES_DELEGATE;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.sm.ExecutionStatusData.Builder.anExecutionStatusData;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -51,7 +54,6 @@ import software.wings.beans.DelegateScripts;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Event.Type;
 import software.wings.beans.TaskType;
-import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Cache;
 import software.wings.service.impl.EventEmitter;
@@ -265,15 +267,15 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldDownloadWatcher() throws IOException, TemplateException {
+  public void shouldDownloadZip() throws IOException, TemplateException {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
-    File zipFile = delegateService.download("https://localhost:9090", ACCOUNT_ID);
+    File zipFile = delegateService.downloadZip("https://localhost:9090", ACCOUNT_ID);
     try (ZipArchiveInputStream zipArchiveInputStream = new ZipArchiveInputStream(new FileInputStream(zipFile))) {
-      assertThat(zipArchiveInputStream.getNextZipEntry().getName()).isEqualTo(Constants.DELEGATE_DIR + "/");
+      assertThat(zipArchiveInputStream.getNextZipEntry().getName()).isEqualTo(DELEGATE_DIR + "/");
 
       ZipArchiveEntry file = zipArchiveInputStream.getNextZipEntry();
-      assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly(Constants.DELEGATE_DIR + "/start.sh");
+      assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly(DELEGATE_DIR + "/start.sh");
       assertThat(file)
           .extracting(ZipArchiveEntry::getExtraFields)
           .flatExtracting(input -> asList((ZipExtraField[]) input))
@@ -286,7 +288,7 @@ public class DelegateServiceTest extends WingsBaseTest {
           .isEqualTo(CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedStart.sh"))));
 
       file = zipArchiveInputStream.getNextZipEntry();
-      assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly(Constants.DELEGATE_DIR + "/delegate.sh");
+      assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly(DELEGATE_DIR + "/delegate.sh");
       assertThat(file)
           .extracting(ZipArchiveEntry::getExtraFields)
           .flatExtracting(input -> asList((ZipExtraField[]) input))
@@ -300,7 +302,7 @@ public class DelegateServiceTest extends WingsBaseTest {
               CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedDelegate.sh"))));
 
       file = zipArchiveInputStream.getNextZipEntry();
-      assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly(Constants.DELEGATE_DIR + "/stop.sh");
+      assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly(DELEGATE_DIR + "/stop.sh");
       assertThat(file)
           .extracting(ZipArchiveEntry::getExtraFields)
           .flatExtracting(input -> asList((ZipExtraField[]) input))
@@ -313,25 +315,67 @@ public class DelegateServiceTest extends WingsBaseTest {
           .isEqualTo(CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedStop.sh"))));
 
       file = zipArchiveInputStream.getNextZipEntry();
-      assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly(Constants.DELEGATE_DIR + "/README.txt");
-      buffer = new byte[(int) file.getSize()];
-      IOUtils.read(zipArchiveInputStream, buffer);
-      assertThat(new String(buffer))
-          .isEqualTo(
-              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedReadme.txt"))));
+      assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly(DELEGATE_DIR + "/README.txt");
 
       file = zipArchiveInputStream.getNextZipEntry();
-      assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly(Constants.DELEGATE_DIR + "/proxy.config");
-      assertThat(file)
-          .extracting(ZipArchiveEntry::getExtraFields)
-          .flatExtracting(input -> asList((ZipExtraField[]) input))
-          .extracting(o -> ((AsiExtraField) o).getMode())
-          .containsExactly(0644 | AsiExtraField.FILE_FLAG);
+      assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly(DELEGATE_DIR + "/proxy.config");
       buffer = new byte[(int) file.getSize()];
       IOUtils.read(zipArchiveInputStream, buffer);
       assertThat(new String(buffer))
           .isEqualTo(
               CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedProxy.config"))));
+    }
+  }
+
+  @Test
+  public void shouldDownloadDocker() throws IOException, TemplateException {
+    when(accountService.get(ACCOUNT_ID))
+        .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
+    File zipFile = delegateService.downloadDocker("https://localhost:9090", ACCOUNT_ID);
+    try (ZipArchiveInputStream zipArchiveInputStream = new ZipArchiveInputStream(new FileInputStream(zipFile))) {
+      assertThat(zipArchiveInputStream.getNextZipEntry().getName()).isEqualTo(DOCKER_DELEGATE + "/");
+
+      ZipArchiveEntry file = zipArchiveInputStream.getNextZipEntry();
+      assertThat(file)
+          .extracting(ZipArchiveEntry::getName)
+          .containsExactly(DOCKER_DELEGATE + "/launch-harness-delegate.sh");
+      assertThat(file)
+          .extracting(ZipArchiveEntry::getExtraFields)
+          .flatExtracting(input -> asList((ZipExtraField[]) input))
+          .extracting(o -> ((AsiExtraField) o).getMode())
+          .containsExactly(0755 | AsiExtraField.FILE_FLAG);
+
+      byte[] buffer = new byte[(int) file.getSize()];
+      IOUtils.read(zipArchiveInputStream, buffer);
+      assertThat(new String(buffer))
+          .isEqualTo(CharStreams.toString(
+              new InputStreamReader(getClass().getResourceAsStream("/expectedLaunchHarnessDelegate.sh"))));
+
+      file = zipArchiveInputStream.getNextZipEntry();
+      assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly(DOCKER_DELEGATE + "/README.txt");
+    }
+  }
+
+  @Test
+  public void shouldDownloadKubernetes() throws IOException, TemplateException {
+    when(accountService.get(ACCOUNT_ID))
+        .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
+    File zipFile = delegateService.downloadKubernetes("https://localhost:9090", ACCOUNT_ID);
+    try (ZipArchiveInputStream zipArchiveInputStream = new ZipArchiveInputStream(new FileInputStream(zipFile))) {
+      assertThat(zipArchiveInputStream.getNextZipEntry().getName()).isEqualTo(KUBERNETES_DELEGATE + "/");
+
+      ZipArchiveEntry file = zipArchiveInputStream.getNextZipEntry();
+      assertThat(file)
+          .extracting(ZipArchiveEntry::getName)
+          .containsExactly(KUBERNETES_DELEGATE + "/harness-delegate.yaml");
+      byte[] buffer = new byte[(int) file.getSize()];
+      IOUtils.read(zipArchiveInputStream, buffer);
+      assertThat(new String(buffer))
+          .isEqualTo(CharStreams.toString(
+              new InputStreamReader(getClass().getResourceAsStream("/expectedHarnessDelegate.yaml"))));
+
+      file = zipArchiveInputStream.getNextZipEntry();
+      assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly(KUBERNETES_DELEGATE + "/README.txt");
     }
   }
 
