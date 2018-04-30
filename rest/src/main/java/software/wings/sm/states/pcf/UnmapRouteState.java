@@ -2,12 +2,18 @@ package software.wings.sm.states.pcf;
 
 import com.google.inject.Inject;
 
+import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.common.Constants;
 import software.wings.service.intfc.LogService;
 import software.wings.sm.StateType;
+import software.wings.stencils.DefaultValue;
 
 public class UnmapRouteState extends MapRouteState {
   @Inject @Transient protected transient LogService logService;
+
+  @DefaultValue("${" + Constants.PCF_APP_NAME + "}") @Attributes(title = "PCF App Name") private String pcfAppName;
+  @DefaultValue("${" + Constants.INFRA_ROUTE + "}") @Attributes(title = "Map Route") private String route;
 
   public String getPcfAppName() {
     return pcfAppName;

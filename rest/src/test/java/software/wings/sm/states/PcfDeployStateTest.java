@@ -47,6 +47,7 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import com.google.common.collect.Lists;
 
+import org.apache.commons.lang3.reflect.MethodUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -246,5 +247,52 @@ public class PcfDeployStateTest extends WingsBaseTest {
     assertEquals(2, pcfCommandRequest.getRouteMaps().size());
     assertTrue(pcfCommandRequest.getRouteMaps().contains("R1"));
     assertTrue(pcfCommandRequest.getRouteMaps().contains("R2"));
+  }
+
+  @Test
+  public void testGetDownsizeUpdateCount() throws Exception {
+    // PERCENT
+    pcfDeployState.setDownsizeInstanceUnitType(InstanceUnitType.PERCENTAGE);
+    pcfDeployState.setDownsizeInstanceCount(30);
+    Integer answer = (Integer) MethodUtils.invokeMethod(pcfDeployState, true, "getDownsizeUpdateCount",
+        new Object[] {50, PcfSetupContextElement.builder().maxInstanceCount(100).build()});
+    assertEquals(70, answer.intValue());
+
+    pcfDeployState.setDownsizeInstanceCount(80);
+    answer = (Integer) MethodUtils.invokeMethod(pcfDeployState, true, "getDownsizeUpdateCount",
+        new Object[] {50, PcfSetupContextElement.builder().maxInstanceCount(100).build()});
+    assertEquals(20, answer.intValue());
+
+    pcfDeployState.setDownsizeInstanceCount(100);
+    answer = (Integer) MethodUtils.invokeMethod(pcfDeployState, true, "getDownsizeUpdateCount",
+        new Object[] {50, PcfSetupContextElement.builder().maxInstanceCount(100).build()});
+    assertEquals(0, answer.intValue());
+
+    pcfDeployState.setDownsizeInstanceCount(0);
+    answer = (Integer) MethodUtils.invokeMethod(pcfDeployState, true, "getDownsizeUpdateCount",
+        new Object[] {50, PcfSetupContextElement.builder().maxInstanceCount(100).build()});
+    assertEquals(100, answer.intValue());
+
+    // COUNT
+    pcfDeployState.setDownsizeInstanceUnitType(InstanceUnitType.COUNT);
+    pcfDeployState.setDownsizeInstanceCount(90);
+    answer = (Integer) MethodUtils.invokeMethod(pcfDeployState, true, "getDownsizeUpdateCount",
+        new Object[] {50, PcfSetupContextElement.builder().maxInstanceCount(100).build()});
+    assertEquals(10, answer.intValue());
+
+    pcfDeployState.setDownsizeInstanceCount(60);
+    answer = (Integer) MethodUtils.invokeMethod(pcfDeployState, true, "getDownsizeUpdateCount",
+        new Object[] {50, PcfSetupContextElement.builder().maxInstanceCount(100).build()});
+    assertEquals(40, answer.intValue());
+
+    pcfDeployState.setDownsizeInstanceCount(100);
+    answer = (Integer) MethodUtils.invokeMethod(pcfDeployState, true, "getDownsizeUpdateCount",
+        new Object[] {50, PcfSetupContextElement.builder().maxInstanceCount(100).build()});
+    assertEquals(0, answer.intValue());
+
+    pcfDeployState.setDownsizeInstanceCount(0);
+    answer = (Integer) MethodUtils.invokeMethod(pcfDeployState, true, "getDownsizeUpdateCount",
+        new Object[] {50, PcfSetupContextElement.builder().maxInstanceCount(100).build()});
+    assertEquals(100, answer.intValue());
   }
 }
