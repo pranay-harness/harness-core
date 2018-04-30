@@ -59,7 +59,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
     try {
       return pcfClient.getApplicationByName(pcfRequestConfig);
     } catch (Exception e) {
-      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION, e);
+      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + e.getMessage(), e);
     }
   }
 
