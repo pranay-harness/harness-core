@@ -45,15 +45,16 @@ public final class NotifyResponseCleanupHandler implements Runnable {
 
     try {
       PageResponse<NotifyResponse> notifyPageResponses = wingsPersistence.query(NotifyResponse.class,
-          aPageRequest().addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS).addFieldsIncluded(ID_KEY).build());
+          aPageRequest().addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS).addFieldsIncluded(ID_KEY).build(),
+          false, true);
       if (isEmpty(notifyPageResponses)) {
         logger.debug("There are no NotifyResponse entries to cleanup");
         return;
       }
 
       List<String> correlationIds = notifyPageResponses.stream().map(NotifyResponse::getUuid).collect(toList());
-      PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(
-          WaitQueue.class, aPageRequest().addFilter("correlationId", Operator.IN, correlationIds.toArray()).build());
+      PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class,
+          aPageRequest().addFilter("correlationId", Operator.IN, correlationIds.toArray()).build(), false, true);
 
       Map<String, List<WaitQueue>> waitQueueMap = new HashMap<>();
 

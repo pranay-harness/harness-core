@@ -48,7 +48,7 @@ public class Notifier implements Runnable {
     try (AcquiredLock lock =
              persistentLocker.acquireLock(Notifier.class, Notifier.class.getName(), Duration.ofMinutes(1))) {
       PageResponse<NotifyResponse> notifyPageResponses = wingsPersistence.query(
-          NotifyResponse.class, aPageRequest().withLimit(UNLIMITED).addFieldsIncluded(ID_KEY).build());
+          NotifyResponse.class, aPageRequest().withLimit(UNLIMITED).addFieldsIncluded(ID_KEY).build(), false, true);
 
       if (isEmpty(notifyPageResponses)) {
         logger.debug("There are no NotifyResponse entries to process");
@@ -59,10 +59,8 @@ public class Notifier implements Runnable {
 
       // Get wait queue entries
       PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class,
-          aPageRequest()
-              .withLimit(UNLIMITED)
-              .addFilter("correlationId", Operator.IN, correlationIds.toArray())
-              .build());
+          aPageRequest().withLimit(UNLIMITED).addFilter("correlationId", Operator.IN, correlationIds.toArray()).build(),
+          false, true);
 
       if (isEmpty(waitQueuesResponse)) {
         if (correlationIds.size() > 200) {

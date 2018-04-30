@@ -225,7 +225,7 @@ public class AlertServiceImpl implements AlertService {
         while (true) {
           List<Key<Alert>> alertKeys = new ArrayList<>();
           try {
-            alertKeys.addAll(wingsPersistence.createQuery(Alert.class)
+            alertKeys.addAll(wingsPersistence.createAuthExemptedQuery(Alert.class)
                                  .filter("status", Closed)
                                  .field("createdAt")
                                  .lessThan(System.currentTimeMillis() - retentionMillis)

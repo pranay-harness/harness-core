@@ -922,6 +922,7 @@ public class DelegateServiceImpl implements DelegateService {
                aPageRequest()
                    .addFilter(ID_KEY, EQ, taskAbortEvent.getDelegateTaskId())
                    .addFilter("delegateId", EQ, delegateId)
+                   .addFilter("accountId", EQ, taskAbortEvent.getAccountId())
                    .build())
         != null;
   }

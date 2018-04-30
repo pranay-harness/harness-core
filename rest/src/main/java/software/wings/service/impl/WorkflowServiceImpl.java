@@ -473,6 +473,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
               aPageRequest()
                   .withLimit(previousExecutionsCount.toString())
                   .addFilter("workflowId", EQ, workflow.getUuid())
+                  .addFilter("appId", EQ, workflow.getAppId())
                   .build();
 
           workflow.setWorkflowExecutions(

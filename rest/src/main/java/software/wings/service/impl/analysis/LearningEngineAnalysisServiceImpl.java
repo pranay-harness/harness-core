@@ -156,8 +156,9 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
   }
 
   @Override
-  public boolean hasAnalysisTimedOut(String workflowExecutionId, String stateExecutionId) {
+  public boolean hasAnalysisTimedOut(String appId, String workflowExecutionId, String stateExecutionId) {
     Query<LearningEngineAnalysisTask> query = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                                                  .filter("appId", appId)
                                                   .filter("workflow_execution_id", workflowExecutionId)
                                                   .filter("state_execution_id", stateExecutionId)
                                                   .filter("executionStatus", ExecutionStatus.RUNNING)

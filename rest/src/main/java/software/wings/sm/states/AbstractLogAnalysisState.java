@@ -104,7 +104,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     String responseMessage = "Log Verification running.";
     if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS) {
       WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
-      String baselineWorkflowExecutionId = workflowExecutionBaselineService.getBaselineExecutionId(
+      String baselineWorkflowExecutionId = workflowExecutionBaselineService.getBaselineExecutionId(context.getAppId(),
           context.getWorkflowId(), workflowStandardParams.getEnv().getUuid(), context.getServiceId());
       if (isEmpty(baselineWorkflowExecutionId)) {
         responseMessage = "No baseline was set for the workflow. Workflow running with auto baseline.";

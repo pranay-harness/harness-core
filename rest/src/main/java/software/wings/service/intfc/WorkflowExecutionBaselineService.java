@@ -10,5 +10,5 @@ import java.util.List;
 public interface WorkflowExecutionBaselineService {
   void markBaseline(List<WorkflowExecutionBaseline> workflowExecutionBaselines, String executionId, boolean isBaseline);
 
-  String getBaselineExecutionId(String workflowId, String envId, String serviceId);
+  String getBaselineExecutionId(String appId, String workflowId, String envId, String serviceId);
 }

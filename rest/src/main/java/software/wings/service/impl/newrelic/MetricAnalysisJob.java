@@ -206,7 +206,8 @@ public class MetricAnalysisJob implements Job {
     }
 
     private boolean timeSeriesML(int analysisMinute) throws InterruptedException, TimeoutException, IOException {
-      if (learningEngineService.hasAnalysisTimedOut(context.getWorkflowExecutionId(), context.getStateExecutionId())) {
+      if (learningEngineService.hasAnalysisTimedOut(
+              context.getAppId(), context.getWorkflowExecutionId(), context.getStateExecutionId())) {
         learningEngineService.markStatus(
             context.getWorkflowExecutionId(), context.getStateExecutionId(), analysisMinute, ExecutionStatus.FAILED);
         throw new WingsException("Error running time series analysis. Finished all retries. stateExecutionId: "

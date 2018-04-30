@@ -119,6 +119,7 @@ public class AppServiceTest extends WingsBaseTest {
   @Before
   public void setUp() throws Exception {
     when(wingsPersistence.createQuery(Application.class)).thenReturn(query);
+    when(wingsPersistence.createAuthExemptedQuery(Application.class)).thenReturn(query);
     when(wingsPersistence.createUpdateOperations(Application.class)).thenReturn(updateOperations);
     when(query.filter(any(), any())).thenReturn(query);
     when(updateOperations.set(any(), any())).thenReturn(updateOperations);

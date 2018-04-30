@@ -238,7 +238,7 @@ public class AppServiceImpl implements AppService {
 
   @Override
   public boolean exist(String appId) {
-    return wingsPersistence.createQuery(Application.class).filter(ID_KEY, appId).getKey() != null;
+    return wingsPersistence.createAuthExemptedQuery(Application.class).filter(ID_KEY, appId).getKey() != null;
   }
 
   private List<Notification> getIncompleteActionableApplicationNotifications(String appId) {

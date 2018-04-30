@@ -69,7 +69,7 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
                                      .withReadPref(ReadPref.CRITICAL)
                                      .addFilter("waitInstanceId", EQ, waitInstanceId)
                                      .build();
-    PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class, req);
+    PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class, req, false, true);
 
     if (isEmpty(waitQueuesResponse)) {
       logger.warn("No entry in the waitQueue found for the waitInstanceId:[{}] skipping ...", waitInstanceId);
@@ -101,7 +101,8 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
                 waitQueuesResponse.stream().map(WaitQueue::getCorrelationId).collect(toList()).toArray())
             .withLimit(PageRequest.UNLIMITED)
             .build();
-    PageResponse<NotifyResponse> notifyResponses = wingsPersistence.query(NotifyResponse.class, notifyResponseReq);
+    PageResponse<NotifyResponse> notifyResponses =
+        wingsPersistence.query(NotifyResponse.class, notifyResponseReq, false, true);
 
     correlationIds = notifyResponses.stream().map(NotifyResponse::getUuid).collect(toList());
 
