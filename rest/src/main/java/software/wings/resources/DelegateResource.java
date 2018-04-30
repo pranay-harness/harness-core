@@ -2,6 +2,9 @@ package software.wings.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
+import static software.wings.common.Constants.DELEGATE_DIR;
+import static software.wings.common.Constants.DOCKER_DELEGATE;
+import static software.wings.common.Constants.KUBERNETES_DELEGATE;
 import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE;
 
 import com.google.common.collect.ImmutableMap;
@@ -25,7 +28,6 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.RestResponse;
-import software.wings.common.Constants;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -229,14 +231,48 @@ public class DelegateResource {
   @Path("download")
   @Timed
   @ExceptionMetered
-  public Response download(@Context HttpServletRequest request, @QueryParam("accountId") @NotEmpty String accountId,
+  public Response downloadZip(@Context HttpServletRequest request, @QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("token") @NotEmpty String token) throws IOException, TemplateException {
     downloadTokenService.validateDownloadToken("delegate." + accountId, token);
-    File delegateFile = delegateService.download(getManagerUrl(request), accountId);
+    File delegateFile = delegateService.downloadZip(getManagerUrl(request), accountId);
     return Response.ok(delegateFile)
         .header("Content-Transfer-Encoding", "binary")
         .type("application/zip; charset=binary")
-        .header("Content-Disposition", "attachment; filename=" + Constants.DELEGATE_DIR + ".zip")
+        .header("Content-Disposition", "attachment; filename=" + DELEGATE_DIR + ".zip")
+        .build();
+  }
+
+  @PublicApi
+  @GET
+  @Path("docker")
+  @Timed
+  @ExceptionMetered
+  public Response downloadDocker(@Context HttpServletRequest request,
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("token") @NotEmpty String token)
+      throws IOException, TemplateException {
+    downloadTokenService.validateDownloadToken("delegate." + accountId, token);
+    File delegateFile = delegateService.downloadDocker(getManagerUrl(request), accountId);
+    return Response.ok(delegateFile)
+        .header("Content-Transfer-Encoding", "binary")
+        .type("application/zip; charset=binary")
+        .header("Content-Disposition", "attachment; filename=" + DOCKER_DELEGATE + ".zip")
+        .build();
+  }
+
+  @PublicApi
+  @GET
+  @Path("kubernetes")
+  @Timed
+  @ExceptionMetered
+  public Response downloadKubernetes(@Context HttpServletRequest request,
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("token") @NotEmpty String token)
+      throws IOException, TemplateException {
+    downloadTokenService.validateDownloadToken("delegate." + accountId, token);
+    File delegateFile = delegateService.downloadKubernetes(getManagerUrl(request), accountId);
+    return Response.ok(delegateFile)
+        .header("Content-Transfer-Encoding", "binary")
+        .type("application/zip; charset=binary")
+        .header("Content-Disposition", "attachment; filename=" + KUBERNETES_DELEGATE + ".zip")
         .build();
   }
 

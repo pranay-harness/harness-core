@@ -123,7 +123,7 @@ public class KubernetesConvention {
   public static String getAccountIdentifier(String accountId) {
     StringBuilder identifier = new StringBuilder();
     for (char c : accountId.toLowerCase().toCharArray()) {
-      if (identifier.length() < 10 && c >= 'a' && c <= 'z') {
+      if (identifier.length() < 6 && c >= 'a' && c <= 'z') {
         identifier.append(c);
       }
     }
