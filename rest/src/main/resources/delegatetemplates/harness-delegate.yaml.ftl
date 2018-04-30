@@ -42,13 +42,13 @@ spec:
         - name: DESCRIPTION
           value: description here
         - name: PROXY_HOST
-          value:
+          value: ""
         - name: PROXY_PORT
-          value:
+          value: ""
         - name: PROXY_SCHEME
-          value:
+          value: ""
         - name: NO_PROXY
-          value:
+          value: ""
         - name: POLL_FOR_TASKS
-          value: false
+          value: "false"
       restartPolicy: Always
