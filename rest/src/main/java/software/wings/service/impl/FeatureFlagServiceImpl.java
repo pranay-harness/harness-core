@@ -62,7 +62,7 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
 
   @Override
   public void initializeFeatureFlags() {
-    List<FeatureFlag> persistedFeatureFlags = wingsPersistence.createQuery(FeatureFlag.class).asList();
+    List<FeatureFlag> persistedFeatureFlags = wingsPersistence.createAuthExemptedQuery(FeatureFlag.class).asList();
     Set<String> definedNames = Arrays.stream(FeatureName.values()).map(FeatureName::name).collect(toSet());
     persistedFeatureFlags.forEach(flag -> flag.setObsolete(!definedNames.contains(flag.getName())));
     wingsPersistence.save(persistedFeatureFlags);

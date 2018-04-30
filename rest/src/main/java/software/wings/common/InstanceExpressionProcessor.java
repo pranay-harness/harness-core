@@ -324,13 +324,13 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     List<ServiceTemplate> serviceTemplates = null;
     if (isEmpty(serviceTemplateNames)) {
       services = getServices(appId);
-      serviceTemplates = getServiceTemplates(envId, services, serviceTemplateNames);
+      serviceTemplates = getServiceTemplates(appId, envId, services, serviceTemplateNames);
     } else {
       if (Misc.isWildCharPresent(serviceTemplateNames)) {
-        serviceTemplates = getServiceTemplates(envId, services);
+        serviceTemplates = getServiceTemplates(appId, envId, services);
         serviceTemplates = matchingServiceTemplates(serviceTemplates, serviceTemplateNames);
       } else {
-        serviceTemplates = getServiceTemplates(envId, services, serviceTemplateNames);
+        serviceTemplates = getServiceTemplates(appId, envId, services, serviceTemplateNames);
       }
     }
 
@@ -370,9 +370,13 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     return matchingServiceTemplates;
   }
 
-  private List<ServiceTemplate> getServiceTemplates(String envId, List<Service> services, String... names) {
-    PageRequestBuilder pageRequestBuilder =
-        aPageRequest().withLimit(UNLIMITED).addFilter("envId", Operator.EQ, envId).addOrder("createdAt", OrderType.ASC);
+  private List<ServiceTemplate> getServiceTemplates(
+      String appId, String envId, List<Service> services, String... names) {
+    PageRequestBuilder pageRequestBuilder = aPageRequest()
+                                                .withLimit(UNLIMITED)
+                                                .addFilter("appId", Operator.EQ, appId)
+                                                .addFilter("envId", Operator.EQ, envId)
+                                                .addOrder("createdAt", OrderType.ASC);
     if (isNotEmpty(services)) {
       pageRequestBuilder.addFilter(
           "serviceId", Operator.IN, services.stream().map(Service::getUuid).collect(toList()).toArray());

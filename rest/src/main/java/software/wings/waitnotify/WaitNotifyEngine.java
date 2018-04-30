@@ -99,7 +99,7 @@ public class WaitNotifyEngine {
 
       PageRequest<WaitQueue> req =
           aPageRequest().withReadPref(ReadPref.CRITICAL).addFilter("correlationId", EQ, correlationId).build();
-      PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class, req);
+      PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class, req, false, true);
       waitQueuesResponse.forEach(waitQueue
           -> notifyQueue.send(
               aNotifyEvent().withWaitInstanceId(waitQueue.getWaitInstanceId()).withError(error).build()));

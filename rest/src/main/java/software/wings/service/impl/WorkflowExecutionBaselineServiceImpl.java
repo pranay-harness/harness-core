@@ -146,8 +146,9 @@ public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBa
   }
 
   @Override
-  public String getBaselineExecutionId(String workflowId, String envId, String serviceId) {
+  public String getBaselineExecutionId(String appId, String workflowId, String envId, String serviceId) {
     PageRequest<WorkflowExecutionBaseline> pageRequest = aPageRequest()
+                                                             .addFilter("appId", Operator.EQ, appId)
                                                              .addFilter("workflowId", Operator.EQ, workflowId)
                                                              .addFilter("envId", Operator.EQ, envId)
                                                              .addFilter("serviceId", Operator.EQ, serviceId)

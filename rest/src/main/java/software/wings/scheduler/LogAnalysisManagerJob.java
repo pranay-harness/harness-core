@@ -160,7 +160,7 @@ public class LogAnalysisManagerJob implements Job {
               context.getStateExecutionId(), context.getStateType(), ClusterLevel.L2, getCollectedNodes());
           if (logAnalysisMinute != -1) {
             if (learningEngineService.hasAnalysisTimedOut(
-                    context.getWorkflowExecutionId(), context.getStateExecutionId())) {
+                    context.getAppId(), context.getWorkflowExecutionId(), context.getStateExecutionId())) {
               learningEngineService.markStatus(context.getWorkflowExecutionId(), context.getStateExecutionId(),
                   logAnalysisMinute, ExecutionStatus.FAILED);
               throw new WingsException("Error running log analysis. Finished all retries. stateExecutionId: "

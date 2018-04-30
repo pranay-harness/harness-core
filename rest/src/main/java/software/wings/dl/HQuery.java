@@ -27,7 +27,7 @@ import java.util.Set;
  */
 public class HQuery<T> extends QueryImpl<T> {
   private static final Logger logger = LoggerFactory.getLogger(HQuery.class);
-  private static Set<String> requiredFilterArgs = Sets.newHashSet("accountId", "appId");
+  private static Set<String> requiredFilterArgs = Sets.newHashSet("accountId", "accounts", "appId");
   private boolean exemptedRequest;
 
   public boolean isExemptedRequest() {

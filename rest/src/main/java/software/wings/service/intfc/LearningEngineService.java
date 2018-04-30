@@ -23,7 +23,7 @@ public interface LearningEngineService {
   LearningEngineExperimentalAnalysisTask getNextLearningEngineExperimentalAnalysisTask(
       String experimentName, ServiceApiVersion serviceApiVersion);
 
-  boolean hasAnalysisTimedOut(String workflowExecutionId, String stateExecutionId);
+  boolean hasAnalysisTimedOut(String appId, String workflowExecutionId, String stateExecutionId);
   List<MLExperiments> getExperiments(MLAnalysisType ml_analysis_type);
 
   void markCompleted(String taskId);
