@@ -93,7 +93,7 @@ public class Base implements UuidAware {
   @SchemaIgnore
   @JsonIgnore
   public Map<String, Object> getShardKeys() {
-    Map<String, Object> shardKeys = new HashMap<String, Object>();
+    Map<String, Object> shardKeys = new HashMap<>();
     shardKeys.put("appId", appId);
     return shardKeys;
   }

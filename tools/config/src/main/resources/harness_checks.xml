@@ -197,5 +197,7 @@
         <module name="RedundantModifier" />
         <module name="UnnecessaryParentheses"/>
         <module name="com.github.sevntu.checkstyle.checks.coding.ReturnBooleanFromTernaryCheck"/>
+        <module name="com.github.sevntu.checkstyle.checks.coding.DiamondOperatorForVariableDefinitionCheck"/>
+
     </module>
 </module>
