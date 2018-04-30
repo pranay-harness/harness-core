@@ -25,7 +25,7 @@ import software.wings.helpers.ext.mail.SmtpConfig;
 
 import java.util.List;
 
-public class EmailHandlerTest extends WingsBaseTest {
+public class EmailHandlerIntegrationTest extends WingsBaseTest {
   @Mock private Mailer mailer;
   @Inject @InjectMocks private EmailHandler emailHandler;
   @Inject MainConfiguration mainConfiguration;
