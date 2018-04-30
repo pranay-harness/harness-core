@@ -16,4 +16,8 @@ Replace if needed with:
 
   kubectl replace -f harness-delegate.yaml
 
+See startup logs with:
+
+  kubectl logs [StatefulSet name]-0 -n harness-delegate
+
 
