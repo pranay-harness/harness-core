@@ -13,11 +13,15 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.common.Constants;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InfraMappingSummary;
 import software.wings.sm.PipelineSummary;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.time.Duration;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,6 +61,8 @@ public class WorkflowExecution extends Base {
   private ErrorStrategy errorStrategy;
 
   private String name;
+  private String displayName;
+  private String releaseNo;
   private int total;
   private CountsByStatuses breakdown;
 
@@ -100,6 +106,25 @@ public class WorkflowExecution extends Base {
    */
   public void setName(String name) {
     this.name = name;
+  }
+
+  public String getDisplayName() {
+    if (displayName == null) {
+      return prepareDisplayName();
+    }
+    return displayName;
+  }
+
+  public void setDisplayName(String displayName) {
+    this.displayName = displayName;
+  }
+
+  public String getReleaseNo() {
+    return releaseNo;
+  }
+
+  public void setReleaseNo(String releaseNo) {
+    this.releaseNo = releaseNo;
   }
 
   /**
@@ -517,6 +542,24 @@ public class WorkflowExecution extends Base {
 
   public void setBaseline(boolean baseline) {
     isBaseline = baseline;
+  }
+
+  public String prepareDisplayName() {
+    String dateSuffix = "";
+    if (getCreatedAt() == 0) {
+      try {
+        DateFormat df = new SimpleDateFormat(Constants.WORKFLOW_NAME_DATE_FORMAT);
+        dateSuffix = "-" + df.format(new Date(getCreatedAt()));
+      } catch (Exception e) {
+        // ignore
+      }
+    }
+    return name + dateSuffix;
+  }
+
+  public void onSave() {
+    super.onSave();
+    displayName = prepareDisplayName();
   }
 
   public static final class WorkflowExecutionBuilder {

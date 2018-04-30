@@ -20,11 +20,11 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.api.ApprovalStateExecutionData.Builder.anApprovalStateExecutionData;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
-import static software.wings.api.WorkflowElement.WorkflowElementBuilder.aWorkflowElement;
 import static software.wings.beans.ApprovalDetails.Action.APPROVE;
 import static software.wings.beans.ApprovalDetails.Action.REJECT;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.beans.EntityType.ARTIFACT;
+import static software.wings.beans.EntityType.DEPLOYMENT;
 import static software.wings.beans.EntityType.ORCHESTRATED_DEPLOYMENT;
 import static software.wings.beans.EntityType.SIMPLE_DEPLOYMENT;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
@@ -88,6 +88,7 @@ import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceTemplateElement;
 import software.wings.api.SimpleWorkflowParam;
+import software.wings.api.WorkflowElement;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.ApprovalDetails;
@@ -98,6 +99,8 @@ import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.EntityType;
+import software.wings.beans.EntityVersion;
+import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionArgs;
@@ -139,6 +142,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.BarrierService;
 import software.wings.service.intfc.BarrierService.OrchestrationWorkflowInfo;
+import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
@@ -226,6 +230,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private Queue<ExecutionEvent> executionEventQueue;
   @Inject private WorkflowExecutionBaselineService workflowExecutionBaselineService;
+  @Inject private EntityVersionService entityVersionService;
 
   @Inject private WingsPersistence wingsPersistence;
 
@@ -869,10 +874,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
             (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
         if (canaryOrchestrationWorkflow.getUserVariables() != null) {
-          stdParams.setWorkflowElement(
-              aWorkflowElement()
-                  .withVariables(getWorkflowVariables(canaryOrchestrationWorkflow, executionArgs))
-                  .build());
+          stdParams.setWorkflowElement(WorkflowElement.builder()
+                                           .variables(getWorkflowVariables(canaryOrchestrationWorkflow, executionArgs))
+                                           .build());
         }
       }
     } else {
@@ -1049,6 +1053,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     workflowExecution.setKeywords(trimList(keywords));
     workflowExecution.setStatus(QUEUED);
+
+    EntityVersion entityVersion = entityVersionService.newEntityVersion(workflowExecution.getAppId(), DEPLOYMENT,
+        workflowExecution.getWorkflowId(), workflowExecution.getDisplayName(), ChangeType.CREATED);
+
+    workflowExecution.setReleaseNo(String.valueOf(entityVersion.getVersion()));
     workflowExecution = wingsPersistence.saveAndGet(WorkflowExecution.class, workflowExecution);
 
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
@@ -1077,16 +1086,23 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         + format(mainConfiguration.getPortal().getExecutionUrlPattern(), workflowExecution.getAppId(),
               workflowExecution.getEnvId(), workflowExecution.getUuid());
     if (stdParams.getWorkflowElement() == null) {
-      stdParams.setWorkflowElement(aWorkflowElement()
-                                       .withUuid(workflowExecution.getUuid())
-                                       .withName(workflowExecution.getName())
-                                       .withUrl(workflowUrl)
+      stdParams.setWorkflowElement(WorkflowElement.builder()
+                                       .uuid(workflowExecution.getUuid())
+                                       .name(workflowExecution.getName())
+                                       .url(workflowUrl)
+                                       .displayName(workflowExecution.getDisplayName())
+                                       .releaseNo(workflowExecution.getReleaseNo())
                                        .build());
     } else {
       stdParams.getWorkflowElement().setName(workflowExecution.getName());
       stdParams.getWorkflowElement().setUuid(workflowExecution.getUuid());
       stdParams.getWorkflowElement().setUrl(workflowUrl);
+      stdParams.getWorkflowElement().setDisplayName(workflowExecution.getDisplayName());
+      stdParams.getWorkflowElement().setReleaseNo(workflowExecution.getReleaseNo());
     }
+
+    lastGoodReleaseInfo(stdParams.getWorkflowElement(), workflowExecution);
+
     WingsDeque<ContextElement> elements = new WingsDeque<>();
     elements.push(stdParams);
     if (contextElements != null) {
@@ -1111,6 +1127,21 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                    .build());
     }
     return wingsPersistence.get(WorkflowExecution.class, workflowExecution.getAppId(), workflowExecution.getUuid());
+  }
+
+  private void lastGoodReleaseInfo(WorkflowElement workflowElement, WorkflowExecution workflowExecution) {
+    WorkflowExecution workflowExecutionLast = wingsPersistence.get(WorkflowExecution.class,
+        aPageRequest()
+            .addFilter("appId", EQ, workflowExecution.getAppId())
+            .addFilter("workflowId", EQ, workflowExecution.getWorkflowId())
+            .addFilter("status", EQ, ExecutionStatus.SUCCESS)
+            .build());
+
+    if (workflowExecutionLast != null) {
+      workflowElement.setLastGoodDeploymentDisplayName(workflowExecutionLast.getDisplayName());
+      workflowElement.setLastGoodDeploymentUuid(workflowExecutionLast.getUuid());
+      workflowElement.setLastGoodReleaseNo(workflowExecutionLast.getReleaseNo());
+    }
   }
 
   @Override

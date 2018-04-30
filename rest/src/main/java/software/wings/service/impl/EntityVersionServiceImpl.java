@@ -67,20 +67,19 @@ public class EntityVersionServiceImpl implements EntityVersionService {
   @Override
   public EntityVersion newEntityVersion(String appId, EntityType entityType, String entityUuid, String parentUuid,
       String name, ChangeType changeType, String entityData) {
-    EntityVersionCollection entityVersion = null;
+    EntityVersionCollection entityVersion = anEntityVersionCollection()
+                                                .withAppId(appId)
+                                                .withEntityType(entityType)
+                                                .withEntityUuid(entityUuid)
+                                                .withEntityData(entityData)
+                                                .withEntityName(name)
+                                                .withChangeType(changeType)
+                                                .withEntityParentUuid(parentUuid)
+                                                .build();
     int i = 0;
     boolean done = false;
     do {
       try {
-        entityVersion = anEntityVersionCollection()
-                            .withAppId(appId)
-                            .withEntityType(entityType)
-                            .withEntityUuid(entityUuid)
-                            .withEntityData(entityData)
-                            .withEntityName(name)
-                            .withChangeType(changeType)
-                            .withEntityParentUuid(parentUuid)
-                            .build();
         EntityVersion lastEntityVersion = lastEntityVersion(appId, entityType, entityUuid, parentUuid);
         if (lastEntityVersion == null) {
           entityVersion.setVersion(EntityVersion.INITIAL_VERSION);
