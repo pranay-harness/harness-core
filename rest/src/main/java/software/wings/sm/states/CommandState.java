@@ -92,6 +92,7 @@ import software.wings.sm.StateExecutionException;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.Expand;
+import software.wings.waitnotify.ErrorNotifyResponseData;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Collections;
@@ -477,18 +478,27 @@ public class CommandState extends State {
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+    if (response.size() != 1) {
+      return anExecutionResponse()
+          .withExecutionStatus(ExecutionStatus.FAILED)
+          .withErrorMessage("Unexpected number of response data items")
+          .build();
+    }
+
+    NotifyResponseData notifyResponseData = response.values().iterator().next();
+
+    if (notifyResponseData instanceof ErrorNotifyResponseData) {
+      return anExecutionResponse()
+          .withExecutionStatus(ExecutionStatus.FAILED)
+          .withErrorMessage(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage())
+          .build();
+    }
+
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String appId = workflowStandardParams.getAppId();
 
-    CommandExecutionResult commandExecutionResult = null;
-    String activityId = null;
-    for (Object status : response.values()) {
-      commandExecutionResult = (CommandExecutionResult) status;
-    }
-
-    for (String key : response.keySet()) {
-      activityId = key;
-    }
+    CommandExecutionResult commandExecutionResult = (CommandExecutionResult) notifyResponseData;
+    String activityId = response.keySet().iterator().next();
 
     if (commandExecutionResult.getStatus() != SUCCESS && isNotEmpty(commandExecutionResult.getErrorMessage())) {
       handleCommandException(context, activityId, appId);

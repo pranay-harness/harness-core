@@ -56,6 +56,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
   }
 
   @Override
+  @SuppressWarnings("PMD")
   public void run() {
     if (preExecute.get()) {
       NotifyResponseData result = null;
@@ -63,7 +64,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
         logger.info("Started executing task {}", taskId);
         result = run(parameters);
         logger.info("Completed executing task {}", taskId);
-      } catch (Exception exception) {
+      } catch (Throwable exception) {
         logger.error("Unexpected error executing delegate task {}", taskId, exception);
         result = ErrorNotifyResponseData.builder().errorMessage(exception.getMessage()).build();
       } finally {
