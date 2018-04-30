@@ -1,8 +1,8 @@
 #!/bin/bash -e
 
-docker pull harness/delegate:latest
+sudo docker pull harness/delegate:latest
 
-docker run -it --hostname=$(hostname) \
+sudo docker run -d --restart unless-stopped --hostname=$(hostname -f) \
 -e ACCOUNT_ID=${accountId} \
 -e ACCOUNT_SECRET=${accountSecret} \
 -e MANAGER_HOST_AND_PORT=${managerHostAndPort} \
