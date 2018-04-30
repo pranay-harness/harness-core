@@ -211,15 +211,17 @@ public interface Constants {
 
   String DEPLOY = "Deploy";
 
-  String PCF_SETUP = "PCF Service Setup";
+  String PCF_SETUP = "App Setup";
 
-  String PCF_RESIZE = "PCF Resize Service";
+  String PCF_RESIZE = "App Resize";
 
   String ROLLBACK = "Rollback";
 
-  String PCF_ROLLBACK = "PCF Service Rollback";
+  String PCF_ROLLBACK = "App Rollback";
 
-  String PCF_ROUTE_SWAP = "Switch Route";
+  String PCF_MAP_ROUTE = "Map Route";
+
+  String PCF_UNMAP_ROUT = "Unmap Route";
   /**
    * The constant KUBERNETES_SERVICE_SETUP.
    */
@@ -782,4 +784,9 @@ public interface Constants {
   String HARNESS_KUBE_CONFIG_PATH = "HARNESS_KUBE_CONFIG_PATH";
 
   String WORKFLOW_NAME_DATE_FORMAT = "MM/dd/yyyy hh:mm a";
+  String INFRA_ROUTE = "infra.route";
+  String INFRA_TEMP_ROUTE = "infra.tempRoute";
+
+  String PCF_APP_NAME = "pcfAppName";
+  String PCF_OLD_APP_NAME = "pcfOldAppName";
 }

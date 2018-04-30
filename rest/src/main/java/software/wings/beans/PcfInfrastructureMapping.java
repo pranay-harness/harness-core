@@ -20,7 +20,7 @@ import java.util.Optional;
 public class PcfInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Organization", required = true) private String organization;
   @Attributes(title = "Space", required = true) private String space;
-  @Attributes(title = "Temporary Route Map") private List<String> tempRouteMap;
+  @Attributes(title = "Temporary Route Maps") private List<String> tempRouteMap;
   @Attributes(title = "Route Maps", required = true) private List<String> routeMaps;
 
   /**

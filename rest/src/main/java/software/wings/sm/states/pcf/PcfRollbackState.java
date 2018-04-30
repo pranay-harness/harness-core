@@ -41,7 +41,7 @@ public class PcfRollbackState extends PcfDeployState {
         pcfServiceData.setDesiredCount(pcfServiceData.getPreviousCount());
         pcfServiceData.setPreviousCount(temp);
         updateDetails.append(new StringBuilder()
-                                 .append("New Application Name: ")
+                                 .append("App Name: ")
                                  .append(pcfServiceData.getName())
                                  .append(", DesiredCount: ")
                                  .append(pcfServiceData.getDesiredCount())

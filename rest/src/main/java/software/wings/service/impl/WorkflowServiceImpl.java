@@ -45,7 +45,6 @@ import static software.wings.beans.PhaseStepType.DE_PROVISION_NODE;
 import static software.wings.beans.PhaseStepType.DISABLE_SERVICE;
 import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
 import static software.wings.beans.PhaseStepType.PCF_RESIZE;
-import static software.wings.beans.PhaseStepType.PCF_ROUTE_SWAP;
 import static software.wings.beans.PhaseStepType.PCF_SETUP;
 import static software.wings.beans.PhaseStepType.PREPARE_STEPS;
 import static software.wings.beans.PhaseStepType.PROVISION_NODE;
@@ -2270,16 +2269,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
                                    .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
                                    .build());
-
-    if (BASIC.equals(orchestrationWorkflowType)) {
-      workflowPhase.addPhaseStep(aPhaseStep(PCF_ROUTE_SWAP, Constants.PCF_ROUTE_SWAP)
-                                     .addStep(aGraphNode()
-                                                  .withId(generateUuid())
-                                                  .withType(PCF_ROUTE_SWAP.name())
-                                                  .withName(Constants.PCF_ROUTE_SWAP)
-                                                  .build())
-                                     .build());
-    }
 
     workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
   }

@@ -5,13 +5,14 @@ import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
+import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
 import software.wings.api.PhaseElement;
+import software.wings.api.pcf.PcfRouteUpdateStateExecutionData;
 import software.wings.api.pcf.PcfSetupContextElement;
-import software.wings.api.pcf.PcfSwapRouteMapStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
@@ -29,7 +30,7 @@ import software.wings.common.Constants;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
-import software.wings.helpers.ext.pcf.request.PcfCommandRouteSwapRequest;
+import software.wings.helpers.ext.pcf.request.PcfCommandRouteUpdateRequest;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfDeployCommandResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -48,6 +49,7 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.stencils.DefaultValue;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
@@ -57,8 +59,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-// TODO STILL NEEDS TO BE DONE
-public class PcfRouteSwapState extends State {
+public class MapRouteState extends State {
   @Inject private transient AppService appService;
   @Inject private transient InfrastructureMappingService infrastructureMappingService;
   @Inject private transient DelegateService delegateService;
@@ -67,20 +68,40 @@ public class PcfRouteSwapState extends State {
   @Inject private transient ActivityService activityService;
   @Inject @Transient protected transient LogService logService;
 
-  public static final String PCF_SWAP_ROUTE_COMMAND = "PCF Route Swap";
+  public static final String PCF_MAP_ROUTE_COMMAND = "PCF Map Route";
 
-  private static final Logger logger = LoggerFactory.getLogger(PcfRouteSwapState.class);
+  private static final Logger logger = LoggerFactory.getLogger(MapRouteState.class);
+
+  @DefaultValue("${" + Constants.PCF_APP_NAME + "}") @Attributes(title = "PCF App Name") protected String pcfAppName;
+
+  @DefaultValue("${" + Constants.INFRA_ROUTE + "}") @Attributes(title = "Map Route") protected String route;
+
+  public String getPcfAppName() {
+    return pcfAppName;
+  }
+
+  public void setPcfAppName(String pcfAppName) {
+    this.pcfAppName = pcfAppName;
+  }
+
+  public String getRoute() {
+    return route;
+  }
+
+  public void setRoute(String route) {
+    this.route = route;
+  }
 
   /**
    * Instantiates a new state.
    *
    * @param name      the name
    */
-  public PcfRouteSwapState(String name) {
-    super(name, StateType.PCF_SETUP.name());
+  public MapRouteState(String name) {
+    super(name, StateType.PCF_MAP_ROUTE.name());
   }
 
-  public PcfRouteSwapState(String name, String stateType) {
+  public MapRouteState(String name, String stateType) {
     super(name, stateType);
   }
 
@@ -109,6 +130,8 @@ public class PcfRouteSwapState extends State {
             .findFirst()
             .orElse(PcfSetupContextElement.builder().build());
 
+    // route.equalsIgnoreCase("${" + Constants.INFRA_ROUTE + "}");
+
     Activity activity = createActivity(context);
     SettingAttribute settingAttribute = settingsService.get(pcfInfrastructureMapping.getComputeProviderSettingId());
     PcfConfig pcfConfig = (PcfConfig) settingAttribute.getValue();
@@ -117,34 +140,30 @@ public class PcfRouteSwapState extends State {
         (Encryptable) pcfConfig, context.getAppId(), context.getWorkflowExecutionId());
 
     PcfCommandRequest pcfCommandRequest =
-        PcfCommandRouteSwapRequest.builder()
-            .pcfCommandType(PcfCommandType.SWAP_ROUTE)
-            .commandName(PCF_SWAP_ROUTE_COMMAND)
+        PcfCommandRouteUpdateRequest.builder()
+            .pcfCommandType(PcfCommandType.UPDATE_ROUTE)
+            .commandName(PCF_MAP_ROUTE_COMMAND)
             .appId(app.getUuid())
             .accountId(app.getAccountId())
             .activityId(activity.getUuid())
             .pcfConfig(pcfConfig)
-            .routeMaps(pcfInfrastructureMapping.getRouteMaps())
-            .tempRouteMaps(pcfInfrastructureMapping.getTempRouteMap())
-            .routeMaps(pcfInfrastructureMapping.getRouteMaps())
-            .timeoutIntervalInMin(pcfSetupContextElement.getTimeoutIntervalInMinutes())
-            .appsToBeDownSized(pcfSetupContextElement.getAppsToBeDownsized())
-            .releaseName(pcfSetupContextElement.getNewPcfApplicationName())
             .organization(pcfInfrastructureMapping.getOrganization())
             .space(pcfInfrastructureMapping.getSpace())
+            .routeMaps(getRoutes(pcfInfrastructureMapping))
+            .appsToBeUpdated(getApplicationNamesTobeUpdated(pcfSetupContextElement))
             .timeoutIntervalInMin(pcfSetupContextElement.getTimeoutIntervalInMinutes())
+            .isMapRoutesOperation(checkIfMapRouteOperation())
             .build();
 
-    PcfSwapRouteMapStateExecutionData stateExecutionData =
-        PcfSwapRouteMapStateExecutionData.builder()
+    PcfRouteUpdateStateExecutionData stateExecutionData =
+        PcfRouteUpdateStateExecutionData.builder()
             .activityId(activity.getUuid())
             .accountId(app.getAccountId())
             .appId(app.getUuid())
             .pcfCommandRequest(pcfCommandRequest)
-            .commandName(PCF_SWAP_ROUTE_COMMAND)
-            .tempRouteMap(pcfInfrastructureMapping.getTempRouteMap())
+            .commandName(PCF_MAP_ROUTE_COMMAND)
             .routeMaps(pcfInfrastructureMapping.getRouteMaps())
-            .isBlueGreenDeployment(pcfSetupContextElement.isBlueGreenDeployment())
+            .appnames(((PcfCommandRouteUpdateRequest) pcfCommandRequest).getAppsToBeUpdated())
             .build();
 
     DelegateTask delegateTask = aDelegateTask()
@@ -154,7 +173,7 @@ public class PcfRouteSwapState extends State {
                                     .withWaitId(activity.getUuid())
                                     .withParameters(new Object[] {pcfCommandRequest, encryptedDataDetails})
                                     .withEnvId(env.getUuid())
-                                    .withTimeout(TimeUnit.MINUTES.toMillis(20))
+                                    .withTimeout(TimeUnit.MINUTES.toMillis(10))
                                     .withInfrastructureMappingId(pcfInfrastructureMapping.getUuid())
                                     .build();
 
@@ -165,6 +184,39 @@ public class PcfRouteSwapState extends State {
         .withStateExecutionData(stateExecutionData)
         .withAsync(true)
         .build();
+  }
+
+  private List<String> getRoutes(PcfInfrastructureMapping pcfInfrastructureMapping) {
+    // determine which routes to map
+    String infraRouteConst = "${" + Constants.INFRA_ROUTE + "}";
+    boolean isOriginalRoute = route == null || infraRouteConst.equalsIgnoreCase(route.trim());
+
+    List<String> routes =
+        isOriginalRoute ? pcfInfrastructureMapping.getRouteMaps() : pcfInfrastructureMapping.getTempRouteMap();
+    if (routes == null) {
+      routes = Collections.EMPTY_LIST;
+    }
+
+    return routes;
+  }
+
+  protected boolean checkIfMapRouteOperation() {
+    return true;
+  }
+
+  private List<String> getApplicationNamesTobeUpdated(PcfSetupContextElement pcfSetupContextElement) {
+    String appConst = "${" + Constants.PCF_APP_NAME + "}";
+    boolean isNewApplication = pcfAppName == null || appConst.equalsIgnoreCase(pcfAppName.trim());
+
+    List<String> appNames = new ArrayList<>();
+
+    if (isNewApplication) {
+      appNames.add(pcfSetupContextElement.getNewPcfApplicationName());
+    } else {
+      appNames.addAll(pcfSetupContextElement.getAppsToBeDownsized());
+    }
+
+    return appNames;
   }
 
   @Override
@@ -178,8 +230,8 @@ public class PcfRouteSwapState extends State {
       activityService.updateStatus(activityId, context.getAppId(), executionStatus);
 
       // update PcfDeployStateExecutionData,
-      PcfSwapRouteMapStateExecutionData stateExecutionData =
-          (PcfSwapRouteMapStateExecutionData) context.getStateExecutionData();
+      PcfRouteUpdateStateExecutionData stateExecutionData =
+          (PcfRouteUpdateStateExecutionData) context.getStateExecutionData();
       stateExecutionData.setStatus(executionStatus);
       stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
 
@@ -212,8 +264,8 @@ public class PcfRouteSwapState extends State {
     }
 
     // update PcfDeployStateExecutionData,
-    PcfSwapRouteMapStateExecutionData stateExecutionData =
-        (PcfSwapRouteMapStateExecutionData) context.getStateExecutionData();
+    PcfRouteUpdateStateExecutionData stateExecutionData =
+        (PcfRouteUpdateStateExecutionData) context.getStateExecutionData();
     stateExecutionData.setStatus(executionStatus);
     stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
 
@@ -234,7 +286,7 @@ public class PcfRouteSwapState extends State {
     ActivityBuilder activityBuilder = Activity.builder()
                                           .applicationName(app.getName())
                                           .appId(app.getUuid())
-                                          .commandName(PCF_SWAP_ROUTE_COMMAND)
+                                          .commandName(PCF_MAP_ROUTE_COMMAND)
                                           .type(Type.Command)
                                           .workflowType(executionContext.getWorkflowType())
                                           .workflowExecutionName(executionContext.getWorkflowExecutionName())
@@ -246,7 +298,7 @@ public class PcfRouteSwapState extends State {
                                           .commandUnits(Collections.emptyList())
                                           .serviceVariables(Maps.newHashMap())
                                           .status(ExecutionStatus.RUNNING)
-                                          .commandUnitType(CommandUnitType.PCF_ROUTE_SWAP)
+                                          .commandUnitType(CommandUnitType.PCF_MAP_ROUTE)
                                           .environmentId(env.getUuid())
                                           .environmentName(env.getName())
                                           .environmentType(env.getEnvironmentType());

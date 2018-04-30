@@ -1,0 +1,103 @@
+package software.wings.delegatetasks.pcf.pcftaskhandler;
+
+import com.google.inject.Singleton;
+
+import lombok.NoArgsConstructor;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import software.wings.beans.PcfConfig;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
+import software.wings.helpers.ext.pcf.PcfRequestConfig;
+import software.wings.helpers.ext.pcf.PivotalClientApiException;
+import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
+import software.wings.helpers.ext.pcf.request.PcfCommandRouteUpdateRequest;
+import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
+import software.wings.helpers.ext.pcf.response.PcfCommandResponse;
+import software.wings.security.encryption.EncryptedDataDetail;
+
+import java.util.List;
+
+@NoArgsConstructor
+@Singleton
+public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
+  private static final Logger logger = LoggerFactory.getLogger(PcfRouteUpdateCommandTaskHandler.class);
+
+  /**
+   * Performs RouteSwapping for Blue-Green deployment
+   * @param pcfCommandRequest
+   * @param encryptedDataDetails
+   * @return
+   */
+  public PcfCommandExecutionResponse executeTaskInternal(
+      PcfCommandRequest pcfCommandRequest, List<EncryptedDataDetail> encryptedDataDetails) {
+    PcfCommandResponse pcfCommandResponse = new PcfCommandResponse();
+    PcfCommandExecutionResponse pcfCommandExecutionResponse =
+        PcfCommandExecutionResponse.builder().pcfCommandResponse(pcfCommandResponse).build();
+
+    try {
+      executionLogCallback.saveExecutionLog("--------- Starting PCF Route Update\n");
+      PcfCommandRouteUpdateRequest pcfCommandRouteUpdateRequest = (PcfCommandRouteUpdateRequest) pcfCommandRequest;
+      PcfConfig pcfConfig = pcfCommandRouteUpdateRequest.getPcfConfig();
+      encryptionService.decrypt(pcfConfig, encryptedDataDetails);
+
+      PcfRequestConfig pcfRequestConfig =
+          PcfRequestConfig.builder()
+              .userName(pcfConfig.getUsername())
+              .endpointUrl(pcfConfig.getEndpointUrl())
+              .password(String.valueOf(pcfConfig.getPassword()))
+              .orgName(pcfCommandRouteUpdateRequest.getOrganization())
+              .spaceName(pcfCommandRouteUpdateRequest.getSpace())
+              .timeOutIntervalInMins(pcfCommandRouteUpdateRequest.getTimeoutIntervalInMin())
+              .build();
+
+      if (pcfCommandRouteUpdateRequest.isMapRoutesOperation()) {
+        mapRouteMaps(pcfCommandRouteUpdateRequest, pcfRequestConfig);
+      } else {
+        unmapRouteMaps(pcfCommandRouteUpdateRequest, pcfRequestConfig);
+      }
+      executionLogCallback.saveExecutionLog("\n--------- PCF Route Update completed successfully");
+      pcfCommandResponse.setOutput(StringUtils.EMPTY);
+      pcfCommandResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
+    } catch (Exception e) {
+      logger.error("Exception in processing PCF Route Update task [{}]", e);
+      executionLogCallback.saveExecutionLog("\n\n--------- PCF Route Update failed to complete successfully");
+      executionLogCallback.saveExecutionLog("# Error: " + e.getMessage());
+      pcfCommandResponse.setOutput(e.getMessage());
+      pcfCommandResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
+    }
+
+    pcfCommandExecutionResponse.setCommandExecutionStatus(pcfCommandResponse.getCommandExecutionStatus());
+    pcfCommandExecutionResponse.setErrorMessage(pcfCommandResponse.getOutput());
+    return pcfCommandExecutionResponse;
+  }
+
+  private void mapRouteMaps(PcfCommandRouteUpdateRequest pcfCommandRouteUpdateRequest,
+      PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
+    if (CollectionUtils.isNotEmpty(pcfCommandRouteUpdateRequest.getAppsToBeUpdated())) {
+      for (String applicationName : pcfCommandRouteUpdateRequest.getAppsToBeUpdated()) {
+        executionLogCallback.saveExecutionLog("# Adding routs for application: " + applicationName);
+        // map
+        pcfRequestConfig.setApplicationName(applicationName);
+        pcfDeploymentManager.mapRouteMapForApplication(pcfRequestConfig, pcfCommandRouteUpdateRequest.getRouteMaps());
+        executionLogCallback.saveExecutionLog(
+            "# Adding routes for application: " + applicationName + " was successfully completed");
+      }
+    }
+  }
+
+  private void unmapRouteMaps(PcfCommandRouteUpdateRequest pcfCommandRouteUpdateRequest,
+      PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
+    if (CollectionUtils.isNotEmpty(pcfCommandRouteUpdateRequest.getAppsToBeUpdated())) {
+      for (String applicationName : pcfCommandRouteUpdateRequest.getAppsToBeUpdated()) {
+        executionLogCallback.saveExecutionLog("# Unmapping routes from application: " + applicationName);
+        // unmap
+        pcfRequestConfig.setApplicationName(applicationName);
+        pcfDeploymentManager.unmapRouteMapForApplication(pcfRequestConfig, pcfCommandRouteUpdateRequest.getRouteMaps());
+        executionLogCallback.saveExecutionLog(
+            "# Unmapping routes from application: " + applicationName + " was successfully completed");
+      }
+    }
+  }
+}

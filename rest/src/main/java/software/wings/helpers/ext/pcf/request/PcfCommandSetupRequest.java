@@ -34,9 +34,9 @@ public class PcfCommandSetupRequest extends PcfCommandRequest {
       PcfCommandType pcfCommandType, String organization, String space, PcfConfig pcfConfig, String workflowExecutionId,
       String releaseNamePrefix, String manifestYaml, List<ArtifactFile> artifactFiles, List<String> tempRouteMap,
       List<String> routeMaps, Map<String, String> serviceVariables, Map<String, String> safeDisplayServiceVariables,
-      Integer timeoutIntervalInMin, boolean isBlueGreenDeployment, Integer maxCount) {
+      Integer timeoutIntervalInMin, Integer maxCount) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
-        workflowExecutionId, timeoutIntervalInMin, isBlueGreenDeployment);
+        workflowExecutionId, timeoutIntervalInMin);
     this.releaseNamePrefix = releaseNamePrefix;
     this.manifestYaml = manifestYaml;
     this.artifactFiles = artifactFiles;

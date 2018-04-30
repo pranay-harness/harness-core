@@ -109,12 +109,12 @@ public class PcfInstanceHandler extends InstanceHandler {
         SetView<String> instancesToBeDeleted =
             Sets.difference(instancesInDBMap.keySet(), latestPcfInstanceInfoMap.keySet());
 
-        instancesToBeUpdated.stream().forEach(id -> {
-          PcfInstanceInfo pcfInstanceInfo = latestPcfInstanceInfoMap.get(id);
-          Instance instance = buildInstanceFromPCFInfo(pcfInfrastructureMapping, pcfInstanceInfo, newDeploymentInfo);
-          logger.info("Updating Instance: " + pcfInstanceInfo.getId() + ", for PcfApplication:- " + pcfApplicationName);
-          instanceService.saveOrUpdate(instance);
-        });
+        //        instancesToBeUpdated.stream().forEach(id -> {
+        //          PcfInstanceInfo pcfInstanceInfo = latestPcfInstanceInfoMap.get(id);
+        //          Instance instance = buildInstanceFromPCFInfo(pcfInfrastructureMapping, pcfInstanceInfo,
+        //          newDeploymentInfo); logger.info("Updating Instance: " + pcfInstanceInfo.getId() + ", for
+        //          PcfApplication:- " + pcfApplicationName); instanceService.saveOrUpdate(instance);
+        //        });
 
         Set<String> instanceIdsToBeDeleted = new HashSet<>();
         instancesToBeDeleted.stream().forEach(id -> {

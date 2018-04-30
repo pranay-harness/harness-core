@@ -1,0 +1,3 @@
+{
+  "ui:order": ["pcfAppName", "maxInstances", "resizeStrategy", "route", "timeoutIntervalInMinutes"]
+}

@@ -15,7 +15,7 @@ public class PcfInstanceSyncRequest extends PcfCommandRequest {
       PcfCommandType pcfCommandType, String organization, String space, PcfConfig pcfConfig, String workflowExecutionId,
       Integer timeoutIntervalInMin, String pcfApplicationName) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
-        workflowExecutionId, timeoutIntervalInMin, false);
+        workflowExecutionId, timeoutIntervalInMin);
     this.pcfApplicationName = pcfApplicationName;
   }
 }

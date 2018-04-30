@@ -26,7 +26,6 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.ResizeStrategy;
@@ -65,6 +64,7 @@ import software.wings.sm.State;
 import software.wings.sm.StateExecutionException;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.stencils.DefaultValue;
 import software.wings.utils.Misc;
 import software.wings.utils.ServiceVersionConvention;
 import software.wings.waitnotify.NotifyResponseData;
@@ -88,11 +88,18 @@ public class PcfSetupState extends State {
   @Inject private ServiceHelper serviceHelper;
 
   @Inject @Transient protected transient LogService logService;
-  @Attributes(title = "PCF Service Name") private String pcfServiceName;
-  @Attributes(title = "Desired Instances", required = true) private Integer maxInstances;
+  @DefaultValue("${app.name}__${service.name}__${env.name}")
+  @Attributes(title = "PCF App Name")
+  private String pcfAppName;
+
+  @Attributes(title = "Total Number of Instances", required = true) private Integer maxInstances;
+
   @Attributes(title = "Resize Strategy", required = true)
   private ResizeStrategy resizeStrategy = ResizeStrategy.DOWNSIZE_OLD_FIRST;
-  @Attributes(title = "Api Timeout Interval(min)") private Integer timeoutIntervalInMinutes = 5;
+
+  @DefaultValue("${" + Constants.INFRA_ROUTE + "}") @Attributes(title = "Map Route") private String route;
+
+  @Attributes(title = "API Timeout Interval (Minutes)") private Integer timeoutIntervalInMinutes = 5;
   public static final String PCF_SETUP_COMMAND = "PCF Setup";
 
   private static final Logger logger = LoggerFactory.getLogger(PcfSetupState.class);
@@ -126,12 +133,12 @@ public class PcfSetupState extends State {
     this.resizeStrategy = resizeStrategy;
   }
 
-  public String getPcfServiceName() {
-    return pcfServiceName;
+  public String getPcfAppName() {
+    return pcfAppName;
   }
 
-  public void setPcfServiceName(String pcfServiceName) {
-    this.pcfServiceName = pcfServiceName;
+  public void setPcfAppName(String pcfAppName) {
+    this.pcfAppName = pcfAppName;
   }
 
   public Integer getTimeoutIntervalInMinutes() {
@@ -140,6 +147,14 @@ public class PcfSetupState extends State {
 
   public void setTimeoutIntervalInMinutes(Integer timeoutIntervalInMinutes) {
     this.timeoutIntervalInMinutes = timeoutIntervalInMinutes;
+  }
+
+  public String getRoute() {
+    return route;
+  }
+
+  public void setRoute(String route) {
+    this.route = route;
   }
 
   @Override
@@ -154,7 +169,7 @@ public class PcfSetupState extends State {
   protected ExecutionResponse executeInternal(ExecutionContext context) {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    //@TODO how to check if canary ?
+
     Application app = appService.get(context.getAppId());
     Environment env = workflowStandardParams.getEnv();
     ServiceElement serviceElement = phaseElement.getServiceElement();
@@ -182,8 +197,13 @@ public class PcfSetupState extends State {
     serviceHelper.addPlaceholderTexts(pcfServiceSpecification);
     validateSpecification(pcfServiceSpecification);
 
-    // is Blue Green deployment
-    boolean isBlueGreenDeployment = OrchestrationWorkflowType.BASIC.equals(context.getOrchestrationWorkflowType());
+    // @TODO as decided, will change to use expressions here
+    // User has control to decide if for new application,
+    // inframapping.routemaps to use or inframapping.temproutemaps to use.
+    // so it automatically, attaches B-G deployment capability to deployment
+    // if user selected tempRoutes
+    String infraRouteConst = "${" + Constants.INFRA_ROUTE + "}";
+    boolean isOriginalRoute = route == null || infraRouteConst.equalsIgnoreCase(route.trim());
 
     List<String> tempRouteMaps = CollectionUtils.isEmpty(pcfInfrastructureMapping.getTempRouteMap())
         ? Collections.EMPTY_LIST
@@ -193,9 +213,10 @@ public class PcfSetupState extends State {
         ? Collections.EMPTY_LIST
         : pcfInfrastructureMapping.getRouteMaps();
 
-    pcfServiceName = isNotBlank(pcfServiceName) ? Misc.normalizeExpression(context.renderExpression(pcfServiceName))
-                                                : Misc.normalizeExpression(ServiceVersionConvention.getPrefix(
-                                                      app.getName(), serviceElement.getName(), env.getName()));
+    // change ${app.name}__${service.name}__${env.name} to actual name.
+    pcfAppName = isNotBlank(pcfAppName) ? Misc.normalizeExpression(context.renderExpression(pcfAppName))
+                                        : Misc.normalizeExpression(ServiceVersionConvention.getPrefix(
+                                              app.getName(), serviceElement.getName(), env.getName()));
 
     PcfCommandRequest commandRequest =
         PcfCommandSetupRequest.builder()
@@ -203,7 +224,7 @@ public class PcfSetupState extends State {
             .appId(app.getUuid())
             .accountId(app.getAccountId())
             .commandName(PCF_SETUP_COMMAND)
-            .releaseNamePrefix(pcfServiceName)
+            .releaseNamePrefix(pcfAppName)
             .organization(pcfInfrastructureMapping.getOrganization())
             .space(pcfInfrastructureMapping.getSpace())
             .pcfConfig(pcfConfig)
@@ -211,30 +232,27 @@ public class PcfSetupState extends State {
             .manifestYaml(pcfServiceSpecification.getManifestYaml())
             .workflowExecutionId(context.getWorkflowExecutionId())
             .artifactFiles(artifact.getArtifactFiles())
-            .routeMaps(isBlueGreenDeployment ? tempRouteMaps : routeMaps)
+            .routeMaps(isOriginalRoute ? routeMaps : tempRouteMaps)
             .serviceVariables(context.getServiceVariables())
             .timeoutIntervalInMin(timeoutIntervalInMinutes == null ? 5 : timeoutIntervalInMinutes)
             .maxCount(maxInstances)
-            .isBlueGreenDeployment(isBlueGreenDeployment)
             .build();
 
-    PcfSetupStateExecutionData stateExecutionData = PcfSetupStateExecutionData.builder()
-                                                        .activityId(activity.getUuid())
-                                                        .accountId(app.getAccountId())
-                                                        .appId(app.getUuid())
-                                                        .envId(env.getUuid())
-                                                        .infraMappingId(pcfInfrastructureMapping.getUuid())
-                                                        .pcfCommandRequest(commandRequest)
-                                                        .commandName(PCF_SETUP_COMMAND)
-                                                        .maxInstanceCount(maxInstances)
-                                                        .manifestYaml(pcfServiceSpecification.getManifestYaml())
-                                                        .accountId(app.getAccountId())
-                                                        .appId(app.getUuid())
-                                                        .serviceId(serviceElement.getUuid())
-                                                        .tempRouteMap(pcfInfrastructureMapping.getTempRouteMap())
-                                                        .routeMaps(pcfInfrastructureMapping.getRouteMaps())
-                                                        .isBlueGreenDeployment(isBlueGreenDeployment)
-                                                        .build();
+    PcfSetupStateExecutionData stateExecutionData =
+        PcfSetupStateExecutionData.builder()
+            .activityId(activity.getUuid())
+            .accountId(app.getAccountId())
+            .appId(app.getUuid())
+            .envId(env.getUuid())
+            .infraMappingId(pcfInfrastructureMapping.getUuid())
+            .pcfCommandRequest(commandRequest)
+            .commandName(PCF_SETUP_COMMAND)
+            .maxInstanceCount(maxInstances)
+            .accountId(app.getAccountId())
+            .appId(app.getUuid())
+            .serviceId(serviceElement.getUuid())
+            .routeMaps(((PcfCommandSetupRequest) commandRequest).getRouteMaps())
+            .build();
 
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(app.getAccountId())
@@ -306,14 +324,11 @@ public class PcfSetupState extends State {
             .resizeStrategy(resizeStrategy)
             .infraMappingId(stateExecutionData.getInfraMappingId())
             .pcfCommandRequest(stateExecutionData.getPcfCommandRequest())
-            .ManifestYaml(stateExecutionData.getManifestYaml())
-            .tempRouteMap(stateExecutionData.getTempRouteMap())
             .routeMaps(stateExecutionData.getRouteMaps())
             .totalPreviousInstanceCount(pcfSetupCommandResponse.getTotalPreviousInstanceCount() == null
                     ? 0
                     : pcfSetupCommandResponse.getTotalPreviousInstanceCount())
             .timeoutIntervalInMinutes(timeoutIntervalInMinutes)
-            .isBlueGreenDeployment(stateExecutionData.isBlueGreenDeployment())
             .appsToBeDownsized(pcfSetupCommandResponse.getDownsizeDetails())
             .build();
 
@@ -338,7 +353,6 @@ public class PcfSetupState extends State {
       ExecutionContext executionContext, Artifact artifact, ArtifactStream artifactStream) {
     Application app = ((ExecutionContextImpl) executionContext).getApp();
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
-    // @TODO do we need this
     ActivityBuilder activityBuilder = Activity.builder()
                                           .applicationName(app.getName())
                                           .appId(app.getUuid())

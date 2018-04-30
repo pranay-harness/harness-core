@@ -145,7 +145,7 @@ public class ActivityServiceImpl implements ActivityService {
                      .commandUnitType(activity.getCommandUnitType())
                      .build());
           break;
-        case PCF_ROUTE_SWAP:
+        case PCF_MAP_ROUTE:
           rv.add(CommandUnitDetails.builder()
                      .commandExecutionStatus(CommandExecutionStatus.translateExecutionStatus(activity.getStatus()))
                      .name(activity.getCommandUnitType().getName())

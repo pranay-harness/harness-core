@@ -47,7 +47,6 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -75,13 +74,12 @@ public class PcfDeployState extends State {
   @Inject private transient SettingsService settingsService;
   @Inject private transient ServiceTemplateService serviceTemplateService;
   @Inject private transient ActivityService activityService;
-  @Inject private transient EncryptionService encryptionService;
 
-  @Attributes(title = "Instance Count", required = true) private Integer instanceCount;
-  @Attributes(title = "Unit Type", required = true)
+  @Attributes(title = "Desired Instances(cumulative)", required = true) private Integer instanceCount;
+  @Attributes(title = "Instance Unit Type", required = true)
   private InstanceUnitType instanceUnitType = InstanceUnitType.PERCENTAGE;
-  @Attributes(title = "Downsize Instance Count") private Integer downsizeInstanceCount;
-  @Attributes(title = "Downsize Unit Type")
+  @Attributes(title = "Desired Instances- Old version") private Integer downsizeInstanceCount;
+  @Attributes(title = "Instance Unit Type")
   private InstanceUnitType downsizeInstanceUnitType = InstanceUnitType.PERCENTAGE;
   public static final String PCF_RESIZE_COMMAND = "PCF Resize";
 
@@ -211,7 +209,8 @@ public class PcfDeployState extends State {
   }
 
   protected Integer getUpsizeUpdateCount(PcfSetupContextElement pcfSetupContextElement) {
-    return getInstanceCountToBeUpdated(pcfSetupContextElement.getMaxInstanceCount(), instanceCount, instanceUnitType);
+    return getInstanceCountToBeUpdated(
+        pcfSetupContextElement.getMaxInstanceCount(), instanceCount, instanceUnitType, true);
   }
 
   protected Integer getDownsizeUpdateCount(Integer updateCount, PcfSetupContextElement pcfSetupContextElement) {
@@ -219,19 +218,23 @@ public class PcfDeployState extends State {
     Integer downsizeUpdateCount = updateCount;
     if (downsizeInstanceCount != null) {
       downsizeUpdateCount = getInstanceCountToBeUpdated(
-          pcfSetupContextElement.getMaxInstanceCount(), downsizeInstanceCount, downsizeInstanceUnitType);
+          pcfSetupContextElement.getMaxInstanceCount(), downsizeInstanceCount, downsizeInstanceUnitType, false);
     }
 
     return downsizeUpdateCount;
   }
 
   private Integer getInstanceCountToBeUpdated(
-      Integer maxInstanceCount, Integer instanceCountValue, InstanceUnitType unitType) {
+      Integer maxInstanceCount, Integer instanceCountValue, InstanceUnitType unitType, boolean upsize) {
     Integer updateCount;
     if (unitType == PERCENTAGE) {
       int percent = Math.min(instanceCountValue, 100);
       int count = (int) Math.round((percent * maxInstanceCount) / 100.0);
-      updateCount = Math.max(count, 1);
+      if (upsize) {
+        updateCount = Math.max(count, 1);
+      } else {
+        updateCount = Math.max(count, 0);
+      }
     } else {
       updateCount = instanceCountValue;
     }
@@ -261,7 +264,6 @@ public class PcfDeployState extends State {
         .accountId(application.getAccountId())
         .newReleaseName(pcfSetupContextElement.getNewPcfApplicationName())
         .timeoutIntervalInMin(pcfSetupContextElement.getTimeoutIntervalInMinutes())
-        .isBlueGreenDeployment(pcfSetupContextElement.isBlueGreenDeployment())
         .build();
   }
 
