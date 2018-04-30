@@ -18,10 +18,10 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InfraMappingSummary;
 import software.wings.sm.PipelineSummary;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.time.Duration;
-import java.util.Date;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -546,13 +546,11 @@ public class WorkflowExecution extends Base {
 
   public String prepareDisplayName() {
     String dateSuffix = "";
-    if (getCreatedAt() == 0) {
-      try {
-        DateFormat df = new SimpleDateFormat(Constants.WORKFLOW_NAME_DATE_FORMAT);
-        dateSuffix = "-" + df.format(new Date(getCreatedAt()));
-      } catch (Exception e) {
-        // ignore
-      }
+    if (getCreatedAt() != 0) {
+      dateSuffix = " - "
+          + Instant.ofEpochMilli(getCreatedAt())
+                .atZone(ZoneId.of("America/Los_Angeles"))
+                .format(DateTimeFormatter.ofPattern(Constants.WORKFLOW_NAME_DATE_FORMAT));
     }
     return name + dateSuffix;
   }
