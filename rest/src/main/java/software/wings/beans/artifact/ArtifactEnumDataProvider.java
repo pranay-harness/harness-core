@@ -1,5 +1,6 @@
 package software.wings.beans.artifact;
 
+import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.common.collect.ImmutableMap;
@@ -7,7 +8,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import software.wings.beans.EntityType;
-import software.wings.beans.SearchFilter;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.stencils.DataProvider;
 
@@ -23,7 +23,8 @@ public class ArtifactEnumDataProvider implements DataProvider {
     Optional<ArtifactStream> artifactStream =
         artifactStreamService
             .list(aPageRequest()
-                      .addFilter("serviceId", SearchFilter.Operator.EQ, params.get(EntityType.SERVICE.name()))
+                      .addFilter("serviceId", EQ, params.get(EntityType.SERVICE.name()))
+                      .addFilter("appId", EQ, appId)
                       .build())
             .getResponse()
             .stream()

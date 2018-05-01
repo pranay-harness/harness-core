@@ -81,6 +81,9 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
       jenkinsExecutionResponse.setJenkinsResult(buildResult.toString());
       jenkinsExecutionResponse.setBuildNumber(String.valueOf(jenkinsBuildWithDetails.getNumber()));
       jenkinsExecutionResponse.setDescription(jenkinsBuildWithDetails.getDescription());
+      jenkinsExecutionResponse.setBuildDisplayName(jenkinsBuildWithDetails.getDisplayName());
+      jenkinsExecutionResponse.setBuildFullDisplayName(jenkinsBuildWithDetails.getFullDisplayName());
+
       try {
         jenkinsExecutionResponse.setJobParameters(jenkinsBuildWithDetails.getParameters());
       } catch (Exception e) { // cause buildWithDetails.getParameters() can throw NPE

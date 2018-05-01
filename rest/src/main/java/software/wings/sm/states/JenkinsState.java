@@ -285,6 +285,8 @@ public class JenkinsState extends State {
     jenkinsExecutionData.setErrorMsg(jenkinsExecutionResponse.getErrorMessage());
     jenkinsExecutionData.setBuildUrl(jenkinsExecutionResponse.getJobUrl());
     jenkinsExecutionData.setBuildNumber(jenkinsExecutionResponse.getBuildNumber());
+    jenkinsExecutionData.setBuildDisplayName(jenkinsExecutionResponse.getBuildDisplayName());
+    jenkinsExecutionData.setBuildFullDisplayName(jenkinsExecutionResponse.getBuildFullDisplayName());
     jenkinsExecutionData.setDescription(jenkinsExecutionResponse.getDescription());
     jenkinsExecutionData.setMetadata(jenkinsExecutionResponse.getMetadata());
     return anExecutionResponse()
@@ -385,5 +387,7 @@ public class JenkinsState extends State {
     private Map<String, String> metadata;
     private Map<String, String> jobParameters;
     private String description;
+    private String buildDisplayName;
+    private String buildFullDisplayName;
   }
 }

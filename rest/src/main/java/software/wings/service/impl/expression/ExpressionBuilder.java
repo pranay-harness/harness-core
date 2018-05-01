@@ -59,6 +59,7 @@ public abstract class ExpressionBuilder {
   protected static final String ARTIFACT_BUCKET_NAME = "artifact.bucketName";
   protected static final String ARTIFACT_BUCKET_KEY = "artifact.key";
   protected static final String ARTIFACT_BUCKET_URL = "artifact.url";
+  protected static final String ARTIFACT_BUILD_FULL_DISPLAYNAME = "artifact.buildFullDisplayName";
 
   protected static final String ENV_NAME = "env.name";
   protected static final String ENV_DESCRIPTION = "env.description";
@@ -133,8 +134,8 @@ public abstract class ExpressionBuilder {
   Set<String> getStaticExpressions() {
     Set<String> expressions = new TreeSet<>();
     expressions.addAll(asList(APP_NAME, APP_DESCRIPTION));
-    expressions.addAll(
-        asList(ARTIFACT_NAME, ARTIFACT_BUILDNO, ARTIFACT_REVISION, ARTIFACT_DESCRIPTION, ARTIFACT_FILE_NAME));
+    expressions.addAll(asList(ARTIFACT_NAME, ARTIFACT_BUILDNO, ARTIFACT_REVISION, ARTIFACT_DESCRIPTION,
+        ARTIFACT_FILE_NAME, ARTIFACT_BUILD_FULL_DISPLAYNAME));
     expressions.addAll(asList(ENV_NAME, ENV_DESCRIPTION));
     expressions.addAll(asList(SERVICE_NAME, SERVICE_DESCRIPTION));
     expressions.addAll(asList(WORKFLOW_NAME, WORKFLOW_DESCRIPTION, WORKFLOW_DISPLAY_NAME, WORKFLOW_RELEASE_NO,

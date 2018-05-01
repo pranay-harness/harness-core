@@ -318,7 +318,9 @@ public class JenkinsImpl implements Jenkins {
                                     .withNumber(String.valueOf(buildWithDetails.getNumber()))
                                     .withRevision(extractRevision(buildWithDetails))
                                     .withDescription(buildWithDetails.getDescription())
+                                    .withBuildDisplayName(buildWithDetails.getDisplayName())
                                     .withBuildUrl(buildWithDetails.getUrl())
+                                    .withBuildFullDisplayName(buildWithDetails.getFullDisplayName())
                                     .build();
     populateBuildParams(buildWithDetails, buildDetails);
     return buildDetails;

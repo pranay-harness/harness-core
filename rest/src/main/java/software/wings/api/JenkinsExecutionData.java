@@ -25,6 +25,8 @@ public class JenkinsExecutionData extends StateExecutionData implements NotifyRe
   private String activityId;
   private Map<String, String> metadata;
   private String buildNumber;
+  private String buildDisplayName;
+  private String buildFullDisplayName;
   private String description;
 
   @Override
@@ -56,6 +58,13 @@ public class JenkinsExecutionData extends StateExecutionData implements NotifyRe
         executionDetails, "jobStatus", ExecutionDataValue.builder().displayName("Job Status").value(jobStatus).build());
     putNotNull(executionDetails, "buildNumber",
         ExecutionDataValue.builder().displayName("Build Number").value(buildNumber).build());
+
+    putNotNull(executionDetails, "buildDisplayName",
+        ExecutionDataValue.builder().displayName("Build DisplayName").value(buildDisplayName).build());
+
+    putNotNull(executionDetails, "buildFullDisplayName",
+        ExecutionDataValue.builder().displayName("Build Full DisplayName").value(buildFullDisplayName).build());
+
     putNotNull(executionDetails, "description",
         ExecutionDataValue.builder().displayName("Description").value(description).build());
     putNotNull(

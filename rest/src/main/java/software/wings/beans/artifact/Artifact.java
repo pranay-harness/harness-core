@@ -3,6 +3,7 @@ package software.wings.beans.artifact;
 import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
 import static software.wings.common.Constants.ARTIFACT_PATH;
 import static software.wings.common.Constants.BUCKET_NAME;
+import static software.wings.common.Constants.BUILD_FULL_DISPLAY_NAME;
 import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.common.Constants.KEY;
 import static software.wings.common.Constants.URL;
@@ -120,13 +121,23 @@ public class Artifact extends Base {
   }
 
   /**
-   * Gets Key
-   *
-   * @return the bucket name
+   * Gets artifact file Name
+   * @return
    */
   public String getArtifactFileName() {
     if (getMetadata() != null) {
       return getMetadata().get(ARTIFACT_FILE_NAME);
+    }
+    return null;
+  }
+
+  /**
+   * Gets Full build display name
+   * @return
+   */
+  public String getBuildFullDisplayName() {
+    if (getMetadata() != null) {
+      return getMetadata().get(BUILD_FULL_DISPLAY_NAME);
     }
     return null;
   }
