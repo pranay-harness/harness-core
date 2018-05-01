@@ -7,7 +7,7 @@ metadata:
   name: harness-delegate-accoun
   namespace: harness-delegate
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       harness.io/app: harness-delegate
@@ -26,7 +26,7 @@ spec:
         resources:
           limits:
             cpu: "2"
-            memory: 6000Mi
+            memory: 8000Mi
         env:
         - name: ACCOUNT_ID
           value: ACCOUNT_ID

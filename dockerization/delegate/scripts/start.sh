@@ -58,6 +58,12 @@ then
   ln -s $JRE_DIR jre
 fi
 
+if [ ! -d $JRE_DIR  -o ! -d jre -o ! -e $JRE_BINARY ]
+then
+  echo "No JRE available. Exiting."
+  exit 1
+fi
+
 echo "Checking Watcher latest version..."
 WATCHER_STORAGE_URL=_watcherStorageUrl_
 REMOTE_WATCHER_LATEST=$(curl -#k $WATCHER_STORAGE_URL/_watcherCheckLocation_)
@@ -139,6 +145,7 @@ else
     then
       echo "Failed to start Watcher."
       echo "$(cat nohup-watcher.out)"
+      exit 1
     else
       sleep 3
       if `pgrep -f "\-Dwatchersourcedir=$DIR"> /dev/null`
@@ -147,6 +154,7 @@ else
       else
         echo "Failed to start Watcher."
         echo "$(tail -n 30 watcher.log)"
+        exit 1
       fi
     fi
   fi

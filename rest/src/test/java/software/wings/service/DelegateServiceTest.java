@@ -267,7 +267,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldDownloadZip() throws IOException, TemplateException {
+  public void shouldDownloadScripts() throws IOException, TemplateException {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
     File zipFile = delegateService.downloadScripts("https://localhost:9090", ACCOUNT_ID);
