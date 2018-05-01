@@ -6,16 +6,31 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-/**
- * Created by peeyushaggarwal on 5/12/16.
- */
 public class BuildDetails {
   private String number;
   private String revision;
   private String description;
   private String artifactPath;
   private String buildUrl;
+  private String buildDisplayName;
+  private String buildFullDisplayName;
   private Map<String, String> buildParameters = new HashMap<>();
+
+  public String getBuildDisplayName() {
+    return buildDisplayName;
+  }
+
+  public void setBuildDisplayName(String buildDisplayName) {
+    this.buildDisplayName = buildDisplayName;
+  }
+
+  public String getBuildFullDisplayName() {
+    return buildFullDisplayName;
+  }
+
+  public void setBuildFullDisplayName(String buildFullDisplayName) {
+    this.buildFullDisplayName = buildFullDisplayName;
+  }
 
   /**
    * Gets number.
@@ -146,6 +161,8 @@ public class BuildDetails {
     private Map<String, String> buildParameters = new HashMap<>();
     private String artifactPath;
     private String buildUrl;
+    private String buildDisplayName;
+    private String buildFullDisplayName;
 
     private Builder() {}
 
@@ -215,6 +232,16 @@ public class BuildDetails {
       return this;
     }
 
+    public Builder withBuildDisplayName(String buildDisplayName) {
+      this.buildDisplayName = buildDisplayName;
+      return this;
+    }
+
+    public Builder withBuildFullDisplayName(String buildFullDisplayName) {
+      this.buildFullDisplayName = buildFullDisplayName;
+      return this;
+    }
+
     /**
      * But builder.
      *
@@ -227,7 +254,9 @@ public class BuildDetails {
           .withDescription(description)
           .withArtifactPath(artifactPath)
           .withBuildParameters(buildParameters)
-          .withBuildUrl(buildUrl);
+          .withBuildUrl(buildUrl)
+          .withBuildDisplayName(buildDisplayName)
+          .withBuildFullDisplayName(buildFullDisplayName);
     }
 
     /**
@@ -243,6 +272,8 @@ public class BuildDetails {
       buildDetails.setBuildParameters(buildParameters);
       buildDetails.setArtifactPath(artifactPath);
       buildDetails.setBuildUrl(buildUrl);
+      buildDetails.setBuildDisplayName(buildDisplayName);
+      buildDetails.setBuildFullDisplayName(buildFullDisplayName);
       return buildDetails;
     }
   }

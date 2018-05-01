@@ -88,7 +88,11 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getAppId()).isNotEmpty();
 
-    assertThat(savedArtifactSteam.getArtifactDisplayName("")).isNotEmpty().contains("todolistwar");
+    String artifactDisplayName = savedArtifactSteam.getArtifactDisplayName("40");
+    assertThat(artifactDisplayName).isNotEmpty().contains("todolistwar");
+    String[] values = artifactDisplayName.split("_");
+    assertThat(values).hasSize(3);
+    assertThat(values[0]).isEqualTo("todolistwar");
     assertThat(savedArtifactSteam.getSourceName()).isEqualTo("todolistwar");
     assertThat(savedArtifactSteam).isInstanceOf(JenkinsArtifactStream.class);
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(JENKINS.name());

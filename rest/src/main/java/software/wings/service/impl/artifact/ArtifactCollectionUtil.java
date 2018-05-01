@@ -1,5 +1,6 @@
 package software.wings.service.impl.artifact;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
@@ -8,6 +9,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.JENKINS;
 import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
 import static software.wings.common.Constants.ARTIFACT_PATH;
 import static software.wings.common.Constants.BUCKET_NAME;
+import static software.wings.common.Constants.BUILD_FULL_DISPLAY_NAME;
 import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.common.Constants.KEY;
 import static software.wings.common.Constants.URL;
@@ -35,6 +37,9 @@ public class ArtifactCollectionUtil {
   }
 
   public static String getDisplayName(ArtifactStream artifactStream, BuildDetails buildDetails) {
+    if (isNotEmpty(buildDetails.getBuildDisplayName())) {
+      return buildDetails.getBuildDisplayName();
+    }
     if (artifactStream.getArtifactStreamType().equals(ARTIFACTORY.name())) {
       if (buildDetails.getArtifactPath() != null) {
         return artifactStream.getArtifactDisplayName("");
@@ -42,7 +47,8 @@ public class ArtifactCollectionUtil {
     } else if (artifactStream.getArtifactStreamType().equals(AMAZON_S3.name())) {
       return artifactStream.getArtifactDisplayName("");
     }
-    return artifactStream.getArtifactDisplayName(artifactStream.getArtifactDisplayName(buildDetails.getNumber()));
+
+    return artifactStream.getArtifactDisplayName(buildDetails.getNumber());
   }
 
   public static Map<String, String> getMetadata(String artifactStreamType, BuildDetails buildDetails) {
@@ -66,6 +72,7 @@ public class ArtifactCollectionUtil {
     } else if (artifactStreamType.equals(JENKINS.name()) || artifactStreamType.equals(BAMBOO.name())) {
       metadata = buildDetails.getBuildParameters();
       metadata.put(BUILD_NO, buildDetails.getNumber());
+      metadata.put(BUILD_FULL_DISPLAY_NAME, buildDetails.getBuildFullDisplayName());
       metadata.put(URL, buildDetails.getBuildUrl());
       return metadata;
     }

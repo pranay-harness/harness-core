@@ -462,9 +462,11 @@ public interface Constants {
   int DEFAULT_STEADY_STATE_TIMEOUT = 10;
 
   /**
-   * The constant BUILD_NO.
+   * The constant reserved for BuildNO
    */
   String BUILD_NO = "buildNo";
+
+  String BUILD_FULL_DISPLAY_NAME = "buildFullDisplayName";
 
   /**
    * The constant BUCKET_NAME.
