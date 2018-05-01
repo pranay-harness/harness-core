@@ -24,10 +24,10 @@ public class SplunkDataCollectionInfo extends LogDataCollectionInfo {
   @Builder
   public SplunkDataCollectionInfo(SplunkConfig splunkConfig, String accountId, String applicationId,
       String stateExecutionId, String workflowId, String workflowExecutionId, String serviceId, Set<String> queries,
-      long startTime, int startMinute, int collectionTime, Set<String> hosts,
+      long startTime, int startMinute, int collectionTime, String hostnameField, Set<String> hosts,
       List<EncryptedDataDetail> encryptedDataDetails) {
     super(accountId, applicationId, stateExecutionId, workflowId, workflowExecutionId, serviceId, queries, startTime,
-        startMinute, collectionTime, hosts, StateType.SPLUNKV2, encryptedDataDetails);
+        startMinute, collectionTime, hostnameField, hosts, StateType.SPLUNKV2, encryptedDataDetails);
     this.splunkConfig = splunkConfig;
   }
 }

@@ -19,6 +19,7 @@ import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import software.wings.api.CanaryWorkflowStandardParams;
 import software.wings.api.InstanceElement;
+import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.ServiceElement;
@@ -28,6 +29,7 @@ import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SortOrder.OrderType;
@@ -40,6 +42,7 @@ import software.wings.common.TemplateExpressionProcessor;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.dl.WingsDeque;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.InvalidRequestException;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -58,6 +61,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionBaselineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -191,10 +195,15 @@ public abstract class AbstractAnalysisState extends State {
     String serviceId = phaseElement.getServiceElement().getUuid();
     String infraMappingId = phaseElement.getInfraMappingId();
 
+    InfrastructureMapping infrastructureMapping = infraMappingService.get(context.getAppId(), infraMappingId);
+
+    if (infrastructureMapping instanceof PcfInfrastructureMapping) {
+      return getPcfApplicationIds(context, true);
+    }
+
     Set<String> phaseHosts = getHostsDeployedSoFar(context, serviceId);
     getLogger().info("Deployed hosts so far: {}", phaseHosts);
 
-    InfrastructureMapping infrastructureMapping = infraMappingService.get(context.getAppId(), infraMappingId);
     if (containerInstanceHelper.isContainerDeployment(infrastructureMapping)) {
       Set<String> containerServiceNames =
           containerInstanceHelper.getContainerServiceNames(context, serviceId, infraMappingId);
@@ -361,6 +370,14 @@ public abstract class AbstractAnalysisState extends State {
   }
 
   protected Set<String> getCanaryNewHostNames(ExecutionContext context) {
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    String infraMappingId = phaseElement.getInfraMappingId();
+
+    InfrastructureMapping infrastructureMapping = infraMappingService.get(context.getAppId(), infraMappingId);
+    if (infrastructureMapping instanceof PcfInfrastructureMapping) {
+      return getPcfApplicationIds(context, false);
+    }
+
     CanaryWorkflowStandardParams canaryWorkflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Set<String> rv = new HashSet<>();
     if (isEmpty(canaryWorkflowStandardParams.getInstances())) {
@@ -375,6 +392,27 @@ public abstract class AbstractAnalysisState extends State {
         rv.add(context.renderExpression(hostnameTemplate, Lists.newArrayList(instanceElement)));
       }
     }
+    return rv;
+  }
+
+  private Set<String> getPcfApplicationIds(ExecutionContext context, boolean includePrevious) {
+    StateExecutionInstance stateExecutionInstance = ((ExecutionContextImpl) context).getStateExecutionInstance();
+    WingsDeque<ContextElement> contextElements = stateExecutionInstance.getContextElements();
+    Set<String> rv = new HashSet<>();
+    if (isEmpty(contextElements)) {
+      return rv;
+    }
+
+    contextElements.forEach(contextElement -> {
+      if (contextElement instanceof InstanceElementListParam) {
+        InstanceElementListParam instances = (InstanceElementListParam) contextElement;
+        instances.getPcfInstanceElements().forEach(pcfInstanceElement -> {
+          if (includePrevious || !pcfInstanceElement.getInstanceIndex().equals("-1")) {
+            rv.add(pcfInstanceElement.getApplicationId());
+          }
+        });
+      }
+    });
     return rv;
   }
 

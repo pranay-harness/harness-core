@@ -21,7 +21,6 @@ import java.util.Set;
 public class ElkDataCollectionInfo extends LogDataCollectionInfo {
   private ElkConfig elkConfig;
   private String indices;
-  private String hostnameField;
   private String messageField;
   private String timestampField;
   private String timestampFieldFormat;
@@ -30,14 +29,13 @@ public class ElkDataCollectionInfo extends LogDataCollectionInfo {
   @Builder
   public ElkDataCollectionInfo(ElkConfig elkConfig, String accountId, String applicationId, String stateExecutionId,
       String workflowId, String workflowExecutionId, String serviceId, Set<String> queries, String indices,
-      String hostnameField, String messageField, String timestampField, String timestampFieldFormat,
-      ElkQueryType queryType, long startTime, int startMinute, int collectionTime, Set<String> hosts,
+      String messageField, String timestampField, String timestampFieldFormat, ElkQueryType queryType, long startTime,
+      int startMinute, int collectionTime, String hostnameField, Set<String> hosts,
       List<EncryptedDataDetail> encryptedDataDetails) {
     super(accountId, applicationId, stateExecutionId, workflowId, workflowExecutionId, serviceId, queries, startTime,
-        startMinute, collectionTime, hosts, StateType.ELK, encryptedDataDetails);
+        startMinute, collectionTime, hostnameField, hosts, StateType.ELK, encryptedDataDetails);
     this.elkConfig = elkConfig;
     this.indices = indices;
-    this.hostnameField = hostnameField;
     this.messageField = messageField;
     this.timestampField = timestampField;
     this.timestampFieldFormat = timestampFieldFormat;

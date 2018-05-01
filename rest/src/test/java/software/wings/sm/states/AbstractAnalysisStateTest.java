@@ -230,9 +230,14 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     ExecutionContext context = Mockito.mock(ExecutionContext.class);
     CanaryWorkflowStandardParams params = Mockito.mock(CanaryWorkflowStandardParams.class);
     doReturn(instanceElements).when(params).getInstances();
+    when(context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM))
+        .thenReturn(aPhaseElement().withInfraMappingId(UUID.randomUUID().toString()).build());
+    when(context.getAppId()).thenReturn(appId);
 
     doReturn(params).when(context).getContextElement(ContextElementType.STANDARD);
     SplunkV2State splunkV2State = spy(new SplunkV2State("SplunkState"));
+
+    setInternalState(splunkV2State, "infraMappingService", infraMappingService);
     Set<String> nodes = splunkV2State.getCanaryNewHostNames(context);
     assertEquals(5, nodes.size());
     for (int i = 0; i < 5; ++i) {
