@@ -213,7 +213,9 @@ public class MapRouteState extends State {
     if (isNewApplication) {
       appNames.add(pcfSetupContextElement.getNewPcfApplicationName());
     } else {
-      appNames.addAll(pcfSetupContextElement.getAppsToBeDownsized());
+      appNames.addAll(pcfSetupContextElement.getAppsToBeDownsized() == null
+              ? Collections.EMPTY_LIST
+              : pcfSetupContextElement.getAppsToBeDownsized());
     }
 
     return appNames;
