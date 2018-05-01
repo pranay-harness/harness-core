@@ -218,6 +218,11 @@ public class PcfSetupState extends State {
                                         : Misc.normalizeExpression(ServiceVersionConvention.getPrefix(
                                               app.getName(), serviceElement.getName(), env.getName()));
 
+    Map<String, String> serviceVariables = context.getServiceVariables();
+    if (serviceVariables != null) {
+      serviceVariables.entrySet().forEach(entry -> { entry.setValue(context.renderExpression(entry.getValue())); });
+    }
+
     PcfCommandRequest commandRequest =
         PcfCommandSetupRequest.builder()
             .activityId(activity.getUuid())
@@ -233,7 +238,7 @@ public class PcfSetupState extends State {
             .workflowExecutionId(context.getWorkflowExecutionId())
             .artifactFiles(artifact.getArtifactFiles())
             .routeMaps(isOriginalRoute ? routeMaps : tempRouteMaps)
-            .serviceVariables(context.getServiceVariables())
+            .serviceVariables(serviceVariables)
             .timeoutIntervalInMin(timeoutIntervalInMinutes == null ? 5 : timeoutIntervalInMinutes)
             .maxCount(maxInstances)
             .build();
