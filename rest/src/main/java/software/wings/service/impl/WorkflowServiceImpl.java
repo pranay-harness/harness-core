@@ -1959,10 +1959,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       return requiredEntityTypes;
     }
 
-    if (workflowPhase.getDeploymentType() != null && workflowPhase.getDeploymentType().equals(DeploymentType.WINRM)) {
-      return requiredEntityTypes;
-    }
-
     if (workflowPhase.getInfraMappingId() != null) {
       InfrastructureMapping infrastructureMapping =
           infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
