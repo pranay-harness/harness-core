@@ -30,7 +30,7 @@ public interface WingsTestConstants {
 
   String ARTIFACT_ID = "ARTIFACT_ID";
 
-  String ARTIFACT_NAME = "ARTIFACT_NAME";
+  String ARTIFACT_NAME = "ARTIFACT_DISPLAY_NAME";
 
   String ARTIFACT_STREAM_ID = "ARTIFACT_STREAM_ID";
 
