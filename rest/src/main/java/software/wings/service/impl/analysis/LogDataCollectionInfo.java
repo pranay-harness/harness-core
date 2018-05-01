@@ -25,6 +25,7 @@ public abstract class LogDataCollectionInfo {
   private long startTime;
   private int startMinute;
   private int collectionTime;
+  private String hostnameField;
   private Set<String> hosts;
   private StateType stateType;
   List<EncryptedDataDetail> encryptedDataDetails;

@@ -24,13 +24,17 @@ import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
 import software.wings.sm.StateType;
 import software.wings.waitnotify.NotifyResponseData;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -141,16 +145,9 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
           int retry = 0;
           while (!completed.get() && retry < RETRIES) {
             try {
-              String hostStr = null;
               final List<LogElement> logElements = new ArrayList<>();
+              final List<Callable<List<LogElement>>> callables = new ArrayList<>();
               for (String host : dataCollectionInfo.getHosts()) {
-                if (hostStr == null) {
-                  hostStr = "host = " + host;
-                } else {
-                  hostStr += " OR "
-                      + " host = " + host;
-                }
-
                 /* Heart beat */
                 final LogElement splunkHeartBeatElement = new LogElement();
                 splunkHeartBeatElement.setQuery(query);
@@ -161,54 +158,16 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
                 splunkHeartBeatElement.setTimeStamp(0);
                 splunkHeartBeatElement.setLogCollectionMinute(logCollectionMinute);
                 logElements.add(splunkHeartBeatElement);
+                callables.add(() -> fetchLogsForHost(host, query));
               }
 
-              if (hostStr == null) {
-                throw new IllegalArgumentException("No hosts found for SplunkV2Task " + dataCollectionInfo.toString());
-              }
+              List<Optional<List<LogElement>>> results = executeParrallel(callables);
+              results.forEach(result -> {
+                if (result.isPresent()) {
+                  logElements.addAll(result.get());
+                }
+              });
 
-              hostStr = " (" + hostStr + ") ";
-
-              final String searchQuery = "search " + query + hostStr
-                  + " | bin _time span=1m | cluster t=0.9999 showcount=t labelonly=t"
-                  + "| table _time, _raw,cluster_label, host | "
-                  + "stats latest(_raw) as _raw count as cluster_count by _time,cluster_label,host";
-
-              JobArgs jobargs = new JobArgs();
-              jobargs.setExecutionMode(JobArgs.ExecutionMode.BLOCKING);
-
-              jobargs.setEarliestTime(String.valueOf(TimeUnit.MILLISECONDS.toSeconds(collectionStartTime)));
-              final long endTime = collectionStartTime + TimeUnit.MINUTES.toMillis(1) - 1;
-              jobargs.setLatestTime(String.valueOf(TimeUnit.MILLISECONDS.toSeconds(endTime)));
-
-              // A blocking search returns the job when the search is done
-              logger.info("triggering splunk query startTime: " + collectionStartTime + " endTime: " + endTime
-                  + " query: " + searchQuery);
-              Job job = splunkService.getJobs().create(searchQuery, jobargs);
-              logger.info("splunk query done. Num of events: " + job.getEventCount()
-                  + " application: " + dataCollectionInfo.getApplicationId()
-                  + " stateExecutionId: " + dataCollectionInfo.getStateExecutionId());
-
-              JobResultsArgs resultsArgs = new JobResultsArgs();
-              resultsArgs.setOutputMode(JobResultsArgs.OutputMode.JSON);
-
-              InputStream results = job.getResults(resultsArgs);
-              ResultsReaderJson resultsReader = new ResultsReaderJson(results);
-              Map<String, String> event;
-
-              while ((event = resultsReader.getNextEvent()) != null) {
-                final LogElement splunkLogElement = new LogElement();
-                splunkLogElement.setQuery(query);
-                splunkLogElement.setClusterLabel(event.get("cluster_label"));
-                splunkLogElement.setHost(event.get("host"));
-                splunkLogElement.setCount(Integer.parseInt(event.get("cluster_count")));
-                splunkLogElement.setLogMessage(event.get("_raw"));
-                splunkLogElement.setTimeStamp(SPLUNK_DATE_FORMATER.parse(event.get("_time")).getTime());
-                splunkLogElement.setLogCollectionMinute(logCollectionMinute);
-                logElements.add(splunkLogElement);
-              }
-
-              resultsReader.close();
               boolean response = logAnalysisStoreService.save(StateType.SPLUNKV2, dataCollectionInfo.getAccountId(),
                   dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(),
                   dataCollectionInfo.getWorkflowId(), dataCollectionInfo.getWorkflowExecutionId(),
@@ -223,7 +182,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
                 }
                 continue;
               }
-              logger.info("sent splunk search records to server. Num of events: " + job.getEventCount()
+              logger.info("sent splunk search records to server. Num of events: " + logElements.size()
                   + " application: " + dataCollectionInfo.getApplicationId() + " stateExecutionId: "
                   + dataCollectionInfo.getStateExecutionId() + " minute: " + logCollectionMinute);
               break;
@@ -264,6 +223,53 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
         shutDownCollection();
         return;
       }
+    }
+
+    private List<LogElement> fetchLogsForHost(String host, String query) throws IOException, ParseException {
+      final List<LogElement> logElements = new ArrayList<>();
+
+      final String searchQuery = "search " + query + " " + dataCollectionInfo.getHostnameField() + " = " + host
+          + " | bin _time span=1m | cluster t=0.9999 showcount=t labelonly=t"
+          + "| table _time, _raw,cluster_label, host | "
+          + "stats latest(_raw) as _raw count as cluster_count by _time,cluster_label,host";
+
+      JobArgs jobargs = new JobArgs();
+      jobargs.setExecutionMode(JobArgs.ExecutionMode.BLOCKING);
+
+      jobargs.setEarliestTime(String.valueOf(TimeUnit.MILLISECONDS.toSeconds(collectionStartTime)));
+      final long endTime = collectionStartTime + TimeUnit.MINUTES.toMillis(1) - 1;
+      jobargs.setLatestTime(String.valueOf(TimeUnit.MILLISECONDS.toSeconds(endTime)));
+
+      // A blocking search returns the job when the search is done
+      logger.info("triggering splunk query startTime: " + collectionStartTime + " endTime: " + endTime
+          + " query: " + searchQuery);
+      Job job = splunkService.getJobs().create(searchQuery, jobargs);
+      logger.info("splunk query done. Num of events: " + job.getEventCount() + " application: "
+          + dataCollectionInfo.getApplicationId() + " stateExecutionId: " + dataCollectionInfo.getStateExecutionId());
+
+      JobResultsArgs resultsArgs = new JobResultsArgs();
+      resultsArgs.setOutputMode(JobResultsArgs.OutputMode.JSON);
+
+      InputStream results = job.getResults(resultsArgs);
+      ResultsReaderJson resultsReader = new ResultsReaderJson(results);
+      Map<String, String> event;
+
+      while ((event = resultsReader.getNextEvent()) != null) {
+        final LogElement splunkLogElement = new LogElement();
+        splunkLogElement.setQuery(query);
+        splunkLogElement.setClusterLabel(event.get("cluster_label"));
+        splunkLogElement.setHost(host);
+        splunkLogElement.setCount(Integer.parseInt(event.get("cluster_count")));
+        splunkLogElement.setLogMessage(event.get("_raw"));
+        splunkLogElement.setTimeStamp(SPLUNK_DATE_FORMATER.parse(event.get("_time")).getTime());
+        splunkLogElement.setLogCollectionMinute(logCollectionMinute);
+        logElements.add(splunkLogElement);
+      }
+
+      resultsReader.close();
+
+      logger.info("for host {} got records {}", host, logElements.size());
+      return logElements;
     }
   }
 }

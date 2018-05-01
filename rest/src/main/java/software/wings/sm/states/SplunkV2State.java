@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
@@ -88,6 +89,19 @@ public class SplunkV2State extends AbstractLogAnalysisState {
     return query;
   }
 
+  @DefaultValue("host")
+  @Attributes(required = true, title = "Field name for Host/Container")
+  public String getHostnameField() {
+    if (isEmpty(hostnameField)) {
+      return "host";
+    }
+    return hostnameField;
+  }
+
+  public void setHostnameField(String hostnameField) {
+    this.hostnameField = hostnameField;
+  }
+
   @Attributes(required = false, title = "Expression for Host/Container name")
   public String getHostnameTemplate() {
     return hostnameTemplate;
@@ -127,6 +141,7 @@ public class SplunkV2State extends AbstractLogAnalysisState {
               .startTime(logCollectionStartTimeStamp)
               .startMinute(0)
               .collectionTime(Integer.parseInt(timeDuration))
+              .hostnameField(getHostnameField())
               .hosts(hostBatch)
               .encryptedDataDetails(secretManager.getEncryptionDetails(
                   splunkConfig, context.getAppId(), context.getWorkflowExecutionId()))
