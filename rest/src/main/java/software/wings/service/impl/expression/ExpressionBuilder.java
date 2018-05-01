@@ -51,15 +51,16 @@ public abstract class ExpressionBuilder {
   protected static final String APP_NAME = "app.name";
   protected static final String APP_DESCRIPTION = "app.description";
 
-  protected static final String ARTIFACT_NAME = "artifact.displayName";
+  protected static final String ARTIFACT_DISPLAY_NAME = "artifact.displayName";
   protected static final String ARTIFACT_DESCRIPTION = "artifact.description";
   protected static final String ARTIFACT_BUILDNO = "artifact.buildNo";
   protected static final String ARTIFACT_REVISION = "artifact.revision";
   protected static final String ARTIFACT_FILE_NAME = "ARTIFACT_FILE_NAME";
   protected static final String ARTIFACT_BUCKET_NAME = "artifact.bucketName";
   protected static final String ARTIFACT_BUCKET_KEY = "artifact.key";
-  protected static final String ARTIFACT_BUCKET_URL = "artifact.url";
+  protected static final String ARTIFACT_URL = "artifact.url";
   protected static final String ARTIFACT_BUILD_FULL_DISPLAYNAME = "artifact.buildFullDisplayName";
+  protected static final String ARTIFACT_PATH = "artifact.artifactPath";
 
   protected static final String ENV_NAME = "env.name";
   protected static final String ENV_DESCRIPTION = "env.description";
@@ -134,8 +135,8 @@ public abstract class ExpressionBuilder {
   Set<String> getStaticExpressions() {
     Set<String> expressions = new TreeSet<>();
     expressions.addAll(asList(APP_NAME, APP_DESCRIPTION));
-    expressions.addAll(asList(ARTIFACT_NAME, ARTIFACT_BUILDNO, ARTIFACT_REVISION, ARTIFACT_DESCRIPTION,
-        ARTIFACT_FILE_NAME, ARTIFACT_BUILD_FULL_DISPLAYNAME));
+    expressions.addAll(asList(ARTIFACT_DISPLAY_NAME, ARTIFACT_BUILDNO, ARTIFACT_REVISION, ARTIFACT_DESCRIPTION,
+        ARTIFACT_FILE_NAME, ARTIFACT_BUILD_FULL_DISPLAYNAME, ARTIFACT_BUCKET_NAME, ARTIFACT_BUCKET_KEY, ARTIFACT_URL));
     expressions.addAll(asList(ENV_NAME, ENV_DESCRIPTION));
     expressions.addAll(asList(SERVICE_NAME, SERVICE_DESCRIPTION));
     expressions.addAll(asList(WORKFLOW_NAME, WORKFLOW_DESCRIPTION, WORKFLOW_DISPLAY_NAME, WORKFLOW_RELEASE_NO,
@@ -173,7 +174,7 @@ public abstract class ExpressionBuilder {
         expressions.addAll(asList(WINGS_RUNTIME_PATH, WINGS_STAGING_PATH, WINGS_BACKUP_PATH));
         break;
       case AWS_CODEDEPLOY_STATE:
-        expressions.addAll(asList(ARTIFACT_BUCKET_NAME, ARTIFACT_BUCKET_KEY, ARTIFACT_BUCKET_URL));
+        expressions.addAll(asList(ARTIFACT_BUCKET_NAME, ARTIFACT_BUCKET_KEY, ARTIFACT_URL));
         break;
       case AWS_LAMBDA_STATE:
       case ECS_SERVICE_SETUP:
