@@ -187,8 +187,6 @@ public abstract class ExpressionBuilder {
       case PCF_SETUP:
       case PCF_RESIZE:
       case PCF_ROLLBACK:
-        expressions.addAll(asList(INFRA_ROUTE, INFRA_TEMP_ROUTE));
-        break;
       case PCF_MAP_ROUTE:
       case PCF_UNMAP_ROUTE:
         expressions.addAll(asList(INFRA_ROUTE, INFRA_TEMP_ROUTE, PCF_APP_NAME, PCF_OLD_APP_NAME));
