@@ -560,7 +560,7 @@ public class StateMachineExecutor {
           ops.set("stateParams", executionEventAdvice.getStateParams());
         }
 
-        List<ExecutionStatus> existingExecutionStatus = asList(FAILED);
+        List<ExecutionStatus> existingExecutionStatus = asList(ERROR, FAILED);
         Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
                                                   .filter("appId", stateExecutionInstance.getAppId())
                                                   .filter(ID_KEY, stateExecutionInstance.getUuid())
@@ -996,7 +996,7 @@ public class StateMachineExecutor {
     stateExecutionInstance.setStatus(status);
     ops.set("status", stateExecutionInstance.getStatus());
 
-    if (status == SUCCESS || status == FAILED || status == ERROR || status == ABORTED) {
+    if (status.isFinalStatus()) {
       stateExecutionInstance.setEndTs(System.currentTimeMillis());
       ops.set("endTs", stateExecutionInstance.getEndTs());
     }
