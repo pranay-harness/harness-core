@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
@@ -9,6 +10,8 @@ import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.exception.WingsException.USER;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -16,7 +19,10 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.EntityType;
+import software.wings.beans.Environment;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
@@ -30,6 +36,7 @@ import software.wings.exception.WingsException;
 import software.wings.expression.ExpressionEvaluator;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
@@ -51,6 +58,7 @@ import javax.validation.Valid;
 public class ServiceVariableServiceImpl implements ServiceVariableService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ServiceTemplateService serviceTemplateService;
+  @Inject private EnvironmentService environmentService;
   @Inject private EntityUpdateService entityUpdateService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private YamlDirectoryService yamlDirectoryService;
@@ -96,7 +104,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
       return null;
     }
 
-    executorService.submit(() -> savewServiceVariableYamlChangeSet(serviceVariable));
+    executorService.submit(() -> saveServiceVariableYamlChangeSet(serviceVariable));
     return newServiceVariable;
   }
 
@@ -131,7 +139,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
       return null;
     }
 
-    executorService.submit(() -> savewServiceVariableYamlChangeSet(serviceVariable));
+    executorService.submit(() -> saveServiceVariableYamlChangeSet(serviceVariable));
 
     return updatedServiceVariable;
   }
@@ -142,15 +150,24 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     if (serviceVariable == null) {
       return;
     }
+    Query<ServiceVariable> query = wingsPersistence.createQuery(ServiceVariable.class)
+                                       .filter("parentServiceVariableId", settingId)
+                                       .filter(APP_ID_KEY, appId);
+    List<ServiceVariable> modified = query.asList();
+    UpdateOperations<ServiceVariable> updateOperations =
+        wingsPersistence.createUpdateOperations(ServiceVariable.class).unset("parentServiceVariableId");
+    wingsPersistence.update(query, updateOperations);
 
-    savewServiceVariableYamlChangeSet(serviceVariable);
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(ServiceVariable.class).filter(APP_ID_KEY, appId).filter(ID_KEY, settingId));
 
-    wingsPersistence.delete(wingsPersistence.createQuery(ServiceVariable.class)
-                                .filter(ServiceVariable.APP_ID_KEY, appId)
-                                .filter(ID_KEY, settingId));
+    executorService.submit(() -> {
+      saveServiceVariableYamlChangeSet(serviceVariable);
+      modified.forEach(this ::saveServiceVariableYamlChangeSet);
+    });
   }
 
-  private void savewServiceVariableYamlChangeSet(ServiceVariable serviceVariable) {
+  private void saveServiceVariableYamlChangeSet(ServiceVariable serviceVariable) {
     String accountId = appService.getAccountIdByAppId(serviceVariable.getAppId());
     if (serviceVariable.getEntityType() == EntityType.SERVICE) {
       Service service = serviceResourceService.get(serviceVariable.getAppId(), serviceVariable.getEntityId());
@@ -158,7 +175,25 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
       if (ygs != null) {
         List<GitFileChange> changeSet = new ArrayList<>();
         changeSet.add(entityUpdateService.getServiceGitSyncFile(accountId, service, ChangeType.MODIFY));
-
+        yamlChangeSetService.saveChangeSet(ygs, changeSet);
+      }
+    } else {
+      String envId = null;
+      if (serviceVariable.getEntityType() == EntityType.SERVICE_TEMPLATE) {
+        ServiceTemplate serviceTemplate =
+            serviceTemplateService.get(serviceVariable.getAppId(), serviceVariable.getEntityId());
+        notNullCheck("Service template not found for id: " + serviceVariable.getEntityId(), serviceTemplate, USER);
+        envId = serviceTemplate.getEnvId();
+      } else if (serviceVariable.getEntityType() == ENVIRONMENT) {
+        envId = serviceVariable.getEntityId();
+      }
+      notNullCheck("Environment ID not found: " + envId, envId, USER);
+      Environment env = environmentService.get(serviceVariable.getAppId(), envId, false);
+      notNullCheck("No environment found for given id: " + envId, env, USER);
+      YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+      if (ygs != null) {
+        List<GitFileChange> changeSet = new ArrayList<>();
+        changeSet.add(entityUpdateService.getEnvironmentGitSyncFile(accountId, env, ChangeType.MODIFY));
         yamlChangeSetService.saveChangeSet(ygs, changeSet);
       }
     }
