@@ -1,5 +1,12 @@
 #!/bin/bash -e
 
+if [ ! -e start.sh ]; then
+  echo
+  echo "Delegate must not be run from a different directory"
+  echo
+  exit 1
+fi
+
 JRE_DIR_OLD=jre1.8.0_131
 JRE_DIR=jre1.8.0_131_2
 JRE_BINARY=jre/bin/java
@@ -85,6 +92,12 @@ then
   ln -s $JRE_DIR jre
 fi
 
+if [ ! -d $JRE_DIR  -o ! -d jre -o ! -e $JRE_BINARY ]
+then
+  echo "No JRE available. Exiting."
+  exit 1
+fi
+
 echo "Checking Watcher latest version..."
 WATCHER_STORAGE_URL=http://localhost:8888
 REMOTE_WATCHER_LATEST=$(curl -#k $WATCHER_STORAGE_URL/watcherci.txt)
@@ -166,6 +179,7 @@ else
     then
       echo "Failed to start Watcher."
       echo "$(cat nohup-watcher.out)"
+      exit 1
     else
       sleep 3
       if `pgrep -f "\-Dwatchersourcedir=$DIR"> /dev/null`
@@ -174,6 +188,7 @@ else
       else
         echo "Failed to start Watcher."
         echo "$(tail -n 30 watcher.log)"
+        exit 1
       fi
     fi
   fi
