@@ -28,17 +28,17 @@ public class CommandStateEnumDataProvider implements DataProvider {
 
   @Override
   public Map<String, String> getData(String appId, Map<String, String> params) {
+    String serviceId = params.get(EntityType.SERVICE.name());
     if (appId != null) {
       List<Service> services;
-      if (isEmpty(params)) {
+      if (params.get("NONE") != null) {
+        return Maps.newHashMap();
+      }
+      if (isEmpty(serviceId)) {
         services = serviceResourceService.list(aPageRequest().addFilter("appId", EQ, appId).build(), false, true)
                        .getResponse();
       } else {
-        if (params.get("NONE") != null) {
-          return Maps.newHashMap();
-        }
-        services =
-            Collections.singletonList(serviceResourceService.get(appId, params.get(EntityType.SERVICE.name()), true));
+        services = Collections.singletonList(serviceResourceService.get(appId, serviceId, true));
       }
       return services.stream()
           .flatMap(service -> service.getServiceCommands().stream())
