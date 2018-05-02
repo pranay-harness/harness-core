@@ -1,5 +1,12 @@
 #!/bin/bash -e
 
+if [ ! -e start.sh ]; then
+  echo
+  echo "Delegate must not be run from a different directory"
+  echo
+  exit 1
+fi
+
 JRE_DIR_OLD=jre1.8.0_131
 JRE_DIR=jre1.8.0_131_2
 JRE_BINARY=jre/bin/java
