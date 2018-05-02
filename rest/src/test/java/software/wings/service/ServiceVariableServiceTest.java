@@ -28,6 +28,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
@@ -39,6 +40,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
@@ -81,12 +83,14 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * The Query.
    */
   @Mock Query<ServiceVariable> query;
+  @Mock UpdateOperations<ServiceVariable> updateOperations;
   /**
    * The End.
    */
   @Mock FieldEnd end;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private ServiceTemplateService serviceTemplateService;
+  @Mock private EnvironmentService environmentService;
   @Mock private AppService appService;
   @Mock private YamlDirectoryService yamlDirectoryService;
   @Inject @InjectMocks private ServiceVariableService serviceVariableService;
@@ -227,6 +231,8 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     when(wingsPersistence.get(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(variable);
     when(wingsPersistence.delete(any(Query.class))).thenReturn(false);
     when(wingsPersistence.createQuery(ServiceVariable.class)).thenReturn(query);
+    when(wingsPersistence.createUpdateOperations(ServiceVariable.class)).thenReturn(updateOperations);
+    when(updateOperations.unset(any())).thenReturn(updateOperations);
     serviceVariableService.delete(APP_ID, SERVICE_VARIABLE_ID);
     verify(wingsPersistence).delete(query);
   }
