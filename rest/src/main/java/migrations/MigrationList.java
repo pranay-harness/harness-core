@@ -11,7 +11,6 @@ import migrations.all.CreateDefaultUserGroupsAndAddToExistingUsers;
 import migrations.all.CreateSupportUserGroupsAndRenameAccountAdmin;
 import migrations.all.FixMaxInstancesFieldInContainerSetup;
 import migrations.all.GitSyncToAllAccounts;
-import migrations.all.MetricDataMigration;
 import migrations.all.NewRelicMetricNameCronRemoval;
 import migrations.all.ServiceKeywordsMigration;
 import migrations.all.ServiceVariableReferentialIntegrity;
@@ -51,7 +50,7 @@ public class MigrationList {
         .add(Pair.of(121, SetRollbackFlagToWorkflows.class))
         .add(Pair.of(122, AddValidUntilToWaitInstance.class))
         .add(Pair.of(123, NewRelicMetricNameCronRemoval.class))
-        .add(Pair.of(124, MetricDataMigration.class))
+        .add(Pair.of(124, BaseMigration.class))
         .add(Pair.of(125, ServiceVariableReferentialIntegrity.class))
         .build();
   }
