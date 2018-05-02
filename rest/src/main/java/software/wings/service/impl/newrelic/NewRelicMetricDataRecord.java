@@ -1,5 +1,6 @@
 package software.wings.service.impl.newrelic;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -36,6 +37,7 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class NewRelicMetricDataRecord extends Base {
   @NotEmpty @Indexed private StateType stateType;
 
