@@ -35,10 +35,14 @@ public class PrometheusResource {
   @Path("validate-metrics")
   public RestResponse<Map<String, String>> validateMetrics(
       @QueryParam("accountId") final String accountId, @NotEmpty List<TimeSeries> timeSeriesToAnalyze) {
+    return new RestResponse<>(validateTransactions(accountId, timeSeriesToAnalyze));
+  }
+
+  public static Map<String, String> validateTransactions(final String accountId, List<TimeSeries> timeSeriesToAnalyze) {
     Map<String, String> invalidFields = new HashMap<>();
     if (isEmpty(timeSeriesToAnalyze)) {
       invalidFields.put("timeSeriesToAnalyze", "No metrics given to analyze.");
-      return new RestResponse<>(invalidFields);
+      return invalidFields;
     }
     Map<String, MetricType> metricNameToType = new HashMap<>();
     timeSeriesToAnalyze.forEach(timeSeries -> {
@@ -71,6 +75,6 @@ public class PrometheusResource {
       }
 
     });
-    return new RestResponse<>(invalidFields);
+    return invalidFields;
   }
 }
