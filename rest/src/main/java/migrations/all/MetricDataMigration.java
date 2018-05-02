@@ -83,6 +83,9 @@ public class MetricDataMigration implements Migration {
 
   private void parseAndSetValue(DBObject next, String key, Map<String, Double> values) {
     Object o = next.get(key);
+    if (o == null) {
+      return;
+    }
     double value = o instanceof Long ? ((Long) o).doubleValue() : (double) o;
 
     next.removeField(key);
