@@ -44,8 +44,6 @@ public class PcfDeployStateExecutionData extends StateExecutionData implements N
     Map<String, ExecutionDataValue> executionDetails = Maps.newLinkedHashMap();
     putNotNull(executionDetails, "commandName",
         ExecutionDataValue.builder().value(commandName).displayName("CommandName").build());
-    putNotNull(executionDetails, "releaseName",
-        ExecutionDataValue.builder().value(releaseName).displayName("PCF App Name").build());
     putNotNull(executionDetails, "updateDetails",
         ExecutionDataValue.builder().value(updateDetails).displayName("Resize Details").build());
 

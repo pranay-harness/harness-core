@@ -23,6 +23,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 public class PcfCommandTaskHelperTest extends WingsBaseTest {
   public static final String MANIFEST_YAML = "  applications:\n"
@@ -93,5 +95,19 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
     assertEquals(MANIFEST_YAML_1, stringBuilder.toString());
     pcfCommandTaskHelper.deleteCreataedFile(Arrays.asList(file));
     assertFalse(file.exists());
+  }
+
+  @Test
+  public void testGetPrefix() {
+    Set<String> names = new HashSet<>();
+    names.add("App__Account__dev__");
+
+    assertTrue(names.contains(pcfCommandTaskHelper.getAppPrefix("App__Account__dev__1")));
+    assertFalse(names.contains(pcfCommandTaskHelper.getAppPrefix("App__Login__dev__1")));
+
+    names.clear();
+    names.add("App__Login__dev__");
+    assertFalse(names.contains(pcfCommandTaskHelper.getAppPrefix("App__Account__dev__1")));
+    assertTrue(names.contains(pcfCommandTaskHelper.getAppPrefix("App__Login__dev__1")));
   }
 }
