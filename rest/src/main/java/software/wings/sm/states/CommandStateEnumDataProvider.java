@@ -1,6 +1,6 @@
 package software.wings.sm.states;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
@@ -30,7 +30,7 @@ public class CommandStateEnumDataProvider implements DataProvider {
   public Map<String, String> getData(String appId, Map<String, String> params) {
     if (appId != null) {
       List<Service> services;
-      if (isNotEmpty(params)) {
+      if (isEmpty(params)) {
         services = serviceResourceService.list(aPageRequest().addFilter("appId", EQ, appId).build(), false, true)
                        .getResponse();
       } else {
