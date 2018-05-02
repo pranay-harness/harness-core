@@ -390,7 +390,9 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
           AwsLambdaContextElement awsLambdaContextElement = (AwsLambdaContextElement) notifiedElement(
               elementNotifyResponseData, AwsLambdaContextElement.class, "Missing AwsLambdaContextElement");
           executionResponse.setContextElements(Lists.newArrayList(awsLambdaContextElement));
-        } else if (deploymentType.equals(DeploymentType.SSH.name()) && phaseStepType == PhaseStepType.PROVISION_NODE) {
+        } else if ((deploymentType.equals(DeploymentType.SSH.name())
+                       || deploymentType.equals(DeploymentType.WINRM.name()))
+            && phaseStepType == PhaseStepType.PROVISION_NODE) {
           ServiceInstanceIdsParam serviceInstanceIdsParam = (ServiceInstanceIdsParam) notifiedElement(
               elementNotifyResponseData, ServiceInstanceIdsParam.class, "Missing ServiceInstanceIdsParam");
 
