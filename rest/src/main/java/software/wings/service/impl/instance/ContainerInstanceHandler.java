@@ -119,12 +119,14 @@ public class ContainerInstanceHandler extends InstanceHandler {
         SetView<String> instancesToBeDeleted =
             Sets.difference(instancesInDBMap.keySet(), latestContainerInfoMap.keySet());
 
-        instancesToBeUpdated.stream().forEach(containerId -> {
-          ContainerInfo containerInfo = latestContainerInfoMap.get(containerId);
-          Instance instance = containerInstanceHelper.buildInstanceFromContainerInfo(
-              containerInfraMapping, containerInfo, newDeploymentInfo);
-          instanceService.saveOrUpdate(instance);
-        });
+        if (newDeploymentInfo != null) {
+          instancesToBeUpdated.stream().forEach(containerId -> {
+            ContainerInfo containerInfo = latestContainerInfoMap.get(containerId);
+            Instance instance = containerInstanceHelper.buildInstanceFromContainerInfo(
+                containerInfraMapping, containerInfo, newDeploymentInfo);
+            instanceService.saveOrUpdate(instance);
+          });
+        }
 
         Set<String> instanceIdsToBeDeleted = new HashSet<>();
         instancesToBeDeleted.stream().forEach(ec2InstanceId -> {

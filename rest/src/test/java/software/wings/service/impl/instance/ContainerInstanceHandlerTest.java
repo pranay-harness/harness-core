@@ -226,22 +226,24 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
 
     containerInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID);
 
-    assertions(containerId, instanceType);
+    assertions(containerId, instanceType, false);
   }
 
-  private void assertions(String containerId, InstanceType instanceType) throws Exception {
+  private void assertions(String containerId, InstanceType instanceType, boolean checkSaveOrUpdate) throws Exception {
     ArgumentCaptor<Set> captor = ArgumentCaptor.forClass(Set.class);
     verify(instanceService).delete(captor.capture());
     Set idTobeDeleted = captor.getValue();
     assertEquals(1, idTobeDeleted.size());
     assertTrue(idTobeDeleted.contains(INSTANCE_1_ID));
 
-    ArgumentCaptor<Instance> captorInstance = ArgumentCaptor.forClass(Instance.class);
-    verify(instanceService, times(1)).saveOrUpdate(captorInstance.capture());
+    if (checkSaveOrUpdate) {
+      ArgumentCaptor<Instance> captorInstance = ArgumentCaptor.forClass(Instance.class);
+      verify(instanceService, times(1)).saveOrUpdate(captorInstance.capture());
 
-    List<Instance> capturedInstances = captorInstance.getAllValues();
-    assertEquals(containerId, capturedInstances.get(0).getContainerInstanceKey().getContainerId());
-    assertEquals(instanceType, capturedInstances.get(0).getInstanceType());
+      List<Instance> capturedInstances = captorInstance.getAllValues();
+      assertEquals(containerId, capturedInstances.get(0).getContainerInstanceKey().getContainerId());
+      assertEquals(instanceType, capturedInstances.get(0).getInstanceType());
+    }
   }
 
   @Test
@@ -301,7 +303,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
             .stateExecutionInstanceId("stateExecutionInstanceId")
             .build());
 
-    assertions("taskARN:2", InstanceType.ECS_CONTAINER_INSTANCE);
+    assertions("taskARN:2", InstanceType.ECS_CONTAINER_INSTANCE, true);
   }
 
   // 2 existing Kubernetes instances,
@@ -423,7 +425,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
             .stateExecutionInstanceId("stateExecutionInstanceId")
             .build());
 
-    assertions("pod:1", InstanceType.KUBERNETES_CONTAINER_INSTANCE);
+    assertions("pod:1", InstanceType.KUBERNETES_CONTAINER_INSTANCE, true);
   }
 
   @Test
@@ -485,6 +487,6 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                                                      .stateExecutionInstanceId("stateExecutionInstanceId")
                                                      .build());
 
-    assertions("pod:1", InstanceType.KUBERNETES_CONTAINER_INSTANCE);
+    assertions("pod:1", InstanceType.KUBERNETES_CONTAINER_INSTANCE, true);
   }
 }

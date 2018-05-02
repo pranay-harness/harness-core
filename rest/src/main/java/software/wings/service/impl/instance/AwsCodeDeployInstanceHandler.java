@@ -91,18 +91,20 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
       SetView<String> instancesToBeUpdated =
           Sets.intersection(latestEc2InstanceMap.keySet(), instancesInDBMap.keySet());
 
-      instancesToBeUpdated.stream().forEach(ec2InstanceId -> {
-        // change to codeDeployInstance builder
-        Instance instance = instancesInDBMap.get(ec2InstanceId);
-        String uuid = null;
-        if (instance != null) {
-          uuid = instance.getUuid();
-        }
-        com.amazonaws.services.ec2.model.Instance ec2Instance = latestEc2InstanceMap.get(ec2InstanceId);
-        instance =
-            instanceHelper.buildInstanceUsingEc2Instance(uuid, ec2Instance, infrastructureMapping, newDeploymentInfo);
-        instanceService.saveOrUpdate(instance);
-      });
+      if (newDeploymentInfo != null) {
+        instancesToBeUpdated.stream().forEach(ec2InstanceId -> {
+          // change to codeDeployInstance builder
+          Instance instance = instancesInDBMap.get(ec2InstanceId);
+          String uuid = null;
+          if (instance != null) {
+            uuid = instance.getUuid();
+          }
+          com.amazonaws.services.ec2.model.Instance ec2Instance = latestEc2InstanceMap.get(ec2InstanceId);
+          instance =
+              instanceHelper.buildInstanceUsingEc2Instance(uuid, ec2Instance, infrastructureMapping, newDeploymentInfo);
+          instanceService.saveOrUpdate(instance);
+        });
+      }
 
       // Find the instances that were yet to be added to db
       SetView<String> instancesToBeAdded = Sets.difference(latestEc2InstanceMap.keySet(), instancesInDBMap.keySet());

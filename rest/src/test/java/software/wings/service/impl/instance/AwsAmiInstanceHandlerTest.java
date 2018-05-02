@@ -8,7 +8,6 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACCOUNT_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_ID;
@@ -79,8 +78,6 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.security.SecretManager;
 
-import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
@@ -145,7 +142,7 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
         .when(settingsService)
         .get(anyString());
 
-    // catpure arg
+    // capture arg
     doReturn(true).when(instanceService).delete(anySet());
     // capture arg
     doReturn(Instance.builder().build()).when(instanceService).save(any(Instance.class));
@@ -268,13 +265,5 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
     Set idTobeDeleted = captor.getValue();
     assertEquals(1, idTobeDeleted.size());
     assertTrue(idTobeDeleted.contains(instance3.getInstanceId()));
-
-    ArgumentCaptor<Instance> captorInstance = ArgumentCaptor.forClass(Instance.class);
-    verify(instanceService, times(2)).saveOrUpdate(captorInstance.capture());
-
-    List<Instance> capturedInstances = captorInstance.getAllValues();
-    Set<String> hostNames = new HashSet<>(asList(HOST_NAME_IP1, ""));
-    assertTrue(hostNames.contains(capturedInstances.get(0).getHostInstanceKey().getHostName()));
-    assertTrue(hostNames.contains(capturedInstances.get(1).getHostInstanceKey().getHostName()));
   }
 }

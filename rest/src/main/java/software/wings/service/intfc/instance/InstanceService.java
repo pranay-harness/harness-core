@@ -3,14 +3,12 @@ package software.wings.service.intfc.instance;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.infrastructure.instance.ContainerDeploymentInfo;
 import software.wings.beans.infrastructure.instance.Instance;
-import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ownership.OwnedByApplication;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import javax.validation.Valid;
@@ -36,10 +34,6 @@ public interface InstanceService extends OwnedByApplication {
    */
   List<Instance> saveOrUpdate(List<Instance> instances);
 
-  List<Instance> save(List<Instance> instances);
-
-  List<Instance> update(List<Instance> instances);
-
   /**
    * Gets instance information.
    *
@@ -56,15 +50,6 @@ public interface InstanceService extends OwnedByApplication {
    */
   @ValidationGroups(Update.class) Instance saveOrUpdate(@Valid Instance instance);
 
-  Instance update(@Valid Instance instance) throws Exception;
-
-  /**
-   * Deletes the given instance.
-   *
-   * @param instanceId the instance id
-   */
-  boolean delete(String instanceId);
-
   /**
    * Deletes the instances with the given ids
    *
@@ -72,29 +57,6 @@ public interface InstanceService extends OwnedByApplication {
    * @return
    */
   boolean delete(Set<String> instanceIdSet);
-
-  /**
-   * Handles save or update of container related instances.
-   * Stale ones are also deleted.
-   *
-   * @param instanceType
-   * @param containerSvcNameNoRevision
-   * @param instanceList
-   * @param appId
-   */
-  void saveOrUpdateContainerInstances(
-      InstanceType instanceType, String containerSvcNameNoRevision, List<Instance> instanceList, String appId);
-
-  /**
-   * @param containerSvcNameNoRevision
-   * @param containerDeploymentInfoCollection
-   * @param appId
-   * @param instanceType
-   * @param syncTimestamp
-   */
-  void saveOrUpdateContainerDeploymentInfo(String containerSvcNameNoRevision,
-      Collection<ContainerDeploymentInfo> containerDeploymentInfoCollection, String appId, InstanceType instanceType,
-      long syncTimestamp);
 
   /**
    * Get the container deployment info of all the container services that belong to the same family
@@ -105,39 +67,6 @@ public interface InstanceService extends OwnedByApplication {
    * @return
    */
   List<ContainerDeploymentInfo> getContainerDeploymentInfoList(String containerSvcNameNoRevision, String appId);
-
-  /**
-   * Get the container service names (taskDefinitionName for ECS and replicationControllerName for Kubernetes) of all
-   * the container services that belong to the same family (containerSvcNameNoRevision) for the given app.
-   *
-   * @param containerSvcNameNoRevision
-   * @param appId
-   * @return
-   */
-  List<String> getContainerServiceNames(String containerSvcNameNoRevision, String appId);
-
-  /**
-   * Get the least recently synced container family (all container deployments with the same containerSvcNameNoRevision)
-   * info from db. This is done so that no container family is starved from update. Each time the sync job comes up, it
-   * picks up a batch of least visited families and updates the instances.
-   *
-   * @param appId
-   * @param lastSyncTimestamp
-   * @return
-   */
-  Set<String> getLeastRecentSyncedContainerDeployments(String appId, long lastSyncTimestamp);
-
-  /**
-   * Deletes the container deployments that have no active instances on the container server (ECS or Kubernetes).
-   *
-   * @param containerSvcNameSetToBeDeleted
-   * @param instanceType
-   * @param appId
-   */
-  void deleteContainerDeploymentInfoAndInstances(
-      Set<String> containerSvcNameSetToBeDeleted, InstanceType instanceType, String appId);
-
-  void deleteInstancesOfAutoScalingGroups(List<String> autoScalingGroupList, String appId);
 
   /**
    * List.

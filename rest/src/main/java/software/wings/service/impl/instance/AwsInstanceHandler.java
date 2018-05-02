@@ -153,17 +153,19 @@ public class AwsInstanceHandler extends InstanceHandler {
         // Find the instances that were yet to be added to db
         SetView<String> instancesToBeAdded = Sets.difference(latestEc2InstanceMap.keySet(), instancesInDBMap.keySet());
 
-        instancesToBeUpdated.stream().forEach(ec2InstanceId -> {
-          Instance instance = instancesInDBMap.get(ec2InstanceId);
-          String uuid = null;
-          if (instance != null) {
-            uuid = instance.getUuid();
-          }
-          com.amazonaws.services.ec2.model.Instance ec2Instance = latestEc2InstanceMap.get(ec2InstanceId);
-          instance = buildInstanceUsingEc2InstanceAndASG(uuid, ec2Instance, infrastructureMapping, autoScalingGroupName,
-              asgDeploymentInfoMap.get(autoScalingGroupName));
-          instanceService.saveOrUpdate(instance);
-        });
+        if (deploymentInfo != null) {
+          instancesToBeUpdated.stream().forEach(ec2InstanceId -> {
+            Instance instance = instancesInDBMap.get(ec2InstanceId);
+            String uuid = null;
+            if (instance != null) {
+              uuid = instance.getUuid();
+            }
+            com.amazonaws.services.ec2.model.Instance ec2Instance = latestEc2InstanceMap.get(ec2InstanceId);
+            instance = buildInstanceUsingEc2InstanceAndASG(uuid, ec2Instance, infrastructureMapping,
+                autoScalingGroupName, asgDeploymentInfoMap.get(autoScalingGroupName));
+            instanceService.saveOrUpdate(instance);
+          });
+        }
 
         handleEc2InstanceDelete(instancesInDBMap, latestEc2InstanceMap);
 
