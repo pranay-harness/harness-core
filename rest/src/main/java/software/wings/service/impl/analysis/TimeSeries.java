@@ -1,7 +1,9 @@
 package software.wings.service.impl.analysis;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import software.wings.metrics.MetricType;
 
 /**
@@ -9,6 +11,8 @@ import software.wings.metrics.MetricType;
  */
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class TimeSeries {
   private String txnName;
   private String url;
