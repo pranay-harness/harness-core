@@ -112,21 +112,13 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
             context.getWorkflowExecutionId())));
 
     ServiceElement serviceElement = fetchServiceElement(context);
-    if (serviceElement != null) {
-      Artifact artifact = getArtifactForService(serviceElement.getUuid());
-      if (artifact != null) {
-        map.put(ARTIFACT, artifact);
-        String artifactFileName = null;
-        if (isNotEmpty(artifact.getArtifactFiles())) {
-          artifactFileName = artifact.getArtifactFiles().get(0).getName();
-        } else if (artifact.getMetadata() != null) {
-          artifactFileName = artifact.getArtifactFileName();
-        }
-        if (isNotEmpty(artifactFileName)) {
-          map.put(ARTIFACT_FILE_NAME_VARIABLE, artifactFileName);
-        }
+    Artifact artifact = null;
+    if (serviceElement == null) {
+      if (isNotEmpty(artifactIds)) {
+        artifact = artifactService.get(appId, artifactIds.get(0));
       }
-
+    } else {
+      artifact = getArtifactForService(serviceElement.getUuid());
       List<Key<ServiceTemplate>> templateRefKeysByService =
           serviceTemplateService.getTemplateRefKeysByService(appId, serviceElement.getUuid(), envId);
       if (isEmpty(templateRefKeysByService) || templateRefKeysByService.get(0).getId() == null) {
@@ -154,6 +146,20 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
               .stream()
               .collect(Collectors.toMap(ServiceVariable::getName, var -> new String(var.getValue()))));
     }
+
+    if (artifact != null) {
+      map.put(ARTIFACT, artifact);
+      String artifactFileName = null;
+      if (isNotEmpty(artifact.getArtifactFiles())) {
+        artifactFileName = artifact.getArtifactFiles().get(0).getName();
+      } else if (artifact.getMetadata() != null) {
+        artifactFileName = artifact.getArtifactFileName();
+      }
+      if (isNotEmpty(artifactFileName)) {
+        map.put(ARTIFACT_FILE_NAME_VARIABLE, artifactFileName);
+      }
+    }
+
     return map;
   }
 
