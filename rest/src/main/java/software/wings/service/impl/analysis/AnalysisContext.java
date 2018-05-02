@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import software.wings.sm.StateType;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -30,7 +32,6 @@ public class AnalysisContext {
   private AnalysisComparisonStrategy comparisonStrategy;
   private int timeDuration;
   private StateType stateType;
-  private String stateBaseUrl;
   private String authToken;
   private String analysisServerConfigId;
   private String correlationId;
@@ -40,6 +41,7 @@ public class AnalysisContext {
   private int minimumRequestsPerMinute;
   private int comparisonWindow;
   private int parallelProcesses;
+  private Map<String, List<TimeSeries>> timeSeriesToCollect;
 
   public LogClusterContext getClusterContext() {
     return LogClusterContext.builder()
@@ -55,7 +57,6 @@ public class AnalysisContext {
         .appPort(appPort)
         .accountId(accountId)
         .stateType(stateType)
-        .stateBaseUrl(stateBaseUrl)
         .authToken(authToken)
         .build();
   }

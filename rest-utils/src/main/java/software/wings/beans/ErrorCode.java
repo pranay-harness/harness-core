@@ -167,6 +167,8 @@ public enum ErrorCode {
 
   APPDYNAMICS_CONFIGURATION_ERROR,
 
+  APM_CONFIGURATION_ERROR,
+
   SPLUNK_CONFIGURATION_ERROR,
 
   ELK_CONFIGURATION_ERROR,
@@ -184,6 +186,8 @@ public enum ErrorCode {
   DYNA_TRACE_CONFIGURATION_ERROR,
 
   DYNA_TRACE_ERROR,
+
+  PROMETHEUS_CONFIGURATION_ERROR,
 
   // Problem with encryption, most likely that the JCE Unlimited Strength jars aren't installed.
   ENCRYPTION_NOT_CONFIGURED,

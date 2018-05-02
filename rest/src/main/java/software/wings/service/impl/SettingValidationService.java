@@ -15,11 +15,13 @@ import org.mongodb.morphia.mapping.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
+import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.Base;
+import software.wings.beans.DatadogConfig;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.DynaTraceConfig;
@@ -30,6 +32,7 @@ import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PcfConfig;
+import software.wings.beans.PrometheusConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.SumoConfig;
@@ -123,6 +126,12 @@ public class SettingValidationService {
       buildSourceService.getBuildService(settingAttribute, Base.GLOBAL_APP_ID).validateArtifactServer(settingValue);
     } else if (settingValue instanceof AppDynamicsConfig) {
       newRelicService.validateConfig(settingAttribute, StateType.APP_DYNAMICS);
+    } else if (settingValue instanceof DatadogConfig) {
+      newRelicService.validateAPMConfig(
+          settingAttribute, ((DatadogConfig) settingAttribute.getValue()).createAPMValidateCollectorConfig());
+    } else if (settingValue instanceof APMVerificationConfig) {
+      newRelicService.validateAPMConfig(
+          settingAttribute, ((APMVerificationConfig) settingAttribute.getValue()).createAPMValidateCollectorConfig());
     } else if (settingValue instanceof SplunkConfig) {
       analysisService.validateConfig(settingAttribute, StateType.SPLUNKV2);
     } else if (settingValue instanceof ElkConfig) {
@@ -145,6 +154,8 @@ public class SettingValidationService {
       newRelicService.validateConfig(settingAttribute, StateType.NEW_RELIC);
     } else if (settingValue instanceof DynaTraceConfig) {
       newRelicService.validateConfig(settingAttribute, StateType.DYNA_TRACE);
+    } else if (settingValue instanceof PrometheusConfig) {
+      newRelicService.validateConfig(settingAttribute, StateType.PROMETHEUS);
     }
 
     if (Encryptable.class.isInstance(settingValue)) {

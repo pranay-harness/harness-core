@@ -998,6 +998,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         accountId, verificationProvidersFolder, SettingVariableTypes.NEW_RELIC, directoryPath.clone());
     doVerificationProviderType(
         accountId, verificationProvidersFolder, SettingVariableTypes.DYNA_TRACE, directoryPath.clone());
+    doVerificationProviderType(
+        accountId, verificationProvidersFolder, SettingVariableTypes.PROMETHEUS, directoryPath.clone());
 
     return verificationProvidersFolder;
   }
@@ -1165,6 +1167,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       case SUMO:
       case NEW_RELIC:
       case DYNA_TRACE:
+      case PROMETHEUS:
         sb.append(VERIFICATION_PROVIDERS_FOLDER);
         break;
       case HOST_CONNECTION_ATTRIBUTES:

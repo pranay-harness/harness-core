@@ -8,13 +8,11 @@ import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
 import io.harness.time.Timestamp;
-import org.apache.commons.text.WordUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.DelegateTask;
 import software.wings.exception.WingsException;
-import software.wings.metrics.appdynamics.AppdynamicsConstants;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
@@ -22,6 +20,7 @@ import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricDataValue;
+import software.wings.service.impl.appdynamics.AppdynamicsTimeSeries;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
@@ -30,7 +29,6 @@ import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -128,7 +126,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
         if (metricName.contains("|")) {
           metricName = metricName.substring(metricName.lastIndexOf('|') + 1);
         }
-        if (!AppdynamicsConstants.METRICS_TO_TRACK.contains(metricName)) {
+        if (!AppdynamicsTimeSeries.getMetricsToTrack().contains(metricName)) {
           metricsData.remove(i);
           if (!metricName.equals("METRIC DATA NOT FOUND")) {
             if (logger.isDebugEnabled()) {
@@ -181,13 +179,11 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
             hostRecord.setTimeStamp(metricDataValue.getStartTimeInMillis());
             hostRecord.setHost(nodeName);
             hostRecord.setStateType(getStateType());
+            hostRecord.setValues(new HashMap<>());
             hostVsRecordMap.put(nodeName, hostRecord);
           }
 
-          String variableName = AppdynamicsConstants.METRIC_NAMES_TO_VARIABLES.get(metricName);
-          Method setValueMethod =
-              NewRelicMetricDataRecord.class.getMethod("set" + WordUtils.capitalize(variableName), Double.TYPE);
-          setValueMethod.invoke(hostRecord, metricDataValue.getValue());
+          hostRecord.getValues().put(AppdynamicsTimeSeries.getVariableName(metricName), metricDataValue.getValue());
         }
       }
       return records;

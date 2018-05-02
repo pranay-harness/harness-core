@@ -25,7 +25,7 @@ class TSAnomlyDetector(object):
     def __init__(self, options, metric_template, control_txns, test_txns):
         self._options = options
         self.metric_template = MetricTemplate(metric_template)
-        self.metric_names = self.metric_template.get_metric_names()
+        self.metric_names = self.metric_template.get_metric_names_by_tags()
         self.raw_control_txns = control_txns
         self.raw_test_txns = test_txns
         self.min_rpm = options.min_rpm
@@ -81,6 +81,16 @@ class TSAnomlyDetector(object):
         """
         result = {}
         data_len = (self._options.analysis_minute - self._options.analysis_start_min)+1
+        txn_metrics = {}
+        for transaction in transactions:
+            txn_name = transaction.get('name')
+            if txn_name not in txn_metrics:
+                txn_metrics[txn_name] = []
+                tag = transaction.get('tag') if transaction.get('tag') else 'default'
+                for metric_name in self.metric_names[tag]:
+                    if metric_name in transaction.get('values'):
+                        txn_metrics[txn_name].append(metric_name)
+
         for transaction in transactions:
             txn_name = transaction.get('name')
             host = transaction.get('host')
@@ -88,16 +98,16 @@ class TSAnomlyDetector(object):
 
             if txn_name not in result:
                 result[txn_name] = OrderedDict({})
-                for metric_name in self.metric_names:
-                    result[txn_name][metric_name] = OrderedDict({})
-
-            for metric_name in self.metric_names:
+                for metric_name in txn_metrics[txn_name]:
+                    if metric_name in transaction.get('values'):
+                        result[txn_name][metric_name] = OrderedDict({})
+            for metric_name in txn_metrics[txn_name]:
                 if host not in result[txn_name][metric_name]:
                     result[txn_name][metric_name][host] = OrderedDict({})
                     result[txn_name][metric_name][host]['data'] = np.asarray([np.nan] * data_len)
-                if transaction.get(metric_name) is None or transaction.get(metric_name) == -1:
+                if transaction.get('values').get(metric_name) is None or transaction.get('values').get(metric_name) == -1:
                     continue
-                result[txn_name][metric_name][host]['data'][data_collection_minute] = transaction.get(metric_name)
+                result[txn_name][metric_name][host]['data'][data_collection_minute] = transaction.get('values').get(metric_name)
 
         return self.sanitize_data(result, self.metric_template, self.min_rpm)
 
@@ -172,7 +182,7 @@ class TSAnomlyDetector(object):
         :param txn_data_dict: the transaction data dictionary
         :return: the data dictionary for processing.
         """
-        if txn_data_dict is None or len(txn_data_dict) == 0:
+        if txn_data_dict is None or len(txn_data_dict) == 0 or metric_name not in txn_data_dict:
             return {}
 
         weights = []
@@ -376,14 +386,15 @@ class TSAnomlyDetector(object):
                     "control_avg" : -1.0,
                     "test_avg" : -1.0,
                     "max_risk" : -1
-                
+
             }    
             """
             for index, host in enumerate(test_txn_data_dict[metric_name].keys()):
                 response['results'][host] = {}
 
                 response['results'][host]['test_data'] = np.ma.masked_array(analysis_output['test_values'][index],
-                                                                     np.isnan(analysis_output['test_values'][index]))\
+                                                                            np.isnan(
+                                                                                analysis_output['test_values'][index])) \
                     .filled(0).tolist()
                 response['results'][host]['score'] = analysis_output['score'][index]
                 response['results'][host]['distance'] = analysis_output['distances'][index].tolist()
@@ -411,7 +422,8 @@ class TSAnomlyDetector(object):
                     response['results'][host]['control_cuts'] = analysis_output['control_cuts'][index].tolist()
                     response['results'][host]['control_index'] = analysis_output['nn'][index]
                 throughput_metric_name = self.metric_template.get_metric_name(MetricType.THROUGHPUT)
-                if throughput_metric_name is not None and test_txn_data_dict[throughput_metric_name][host]['skip']:
+                if throughput_metric_name is not None and throughput_metric_name in test_txn_data_dict \
+                        and test_txn_data_dict[throughput_metric_name][host]['skip']:
                     response['results'][host]['risk'] = RiskLevel.NA.value
                 else:
                     response['results'][host]['risk'] = analysis_output['risk'][index]
@@ -462,7 +474,7 @@ class TSAnomlyDetector(object):
                 else:
                     control_txn_data_dict = {}
 
-                for metric_ind, metric_name in enumerate(self.metric_names):
+                for metric_ind, metric_name in enumerate(test_txn_data_dict.keys()):
 
                     logger.info("Analyzing txn " + txn_name + " metric " + metric_name)
                     response = self.analyze_metric(txn_name, metric_name, control_txn_data_dict,
@@ -640,9 +652,9 @@ def parallelize_processing(options, metric_template, control_metrics, test_metri
     while processed < len(jobs):
         # TODO - get blocks forever. Will java kill us?
         try:
-            val = queue.get(timeout=300)
+            val = queue.get(timeout=120)
         except Empty:
-            sys.exit(5)
+            raise Exception("Unknown error occured in worker process. Check logs")
         for txn_data in val['transactions'].values():
             result['transactions'][txn_id] = txn_data
             txn_id += 1

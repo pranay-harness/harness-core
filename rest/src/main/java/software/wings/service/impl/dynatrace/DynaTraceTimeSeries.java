@@ -1,14 +1,10 @@
 package software.wings.service.impl.dynatrace;
 
 import software.wings.metrics.MetricType;
-import software.wings.metrics.Threshold;
-import software.wings.metrics.ThresholdComparisonType;
-import software.wings.metrics.ThresholdType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
+import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -16,27 +12,31 @@ import java.util.Map;
  */
 public enum DynaTraceTimeSeries {
   CLIENT_SIDE_FAILURE_RATE("com.dynatrace.builtin:servicemethod.clientsidefailurerate", DynaTraceAggregationType.AVG,
-      null, "clientSideFailureRate"),
-  ERROR_COUNT_HTTP_4XX("com.dynatrace.builtin:servicemethod.errorcounthttp4xx", null, null, "errorCountHttp4xx"),
-  ERROR_COUNT_HTTP_5XX("com.dynatrace.builtin:servicemethod.errorcounthttp5xx", null, null, "errorCountHttp5xx"),
-  REQUEST_PER_MINUTE(
-      "com.dynatrace.builtin:servicemethod.requestspermin", DynaTraceAggregationType.COUNT, null, "requestsPerMin"),
-  RESPONSE_TIME(
-      "com.dynatrace.builtin:servicemethod.responsetime", DynaTraceAggregationType.PERCENTILE, 95, "responseTime"),
+      null, NewRelicMetricValueDefinition.CLIENT_SIDE_FAILURE_RATE, MetricType.ERROR),
+  ERROR_COUNT_HTTP_4XX("com.dynatrace.builtin:servicemethod.errorcounthttp4xx", null, null,
+      NewRelicMetricValueDefinition.ERROR_COUNT_HTTP_4XX, MetricType.ERROR),
+  ERROR_COUNT_HTTP_5XX("com.dynatrace.builtin:servicemethod.errorcounthttp5xx", null, null,
+      NewRelicMetricValueDefinition.ERROR_COUNT_HTTP_5XX, MetricType.ERROR),
+  REQUEST_PER_MINUTE("com.dynatrace.builtin:servicemethod.requestspermin", DynaTraceAggregationType.COUNT, null,
+      NewRelicMetricValueDefinition.REQUEST_PER_MINUTE, MetricType.THROUGHPUT),
+  RESPONSE_TIME("com.dynatrace.builtin:servicemethod.responsetime", DynaTraceAggregationType.PERCENTILE, 95,
+      NewRelicMetricValueDefinition.RESPONSE_TIME, MetricType.RESP_TIME),
   SERVER_SIDE_FAILURE_RATE("com.dynatrace.builtin:servicemethod.serversidefailurerate", DynaTraceAggregationType.AVG,
-      null, "serverSideFailureRate");
+      null, NewRelicMetricValueDefinition.SERVER_SIDE_FAILURE_RATE, MetricType.ERROR);
 
   private final String timeseriesId;
   private final DynaTraceAggregationType aggregationType;
   private final Integer percentile;
   private final String savedFieldName;
+  private final MetricType metricType;
 
-  DynaTraceTimeSeries(
-      String timeseriesId, DynaTraceAggregationType aggregationType, Integer percentile, String savedFieldName) {
+  DynaTraceTimeSeries(String timeseriesId, DynaTraceAggregationType aggregationType, Integer percentile,
+      String savedFieldName, MetricType metricType) {
     this.timeseriesId = timeseriesId;
     this.aggregationType = aggregationType;
     this.percentile = percentile;
     this.savedFieldName = savedFieldName;
+    this.metricType = metricType;
   }
 
   public String getTimeseriesId() {
@@ -55,6 +55,10 @@ public enum DynaTraceTimeSeries {
     return savedFieldName;
   }
 
+  public MetricType getMetricType() {
+    return metricType;
+  }
+
   public static DynaTraceTimeSeries getTimeSeries(String timeseriesId) {
     for (DynaTraceTimeSeries timeSeries : DynaTraceTimeSeries.values()) {
       if (timeSeries.getTimeseriesId().equals(timeseriesId)) {
@@ -68,27 +72,10 @@ public enum DynaTraceTimeSeries {
   public static Map<String, TimeSeriesMetricDefinition> getDefinitionsToAnalyze() {
     Map<String, TimeSeriesMetricDefinition> rv = new HashMap<>();
 
-    // clientsidefailurerate
-    List<Threshold> thresholds = new ArrayList<>();
-    thresholds.add(Threshold.builder()
-                       .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
-                       .comparisonType(ThresholdComparisonType.RATIO)
-                       .high(1.5)
-                       .medium(1.25)
-                       .min(0.5)
-                       .build());
-    thresholds.add(Threshold.builder()
-                       .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
-                       .comparisonType(ThresholdComparisonType.DELTA)
-                       .high(10)
-                       .medium(5)
-                       .min(0)
-                       .build());
     rv.put(CLIENT_SIDE_FAILURE_RATE.getSavedFieldName(),
         TimeSeriesMetricDefinition.builder()
             .metricName(CLIENT_SIDE_FAILURE_RATE.getSavedFieldName())
             .metricType(MetricType.ERROR)
-            .thresholds(thresholds)
             .build());
 
     // errorcounthttp4xx
@@ -96,7 +83,6 @@ public enum DynaTraceTimeSeries {
         TimeSeriesMetricDefinition.builder()
             .metricName(ERROR_COUNT_HTTP_4XX.getSavedFieldName())
             .metricType(MetricType.ERROR)
-            .thresholds(thresholds)
             .build());
 
     // errorcounthttp5xx
@@ -104,7 +90,6 @@ public enum DynaTraceTimeSeries {
         TimeSeriesMetricDefinition.builder()
             .metricName(ERROR_COUNT_HTTP_5XX.getSavedFieldName())
             .metricType(MetricType.ERROR)
-            .thresholds(thresholds)
             .build());
 
     // serversidefailurerate
@@ -112,55 +97,18 @@ public enum DynaTraceTimeSeries {
         TimeSeriesMetricDefinition.builder()
             .metricName(SERVER_SIDE_FAILURE_RATE.getSavedFieldName())
             .metricType(MetricType.ERROR)
-            .thresholds(thresholds)
             .build());
-
-    // requestspermin
-    thresholds = new ArrayList<>();
-    thresholds.add(Threshold.builder()
-                       .thresholdType(ThresholdType.ALERT_WHEN_LOWER)
-                       .comparisonType(ThresholdComparisonType.RATIO)
-                       .high(0.5)
-                       .medium(0.75)
-                       .min(0.5)
-                       .build());
-    thresholds.add(Threshold.builder()
-                       .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
-                       .comparisonType(ThresholdComparisonType.DELTA)
-                       .high(100)
-                       .medium(50)
-                       .min(20)
-                       .build());
 
     rv.put(REQUEST_PER_MINUTE.getSavedFieldName(),
         TimeSeriesMetricDefinition.builder()
             .metricName(REQUEST_PER_MINUTE.getSavedFieldName())
             .metricType(MetricType.THROUGHPUT)
-            .thresholds(thresholds)
             .build());
-
-    // responsetime
-    thresholds = new ArrayList<>();
-    thresholds.add(Threshold.builder()
-                       .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
-                       .comparisonType(ThresholdComparisonType.RATIO)
-                       .high(1.5)
-                       .medium(1.25)
-                       .min(0.5)
-                       .build());
-    thresholds.add(Threshold.builder()
-                       .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
-                       .comparisonType(ThresholdComparisonType.DELTA)
-                       .high(10)
-                       .medium(5)
-                       .min(50)
-                       .build());
 
     rv.put(RESPONSE_TIME.getSavedFieldName(),
         TimeSeriesMetricDefinition.builder()
             .metricName(RESPONSE_TIME.getSavedFieldName())
             .metricType(MetricType.RESP_TIME)
-            .thresholds(thresholds)
             .build());
 
     return rv;

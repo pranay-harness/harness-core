@@ -1,6 +1,3 @@
 {
-  "ui:order": ["awsCredentialsConfigId", "region", "namespace", "metricName", "percentile", "dimensions", "timeDuration", "assertion"],
-  "dimensions": {
-    "classNames": "__2Col"
-  }
+  "ui:order": ["analysisServerConfigId", "region", "loadBalancerName", "comparisonStrategy", "analysisTolerance", "timeDuration"]
 }

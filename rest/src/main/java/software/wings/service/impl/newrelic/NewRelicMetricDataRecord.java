@@ -2,6 +2,7 @@ package software.wings.service.impl.newrelic;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -15,6 +16,9 @@ import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateType;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by rsingh on 08/30/17.
@@ -55,23 +59,8 @@ public class NewRelicMetricDataRecord extends Base {
 
   @Indexed private ClusterLevel level;
 
-  private double error = -1;
+  private String tag;
 
-  // new relic metrics
-  private double throughput = -1;
-  private double averageResponseTime = -1;
-  private double apdexScore = -1;
-  private long callCount;
-  private double requestsPerMinute = -1;
-  // appdynamics metrics
-  private double response95th = -1;
-  private double stalls = -1;
-  private double slowCalls = -1;
-  // dynatrace metrics
-  private double clientSideFailureRate = -1;
-  private double errorCountHttp4xx = -1;
-  private double errorCountHttp5xx = -1;
-  private double requestsPerMin = -1;
-  private double responseTime = -1;
-  private double serverSideFailureRate = -1;
+  // generic values
+  @Default private Map<String, Double> values = new HashMap<>();
 }

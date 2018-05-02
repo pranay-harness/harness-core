@@ -68,7 +68,9 @@ public class NewRelicMetricAnalysisRecord extends Base {
     @Transient private String fullMetricName;
 
     public void addNewRelicMetricAnalysisValue(NewRelicMetricAnalysisValue metricAnalysisValue) {
-      metricValues.add(metricAnalysisValue);
+      if (metricAnalysisValue.getTestValue() >= 0.0 || metricAnalysisValue.getControlValue() >= 0.0) {
+        metricValues.add(metricAnalysisValue);
+      }
     }
 
     @Override

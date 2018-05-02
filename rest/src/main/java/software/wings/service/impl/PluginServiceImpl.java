@@ -21,11 +21,13 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.AccountPlugin;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.BambooConfig;
+import software.wings.beans.DatadogConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.ElasticLoadBalancerConfig;
@@ -38,6 +40,7 @@ import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
+import software.wings.beans.PrometheusConfig;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.SumoConfig;
@@ -140,6 +143,42 @@ public class PluginServiceImpl implements PluginService {
             .withPluginCategories(asList(Verification))
             .withUiSchema(readUiSchema(SettingVariableTypes.DYNA_TRACE.name()))
             .build(),
+        anAccountPlugin()
+            .withSettingClass(PrometheusConfig.class)
+            .withAccountId(accountId)
+            .withIsEnabled(true)
+            .withDisplayName(SettingVariableTypes.PROMETHEUS.getDisplayName())
+            .withType(SettingVariableTypes.PROMETHEUS.name())
+            .withPluginCategories(asList(Verification))
+            .withUiSchema(readUiSchema(SettingVariableTypes.PROMETHEUS.name()))
+            .build(),
+        anAccountPlugin()
+            .withSettingClass(APMVerificationConfig.class)
+            .withAccountId(accountId)
+            .withIsEnabled(false)
+            .withDisplayName(SettingVariableTypes.APM_VERIFICATION.getDisplayName())
+            .withType(SettingVariableTypes.APM_VERIFICATION.name())
+            .withPluginCategories(asList(Verification))
+            .withUiSchema(readUiSchema(SettingVariableTypes.APM_VERIFICATION.name()))
+            .build(),
+        anAccountPlugin()
+            .withSettingClass(DatadogConfig.class)
+            .withAccountId(accountId)
+            .withIsEnabled(true)
+            .withDisplayName(SettingVariableTypes.DATA_DOG.getDisplayName())
+            .withType(SettingVariableTypes.DATA_DOG.name())
+            .withPluginCategories(asList(Verification))
+            .withUiSchema(readUiSchema(SettingVariableTypes.DATA_DOG.name()))
+            .build(),
+        //        anAccountPlugin()
+        //            .withSettingClass(AwsConfig.class)
+        //            .withAccountId(accountId)
+        //            .withIsEnabled(true)
+        //            .withDisplayName(SettingVariableTypes.CLOUD_WATCH.getDisplayName())
+        //            .withType(SettingVariableTypes.CLOUD_WATCH.name())
+        //            .withPluginCategories(asList(Verification))
+        //            .withUiSchema(readUiSchema(SettingVariableTypes.CLOUD_WATCH.name()))
+        //            .build(),
         anAccountPlugin()
             .withSettingClass(SplunkConfig.class)
             .withAccountId(accountId)

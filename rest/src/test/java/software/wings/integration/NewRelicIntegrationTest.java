@@ -11,6 +11,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
+import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.APDEX_SCORE;
+import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.AVERAGE_RESPONSE_TIME;
+import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.ERROR;
+import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.REQUSET_PER_MINUTE;
+import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.THROUGHPUT;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -53,6 +58,7 @@ import software.wings.waitnotify.WaitNotifyEngine;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
@@ -145,10 +151,11 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
             record.setTimeStamp(collectionMin);
             record.setDataCollectionMinute(collectionMin);
 
-            record.setThroughput(r.nextDouble());
-            record.setAverageResponseTime(r.nextDouble());
-            record.setError(r.nextDouble());
-            record.setApdexScore(r.nextDouble());
+            record.setValues(new HashMap<>());
+            record.getValues().put(THROUGHPUT, r.nextDouble());
+            record.getValues().put(AVERAGE_RESPONSE_TIME, r.nextDouble());
+            record.getValues().put(ERROR, r.nextDouble());
+            record.getValues().put(APDEX_SCORE, r.nextDouble());
 
             metricDataRecords.add(record);
 
@@ -165,10 +172,11 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
               record.setTimeStamp(collectionMin - 1);
               record.setDataCollectionMinute(collectionMin);
 
-              record.setThroughput(r.nextDouble());
-              record.setAverageResponseTime(r.nextDouble());
-              record.setError(r.nextDouble());
-              record.setApdexScore(r.nextDouble());
+              record.setValues(new HashMap<>());
+              record.getValues().put(THROUGHPUT, r.nextDouble());
+              record.getValues().put(AVERAGE_RESPONSE_TIME, r.nextDouble());
+              record.getValues().put(ERROR, r.nextDouble());
+              record.getValues().put(APDEX_SCORE, r.nextDouble());
 
               metricDataRecords.add(record);
             }
@@ -339,7 +347,6 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
             .comparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS)
             .timeDuration(1)
             .stateType(StateType.NEW_RELIC)
-            .stateBaseUrl("/newrelic")
             .authToken(AbstractAnalysisState.generateAuthToken("nhUmut2NMcUnsR01OgOz0e51MZ51AqUwrOATJ3fJ"))
             .correlationId(UUID.randomUUID().toString())
             .prevWorkflowExecutionId(prevWorkflowExecutionID == null ? "-1" : prevWorkflowExecutionID)
@@ -358,7 +365,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
         .run();
 
     NewRelicMetricAnalysisRecord metricsAnalysis =
-        metricDataAnalysisService.getMetricsAnalysis(StateType.NEW_RELIC, stateExecutionId, workflowExecutionId);
+        metricDataAnalysisService.getMetricsAnalysis(stateExecutionId, workflowExecutionId);
     assertEquals(RiskLevel.NA, metricsAnalysis.getRiskLevel());
     assertFalse(metricsAnalysis.isShowTimeSeries());
     assertEquals("No data available", metricsAnalysis.getMessage());
@@ -409,10 +416,12 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     record1.setStateExecutionId(prevStateExecutionId);
     record1.setTimeStamp(System.currentTimeMillis());
     record1.setDataCollectionMinute(0);
-    record1.setRequestsPerMinute(20);
-    record1.setAverageResponseTime(50);
-    record1.setError(-1);
-    record1.setApdexScore(1.0);
+
+    record1.setValues(new HashMap<>());
+    record1.getValues().put(REQUSET_PER_MINUTE, 20.0);
+    record1.getValues().put(AVERAGE_RESPONSE_TIME, 50.0);
+    record1.getValues().put(APDEX_SCORE, 1.0);
+
     record1.setHost("host1");
     record1.setStateType(StateType.NEW_RELIC);
 
@@ -468,7 +477,6 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
             .comparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS)
             .timeDuration(1)
             .stateType(StateType.NEW_RELIC)
-            .stateBaseUrl("newrelic")
             .authToken(AbstractAnalysisState.generateAuthToken("nhUmut2NMcUnsR01OgOz0e51MZ51AqUwrOATJ3fJ"))
             .correlationId(UUID.randomUUID().toString())
             .prevWorkflowExecutionId(prevWorkflowExecutionID == null ? "-1" : prevWorkflowExecutionID)
@@ -487,7 +495,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
         .run();
 
     NewRelicMetricAnalysisRecord metricsAnalysis =
-        metricDataAnalysisService.getMetricsAnalysis(StateType.NEW_RELIC, stateExecutionId, workflowExecutionId);
+        metricDataAnalysisService.getMetricsAnalysis(stateExecutionId, workflowExecutionId);
 
     assertEquals(RiskLevel.NA, metricsAnalysis.getRiskLevel());
     assertFalse(metricsAnalysis.isShowTimeSeries());
@@ -572,10 +580,11 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     record1.setStateExecutionId(stateExecutionId);
     record1.setTimeStamp(System.currentTimeMillis());
     record1.setDataCollectionMinute(0);
-    record1.setRequestsPerMinute(20);
-    record1.setAverageResponseTime(50);
-    record1.setError(-1);
-    record1.setApdexScore(1.0);
+
+    record1.setValues(new HashMap<>());
+    record1.getValues().put(REQUSET_PER_MINUTE, 20.0);
+    record1.getValues().put(AVERAGE_RESPONSE_TIME, 50.0);
+    record1.getValues().put(APDEX_SCORE, 1.0);
     record1.setHost("host1");
     record1.setStateType(StateType.NEW_RELIC);
 
@@ -599,7 +608,6 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
             .comparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS)
             .timeDuration(1)
             .stateType(StateType.NEW_RELIC)
-            .stateBaseUrl("newrelic")
             .authToken(AbstractAnalysisState.generateAuthToken("nhUmut2NMcUnsR01OgOz0e51MZ51AqUwrOATJ3fJ"))
             .correlationId(UUID.randomUUID().toString())
             .prevWorkflowExecutionId(prevWorkflowExecutionID)
@@ -618,7 +626,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
         .run();
 
     NewRelicMetricAnalysisRecord metricsAnalysis =
-        metricDataAnalysisService.getMetricsAnalysis(StateType.NEW_RELIC, stateExecutionId, workflowExecutionId);
+        metricDataAnalysisService.getMetricsAnalysis(stateExecutionId, workflowExecutionId);
 
     assertEquals(RiskLevel.LOW, metricsAnalysis.getRiskLevel());
     assertFalse(metricsAnalysis.isShowTimeSeries());
@@ -671,10 +679,10 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     record1.setStateExecutionId(prevStateExecutionId);
     record1.setTimeStamp(System.currentTimeMillis());
     record1.setDataCollectionMinute(0);
-    record1.setRequestsPerMinute(20);
-    record1.setAverageResponseTime(50);
-    record1.setError(-1);
-    record1.setApdexScore(1.0);
+    record1.setValues(new HashMap<>());
+    record1.getValues().put(REQUSET_PER_MINUTE, 20.0);
+    record1.getValues().put(AVERAGE_RESPONSE_TIME, 50.0);
+    record1.getValues().put(APDEX_SCORE, 1.0);
     record1.setHost("host1");
     record1.setStateType(StateType.NEW_RELIC);
 
@@ -718,10 +726,10 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     record1.setStateExecutionId(stateExecutionId);
     record1.setTimeStamp(System.currentTimeMillis());
     record1.setDataCollectionMinute(0);
-    record1.setRequestsPerMinute(20);
-    record1.setAverageResponseTime(50);
-    record1.setError(-1);
-    record1.setApdexScore(1.0);
+    record1.setValues(new HashMap<>());
+    record1.getValues().put(REQUSET_PER_MINUTE, 20.0);
+    record1.getValues().put(AVERAGE_RESPONSE_TIME, 50.0);
+    record1.getValues().put(APDEX_SCORE, 1.0);
     record1.setHost("host1");
     record1.setStateType(StateType.NEW_RELIC);
 
@@ -745,7 +753,6 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
             .comparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS)
             .timeDuration(1)
             .stateType(StateType.NEW_RELIC)
-            .stateBaseUrl("newrelic")
             .authToken(AbstractAnalysisState.generateAuthToken("nhUmut2NMcUnsR01OgOz0e51MZ51AqUwrOATJ3fJ"))
             .correlationId(UUID.randomUUID().toString())
             .prevWorkflowExecutionId(prevWorkflowExecutionID == null ? "-1" : prevWorkflowExecutionID)
@@ -766,7 +773,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
         .run();
 
     NewRelicMetricAnalysisRecord metricsAnalysis =
-        metricDataAnalysisService.getMetricsAnalysis(StateType.NEW_RELIC, stateExecutionId, workflowExecutionId);
+        metricDataAnalysisService.getMetricsAnalysis(stateExecutionId, workflowExecutionId);
 
     assertEquals(RiskLevel.LOW, metricsAnalysis.getRiskLevel());
     assertTrue(metricsAnalysis.isShowTimeSeries());

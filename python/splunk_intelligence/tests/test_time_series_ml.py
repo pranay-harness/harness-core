@@ -74,6 +74,7 @@ def run_analysis(options_var, ctrl_file, test_file, out_file):
     for txn_id, txn_data in result['transactions'].items():
         assert txn_data['txn_name'] in out
         for metrics_id, metric_data in txn_data['metrics'].items():
+            print(txn_data['txn_name'])
             assert metric_data['metric_name'] in out[txn_data['txn_name']]['metrics']
             assert metric_data['max_risk'] == out[txn_data['txn_name']]['metrics'][metric_data['metric_name']][
                 'max_risk']
@@ -106,7 +107,7 @@ def test_run_4():
     run_analysis(options_var, 'resources/ts/nr_control_live_4.json', 'resources/ts/nr_test_live_4.json', 'resources/ts/nr_out_live_4.json')
 
 def main(args):
-    test_run_2()
+    test_run_4()
     #test_max_threshold_node()
 
 

@@ -783,6 +783,11 @@ public interface Constants {
   /**
    * The constant HARNESS_KUBE_CONFIG_PATH.
    */
+  String STATIC_CLOUD_WATCH_METRIC_URL = "/configs/cloudwatch_metrics.yml";
+
+  /**
+   * The cloudwatch metric url.
+   */
   String HARNESS_KUBE_CONFIG_PATH = "HARNESS_KUBE_CONFIG_PATH";
 
   String WORKFLOW_NAME_DATE_FORMAT = "MM/dd/yyyy hh:mm a";

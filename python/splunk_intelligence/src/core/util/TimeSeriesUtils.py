@@ -28,6 +28,9 @@ class MetricType(Enum):
     # Metrics that count something
     COUNT = 'COUNT'
 
+    # All Infra metrics
+    INFRA = 'INFRA'
+
 
 class MetricToDeviationType(Enum):
     HIGHER = 0

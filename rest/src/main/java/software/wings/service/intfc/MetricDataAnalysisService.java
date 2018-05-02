@@ -21,6 +21,7 @@ import javax.validation.constraints.NotNull;
  * Created by rsingh on 9/26/17.
  */
 public interface MetricDataAnalysisService {
+  String RESOURCE_URL = "timeseries";
   @ValidationGroups(Create.class)
   boolean saveMetricData(@NotNull String accountId, String applicationId, String stateExecutionId,
       String delegateTaskId, @Valid List<NewRelicMetricDataRecord> metricData) throws IOException;
@@ -49,8 +50,7 @@ public interface MetricDataAnalysisService {
 
   List<String> getLastSuccessfulWorkflowExecutionIds(String workflowId);
 
-  NewRelicMetricAnalysisRecord getMetricsAnalysis(
-      StateType stateType, String stateExecutionId, String workflowExecutionId);
+  NewRelicMetricAnalysisRecord getMetricsAnalysis(String stateExecutionId, String workflowExecutionId);
 
   boolean isStateValid(String appdId, String stateExecutionID);
 
@@ -69,10 +69,15 @@ public interface MetricDataAnalysisService {
   List<NewRelicMetricHostAnalysisValue> getToolTip(String stateExecutionId, String workflowExecutionId,
       int analysisMinute, String transactionName, String metricName);
 
-  Map<String, TimeSeriesMetricDefinition> getMetricTemplate(StateType stateType);
+  Map<String, TimeSeriesMetricDefinition> getMetricTemplate(StateType stateType, String stateExecutionId);
 
   NewRelicMetricDataRecord getAnalysisMinute(
       StateType stateType, String stateExecutionId, String workflowExecutionId, String serviceId);
+
+  void saveMetricTemplates(
+      StateType stateType, String stateExecutionId, Map<String, TimeSeriesMetricDefinition> metricTemplates);
+
+  Map<String, TimeSeriesMetricDefinition> getMetricTemplates(StateType stateType, String stateExecutionId);
 
   void cleanUpForMetricRetry(String stateExecutionId);
 }

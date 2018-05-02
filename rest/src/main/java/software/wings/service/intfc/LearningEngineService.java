@@ -16,6 +16,7 @@ import java.util.Optional;
  * Created by rsingh on 1/9/18.
  */
 public interface LearningEngineService {
+  String RESOURCE_URL = "learning";
   boolean addLearningEngineAnalysisTask(LearningEngineAnalysisTask analysisTask);
   boolean addLearningEngineExperimentalAnalysisTask(LearningEngineExperimentalAnalysisTask analysisTask);
 

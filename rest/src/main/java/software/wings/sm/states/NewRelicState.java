@@ -171,11 +171,6 @@ public class NewRelicState extends AbstractMetricAnalysisState {
     return delegateService.queueTask(delegateTask);
   }
 
-  @SchemaIgnore
-  protected String getStateBaseUrl() {
-    return "newrelic";
-  }
-
   @Override
   public Map<String, String> parentTemplateFields(String fieldName) {
     Map<String, String> parentTemplateFields = new LinkedHashMap<>();

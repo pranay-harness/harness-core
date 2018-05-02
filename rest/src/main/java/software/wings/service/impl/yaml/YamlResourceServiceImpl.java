@@ -408,6 +408,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       case SUMO:
       case NEW_RELIC:
       case DYNA_TRACE:
+      case PROMETHEUS:
         return yamlHandlerFactory.getYamlHandler(YamlType.VERIFICATION_PROVIDER, settingVariableType.name());
 
       case HOST_CONNECTION_ATTRIBUTES:
