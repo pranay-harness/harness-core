@@ -126,6 +126,7 @@ import software.wings.service.impl.yaml.handler.setting.verificationprovider.Elk
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.JenkinsConfigVerificationYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.LogzConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.NewRelicConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.verificationprovider.PrometheusConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.SplunkConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.SumoConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.VerificationProviderYamlHandler;
@@ -233,6 +234,8 @@ public class YamlModule extends AbstractModule {
         .to(NewRelicConfigYamlHandler.class);
     verificationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.DYNA_TRACE.name())
         .to(DynaTraceConfigYamlHandler.class);
+    verificationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.PROMETHEUS.name())
+        .to(PrometheusConfigYamlHandler.class);
     verificationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.SPLUNK.name())
         .to(SplunkConfigYamlHandler.class);
     verificationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.SUMO.name())

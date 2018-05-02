@@ -66,6 +66,7 @@ import software.wings.sm.states.BambooState;
 import software.wings.sm.states.BarrierState;
 import software.wings.sm.states.CloudWatchState;
 import software.wings.sm.states.CommandState;
+import software.wings.sm.states.DatadogState;
 import software.wings.sm.states.DcNodeSelectState;
 import software.wings.sm.states.DynatraceState;
 import software.wings.sm.states.EcsServiceDeploy;
@@ -92,6 +93,7 @@ import software.wings.sm.states.NewRelicState;
 import software.wings.sm.states.PauseState;
 import software.wings.sm.states.PhaseStepSubWorkflow;
 import software.wings.sm.states.PhaseSubWorkflow;
+import software.wings.sm.states.PrometheusState;
 import software.wings.sm.states.RepeatState;
 import software.wings.sm.states.RollingNodeSelectState;
 import software.wings.sm.states.ShellScriptState;
@@ -182,43 +184,53 @@ public enum StateType implements StateTypeDescriptor {
   DYNA_TRACE(DynatraceState.class, VERIFICATIONS, 4, asList(), ORCHESTRATION_STENCILS),
 
   /**
+   * Prometheus state type.
+   */
+  PROMETHEUS(PrometheusState.class, VERIFICATIONS, 5, asList(), ORCHESTRATION_STENCILS),
+
+  /**
    * Splunk state type.
    */
-  SPLUNK(SplunkState.class, VERIFICATIONS, 5, asList(), ORCHESTRATION_STENCILS),
+  SPLUNK(SplunkState.class, VERIFICATIONS, 6, asList(), ORCHESTRATION_STENCILS),
 
   /**
    * Splunk V2 state type.
    */
-  SPLUNKV2(SplunkV2State.class, VERIFICATIONS, 6, asList(), ORCHESTRATION_STENCILS),
+  SPLUNKV2(SplunkV2State.class, VERIFICATIONS, 7, asList(), ORCHESTRATION_STENCILS),
 
   /**
    * Elk state type.
    */
-  ELK(ElkAnalysisState.class, VERIFICATIONS, 7, "ELK", emptyList(), ORCHESTRATION_STENCILS),
+  ELK(ElkAnalysisState.class, VERIFICATIONS, 8, "ELK", emptyList(), ORCHESTRATION_STENCILS),
 
   /**
    * LOGZ state type.
    */
-  LOGZ(LogzAnalysisState.class, VERIFICATIONS, 8, "LOGZ", emptyList(), ORCHESTRATION_STENCILS),
+  LOGZ(LogzAnalysisState.class, VERIFICATIONS, 9, "LOGZ", emptyList(), ORCHESTRATION_STENCILS),
 
   /**
    * Sumo state type.
    */
-  SUMO(SumoLogicAnalysisState.class, VERIFICATIONS, 9, "SumoLogic", emptyList(), ORCHESTRATION_STENCILS),
+  SUMO(SumoLogicAnalysisState.class, VERIFICATIONS, 10, "SumoLogic", emptyList(), ORCHESTRATION_STENCILS),
+
+  /**
+   * Sumo state type.
+   */
+  DATA_DOG(DatadogState.class, VERIFICATIONS, 9, "Datadog", emptyList(), ORCHESTRATION_STENCILS),
 
   /**
    * Cloud watch state type.
    */
-  CLOUD_WATCH(CloudWatchState.class, VERIFICATIONS, 10, asList(), ORCHESTRATION_STENCILS),
+  CLOUD_WATCH(CloudWatchState.class, VERIFICATIONS, 11, "CloudWatch", asList(), ORCHESTRATION_STENCILS),
 
   /**
    * New relic deployment marker state type.
    */
-  NEW_RELIC_DEPLOYMENT_MARKER(NewRelicDeploymentMarkerState.class, VERIFICATIONS, 11, "NewRelic Deployment Marker",
+  NEW_RELIC_DEPLOYMENT_MARKER(NewRelicDeploymentMarkerState.class, VERIFICATIONS, 12, "NewRelic Deployment Marker",
       asList(), ORCHESTRATION_STENCILS),
 
   AWS_LAMBDA_VERIFICATION(
-      AwsLambdaVerification.class, VERIFICATIONS, 12, "AWS Lambda Verification", asList(), ORCHESTRATION_STENCILS),
+      AwsLambdaVerification.class, VERIFICATIONS, 13, "AWS Lambda Verification", asList(), ORCHESTRATION_STENCILS),
 
   /**
    * Env state state type.

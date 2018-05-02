@@ -1,0 +1,8 @@
+{
+  "ui:order" : [
+    "analysisServerConfigId", "serviceName", "metrics", "hostnameTemplate", "timeDuration", "comparisonStrategy", "analysisTolerance"
+  ],
+  "metrics" : {
+    "ui:widget" : "textarea"
+  }
+}

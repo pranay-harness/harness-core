@@ -8,21 +8,16 @@ import com.google.common.math.Stats;
 
 import lombok.Builder;
 import lombok.Data;
-import org.apache.commons.text.WordUtils;
 import software.wings.beans.SortOrder;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.RiskLevel;
 import software.wings.metrics.Threshold;
-import software.wings.metrics.ThresholdComparisonType;
-import software.wings.metrics.ThresholdType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
-import software.wings.metrics.appdynamics.AppdynamicsConstants;
+import software.wings.service.impl.appdynamics.AppdynamicsTimeSeries;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
 import software.wings.sm.StateType;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -33,213 +28,74 @@ import java.util.Map;
 @Data
 @Builder
 public class NewRelicMetricValueDefinition {
+  public static String ERROR = "error";
+  public static String THROUGHPUT = "throughput";
+  public static String AVERAGE_RESPONSE_TIME = "averageResponseTime";
+  public static String APDEX_SCORE = "apdexScore";
+  public static String CALL_COUNT = "callCount";
+  public static String REQUSET_PER_MINUTE = "requestsPerMinute";
+
+  public static String RESPONSE_TIME_95 = "response95th";
+  public static String STALL_COUNT = "stalls";
+  public static String NUMBER_OF_SLOW_CALLS = "slowCalls";
+
+  public static String CLIENT_SIDE_FAILURE_RATE = "clientSideFailureRate";
+  public static String ERROR_COUNT_HTTP_4XX = "errorCountHttp4xx";
+  public static String ERROR_COUNT_HTTP_5XX = "errorCountHttp5xx";
+  public static String REQUEST_PER_MINUTE = "requestsPerMin";
+  public static String RESPONSE_TIME = "responseTime";
+  public static String SERVER_SIDE_FAILURE_RATE = "serverSideFailureRate";
+
   public static Map<StateType, SortOrder> SORTING_METRIC_NAME =
-      ImmutableMap.of(StateType.APP_DYNAMICS, aSortOrder().withField("response95th", OrderType.DESC).build(),
-          StateType.NEW_RELIC, aSortOrder().withField("requestsPerMinute", OrderType.DESC).build(),
-          StateType.DYNA_TRACE, aSortOrder().withField("requestsPerMin", OrderType.DESC).build());
+      ImmutableMap.of(StateType.APP_DYNAMICS, aSortOrder().withField(RESPONSE_TIME_95, OrderType.DESC).build(),
+          StateType.NEW_RELIC, aSortOrder().withField(REQUSET_PER_MINUTE, OrderType.DESC).build(), StateType.DYNA_TRACE,
+          aSortOrder().withField(REQUEST_PER_MINUTE, OrderType.DESC).build());
 
   public static Map<String, TimeSeriesMetricDefinition> NEW_RELIC_VALUES_TO_ANALYZE = new HashMap<>();
 
   static {
-    List<Threshold> thresholds;
+    NEW_RELIC_VALUES_TO_ANALYZE.put(REQUSET_PER_MINUTE,
+        TimeSeriesMetricDefinition.builder().metricName(REQUSET_PER_MINUTE).metricType(MetricType.THROUGHPUT).build());
 
-    // requestsPerMinute
-    thresholds = new ArrayList<>();
-    thresholds.add(Threshold.builder()
-                       .thresholdType(ThresholdType.ALERT_WHEN_LOWER)
-                       .comparisonType(ThresholdComparisonType.RATIO)
-                       .high(0.5)
-                       .medium(0.75)
-                       .min(0.5)
-                       .build());
-    thresholds.add(Threshold.builder()
-                       .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
-                       .comparisonType(ThresholdComparisonType.DELTA)
-                       .high(100)
-                       .medium(50)
-                       .min(20)
-                       .build());
-    NEW_RELIC_VALUES_TO_ANALYZE.put("requestsPerMinute",
+    NEW_RELIC_VALUES_TO_ANALYZE.put(AVERAGE_RESPONSE_TIME,
         TimeSeriesMetricDefinition.builder()
-            .metricName("requestsPerMinute")
-            .metricType(MetricType.THROUGHPUT)
-            .thresholds(thresholds)
-            .build());
-
-    // averageResponseTime
-    thresholds = new ArrayList<>();
-    thresholds.add(Threshold.builder()
-                       .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
-                       .comparisonType(ThresholdComparisonType.RATIO)
-                       .high(1.5)
-                       .medium(1.25)
-                       .min(0.5)
-                       .build());
-    thresholds.add(Threshold.builder()
-                       .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
-                       .comparisonType(ThresholdComparisonType.DELTA)
-                       .high(10)
-                       .medium(5)
-                       .min(50)
-                       .build());
-    NEW_RELIC_VALUES_TO_ANALYZE.put("averageResponseTime",
-        TimeSeriesMetricDefinition.builder()
-            .metricName("averageResponseTime")
+            .metricName(AVERAGE_RESPONSE_TIME)
             .metricType(MetricType.RESP_TIME)
-            .thresholds(thresholds)
             .build());
 
-    // error
-    thresholds = new ArrayList<>();
-    thresholds.add(Threshold.builder()
-                       .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
-                       .comparisonType(ThresholdComparisonType.RATIO)
-                       .high(1.10)
-                       .medium(1.05)
-                       .min(0.01)
-                       .build());
-    thresholds.add(Threshold.builder()
-                       .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
-                       .comparisonType(ThresholdComparisonType.DELTA)
-                       .high(2)
-                       .medium(1)
-                       .min(.01)
-                       .build());
-    NEW_RELIC_VALUES_TO_ANALYZE.put("error",
-        TimeSeriesMetricDefinition.builder()
-            .metricName("error")
-            .metricType(MetricType.ERROR)
-            .thresholds(thresholds)
-            .build());
+    NEW_RELIC_VALUES_TO_ANALYZE.put(
+        ERROR, TimeSeriesMetricDefinition.builder().metricName(ERROR).metricType(MetricType.ERROR).build());
 
-    // apdexScore
-    thresholds = new ArrayList<>();
-    thresholds.add(Threshold.builder()
-                       .thresholdType(ThresholdType.ALERT_WHEN_LOWER)
-                       .comparisonType(ThresholdComparisonType.RATIO)
-                       .high(0.5)
-                       .medium(0.75)
-                       .min(0.5)
-                       .build());
-    thresholds.add(Threshold.builder()
-                       .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
-                       .comparisonType(ThresholdComparisonType.DELTA)
-                       .high(0.5)
-                       .medium(0.3)
-                       .min(0.3)
-                       .build());
-    NEW_RELIC_VALUES_TO_ANALYZE.put("apdexScore",
-        TimeSeriesMetricDefinition.builder()
-            .metricName("apdexScore")
-            .metricType(MetricType.VALUE)
-            .thresholds(thresholds)
-            .build());
+    NEW_RELIC_VALUES_TO_ANALYZE.put(
+        APDEX_SCORE, TimeSeriesMetricDefinition.builder().metricName(APDEX_SCORE).metricType(MetricType.VALUE).build());
   }
 
   public static Map<String, TimeSeriesMetricDefinition> APP_DYNAMICS_VALUES_TO_ANALYZE = new HashMap<>();
   static {
-    List<Threshold> thresholds;
-
     // 95th percentile response time
-    String metricName = AppdynamicsConstants.METRIC_NAMES_TO_VARIABLES.get(AppdynamicsConstants.RESPONSE_TIME_95);
-    thresholds = new ArrayList<>();
-    thresholds.add(Threshold.builder()
-                       .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
-                       .comparisonType(ThresholdComparisonType.RATIO)
-                       .high(1.5)
-                       .medium(1.25)
-                       .min(0.5)
-                       .build());
-    thresholds.add(Threshold.builder()
-                       .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
-                       .comparisonType(ThresholdComparisonType.DELTA)
-                       .high(10)
-                       .medium(5)
-                       .min(50)
-                       .build());
+    String metricName = AppdynamicsTimeSeries.RESPONSE_TIME_95.getMetricName();
     APP_DYNAMICS_VALUES_TO_ANALYZE.put(metricName,
-        TimeSeriesMetricDefinition.builder()
-            .metricName(metricName)
-            .metricType(MetricType.RESP_TIME)
-            .thresholds(thresholds)
-            .build());
+        TimeSeriesMetricDefinition.builder().metricName(metricName).metricType(MetricType.RESP_TIME).build());
 
     // slow calls
-    metricName = AppdynamicsConstants.METRIC_NAMES_TO_VARIABLES.get(AppdynamicsConstants.NUMBER_OF_SLOW_CALLS);
-    thresholds = new ArrayList<>();
-    thresholds.add(Threshold.builder()
-                       .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
-                       .comparisonType(ThresholdComparisonType.DELTA)
-                       .high(100)
-                       .medium(50)
-                       .min(10)
-                       .build());
-    thresholds.add(Threshold.builder()
-                       .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
-                       .comparisonType(ThresholdComparisonType.RATIO)
-                       .high(1.5)
-                       .medium(1.25)
-                       .min(0.5)
-                       .build());
-    APP_DYNAMICS_VALUES_TO_ANALYZE.put(metricName,
-        TimeSeriesMetricDefinition.builder()
-            .metricName(metricName)
-            .metricType(MetricType.ERROR)
-            .thresholds(thresholds)
-            .build());
+    metricName = AppdynamicsTimeSeries.NUMBER_OF_SLOW_CALLS.getMetricName();
+    APP_DYNAMICS_VALUES_TO_ANALYZE.put(
+        metricName, TimeSeriesMetricDefinition.builder().metricName(metricName).metricType(MetricType.ERROR).build());
 
     // error
-    metricName = AppdynamicsConstants.METRIC_NAMES_TO_VARIABLES.get(AppdynamicsConstants.ERRORS_PER_MINUTE);
-    thresholds = new ArrayList<>();
-    thresholds.add(Threshold.builder()
-                       .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
-                       .comparisonType(ThresholdComparisonType.RATIO)
-                       .high(1.10)
-                       .medium(1.05)
-                       .min(0.01)
-                       .build());
-    thresholds.add(Threshold.builder()
-                       .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
-                       .comparisonType(ThresholdComparisonType.DELTA)
-                       .high(2)
-                       .medium(1)
-                       .min(0.01)
-                       .build());
-    APP_DYNAMICS_VALUES_TO_ANALYZE.put(metricName,
-        TimeSeriesMetricDefinition.builder()
-            .metricName(metricName)
-            .metricType(MetricType.ERROR)
-            .thresholds(thresholds)
-            .build());
+    metricName = AppdynamicsTimeSeries.ERRORS_PER_MINUTE.getMetricName();
+    APP_DYNAMICS_VALUES_TO_ANALYZE.put(
+        metricName, TimeSeriesMetricDefinition.builder().metricName(metricName).metricType(MetricType.ERROR).build());
 
     // stalls
-    metricName = AppdynamicsConstants.METRIC_NAMES_TO_VARIABLES.get(AppdynamicsConstants.STALL_COUNT);
-    thresholds = new ArrayList<>();
-    thresholds.add(Threshold.builder()
-                       .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
-                       .comparisonType(ThresholdComparisonType.DELTA)
-                       .high(2)
-                       .medium(1)
-                       .min(1)
-                       .build());
-    thresholds.add(Threshold.builder()
-                       .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
-                       .comparisonType(ThresholdComparisonType.RATIO)
-                       .high(1.10)
-                       .medium(1.05)
-                       .min(1)
-                       .build());
-    APP_DYNAMICS_VALUES_TO_ANALYZE.put(metricName,
-        TimeSeriesMetricDefinition.builder()
-            .metricName(metricName)
-            .metricType(MetricType.ERROR)
-            .thresholds(thresholds)
-            .build());
+    metricName = AppdynamicsTimeSeries.STALL_COUNT.getMetricName();
+    APP_DYNAMICS_VALUES_TO_ANALYZE.put(
+        metricName, TimeSeriesMetricDefinition.builder().metricName(metricName).metricType(MetricType.ERROR).build());
   }
 
   private String metricName;
   private String metricValueName;
-  private List<Threshold> thresholds;
+  private MetricType metricType;
 
   public NewRelicMetricAnalysisValue analyze(
       List<NewRelicMetricDataRecord> testRecords, List<NewRelicMetricDataRecord> controlRecords) {
@@ -257,7 +113,7 @@ public class NewRelicMetricValueDefinition {
 
     RiskLevel riskLevel = RiskLevel.HIGH;
 
-    for (Threshold threshold : thresholds) {
+    for (Threshold threshold : metricType.getThresholds()) {
       RiskLevel currentRiskLevel = threshold.getRiskLevel(testValue, controlValue);
       if (currentRiskLevel.compareTo(riskLevel) > 0) {
         riskLevel = currentRiskLevel;
@@ -293,16 +149,15 @@ public class NewRelicMetricValueDefinition {
     return value;
   }
 
-  private List<Double> parseValuesForAnalysis(List<NewRelicMetricDataRecord> records)
-      throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+  private List<Double> parseValuesForAnalysis(List<NewRelicMetricDataRecord> records) {
     List<Double> values = new ArrayList<>();
-    Method getValueMethod = NewRelicMetricDataRecord.class.getMethod("get" + WordUtils.capitalize(metricValueName));
     for (NewRelicMetricDataRecord metricDataRecord : records) {
-      if (!metricDataRecord.getName().equals(metricName)) {
+      if (metricDataRecord.getValues() == null) {
         continue;
       }
-      Double value = (Double) getValueMethod.invoke(metricDataRecord);
-      if (value.doubleValue() >= 0.0) {
+
+      Double value = metricDataRecord.getValues().get(metricValueName);
+      if (value != null) {
         values.add(value);
       }
     }

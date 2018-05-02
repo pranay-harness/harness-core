@@ -63,6 +63,7 @@ import com.amazonaws.services.cloudwatch.AmazonCloudWatchClientBuilder;
 import com.amazonaws.services.cloudwatch.model.Datapoint;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsRequest;
 import com.amazonaws.services.cloudwatch.model.ListMetricsRequest;
+import com.amazonaws.services.cloudwatch.model.ListMetricsResult;
 import com.amazonaws.services.cloudwatch.model.Metric;
 import com.amazonaws.services.codedeploy.AmazonCodeDeployClient;
 import com.amazonaws.services.codedeploy.AmazonCodeDeployClientBuilder;
@@ -1688,8 +1689,18 @@ public class AwsHelperService {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       AmazonCloudWatchClient cloudWatchClient =
           getAwsCloudWatchClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
-      return cloudWatchClient.listMetrics().getMetrics();
 
+      List<Metric> rv = new ArrayList<>();
+      String nextToken = null;
+      do {
+        ListMetricsRequest request = new ListMetricsRequest();
+        request.withNextToken(nextToken);
+        ListMetricsResult listMetricsResult = cloudWatchClient.listMetrics(request);
+        nextToken = listMetricsResult.getNextToken();
+        rv.addAll(listMetricsResult.getMetrics());
+      } while (nextToken != null);
+
+      return rv;
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
@@ -1702,7 +1713,17 @@ public class AwsHelperService {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       AmazonCloudWatchClient cloudWatchClient =
           getAwsCloudWatchClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
-      return cloudWatchClient.listMetrics(listMetricsRequest).getMetrics();
+
+      List<Metric> rv = new ArrayList<>();
+      String nextToken = null;
+      do {
+        listMetricsRequest.withNextToken(nextToken);
+        ListMetricsResult listMetricsResult = cloudWatchClient.listMetrics(listMetricsRequest);
+        nextToken = listMetricsResult.getNextToken();
+        rv.addAll(listMetricsResult.getMetrics());
+      } while (nextToken != null);
+
+      return rv;
 
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);

@@ -144,6 +144,16 @@ public abstract class SettingValue implements ExtensionPoint {
     SUMO("SumoLogic"),
 
     /**
+     * Datadog setting variable type.
+     */
+    DATA_DOG("Datadog"),
+
+    /**
+     * Generic APM setting variable types.
+     */
+    APM_VERIFICATION("APM Verification"),
+
+    /**
      * App dynamics setting variable types.
      */
     APP_DYNAMICS("AppDynamics"),
@@ -157,6 +167,11 @@ public abstract class SettingValue implements ExtensionPoint {
      * Dyna trace variable types.
      */
     DYNA_TRACE("Dynatrace"),
+
+    /**
+     * Dyna trace variable types.
+     */
+    CLOUD_WATCH("Cloudwatch"),
 
     /**
      * Elastic Load Balancer Settings
@@ -275,7 +290,9 @@ public abstract class SettingValue implements ExtensionPoint {
 
     WINRM_CONNECTION_ATTRIBUTES("WinRm Connection Attributes"),
 
-    WINRM_SESSION_CONFIG;
+    WINRM_SESSION_CONFIG,
+
+    PROMETHEUS("Prometheus");
 
     private String displayName;
 

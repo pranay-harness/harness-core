@@ -1,6 +1,11 @@
 package software.wings.metrics;
 
 import static org.junit.Assert.assertEquals;
+import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.APDEX_SCORE;
+import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.AVERAGE_RESPONSE_TIME;
+import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.ERROR;
+import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.REQUSET_PER_MINUTE;
+import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.THROUGHPUT;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -10,7 +15,6 @@ import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -21,10 +25,10 @@ public class NewRelicMetricValueDefinitionTest {
   private NewRelicMetricDataRecord testRecord;
   private NewRelicMetricDataRecord controlRecord;
 
-  private Map<String, List<Threshold>> getThresholdsMap(Map<String, TimeSeriesMetricDefinition> stateValuesToAnalyze) {
-    Map<String, List<Threshold>> stateValuesToThresholds = new HashMap<>();
+  private Map<String, MetricType> getMetricTypeMap(Map<String, TimeSeriesMetricDefinition> stateValuesToAnalyze) {
+    Map<String, MetricType> stateValuesToThresholds = new HashMap<>();
     for (Entry<String, TimeSeriesMetricDefinition> entry : stateValuesToAnalyze.entrySet()) {
-      stateValuesToThresholds.put(entry.getKey(), entry.getValue().getThresholds());
+      stateValuesToThresholds.put(entry.getKey(), entry.getValue().getMetricType());
     }
 
     return stateValuesToThresholds;
@@ -41,11 +45,12 @@ public class NewRelicMetricValueDefinitionTest {
                      .timeStamp(System.currentTimeMillis())
                      .host("host")
                      .dataCollectionMinute(1)
-                     .throughput(0.0)
-                     .averageResponseTime(0.0)
-                     .error(0.0)
-                     .apdexScore(0.0)
                      .build();
+    testRecord.getValues().put(THROUGHPUT, 0.0);
+    testRecord.getValues().put(REQUSET_PER_MINUTE, 0.0);
+    testRecord.getValues().put(AVERAGE_RESPONSE_TIME, 0.0);
+    testRecord.getValues().put(ERROR, 0.0);
+    testRecord.getValues().put(APDEX_SCORE, 0.0);
 
     controlRecord = NewRelicMetricDataRecord.builder()
                         .name("metric")
@@ -56,32 +61,34 @@ public class NewRelicMetricValueDefinitionTest {
                         .timeStamp(System.currentTimeMillis())
                         .host("host")
                         .dataCollectionMinute(1)
-                        .throughput(0.0)
-                        .averageResponseTime(0.0)
-                        .error(0.0)
-                        .apdexScore(0.0)
                         .build();
+
+    controlRecord.getValues().put(THROUGHPUT, 0.0);
+    controlRecord.getValues().put(REQUSET_PER_MINUTE, 0.0);
+    controlRecord.getValues().put(AVERAGE_RESPONSE_TIME, 0.0);
+    controlRecord.getValues().put(ERROR, 0.0);
+    controlRecord.getValues().put(APDEX_SCORE, 0.0);
   }
 
   @Test
   public void testAlertWhenLowerApdexWihRatio() {
-    testRecord.setApdexScore(0.40);
-    controlRecord.setApdexScore(1.0);
-    for (Entry<String, List<Threshold>> valuesToAnalyze :
-        getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
+    testRecord.getValues().put(APDEX_SCORE, 0.40);
+    controlRecord.getValues().put(APDEX_SCORE, 1.0);
+    for (Entry<String, MetricType> valuesToAnalyze :
+        getMetricTypeMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
       NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
                                                                 .metricName("metric")
                                                                 .metricValueName(valuesToAnalyze.getKey())
-                                                                .thresholds(valuesToAnalyze.getValue())
+                                                                .metricType(valuesToAnalyze.getValue())
                                                                 .build();
 
       NewRelicMetricAnalysisValue analysisValue = metricValueDefinition.analyze(
           Collections.singletonList(testRecord), Collections.singletonList(controlRecord));
 
-      if (analysisValue.getName().equals("apdexScore")) {
+      if (analysisValue.getName().equals(APDEX_SCORE)) {
         assertEquals(RiskLevel.HIGH, analysisValue.getRiskLevel());
-        assertEquals(testRecord.getApdexScore(), analysisValue.getTestValue(), 0.01);
-        assertEquals(controlRecord.getApdexScore(), analysisValue.getControlValue(), 0.01);
+        assertEquals(testRecord.getValues().get(APDEX_SCORE), analysisValue.getTestValue(), 0.01);
+        assertEquals(controlRecord.getValues().get(APDEX_SCORE), analysisValue.getControlValue(), 0.01);
       } else {
         assertEquals(RiskLevel.LOW, analysisValue.getRiskLevel());
         assertEquals(0.0, analysisValue.getTestValue(), 0.01);
@@ -90,22 +97,22 @@ public class NewRelicMetricValueDefinitionTest {
     }
 
     // test for medium
-    testRecord.setApdexScore(0.60);
-    for (Entry<String, List<Threshold>> valuesToAnalyze :
-        getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
+    testRecord.getValues().put(APDEX_SCORE, 0.60);
+    for (Entry<String, MetricType> valuesToAnalyze :
+        getMetricTypeMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
       NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
                                                                 .metricName("metric")
                                                                 .metricValueName(valuesToAnalyze.getKey())
-                                                                .thresholds(valuesToAnalyze.getValue())
+                                                                .metricType(valuesToAnalyze.getValue())
                                                                 .build();
 
       NewRelicMetricAnalysisValue analysisValue = metricValueDefinition.analyze(
           Collections.singletonList(testRecord), Collections.singletonList(controlRecord));
 
-      if (analysisValue.getName().equals("apdexScore")) {
+      if (analysisValue.getName().equals(APDEX_SCORE)) {
         assertEquals(RiskLevel.MEDIUM, analysisValue.getRiskLevel());
-        assertEquals(testRecord.getApdexScore(), analysisValue.getTestValue(), 0.01);
-        assertEquals(controlRecord.getApdexScore(), analysisValue.getControlValue(), 0.01);
+        assertEquals(testRecord.getValues().get(APDEX_SCORE), analysisValue.getTestValue(), 0.01);
+        assertEquals(controlRecord.getValues().get(APDEX_SCORE), analysisValue.getControlValue(), 0.01);
       } else {
         assertEquals(RiskLevel.LOW, analysisValue.getRiskLevel());
         assertEquals(0.0, analysisValue.getTestValue(), 0.01);
@@ -114,22 +121,22 @@ public class NewRelicMetricValueDefinitionTest {
     }
 
     // test for low
-    testRecord.setApdexScore(0.85);
-    for (Entry<String, List<Threshold>> valuesToAnalyze :
-        getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
+    testRecord.getValues().put(APDEX_SCORE, 0.85);
+    for (Entry<String, MetricType> valuesToAnalyze :
+        getMetricTypeMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
       NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
                                                                 .metricName("metric")
                                                                 .metricValueName(valuesToAnalyze.getKey())
-                                                                .thresholds(valuesToAnalyze.getValue())
+                                                                .metricType(valuesToAnalyze.getValue())
                                                                 .build();
 
       NewRelicMetricAnalysisValue analysisValue = metricValueDefinition.analyze(
           Collections.singletonList(testRecord), Collections.singletonList(controlRecord));
 
-      if (analysisValue.getName().equals("apdexScore")) {
+      if (analysisValue.getName().equals(APDEX_SCORE)) {
         assertEquals(RiskLevel.LOW, analysisValue.getRiskLevel());
-        assertEquals(testRecord.getApdexScore(), analysisValue.getTestValue(), 0.01);
-        assertEquals(controlRecord.getApdexScore(), analysisValue.getControlValue(), 0.01);
+        assertEquals(testRecord.getValues().get(APDEX_SCORE), analysisValue.getTestValue(), 0.01);
+        assertEquals(controlRecord.getValues().get(APDEX_SCORE), analysisValue.getControlValue(), 0.01);
       } else {
         assertEquals(RiskLevel.LOW, analysisValue.getRiskLevel());
         assertEquals(0.0, analysisValue.getTestValue(), 0.01);
@@ -140,23 +147,23 @@ public class NewRelicMetricValueDefinitionTest {
 
   @Test
   public void testAlertWhenLowerThroughput() {
-    testRecord.setThroughput(98);
-    controlRecord.setThroughput(200);
-    for (Entry<String, List<Threshold>> valuesToAnalyze :
-        getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
+    testRecord.getValues().put(THROUGHPUT, 98.0);
+    controlRecord.getValues().put(THROUGHPUT, 200.0);
+    for (Entry<String, MetricType> valuesToAnalyze :
+        getMetricTypeMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
       NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
                                                                 .metricName("metric")
                                                                 .metricValueName(valuesToAnalyze.getKey())
-                                                                .thresholds(valuesToAnalyze.getValue())
+                                                                .metricType(valuesToAnalyze.getValue())
                                                                 .build();
 
       NewRelicMetricAnalysisValue analysisValue = metricValueDefinition.analyze(
           Collections.singletonList(testRecord), Collections.singletonList(controlRecord));
 
-      if (analysisValue.getName().equals("throughput")) {
+      if (analysisValue.getName().equals(THROUGHPUT)) {
         assertEquals(RiskLevel.HIGH, analysisValue.getRiskLevel());
-        assertEquals(testRecord.getThroughput(), analysisValue.getTestValue(), 0.01);
-        assertEquals(controlRecord.getThroughput(), analysisValue.getControlValue(), 0.01);
+        assertEquals(testRecord.getValues().get(THROUGHPUT), analysisValue.getTestValue(), 0.01);
+        assertEquals(controlRecord.getValues().get(THROUGHPUT), analysisValue.getControlValue(), 0.01);
       } else {
         assertEquals(RiskLevel.LOW, analysisValue.getRiskLevel());
         assertEquals(0.0, analysisValue.getTestValue(), 0.01);
@@ -165,23 +172,23 @@ public class NewRelicMetricValueDefinitionTest {
     }
 
     // test for medium
-    testRecord.setThroughput(49);
-    controlRecord.setThroughput(100);
-    for (Entry<String, List<Threshold>> valuesToAnalyze :
-        getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
+    testRecord.getValues().put(THROUGHPUT, 49.0);
+    controlRecord.getValues().put(THROUGHPUT, 100.0);
+    for (Entry<String, MetricType> valuesToAnalyze :
+        getMetricTypeMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
       NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
                                                                 .metricName("metric")
                                                                 .metricValueName(valuesToAnalyze.getKey())
-                                                                .thresholds(valuesToAnalyze.getValue())
+                                                                .metricType(valuesToAnalyze.getValue())
                                                                 .build();
 
       NewRelicMetricAnalysisValue analysisValue = metricValueDefinition.analyze(
           Collections.singletonList(testRecord), Collections.singletonList(controlRecord));
 
-      if (analysisValue.getName().equals("throughput")) {
+      if (analysisValue.getName().equals(THROUGHPUT)) {
         assertEquals(RiskLevel.MEDIUM, analysisValue.getRiskLevel());
-        assertEquals(testRecord.getThroughput(), analysisValue.getTestValue(), 0.01);
-        assertEquals(controlRecord.getThroughput(), analysisValue.getControlValue(), 0.01);
+        assertEquals(testRecord.getValues().get(THROUGHPUT), analysisValue.getTestValue(), 0.01);
+        assertEquals(controlRecord.getValues().get(THROUGHPUT), analysisValue.getControlValue(), 0.01);
       } else {
         assertEquals(RiskLevel.LOW, analysisValue.getRiskLevel());
         assertEquals(0.0, analysisValue.getTestValue(), 0.01);
@@ -190,23 +197,23 @@ public class NewRelicMetricValueDefinitionTest {
     }
 
     // test for medium
-    testRecord.setThroughput(140);
-    controlRecord.setThroughput(200);
-    for (Entry<String, List<Threshold>> valuesToAnalyze :
-        getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
+    testRecord.getValues().put(THROUGHPUT, 140.0);
+    controlRecord.getValues().put(THROUGHPUT, 200.0);
+    for (Entry<String, MetricType> valuesToAnalyze :
+        getMetricTypeMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
       NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
                                                                 .metricName("metric")
                                                                 .metricValueName(valuesToAnalyze.getKey())
-                                                                .thresholds(valuesToAnalyze.getValue())
+                                                                .metricType(valuesToAnalyze.getValue())
                                                                 .build();
 
       NewRelicMetricAnalysisValue analysisValue = metricValueDefinition.analyze(
           Collections.singletonList(testRecord), Collections.singletonList(controlRecord));
 
-      if (analysisValue.getName().equals("throughput")) {
+      if (analysisValue.getName().equals(THROUGHPUT)) {
         assertEquals(RiskLevel.MEDIUM, analysisValue.getRiskLevel());
-        assertEquals(testRecord.getThroughput(), analysisValue.getTestValue(), 0.01);
-        assertEquals(controlRecord.getThroughput(), analysisValue.getControlValue(), 0.01);
+        assertEquals(testRecord.getValues().get(THROUGHPUT), analysisValue.getTestValue(), 0.01);
+        assertEquals(controlRecord.getValues().get(THROUGHPUT), analysisValue.getControlValue(), 0.01);
       } else {
         assertEquals(RiskLevel.LOW, analysisValue.getRiskLevel());
         assertEquals(0.0, analysisValue.getTestValue(), 0.01);
@@ -215,23 +222,23 @@ public class NewRelicMetricValueDefinitionTest {
     }
 
     // test for low
-    testRecord.setThroughput(85);
-    controlRecord.setThroughput(100);
-    for (Entry<String, List<Threshold>> valuesToAnalyze :
-        getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
+    testRecord.getValues().put(THROUGHPUT, 85.0);
+    controlRecord.getValues().put(THROUGHPUT, 100.0);
+    for (Entry<String, MetricType> valuesToAnalyze :
+        getMetricTypeMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
       NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
                                                                 .metricName("metric")
                                                                 .metricValueName(valuesToAnalyze.getKey())
-                                                                .thresholds(valuesToAnalyze.getValue())
+                                                                .metricType(valuesToAnalyze.getValue())
                                                                 .build();
 
       NewRelicMetricAnalysisValue analysisValue = metricValueDefinition.analyze(
           Collections.singletonList(testRecord), Collections.singletonList(controlRecord));
 
-      if (analysisValue.getName().equals("throughput")) {
+      if (analysisValue.getName().equals(THROUGHPUT)) {
         assertEquals(RiskLevel.LOW, analysisValue.getRiskLevel());
-        assertEquals(testRecord.getThroughput(), analysisValue.getTestValue(), 0.01);
-        assertEquals(controlRecord.getThroughput(), analysisValue.getControlValue(), 0.01);
+        assertEquals(testRecord.getValues().get(THROUGHPUT), analysisValue.getTestValue(), 0.01);
+        assertEquals(controlRecord.getValues().get(THROUGHPUT), analysisValue.getControlValue(), 0.01);
       } else {
         assertEquals(RiskLevel.LOW, analysisValue.getRiskLevel());
         assertEquals(0.0, analysisValue.getTestValue(), 0.01);
@@ -240,23 +247,23 @@ public class NewRelicMetricValueDefinitionTest {
     }
 
     // test for zero throughput
-    testRecord.setThroughput(0);
-    controlRecord.setThroughput(150);
-    for (Entry<String, List<Threshold>> valuesToAnalyze :
-        getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
+    testRecord.getValues().put(THROUGHPUT, 0.0);
+    controlRecord.getValues().put(THROUGHPUT, 150.0);
+    for (Entry<String, MetricType> valuesToAnalyze :
+        getMetricTypeMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
       NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
                                                                 .metricName("metric")
                                                                 .metricValueName(valuesToAnalyze.getKey())
-                                                                .thresholds(valuesToAnalyze.getValue())
+                                                                .metricType(valuesToAnalyze.getValue())
                                                                 .build();
 
       NewRelicMetricAnalysisValue analysisValue = metricValueDefinition.analyze(
           Collections.singletonList(testRecord), Collections.singletonList(controlRecord));
 
-      if (analysisValue.getName().equals("throughput")) {
+      if (analysisValue.getName().equals(THROUGHPUT)) {
         assertEquals(RiskLevel.HIGH, analysisValue.getRiskLevel());
-        assertEquals(testRecord.getThroughput(), analysisValue.getTestValue(), 0.01);
-        assertEquals(controlRecord.getThroughput(), analysisValue.getControlValue(), 0.01);
+        assertEquals(testRecord.getValues().get(THROUGHPUT), analysisValue.getTestValue(), 0.01);
+        assertEquals(controlRecord.getValues().get(THROUGHPUT), analysisValue.getControlValue(), 0.01);
       } else {
         assertEquals(RiskLevel.LOW, analysisValue.getRiskLevel());
         assertEquals(0.0, analysisValue.getTestValue(), 0.01);
@@ -267,23 +274,23 @@ public class NewRelicMetricValueDefinitionTest {
 
   @Test
   public void testAlertWhenHigherResponseTime() {
-    testRecord.setAverageResponseTime(100);
-    controlRecord.setAverageResponseTime(50);
-    for (Entry<String, List<Threshold>> valuesToAnalyze :
-        getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
+    testRecord.getValues().put(AVERAGE_RESPONSE_TIME, 100.0);
+    controlRecord.getValues().put(AVERAGE_RESPONSE_TIME, 50.0);
+    for (Entry<String, MetricType> valuesToAnalyze :
+        getMetricTypeMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
       NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
                                                                 .metricName("metric")
                                                                 .metricValueName(valuesToAnalyze.getKey())
-                                                                .thresholds(valuesToAnalyze.getValue())
+                                                                .metricType(valuesToAnalyze.getValue())
                                                                 .build();
 
       NewRelicMetricAnalysisValue analysisValue = metricValueDefinition.analyze(
           Collections.singletonList(testRecord), Collections.singletonList(controlRecord));
 
-      if (analysisValue.getName().equals("averageResponseTime")) {
+      if (analysisValue.getName().equals(AVERAGE_RESPONSE_TIME)) {
         assertEquals(RiskLevel.HIGH, analysisValue.getRiskLevel());
-        assertEquals(testRecord.getAverageResponseTime(), analysisValue.getTestValue(), 0.01);
-        assertEquals(controlRecord.getAverageResponseTime(), analysisValue.getControlValue(), 0.01);
+        assertEquals(testRecord.getValues().get(AVERAGE_RESPONSE_TIME), analysisValue.getTestValue(), 0.01);
+        assertEquals(controlRecord.getValues().get(AVERAGE_RESPONSE_TIME), analysisValue.getControlValue(), 0.01);
       } else {
         assertEquals(RiskLevel.LOW, analysisValue.getRiskLevel());
         assertEquals(0.0, analysisValue.getTestValue(), 0.01);
@@ -292,23 +299,23 @@ public class NewRelicMetricValueDefinitionTest {
     }
 
     // test for medium
-    testRecord.setAverageResponseTime(130);
-    controlRecord.setAverageResponseTime(100);
-    for (Entry<String, List<Threshold>> valuesToAnalyze :
-        getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
+    testRecord.getValues().put(AVERAGE_RESPONSE_TIME, 130.0);
+    controlRecord.getValues().put(AVERAGE_RESPONSE_TIME, 100.0);
+    for (Entry<String, MetricType> valuesToAnalyze :
+        getMetricTypeMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
       NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
                                                                 .metricName("metric")
                                                                 .metricValueName(valuesToAnalyze.getKey())
-                                                                .thresholds(valuesToAnalyze.getValue())
+                                                                .metricType(valuesToAnalyze.getValue())
                                                                 .build();
 
       NewRelicMetricAnalysisValue analysisValue = metricValueDefinition.analyze(
           Collections.singletonList(testRecord), Collections.singletonList(controlRecord));
 
-      if (analysisValue.getName().equals("averageResponseTime")) {
+      if (analysisValue.getName().equals(AVERAGE_RESPONSE_TIME)) {
         assertEquals(RiskLevel.MEDIUM, analysisValue.getRiskLevel());
-        assertEquals(testRecord.getAverageResponseTime(), analysisValue.getTestValue(), 0.01);
-        assertEquals(controlRecord.getAverageResponseTime(), analysisValue.getControlValue(), 0.01);
+        assertEquals(testRecord.getValues().get(AVERAGE_RESPONSE_TIME), analysisValue.getTestValue(), 0.01);
+        assertEquals(controlRecord.getValues().get(AVERAGE_RESPONSE_TIME), analysisValue.getControlValue(), 0.01);
       } else {
         assertEquals(RiskLevel.LOW, analysisValue.getRiskLevel());
         assertEquals(0.0, analysisValue.getTestValue(), 0.01);
@@ -317,23 +324,23 @@ public class NewRelicMetricValueDefinitionTest {
     }
 
     // test for medium
-    testRecord.setAverageResponseTime(16);
-    controlRecord.setAverageResponseTime(10);
-    for (Entry<String, List<Threshold>> valuesToAnalyze :
-        getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
+    testRecord.getValues().put(AVERAGE_RESPONSE_TIME, 16.0);
+    controlRecord.getValues().put(AVERAGE_RESPONSE_TIME, 10.0);
+    for (Entry<String, MetricType> valuesToAnalyze :
+        getMetricTypeMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
       NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
                                                                 .metricName("metric")
                                                                 .metricValueName(valuesToAnalyze.getKey())
-                                                                .thresholds(valuesToAnalyze.getValue())
+                                                                .metricType(valuesToAnalyze.getValue())
                                                                 .build();
 
       NewRelicMetricAnalysisValue analysisValue = metricValueDefinition.analyze(
           Collections.singletonList(testRecord), Collections.singletonList(controlRecord));
 
-      if (analysisValue.getName().equals("averageResponseTime")) {
+      if (analysisValue.getName().equals(AVERAGE_RESPONSE_TIME)) {
         assertEquals(RiskLevel.MEDIUM, analysisValue.getRiskLevel());
-        assertEquals(testRecord.getAverageResponseTime(), analysisValue.getTestValue(), 0.01);
-        assertEquals(controlRecord.getAverageResponseTime(), analysisValue.getControlValue(), 0.01);
+        assertEquals(testRecord.getValues().get(AVERAGE_RESPONSE_TIME), analysisValue.getTestValue(), 0.01);
+        assertEquals(controlRecord.getValues().get(AVERAGE_RESPONSE_TIME), analysisValue.getControlValue(), 0.01);
       } else {
         assertEquals(RiskLevel.LOW, analysisValue.getRiskLevel());
         assertEquals(0.0, analysisValue.getTestValue(), 0.01);
@@ -342,23 +349,23 @@ public class NewRelicMetricValueDefinitionTest {
     }
 
     // test for low
-    testRecord.setAverageResponseTime(85);
-    controlRecord.setAverageResponseTime(100);
-    for (Entry<String, List<Threshold>> valuesToAnalyze :
-        getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
+    testRecord.getValues().put(AVERAGE_RESPONSE_TIME, 85.0);
+    controlRecord.getValues().put(AVERAGE_RESPONSE_TIME, 100.0);
+    for (Entry<String, MetricType> valuesToAnalyze :
+        getMetricTypeMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
       NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
                                                                 .metricName("metric")
                                                                 .metricValueName(valuesToAnalyze.getKey())
-                                                                .thresholds(valuesToAnalyze.getValue())
+                                                                .metricType(valuesToAnalyze.getValue())
                                                                 .build();
 
       NewRelicMetricAnalysisValue analysisValue = metricValueDefinition.analyze(
           Collections.singletonList(testRecord), Collections.singletonList(controlRecord));
 
-      if (analysisValue.getName().equals("averageResponseTime")) {
+      if (analysisValue.getName().equals(AVERAGE_RESPONSE_TIME)) {
         assertEquals(RiskLevel.LOW, analysisValue.getRiskLevel());
-        assertEquals(testRecord.getAverageResponseTime(), analysisValue.getTestValue(), 0.01);
-        assertEquals(controlRecord.getAverageResponseTime(), analysisValue.getControlValue(), 0.01);
+        assertEquals(testRecord.getValues().get(AVERAGE_RESPONSE_TIME), analysisValue.getTestValue(), 0.01);
+        assertEquals(controlRecord.getValues().get(AVERAGE_RESPONSE_TIME), analysisValue.getControlValue(), 0.01);
       } else {
         assertEquals(RiskLevel.LOW, analysisValue.getRiskLevel());
         assertEquals(0.0, analysisValue.getTestValue(), 0.01);
@@ -369,23 +376,23 @@ public class NewRelicMetricValueDefinitionTest {
 
   @Test
   public void testAlertWhenHigherError() {
-    testRecord.setError(100);
-    controlRecord.setError(50);
-    for (Entry<String, List<Threshold>> valuesToAnalyze :
-        getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
+    testRecord.getValues().put(ERROR, 100.0);
+    controlRecord.getValues().put(ERROR, 50.0);
+    for (Entry<String, MetricType> valuesToAnalyze :
+        getMetricTypeMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
       NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
                                                                 .metricName("metric")
                                                                 .metricValueName(valuesToAnalyze.getKey())
-                                                                .thresholds(valuesToAnalyze.getValue())
+                                                                .metricType(valuesToAnalyze.getValue())
                                                                 .build();
 
       NewRelicMetricAnalysisValue analysisValue = metricValueDefinition.analyze(
           Collections.singletonList(testRecord), Collections.singletonList(controlRecord));
 
-      if (analysisValue.getName().equals("error")) {
+      if (analysisValue.getName().equals(ERROR)) {
         assertEquals(RiskLevel.HIGH, analysisValue.getRiskLevel());
-        assertEquals(testRecord.getError(), analysisValue.getTestValue(), 0.01);
-        assertEquals(controlRecord.getError(), analysisValue.getControlValue(), 0.01);
+        assertEquals(testRecord.getValues().get(ERROR), analysisValue.getTestValue(), 0.01);
+        assertEquals(controlRecord.getValues().get(ERROR), analysisValue.getControlValue(), 0.01);
       } else {
         assertEquals(RiskLevel.LOW, analysisValue.getRiskLevel());
         assertEquals(0.0, analysisValue.getTestValue(), 0.01);
@@ -394,23 +401,23 @@ public class NewRelicMetricValueDefinitionTest {
     }
 
     // test for medium
-    testRecord.setError(106);
-    controlRecord.setError(100);
-    for (Entry<String, List<Threshold>> valuesToAnalyze :
-        getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
+    testRecord.getValues().put(ERROR, 106.0);
+    controlRecord.getValues().put(ERROR, 100.0);
+    for (Entry<String, MetricType> valuesToAnalyze :
+        getMetricTypeMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
       NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
                                                                 .metricName("metric")
                                                                 .metricValueName(valuesToAnalyze.getKey())
-                                                                .thresholds(valuesToAnalyze.getValue())
+                                                                .metricType(valuesToAnalyze.getValue())
                                                                 .build();
 
       NewRelicMetricAnalysisValue analysisValue = metricValueDefinition.analyze(
           Collections.singletonList(testRecord), Collections.singletonList(controlRecord));
 
-      if (analysisValue.getName().equals("error")) {
+      if (analysisValue.getName().equals(ERROR)) {
         assertEquals(RiskLevel.MEDIUM, analysisValue.getRiskLevel());
-        assertEquals(testRecord.getError(), analysisValue.getTestValue(), 0.01);
-        assertEquals(controlRecord.getError(), analysisValue.getControlValue(), 0.01);
+        assertEquals(testRecord.getValues().get(ERROR), analysisValue.getTestValue(), 0.01);
+        assertEquals(controlRecord.getValues().get(ERROR), analysisValue.getControlValue(), 0.01);
       } else {
         assertEquals(RiskLevel.LOW, analysisValue.getRiskLevel());
         assertEquals(0.0, analysisValue.getTestValue(), 0.01);
@@ -419,23 +426,23 @@ public class NewRelicMetricValueDefinitionTest {
     }
 
     // test for medium
-    testRecord.setError(2);
-    controlRecord.setError(0.5);
-    for (Entry<String, List<Threshold>> valuesToAnalyze :
-        getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
+    testRecord.getValues().put(ERROR, 2.0);
+    controlRecord.getValues().put(ERROR, 0.50);
+    for (Entry<String, MetricType> valuesToAnalyze :
+        getMetricTypeMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
       NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
                                                                 .metricName("metric")
                                                                 .metricValueName(valuesToAnalyze.getKey())
-                                                                .thresholds(valuesToAnalyze.getValue())
+                                                                .metricType(valuesToAnalyze.getValue())
                                                                 .build();
 
       NewRelicMetricAnalysisValue analysisValue = metricValueDefinition.analyze(
           Collections.singletonList(testRecord), Collections.singletonList(controlRecord));
 
-      if (analysisValue.getName().equals("error")) {
+      if (analysisValue.getName().equals(ERROR)) {
         assertEquals(RiskLevel.MEDIUM, analysisValue.getRiskLevel());
-        assertEquals(testRecord.getError(), analysisValue.getTestValue(), 0.01);
-        assertEquals(controlRecord.getError(), analysisValue.getControlValue(), 0.01);
+        assertEquals(testRecord.getValues().get(ERROR), analysisValue.getTestValue(), 0.01);
+        assertEquals(controlRecord.getValues().get(ERROR), analysisValue.getControlValue(), 0.01);
       } else {
         assertEquals(RiskLevel.LOW, analysisValue.getRiskLevel());
         assertEquals(0.0, analysisValue.getTestValue(), 0.01);
@@ -444,23 +451,23 @@ public class NewRelicMetricValueDefinitionTest {
     }
 
     // test for low
-    testRecord.setError(85);
-    controlRecord.setError(100);
-    for (Entry<String, List<Threshold>> valuesToAnalyze :
-        getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
+    testRecord.getValues().put(ERROR, 85.0);
+    controlRecord.getValues().put(ERROR, 100.0);
+    for (Entry<String, MetricType> valuesToAnalyze :
+        getMetricTypeMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
       NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
                                                                 .metricName("metric")
                                                                 .metricValueName(valuesToAnalyze.getKey())
-                                                                .thresholds(valuesToAnalyze.getValue())
+                                                                .metricType(valuesToAnalyze.getValue())
                                                                 .build();
 
       NewRelicMetricAnalysisValue analysisValue = metricValueDefinition.analyze(
           Collections.singletonList(testRecord), Collections.singletonList(controlRecord));
 
-      if (analysisValue.getName().equals("error")) {
+      if (analysisValue.getName().equals(ERROR)) {
         assertEquals(RiskLevel.LOW, analysisValue.getRiskLevel());
-        assertEquals(testRecord.getError(), analysisValue.getTestValue(), 0.01);
-        assertEquals(controlRecord.getError(), analysisValue.getControlValue(), 0.01);
+        assertEquals(testRecord.getValues().get(ERROR), analysisValue.getTestValue(), 0.01);
+        assertEquals(controlRecord.getValues().get(ERROR), analysisValue.getControlValue(), 0.01);
       } else {
         assertEquals(RiskLevel.LOW, analysisValue.getRiskLevel());
         assertEquals(0.0, analysisValue.getTestValue(), 0.01);

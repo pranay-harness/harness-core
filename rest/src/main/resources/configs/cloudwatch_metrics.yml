@@ -1,0 +1,99 @@
+EC2:
+    - metricName: CPUUtilization
+      displayName: CPU Usage
+      dimension: InstanceId
+      dimensionDisplay: Host name expression
+      metricType: VALUE
+      enabledDefault: true
+
+    - metricName: DiskReadBytes
+      displayName: Disk Read Bytes
+      dimension: InstanceId
+      dimensionDisplay: Host name expression
+      metricType: VALUE
+      enabledDefault: true
+
+    - metricName: DiskReadOps
+      displayName: Disk Read Ops
+      dimension: InstanceId
+      dimensionDisplay: Host name expression
+      metricType: VALUE
+      enabledDefault: true
+
+    - metricName: DiskWriteBytes
+      displayName: Disk Write Bytes
+      dimension: InstanceId
+      dimensionDisplay: Host name expression
+      metricType: VALUE
+      enabledDefault: true
+
+    - metricName: DiskWriteOps
+      displayName: Disk Write Ops
+      dimension: InstanceId
+      dimensionDisplay: Host name expression
+      metricType: VALUE
+      enabledDefault: true
+
+    - metricName: NetworkIn
+      displayName: Network In
+      dimension: InstanceId
+      dimensionDisplay: Host name expression
+      metricType: VALUE
+      enabledDefault: true
+
+    - metricName: NetworkOut
+      displayName: Network Out
+      dimension: InstanceId
+      dimensionDisplay: Host name expression
+      metricType: VALUE
+      enabledDefault: true
+
+    - metricName: NetworkPacketsIn
+      displayName: Network Packets In
+      dimension: InstanceId
+      dimensionDisplay: Host name expression
+      metricType: VALUE
+      enabledDefault: false
+
+    - metricName: NetworkPacketsOut
+      displayName: Network Packets Out
+      dimension: InstanceId
+      dimensionDisplay: Host name expression
+      metricType: VALUE
+      enabledDefault: false
+
+ELB:
+    - metricName: HTTPCode_Backend_2XX
+      displayName: HTTP 2XX
+      dimension: LoadBalancerName
+      dimensionDisplay: Load balancer name
+      metricType: ERROR
+      enabledDefault: true
+
+    - metricName: HTTPCode_Backend_3XX
+      displayName: HTTP 3XX
+      dimension: LoadBalancerName
+      dimensionDisplay: Load balancer name
+      metricType: ERROR
+      enabledDefault: true
+
+    - metricName: HTTPCode_Backend_4XX
+      displayName: HTTP 4XX
+      dimension: LoadBalancerName
+      dimensionDisplay: Load balancer name
+      metricType: ERROR
+      enabledDefault: true
+
+    - metricName: Latency
+      displayName: Latency
+      dimension: LoadBalancerName
+      dimensionDisplay: Load balancer name
+      metricType: ERROR
+      enabledDefault: true
+
+    - metricName: RequestCount
+      displayName: Request Count
+      dimension: LoadBalancerName
+      dimensionDisplay: Load balancer name
+      metricType: THROUGHPUT
+      enabledDefault: true

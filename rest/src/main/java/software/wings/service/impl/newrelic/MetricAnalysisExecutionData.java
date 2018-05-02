@@ -11,7 +11,6 @@ import software.wings.api.ExecutionDataValue;
 import software.wings.beans.CountsByStatuses;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.sm.StateExecutionData;
-import software.wings.sm.StateType;
 
 import java.util.Map;
 import java.util.Set;
@@ -52,8 +51,8 @@ public class MetricAnalysisExecutionData extends StateExecutionData {
         executionDetails, "errorMsg", ExecutionDataValue.builder().displayName("Message").value(getErrorMsg()).build());
     final int total = timeDuration;
     putNotNull(executionDetails, "total", ExecutionDataValue.builder().displayName("Total").value(total).build());
-    final NewRelicMetricAnalysisRecord analysisRecord = metricDataAnalysisService.getMetricsAnalysis(
-        StateType.valueOf(getStateType()), stateExecutionInstanceId, workflowExecutionId);
+    final NewRelicMetricAnalysisRecord analysisRecord =
+        metricDataAnalysisService.getMetricsAnalysis(stateExecutionInstanceId, workflowExecutionId);
 
     int elapsedMinutes = analysisRecord == null ? 0 : analysisRecord.getAnalysisMinute();
     final CountsByStatuses breakdown = new CountsByStatuses();

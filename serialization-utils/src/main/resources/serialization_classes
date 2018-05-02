@@ -343,3 +343,16 @@ software.wings.helpers.ext.external.comm.CollaborationProviderRequest$Communicat
 software.wings.helpers.ext.external.comm.CollaborationProviderResponse, 5308
 software.wings.helpers.ext.external.comm.EmailRequest,5309
 software.wings.beans.Permission,5310
+software.wings.service.impl.prometheus.PrometheusDataCollectionInfo, 5311
+software.wings.service.impl.analysis.TimeSeries, 5312
+software.wings.metrics.MetricType, 5313
+software.wings.beans.PrometheusConfig, 5314
+software.wings.service.impl.prometheus.PrometheusMetricDataResponse, 5315
+software.wings.beans.ResponseMessage, 5316
+software.wings.service.impl.cloudwatch.CloudWatchDataCollectionInfo, 5317
+software.wings.service.impl.cloudwatch.CloudWatchMetric, 5318
+software.wings.service.impl.cloudwatch.AwsNameSpace, 5319
+software.wings.service.impl.apm.APMDataCollectionInfo, 5320
+software.wings.service.impl.apm.APMMetricInfo, 5321
+software.wings.service.impl.apm.APMMetricInfo$ResponseMapper, 5322
+software.wings.beans.APMValidateCollectorConfig, 5323

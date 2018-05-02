@@ -24,8 +24,8 @@ import javax.ws.rs.QueryParam;
 /**
  * Created by rsingh on 09/05/17.
  */
-@Api("learning")
-@Path("/learning")
+@Api(LearningEngineService.RESOURCE_URL)
+@Path("/" + LearningEngineService.RESOURCE_URL)
 @Produces("application/json")
 @Scope(ResourceType.SETTING)
 public class LearningEngineResource {

@@ -395,7 +395,6 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
             .comparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS)
             .timeDuration(1)
             .stateType(StateType.SPLUNKV2)
-            .stateBaseUrl(LogAnalysisResource.SPLUNK_RESOURCE_BASE_URL)
             .authToken(AbstractAnalysisState.generateAuthToken("nhUmut2NMcUnsR01OgOz0e51MZ51AqUwrOATJ3fJ"))
             .correlationId(UUID.randomUUID().toString())
             .build();
@@ -515,7 +514,6 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
             .comparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS)
             .timeDuration(1)
             .stateType(StateType.SUMO)
-            .stateBaseUrl(LogAnalysisResource.SUMO_RESOURCE_BASE_URL)
             .authToken(AbstractAnalysisState.generateAuthToken("nhUmut2NMcUnsR01OgOz0e51MZ51AqUwrOATJ3fJ"))
             .correlationId(UUID.randomUUID().toString())
             .build();
@@ -644,7 +642,6 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
             .comparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS)
             .timeDuration(1)
             .stateType(StateType.ELK)
-            .stateBaseUrl(LogAnalysisResource.ELK_RESOURCE_BASE_URL)
             .authToken(AbstractAnalysisState.generateAuthToken("nhUmut2NMcUnsR01OgOz0e51MZ51AqUwrOATJ3fJ"))
             .correlationId(UUID.randomUUID().toString())
             .build();
@@ -775,7 +772,6 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
             .comparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS)
             .timeDuration(5)
             .stateType(StateType.SUMO)
-            .stateBaseUrl(LogAnalysisResource.SUMO_RESOURCE_BASE_URL)
             .authToken(AbstractAnalysisState.generateAuthToken("nhUmut2NMcUnsR01OgOz0e51MZ51AqUwrOATJ3fJ"))
             .correlationId(UUID.randomUUID().toString())
             .prevWorkflowExecutionId(prevWorkFlowExecutionId)

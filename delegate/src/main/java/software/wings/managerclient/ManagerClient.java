@@ -24,9 +24,9 @@ import software.wings.beans.RestResponse;
 import software.wings.delegatetasks.DelegateFile;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.service.impl.analysis.LogElement;
-import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.FileService.FileBucket;
+import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.StateType;
@@ -64,13 +64,7 @@ public interface ManagerClient {
   Call<RestResponse> saveCommandUnitLogs(@Path("activityId") String activityId, @Path("unitName") String unitName,
       @Query("accountId") String accountId, @Body Log log);
 
-  @POST("appdynamics/save-metrics")
-  Call<RestResponse<Boolean>> saveAppdynamicsMetrics(@Query("accountId") String accountId,
-      @Query("applicationId") String applicationId, @Query("stateExecutionId") String stateExecutionId,
-      @Query("appdynamicsAppId") long appId, @Query("tierId") long tierId,
-      @Body List<AppdynamicsMetricData> metricData);
-
-  @POST("newrelic/save-metrics")
+  @POST(MetricDataAnalysisService.RESOURCE_URL + "/save-metrics")
   Call<RestResponse<Boolean>> saveNewRelicMetrics(@Query("accountId") String accountId,
       @Query("applicationId") String applicationId, @Query("stateExecutionId") String stateExecutionId,
       @Query("delegateTaskId") String delegateTaskId, @Body List<NewRelicMetricDataRecord> metricData);

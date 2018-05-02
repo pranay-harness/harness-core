@@ -12,6 +12,8 @@ public enum TaskGroup {
   APPDYNAMICS,
   NEWRELIC,
   DYNA_TRACE,
+  PROMETHEUS,
+  CLOUD_WATCH,
   JENKINS,
   COMMAND,
   BAMBOO,
@@ -32,5 +34,6 @@ public enum TaskGroup {
   AMI,
   HELM,
   COLLABORATION_PROVIDER,
-  PCF
+  PCF,
+  APM
 }

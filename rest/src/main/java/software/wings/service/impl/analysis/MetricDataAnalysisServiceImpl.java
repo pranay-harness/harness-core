@@ -403,7 +403,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   }
 
   @Override
-  public Map<String, TimeSeriesMetricDefinition> getMetricTemplate(StateType stateType) {
+  public Map<String, TimeSeriesMetricDefinition> getMetricTemplate(StateType stateType, String stateExecutionId) {
     switch (stateType) {
       case NEW_RELIC:
         return NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE;
@@ -411,14 +411,17 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
         return NewRelicMetricValueDefinition.APP_DYNAMICS_VALUES_TO_ANALYZE;
       case DYNA_TRACE:
         return DynaTraceTimeSeries.getDefinitionsToAnalyze();
+      case PROMETHEUS:
+      case CLOUD_WATCH:
+      case DATA_DOG:
+        return getMetricTemplates(stateType, stateExecutionId);
       default:
         return null;
     }
   }
 
   @Override
-  public NewRelicMetricAnalysisRecord getMetricsAnalysis(
-      StateType stateType, String stateExecutionId, String workflowExecutionId) {
+  public NewRelicMetricAnalysisRecord getMetricsAnalysis(String stateExecutionId, String workflowExecutionId) {
     NewRelicMetricAnalysisRecord analysisRecord;
 
     Query<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecordQuery =
@@ -454,7 +457,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       }
       analysisRecord = NewRelicMetricAnalysisRecord.builder()
                            .applicationId(timeSeriesMLAnalysisRecord.getApplicationId())
-                           .stateType(stateType)
+                           .stateType(timeSeriesMLAnalysisRecord.getStateType())
                            .analysisMinute(timeSeriesMLAnalysisRecord.getAnalysisMinute())
                            .metricAnalyses(metricAnalysisList)
                            .stateExecutionId(timeSeriesMLAnalysisRecord.getStateExecutionId())
@@ -532,6 +535,22 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       analysisRecord.setRiskLevel(RiskLevel.NA);
       analysisRecord.setMessage("No data available");
     }
+
+    if (analysisRecord.getStateType() == StateType.DYNA_TRACE) {
+      for (NewRelicMetricAnalysis analysis : analysisRecord.getMetricAnalyses()) {
+        String metricName = analysis.getMetricName();
+        String[] split = metricName.split(":");
+        if (split == null || split.length == 1) {
+          analysis.setDisplayName(metricName);
+          analysis.setFullMetricName(metricName);
+          continue;
+        }
+        String btName = split[0];
+        String fullBTName = btName + " (" + metricName.substring(btName.length() + 1) + ")";
+        analysis.setDisplayName(btName);
+        analysis.setFullMetricName(fullBTName);
+      }
+    }
     return analysisRecord;
   }
 
@@ -607,7 +626,32 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   }
 
   @Override
+  public void saveMetricTemplates(
+      StateType stateType, String stateExecutionId, Map<String, TimeSeriesMetricDefinition> metricTemplates) {
+    wingsPersistence.save(TimeSeriesMetricTemplates.builder()
+                              .stateType(stateType)
+                              .stateExecutionId(stateExecutionId)
+                              .metricTemplates(metricTemplates)
+                              .build());
+  }
+
+  @Override
+  public Map<String, TimeSeriesMetricDefinition> getMetricTemplates(StateType stateType, String stateExecutionId) {
+    TimeSeriesMetricTemplates newRelicMetricDataRecord = wingsPersistence.createQuery(TimeSeriesMetricTemplates.class)
+                                                             .field("stateType")
+                                                             .equal(stateType)
+                                                             .field("stateExecutionId")
+                                                             .equal(stateExecutionId)
+                                                             .get(new FindOptions().limit(1));
+    return newRelicMetricDataRecord == null ? null : newRelicMetricDataRecord.getMetricTemplates();
+  }
+
+  @Override
   public void cleanUpForMetricRetry(String stateExecutionId) {
+    // delete the metric templates
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(TimeSeriesMetricTemplates.class).filter("stateExecutionId", stateExecutionId));
+
     // delete new relic metric records
     wingsPersistence.delete(
         wingsPersistence.createQuery(NewRelicMetricDataRecord.class).filter("stateExecutionId", stateExecutionId));

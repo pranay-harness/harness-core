@@ -80,20 +80,20 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
   public ExecutionResponse execute(ExecutionContext executionContext) {
     getLogger().info("Executing {} state, id: {} ", getStateType(), executionContext.getStateExecutionInstanceId());
     cleanUpForRetry(executionContext);
-    AnalysisContext context = getLogAnalysisContext(executionContext, UUID.randomUUID().toString());
-    saveMetaDataForDashboard(context.getAccountId(), executionContext);
+    analysisContext = getLogAnalysisContext(executionContext, UUID.randomUUID().toString());
+    saveMetaDataForDashboard(analysisContext.getAccountId(), executionContext);
 
-    Set<String> canaryNewHostNames = context.getTestNodes();
+    Set<String> canaryNewHostNames = analysisContext.getTestNodes();
     if (isEmpty(canaryNewHostNames)) {
       getLogger().warn("Could not find test nodes to compare the data");
-      return generateAnalysisResponse(context, ExecutionStatus.SUCCESS, "Could not find hosts to analyze!");
+      return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS, "Could not find hosts to analyze!");
     }
 
-    Set<String> lastExecutionNodes = context.getControlNodes();
+    Set<String> lastExecutionNodes = analysisContext.getControlNodes();
     if (isEmpty(lastExecutionNodes)) {
       if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
-        getLogger().warn("No nodes with older version found to compare the logs. Skipping analysis");
-        return generateAnalysisResponse(context, ExecutionStatus.SUCCESS,
+        getLogger().error("No nodes with older version found to compare the logs. Skipping analysis");
+        return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS,
             "Skipping analysis due to lack of baseline hosts. Make sure you have at least two phases defined.");
       }
 
@@ -104,33 +104,36 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     String responseMessage = "Log Verification running.";
     if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS) {
       WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
-      String baselineWorkflowExecutionId = workflowExecutionBaselineService.getBaselineExecutionId(context.getAppId(),
-          context.getWorkflowId(), workflowStandardParams.getEnv().getUuid(), context.getServiceId());
+      String baselineWorkflowExecutionId = workflowExecutionBaselineService.getBaselineExecutionId(
+          analysisContext.getAppId(), analysisContext.getWorkflowId(), workflowStandardParams.getEnv().getUuid(),
+          analysisContext.getServiceId());
       if (isEmpty(baselineWorkflowExecutionId)) {
         responseMessage = "No baseline was set for the workflow. Workflow running with auto baseline.";
         getLogger().info(responseMessage);
-        baselineWorkflowExecutionId = analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(
-            context.getStateType(), context.getAppId(), context.getServiceId(), context.getWorkflowId());
+        baselineWorkflowExecutionId =
+            analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(analysisContext.getStateType(),
+                analysisContext.getAppId(), analysisContext.getServiceId(), analysisContext.getWorkflowId());
       } else {
         responseMessage = "Baseline is pinned for the workflow. Analyzing against pinned baseline.";
-        getLogger().info("Baseline execution for {} is {}", context.getStateExecutionId(), baselineWorkflowExecutionId);
+        getLogger().info(
+            "Baseline execution for {} is {}", analysisContext.getStateExecutionId(), baselineWorkflowExecutionId);
       }
       if (baselineWorkflowExecutionId == null) {
         responseMessage += " No previous execution found. This will be the baseline run.";
         getLogger().warn("No previous execution found. This will be the baseline run");
       }
-      context.setPrevWorkflowExecutionId(baselineWorkflowExecutionId);
+      analysisContext.setPrevWorkflowExecutionId(baselineWorkflowExecutionId);
     }
 
     final LogAnalysisExecutionData executionData =
         LogAnalysisExecutionData.builder()
-            .stateExecutionInstanceId(context.getStateExecutionId())
+            .stateExecutionInstanceId(analysisContext.getStateExecutionId())
             .serverConfigId(getAnalysisServerConfigId())
             .query(query)
             .timeDuration(Integer.parseInt(timeDuration))
             .canaryNewHostNames(canaryNewHostNames)
             .lastExecutionNodes(lastExecutionNodes == null ? new HashSet<>() : new HashSet<>(lastExecutionNodes))
-            .correlationId(context.getCorrelationId())
+            .correlationId(analysisContext.getCorrelationId())
             .build();
 
     executionData.setStatus(ExecutionStatus.RUNNING);
@@ -143,14 +146,14 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     try {
       hostsToBeCollected.addAll(canaryNewHostNames);
       String delegateTaskId =
-          triggerAnalysisDataCollection(executionContext, context.getCorrelationId(), hostsToBeCollected);
+          triggerAnalysisDataCollection(executionContext, analysisContext.getCorrelationId(), hostsToBeCollected);
 
-      scheduleClusterCronJob(context, delegateTaskId);
-      scheduleAnalysisCronJob(context, delegateTaskId);
+      scheduleClusterCronJob(analysisContext, delegateTaskId);
+      scheduleAnalysisCronJob(analysisContext, delegateTaskId);
 
       return anExecutionResponse()
           .withAsync(true)
-          .withCorrelationIds(Collections.singletonList(context.getCorrelationId()))
+          .withCorrelationIds(Collections.singletonList(analysisContext.getCorrelationId()))
           .withExecutionStatus(ExecutionStatus.RUNNING)
           .withErrorMessage(responseMessage)
           .withStateExecutionData(executionData)
@@ -159,7 +162,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       getLogger().error("log analysis state failed ", ex);
       return anExecutionResponse()
           .withAsync(true)
-          .withCorrelationIds(Collections.singletonList(context.getCorrelationId()))
+          .withCorrelationIds(Collections.singletonList(analysisContext.getCorrelationId()))
           .withExecutionStatus(ExecutionStatus.ERROR)
           .withErrorMessage(ex.getMessage())
           .withStateExecutionData(executionData)
@@ -339,7 +342,6 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           .comparisonStrategy(getComparisonStrategy())
           .timeDuration(Integer.parseInt(timeDuration))
           .stateType(StateType.valueOf(getStateType()))
-          .stateBaseUrl(getStateBaseUrl(StateType.valueOf(getStateType())))
           .authToken(generateAuthToken())
           .analysisServerConfigId(getAnalysisServerConfigId())
           .correlationId(correlationId)

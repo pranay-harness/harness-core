@@ -49,6 +49,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
+import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData.ContinuousVerificationExecutionMetaDataBuilder;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
@@ -87,6 +88,9 @@ import java.util.stream.Collectors;
  * Created by rsingh on 7/6/17.
  */
 public abstract class AbstractAnalysisState extends State {
+  public static final String START_TIME_PLACE_HOLDER = "$startTime";
+  public static final String END_TIME_PLACE_HOLDER = "$endTime";
+  public static final String HOST_NAME_PLACE_HOLDER = "$hostName";
   protected String timeDuration;
   protected String comparisonStrategy;
   protected String tolerance;
@@ -124,6 +128,8 @@ public abstract class AbstractAnalysisState extends State {
   protected String hostnameField;
 
   protected String hostnameTemplate;
+
+  protected AnalysisContext analysisContext;
 
   @Attributes(title = "Analysis Time duration (in minutes)")
   @DefaultValue("15")

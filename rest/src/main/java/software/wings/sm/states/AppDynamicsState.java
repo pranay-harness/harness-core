@@ -205,11 +205,6 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
   }
 
   @Override
-  protected String getStateBaseUrl() {
-    return "appdynamics";
-  }
-
-  @Override
   public Map<String, String> parentTemplateFields(String fieldName) {
     Map<String, String> parentTemplateFields = new LinkedHashMap<>();
     if (fieldName.equals("applicationId")) {

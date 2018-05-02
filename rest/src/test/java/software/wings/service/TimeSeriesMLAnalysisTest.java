@@ -17,8 +17,8 @@ import software.wings.WingsBaseTest;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
-import software.wings.resources.DynaTraceResource;
 import software.wings.resources.NewRelicResource;
+import software.wings.resources.TimeSeriesResource;
 import software.wings.service.impl.analysis.TSRequest;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
@@ -55,7 +55,7 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
   private String delegateTaskId;
 
   @Inject private NewRelicResource newRelicResource;
-  @Inject private DynaTraceResource dynaTraceResource;
+  @Inject private TimeSeriesResource timeSeriesResource;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private MetricDataAnalysisService metricDataAnalysisService;
@@ -77,10 +77,10 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
     InputStream is = getClass().getClassLoader().getResourceAsStream("verification/TimeSeriesNRAnalysisRecords.json");
     String jsonTxt = IOUtils.toString(is, Charset.defaultCharset());
     TimeSeriesMLAnalysisRecord record = JsonUtils.asObject(jsonTxt, TimeSeriesMLAnalysisRecord.class);
-    newRelicResource.saveMLAnalysisRecords(
-        accountId, appId, stateExecutionId, workflowExecutionId, workflowId, serviceId, 0, null, null, record);
+    timeSeriesResource.saveMLAnalysisRecords(accountId, appId, StateType.NEW_RELIC, stateExecutionId,
+        workflowExecutionId, workflowId, serviceId, 0, null, null, record);
     NewRelicMetricAnalysisRecord analysisRecord =
-        newRelicResource.getMetricsAnalysis(stateExecutionId, workflowExecutionId, accountId).getResource();
+        timeSeriesResource.getMetricsAnalysis(stateExecutionId, workflowExecutionId, accountId).getResource();
     assertEquals(1, analysisRecord.getMetricAnalyses().size());
     assertEquals("WebTransaction/Servlet/Register", analysisRecord.getMetricAnalyses().get(0).getMetricName());
     assertEquals(1, analysisRecord.getMetricAnalyses().get(0).getMetricValues().size());
@@ -113,7 +113,7 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
 
     metricDataAnalysisService.saveAnalysisRecords(newRelicMetricAnalysisRecord);
     NewRelicMetricAnalysisRecord analysisRecord =
-        newRelicResource.getMetricsAnalysis(stateExecutionId, workflowExecutionId, accountId).getResource();
+        timeSeriesResource.getMetricsAnalysis(stateExecutionId, workflowExecutionId, accountId).getResource();
     assertEquals(1, analysisRecord.getMetricAnalyses().size());
     assertEquals("index.jsp", analysisRecord.getMetricAnalyses().get(0).getMetricName());
     assertEquals(1, analysisRecord.getMetricAnalyses().get(0).getMetricValues().size());
@@ -194,7 +194,7 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
 
     metricDataAnalysisService.saveAnalysisRecords(newRelicMetricAnalysisRecord);
     NewRelicMetricAnalysisRecord analysisRecord =
-        newRelicResource.getMetricsAnalysis(stateExecutionId, workflowExecutionId, accountId).getResource();
+        timeSeriesResource.getMetricsAnalysis(stateExecutionId, workflowExecutionId, accountId).getResource();
     assertEquals(3, analysisRecord.getMetricAnalyses().size());
     assertEquals("account", analysisRecord.getMetricAnalyses().get(0).getMetricName());
     assertEquals("login", analysisRecord.getMetricAnalyses().get(1).getMetricName());
@@ -275,7 +275,7 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
 
     metricDataAnalysisService.saveAnalysisRecords(newRelicMetricAnalysisRecord);
     NewRelicMetricAnalysisRecord analysisRecord =
-        newRelicResource.getMetricsAnalysis(stateExecutionId, workflowExecutionId, accountId).getResource();
+        timeSeriesResource.getMetricsAnalysis(stateExecutionId, workflowExecutionId, accountId).getResource();
     assertEquals(3, analysisRecord.getMetricAnalyses().size());
     assertEquals("account", analysisRecord.getMetricAnalyses().get(0).getMetricName());
     assertEquals("login", analysisRecord.getMetricAnalyses().get(1).getMetricName());
@@ -356,7 +356,7 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
 
     metricDataAnalysisService.saveAnalysisRecords(newRelicMetricAnalysisRecord);
     NewRelicMetricAnalysisRecord analysisRecord =
-        newRelicResource.getMetricsAnalysis(stateExecutionId, workflowExecutionId, accountId).getResource();
+        timeSeriesResource.getMetricsAnalysis(stateExecutionId, workflowExecutionId, accountId).getResource();
     assertEquals(3, analysisRecord.getMetricAnalyses().size());
     assertEquals("account", analysisRecord.getMetricAnalyses().get(0).getMetricName());
     assertEquals("login", analysisRecord.getMetricAnalyses().get(1).getMetricName());
@@ -395,7 +395,7 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
 
     metricDataAnalysisService.saveAnalysisRecords(newRelicMetricAnalysisRecord);
     NewRelicMetricAnalysisRecord analysisRecord =
-        dynaTraceResource.getMetricsAnalysis(stateExecutionId, workflowExecutionId, accountId).getResource();
+        timeSeriesResource.getMetricsAnalysis(stateExecutionId, workflowExecutionId, accountId).getResource();
     List<NewRelicMetricAnalysis> metricAnalyses = analysisRecord.getMetricAnalyses();
     assertEquals(2, metricAnalyses.size());
     assertEquals("index.jsp", metricAnalyses.get(0).getMetricName());
@@ -443,18 +443,19 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
     stateExecutionInstance.setAppId(appId);
     wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(stateExecutionInstance));
     newRelicResource.saveMetricData(accountId, appId, stateExecutionId, delegateTaskId, controlRecords);
-    List<NewRelicMetricDataRecord> results = newRelicResource
-                                                 .getMetricData(accountId, workflowExecutionId, true,
-                                                     TSRequest.builder()
-                                                         .applicationId(appId)
-                                                         .workflowId(workflowId)
-                                                         .workflowExecutionId(workflowExecutionId)
-                                                         .stateExecutionId(stateExecutionId)
-                                                         .serviceId(serviceId)
-                                                         .analysisMinute(0)
-                                                         .nodes(nodes)
-                                                         .build())
-                                                 .getResource();
+    List<NewRelicMetricDataRecord> results =
+        timeSeriesResource
+            .getMetricData(accountId, StateType.NEW_RELIC, workflowExecutionId, true,
+                TSRequest.builder()
+                    .applicationId(appId)
+                    .workflowId(workflowId)
+                    .workflowExecutionId(workflowExecutionId)
+                    .stateExecutionId(stateExecutionId)
+                    .serviceId(serviceId)
+                    .analysisMinute(0)
+                    .nodes(nodes)
+                    .build())
+            .getResource();
 
     assertEquals(results.size(), controlRecords.size());
   }

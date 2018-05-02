@@ -1,0 +1,50 @@
+Servlet:
+  url: query
+  responseMappers:
+        -
+            fieldName: txnName
+            jsonPath: series[*].scope
+            regexs:
+                - (resource_name:(.*),)
+                - (?<=:).*(?=,)
+        -
+            fieldName: host
+            jsonPath: series[*].scope
+            regexs:
+                - ((?<=host:)(.*))(?=,resource_name)
+        -
+            fieldName: timestamp
+            jsonPath: series[*].pointlist[*].[0]
+        -
+            fieldName: value
+            jsonPath: series[*].pointlist[*].[1]
+  options:
+        api_key: ${apiKey}
+        application_key: ${applicationKey}
+        from: ${start_time}
+        to: ${end_time}
+        query: ${query}{service:${serviceName}, host:${host}}by{resource_name, host}.rollup(avg,60)
+
+System:
+  url: query
+  responseMappers:
+        -
+            fieldName: txnName
+            jsonPath: series[*].scope
+        -
+            fieldName: timestamp
+            jsonPath: series[*].pointlist[*].[0]
+        -
+            fieldName: value
+            jsonPath: series[*].pointlist[*].[1]
+        -
+            fieldName: host
+            jsonPath: series[*].scope
+            regexs:
+              - ((?<=host:)(.*))
+  options:
+        api_key: ${apiKey}
+        application_key: ${applicationKey}
+        from: ${start_time}
+        to: ${end_time}
+        query: ${query}{host:${host}}by{host}.rollup(avg,60)

@@ -1,0 +1,37 @@
+Servlet:
+  -
+    metricName: trace.servlet.request.duration
+    mlMetricType: RESP_TIME
+    datadogMetricType: Servlet
+    displayName: Request Duration
+  -
+    metricName: trace.servlet.request.errors
+    mlMetricType: ERROR
+    datadogMetricType: Servlet
+    displayName: Errors
+  -
+    metricName: trace.servlet.request.hits
+    mlMetricType: THROUGHPUT
+    datadogMetricType: Servlet
+    displayName: Hits
+System:
+  -
+    metricName: system.load.1
+    mlMetricType: INFRA
+    datadogMetricType: System
+    displayName: System Load 1
+  -
+      metricName: system.mem.used
+      mlMetricType: INFRA
+      datadogMetricType: System
+      displayName: System Mem Used
+  -
+      metricName: system.cpu.iowait
+      mlMetricType: INFRA
+      datadogMetricType: System
+      displayName: IO Wait
+
+
+
+
+

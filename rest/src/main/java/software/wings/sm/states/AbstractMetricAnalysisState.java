@@ -52,7 +52,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
 
   @Inject @Named("VerificationJobScheduler") private QuartzScheduler jobScheduler;
 
-  @Transient @Inject private MetricDataAnalysisService metricAnalysisService;
+  @Transient @Inject protected MetricDataAnalysisService metricAnalysisService;
 
   public AbstractMetricAnalysisState(String name, StateType stateType) {
     super(name, stateType.name());
@@ -66,7 +66,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
   public ExecutionResponse execute(ExecutionContext context) {
     getLogger().info("Executing {} state, id: {} ", getStateType(), context.getStateExecutionInstanceId());
     cleanUpForRetry(context);
-    AnalysisContext analysisContext = getAnalysisContext(context, UUID.randomUUID().toString());
+    this.analysisContext = getAnalysisContext(context, UUID.randomUUID().toString());
     saveMetaDataForDashboard(analysisContext.getAccountId(), context);
 
     Set<String> canaryNewHostNames = analysisContext.getTestNodes();
@@ -94,7 +94,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           "Skipping analysis due to lack of baseline data (Minimum two phases are required).");
     }
 
-    String responseMessage = "Log Verification running";
+    String responseMessage = "Metric Verification running";
     if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS) {
       WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
       String baselineWorkflowExecutionId = workflowExecutionBaselineService.getBaselineExecutionId(context.getAppId(),
@@ -147,7 +147,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           .withAsync(true)
           .withCorrelationIds(Collections.singletonList(executionData.getCorrelationId()))
           .withExecutionStatus(ExecutionStatus.RUNNING)
-          .withErrorMessage(getStateType() + " Verification running")
+          .withErrorMessage(responseMessage)
           .withStateExecutionData(executionData)
           .build();
     } catch (Exception ex) {
@@ -204,7 +204,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     }
 
     NewRelicMetricAnalysisRecord metricsAnalysis = metricAnalysisService.getMetricsAnalysis(
-        StateType.valueOf(getStateType()), context.getStateExecutionInstanceId(), context.getWorkflowExecutionId());
+        context.getStateExecutionInstanceId(), context.getWorkflowExecutionId());
     if (metricsAnalysis == null) {
       continuousVerificationService.setMetaDataExecutionStatus(
           context.getStateExecutionInstanceId(), ExecutionStatus.SUCCESS);
@@ -279,7 +279,6 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           .comparisonStrategy(getComparisonStrategy())
           .timeDuration(Integer.parseInt(timeDuration))
           .stateType(StateType.valueOf(getStateType()))
-          .stateBaseUrl(getStateBaseUrl())
           .authToken(generateAuthToken())
           .analysisServerConfigId(getAnalysisServerConfigId())
           .correlationId(correlationId)
@@ -295,6 +294,4 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
   }
 
   public abstract AnalysisTolerance getAnalysisTolerance();
-
-  protected abstract String getStateBaseUrl();
 }

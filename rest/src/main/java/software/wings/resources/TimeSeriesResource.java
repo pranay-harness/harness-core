@@ -13,13 +13,12 @@ import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.TSRequest;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
+import software.wings.service.impl.analysis.TimeSeriesMLScores;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
-import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricHostAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
-import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.MetricDataAnalysisService;
-import software.wings.service.intfc.analysis.MetricAnalysisResource;
+import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.sm.StateType;
 
 import java.io.IOException;
@@ -33,22 +32,22 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
 /**
- * Created by rsingh on 2/6/18.
+ * Created by rsingh on 04/11/18.
  */
-@Api("dynatrace")
-@Path("/dynatrace")
+@Api(MetricDataAnalysisService.RESOURCE_URL)
+@Path("/" + MetricDataAnalysisService.RESOURCE_URL)
 @Produces("application/json")
 @Scope(ResourceType.SETTING)
-public class DynaTraceResource implements MetricAnalysisResource {
+public class TimeSeriesResource {
+  @Inject private NewRelicService newRelicService;
+
   @Inject private MetricDataAnalysisService metricDataAnalysisService;
-  @Inject private LearningEngineService learningEngineService;
 
   @POST
   @Path("/save-metrics")
   @Timed
   @DelegateAuth
   @ExceptionMetered
-  @Override
   public RestResponse<Boolean> saveMetricData(@QueryParam("accountId") final String accountId,
       @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
       @QueryParam("delegateTaskId") String delegateTaskId, List<NewRelicMetricDataRecord> metricData)
@@ -63,57 +62,33 @@ public class DynaTraceResource implements MetricAnalysisResource {
   @Timed
   @LearningEngineAuth
   @ExceptionMetered
-  @Override
   public RestResponse<List<NewRelicMetricDataRecord>> getMetricData(@QueryParam("accountId") String accountId,
-      @QueryParam("workflowExecutionId") String workFlowExecutionId,
+      @QueryParam("stateType") StateType stateType, @QueryParam("workflowExecutionId") String workFlowExecutionId,
       @QueryParam("compareCurrent") boolean compareCurrent, TSRequest request) throws IOException {
-    List<NewRelicMetricDataRecord> metricDataRecords;
     if (compareCurrent) {
-      metricDataRecords = metricDataAnalysisService.getRecords(StateType.DYNA_TRACE, request.getWorkflowExecutionId(),
+      return new RestResponse<>(metricDataAnalysisService.getRecords(stateType, request.getWorkflowExecutionId(),
           request.getStateExecutionId(), request.getWorkflowId(), request.getServiceId(), request.getNodes(),
-          request.getAnalysisMinute(), request.getAnalysisStartMinute());
+          request.getAnalysisMinute(), request.getAnalysisStartMinute()));
     } else {
       if (workFlowExecutionId == null || workFlowExecutionId.equals("-1")) {
-        metricDataRecords = new ArrayList<>();
-      } else {
-        metricDataRecords = metricDataAnalysisService.getPreviousSuccessfulRecords(StateType.DYNA_TRACE,
-            request.getWorkflowId(), workFlowExecutionId, request.getServiceId(), request.getAnalysisMinute(),
-            request.getAnalysisStartMinute());
+        return new RestResponse<>(new ArrayList<>());
       }
-    }
 
-    metricDataRecords.forEach(metricDataRecord -> { metricDataRecord.setHost(metricDataRecord.getName()); });
-    return new RestResponse<>(metricDataRecords);
+      return new RestResponse<>(metricDataAnalysisService.getPreviousSuccessfulRecords(stateType,
+          request.getWorkflowId(), workFlowExecutionId, request.getServiceId(), request.getAnalysisMinute(),
+          request.getAnalysisStartMinute()));
+    }
   }
 
   @GET
   @Path("/generate-metrics")
   @Timed
   @ExceptionMetered
-  @Override
   public RestResponse<NewRelicMetricAnalysisRecord> getMetricsAnalysis(
       @QueryParam("stateExecutionId") final String stateExecutionId,
       @QueryParam("workflowExecutionId") final String workflowExecutionId,
       @QueryParam("accountId") final String accountId) throws IOException {
-    NewRelicMetricAnalysisRecord metricsAnalysis =
-        metricDataAnalysisService.getMetricsAnalysis(StateType.DYNA_TRACE, stateExecutionId, workflowExecutionId);
-    if (metricsAnalysis == null || metricsAnalysis.getMetricAnalyses() == null) {
-      return new RestResponse<>(metricsAnalysis);
-    }
-    for (NewRelicMetricAnalysis analysis : metricsAnalysis.getMetricAnalyses()) {
-      String metricName = analysis.getMetricName();
-      String[] split = metricName.split(":");
-      if (split == null || split.length == 1) {
-        analysis.setDisplayName(metricName);
-        analysis.setFullMetricName(metricName);
-        continue;
-      }
-      String btName = split[0];
-      String fullBTName = btName + " (" + metricName.substring(btName.length() + 1) + ")";
-      analysis.setDisplayName(btName);
-      analysis.setFullMetricName(fullBTName);
-    }
-    return new RestResponse<>(metricsAnalysis);
+    return new RestResponse<>(metricDataAnalysisService.getMetricsAnalysis(stateExecutionId, workflowExecutionId));
   }
 
   @Produces({"application/json", "application/v1+json"})
@@ -122,17 +97,30 @@ public class DynaTraceResource implements MetricAnalysisResource {
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
-  @Override
   public RestResponse<Boolean> saveMLAnalysisRecords(@QueryParam("accountId") String accountId,
-      @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
+      @QueryParam("applicationId") String applicationId, @QueryParam("stateType") StateType stateType,
+      @QueryParam("stateExecutionId") String stateExecutionId,
       @QueryParam("workflowExecutionId") final String workflowExecutionId,
-      @QueryParam("workflowId") final String workflowId, @QueryParam("serviceId") String serviceId,
+      @QueryParam("workflowId") final String workflowId, @QueryParam("serviceId") final String serviceId,
       @QueryParam("analysisMinute") Integer analysisMinute, @QueryParam("taskId") String taskId,
       @QueryParam("baseLineExecutionId") String baseLineExecutionId, TimeSeriesMLAnalysisRecord mlAnalysisResponse)
       throws IOException {
-    return new RestResponse<>(metricDataAnalysisService.saveAnalysisRecordsML(StateType.DYNA_TRACE, accountId,
-        applicationId, stateExecutionId, workflowExecutionId, workflowId, serviceId, analysisMinute, taskId,
-        baseLineExecutionId, mlAnalysisResponse));
+    return new RestResponse<>(metricDataAnalysisService.saveAnalysisRecordsML(stateType, accountId, applicationId,
+        stateExecutionId, workflowExecutionId, workflowId, serviceId, analysisMinute, taskId, baseLineExecutionId,
+        mlAnalysisResponse));
+  }
+
+  @Produces({"application/json", "application/v1+json"})
+  @POST
+  @Path("/get-scores")
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  public RestResponse<List<TimeSeriesMLScores>> getScores(@QueryParam("accountId") String accountId,
+      @QueryParam("applicationId") String applicationId, @QueryParam("workFlowId") String workflowId,
+      @QueryParam("analysisMinute") Integer analysisMinute, @QueryParam("limit") Integer limit) throws IOException {
+    return new RestResponse<>(
+        metricDataAnalysisService.getTimeSeriesMLScores(applicationId, workflowId, analysisMinute, limit));
   }
 
   @POST
@@ -140,7 +128,6 @@ public class DynaTraceResource implements MetricAnalysisResource {
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
-  @Override
   public RestResponse<List<NewRelicMetricHostAnalysisValue>> getTooltip(@QueryParam("accountId") String accountId,
       @QueryParam("stateExecutionId") String stateExecutionId,
       @QueryParam("workFlowExecutionId") String workFlowExecutionId,
@@ -156,9 +143,9 @@ public class DynaTraceResource implements MetricAnalysisResource {
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
-  @Override
   public RestResponse<Map<String, TimeSeriesMetricDefinition>> getMetricTemplate(
-      @QueryParam("accountId") String accountId) {
-    return new RestResponse<>(metricDataAnalysisService.getMetricTemplate(StateType.DYNA_TRACE));
+      @QueryParam("accountId") String accountId, @QueryParam("stateType") StateType stateType,
+      @QueryParam("stateExecutionId") String stateExecutionId) {
+    return new RestResponse<>(metricDataAnalysisService.getMetricTemplate(stateType, stateExecutionId));
   }
 }

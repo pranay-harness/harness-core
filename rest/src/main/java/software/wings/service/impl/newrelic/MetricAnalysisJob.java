@@ -16,8 +16,8 @@ import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.delegatetasks.NewRelicDataCollectionTask;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.metrics.MetricType;
 import software.wings.metrics.RiskLevel;
-import software.wings.metrics.Threshold;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
@@ -117,11 +117,11 @@ public class MetricAnalysisJob implements Job {
       this.analysisDuration = context.getTimeDuration() - APM_BUFFER_MINUTES - 1;
     }
 
-    private Map<String, List<Threshold>> getThresholdsMap(
-        Map<String, TimeSeriesMetricDefinition> stateValuesToAnalyze) {
-      Map<String, List<Threshold>> stateValuesToThresholds = new HashMap<>();
+    private Map<String, MetricType> getMetricTypeMap(Map<String, TimeSeriesMetricDefinition> stateValuesToAnalyze) {
+      Map<String, MetricType> stateValuesToThresholds = new HashMap<>();
       for (Entry<String, TimeSeriesMetricDefinition> entry : stateValuesToAnalyze.entrySet()) {
-        stateValuesToThresholds.put(entry.getValue().getMetricName(), entry.getValue().getThresholds());
+        String metricName = entry.getValue().getMetricName();
+        stateValuesToThresholds.put(metricName, entry.getValue().getMetricType());
       }
 
       return stateValuesToThresholds;
@@ -155,16 +155,22 @@ public class MetricAnalysisJob implements Job {
                                                         .metricAnalyses(new ArrayList<>())
                                                         .build();
 
-      Map<String, List<Threshold>> stateValuesToAnalyze;
+      Map<String, MetricType> stateValuesToAnalyze;
       switch (context.getStateType()) {
         case NEW_RELIC:
-          stateValuesToAnalyze = getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE);
+          stateValuesToAnalyze = getMetricTypeMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE);
           break;
         case APP_DYNAMICS:
-          stateValuesToAnalyze = getThresholdsMap(NewRelicMetricValueDefinition.APP_DYNAMICS_VALUES_TO_ANALYZE);
+          stateValuesToAnalyze = getMetricTypeMap(NewRelicMetricValueDefinition.APP_DYNAMICS_VALUES_TO_ANALYZE);
           break;
         case DYNA_TRACE:
-          stateValuesToAnalyze = getThresholdsMap(DynaTraceTimeSeries.getDefinitionsToAnalyze());
+          stateValuesToAnalyze = getMetricTypeMap(DynaTraceTimeSeries.getDefinitionsToAnalyze());
+          break;
+        case PROMETHEUS:
+        case CLOUD_WATCH:
+        case DATA_DOG:
+          stateValuesToAnalyze = getMetricTypeMap(
+              analysisService.getMetricTemplates(context.getStateType(), context.getStateExecutionId()));
           break;
         default:
           throw new IllegalStateException("Invalid stateType " + context.getStateType());
@@ -178,11 +184,11 @@ public class MetricAnalysisJob implements Job {
                                                     .metricValues(new ArrayList<>())
                                                     .build();
 
-        for (Entry<String, List<Threshold>> valuesToAnalyze : stateValuesToAnalyze.entrySet()) {
+        for (Entry<String, MetricType> valuesToAnalyze : stateValuesToAnalyze.entrySet()) {
           NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
                                                                     .metricName(metricName)
                                                                     .metricValueName(valuesToAnalyze.getKey())
-                                                                    .thresholds(valuesToAnalyze.getValue())
+                                                                    .metricType(valuesToAnalyze.getValue())
                                                                     .build();
 
           NewRelicMetricAnalysisValue metricAnalysisValue =
@@ -215,10 +221,11 @@ public class MetricAnalysisJob implements Job {
       }
       int analysisStartMin = analysisMinute > ANALYSIS_DURATION ? analysisMinute - ANALYSIS_DURATION : 0;
 
-      String testInputUrl = "/api/" + context.getStateBaseUrl() + "/get-metrics?accountId=" + context.getAccountId()
+      String testInputUrl = "/api/" + MetricDataAnalysisService.RESOURCE_URL
+          + "/get-metrics?accountId=" + context.getAccountId() + "&stateType=" + context.getStateType()
           + "&workflowExecutionId=" + context.getWorkflowExecutionId() + "&compareCurrent=true";
-      String controlInputUrl =
-          "/api/" + context.getStateBaseUrl() + "/get-metrics?accountId=" + context.getAccountId() + "&compareCurrent=";
+      String controlInputUrl = "/api/" + MetricDataAnalysisService.RESOURCE_URL + "/get-metrics?accountId="
+          + context.getAccountId() + "&stateType=" + context.getStateType() + "&compareCurrent=";
       if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
         controlInputUrl = controlInputUrl + true + "&workflowExecutionId=" + context.getWorkflowExecutionId();
       } else {
@@ -227,9 +234,9 @@ public class MetricAnalysisJob implements Job {
 
       String uuid = generateUuid();
 
-      String logAnalysisSaveUrl = "/api/" + context.getStateBaseUrl()
-          + "/save-analysis?accountId=" + context.getAccountId() + "&applicationId=" + context.getAppId() + "&"
-          + "workflowExecutionId=" + context.getWorkflowExecutionId()
+      String logAnalysisSaveUrl = "/api/" + MetricDataAnalysisService.RESOURCE_URL
+          + "/save-analysis?accountId=" + context.getAccountId() + "&stateType=" + context.getStateType()
+          + "&applicationId=" + context.getAppId() + "&workflowExecutionId=" + context.getWorkflowExecutionId()
           + "&stateExecutionId=" + context.getStateExecutionId() + "&analysisMinute=" + analysisMinute
           + "&taskId=" + uuid + "&serviceId=" + context.getServiceId() + "&workflowId=" + context.getWorkflowId();
 
@@ -255,8 +262,9 @@ public class MetricAnalysisJob implements Job {
               .test_input_url(testInputUrl)
               .control_input_url(controlInputUrl)
               .analysis_save_url(logAnalysisSaveUrl)
-              .metric_template_url(
-                  "/api/" + context.getStateBaseUrl() + "/get-metric-template?accountId=" + context.getAccountId())
+              .metric_template_url("/api/" + MetricDataAnalysisService.RESOURCE_URL
+                  + "/get-metric-template?accountId=" + context.getAccountId() + "&stateType=" + context.getStateType()
+                  + "&stateExecutionId=" + context.getStateExecutionId())
               .control_nodes(controlNodes)
               .test_nodes(testNodes)
               .stateType(context.getStateType())

@@ -150,11 +150,6 @@ public class DynatraceState extends AbstractMetricAnalysisState {
   }
 
   @Override
-  protected String getStateBaseUrl() {
-    return "dynatrace";
-  }
-
-  @Override
   protected Set<String> getLastExecutionNodes(ExecutionContext context) {
     return Sets.newHashSet(CONTROL_HOST_NAME);
   }

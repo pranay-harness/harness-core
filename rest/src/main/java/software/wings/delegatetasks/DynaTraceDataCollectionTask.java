@@ -28,8 +28,8 @@ import software.wings.sm.states.DynatraceState;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -272,18 +272,12 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
                                        .timeStamp(timeStamp.longValue())
                                        .stateType(StateType.DYNA_TRACE)
                                        .host(dataResponse.getResult().getHost())
+                                       .values(new HashMap<>())
                                        .build();
                 records.put(btName, timeStamp.longValue(), metricDataRecord);
               }
-              try {
-                Field f = NewRelicMetricDataRecord.class.getDeclaredField(timeSeries.getSavedFieldName());
-                f.setAccessible(true);
-                f.set(metricDataRecord, value);
-              } catch (NoSuchFieldException e) {
-                throw new WingsException(e);
-              } catch (IllegalAccessException e) {
-                throw new WingsException(e);
-              }
+
+              metricDataRecord.getValues().put(timeSeries.getSavedFieldName(), value);
             }
           });
         });

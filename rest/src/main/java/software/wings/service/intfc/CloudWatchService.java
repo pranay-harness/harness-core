@@ -1,6 +1,10 @@
 package software.wings.service.intfc;
 
+import software.wings.service.impl.cloudwatch.AwsNameSpace;
+import software.wings.service.impl.cloudwatch.CloudWatchMetric;
+
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by anubhaw on 12/14/16.
@@ -35,4 +39,6 @@ public interface CloudWatchService {
    * @return the list
    */
   List<String> listDimensions(String settingId, String region, String namespace, String metricName);
+
+  Map<AwsNameSpace, List<CloudWatchMetric>> getCloudWatchMetrics();
 }

@@ -73,12 +73,14 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 /**
  * Created by rsingh on 9/27/17.
  */
 public class LogMLAnalysisServiceTest extends WingsBaseTest {
   private static final Logger logger = LoggerFactory.getLogger(LogMLAnalysisServiceTest.class);
+  static Pattern p = Pattern.compile("\\[(.*?)\\]");
 
   private String accountId;
   private String appId;

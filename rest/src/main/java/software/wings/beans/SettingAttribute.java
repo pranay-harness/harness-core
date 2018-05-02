@@ -2,12 +2,14 @@ package software.wings.beans;
 
 import static java.util.Arrays.stream;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AMAZON_S3;
+import static software.wings.settings.SettingValue.SettingVariableTypes.APM_VERIFICATION;
 import static software.wings.settings.SettingValue.SettingVariableTypes.APP_DYNAMICS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.ARTIFACTORY;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AZURE;
 import static software.wings.settings.SettingValue.SettingVariableTypes.BAMBOO;
 import static software.wings.settings.SettingValue.SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES;
+import static software.wings.settings.SettingValue.SettingVariableTypes.DATA_DOG;
 import static software.wings.settings.SettingValue.SettingVariableTypes.DIRECT;
 import static software.wings.settings.SettingValue.SettingVariableTypes.DOCKER;
 import static software.wings.settings.SettingValue.SettingVariableTypes.DYNA_TRACE;
@@ -24,6 +26,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.NEW_RELI
 import static software.wings.settings.SettingValue.SettingVariableTypes.NEXUS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PCF;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
+import static software.wings.settings.SettingValue.SettingVariableTypes.PROMETHEUS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.SLACK;
 import static software.wings.settings.SettingValue.SettingVariableTypes.SMTP;
 import static software.wings.settings.SettingValue.SettingVariableTypes.SPLUNK;
@@ -85,7 +88,7 @@ public class SettingAttribute extends Base {
     CLOUD_PROVIDER(Lists.newArrayList(PHYSICAL_DATA_CENTER, AWS, AZURE, GCP, DIRECT, KUBERNETES_CLUSTER, PCF)),
 
     CONNECTOR(Lists.newArrayList(SMTP, JENKINS, BAMBOO, SPLUNK, ELK, LOGZ, SUMO, APP_DYNAMICS, NEW_RELIC, DYNA_TRACE,
-        ELB, SLACK, DOCKER, ECR, GCR, NEXUS, ARTIFACTORY, AMAZON_S3)),
+        DATA_DOG, APM_VERIFICATION, PROMETHEUS, ELB, SLACK, DOCKER, ECR, GCR, NEXUS, ARTIFACTORY, AMAZON_S3)),
 
     SETTING(Lists.newArrayList(HOST_CONNECTION_ATTRIBUTES, BASTION_HOST_CONNECTION_ATTRIBUTES, STRING));
 

@@ -2,6 +2,12 @@ package software.wings.delegatetasks;
 
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
+import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.APDEX_SCORE;
+import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.AVERAGE_RESPONSE_TIME;
+import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.CALL_COUNT;
+import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.ERROR;
+import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.REQUSET_PER_MINUTE;
+import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.THROUGHPUT;
 
 import com.google.common.collect.Sets;
 import com.google.common.collect.Table.Cell;
@@ -172,6 +178,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
 
               metricDataRecord.setTimeStamp(timeStamp);
               metricDataRecord.setHost(node.getHost());
+              metricDataRecord.setValues(new HashMap<>());
 
               metricDataRecord.setDataCollectionMinute(
                   (int) ((timeStamp - managerAnalysisStartTime) / TimeUnit.MINUTES.toMillis(1)));
@@ -179,10 +186,10 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
               final String webTxnJson = JsonUtils.asJson(timeSlice.getValues());
               NewRelicWebTransactions webTransactions = JsonUtils.asObject(webTxnJson, NewRelicWebTransactions.class);
               if (webTransactions.getCall_count() > 0) {
-                metricDataRecord.setThroughput(webTransactions.getThroughput());
-                metricDataRecord.setAverageResponseTime(webTransactions.getAverage_response_time());
-                metricDataRecord.setCallCount(webTransactions.getCall_count());
-                metricDataRecord.setRequestsPerMinute(webTransactions.getRequests_per_minute());
+                metricDataRecord.getValues().put(THROUGHPUT, webTransactions.getThroughput());
+                metricDataRecord.getValues().put(AVERAGE_RESPONSE_TIME, webTransactions.getAverage_response_time());
+                metricDataRecord.getValues().put(CALL_COUNT, (double) webTransactions.getCall_count());
+                metricDataRecord.getValues().put(REQUSET_PER_MINUTE, (double) webTransactions.getRequests_per_minute());
                 records.put(metric.getName(), timeStamp, metricDataRecord);
               }
             }
@@ -215,7 +222,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
               if (metricDataRecord != null) {
                 final String errorsJson = JsonUtils.asJson(timeslice.getValues());
                 NewRelicErrors errors = JsonUtils.asObject(errorsJson, NewRelicErrors.class);
-                metricDataRecord.setError(errors.getError_count());
+                metricDataRecord.getValues().put(ERROR, (double) errors.getError_count());
               }
             }
           }
@@ -248,7 +255,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
               if (metricDataRecord != null) {
                 final String apdexJson = JsonUtils.asJson(timeslice.getValues());
                 NewRelicApdex apdex = JsonUtils.asObject(apdexJson, NewRelicApdex.class);
-                metricDataRecord.setApdexScore(apdex.getScore());
+                metricDataRecord.getValues().put(APDEX_SCORE, apdex.getScore());
               }
             }
           }

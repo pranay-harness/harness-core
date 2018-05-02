@@ -1,10 +1,11 @@
 package software.wings.metrics;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by sriram_parthasarathy on 11/29/17.
@@ -13,6 +14,16 @@ import java.util.List;
 @Data
 public class TimeSeriesMetricDefinition {
   private String metricName;
-  private List<Threshold> thresholds = new ArrayList<>();
   private MetricType metricType;
+  private Set<String> tags;
+
+  @JsonProperty("metricType")
+  public String getMetricTypeName() {
+    return metricType.name();
+  }
+
+  @JsonProperty("thresholds")
+  public List<Threshold> getThresholds() {
+    return metricType.getThresholds();
+  }
 }

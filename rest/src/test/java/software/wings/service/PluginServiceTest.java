@@ -19,10 +19,12 @@ import static software.wings.beans.PluginCategory.Verification;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.BambooConfig;
+import software.wings.beans.DatadogConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.ElasticLoadBalancerConfig;
@@ -35,6 +37,7 @@ import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
+import software.wings.beans.PrometheusConfig;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.SumoConfig;
@@ -45,6 +48,7 @@ import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.impl.PluginServiceImpl;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.PluginService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.StateType;
 
 import java.io.IOException;
@@ -78,7 +82,7 @@ public class PluginServiceTest {
   @Test
   public void shouldGetInstalledPlugins() throws Exception {
     assertThat(pluginService.getInstalledPlugins(accountId))
-        .hasSize(21)
+        .hasSize(24)
         .containsExactly(anAccountPlugin()
                              .withSettingClass(JenkinsConfig.class)
                              .withAccountId(accountId)
@@ -141,6 +145,30 @@ public class PluginServiceTest {
                 .withIsEnabled(true)
                 .withDisplayName("Dynatrace")
                 .withType(StateType.DYNA_TRACE.name())
+                .withPluginCategories(asList(Verification))
+                .build(),
+            anAccountPlugin()
+                .withSettingClass(PrometheusConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName("Prometheus")
+                .withType(StateType.PROMETHEUS.name())
+                .withPluginCategories(asList(Verification))
+                .build(),
+            anAccountPlugin()
+                .withSettingClass(APMVerificationConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(false)
+                .withDisplayName("APM Verification")
+                .withType(SettingVariableTypes.APM_VERIFICATION.name())
+                .withPluginCategories(asList(Verification))
+                .build(),
+            anAccountPlugin()
+                .withSettingClass(DatadogConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName("Datadog")
+                .withType(StateType.DATA_DOG.name())
                 .withPluginCategories(asList(Verification))
                 .build(),
             anAccountPlugin()
@@ -249,7 +277,7 @@ public class PluginServiceTest {
                 .build());
 
     assertThat(pluginService.getInstalledPlugins(azureEnabledAccountId))
-        .hasSize(22)
+        .hasSize(25)
         .contains(anAccountPlugin()
                       .withSettingClass(AzureConfig.class)
                       .withAccountId(azureEnabledAccountId)
@@ -260,7 +288,7 @@ public class PluginServiceTest {
                       .build());
 
     assertThat(pluginService.getInstalledPlugins(pcfEnabledAccountId))
-        .hasSize(23)
+        .hasSize(26)
         .contains(anAccountPlugin()
                       .withSettingClass(PcfConfig.class)
                       .withAccountId(pcfEnabledAccountId)
@@ -274,21 +302,23 @@ public class PluginServiceTest {
   @Test
   public void shouldGetPluginSettingSchema() throws Exception {
     assertThat(pluginService.getPluginSettingSchema(accountId))
-        .hasSize(21)
-        .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK",
-            "ELK", "LOGZ", "SUMO", "AWS", "GCP", "PHYSICAL_DATA_CENTER", "KUBERNETES_CLUSTER", "DOCKER",
-            "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS", "ARTIFACTORY", "GIT");
+        .hasSize(24)
+        .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "PROMETHEUS", "APM_VERIFICATION", "DATA_DOG",
+            "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "ELK", "LOGZ", "SUMO", "AWS", "GCP", "PHYSICAL_DATA_CENTER",
+            "KUBERNETES_CLUSTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS", "ARTIFACTORY", "GIT");
 
     assertThat(pluginService.getPluginSettingSchema(azureEnabledAccountId))
-        .hasSize(22)
-        .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK",
-            "ELK", "LOGZ", "SUMO", "AWS", "GCP", "AZURE", "PHYSICAL_DATA_CENTER", "KUBERNETES_CLUSTER", "DOCKER",
-            "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS", "ARTIFACTORY", "GIT");
+        .hasSize(25)
+        .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "PROMETHEUS", "APM_VERIFICATION", "DATA_DOG",
+            "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "ELK", "LOGZ", "SUMO", "AWS", "GCP", "AZURE",
+            "PHYSICAL_DATA_CENTER", "KUBERNETES_CLUSTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS",
+            "ARTIFACTORY", "GIT");
 
     assertThat(pluginService.getPluginSettingSchema(pcfEnabledAccountId))
-        .hasSize(23)
-        .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK",
-            "ELK", "LOGZ", "SUMO", "AWS", "GCP", "AZURE", "PHYSICAL_DATA_CENTER", "KUBERNETES_CLUSTER", "DOCKER",
-            "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS", "ARTIFACTORY", "PCF", "GIT");
+        .hasSize(26)
+        .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "PROMETHEUS", "APM_VERIFICATION", "DATA_DOG",
+            "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "ELK", "LOGZ", "SUMO", "AWS", "GCP", "AZURE",
+            "PHYSICAL_DATA_CENTER", "KUBERNETES_CLUSTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS",
+            "ARTIFACTORY", "PCF", "GIT");
   }
 }

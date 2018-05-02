@@ -11,6 +11,18 @@ class MetricTemplate(object):
             metric_names.append(metrics['metricName'])
         return metric_names
 
+    def get_metric_names_by_tags(self):
+        metric_names = {'default':[]}
+        for metrics in self.metric_template.values():
+            if 'tags' in metrics and metrics.get('tags') is not None:
+                if len(metrics.get('tags')) != 0:
+                    for tag in metrics['tags']:
+                        if not tag in metric_names:
+                            metric_names[tag] = []
+                        metric_names[tag].append(metrics['metricName'])
+            metric_names['default'].append(metrics['metricName'])
+        return metric_names
+
     def get_deviation_type(self, metric_name):
         threshold_type = self.metric_template[metric_name]['thresholds'][0]['thresholdType']
         if threshold_type == 'ALERT_WHEN_HIGHER':

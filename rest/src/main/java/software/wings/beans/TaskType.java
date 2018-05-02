@@ -4,8 +4,10 @@ import static org.joor.Reflect.on;
 
 import com.google.inject.Injector;
 
+import software.wings.delegatetasks.APMDataCollectionTask;
 import software.wings.delegatetasks.AppdynamicsDataCollectionTask;
 import software.wings.delegatetasks.BambooTask;
+import software.wings.delegatetasks.CloudWatchDataCollectionTask;
 import software.wings.delegatetasks.CollaborationProviderTask;
 import software.wings.delegatetasks.CommandTask;
 import software.wings.delegatetasks.DelegateRunnableTask;
@@ -18,6 +20,7 @@ import software.wings.delegatetasks.JenkinsTask;
 import software.wings.delegatetasks.KubernetesSteadyStateCheckTask;
 import software.wings.delegatetasks.NewRelicDataCollectionTask;
 import software.wings.delegatetasks.NewRelicDeploymentMarkerTask;
+import software.wings.delegatetasks.PrometheusDataCollectionTask;
 import software.wings.delegatetasks.ServiceImplDelegateTask;
 import software.wings.delegatetasks.ShellScriptTask;
 import software.wings.delegatetasks.SplunkDataCollectionTask;
@@ -28,6 +31,7 @@ import software.wings.delegatetasks.collect.artifacts.BambooCollectionTask;
 import software.wings.delegatetasks.collect.artifacts.JenkinsCollectionTask;
 import software.wings.delegatetasks.collect.artifacts.NexusCollectionTask;
 import software.wings.delegatetasks.pcf.PcfCommandTask;
+import software.wings.delegatetasks.validation.APMValidation;
 import software.wings.delegatetasks.validation.AlwaysTrueValidation;
 import software.wings.delegatetasks.validation.AppdynamicsValidation;
 import software.wings.delegatetasks.validation.ArtifactoryValidation;
@@ -49,6 +53,7 @@ import software.wings.delegatetasks.validation.KubernetesSteadyStateCheckValidat
 import software.wings.delegatetasks.validation.LogzValidation;
 import software.wings.delegatetasks.validation.NewRelicValidation;
 import software.wings.delegatetasks.validation.NexusValidation;
+import software.wings.delegatetasks.validation.PrometheusValidation;
 import software.wings.delegatetasks.validation.ShellScriptValidation;
 import software.wings.delegatetasks.validation.SplunkValidation;
 import software.wings.delegatetasks.validation.SumoValidation;
@@ -107,6 +112,7 @@ public enum TaskType {
   AMAZON_S3_LAST_SUCCESSFUL_BUILD(TaskGroup.S3, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   AMAZON_S3_GET_BUILDS(TaskGroup.S3, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   AMAZON_S3_GET_PLANS(TaskGroup.S3, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
+  APM_VALIDATE_CONNECTOR_TASK(TaskGroup.APM, ServiceImplDelegateTask.class, APMValidation.class),
   APPDYNAMICS_CONFIGURATION_VALIDATE_TASK(
       TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class, AppdynamicsValidation.class),
   APPDYNAMICS_GET_APP_TASK(TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class, AppdynamicsValidation.class),
@@ -117,7 +123,6 @@ public enum TaskType {
   NEWRELIC_GET_APP_TASK(TaskGroup.NEWRELIC, ServiceImplDelegateTask.class, NewRelicValidation.class),
   NEWRELIC_GET_APP_INSTANCES_TASK(TaskGroup.NEWRELIC, ServiceImplDelegateTask.class, NewRelicValidation.class),
   NEWRELIC_COLLECT_METRIC_DATA(TaskGroup.NEWRELIC, NewRelicDataCollectionTask.class, NewRelicValidation.class),
-  NEWRELIC_COLLECT_METRIC_NAMES(TaskGroup.NEWRELIC, ServiceImplDelegateTask.class, NewRelicValidation.class),
   NEWRELIC_GET_METRICES_DATA(TaskGroup.NEWRELIC, ServiceImplDelegateTask.class, NewRelicValidation.class),
   NEWRELIC_POST_DEPLOYMENT_MARKER(TaskGroup.NEWRELIC, NewRelicDeploymentMarkerTask.class, NewRelicValidation.class),
   SPLUNK(TaskGroup.SPLUNK, HttpTask.class, SplunkValidation.class),
@@ -165,7 +170,14 @@ public enum TaskType {
       TaskGroup.CONTAINER, KubernetesSteadyStateCheckTask.class, KubernetesSteadyStateCheckValidation.class),
   PCF_COMMAND_TASK(TaskGroup.PCF, PcfCommandTask.class, AlwaysTrueValidation.class),
   COLLABORATION_PROVIDER_TASK(
-      TaskGroup.COLLABORATION_PROVIDER, CollaborationProviderTask.class, CollaborationProviderTaskValidation.class);
+      TaskGroup.COLLABORATION_PROVIDER, CollaborationProviderTask.class, CollaborationProviderTaskValidation.class),
+  PROMETHEUS_VALIDATE_CONFIGURATION_TASK(
+      TaskGroup.PROMETHEUS, ServiceImplDelegateTask.class, PrometheusValidation.class),
+  PROMETHEUS_METRIC_DATA_COLLECTION_TASK(
+      TaskGroup.PROMETHEUS, PrometheusDataCollectionTask.class, PrometheusValidation.class),
+  CLOUD_WATCH_COLLECT_METRIC_DATA(
+      TaskGroup.CLOUD_WATCH, CloudWatchDataCollectionTask.class, AlwaysTrueValidation.class),
+  APM_METRIC_DATA_COLLECTION_TASK(TaskGroup.APM, APMDataCollectionTask.class, APMValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;
