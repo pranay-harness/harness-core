@@ -402,6 +402,30 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     return result;
   }
 
+  @Override
+  public Map<String, String> getActiveServiceImages(KubernetesConfig kubernetesConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, boolean isStatefulSet,
+      String imagePrefix) {
+    Map<String, String> result = new HashMap<>();
+    String controllerNamePrefix = getPrefixFromControllerName(containerServiceName, isStatefulSet);
+    listControllers(kubernetesConfig, encryptedDataDetails)
+        .stream()
+        .filter(ctrl -> ctrl.getMetadata().getName().startsWith(controllerNamePrefix))
+        .filter(ctrl -> getControllerPodCount(ctrl) > 0)
+        .filter(ctrl -> getRevisionFromControllerName(ctrl.getMetadata().getName(), isStatefulSet).isPresent())
+        .forEach(ctrl
+            -> result.put(ctrl.getMetadata().getName(),
+                getPodTemplateSpec(ctrl)
+                    .getSpec()
+                    .getContainers()
+                    .stream()
+                    .map(Container::getImage)
+                    .filter(image -> image.startsWith(imagePrefix + ":"))
+                    .findFirst()
+                    .orElse("none")));
+    return result;
+  }
+
   private boolean inSteadyState(Pod pod) {
     List<PodCondition> conditions = pod.getStatus().getConditions();
     return isNotEmpty(conditions)

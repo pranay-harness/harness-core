@@ -1089,6 +1089,18 @@ public class AwsHelperService {
     return new ListTaskDefinitionsResult();
   }
 
+  public DescribeTaskDefinitionResult describeTaskDefinition(String region, AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptionDetails, DescribeTaskDefinitionRequest describeTaskDefinitionRequest) {
+    try {
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      return getAmazonEcsClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey())
+          .describeTaskDefinition(describeTaskDefinitionRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new DescribeTaskDefinitionResult();
+  }
+
   public DescribeTasksResult describeTasks(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, DescribeTasksRequest describeTasksRequest) {
     try {

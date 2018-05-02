@@ -76,13 +76,14 @@ public class KubernetesSetupRollback extends ContainerServiceSetup {
   }
 
   @Override
-  protected ContainerServiceElement buildContainerServiceElement(
-      ExecutionContext context, CommandExecutionResult executionResult, ExecutionStatus status) {
+  protected ContainerServiceElement buildContainerServiceElement(ExecutionContext context,
+      CommandExecutionResult executionResult, ExecutionStatus status, ImageDetails imageDetails) {
     CommandStateExecutionData executionData = (CommandStateExecutionData) context.getStateExecutionData();
     KubernetesSetupParams setupParams = (KubernetesSetupParams) executionData.getContainerSetupParams();
     ContainerServiceElementBuilder containerServiceElementBuilder =
         ContainerServiceElement.builder()
             .uuid(executionData.getServiceId())
+            .image(imageDetails.getName() + ":" + imageDetails.getTag())
             .clusterName(executionData.getClusterName())
             .namespace(setupParams.getNamespace())
             .deploymentType(DeploymentType.KUBERNETES)

@@ -197,6 +197,7 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
 
     return ContainerServiceData.builder()
         .name(containerServiceName)
+        .image(contextData.resizeParams.getImage())
         .previousCount(previousCount)
         .desiredCount(desiredCount)
         .previousTraffic(getPreviousTrafficPercent(contextData))
@@ -237,6 +238,8 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
     List<ContainerServiceData> oldInstanceData = new ArrayList<>();
     Map<String, Integer> previousCounts = getActiveServiceCounts(contextData);
     previousCounts.remove(newServiceData.getName());
+    Map<String, String> previousImages = getActiveServiceImages(contextData);
+    previousImages.remove(newServiceData.getName());
     Map<String, Integer> previousTrafficWeights = getTrafficWeights(contextData);
     previousTrafficWeights.remove(newServiceData.getName());
 
@@ -248,6 +251,7 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
     double oldInstanceTrafficShare = 100.0 - newServiceData.getDesiredTraffic();
 
     for (String serviceName : previousCounts.keySet()) {
+      String previousImage = previousImages.get(serviceName);
       int previousCount = previousCounts.get(serviceName);
       int desiredCount = Math.max(previousCount - downsizeCount, 0);
       int previousTraffic = Optional.ofNullable(previousTrafficWeights.get(serviceName)).orElse(0);
@@ -255,6 +259,7 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
 
       oldInstanceData.add(ContainerServiceData.builder()
                               .name(serviceName)
+                              .image(previousImage)
                               .previousCount(previousCount)
                               .desiredCount(desiredCount)
                               .previousTraffic(previousTraffic)
@@ -269,6 +274,8 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
       ContextData contextData, List<ContainerServiceData> allData, ExecutionLogCallback executionLogCallback) {}
 
   protected abstract Map<String, Integer> getActiveServiceCounts(ContextData contextData);
+
+  protected abstract Map<String, String> getActiveServiceImages(ContextData contextData);
 
   protected abstract Map<String, Integer> getTrafficWeights(ContextData contextData);
 

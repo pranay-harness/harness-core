@@ -105,7 +105,7 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
           cloudProviderSetting, encryptedDataDetails, setupParams.getClusterName(), containerServiceName);
 
       commandExecutionDataBuilder.containerServiceName(containerServiceName)
-          .activeServiceCounts(mapToListOfStringArray(activeServiceCounts));
+          .activeServiceCounts(integerMapToListOfStringArray(activeServiceCounts));
 
       CreateServiceRequest createServiceRequest = getCreateServiceRequest(
           cloudProviderSetting, encryptedDataDetails, setupParams, taskDefinition, containerServiceName);

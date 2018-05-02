@@ -255,6 +255,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
         .map(sc
             -> ContainerServiceData.builder()
                    .name(sc.getName())
+                   .image(sc.getImage())
                    .previousCount(sc.getDesiredCount())
                    .desiredCount(sc.getPreviousCount())
                    .previousTraffic(sc.getDesiredTraffic())

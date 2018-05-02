@@ -10,6 +10,7 @@ import lombok.Data;
 @Builder
 public class ContainerServiceData {
   private String name;
+  private String image;
   private int previousCount;
   private int desiredCount;
   private int previousTraffic;

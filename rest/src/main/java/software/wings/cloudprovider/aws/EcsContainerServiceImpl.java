@@ -37,6 +37,8 @@ import com.amazonaws.services.ecs.model.DeleteServiceRequest;
 import com.amazonaws.services.ecs.model.DescribeClustersRequest;
 import com.amazonaws.services.ecs.model.DescribeContainerInstancesRequest;
 import com.amazonaws.services.ecs.model.DescribeServicesRequest;
+import com.amazonaws.services.ecs.model.DescribeTaskDefinitionRequest;
+import com.amazonaws.services.ecs.model.DescribeTaskDefinitionResult;
 import com.amazonaws.services.ecs.model.DescribeTasksRequest;
 import com.amazonaws.services.ecs.model.DesiredStatus;
 import com.amazonaws.services.ecs.model.LaunchType;
@@ -1301,5 +1303,16 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       List<EncryptedDataDetail> encryptedDataDetails, String targetGroupArn) {
     AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptedDataDetails);
     return awsHelperService.getTargetGroupForAlb(region, awsConfig, encryptedDataDetails, targetGroupArn);
+  }
+
+  @Override
+  public TaskDefinition getTaskDefinitionFromService(String region, SettingAttribute cloudProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, Service service) {
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptedDataDetails);
+    DescribeTaskDefinitionRequest describeTaskDefinitionRequest =
+        new DescribeTaskDefinitionRequest().withTaskDefinition(service.getTaskDefinition());
+    DescribeTaskDefinitionResult taskDefinitionResult =
+        awsHelperService.describeTaskDefinition(region, awsConfig, encryptedDataDetails, describeTaskDefinitionRequest);
+    return taskDefinitionResult.getTaskDefinition();
   }
 }

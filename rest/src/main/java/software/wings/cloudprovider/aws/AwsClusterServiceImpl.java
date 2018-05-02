@@ -9,6 +9,7 @@ import static software.wings.utils.EcsConvention.getServiceNamePrefixFromService
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.amazonaws.services.ecs.model.ContainerDefinition;
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.Service;
@@ -115,6 +116,31 @@ public class AwsClusterServiceImpl implements AwsClusterService {
             .sorted(comparingInt(service -> getRevisionFromServiceName(service.getServiceName())))
             .collect(toList());
     activeOldServices.forEach(service -> result.put(service.getServiceName(), service.getDesiredCount()));
+    return result;
+  }
+
+  @Override
+  public Map<String, String> getActiveServiceImages(String region, SettingAttribute cloudProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String containerServiceName,
+      String imagePrefix) {
+    Map<String, String> result = new HashMap<>();
+    String serviceNamePrefix = getServiceNamePrefixFromServiceName(containerServiceName);
+    List<Service> activeOldServices =
+        getServices(region, cloudProviderSetting, encryptedDataDetails, clusterName)
+            .stream()
+            .filter(service -> service.getServiceName().startsWith(serviceNamePrefix) && service.getDesiredCount() > 0)
+            .sorted(comparingInt(service -> getRevisionFromServiceName(service.getServiceName())))
+            .collect(toList());
+    activeOldServices.forEach(service
+        -> result.put(service.getServiceName(),
+            ecsContainerService
+                .getTaskDefinitionFromService(region, cloudProviderSetting, encryptedDataDetails, service)
+                .getContainerDefinitions()
+                .stream()
+                .map(ContainerDefinition::getImage)
+                .filter(image -> image.startsWith(imagePrefix + ":"))
+                .findFirst()
+                .orElse("none")));
     return result;
   }
 }

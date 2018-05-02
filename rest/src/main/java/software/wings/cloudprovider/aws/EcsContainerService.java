@@ -68,4 +68,7 @@ public interface EcsContainerService {
   List<ContainerInfo> generateContainerInfos(List<Task> tasks, String clusterName, String region,
       List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback, AwsConfig awsConfig,
       List<String> taskArns);
+
+  TaskDefinition getTaskDefinitionFromService(String region, SettingAttribute cloudProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, Service service);
 }

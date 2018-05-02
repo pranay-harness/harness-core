@@ -71,6 +71,10 @@ public interface KubernetesContainerService {
   LinkedHashMap<String, Integer> getActiveServiceCounts(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, boolean isStatefulSet);
 
+  Map<String, String> getActiveServiceImages(KubernetesConfig kubernetesConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, boolean isStatefulSet,
+      String imagePrefix);
+
   Service createOrReplaceService(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Service definition);
 

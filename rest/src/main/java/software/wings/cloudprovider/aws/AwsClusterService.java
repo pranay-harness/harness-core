@@ -14,6 +14,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by anubhaw on 12/29/16.
@@ -62,4 +63,8 @@ public interface AwsClusterService {
 
   LinkedHashMap<String, Integer> getActiveServiceCounts(String region, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String containerServiceName);
+
+  Map<String, String> getActiveServiceImages(String region, SettingAttribute cloudProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String containerServiceName,
+      String imagePrefix);
 }

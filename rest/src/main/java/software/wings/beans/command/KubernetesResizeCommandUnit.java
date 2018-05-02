@@ -2,6 +2,7 @@ package software.wings.beans.command;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.atteo.evo.inflector.English.plural;
 import static software.wings.beans.ErrorCode.GENERAL_ERROR;
 import static software.wings.cloudprovider.ContainerInfo.Status.SUCCESS;
@@ -202,6 +203,16 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     String controllerName = contextData.resizeParams.getContainerServiceName();
     return kubernetesContainerService.getActiveServiceCounts(
         kubernetesConfig, encryptedDataDetails, controllerName, !controllerName.contains(DOT));
+  }
+
+  @Override
+  protected Map<String, String> getActiveServiceImages(ContextData contextData) {
+    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
+    KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
+    String controllerName = contextData.resizeParams.getContainerServiceName();
+    String imagePrefix = substringBefore(contextData.resizeParams.getImage(), ":");
+    return kubernetesContainerService.getActiveServiceImages(
+        kubernetesConfig, encryptedDataDetails, controllerName, !controllerName.contains(DOT), imagePrefix);
   }
 
   @Override
