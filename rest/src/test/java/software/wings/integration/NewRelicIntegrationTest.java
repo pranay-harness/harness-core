@@ -39,6 +39,7 @@ import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.newrelic.MetricAnalysisJob.MetricAnalysisGenerator;
 import software.wings.service.impl.newrelic.NewRelicApplication;
+import software.wings.service.impl.newrelic.NewRelicMetric;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
@@ -47,6 +48,7 @@ import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.analysis.ClusterLevel;
+import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
@@ -78,6 +80,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
   @Inject private LearningEngineService learningEngineService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private DelegateService delegateService;
+  @Inject private NewRelicDelegateService newRelicDelegateService;
 
   private String newRelicConfigId;
 
@@ -98,7 +101,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
             .withValue(NewRelicConfig.builder()
                            .accountId(accountId)
                            .newRelicUrl("https://api.newrelic.com")
-                           .apiKey("5ed76b50ebcfda54b77cd1daaabe635bd7f2e13dc6c5b11".toCharArray())
+                           .apiKey("d8d3da54ce9355bd39cb7ced542a8acd2c1672312711610".toCharArray())
                            .build())
             .build();
     newRelicConfigId = wingsPersistence.saveAndGet(SettingAttribute.class, newRelicSettingAttribute).getUuid();
@@ -118,6 +121,30 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
       assertTrue(app.getId() > 0);
       assertFalse(isBlank(app.getName()));
     }
+  }
+
+  @Test
+  public void getAllTxnNames() throws Exception {
+    SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, newRelicConfigId);
+    NewRelicConfig newRelicConfig = (NewRelicConfig) settingAttribute.getValue();
+
+    WebTarget target =
+        client.target(API_BASE + "/newrelic/applications?settingId=" + newRelicConfigId + "&accountId=" + accountId);
+    RestResponse<List<NewRelicApplication>> restResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<NewRelicApplication>>>() {});
+
+    assertEquals(0, restResponse.getResponseMessages().size());
+    assertFalse(restResponse.getResource().isEmpty());
+
+    int totalTxns = 0;
+    for (NewRelicApplication app : restResponse.getResource()) {
+      assertTrue(app.getId() > 0);
+      Set<NewRelicMetric> txnNameToCollect = newRelicDelegateService.getTxnNameToCollect(
+          newRelicConfig, secretManager.getEncryptionDetails(newRelicConfig, null, null), app.getId());
+      totalTxns += txnNameToCollect.size();
+    }
+
+    assertTrue(totalTxns > 0);
   }
 
   @Test

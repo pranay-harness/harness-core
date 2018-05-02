@@ -1,6 +1,10 @@
 package software.wings.service.impl.newrelic;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.threading.Morpheus.sleep;
+import static java.time.Duration.ofMillis;
+import static software.wings.service.impl.security.SecretManagementDelegateServiceImpl.NUM_OF_RETRIES;
 
 import com.google.inject.Inject;
 
@@ -32,6 +36,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * Created by rsingh on 8/28/17.
@@ -107,25 +112,46 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   @Override
   public Set<NewRelicMetric> getTxnNameToCollect(NewRelicConfig newRelicConfig,
       List<EncryptedDataDetail> encryptedDataDetails, long newRelicAppId) throws IOException {
-    final Call<NewRelicMetricResponse> request =
-        getNewRelicRestClient(newRelicConfig, encryptedDataDetails).listMetricNames(newRelicAppId);
-    final Response<NewRelicMetricResponse> response = request.execute();
-    if (response.isSuccessful()) {
-      List<NewRelicMetric> metrics = response.body().getMetrics();
-      if (metrics == null) {
-        return Collections.emptySet();
-      }
-      Set<NewRelicMetric> newRelicMetrics = new HashSet<>();
-      for (NewRelicMetric metric : metrics) {
-        if (metric.getName().startsWith("WebTransaction/")) {
-          newRelicMetrics.add(metric);
+    Set<NewRelicMetric> newRelicMetrics = new HashSet<>();
+    int pageCount = 1;
+    while (true) {
+      List<NewRelicMetric> metrics = new ArrayList<>();
+      for (int retry = 0; retry <= NUM_OF_RETRIES; retry++) {
+        try {
+          final Call<NewRelicMetricResponse> request =
+              getNewRelicRestClient(newRelicConfig, encryptedDataDetails).listMetricNames(newRelicAppId, pageCount);
+          final Response<NewRelicMetricResponse> response = request.execute();
+          if (response.isSuccessful()) {
+            metrics = response.body().getMetrics();
+            if (isNotEmpty(metrics)) {
+              metrics.forEach(metric -> {
+                if (metric.getName().startsWith("WebTransaction/")) {
+                  newRelicMetrics.add(metric);
+                }
+              });
+            }
+          } else if (response.code() != HttpServletResponse.SC_NOT_FOUND) {
+            JSONObject errorObject = new JSONObject(response.errorBody().string());
+            throw new WingsException(errorObject.getJSONObject("error").getString("title"));
+          }
+          break;
+        } catch (Exception e) {
+          if (retry < NUM_OF_RETRIES) {
+            logger.warn("txn name fetch failed. trial num: {}", retry, e);
+            sleep(ofMillis(1000));
+          } else {
+            logger.error("txn name fetch failed after {} retries ", retry, e);
+            throw new IOException("txn name fetch failed after " + NUM_OF_RETRIES + " retries", e);
+          }
         }
       }
-      return newRelicMetrics;
+      if (isEmpty(metrics)) {
+        break;
+      }
+      pageCount++;
     }
 
-    JSONObject errorObject = new JSONObject(response.errorBody().string());
-    throw new WingsException(errorObject.getJSONObject("error").getString("title"));
+    return newRelicMetrics;
   }
 
   @Override
