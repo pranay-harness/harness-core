@@ -43,7 +43,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.RiskLevel;
 import software.wings.metrics.TimeSeriesMetricDefinition;
-import software.wings.resources.PrometheusResource;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
@@ -95,7 +94,6 @@ public class PrometheusStateTest extends WingsBaseTest {
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private BroadcasterFactory broadcasterFactory;
   @Mock private WorkflowStandardParams workflowStandardParams;
-  @Inject private PrometheusResource prometheusResource;
   @Inject private MetricDataAnalysisService metricDataAnalysisService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AppService appService;
@@ -171,7 +169,6 @@ public class PrometheusStateTest extends WingsBaseTest {
     prometheusState = new PrometheusState("PrometheusState");
     prometheusState.setTimeSeriesToAnalyze(timeSeriesToCollect);
     prometheusState.setTimeDuration("15");
-    prometheusState.setPrometheusResource(prometheusResource);
     setInternalState(prometheusState, "appService", appService);
     setInternalState(prometheusState, "configuration", configuration);
     setInternalState(prometheusState, "metricAnalysisService", metricDataAnalysisService);

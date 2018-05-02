@@ -5,7 +5,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
 import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -55,8 +54,6 @@ public class PrometheusState extends AbstractMetricAnalysisState {
   @Transient @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(PrometheusState.class);
   @Transient @SchemaIgnore public static final String TEST_HOST_NAME = "testNode";
   @Transient @SchemaIgnore public static final String CONTROL_HOST_NAME = "controlNode";
-
-  @Transient @Inject @SchemaIgnore private PrometheusResource prometheusResource;
 
   @EnumData(enumDataProvider = PrometheusSettingProvider.class)
   @Attributes(required = true, title = "Prometheus Server")
@@ -143,7 +140,7 @@ public class PrometheusState extends AbstractMetricAnalysisState {
 
   @Override
   public Map<String, String> validateFields() {
-    return prometheusResource.validateMetrics(Account.GLOBAL_ACCOUNT_ID, timeSeriesToAnalyze).getResource();
+    return PrometheusResource.validateTransactions(Account.GLOBAL_ACCOUNT_ID, timeSeriesToAnalyze);
   }
 
   private Map<String, TimeSeriesMetricDefinition> getMetricTemplates() {
