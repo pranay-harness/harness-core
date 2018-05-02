@@ -92,7 +92,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     Set<String> lastExecutionNodes = analysisContext.getControlNodes();
     if (isEmpty(lastExecutionNodes)) {
       if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
-        getLogger().error("No nodes with older version found to compare the logs. Skipping analysis");
+        getLogger().info("No nodes with older version found to compare the logs. Skipping analysis");
         return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS,
             "Skipping analysis due to lack of baseline hosts. Make sure you have at least two phases defined.");
       }
