@@ -15,6 +15,7 @@ import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
@@ -118,7 +119,11 @@ public class ContainerSyncImpl implements ContainerSync {
         result.addAll(delegateProxyFactory.get(ContainerService.class, syncTaskContext)
                           .getContainerInfos(containerServiceParams));
       } catch (Exception ex) {
-        logger.warn("Error while getting instances for container", ex);
+        logger.warn(
+            "Error while getting instances for container {}", containerDeploymentInfo.getContainerSvcName(), ex);
+        throw new WingsException(ErrorCode.UNKNOWN_ERROR, ex)
+            .addParam("message",
+                "Error while getting instances for container " + containerDeploymentInfo.getContainerSvcName());
       }
     }
     return ContainerSyncResponse.builder().containerInfoList(result).build();
@@ -141,6 +146,10 @@ public class ContainerSyncImpl implements ContainerSync {
       } catch (Exception ex) {
         logger.warn("Error while getting instances for container for appId {} and infraMappingId {}",
             containerInfraMapping.getAppId(), containerInfraMapping.getUuid(), ex);
+        throw new WingsException(ErrorCode.UNKNOWN_ERROR, ex)
+            .addParam("message",
+                "Error while getting instances for container for appId " + containerInfraMapping.getAppId()
+                    + " and infraMappingId " + containerInfraMapping.getUuid());
       }
     });
     return ContainerSyncResponse.builder().containerInfoList(result).build();
