@@ -103,7 +103,9 @@ public class PcfHelperService {
 
       if (CommandExecutionStatus.FAILURE.equals(pcfCommandExecutionResponse.getCommandExecutionStatus())) {
         logger.error("Failed to fetch PCF application details for Instance Sync, check delegate logs");
-        if (pcfCommandExecutionResponse.getErrorMessage().contains(pcfApplicationName + " does not exist")) {
+        if (pcfCommandExecutionResponse.getErrorMessage().contains(pcfApplicationName + " does not exist")
+            || pcfCommandExecutionResponse.getErrorMessage().contains(organization + " does not exist")
+            || pcfCommandExecutionResponse.getErrorMessage().contains(space + " does not exist")) {
           throw new PcfAppNotFoundException(pcfCommandExecutionResponse.getErrorMessage());
         } else {
           throw new WingsException(ErrorCode.UNKNOWN_ERROR)
