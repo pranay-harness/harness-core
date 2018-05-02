@@ -304,8 +304,7 @@ public class PcfCommandTaskHelper {
   }
 
   public String getAppPrefix(String appName) {
-    int index = appName.indexOf("__");
-    return appName.substring(0, index);
+    return appName.substring(0, appName.lastIndexOf(DELIMITER) + DELIMITER.length());
   }
 
   public static int getRevisionFromReleaseName(String name) {
