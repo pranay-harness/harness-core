@@ -220,8 +220,8 @@ public class KubernetesSetup extends ContainerServiceSetup {
   }
 
   @Override
-  protected ContainerServiceElement buildContainerServiceElement(
-      ExecutionContext context, CommandExecutionResult executionResult, ExecutionStatus status) {
+  protected ContainerServiceElement buildContainerServiceElement(ExecutionContext context,
+      CommandExecutionResult executionResult, ExecutionStatus status, ImageDetails imageDetails) {
     CommandStateExecutionData executionData = (CommandStateExecutionData) context.getStateExecutionData();
     KubernetesSetupParams setupParams = (KubernetesSetupParams) executionData.getContainerSetupParams();
     Integer maxVal = null;
@@ -244,6 +244,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
     ContainerServiceElementBuilder containerServiceElementBuilder =
         ContainerServiceElement.builder()
             .uuid(executionData.getServiceId())
+            .image(imageDetails.getName() + ":" + imageDetails.getTag())
             .useFixedInstances(FIXED_INSTANCES.equals(getDesiredInstanceCount()))
             .fixedInstances(fixedInstances)
             .maxInstances(maxInstances)

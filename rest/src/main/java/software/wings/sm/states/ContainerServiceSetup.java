@@ -246,7 +246,17 @@ public abstract class ContainerServiceSetup extends State {
     CommandStateExecutionData executionData = (CommandStateExecutionData) context.getStateExecutionData();
     activityService.updateStatus(executionData.getActivityId(), executionData.getAppId(), status);
 
-    ContainerServiceElement containerServiceElement = buildContainerServiceElement(context, executionResult, status);
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    String serviceId = phaseElement.getServiceElement().getUuid();
+    Artifact artifact = ((DeploymentExecutionContext) context).getArtifactForService(serviceId);
+    if (artifact == null) {
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Artifact is null");
+    }
+    ImageDetails imageDetails =
+        containerDeploymentHelper.fetchArtifactDetails(artifact, context.getAppId(), context.getWorkflowExecutionId());
+
+    ContainerServiceElement containerServiceElement =
+        buildContainerServiceElement(context, executionResult, status, imageDetails);
 
     InstanceElementListParam instanceElementListParam =
         anInstanceElementListParam()
@@ -370,6 +380,6 @@ public abstract class ContainerServiceSetup extends State {
 
   protected abstract boolean isValidInfraMapping(InfrastructureMapping infrastructureMapping);
 
-  protected abstract ContainerServiceElement buildContainerServiceElement(
-      ExecutionContext context, CommandExecutionResult executionResult, ExecutionStatus status);
+  protected abstract ContainerServiceElement buildContainerServiceElement(ExecutionContext context,
+      CommandExecutionResult executionResult, ExecutionStatus status, ImageDetails imageDetails);
 }

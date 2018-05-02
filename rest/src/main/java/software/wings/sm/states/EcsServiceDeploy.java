@@ -78,6 +78,7 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
         .withDownsizeInstanceCount(contextData.downsizeInstanceCount)
         .withDownsizeInstanceUnitType(getDownsizeInstanceUnitType())
         .withContainerServiceName(contextData.containerElement.getName())
+        .withImage(contextData.containerElement.getImage())
         .withResizeStrategy(contextData.containerElement.getResizeStrategy())
         .withUseFixedInstances(contextData.containerElement.isUseFixedInstances())
         .withMaxInstances(contextData.containerElement.getMaxInstances())

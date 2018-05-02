@@ -366,6 +366,7 @@ public class EcsServiceSetupTest extends WingsBaseTest {
 
     ecsServiceSetup.setMaxInstances(maxInstances);
     ecsServiceSetup.setFixedInstances(fixedInstances);
-    return ecsServiceSetup.buildContainerServiceElement(context, result, ExecutionStatus.SUCCESS);
+    return ecsServiceSetup.buildContainerServiceElement(
+        context, result, ExecutionStatus.SUCCESS, ImageDetails.builder().name("foo").tag("43").build());
   }
 }

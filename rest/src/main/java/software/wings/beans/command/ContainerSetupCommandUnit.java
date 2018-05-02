@@ -23,8 +23,8 @@ public abstract class ContainerSetupCommandUnit extends AbstractCommandUnit {
 
   @Inject @Transient private transient DelegateLogService logService;
 
-  static List<String[]> mapToListOfStringArray(Map<String, Integer> activeServiceCounts) {
-    return activeServiceCounts.entrySet()
+  static List<String[]> integerMapToListOfStringArray(Map<String, Integer> integerMap) {
+    return integerMap.entrySet()
         .stream()
         .map(entry -> new String[] {entry.getKey(), entry.getValue().toString()})
         .collect(toList());

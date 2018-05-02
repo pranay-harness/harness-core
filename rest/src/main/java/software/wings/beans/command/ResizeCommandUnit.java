@@ -1,5 +1,7 @@
 package software.wings.beans.command;
 
+import static org.apache.commons.lang3.StringUtils.substringBefore;
+
 import com.google.inject.Inject;
 
 import com.amazonaws.services.ecs.model.Service;
@@ -41,6 +43,15 @@ public class ResizeCommandUnit extends ContainerResizeCommandUnit {
     EcsResizeParams resizeParams = (EcsResizeParams) contextData.resizeParams;
     return awsClusterService.getActiveServiceCounts(resizeParams.getRegion(), contextData.settingAttribute,
         contextData.encryptedDataDetails, resizeParams.getClusterName(), resizeParams.getContainerServiceName());
+  }
+
+  @Override
+  protected Map<String, String> getActiveServiceImages(ContextData contextData) {
+    EcsResizeParams resizeParams = (EcsResizeParams) contextData.resizeParams;
+    String imagePrefix = substringBefore(contextData.resizeParams.getImage(), ":");
+    return awsClusterService.getActiveServiceImages(resizeParams.getRegion(), contextData.settingAttribute,
+        contextData.encryptedDataDetails, resizeParams.getClusterName(), resizeParams.getContainerServiceName(),
+        imagePrefix);
   }
 
   @Override

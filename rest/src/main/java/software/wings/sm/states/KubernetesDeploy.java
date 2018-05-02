@@ -94,6 +94,7 @@ public class KubernetesDeploy extends ContainerServiceDeploy {
         .withApiVersion(getApiVersion(contextData))
         .withUseIstioRouteRule(contextData.containerElement.isUseIstioRouteRule())
         .withContainerServiceName(contextData.containerElement.getName())
+        .withImage(contextData.containerElement.getImage())
         .withResizeStrategy(contextData.containerElement.getResizeStrategy())
         .withUseFixedInstances(contextData.containerElement.isUseFixedInstances())
         .withMaxInstances(contextData.containerElement.getMaxInstances())

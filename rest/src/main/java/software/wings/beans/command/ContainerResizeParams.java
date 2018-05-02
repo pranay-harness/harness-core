@@ -14,6 +14,7 @@ public class ContainerResizeParams {
   private boolean rollback;
   private boolean rollbackAllPhases;
   private String containerServiceName;
+  private String image;
   private ResizeStrategy resizeStrategy;
   private boolean useFixedInstances;
   private int maxInstances;

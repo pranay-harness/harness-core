@@ -32,10 +32,11 @@ public class KubernetesResizeParams extends ContainerResizeParams {
     private String subscriptionId;
     private String containerServiceName;
     private String resourceGroup;
-    private ResizeStrategy resizeStrategy;
+    private String image;
     private boolean useIstioRouteRule;
-    private boolean useFixedInstances;
+    private ResizeStrategy resizeStrategy;
     private Integer trafficPercent;
+    private boolean useFixedInstances;
     private int maxInstances;
     private int fixedInstances;
     private List<ContainerServiceData> newInstanceData;
@@ -103,8 +104,8 @@ public class KubernetesResizeParams extends ContainerResizeParams {
       return this;
     }
 
-    public KubernetesResizeParamsBuilder withResizeStrategy(ResizeStrategy resizeStrategy) {
-      this.resizeStrategy = resizeStrategy;
+    public KubernetesResizeParamsBuilder withImage(String image) {
+      this.image = image;
       return this;
     }
 
@@ -113,13 +114,18 @@ public class KubernetesResizeParams extends ContainerResizeParams {
       return this;
     }
 
-    public KubernetesResizeParamsBuilder withUseFixedInstances(boolean useFixedInstances) {
-      this.useFixedInstances = useFixedInstances;
+    public KubernetesResizeParamsBuilder withResizeStrategy(ResizeStrategy resizeStrategy) {
+      this.resizeStrategy = resizeStrategy;
       return this;
     }
 
     public KubernetesResizeParamsBuilder withTrafficPercent(Integer trafficPercent) {
       this.trafficPercent = trafficPercent;
+      return this;
+    }
+
+    public KubernetesResizeParamsBuilder withUseFixedInstances(boolean useFixedInstances) {
+      this.useFixedInstances = useFixedInstances;
       return this;
     }
 
@@ -185,10 +191,11 @@ public class KubernetesResizeParams extends ContainerResizeParams {
           .withSubscriptionId(subscriptionId)
           .withContainerServiceName(containerServiceName)
           .withResourceGroup(resourceGroup)
-          .withResizeStrategy(resizeStrategy)
+          .withImage(image)
           .withUseIstioRouteRule(useIstioRouteRule)
-          .withUseFixedInstances(useFixedInstances)
+          .withResizeStrategy(resizeStrategy)
           .withTrafficPercent(trafficPercent)
+          .withUseFixedInstances(useFixedInstances)
           .withMaxInstances(maxInstances)
           .withFixedInstances(fixedInstances)
           .withNewInstanceData(newInstanceData)
@@ -213,10 +220,11 @@ public class KubernetesResizeParams extends ContainerResizeParams {
       kubernetesResizeParams.setSubscriptionId(subscriptionId);
       kubernetesResizeParams.setContainerServiceName(containerServiceName);
       kubernetesResizeParams.setResourceGroup(resourceGroup);
-      kubernetesResizeParams.setResizeStrategy(resizeStrategy);
+      kubernetesResizeParams.setImage(image);
       kubernetesResizeParams.setUseIstioRouteRule(useIstioRouteRule);
-      kubernetesResizeParams.setUseFixedInstances(useFixedInstances);
+      kubernetesResizeParams.setResizeStrategy(resizeStrategy);
       kubernetesResizeParams.setTrafficPercent(trafficPercent);
+      kubernetesResizeParams.setUseFixedInstances(useFixedInstances);
       kubernetesResizeParams.setMaxInstances(maxInstances);
       kubernetesResizeParams.setFixedInstances(fixedInstances);
       kubernetesResizeParams.setNewInstanceData(newInstanceData);

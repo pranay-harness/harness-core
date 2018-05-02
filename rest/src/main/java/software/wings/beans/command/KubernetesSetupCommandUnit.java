@@ -253,8 +253,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       commandExecutionDataBuilder.containerServiceName(containerServiceName)
           .previousDaemonSetYaml(previousDaemonSetYaml)
           .previousActiveAutoscalers(previousActiveAutoscalers)
-          .activeServiceCounts(mapToListOfStringArray(activeServiceCounts))
-          .trafficWeights(mapToListOfStringArray(trafficWeights));
+          .activeServiceCounts(integerMapToListOfStringArray(activeServiceCounts))
+          .trafficWeights(integerMapToListOfStringArray(trafficWeights));
 
       Map<String, String> serviceLabels =
           ImmutableMap.<String, String>builder()

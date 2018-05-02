@@ -22,6 +22,7 @@ import java.util.Map;
 public class ContainerServiceElement implements ContextElement {
   private String uuid;
   private String name;
+  private String image;
   private boolean useFixedInstances;
   private int fixedInstances;
   private int maxInstances;

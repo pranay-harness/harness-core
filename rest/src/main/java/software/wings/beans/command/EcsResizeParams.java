@@ -20,6 +20,7 @@ public class EcsResizeParams extends ContainerResizeParams {
     private boolean rollback;
     private boolean rollbackAllPhases;
     private String containerServiceName;
+    private String image;
     private ResizeStrategy resizeStrategy;
     private boolean useFixedInstances;
     private int maxInstances;
@@ -66,6 +67,11 @@ public class EcsResizeParams extends ContainerResizeParams {
 
     public EcsResizeParamsBuilder withContainerServiceName(String containerServiceName) {
       this.containerServiceName = containerServiceName;
+      return this;
+    }
+
+    public EcsResizeParamsBuilder withImage(String image) {
+      this.image = image;
       return this;
     }
 
@@ -137,6 +143,7 @@ public class EcsResizeParams extends ContainerResizeParams {
           .withRollback(rollback)
           .withRollbackAllPhases(rollbackAllPhases)
           .withContainerServiceName(containerServiceName)
+          .withImage(image)
           .withResizeStrategy(resizeStrategy)
           .withUseFixedInstances(useFixedInstances)
           .withMaxInstances(maxInstances)
@@ -159,6 +166,7 @@ public class EcsResizeParams extends ContainerResizeParams {
       ecsResizeParams.setRollback(rollback);
       ecsResizeParams.setRollbackAllPhases(rollbackAllPhases);
       ecsResizeParams.setContainerServiceName(containerServiceName);
+      ecsResizeParams.setImage(image);
       ecsResizeParams.setResizeStrategy(resizeStrategy);
       ecsResizeParams.setUseFixedInstances(useFixedInstances);
       ecsResizeParams.setMaxInstances(maxInstances);

@@ -425,6 +425,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
 
     kubernetesSetup.setMaxInstances(maxInstances);
     kubernetesSetup.setFixedInstances(fixedInstances);
-    return kubernetesSetup.buildContainerServiceElement(context, result, ExecutionStatus.SUCCESS);
+    return kubernetesSetup.buildContainerServiceElement(
+        context, result, ExecutionStatus.SUCCESS, ImageDetails.builder().name("foo").tag("43").build());
   }
 }
