@@ -9,6 +9,7 @@ import migrations.all.AddValidUntilToWaitInstance;
 import migrations.all.AddVerifyToRollbackWorkflows;
 import migrations.all.CreateDefaultUserGroupsAndAddToExistingUsers;
 import migrations.all.CreateSupportUserGroupsAndRenameAccountAdmin;
+import migrations.all.DirectKubernetesToCloudProvider;
 import migrations.all.FixMaxInstancesFieldInContainerSetup;
 import migrations.all.GitSyncToAllAccounts;
 import migrations.all.NewRelicMetricNameCronRemoval;
@@ -52,6 +53,7 @@ public class MigrationList {
         .add(Pair.of(123, NewRelicMetricNameCronRemoval.class))
         .add(Pair.of(124, BaseMigration.class))
         .add(Pair.of(125, ServiceVariableReferentialIntegrity.class))
+        .add(Pair.of(126, DirectKubernetesToCloudProvider.class))
         .build();
   }
 }
