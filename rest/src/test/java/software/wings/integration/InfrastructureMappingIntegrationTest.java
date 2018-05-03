@@ -88,6 +88,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
 
     PhysicalInfrastructureMapping physicalInfrastructureMapping =
         aPhysicalInfrastructureMapping()
+            .withName("Name1")
             .withAppId(app.getUuid())
             .withAccountId(accountId)
             .withEnvId(environment.getUuid())

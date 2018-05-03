@@ -257,6 +257,7 @@ public class ConfigServiceTest extends WingsBaseTest {
     configFile.setChecksum("CHECKSUM");
     configFile.setSize(12);
     configFile.setEncryptedFileId("ENC_ID");
+    configFile.setName("Name00");
 
     when(wingsPersistence.get(EncryptedData.class, configFile.getEncryptedFileId()))
         .thenReturn(EncryptedData.builder().encryptedValue("csd".toCharArray()).build());

@@ -5,6 +5,7 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.yaml.YamlHelper.trimYaml;
 
+import io.harness.data.validator.EntityName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -34,7 +35,7 @@ import javax.validation.constraints.NotNull;
 public class Environment extends Base {
   public static final String NAME_KEY = "name";
 
-  @NotEmpty private String name;
+  @NotEmpty @EntityName private String name;
   private String description;
   private String configMapYaml;
   private String helmValueYaml;

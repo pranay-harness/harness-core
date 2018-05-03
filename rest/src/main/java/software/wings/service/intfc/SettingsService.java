@@ -27,9 +27,9 @@ public interface SettingsService extends OwnedByAccount {
   PageResponse<SettingAttribute> list(
       PageRequest<SettingAttribute> req, String appIdFromRequest, String envIdFromRequest);
 
-  SettingAttribute save(@Valid SettingAttribute settingAttribute);
+  @ValidationGroups(Create.class) SettingAttribute save(@Valid SettingAttribute settingAttribute);
 
-  SettingAttribute forceSave(SettingAttribute settingAttribute);
+  @ValidationGroups(Create.class) SettingAttribute forceSave(@Valid SettingAttribute settingAttribute);
 
   @ValidationGroups(Create.class) SettingAttribute save(@Valid SettingAttribute settingAttribute, boolean pushToGit);
 

@@ -278,6 +278,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   @Test
   public void shouldUpdate() {
     PhysicalInfrastructureMapping savedInfra = aPhysicalInfrastructureMapping()
+                                                   .withName("Name1")
                                                    .withHostConnectionAttrs(HOST_CONN_ATTR_ID)
                                                    .withComputeProviderSettingId(SETTING_ID)
                                                    .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
@@ -293,6 +294,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
                                                    .build();
 
     PhysicalInfrastructureMapping updatedInfra = aPhysicalInfrastructureMapping()
+                                                     .withName("Name2")
                                                      .withHostConnectionAttrs("HOST_CONN_ATTR_ID_1")
                                                      .withComputeProviderSettingId(SETTING_ID)
                                                      .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
@@ -329,6 +331,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   @Test
   public void shouldUpdateInfraComputerProviderId() {
     PhysicalInfrastructureMapping savedInfra = aPhysicalInfrastructureMapping()
+                                                   .withName("Name3")
                                                    .withHostConnectionAttrs(HOST_CONN_ATTR_ID)
                                                    .withComputeProviderSettingId(SETTING_ID)
                                                    .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
@@ -344,6 +347,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
                                                    .build();
 
     PhysicalInfrastructureMapping updatedInfra = aPhysicalInfrastructureMapping()
+                                                     .withName("Name4")
                                                      .withHostConnectionAttrs("HOST_CONN_ATTR_ID_1")
                                                      .withComputeProviderSettingId(SETTING_ID)
                                                      .withComputeProviderSettingId(COMPUTE_PROVIDER_ID_CHANGED)
@@ -392,9 +396,9 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     keyValuePairs.put("hostConnectionAttrs", "HOST_CONN_ATTR_ID_1");
     keyValuePairs.put("hostNames", singletonList(HOST_NAME));
     keyValuePairs.put("computeProviderName", COMPUTE_PROVIDER_ID_CHANGED);
+    keyValuePairs.put("name", "Name4");
 
     Set<String> fieldsToRemove = new HashSet<>();
-    fieldsToRemove.add("name");
     verify(wingsPersistence)
         .updateFields(PhysicalInfrastructureMapping.class, INFRA_MAPPING_ID, keyValuePairs, fieldsToRemove);
     verify(wingsPersistence, times(2)).get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);

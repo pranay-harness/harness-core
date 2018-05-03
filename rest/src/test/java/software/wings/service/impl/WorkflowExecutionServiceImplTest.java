@@ -1807,6 +1807,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.save(PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping()
+                                              .withName("Name4")
                                               .withAppId(app.getUuid())
                                               .withEnvId(env.getUuid())
                                               .withAccountId(app.getAccountId())
@@ -1844,6 +1845,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.save(PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping()
+                                              .withName("Name2")
                                               .withAppId(app.getUuid())
                                               .withAccountId(app.getAccountId())
                                               .withEnvId(env.getUuid())
@@ -1858,6 +1860,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     InfrastructureMapping templateInfraMapping =
         infrastructureMappingService.save(PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping()
+                                              .withName("Name3")
                                               .withAppId(app.getUuid())
                                               .withEnvId(env.getUuid())
                                               .withAccountId(app.getAccountId())
