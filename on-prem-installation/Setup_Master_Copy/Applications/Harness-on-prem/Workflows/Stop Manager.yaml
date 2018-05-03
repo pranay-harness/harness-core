@@ -16,7 +16,7 @@ notificationRules:
 phases:
   - type: SSH
     computeProviderName: on-prem-datacenter
-    infraMappingName: 'Physical Data Center on-prem-datacenter (Data Center_SSH)'
+    infraMappingName: 'on-prem-datacenter-manager'
     name: Phase 1
     phaseSteps:
       - type: PROVISION_NODE
@@ -55,7 +55,7 @@ phases:
 rollbackPhases:
   - type: SSH
     computeProviderName: on-prem-datacenter
-    infraMappingName: 'Physical Data Center on-prem-datacenter (Data Center_SSH)'
+    infraMappingName: 'on-prem-datacenter-manager'
     name: Rollback Phase 1
     phaseNameForRollback: Phase 1
     phaseSteps:

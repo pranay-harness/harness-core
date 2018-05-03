@@ -17,7 +17,7 @@ if [[ -v "UI_SERVER_URL" ]]; then
 fi
 
 if [[ -v "ALLOWED_ORIGINS" ]]; then
-    sed -i "s|allowedOrigins: https://localhost:8000|allowedOrigins: ${ALLOWED_ORIGINS}|" /opt/harness/config.yml
+    sed -i "s|allowedOrigins: http://localhost:8000|allowedOrigins: ${ALLOWED_ORIGINS}|" /opt/harness/config.yml
 fi
 
 if [[ -v "ALLOWED_DOMAINS" ]]; then
