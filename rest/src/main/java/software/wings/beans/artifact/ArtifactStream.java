@@ -23,6 +23,7 @@ import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
 import software.wings.utils.Util;
+import software.wings.utils.validation.Create;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.text.DateFormat;
@@ -54,7 +55,7 @@ public abstract class ArtifactStream extends Base {
   private String artifactStreamType;
   private String sourceName;
   private String settingId;
-  @EntityName private String name;
+  @EntityName(groups = Create.class) private String name;
   private boolean autoPopulate;
   @Indexed private String serviceId;
   transient @Deprecated private boolean autoDownload;

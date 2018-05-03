@@ -16,6 +16,7 @@ import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.utils.validation.Create;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.util.ArrayList;
@@ -35,7 +36,7 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Pipeline extends Base {
-  @NotNull @EntityName private String name;
+  @NotNull @EntityName(groups = Create.class) private String name;
   private String description;
   @NotNull private List<PipelineStage> pipelineStages = new ArrayList<>();
   private Map<String, Long> stateEtaMap = new HashMap<>();

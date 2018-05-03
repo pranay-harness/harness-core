@@ -49,6 +49,7 @@ import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Activity;
 import software.wings.beans.AppContainer;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -120,6 +121,7 @@ import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.Validator;
+import software.wings.utils.validation.Create;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -187,11 +189,13 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
    * {@inheritDoc}
    */
   @Override
+  @ValidationGroups(Create.class)
   public Service save(Service service) {
     return save(service, false, true);
   }
 
   @Override
+  @ValidationGroups(Create.class)
   public Service save(Service service, boolean createdFromYaml, boolean createDefaultCommands) {
     setKeyWords(service);
     Service savedService =
@@ -895,7 +899,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         entityVersionService.lastEntityVersion(appId, EntityType.COMMAND, serviceCommand.getUuid(), serviceId);
 
     if (serviceCommand.getCommand() != null) {
-      validateCommandName(serviceCommand.getCommand());
       updateCommandInternal(appId, serviceId, serviceCommand, lastEntityVersion, false);
     }
 

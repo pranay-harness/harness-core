@@ -39,6 +39,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
@@ -79,6 +80,7 @@ import software.wings.service.intfc.ownership.OwnedByEnvironment;
 import software.wings.stencils.DataProvider;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.Validator;
+import software.wings.utils.validation.Create;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -199,6 +201,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
    * {@inheritDoc}
    */
   @Override
+  @ValidationGroups(Create.class)
   public Environment save(Environment environment) {
     environment.setKeywords(trimList(environment.generateKeywords()));
     Environment savedEnvironment = Validator.duplicateCheck(

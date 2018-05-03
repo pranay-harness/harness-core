@@ -37,6 +37,7 @@ import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.EntityType;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.InfrastructureMapping;
@@ -70,6 +71,7 @@ import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.sm.StateMachine;
+import software.wings.utils.validation.Create;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.time.Duration;
@@ -434,6 +436,7 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   @Override
+  @ValidationGroups(Create.class)
   public Pipeline save(Pipeline pipeline) {
     ensurePipelineStageUuids(pipeline);
 
