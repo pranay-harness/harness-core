@@ -16,7 +16,7 @@ notificationRules:
 phases:
   - type: SSH
     computeProviderName: on-prem-datacenter
-    infraMappingName: 'Physical Data Center on-prem-datacenter (Data Center_SSH).1'
+    infraMappingName: 'on-prem-datacenter-mongodb'
     name: Phase 1
     phaseSteps:
       - type: PROVISION_NODE
@@ -58,7 +58,7 @@ phases:
     serviceName: MongoDB
   - type: SSH
     computeProviderName: on-prem-datacenter
-    infraMappingName: 'Physical Data Center on-prem-datacenter (Data Center_SSH).1'
+    infraMappingName: 'on-prem-datacenter-mongodb'
     name: Phase 2
     phaseSteps:
       - type: PROVISION_NODE
@@ -101,7 +101,7 @@ phases:
 rollbackPhases:
   - type: SSH
     computeProviderName: on-prem-datacenter
-    infraMappingName: 'Physical Data Center on-prem-datacenter (Data Center_SSH).1'
+    infraMappingName: 'on-prem-datacenter-mongodb'
     name: Rollback Phase 1
     phaseNameForRollback: Phase 1
     phaseSteps:
@@ -137,7 +137,7 @@ rollbackPhases:
     serviceName: MongoDB
   - type: SSH
     computeProviderName: on-prem-datacenter
-    infraMappingName: 'Physical Data Center on-prem-datacenter (Data Center_SSH).1'
+    infraMappingName: 'on-prem-datacenter-mongodb'
     name: Rollback Phase 2
     phaseNameForRollback: Phase 2
     phaseSteps:
