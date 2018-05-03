@@ -73,6 +73,7 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
 
     if (!emailHelperUtil.isSmtpConfigValid(config)) {
       sendEmailNotSentAlert(emailData);
+      return;
     }
 
     List<EncryptedDataDetail> encryptionDetails = config.equals(mainConfiguration.getSmtpConfig())
@@ -82,6 +83,7 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
     if (config.equals(mainConfiguration.getSmtpConfig())) {
       try {
         mailer.send(config, encryptionDetails, emailData);
+        closeEmailNotSentAlert(emailData);
       } catch (WingsException e) {
         String errorString = emailUtil.getErrorString(emailData);
         logger.warn(errorString, e);
@@ -96,6 +98,10 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
     String errorString = emailUtil.getErrorString(emailData);
     alertService.openAlert(emailData.getAccountId(), GLOBAL_APP_ID, AlertType.EMAIL_NOT_SENT_ALERT,
         EmailSendingFailedAlert.builder().emailAlertData(errorString).build());
+  }
+
+  private void closeEmailNotSentAlert(EmailData emailData) {
+    alertService.closeAlertsOfType(emailData.getAccountId(), GLOBAL_APP_ID, AlertType.EMAIL_NOT_SENT_ALERT);
   }
 
   private void sendEmailAsDelegateTask(

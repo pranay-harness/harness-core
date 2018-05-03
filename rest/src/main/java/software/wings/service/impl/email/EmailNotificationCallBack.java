@@ -45,8 +45,12 @@ public class EmailNotificationCallBack implements NotifyCallback {
   public void notifyError(Map<String, NotifyResponseData> response) {
     try {
       NotifyResponseData data = response.entrySet().iterator().next().getValue();
-      CollaborationProviderResponse collaborationProviderResponse = (CollaborationProviderResponse) data;
-      openEmailNotSentAlert(data, collaborationProviderResponse);
+      if (data instanceof CollaborationProviderResponse) {
+        CollaborationProviderResponse collaborationProviderResponse = (CollaborationProviderResponse) data;
+        openEmailNotSentAlert(data, collaborationProviderResponse);
+      } else {
+        logger.warn("Failed to send Email, errorResponse=[{}] ", data);
+      }
     } catch (Exception e) {
       logger.warn("Failed on notifyError for response=[{}]", response, e);
     }
