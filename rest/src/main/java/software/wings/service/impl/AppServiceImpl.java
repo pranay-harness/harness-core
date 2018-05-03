@@ -21,6 +21,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import io.harness.data.validator.EntityNameValidator;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -41,6 +42,7 @@ import software.wings.common.NotificationMessageResolver.NotificationMessageType
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.scheduler.InstanceSyncJob;
 import software.wings.scheduler.PruneEntityJob;
@@ -109,12 +111,21 @@ public class AppServiceImpl implements AppService {
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
+  private void validateAppName(Application app) {
+    if (app != null) {
+      if (!EntityNameValidator.isValid(app.getName())) {
+        throw new InvalidRequestException("App Name can only have characters -, _, a-z, A-Z, 0-9 and space");
+      }
+    }
+  }
+
   /* (non-Javadoc)
    * @see software.wings.service.intfc.AppService#save(software.wings.beans.Application)
    */
   @Override
   public Application save(Application app) {
     Validator.notNullCheck("accountId", app.getAccountId());
+    validateAppName(app);
     app.setKeywords(trimList(app.generateKeywords()));
     Application application =
         Validator.duplicateCheck(() -> wingsPersistence.saveAndGet(Application.class, app), "name", app.getName());
@@ -273,6 +284,7 @@ public class AppServiceImpl implements AppService {
    */
   @Override
   public Application update(Application app) {
+    validateAppName(app);
     Application savedApp = get(app.getUuid());
     Query<Application> query = wingsPersistence.createQuery(Application.class).filter(ID_KEY, app.getUuid());
     UpdateOperations<Application> operations =

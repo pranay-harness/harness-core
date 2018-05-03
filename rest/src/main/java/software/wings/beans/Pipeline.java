@@ -7,6 +7,7 @@ package software.wings.beans;
 import static java.util.Arrays.asList;
 import static software.wings.beans.WorkflowType.PIPELINE;
 
+import io.harness.data.validator.EntityName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -34,7 +35,7 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Pipeline extends Base {
-  @NotNull private String name;
+  @NotNull @EntityName private String name;
   private String description;
   @NotNull private List<PipelineStage> pipelineStages = new ArrayList<>();
   private Map<String, Long> stateEtaMap = new HashMap<>();

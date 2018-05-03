@@ -1,6 +1,6 @@
 {
   "_id" : "zEH9zdHRRS2GrfkkybqQ5w",
-  "name" : "[DRY RUN] Deploy All SHN Components",
+  "name" : "DRY RUN Deploy All SHN Components",
   "pipelineStages" : [
     {
       "parallel" : false,

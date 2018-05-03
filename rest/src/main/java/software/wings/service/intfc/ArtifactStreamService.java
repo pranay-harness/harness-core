@@ -1,10 +1,13 @@
 package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ownership.OwnedByService;
+import software.wings.utils.validation.Create;
+import software.wings.utils.validation.Update;
 
 import java.util.List;
 import java.util.Map;
@@ -41,7 +44,7 @@ public interface ArtifactStreamService extends OwnedByService {
    * @param artifactStream the artifact stream
    * @return the artifact stream
    */
-  ArtifactStream create(@Valid ArtifactStream artifactStream);
+  @ValidationGroups(Create.class) ArtifactStream create(@Valid ArtifactStream artifactStream);
 
   /**
    * Creates artifact without checking the validity artifact stream.
@@ -49,7 +52,7 @@ public interface ArtifactStreamService extends OwnedByService {
    * @param artifactStream the artifact stream
    * @return the artifact stream
    */
-  ArtifactStream forceCreate(@Valid ArtifactStream artifactStream);
+  @ValidationGroups(Create.class) ArtifactStream forceCreate(@Valid ArtifactStream artifactStream);
 
   /**
    * Update artifact stream.
@@ -57,7 +60,7 @@ public interface ArtifactStreamService extends OwnedByService {
    * @param artifactStream the artifact stream
    * @return the artifact stream
    */
-  ArtifactStream update(@Valid ArtifactStream artifactStream);
+  @ValidationGroups(Update.class) ArtifactStream update(@Valid ArtifactStream artifactStream);
 
   /**
    * Delete.

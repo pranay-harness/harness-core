@@ -41,6 +41,7 @@ import com.mongodb.DBCursor;
 import de.danielbechler.diff.ObjectDifferBuilder;
 import de.danielbechler.diff.node.DiffNode;
 import de.danielbechler.diff.path.NodePath;
+import io.harness.data.validator.EntityNameValidator;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.MorphiaIterator;
@@ -800,6 +801,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
     Validator.notNullCheck("service", service);
 
+    validateCommandName(serviceCommand.getCommand());
     addServiceCommand(appId, serviceId, serviceCommand, pushToYaml, service);
 
     wingsPersistence.save(service);
@@ -825,6 +827,14 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     return get(appId, serviceId);
   }
 
+  private void validateCommandName(Command command) {
+    if (command != null) {
+      if (!EntityNameValidator.isValid(command.getName())) {
+        throw new InvalidRequestException("Command Name can only have characters -, _, a-z, A-Z, 0-9 and space");
+      }
+    }
+  }
+
   private void addServiceCommand(
       String appId, String serviceId, ServiceCommand serviceCommand, boolean pushToYaml, Service service) {
     serviceCommand.setDefaultVersion(1);
@@ -832,7 +842,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     serviceCommand.setAppId(appId);
     String notes = serviceCommand.getNotes();
     Command command = serviceCommand.getCommand();
-
     if (serviceCommand.getCommand().getGraph() != null) {
       if (!isLinearCommandGraph(serviceCommand)) {
         WingsException wingsException =
@@ -886,6 +895,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         entityVersionService.lastEntityVersion(appId, EntityType.COMMAND, serviceCommand.getUuid(), serviceId);
 
     if (serviceCommand.getCommand() != null) {
+      validateCommandName(serviceCommand.getCommand());
       updateCommandInternal(appId, serviceId, serviceCommand, lastEntityVersion, false);
     }
 

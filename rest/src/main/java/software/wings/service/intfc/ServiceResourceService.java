@@ -85,7 +85,7 @@ public interface ServiceResourceService extends OwnedByApplication {
    * @param fromYaml if the update is from yaml
    * @return the service
    */
-  Service update(Service service, boolean fromYaml);
+  @ValidationGroups(Update.class) Service update(@Valid Service service, boolean fromYaml);
 
   /**
    * Gets the.

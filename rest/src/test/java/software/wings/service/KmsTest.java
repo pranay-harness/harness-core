@@ -2934,6 +2934,7 @@ public class KmsTest extends WingsBaseTest {
     String clientKeyPassphrase = UUID.randomUUID().toString();
     DirectKubernetesInfrastructureMapping infrastructureMapping =
         DirectKubernetesInfrastructureMapping.Builder.aDirectKubernetesInfrastructureMapping()
+            .withName("Name1")
             .withMasterUrl(UUID.randomUUID().toString())
             .withUsername(UUID.randomUUID().toString())
             .withClientCert(clientCert.toCharArray())

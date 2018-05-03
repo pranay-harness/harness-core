@@ -3,6 +3,7 @@ package software.wings.beans;
 import static java.util.Arrays.asList;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.data.validator.EntityName;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -38,7 +39,7 @@ import java.util.List;
 public class Service extends Base {
   public static final String NAME_KEY = "name";
 
-  private String name;
+  @EntityName private String name;
   private String description;
   private ArtifactType artifactType;
   private String configMapYaml;

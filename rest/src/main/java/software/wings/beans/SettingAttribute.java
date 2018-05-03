@@ -37,6 +37,7 @@ import com.google.common.collect.Lists;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.data.validator.EntityName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -74,7 +75,7 @@ public class SettingAttribute extends Base {
 
   @NotEmpty private String envId = GLOBAL_ENV_ID;
   @NotEmpty private String accountId;
-  @NotEmpty private String name;
+  @NotEmpty @EntityName private String name;
   @Valid private SettingValue value;
   private Category category = Category.SETTING;
   private List<String> appIds;

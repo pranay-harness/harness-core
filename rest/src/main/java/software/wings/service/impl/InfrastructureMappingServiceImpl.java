@@ -48,6 +48,7 @@ import com.google.inject.name.Named;
 
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.model.Tag;
+import io.harness.data.validator.EntityNameValidator;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
@@ -312,8 +313,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
    * @param infraMapping
    */
   private void setAutoPopulatedName(InfrastructureMapping infraMapping) {
-    String name = infraMapping.getDefaultName();
-
+    String name = EntityNameValidator.getMappedString(infraMapping.getDefaultName());
     String escapedString = Pattern.quote(name);
 
     // We need to check if the name exists in case of auto generate, if it exists, we need to add a suffix to the name.

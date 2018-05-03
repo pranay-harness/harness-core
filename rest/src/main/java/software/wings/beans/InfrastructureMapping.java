@@ -15,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.data.validator.EntityName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -62,7 +63,7 @@ public abstract class InfrastructureMapping extends Base {
   @Attributes(title = "Deployment type", required = true) @NotEmpty private String deploymentType;
   @SchemaIgnore private String computeProviderName;
 
-  @Attributes(title = "Name") private String name;
+  @EntityName @Attributes(title = "Name") private String name;
 
   // auto populate name
   @SchemaIgnore private boolean autoPopulate = true;

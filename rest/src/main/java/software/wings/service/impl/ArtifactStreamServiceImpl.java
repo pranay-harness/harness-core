@@ -25,6 +25,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import io.harness.data.validator.EntityNameValidator;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
@@ -146,7 +147,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
    */
   private void setAutoPopulatedName(ArtifactStream artifactStream) {
     if (artifactStream.isAutoPopulate()) {
-      String name = artifactStream.generateName();
+      String name = EntityNameValidator.getMappedString(artifactStream.generateName());
       String escapedString = Pattern.quote(name);
 
       // We need to check if the name exists in case of auto generate, if it exists, we need to add a suffix to the

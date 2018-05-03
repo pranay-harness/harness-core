@@ -25,6 +25,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
 
 /**
  * Miscellaneous utility class.
@@ -160,6 +162,12 @@ public class Misc {
     if (t instanceof WingsException) {
       WingsException we = (WingsException) t;
       return we.getResponseMessageList(REST_API).stream().map(ResponseMessage::getMessage).collect(joining(". "));
+    } else if (t instanceof ConstraintViolationException) {
+      ConstraintViolationException constraintViolationException = (ConstraintViolationException) t;
+      return constraintViolationException.getConstraintViolations()
+          .stream()
+          .map(ConstraintViolation::getMessage)
+          .collect(joining(". "));
     } else {
       return t.getClass().getSimpleName() + (t.getMessage() == null ? "" : ": " + t.getMessage());
     }

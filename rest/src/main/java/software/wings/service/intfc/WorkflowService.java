@@ -22,6 +22,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
 import software.wings.stencils.Stencil;
+import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
 import java.util.List;
@@ -47,14 +48,16 @@ public interface WorkflowService extends OwnedByApplication, OwnedByEnvironment 
 
   Workflow readWorkflowByName(String appId, String workflowName);
 
-  Workflow createWorkflow(@Valid Workflow workflow);
+  @ValidationGroups(Create.class) Workflow createWorkflow(@Valid Workflow workflow);
 
   boolean ensureArtifactCheck(String appId, OrchestrationWorkflow orchestrationWorkflow);
 
-  Workflow updateWorkflow(@Valid Workflow workflow);
+  @ValidationGroups(Update.class) Workflow updateWorkflow(@Valid Workflow workflow);
 
+  @ValidationGroups(Update.class)
   Workflow updateWorkflow(@Valid Workflow workflow, OrchestrationWorkflow orchestrationWorkflow);
 
+  @ValidationGroups(Update.class)
   Workflow updateWorkflow(@Valid Workflow workflow, OrchestrationWorkflow orchestrationWorkflow,
       boolean inframappingChanged, boolean envChanged, boolean cloned);
 

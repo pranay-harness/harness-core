@@ -9,6 +9,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.harness.data.validator.EntityName;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -53,7 +54,7 @@ public abstract class ArtifactStream extends Base {
   private String artifactStreamType;
   private String sourceName;
   private String settingId;
-  private String name;
+  @EntityName private String name;
   private boolean autoPopulate;
   @Indexed private String serviceId;
   transient @Deprecated private boolean autoDownload;
