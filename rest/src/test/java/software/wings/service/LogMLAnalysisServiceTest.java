@@ -63,8 +63,9 @@ import software.wings.utils.JsonUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -1031,9 +1032,14 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     analysisService.saveFeedback(logMLFeedback, StateType.ELK);
   }
 
-  @Test
   public void formatDate() throws Exception {
-    DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSSXXX");
-    System.out.println(df.parse("2018-05-03T00:15:12.618905414+00:00").getTime());
+    ZonedDateTime zdt = ZonedDateTime.parse("2018-05-03T00:15:12.618905414+00:00");
+    System.out.println(zdt.toEpochSecond());
+
+    zdt = ZonedDateTime.parse("2018-04-27T23:11:23.628Z");
+    System.out.println(zdt.toEpochSecond());
+
+    DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSSXXX");
+    System.out.println(Instant.from(df.parse("2018-05-03T00:15:12.618905414+00:00")).toEpochMilli());
   }
 }
