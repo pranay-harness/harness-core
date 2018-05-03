@@ -73,6 +73,7 @@ def run_analysis(options_var, ctrl_file, test_file, out_file):
     result = anomaly_detector.analyze()
     for txn_id, txn_data in result['transactions'].items():
         assert txn_data['txn_name'] in out
+        assert txn_data['txn_tag'] == 'default'
         for metrics_id, metric_data in txn_data['metrics'].items():
             print(txn_data['txn_name'])
             assert metric_data['metric_name'] in out[txn_data['txn_name']]['metrics']

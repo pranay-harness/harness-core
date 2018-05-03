@@ -56,7 +56,8 @@ class TSAnomlyDetector(object):
             "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
             "lastUpdatedBy": null,
             "throughput": 0,
-            "error": 0
+            "error": 0,
+            "tag":"Servlet"
           }
 
         Sample Output:
@@ -87,6 +88,9 @@ class TSAnomlyDetector(object):
             if txn_name not in txn_metrics:
                 txn_metrics[txn_name] = []
                 tag = transaction.get('tag') if transaction.get('tag') else 'default'
+                # Probably coming from a previous run
+                if tag not in self.metric_names:
+                    tag = 'default'
                 for metric_name in self.metric_names[tag]:
                     if metric_name in transaction.get('values'):
                         txn_metrics[txn_name].append(metric_name)
@@ -450,6 +454,15 @@ class TSAnomlyDetector(object):
             adjusted_dist[dist_2d_data > 0] = 0
         return np.abs(adjusted_dist)
 
+    @staticmethod
+    def txn_meta_data_dict(transactions):
+        txns_meta_dict = {}
+        for transaction in transactions:
+            if transaction.get('txn_name') not in txns_meta_dict:
+                tag = transaction.get('tag') if transaction.get('tag') else 'default'
+                txns_meta_dict[transaction.get('name')] = {'tag': tag}
+        return txns_meta_dict
+
     def analyze(self, fast_analysis=None):
         """
          analyze all transaction / metric combinations
@@ -459,6 +472,8 @@ class TSAnomlyDetector(object):
 
         control_txn_groups = self.group_txns(self.raw_control_txns)
         test_txn_groups = self.group_txns(self.raw_test_txns)
+
+        test_txn_meta_data_dict = self.txn_meta_data_dict(self.raw_test_txns)
 
         txns_count = 0
         if len(control_txn_groups) == 0 or len(test_txn_groups) == 0:
@@ -485,7 +500,7 @@ class TSAnomlyDetector(object):
                         dictionaries, and transactions or metric names can contain the dot char.
                         So use numbers for keys and stick the name inside the dictionary. '''
                     if txn_ind not in result['transactions']:
-                        result['transactions'][txn_ind] = dict(txn_name=txn_name, metrics={})
+                        result['transactions'][txn_ind] = dict(txn_name=txn_name, txn_tag=test_txn_meta_data_dict[txn_name].get('tag'), metrics={})
 
                     result['transactions'][txn_ind]['metrics'][metric_ind] = response
                 txns_count += 1
