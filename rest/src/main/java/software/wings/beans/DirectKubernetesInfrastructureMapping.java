@@ -3,6 +3,7 @@ package software.wings.beans;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.settings.SettingValue.SettingVariableTypes.KUBERNETES_CLUSTER;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -64,7 +65,8 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
   @SchemaIgnore
   @Override
   public String getClusterName() {
-    return isNotBlank(super.getClusterName()) ? super.getClusterName() : getComputeProviderName();
+    return KUBERNETES_CLUSTER.name().equals(getComputeProviderType()) ? getComputeProviderName()
+                                                                      : super.getClusterName();
   }
 
   @SchemaIgnore
