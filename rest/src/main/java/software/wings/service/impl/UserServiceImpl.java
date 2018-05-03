@@ -365,7 +365,8 @@ public class UserServiceImpl implements UserService {
     if (CollectionUtils.isEmpty(userInvite.getRoles())) {
       Role accountAdminRole = roleService.getAccountAdminRole(userInvite.getAccountId());
       if (accountAdminRole != null) {
-        List<Role> roleList = asList(accountAdminRole);
+        List<Role> roleList = new ArrayList<>();
+        roleList.add(accountAdminRole);
         userInvite.setRoles(roleList);
       }
     }
