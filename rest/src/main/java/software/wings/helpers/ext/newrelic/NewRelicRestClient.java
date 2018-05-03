@@ -33,7 +33,7 @@ public interface NewRelicRestClient {
       @Url String url, @Query("from") String fromTime, @Query("to") String toTime);
 
   @GET("v2/applications/{applicationId}/metrics.json?name=WebTransaction/")
-  Call<NewRelicMetricResponse> listMetricNames(@Path("applicationId") long newRelicAppId, @Query("page") int pageCount);
+  Call<NewRelicMetricResponse> listMetricNames(@Path("applicationId") long newRelicAppId);
 
   @POST() Call<Object> postDeploymentMarker(@Url String url, @Body NewRelicDeploymentMarkerPayload body);
 }

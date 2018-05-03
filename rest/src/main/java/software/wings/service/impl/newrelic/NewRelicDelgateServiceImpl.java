@@ -113,45 +113,37 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   public Set<NewRelicMetric> getTxnNameToCollect(NewRelicConfig newRelicConfig,
       List<EncryptedDataDetail> encryptedDataDetails, long newRelicAppId) throws IOException {
     Set<NewRelicMetric> newRelicMetrics = new HashSet<>();
-    int pageCount = 1;
-    while (true) {
-      List<NewRelicMetric> metrics = new ArrayList<>();
-      for (int retry = 0; retry <= NUM_OF_RETRIES; retry++) {
-        try {
-          final Call<NewRelicMetricResponse> request =
-              getNewRelicRestClient(newRelicConfig, encryptedDataDetails).listMetricNames(newRelicAppId, pageCount);
-          final Response<NewRelicMetricResponse> response = request.execute();
-          if (response.isSuccessful()) {
-            metrics = response.body().getMetrics();
-            if (isNotEmpty(metrics)) {
-              metrics.forEach(metric -> {
-                if (metric.getName().startsWith("WebTransaction/")) {
-                  newRelicMetrics.add(metric);
-                }
-              });
-            }
-          } else if (response.code() != HttpServletResponse.SC_NOT_FOUND) {
-            JSONObject errorObject = new JSONObject(response.errorBody().string());
-            throw new WingsException(errorObject.getJSONObject("error").getString("title"));
+    for (int retry = 0; retry <= NUM_OF_RETRIES; retry++) {
+      try {
+        final Call<NewRelicMetricResponse> request =
+            getNewRelicRestClient(newRelicConfig, encryptedDataDetails).listMetricNames(newRelicAppId);
+        final Response<NewRelicMetricResponse> response = request.execute();
+        if (response.isSuccessful()) {
+          List<NewRelicMetric> metrics = response.body().getMetrics();
+          if (isNotEmpty(metrics)) {
+            metrics.forEach(metric -> {
+              if (metric.getName().startsWith("WebTransaction/")) {
+                newRelicMetrics.add(metric);
+              }
+            });
           }
-          break;
-        } catch (Exception e) {
-          if (retry < NUM_OF_RETRIES) {
-            logger.warn("txn name fetch failed. trial num: {}", retry, e);
-            sleep(ofMillis(1000));
-          } else {
-            logger.error("txn name fetch failed after {} retries ", retry, e);
-            throw new IOException("txn name fetch failed after " + NUM_OF_RETRIES + " retries", e);
-          }
+        } else if (response.code() != HttpServletResponse.SC_NOT_FOUND) {
+          JSONObject errorObject = new JSONObject(response.errorBody().string());
+          throw new WingsException(errorObject.getJSONObject("error").getString("title"));
+        }
+        return newRelicMetrics;
+      } catch (Exception e) {
+        if (retry < NUM_OF_RETRIES) {
+          logger.warn("txn name fetch failed. trial num: {}", retry, e);
+          sleep(ofMillis(1000));
+        } else {
+          logger.error("txn name fetch failed after {} retries ", retry, e);
+          throw new IOException("txn name fetch failed after " + NUM_OF_RETRIES + " retries", e);
         }
       }
-      if (isEmpty(metrics)) {
-        break;
-      }
-      pageCount++;
     }
 
-    return newRelicMetrics;
+    throw new IllegalStateException("This state should have never reached ");
   }
 
   @Override
