@@ -24,8 +24,8 @@ import software.wings.sm.StateType;
 import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.NotifyResponseData;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -165,7 +165,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                   continue;
                 }
 
-                DateFormat df = new SimpleDateFormat(timestampFieldFormat);
+                DateTimeFormatter df = DateTimeFormatter.ofPattern(timestampFieldFormat);
                 JSONArray logHits = hits.getJSONArray("hits");
                 final List<LogElement> logElements = new ArrayList<>();
 
@@ -216,10 +216,11 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                       : timeStampObject.getString(timeStampPaths[timeStampPaths.length - 1]);
                   long timeStampValue = 0;
                   try {
-                    timeStampValue = df.parse(timeStamp).getTime();
-                  } catch (java.text.ParseException pe) {
-                    logger.warn("Failed to parse time stamp : " + timeStamp + ", " + timestampFieldFormat, pe);
-                    continue;
+                    timeStampValue = Instant.from(df.parse(timeStamp)).toEpochMilli();
+                  } catch (Exception pe) {
+                    logger.warn("Failed to parse time stamp : " + timeStamp + ", " + timestampFieldFormat);
+                    retry = RETRIES;
+                    throw pe;
                   }
 
                   final LogElement elkLogElement = new LogElement();
@@ -253,7 +254,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                     + " minute: " + logCollectionMinute + " host: " + hostName);
                 break;
               } catch (Exception e) {
-                if (++retry == RETRIES) {
+                if (++retry >= RETRIES) {
                   taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
                   completed.set(true);
                   throw e;
