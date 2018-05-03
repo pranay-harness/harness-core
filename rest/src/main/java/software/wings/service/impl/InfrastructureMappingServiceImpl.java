@@ -54,6 +54,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.annotation.Encryptable;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
@@ -132,6 +133,7 @@ import software.wings.utils.KubernetesConvention;
 import software.wings.utils.Misc;
 import software.wings.utils.Util;
 import software.wings.utils.Validator;
+import software.wings.utils.validation.Create;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.time.Duration;
@@ -217,6 +219,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
+  @ValidationGroups(Create.class)
   public InfrastructureMapping save(@Valid InfrastructureMapping infraMapping) {
     // The default name uses a bunch of user inputs, which is why we generate it at the time of save.
     if (infraMapping.isAutoPopulate()) {

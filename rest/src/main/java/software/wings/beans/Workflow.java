@@ -12,6 +12,7 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import io.harness.data.validator.EntityName;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.utils.validation.Create;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +25,7 @@ import javax.validation.constraints.NotNull;
  */
 @Entity(value = "workflows", noClassnameStored = true)
 public class Workflow extends Base {
-  @NotNull @EntityName private String name;
+  @NotNull @EntityName(groups = Create.class) private String name;
   private String description;
 
   private WorkflowType workflowType;

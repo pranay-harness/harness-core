@@ -40,6 +40,7 @@ import com.google.inject.Singleton;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.annotation.Encryptable;
 import software.wings.beans.Application;
 import software.wings.beans.InfrastructureMapping;
@@ -73,6 +74,7 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.settings.UsageRestrictions.AppEnvRestriction;
 import software.wings.utils.Validator;
+import software.wings.utils.validation.Create;
 
 import java.util.Collection;
 import java.util.List;
@@ -227,7 +229,6 @@ public class SettingsServiceImpl implements SettingsService {
                     .isPresent();
               }
             }
-
           })
           .collect(toList());
     }
@@ -243,11 +244,13 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   @Override
+  @ValidationGroups(Create.class)
   public SettingAttribute save(SettingAttribute settingAttribute) {
     return save(settingAttribute, true);
   }
 
   @Override
+  @ValidationGroups(Create.class)
   public SettingAttribute forceSave(SettingAttribute settingAttribute) {
     if (settingAttribute.getValue() != null) {
       if (settingAttribute.getValue() instanceof Encryptable) {
@@ -284,6 +287,7 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   @Override
+  @ValidationGroups(Create.class)
   public SettingAttribute save(SettingAttribute settingAttribute, boolean pushToGit) {
     settingValidationService.validate(settingAttribute);
     SettingAttribute newSettingAttribute = forceSave(settingAttribute);
