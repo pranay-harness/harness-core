@@ -112,13 +112,16 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
             context.getWorkflowExecutionId())));
 
     ServiceElement serviceElement = fetchServiceElement(context);
-    Artifact artifact = null;
+    Artifact artifact;
     if (serviceElement == null) {
       if (isNotEmpty(artifactIds)) {
         artifact = artifactService.get(appId, artifactIds.get(0));
+        addArtifactToContext(map, artifact);
       }
     } else {
       artifact = getArtifactForService(serviceElement.getUuid());
+      addArtifactToContext(map, artifact);
+
       List<Key<ServiceTemplate>> templateRefKeysByService =
           serviceTemplateService.getTemplateRefKeysByService(appId, serviceElement.getUuid(), envId);
       if (isEmpty(templateRefKeysByService) || templateRefKeysByService.get(0).getId() == null) {
@@ -147,6 +150,10 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
               .collect(Collectors.toMap(ServiceVariable::getName, var -> new String(var.getValue()))));
     }
 
+    return map;
+  }
+
+  private void addArtifactToContext(Map<String, Object> map, Artifact artifact) {
     if (artifact != null) {
       map.put(ARTIFACT, artifact);
       String artifactFileName = null;
@@ -159,8 +166,6 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
         map.put(ARTIFACT_FILE_NAME_VARIABLE, artifactFileName);
       }
     }
-
-    return map;
   }
 
   private String buildAbsoluteUrl(String fragment) {
