@@ -81,6 +81,7 @@ import software.wings.app.YamlModule;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.core.queue.QueueListenerController;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.lock.ManagedDistributedLockSvc;
 import software.wings.service.impl.EventEmitter;
@@ -178,10 +179,9 @@ public class WingsRule implements MethodRule {
         // Protection against running tests on non-local databases such as prod or qa. Comment out this check if you're
         // sure.
         if (!clientUri.getURI().startsWith("mongodb://localhost:")) {
-          logger.info("\n*** WARNING *** : Attempting to run test on non-local Mongo: " + clientUri.getURI());
-          logger.info(
-              "*** Exiting *** : Comment out this check in WingsRule.java if you are sure you want to run against a remote Mongo.\n");
-          System.exit(1);
+          throw new WingsException(
+              "\n*** WARNING *** : Attempting to run test on non-local Mongo: " + clientUri.getURI()
+              + "\n*** Exiting *** : Comment out this check in WingsRule.java if you are sure you want to run against a remote Mongo.\n");
         }
         dbName = clientUri.getDatabase();
         mongoClient = new MongoClient(clientUri);
