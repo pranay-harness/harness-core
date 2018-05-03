@@ -1,5 +1,7 @@
 package software.wings.service.impl.newrelic;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -66,6 +68,11 @@ public class NewRelicMetricAnalysisRecord extends Base {
     private List<NewRelicMetricAnalysisValue> metricValues;
     @Transient private String displayName;
     @Transient private String fullMetricName;
+    private String tag;
+
+    public String getTag() {
+      return isEmpty(tag) ? "DEFAULT" : tag;
+    }
 
     public void addNewRelicMetricAnalysisValue(NewRelicMetricAnalysisValue metricAnalysisValue) {
       if (metricAnalysisValue.getTestValue() >= 0.0 || metricAnalysisValue.getControlValue() >= 0.0) {

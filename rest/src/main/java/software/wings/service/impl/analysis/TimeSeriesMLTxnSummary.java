@@ -10,5 +10,6 @@ import java.util.Map;
 @Data
 public class TimeSeriesMLTxnSummary {
   private String txn_name;
+  private String txn_tag;
   private Map<String, TimeSeriesMLMetricSummary> metrics;
 }

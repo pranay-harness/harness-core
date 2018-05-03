@@ -7,12 +7,15 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
+import software.wings.settings.UsageRestrictions;
+import software.wings.yaml.setting.VerificationProviderYaml;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -68,5 +71,23 @@ public class DatadogConfig extends SettingValue implements Encryptable {
         .options(optionsMap())
         .headers(new HashMap<>())
         .build();
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
+  public static final class DatadogYaml extends VerificationProviderYaml {
+    private String url;
+    private String apiKey;
+    private String applicationKey;
+
+    @Builder
+    public DatadogYaml(String type, String harnessApiVersion, String url, String apiKey, String applicationKey,
+        UsageRestrictions usageRestrictions) {
+      super(type, harnessApiVersion, usageRestrictions);
+      this.url = url;
+      this.apiKey = apiKey;
+      this.applicationKey = applicationKey;
+    }
   }
 }

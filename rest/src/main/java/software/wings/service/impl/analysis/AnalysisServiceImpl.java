@@ -723,7 +723,7 @@ public class AnalysisServiceImpl implements AnalysisService {
 
     List<LogMLFeedbackRecord> logMLFeedbackRecords = wingsPersistence.createQuery(LogMLFeedbackRecord.class)
                                                          .filter("stateExecutionId", stateExecutionId)
-                                                         .filter("appId", applicationId)
+                                                         .filter("applicationId", applicationId)
                                                          .asList();
 
     if (logMLFeedbackRecords == null) {

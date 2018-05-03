@@ -552,6 +552,12 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
         + LogAnalysisResource.ANALYSIS_USER_FEEDBACK + "?accountId=" + accountId + "&stateType=" + StateType.SUMO);
     RestResponse<Boolean> restResponse = getRequestBuilderWithAuthHeader(getTarget).post(
         entity(mlFeedback, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
+
+    LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SUMO);
+
+    assertEquals(AnalysisServiceImpl.LogMLFeedbackType.IGNORE_ALWAYS,
+        analysisSummary.getTestClusters().get(0).getLogMLFeedbackType());
+
     assertTrue(restResponse.getResource());
   }
 

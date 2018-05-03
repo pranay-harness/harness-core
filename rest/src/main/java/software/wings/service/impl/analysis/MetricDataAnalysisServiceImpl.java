@@ -451,6 +451,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
         }
         metricAnalysisList.add(NewRelicMetricAnalysis.builder()
                                    .metricName(txnSummary.getTxn_name())
+                                   .tag(txnSummary.getTxn_tag())
                                    .metricValues(metricsList)
                                    .riskLevel(globalRisk)
                                    .build());
@@ -476,6 +477,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     }
 
     if (analysisRecord == null) {
+      // TODO why is this hard coded to DYNA_TRACE???
       return NewRelicMetricAnalysisRecord.builder()
           .showTimeSeries(false)
           .stateType(StateType.DYNA_TRACE)
