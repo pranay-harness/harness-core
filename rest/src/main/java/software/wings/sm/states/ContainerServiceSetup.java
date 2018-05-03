@@ -142,6 +142,8 @@ public abstract class ContainerServiceSetup extends State {
           (ContainerInfrastructureMapping) infrastructureMapping;
 
       String clusterName = containerInfrastructureMapping.getClusterName();
+      logger.info("Got cluster {} from container infra-mapping {} for cloud provider {}", clusterName,
+          infrastructureMapping.getUuid(), infrastructureMapping.getComputeProviderSettingId());
       if (!(infrastructureMapping instanceof DirectKubernetesInfrastructureMapping)
           && Constants.RUNTIME.equals(clusterName)) {
         if ((infrastructureMapping instanceof GcpKubernetesInfrastructureMapping
