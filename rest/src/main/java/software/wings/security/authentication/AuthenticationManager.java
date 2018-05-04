@@ -103,7 +103,7 @@ public class AuthenticationManager {
     try {
       String[] decryptedData = new String(Base64.getDecoder().decode(basicToken)).split(":");
       if (decryptedData.length < 2) {
-        throw new WingsException(INVALID_CREDENTIAL);
+        throw new WingsException(INVALID_CREDENTIAL, USER);
       }
       String userName = decryptedData[0];
       String password = decryptedData[1];
@@ -115,7 +115,7 @@ public class AuthenticationManager {
       }
     } catch (Exception e) {
       logger.warn("Failed to login via default mechanism", e);
-      throw new WingsException(INVALID_CREDENTIAL);
+      throw new WingsException(INVALID_CREDENTIAL, USER);
     }
   }
 
