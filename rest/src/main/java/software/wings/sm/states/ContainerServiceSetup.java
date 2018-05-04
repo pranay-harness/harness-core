@@ -6,8 +6,6 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder.anInstanceElementListParam;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
-import static software.wings.beans.FeatureName.ECS_CREATE_CLUSTER;
-import static software.wings.beans.FeatureName.KUBERNETES_CREATE_CLUSTER;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
@@ -30,10 +28,8 @@ import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
-import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.ResizeStrategy;
 import software.wings.beans.Service;
@@ -144,17 +140,6 @@ public abstract class ContainerServiceSetup extends State {
       String clusterName = containerInfrastructureMapping.getClusterName();
       logger.info("Got cluster {} from container infra-mapping {} for cloud provider {}", clusterName,
           infrastructureMapping.getUuid(), infrastructureMapping.getComputeProviderSettingId());
-      if (!(infrastructureMapping instanceof DirectKubernetesInfrastructureMapping)
-          && Constants.RUNTIME.equals(clusterName)) {
-        if ((infrastructureMapping instanceof GcpKubernetesInfrastructureMapping
-                && featureFlagService.isEnabled(KUBERNETES_CREATE_CLUSTER, app.getAccountId()))
-            || (infrastructureMapping instanceof EcsInfrastructureMapping
-                   && featureFlagService.isEnabled(ECS_CREATE_CLUSTER, app.getAccountId()))) {
-          clusterName = getClusterNameFromContextElement(context);
-        } else {
-          throw new InvalidRequestException("Runtime creation of clusters is not yet supported.");
-        }
-      }
 
       Command command =
           serviceResourceService.getCommandByName(app.getUuid(), serviceId, env.getUuid(), getCommandName())

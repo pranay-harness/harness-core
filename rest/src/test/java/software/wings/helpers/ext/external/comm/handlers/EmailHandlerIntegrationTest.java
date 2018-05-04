@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
+import io.harness.rule.RepeatRule.Repeat;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -55,6 +56,7 @@ public class EmailHandlerIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Repeat(times = 3, successes = 1)
   public void testSMTPConnectivity() {
     SmtpConfig smtpConfig =
         SmtpConfig.builder()

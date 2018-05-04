@@ -56,7 +56,6 @@ import software.wings.sm.states.AwsAmiServiceDeployState;
 import software.wings.sm.states.AwsAmiServiceRollback;
 import software.wings.sm.states.AwsAmiServiceSetup;
 import software.wings.sm.states.AwsAutoScaleProvisionState;
-import software.wings.sm.states.AwsClusterSetup;
 import software.wings.sm.states.AwsCodeDeployRollback;
 import software.wings.sm.states.AwsCodeDeployState;
 import software.wings.sm.states.AwsLambdaRollback;
@@ -358,9 +357,6 @@ public enum StateType implements StateTypeDescriptor {
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.AZURE_KUBERNETES,
           InfrastructureMappingType.GCP_KUBERNETES),
       asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
-
-  AWS_CLUSTER_SETUP(AwsClusterSetup.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_ECS),
-      asList(CLUSTER_SETUP), ORCHESTRATION_STENCILS),
 
   GCP_CLUSTER_SETUP(GcpClusterSetup.class, CLOUD,
       Lists.newArrayList(InfrastructureMappingType.GCP_KUBERNETES, InfrastructureMappingType.AZURE_KUBERNETES),
