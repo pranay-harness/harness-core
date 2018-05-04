@@ -180,7 +180,6 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
               delegateName, config.getDelegateName(), cloudProviderSetting.getName()));
         }
         kubernetesConfig = config.createKubernetesConfig(setupParams.getNamespace());
-
         encryptedDataDetails = edd;
       } else if (cloudProviderSetting.getValue() instanceof AzureConfig) {
         AzureConfig azureConfig = (AzureConfig) cloudProviderSetting.getValue();
