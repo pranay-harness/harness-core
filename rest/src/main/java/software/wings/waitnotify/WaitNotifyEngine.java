@@ -6,9 +6,11 @@ import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.waitnotify.NotifyEvent.Builder.aNotifyEvent;
 
 import com.google.common.base.Preconditions;
+import com.google.common.util.concurrent.RateLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.mongodb.DuplicateKeyException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ReadPref;
@@ -16,8 +18,8 @@ import software.wings.core.queue.Queue;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
-import software.wings.utils.Misc;
 
+import java.time.Duration;
 import java.util.Arrays;
 
 /**
@@ -85,6 +87,11 @@ public class WaitNotifyEngine {
     return notify(correlationId, response, response instanceof ErrorNotifyResponseData);
   }
 
+  // If we get duplicate key exception this means that this correlation id was already handled. In rare cases
+  // the delegate might get confused and send the response twice. Ignore two DuplicateKeyException per hour.
+  // If more are observed that's alarming.
+  static RateLimiter duplicateKeyExceptionRateLimiter = RateLimiter.create(2.0 / Duration.ofHours(1).getSeconds());
+
   private <T extends NotifyResponseData> String notify(String correlationId, T response, boolean error) {
     Preconditions.checkArgument(isNotEmpty(correlationId), "correlationId is null or empty");
 
@@ -101,10 +108,12 @@ public class WaitNotifyEngine {
               aNotifyEvent().withWaitInstanceId(waitQueue.getWaitInstanceId()).withError(error).build()));
 
       return notificationId;
-    } catch (Exception e) {
-      logger.error(
-          "Failed to notify for response of type " + response.getClass().getSimpleName() + ": " + Misc.getMessage(e),
-          e);
+    } catch (DuplicateKeyException exception) {
+      if (!duplicateKeyExceptionRateLimiter.tryAcquire()) {
+        logger.error("Unexpected rate of DuplicateKeyException per correlation", exception);
+      }
+    } catch (Exception exception) {
+      logger.error("Failed to notify for response of type " + response.getClass().getSimpleName(), exception);
     }
     return null;
   }
