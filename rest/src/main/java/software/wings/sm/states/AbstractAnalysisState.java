@@ -53,7 +53,7 @@ import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData.ContinuousVerificationExecutionMetaDataBuilder;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
-import software.wings.service.impl.instance.ContainerInstanceHelper;
+import software.wings.service.impl.instance.ContainerInstanceHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.DelegateService;
@@ -111,7 +111,7 @@ public abstract class AbstractAnalysisState extends State {
 
   @Transient @Inject @SchemaIgnore protected MainConfiguration configuration;
 
-  @Transient @Inject @SchemaIgnore protected ContainerInstanceHelper containerInstanceHelper;
+  @Transient @Inject @SchemaIgnore protected ContainerInstanceHandler containerInstanceHandler;
 
   @Transient @Inject @SchemaIgnore protected InfrastructureMappingService infraMappingService;
 
@@ -210,9 +210,9 @@ public abstract class AbstractAnalysisState extends State {
     Set<String> phaseHosts = getHostsDeployedSoFar(context, serviceId);
     getLogger().info("Deployed hosts so far: {}", phaseHosts);
 
-    if (containerInstanceHelper.isContainerDeployment(infrastructureMapping)) {
+    if (containerInstanceHandler.isContainerDeployment(infrastructureMapping)) {
       Set<String> containerServiceNames =
-          containerInstanceHelper.getContainerServiceNames(context, serviceId, infraMappingId);
+          containerInstanceHandler.getContainerServiceNames(context, serviceId, infraMappingId);
 
       if (infrastructureMapping instanceof EcsInfrastructureMapping) {
         Set<String> hosts =
@@ -221,8 +221,8 @@ public abstract class AbstractAnalysisState extends State {
         return hosts;
       }
 
-      List<ContainerInfo> containerInfoForService =
-          containerInstanceHelper.getContainerInfoForService(containerServiceNames, context, infraMappingId, serviceId);
+      List<ContainerInfo> containerInfoForService = containerInstanceHandler.getContainerInfoForService(
+          containerServiceNames, context, infraMappingId, serviceId);
       Set<String> hosts = containerInfoForService.stream()
                               .map(containerInfo -> {
                                 if (containerInfo instanceof KubernetesContainerInfo) {

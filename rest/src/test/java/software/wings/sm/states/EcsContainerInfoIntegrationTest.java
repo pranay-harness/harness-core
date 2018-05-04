@@ -38,7 +38,7 @@ import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.AwsHelperService;
-import software.wings.service.impl.instance.ContainerInstanceHelper;
+import software.wings.service.impl.instance.ContainerInstanceHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -69,7 +69,7 @@ public class EcsContainerInfoIntegrationTest extends WingsBaseTest {
   @Inject private SecretManager secretManager;
   @Inject private AwsHelperService awsHelperService;
   @Inject private ContainerService containerService;
-  @Mock private ContainerInstanceHelper containerInstanceHelper;
+  @Mock private ContainerInstanceHandler containerInstanceHandler;
   @Mock private InfrastructureMappingService infraMappingService;
   @Mock private AppService appService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
@@ -81,7 +81,7 @@ public class EcsContainerInfoIntegrationTest extends WingsBaseTest {
   @Before
   public void setUp() throws Exception {
     initMocks(this);
-    when(containerInstanceHelper.isContainerDeployment(anyObject())).thenReturn(true);
+    when(containerInstanceHandler.isContainerDeployment(anyObject())).thenReturn(true);
     when(infraMappingService.get(anyString(), anyString())).thenReturn(null);
     when(appService.get(appId))
         .thenReturn(Application.Builder.anApplication().withUuid(appId).withAccountId(accountId).build());
@@ -127,13 +127,13 @@ public class EcsContainerInfoIntegrationTest extends WingsBaseTest {
                         .withRegion(Regions.US_EAST_1.getName())
                         .withComputeProviderSettingId(awsConfigid)
                         .build());
-    when(containerInstanceHelper.getContainerServiceNames(anyObject(), anyString(), anyString()))
+    when(containerInstanceHandler.getContainerServiceNames(anyObject(), anyString(), anyString()))
         .thenReturn(Sets.newHashSet("do_not_delete__ecs__container__integration__test__Prod__1",
             "do_not_delete__ecs__container__integration__test__Prod__2"));
 
     SplunkV2State splunkV2State = spy(new SplunkV2State("SplunkState"));
     doReturn(workflowId).when(splunkV2State).getWorkflowId(context);
-    setInternalState(splunkV2State, "containerInstanceHelper", containerInstanceHelper);
+    setInternalState(splunkV2State, "containerInstanceHandler", containerInstanceHandler);
     setInternalState(splunkV2State, "infraMappingService", infraMappingService);
     setInternalState(splunkV2State, "settingsService", settingsService);
     setInternalState(splunkV2State, "secretManager", secretManager);

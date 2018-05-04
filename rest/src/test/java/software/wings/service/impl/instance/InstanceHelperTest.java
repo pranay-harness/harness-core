@@ -58,6 +58,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.instance.InstanceService;
+import software.wings.sm.ExecutionContext;
 import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.WorkflowStandardParams;
@@ -82,8 +83,9 @@ public class InstanceHelperTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private ArtifactService artifactService;
   @Mock private Queue<DeploymentEvent> deploymentEventQueue;
+  @Mock private ExecutionContext context;
   @InjectMocks @Spy WorkflowStandardParams workflowStandardParams;
-  @InjectMocks @Inject private ContainerInstanceHelper containerInstanceHelper;
+  @InjectMocks @Inject private ContainerInstanceHandler containerInstanceHandler;
   @InjectMocks @Inject private InstanceHelper instanceHelper;
   private WorkflowExecution workflowExecution;
   private StateExecutionData stateExecutionData;

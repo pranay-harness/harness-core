@@ -37,7 +37,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
 import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.instance.ContainerInstanceHelper;
+import software.wings.service.impl.instance.ContainerInstanceHandler;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElementType;
@@ -64,7 +64,7 @@ import java.util.UUID;
 public class AbstractAnalysisStateTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowExecutionService workflowExecutionService;
-  @Mock private ContainerInstanceHelper containerInstanceHelper;
+  @Mock private ContainerInstanceHandler containerInstanceHandler;
   @Mock private InfrastructureMappingService infraMappingService;
   private final String workflowId = UUID.randomUUID().toString();
   private final String appId = UUID.randomUUID().toString();
@@ -73,7 +73,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   @Before
   public void setup() {
     initMocks(this);
-    when(containerInstanceHelper.isContainerDeployment(anyObject())).thenReturn(false);
+    when(containerInstanceHandler.isContainerDeployment(anyObject())).thenReturn(false);
     when(infraMappingService.get(anyString(), anyString())).thenReturn(null);
   }
 
@@ -117,7 +117,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
 
     SplunkV2State splunkV2State = spy(new SplunkV2State("SplunkState"));
     doReturn(workflowId).when(splunkV2State).getWorkflowId(context);
-    setInternalState(splunkV2State, "containerInstanceHelper", containerInstanceHelper);
+    setInternalState(splunkV2State, "containerInstanceHandler", containerInstanceHandler);
     setInternalState(splunkV2State, "infraMappingService", infraMappingService);
     Reflect.on(splunkV2State).set("workflowExecutionService", workflowExecutionService);
     Set<String> nodes = splunkV2State.getLastExecutionNodes(context);
@@ -198,7 +198,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
 
     SplunkV2State splunkV2State = spy(new SplunkV2State("SplunkState"));
     doReturn(workflowId).when(splunkV2State).getWorkflowId(context);
-    setInternalState(splunkV2State, "containerInstanceHelper", containerInstanceHelper);
+    setInternalState(splunkV2State, "containerInstanceHandler", containerInstanceHandler);
     setInternalState(splunkV2State, "infraMappingService", infraMappingService);
     Reflect.on(splunkV2State).set("workflowExecutionService", workflowExecutionService);
     Set<String> nodes = splunkV2State.getLastExecutionNodes(context);
