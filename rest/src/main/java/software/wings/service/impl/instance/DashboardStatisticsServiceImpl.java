@@ -24,6 +24,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import lombok.Data;
 import org.mongodb.morphia.aggregation.Group;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.query.Query;
@@ -807,6 +808,10 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     return query;
   }
 
+  /**
+   * DONT DELETE THESE CLASSES, These are used by morphia.
+   */
+  @Data
   public static final class AggregationInfo {
     @Id private ID _id;
     private long count;
@@ -817,56 +822,20 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     private ArtifactInfo artifactInfo;
     private List<EntitySummary> instanceInfoList;
 
-    public ID get_id() {
-      return _id;
-    }
-
-    public long getCount() {
-      return count;
-    }
-
-    public EntitySummary getAppInfo() {
-      return appInfo;
-    }
-
-    public EntitySummary getServiceInfo() {
-      return serviceInfo;
-    }
-
-    public EntitySummary getInfraMappingInfo() {
-      return infraMappingInfo;
-    }
-
-    public EnvInfo getEnvInfo() {
-      return envInfo;
-    }
-
-    public ArtifactInfo getArtifactInfo() {
-      return artifactInfo;
-    }
-
-    public List<EntitySummary> getInstanceInfoList() {
-      return instanceInfoList;
-    }
-
+    /**
+     * DONT DELETE THESE CLASSES, These are used by morphia.
+     */
+    @Data
     protected static final class EnvInfo {
       private String id;
       private String name;
       private String type;
-
-      public String getId() {
-        return id;
-      }
-
-      public String getName() {
-        return name;
-      }
-
-      public String getType() {
-        return type;
-      }
     }
 
+    /**
+     * DONT DELETE THESE CLASSES, These are used by morphia.
+     */
+    @Data
     protected static final class ArtifactInfo {
       private String id;
       private String name;
@@ -875,96 +844,41 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       private String streamName;
       private long deployedAt;
       private String sourceName;
-
-      public String getId() {
-        return id;
-      }
-
-      public String getName() {
-        return name;
-      }
-
-      public String getBuildNo() {
-        return buildNo;
-      }
-
-      public String getStreamId() {
-        return streamId;
-      }
-
-      public String getStreamName() {
-        return streamName;
-      }
-
-      public long getDeployedAt() {
-        return deployedAt;
-      }
-
-      public String getSourceName() {
-        return sourceName;
-      }
     }
 
+    @Data
     public static final class ID {
       private String serviceId;
       private String envId;
       private String lastArtifactId;
-
-      public String getServiceId() {
-        return serviceId;
-      }
-
-      public String getEnvId() {
-        return envId;
-      }
-
-      public String getLastArtifactId() {
-        return lastArtifactId;
-      }
     }
   }
 
+  /**
+   * DONT DELETE THESE CLASSES, These are used by morphia.
+   */
+  @Data
   public static class FlatEntitySummaryStats {
     private String entityId;
     private String entityName;
     private String entityVersion;
     private int count;
-
-    public String getEntityId() {
-      return entityId;
-    }
-
-    public String getEntityName() {
-      return entityName;
-    }
-
-    public int getCount() {
-      return count;
-    }
-
-    public String getEntityVersion() {
-      return entityVersion;
-    }
   }
 
+  /**
+   * DONT DELETE THESE CLASSES, These are used by morphia.
+   */
+  @Data
   public static class EnvironmentSummaryStats {
     private String envType;
     private int count;
-
-    public String getEnvType() {
-      return envType;
-    }
-
-    public int getCount() {
-      return count;
-    }
   }
 
+  /**
+   * DONT DELETE THESE CLASSES, These are used by morphia.
+   */
+  @Data
   public static class InstanceCount {
     private int count;
-
-    public int getCount() {
-      return count;
-    }
   }
 }

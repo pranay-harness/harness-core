@@ -10,6 +10,7 @@ import migrations.all.AddVerifyToRollbackWorkflows;
 import migrations.all.CreateDefaultUserGroupsAndAddToExistingUsers;
 import migrations.all.CreateSupportUserGroupsAndRenameAccountAdmin;
 import migrations.all.DirectKubernetesToCloudProvider;
+import migrations.all.FixInstanceData;
 import migrations.all.FixMaxInstancesFieldInContainerSetup;
 import migrations.all.GitSyncToAllAccounts;
 import migrations.all.LogAnalysisRecordsMigration;
@@ -60,6 +61,7 @@ public class MigrationList {
         .add(Pair.of(127, LogDataRecordsMigration.class))
         .add(Pair.of(128, LogAnalysisRecordsMigration.class))
         .add(Pair.of(129, LogFeedbackRecordsMigration.class))
+        .add(Pair.of(130, FixInstanceData.class))
         .build();
   }
 }

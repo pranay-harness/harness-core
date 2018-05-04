@@ -92,7 +92,6 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
   @Mock ServiceResourceService serviceResourceService;
   @Mock private ContainerSync containerSync;
   @InjectMocks @Spy InstanceHelper instanceHelper;
-  @InjectMocks @Spy ContainerInstanceHelper containerInstanceHelper;
   @Spy InstanceUtil instanceUtil;
   @InjectMocks @Inject ContainerInstanceHandler containerInstanceHandler;
 

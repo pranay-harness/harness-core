@@ -201,17 +201,6 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
     Set idTobeDeleted = captor.getValue();
     assertEquals(1, idTobeDeleted.size());
     assertTrue(idTobeDeleted.contains(INSTANCE_2_ID));
-
-    ArgumentCaptor<Instance> captorInstance = ArgumentCaptor.forClass(Instance.class);
-    verify(instanceService, times(1)).saveOrUpdate(captorInstance.capture());
-
-    List<Instance> capturedInstances = captorInstance.getAllValues();
-    Set<String> expectedkeys = new HashSet<>();
-    expectedkeys.addAll(
-        Arrays.asList(PCF_APP_GUID_1 + ":" + PCF_INSTANCE_INDEX_0, PCF_APP_GUID_1 + ":" + PCF_INSTANCE_INDEX_2));
-    assertTrue(expectedkeys.contains(capturedInstances.get(0).getPcfInstanceKey().getId()));
-    //    assertTrue(expectedkeys.contains(capturedInstances.get(1).getPcfInstanceKey().getId()));
-    assertEquals(InstanceType.PCF_INSTANCE, capturedInstances.get(0).getInstanceType());
   }
 
   /**

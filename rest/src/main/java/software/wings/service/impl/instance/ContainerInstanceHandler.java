@@ -2,6 +2,7 @@ package software.wings.service.impl.instance;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Maps;
@@ -11,27 +12,49 @@ import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.hazelcast.util.Preconditions;
+import software.wings.api.CommandStepExecutionSummary;
 import software.wings.api.ContainerDeploymentInfoWithLabels;
 import software.wings.api.ContainerDeploymentInfoWithNames;
+import software.wings.api.ContainerServiceData;
 import software.wings.api.DeploymentInfo;
+import software.wings.api.HelmSetupExecutionSummary;
+import software.wings.api.PhaseExecutionData;
+import software.wings.api.PhaseStepExecutionData;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.WorkflowExecution;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.instance.Instance;
+import software.wings.beans.infrastructure.instance.Instance.InstanceBuilder;
+import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.beans.infrastructure.instance.info.ContainerInfo;
 import software.wings.beans.infrastructure.instance.info.EcsContainerInfo;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
+import software.wings.beans.infrastructure.instance.key.ContainerInstanceKey;
+import software.wings.common.Constants;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.instance.sync.ContainerSync;
+import software.wings.service.impl.instance.sync.request.ContainerFilter;
+import software.wings.service.impl.instance.sync.request.ContainerSyncRequest;
 import software.wings.service.impl.instance.sync.response.ContainerSyncResponse;
-import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.sm.ExecutionContext;
+import software.wings.sm.PhaseExecutionSummary;
+import software.wings.sm.PhaseStepExecutionSummary;
+import software.wings.sm.StateExecutionData;
+import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateType;
+import software.wings.sm.StepExecutionSummary;
 import software.wings.utils.Validator;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -40,8 +63,6 @@ import java.util.stream.Collectors;
  */
 @Singleton
 public class ContainerInstanceHandler extends InstanceHandler {
-  @Inject private InfrastructureMappingService infraMappingService;
-  @Inject private ContainerInstanceHelper containerInstanceHelper;
   @Inject private ContainerSync containerSync;
 
   @Override
@@ -83,6 +104,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
     // This is to handle the case of the instances stored in the new schema.
     if (containerSvcNameInstanceMap.size() > 0) {
       containerSvcNameInstanceMap.keySet().forEach(containerSvcName -> {
+
         // Get all the instances for the given containerSvcName (In kubernetes, this is replication Controller and in
         // ECS it is taskDefinition)
         ContainerSyncResponse instanceSyncResponse =
@@ -122,8 +144,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
         if (newDeploymentInfo != null) {
           instancesToBeUpdated.stream().forEach(containerId -> {
             ContainerInfo containerInfo = latestContainerInfoMap.get(containerId);
-            Instance instance = containerInstanceHelper.buildInstanceFromContainerInfo(
-                containerInfraMapping, containerInfo, newDeploymentInfo);
+            Instance instance = buildInstanceFromContainerInfo(containerInfraMapping, containerInfo, newDeploymentInfo);
             instanceService.saveOrUpdate(instance);
           });
         }
@@ -145,11 +166,27 @@ public class ContainerInstanceHandler extends InstanceHandler {
           instanceService.delete(instanceIdsToBeDeleted);
         }
 
+        DeploymentInfo deploymentInfo;
         if (isNotEmpty(instancesToBeAdded)) {
+          // newDeploymentInfo would be null in case of sync job.
+          if (newDeploymentInfo == null && isNotEmpty(instancesInDB)) {
+            Optional<Instance> instanceWithExecutionInfoOptional = getInstanceWithExecutionInfo(instancesInDB);
+            if (!instanceWithExecutionInfoOptional.isPresent()) {
+              logger.error("Couldn't find an instance from a previous deployment for inframapping {}", infraMappingId);
+              return;
+            }
+
+            DeploymentInfo deploymentInfoFromPrevious = ContainerDeploymentInfoWithNames.builder().build();
+            // We pick one of the existing instances from db for the same controller / task definition
+            generateDeploymentInfoFromInstance(instanceWithExecutionInfoOptional.get(), deploymentInfoFromPrevious);
+            deploymentInfo = deploymentInfoFromPrevious;
+          } else {
+            deploymentInfo = newDeploymentInfo;
+          }
+
           instancesToBeAdded.forEach(containerId -> {
             ContainerInfo containerInfo = latestContainerInfoMap.get(containerId);
-            Instance instance = containerInstanceHelper.buildInstanceFromContainerInfo(
-                containerInfraMapping, containerInfo, newDeploymentInfo);
+            Instance instance = buildInstanceFromContainerInfo(containerInfraMapping, containerInfo, deploymentInfo);
             instanceService.saveOrUpdate(instance);
           });
         }
@@ -164,7 +201,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
       InstanceInfo instanceInfo = instance.getInstanceInfo();
       if (instanceInfo instanceof ContainerInfo) {
         ContainerInfo containerInfo = (ContainerInfo) instanceInfo;
-        String containerSvcName = containerInstanceHelper.getContainerSvcName(containerInfo);
+        String containerSvcName = getContainerSvcName(containerInfo);
         containerSvcNameInstanceMap.put(containerSvcName, instance);
       } else {
         throw new HarnessException("UnSupported instance deploymentInfo type" + instance.getInstanceType().name());
@@ -192,9 +229,97 @@ public class ContainerInstanceHandler extends InstanceHandler {
     } else {
       throw new HarnessException("Incompatible deployment info type: " + deploymentInfo.getClass().getName());
     }
-
     syncInstancesInternal(
         deploymentInfo.getAppId(), deploymentInfo.getInfraMappingId(), containerSvcNameInstanceMap, deploymentInfo);
+  }
+
+  public boolean isContainerDeployment(InfrastructureMapping infrastructureMapping) {
+    return infrastructureMapping instanceof ContainerInfrastructureMapping;
+  }
+
+  @Override
+  public Optional<DeploymentInfo> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
+      WorkflowExecution workflowExecution, InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId,
+      Artifact artifact) throws HarnessException {
+    PhaseExecutionSummary phaseExecutionSummary = phaseExecutionData.getPhaseExecutionSummary();
+    if (phaseExecutionSummary != null) {
+      Map<String, PhaseStepExecutionSummary> phaseStepExecutionSummaryMap =
+          phaseExecutionSummary.getPhaseStepExecutionSummaryMap();
+      if (phaseStepExecutionSummaryMap != null) {
+        PhaseStepExecutionSummary phaseStepExecutionSummary =
+            phaseStepExecutionSummaryMap.get(Constants.DEPLOY_CONTAINERS);
+        if (phaseStepExecutionSummary == null) {
+          if (logger.isDebugEnabled()) {
+            logger.debug("PhaseStepExecutionSummary is null for stateExecutionInstanceId: " + stateExecutionInstanceId);
+          }
+          return Optional.empty();
+        }
+        List<StepExecutionSummary> stepExecutionSummaryList = phaseStepExecutionSummary.getStepExecutionSummaryList();
+        // This was observed when the "deploy containers" step was executed in rollback and no commands were
+        // executed since setup failed.
+        if (stepExecutionSummaryList == null) {
+          if (logger.isDebugEnabled()) {
+            logger.debug("StepExecutionSummaryList is null for stateExecutionInstanceId: " + stateExecutionInstanceId);
+          }
+          return Optional.empty();
+        }
+
+        for (StepExecutionSummary stepExecutionSummary : stepExecutionSummaryList) {
+          if (stepExecutionSummary != null && stepExecutionSummary instanceof CommandStepExecutionSummary) {
+            CommandStepExecutionSummary commandStepExecutionSummary =
+                (CommandStepExecutionSummary) stepExecutionSummary;
+            String clusterName = commandStepExecutionSummary.getClusterName();
+            Set<String> containerSvcNameSet = Sets.newHashSet();
+
+            if (commandStepExecutionSummary.getOldInstanceData() != null) {
+              containerSvcNameSet.addAll(commandStepExecutionSummary.getOldInstanceData()
+                                             .stream()
+                                             .map(ContainerServiceData::getName)
+                                             .collect(toList()));
+            }
+
+            if (commandStepExecutionSummary.getNewInstanceData() != null) {
+              List<String> newcontainerSvcNames = commandStepExecutionSummary.getNewInstanceData()
+                                                      .stream()
+                                                      .map(ContainerServiceData::getName)
+                                                      .collect(toList());
+              containerSvcNameSet.addAll(newcontainerSvcNames);
+            }
+
+            if (containerSvcNameSet.isEmpty()) {
+              logger.warn(
+                  "Both old and new container services are empty. Cannot proceed for phase step for state execution instance: {}",
+                  stateExecutionInstanceId);
+              return Optional.empty();
+            }
+
+            ContainerDeploymentInfoWithNames containerDeploymentInfo = ContainerDeploymentInfoWithNames.builder()
+                                                                           .containerSvcNameSet(containerSvcNameSet)
+                                                                           .clusterName(clusterName)
+                                                                           .build();
+            return Optional.of(containerDeploymentInfo);
+
+          } else if (stepExecutionSummary != null && stepExecutionSummary instanceof HelmSetupExecutionSummary) {
+            if (!(infrastructureMapping instanceof ContainerInfrastructureMapping)) {
+              logger.warn("Inframapping is not container type. cannot proceed for state execution instance: {}",
+                  stateExecutionInstanceId);
+              return Optional.empty();
+            }
+
+            String clusterName = ((ContainerInfrastructureMapping) infrastructureMapping).getClusterName();
+            HelmSetupExecutionSummary helmSetupExecutionSummary = (HelmSetupExecutionSummary) stepExecutionSummary;
+            HashMap<String, String> labels = Maps.newHashMap();
+            labels.put("release", helmSetupExecutionSummary.getReleaseName());
+
+            ContainerDeploymentInfoWithLabels containerDeploymentInfo =
+                ContainerDeploymentInfoWithLabels.builder().labels(labels).clusterName(clusterName).build();
+
+            return Optional.of(containerDeploymentInfo);
+          }
+        }
+      }
+    }
+    return Optional.empty();
   }
 
   private String getContainerId(ContainerInfo containerInfo) {
@@ -209,5 +334,178 @@ public class ContainerInstanceHandler extends InstanceHandler {
       logger.error(msg);
       throw new WingsException(msg);
     }
+  }
+
+  public Instance buildInstanceFromContainerInfo(
+      InfrastructureMapping infraMapping, ContainerInfo containerInfo, DeploymentInfo newDeploymentInfo) {
+    InstanceBuilder builder = buildInstanceBase(null, infraMapping, newDeploymentInfo);
+    builder.containerInstanceKey(generateInstanceKeyForContainer(containerInfo));
+    builder.instanceInfo(containerInfo);
+
+    return builder.build();
+  }
+
+  private ContainerInstanceKey generateInstanceKeyForContainer(ContainerInfo containerInfo) {
+    ContainerInstanceKey containerInstanceKey;
+
+    if (containerInfo instanceof KubernetesContainerInfo) {
+      KubernetesContainerInfo kubernetesContainerInfo = (KubernetesContainerInfo) containerInfo;
+      containerInstanceKey = ContainerInstanceKey.builder().containerId(kubernetesContainerInfo.getPodName()).build();
+    } else if (containerInfo instanceof EcsContainerInfo) {
+      EcsContainerInfo ecsContainerInfo = (EcsContainerInfo) containerInfo;
+      containerInstanceKey = ContainerInstanceKey.builder().containerId(ecsContainerInfo.getTaskArn()).build();
+    } else {
+      String msg = "Unsupported container instance type:" + containerInfo;
+      logger.error(msg);
+      throw new WingsException(msg);
+    }
+
+    return containerInstanceKey;
+  }
+
+  public String getContainerSvcName(ContainerInfo containerInfo) {
+    if (containerInfo instanceof KubernetesContainerInfo) {
+      return ((KubernetesContainerInfo) containerInfo).getControllerName();
+    } else if (containerInfo instanceof EcsContainerInfo) {
+      return ((EcsContainerInfo) containerInfo).getServiceName();
+    } else {
+      throw new WingsException(
+          "Unsupported container deploymentInfo type:" + containerInfo.getClass().getCanonicalName());
+    }
+  }
+
+  public ContainerSyncResponse getLatestInstancesFromContainerServer(
+      Collection<software.wings.beans.infrastructure.instance.ContainerDeploymentInfo>
+          containerDeploymentInfoCollection,
+      InstanceType instanceType) {
+    ContainerFilter containerFilter =
+        ContainerFilter.builder().containerDeploymentInfoCollection(containerDeploymentInfoCollection).build();
+
+    ContainerSyncRequest instanceSyncRequest = ContainerSyncRequest.builder().filter(containerFilter).build();
+    if (instanceType == InstanceType.KUBERNETES_CONTAINER_INSTANCE
+        || instanceType == InstanceType.ECS_CONTAINER_INSTANCE) {
+      return containerSync.getInstances(instanceSyncRequest);
+    } else {
+      String msg = "Unsupported container instance type:" + instanceType;
+      logger.error(msg);
+      throw new WingsException(msg);
+    }
+  }
+
+  public Set<String> getContainerServiceNames(ExecutionContext context, String serviceId, String infraMappingId) {
+    Set<String> containerSvcNameSet = Sets.newHashSet();
+    List<StateExecutionInstance> executionDataList = workflowExecutionService.getStateExecutionData(context.getAppId(),
+        context.getWorkflowExecutionId(), serviceId, infraMappingId, StateType.PHASE_STEP, Constants.DEPLOY_CONTAINERS);
+    executionDataList.forEach(stateExecutionData -> {
+      List<StateExecutionData> deployPhaseStepList =
+          stateExecutionData.getStateExecutionMap()
+              .entrySet()
+              .stream()
+              .filter(entry -> entry.getKey().equals(Constants.DEPLOY_CONTAINERS))
+              .map(entry -> entry.getValue())
+              .collect(toList());
+      deployPhaseStepList.stream().forEach(phaseStep -> {
+        PhaseStepExecutionSummary phaseStepExecutionSummary =
+            ((PhaseStepExecutionData) phaseStep).getPhaseStepExecutionSummary();
+        Preconditions.checkNotNull(
+            phaseStepExecutionSummary, "PhaseStepExecutionSummary is null for stateExecutionInstanceId: " + phaseStep);
+        List<StepExecutionSummary> stepExecutionSummaryList = phaseStepExecutionSummary.getStepExecutionSummaryList();
+        Preconditions.checkNotNull(
+            stepExecutionSummaryList, "stepExecutionSummaryList null for " + phaseStepExecutionSummary);
+
+        for (StepExecutionSummary stepExecutionSummary : stepExecutionSummaryList) {
+          if (stepExecutionSummary != null && stepExecutionSummary instanceof CommandStepExecutionSummary) {
+            CommandStepExecutionSummary commandStepExecutionSummary =
+                (CommandStepExecutionSummary) stepExecutionSummary;
+            if (commandStepExecutionSummary.getOldInstanceData() != null) {
+              containerSvcNameSet.addAll(commandStepExecutionSummary.getOldInstanceData()
+                                             .stream()
+                                             .map(ContainerServiceData::getName)
+                                             .collect(toList()));
+            }
+
+            if (commandStepExecutionSummary.getNewInstanceData() != null) {
+              List<String> newcontainerSvcNames = commandStepExecutionSummary.getNewInstanceData()
+                                                      .stream()
+                                                      .map(ContainerServiceData::getName)
+                                                      .collect(toList());
+              containerSvcNameSet.addAll(newcontainerSvcNames);
+            }
+
+            Preconditions.checkState(!containerSvcNameSet.isEmpty(),
+                "Both old and new container services are empty. Cannot proceed for phase step "
+                    + commandStepExecutionSummary.getServiceId());
+          }
+        }
+      });
+    });
+
+    return containerSvcNameSet;
+  }
+
+  public List<ContainerInfo> getContainerInfoForService(
+      Set<String> containerSvcNames, ExecutionContext context, String infrastructureMappingId, String serviceId) {
+    Preconditions.checkState(!containerSvcNames.isEmpty(), "empty for " + context);
+    InfrastructureMapping infrastructureMapping = infraMappingService.get(context.getAppId(), infrastructureMappingId);
+    InstanceType instanceType = instanceUtil.getInstanceType(infrastructureMapping.getInfraMappingType());
+    Preconditions.checkNotNull(instanceType, "Null for " + infrastructureMappingId);
+
+    String containerSvcNameNoRevision =
+        getcontainerSvcNameNoRevision(instanceType, containerSvcNames.iterator().next());
+    Map<String, software.wings.beans.infrastructure.instance.ContainerDeploymentInfo>
+        containerSvcNameDeploymentInfoMap = Maps.newHashMap();
+
+    List<software.wings.beans.infrastructure.instance.ContainerDeploymentInfo> currentContainerDeploymentsInDB =
+        instanceService.getContainerDeploymentInfoList(containerSvcNameNoRevision, context.getAppId());
+
+    currentContainerDeploymentsInDB.stream().forEach(currentContainerDeploymentInDB
+        -> containerSvcNameDeploymentInfoMap.put(
+            currentContainerDeploymentInDB.getContainerSvcName(), currentContainerDeploymentInDB));
+
+    for (String containerSvcName : containerSvcNames) {
+      software.wings.beans.infrastructure.instance.ContainerDeploymentInfo containerDeploymentInfo =
+          containerSvcNameDeploymentInfoMap.get(containerSvcName);
+      if (containerDeploymentInfo == null) {
+        containerDeploymentInfo =
+            software.wings.beans.infrastructure.instance.ContainerDeploymentInfo.Builder.aContainerDeploymentInfo()
+                .withAppId(context.getAppId())
+                .withContainerSvcName(containerSvcName)
+                .withInfraMappingId(infrastructureMappingId)
+                .withWorkflowId(context.getWorkflowId())
+                .withWorkflowExecutionId(context.getWorkflowExecutionId())
+                .withServiceId(serviceId)
+                .build();
+
+        containerSvcNameDeploymentInfoMap.put(containerSvcName, containerDeploymentInfo);
+      }
+    }
+    ContainerSyncResponse instanceSyncResponse =
+        getLatestInstancesFromContainerServer(containerSvcNameDeploymentInfoMap.values(), instanceType);
+    Preconditions.checkNotNull(instanceSyncResponse, "InstanceSyncResponse");
+
+    return instanceSyncResponse.getContainerInfoList();
+  }
+
+  private String getcontainerSvcNameNoRevision(InstanceType instanceType, String containerSvcName) {
+    String delimiter;
+    if (instanceType == InstanceType.ECS_CONTAINER_INSTANCE) {
+      delimiter = "__";
+    } else if (instanceType == InstanceType.KUBERNETES_CONTAINER_INSTANCE) {
+      delimiter = ".";
+    } else {
+      String msg = "Unsupported container instance type:" + instanceType;
+      logger.error(msg);
+      throw new WingsException(msg);
+    }
+
+    if (containerSvcName == null) {
+      return null;
+    }
+
+    int index = containerSvcName.lastIndexOf(delimiter);
+    if (index == -1) {
+      return containerSvcName;
+    }
+    return containerSvcName.substring(0, index);
   }
 }

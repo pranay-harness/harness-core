@@ -1,15 +1,11 @@
 package software.wings.service.impl.instance;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static java.util.stream.Collectors.toList;
 import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
 import static software.wings.exception.WingsException.USER_SRE;
 import static software.wings.sm.ExecutionStatus.FAILED;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
@@ -18,29 +14,18 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
-import software.wings.api.AmiStepExecutionSummary;
-import software.wings.api.AwsAutoScalingGroupDeploymentInfo;
-import software.wings.api.AwsCodeDeployDeploymentInfo;
-import software.wings.api.CommandStepExecutionSummary;
-import software.wings.api.ContainerServiceData;
 import software.wings.api.DeploymentEvent;
 import software.wings.api.DeploymentInfo;
-import software.wings.api.DeploymentType;
 import software.wings.api.HostElement;
-import software.wings.api.PcfDeploymentInfo;
 import software.wings.api.PhaseExecutionData;
-import software.wings.api.pcf.PcfDeployExecutionSummary;
-import software.wings.api.pcf.PcfServiceData;
 import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.CodeDeployInfrastructureMapping;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EmbeddedUser;
-import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
-import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
@@ -54,27 +39,22 @@ import software.wings.beans.infrastructure.instance.info.PhysicalHostInstanceInf
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.common.Constants;
 import software.wings.core.queue.Queue;
-import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
-import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InstanceStatusSummary;
-import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateExecutionData;
-import software.wings.sm.StepExecutionSummary;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.Util;
 import software.wings.utils.Validator;
@@ -82,9 +62,7 @@ import software.wings.utils.Validator;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * Both the normal instance and container instance are handled here.
@@ -98,11 +76,8 @@ public class InstanceHelper {
   // This queue is used to asynchronously process all the instance information that the workflow touched upon.
   @Inject private Queue<DeploymentEvent> deploymentEventQueue;
   @Inject private InfrastructureMappingService infraMappingService;
-  @Inject private EnvironmentService environmentService;
-  @Inject private ServiceResourceService serviceResourceService;
   @Inject private AppService appService;
   @Inject private InstanceUtil instanceUtil;
-  @Inject private ContainerInstanceHelper containerInstanceHelper;
   @Inject private HostService hostService;
   @Inject private AwsHelperService awsHelperService;
   @Inject private SettingsService settingsService;
@@ -136,6 +111,7 @@ public class InstanceHelper {
       }
 
       Artifact artifact = workflowStandardParams.getArtifactForService(phaseExecutionData.getServiceId());
+
       if (artifact == null) {
         if (logger.isDebugEnabled()) {
           logger.debug("artifact is null for stateExecutionInstance:" + stateExecutionInstanceId);
@@ -149,85 +125,65 @@ public class InstanceHelper {
         }
         return;
       }
+
       InfrastructureMapping infrastructureMapping =
           infraMappingService.get(appId, phaseExecutionData.getInfraMappingId());
 
-      // If its container based deployment
-      if (containerInstanceHelper.isContainerDeployment(infrastructureMapping)) {
-        Optional<DeploymentEvent> deploymentEvent = containerInstanceHelper.extractContainerInfoAndSendEvent(
-            stateExecutionInstanceId, phaseExecutionData, workflowExecution, artifact, infrastructureMapping);
+      if (InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.getName().equals(
+              infrastructureMapping.getInfraMappingType())
+          || InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM.getName().equals(
+                 infrastructureMapping.getInfraMappingType())
+          || InfrastructureMappingType.AWS_SSH.getName().equals(infrastructureMapping.getInfraMappingType())) {
+        List<Instance> instanceList = Lists.newArrayList();
+        PhaseStepExecutionSummary phaseStepExecutionSummary =
+            getDeployPhaseStep(phaseExecutionData, Constants.DEPLOY_SERVICE);
 
-        if (deploymentEvent.isPresent()) {
-          deploymentEventQueue.send(deploymentEvent.get());
+        if (phaseStepExecutionSummary == null) {
+          logger.warn(
+              "phaseStepExecutionSummary is null for InfraMappingType {}, appId: {}, WorkflowExecution<Name, Id> :<{},{}>",
+              infrastructureMapping.getInfraMappingType(), appId, workflowExecution.getName(),
+              workflowExecution.getWorkflowId());
+          return;
         }
-      } else {
-        if (DeploymentType.PCF.getDisplayName().equals(phaseExecutionData.getDeploymentType())) {
-          Optional<DeploymentEvent> deploymentEvent = extractPCFInfoAndSendEvent(
-              stateExecutionInstanceId, phaseExecutionData, workflowExecution, artifact, infrastructureMapping);
 
-          if (deploymentEvent.isPresent()) {
-            deploymentEventQueue.send(deploymentEvent.get());
-          }
-        } else if (DeploymentType.AMI.name().equals(phaseExecutionData.getDeploymentType())) {
-          List<String> autoScalingGroupNames = getASGFromAMIDeployment(phaseExecutionData, workflowExecution);
-          AwsAutoScalingGroupDeploymentInfo deploymentInfo =
-              AwsAutoScalingGroupDeploymentInfo.builder().autoScalingGroupNameList(autoScalingGroupNames).build();
+        if (checkIfAnyStepsFailed(phaseStepExecutionSummary)) {
+          logger.info("Deploy Service Phase step failed, not capturing any instances");
+          return;
+        }
 
-          deploymentEventQueue.send(setValuesToDeploymentEvent(stateExecutionInstanceId, workflowExecution,
-              phaseExecutionData, infrastructureMapping, artifact, deploymentInfo));
-        } else if (DeploymentType.AWS_CODEDEPLOY.getDisplayName().equals(phaseExecutionData.getDeploymentType())) {
-          String codeDeployDeploymentId = getCodeDeployDeploymentId(phaseExecutionData, workflowExecution);
-
-          if (codeDeployDeploymentId == null) {
-            logger.warn("Phase step execution summary null for Deploy for workflow:{} Can't create deployment event",
-                workflowExecution.getName());
-            return;
-          }
-          AwsCodeDeployDeploymentInfo deploymentInfo =
-              AwsCodeDeployDeploymentInfo.builder().deploymentId(codeDeployDeploymentId).build();
-
-          deploymentEventQueue.send(setValuesToDeploymentEvent(stateExecutionInstanceId, workflowExecution,
-              phaseExecutionData, infrastructureMapping, artifact, deploymentInfo));
-        } else if (InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.getName().equals(
-                       infrastructureMapping.getInfraMappingType())
-            || InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM.getName().equals(
-                   infrastructureMapping.getInfraMappingType())
-            || InfrastructureMappingType.AWS_SSH.getName().equals(infrastructureMapping.getInfraMappingType())) {
-          List<Instance> instanceList = Lists.newArrayList();
-          PhaseStepExecutionSummary phaseStepExecutionSummary =
-              getDeployPhaseStep(phaseExecutionData, Constants.DEPLOY_SERVICE);
-
-          if (phaseStepExecutionSummary == null) {
-            logger.warn(
-                "phaseStepExecutionSummary is null for InfraMappingType {}, appId: {}, WorkflowExecution<Name, Id> :<{},{}>",
-                infrastructureMapping.getInfraMappingType(), appId, workflowExecution.getName(),
-                workflowExecution.getWorkflowId());
+        for (ElementExecutionSummary summary : phaseExecutionData.getElementStatusSummary()) {
+          List<InstanceStatusSummary> instanceStatusSummaries = summary.getInstanceStatusSummaries();
+          if (isEmpty(instanceStatusSummaries)) {
+            logger.info("No instances to process");
             return;
           }
 
-          if (checkIfAnyStepsFailed(phaseStepExecutionSummary)) {
-            logger.info("Deploy Service Phase step failed, not capturing any instances");
-            return;
-          }
-
-          for (ElementExecutionSummary summary : phaseExecutionData.getElementStatusSummary()) {
-            List<InstanceStatusSummary> instanceStatusSummaries = summary.getInstanceStatusSummaries();
-            if (isEmpty(instanceStatusSummaries)) {
-              logger.info("No instances to process");
-              return;
-            }
-
-            for (InstanceStatusSummary instanceStatusSummary : instanceStatusSummaries) {
-              if (shouldCaptureInstance(instanceStatusSummary.getStatus())) {
-                Instance instance = buildInstanceUsingHostInfo(
-                    workflowExecution, artifact, instanceStatusSummary, phaseExecutionData, infrastructureMapping);
-                if (instance != null) {
-                  instanceList.add(instance);
-                }
+          for (InstanceStatusSummary instanceStatusSummary : instanceStatusSummaries) {
+            if (shouldCaptureInstance(instanceStatusSummary.getStatus())) {
+              Instance instance = buildInstanceUsingHostInfo(
+                  workflowExecution, artifact, instanceStatusSummary, phaseExecutionData, infrastructureMapping);
+              if (instance != null) {
+                instanceList.add(instance);
               }
             }
           }
-          instanceService.saveOrUpdate(instanceList);
+        }
+        instanceService.saveOrUpdate(instanceList);
+      } else {
+        Optional<InstanceHandler> instanceHandlerOptional = getInstanceHandler(infrastructureMapping);
+        if (!instanceHandlerOptional.isPresent()) {
+          String msg = "Instance handler not found for infraMappingType: " + infrastructureMapping.getName();
+          logger.error(msg);
+          throw new WingsException(msg);
+        }
+
+        InstanceHandler instanceHandler = instanceHandlerOptional.get();
+        Optional<DeploymentInfo> deploymentInfo = instanceHandler.getDeploymentInfo(
+            phaseExecutionData, workflowExecution, infrastructureMapping, stateExecutionInstanceId, artifact);
+        if (deploymentInfo.isPresent()) {
+          DeploymentEvent deploymentEvent = setValuesToDeploymentEvent(stateExecutionInstanceId, workflowExecution,
+              phaseExecutionData, infrastructureMapping, artifact, deploymentInfo.get());
+          deploymentEventQueue.send(deploymentEvent);
         }
       }
     } catch (Exception ex) {
@@ -236,80 +192,20 @@ public class InstanceHelper {
     }
   }
 
-  private Optional<DeploymentEvent> extractPCFInfoAndSendEvent(String stateExecutionInstanceId,
-      PhaseExecutionData phaseExecutionData, WorkflowExecution workflowExecution, Artifact artifact,
-      InfrastructureMapping infrastructureMapping) {
-    PhaseExecutionSummary phaseExecutionSummary = phaseExecutionData.getPhaseExecutionSummary();
-    if (phaseExecutionSummary != null) {
-      Map<String, PhaseStepExecutionSummary> phaseStepExecutionSummaryMap =
-          phaseExecutionSummary.getPhaseStepExecutionSummaryMap();
-      if (phaseStepExecutionSummaryMap != null) {
-        PhaseStepExecutionSummary phaseStepExecutionSummary = phaseStepExecutionSummaryMap.get(Constants.DEPLOY);
-        if (phaseStepExecutionSummary == null) {
-          if (logger.isDebugEnabled()) {
-            logger.debug("PhaseStepExecutionSummary is null for stateExecutionInstanceId: " + stateExecutionInstanceId);
-          }
-          return Optional.empty();
-        }
-        List<StepExecutionSummary> stepExecutionSummaryList = phaseStepExecutionSummary.getStepExecutionSummaryList();
-        // This was observed when the "deploy containers" step was executed in rollback and no commands were
-        // executed since setup failed.
-        if (stepExecutionSummaryList == null) {
-          if (logger.isDebugEnabled()) {
-            logger.debug("StepExecutionSummaryList is null for stateExecutionInstanceId: " + stateExecutionInstanceId);
-          }
-          return Optional.empty();
-        }
-
-        for (StepExecutionSummary stepExecutionSummary : stepExecutionSummaryList) {
-          if (stepExecutionSummary != null && stepExecutionSummary instanceof PcfDeployExecutionSummary) {
-            PcfDeployExecutionSummary pcfDeployExecutionSummary = (PcfDeployExecutionSummary) stepExecutionSummary;
-
-            Set<String> pcfSvcNameSet = Sets.newHashSet();
-
-            if (pcfDeployExecutionSummary.getInstaceData() != null) {
-              pcfSvcNameSet.addAll(
-                  pcfDeployExecutionSummary.getInstaceData().stream().map(PcfServiceData::getName).collect(toList()));
-            }
-
-            if (pcfSvcNameSet.isEmpty()) {
-              logger.warn(
-                  "Both old and new app resize details are empty. Cannot proceed for phase step for state execution instance: {}",
-                  stateExecutionInstanceId);
-              return Optional.empty();
-            }
-
-            return Optional.of(buildPcfDeploymentEvent(stateExecutionInstanceId, workflowExecution, phaseExecutionData,
-                pcfSvcNameSet, infrastructureMapping, artifact));
-          }
-        }
-      }
+  protected PhaseStepExecutionSummary getDeployPhaseStep(PhaseExecutionData phaseExecutionData, String phaseStepName) {
+    if (phaseExecutionData == null || phaseExecutionData.getPhaseExecutionSummary() == null
+        || phaseExecutionData.getPhaseExecutionSummary().getPhaseStepExecutionSummaryMap() == null) {
+      logger.warn("Not able to get PhaseStepExecutionSummary for phaseStepName: {}, as phaseExecutionData= {}",
+          phaseStepName, phaseExecutionData);
+      return null;
     }
 
-    return Optional.empty();
+    return phaseExecutionData.getPhaseExecutionSummary().getPhaseStepExecutionSummaryMap().get(phaseStepName);
   }
 
-  private DeploymentEvent buildPcfDeploymentEvent(String stateExecutionInstanceId, WorkflowExecution workflowExecution,
-      PhaseExecutionData phaseExecutionData, Set<String> pcfSvcNameSet, InfrastructureMapping infrastructureMapping,
-      Artifact artifact) {
-    Validator.notNullCheck("pcfSvcNameSet", pcfSvcNameSet);
-    if (pcfSvcNameSet.isEmpty()) {
-      String msg = "No pcf service names processed by the event";
-      logger.error(msg);
-      throw new WingsException(msg);
-    }
-
-    PcfDeploymentInfo pcfDeploymentInfo = PcfDeploymentInfo.builder().pcfApplicationNameSet(pcfSvcNameSet).build();
-
-    // builder pattern doesn't quite work well here since we will have to duplicate the same setter code in multiple
-    // places
-    return setValuesToDeploymentEvent(stateExecutionInstanceId, workflowExecution, phaseExecutionData,
-        infrastructureMapping, artifact, pcfDeploymentInfo);
-  }
-
-  DeploymentEvent setValuesToDeploymentEvent(String stateExecutionInstanceId, WorkflowExecution workflowExecution,
-      PhaseExecutionData phaseExecutionData, InfrastructureMapping infrastructureMapping, Artifact artifact,
-      DeploymentInfo deploymentInfo) {
+  private DeploymentEvent setValuesToDeploymentEvent(String stateExecutionInstanceId,
+      WorkflowExecution workflowExecution, PhaseExecutionData phaseExecutionData,
+      InfrastructureMapping infrastructureMapping, Artifact artifact, DeploymentInfo deploymentInfo) {
     PipelineSummary pipelineSummary = workflowExecution.getPipelineSummary();
     Application application = appService.get(workflowExecution.getAppId());
     Validator.notNullCheck("Application", application);
@@ -357,99 +253,6 @@ public class InstanceHelper {
         stepExecutionSummary -> stepExecutionSummary.getStatus() == FAILED);
   }
 
-  private PhaseStepExecutionSummary getDeployPhaseStep(PhaseExecutionData phaseExecutionData, String phaseStepName) {
-    if (phaseExecutionData == null || phaseExecutionData.getPhaseExecutionSummary() == null
-        || phaseExecutionData.getPhaseExecutionSummary().getPhaseStepExecutionSummaryMap() == null) {
-      logger.warn("Not able to get PhaseStepExecutionSummary for phaseStepName: {}, as phaseExecutionData= {}",
-          phaseStepName, phaseExecutionData);
-      return null;
-    }
-
-    return phaseExecutionData.getPhaseExecutionSummary().getPhaseStepExecutionSummaryMap().get(phaseStepName);
-  }
-
-  /**
-   * Returns the auto scaling group names
-   */
-  private List<String> getASGFromAMIDeployment(
-      PhaseExecutionData phaseExecutionData, WorkflowExecution workflowExecution) throws HarnessException {
-    List<String> autoScalingGroupNames = Lists.newArrayList();
-
-    PhaseStepExecutionSummary phaseStepExecutionSummary =
-        getDeployPhaseStep(phaseExecutionData, Constants.DEPLOY_SERVICE);
-    if (phaseStepExecutionSummary != null) {
-      Optional<StepExecutionSummary> stepExecutionSummaryOptional =
-          phaseStepExecutionSummary.getStepExecutionSummaryList()
-              .stream()
-              .filter(stepExecutionSummary -> stepExecutionSummary instanceof AmiStepExecutionSummary)
-              .findFirst();
-
-      if (stepExecutionSummaryOptional.isPresent()) {
-        StepExecutionSummary stepExecutionSummary = stepExecutionSummaryOptional.get();
-
-        AmiStepExecutionSummary amiStepExecutionSummary = (AmiStepExecutionSummary) stepExecutionSummary;
-
-        // Capture the instances of the new revision
-        if (isNotEmpty(amiStepExecutionSummary.getNewInstanceData())) {
-          List<String> asgList = amiStepExecutionSummary.getNewInstanceData()
-                                     .stream()
-                                     .map(ContainerServiceData::getName)
-                                     .collect(toList());
-          if (isNotEmpty(asgList)) {
-            autoScalingGroupNames.addAll(asgList);
-          }
-        }
-
-        // Capture the instances of the old revision, note that the downsize operation need not bring the count
-        // to zero.
-        if (isNotEmpty(amiStepExecutionSummary.getOldInstanceData())) {
-          List<String> asgList = amiStepExecutionSummary.getOldInstanceData()
-                                     .stream()
-                                     .map(ContainerServiceData::getName)
-                                     .collect(toList());
-          if (isNotEmpty(asgList)) {
-            autoScalingGroupNames.addAll(asgList);
-          }
-        }
-      } else {
-        throw new HarnessException(
-            "Step execution summary null for AMI Deploy Step for workflow: " + workflowExecution.getName());
-      }
-
-    } else {
-      throw new HarnessException(
-          "Phase step execution summary null for AMI Deploy for workflow: " + workflowExecution.getName());
-    }
-
-    return autoScalingGroupNames;
-  }
-
-  private String getCodeDeployDeploymentId(PhaseExecutionData phaseExecutionData, WorkflowExecution workflowExecution)
-      throws HarnessException {
-    PhaseStepExecutionSummary phaseStepExecutionSummary =
-        getDeployPhaseStep(phaseExecutionData, Constants.DEPLOY_SERVICE);
-    if (phaseStepExecutionSummary != null) {
-      Optional<StepExecutionSummary> stepExecutionSummaryOptional =
-          phaseStepExecutionSummary.getStepExecutionSummaryList()
-              .stream()
-              .filter(stepExecutionSummary -> stepExecutionSummary instanceof CommandStepExecutionSummary)
-              .findFirst();
-
-      if (stepExecutionSummaryOptional.isPresent()) {
-        StepExecutionSummary stepExecutionSummary = stepExecutionSummaryOptional.get();
-
-        CommandStepExecutionSummary commandStepExecutionSummary = (CommandStepExecutionSummary) stepExecutionSummary;
-        return commandStepExecutionSummary.getCodeDeployDeploymentId();
-
-      } else {
-        throw new HarnessException("Command step execution summary null for workflow: " + workflowExecution.getName());
-      }
-
-    } else {
-      return null;
-    }
-  }
-
   /**
    * At the end of the phase, the instance can only be in one of the following states.
    */
@@ -468,14 +271,6 @@ public class InstanceHelper {
       default:
         return false;
     }
-  }
-
-  public Instance buildInstanceUsingEc2Instance(String instanceUuid,
-      com.amazonaws.services.ec2.model.Instance ec2Instance, InfrastructureMapping infraMapping,
-      DeploymentInfo deploymentInfo) {
-    InstanceBuilder builder = buildInstanceBase(instanceUuid, infraMapping, deploymentInfo);
-    setInstanceInfoAndKey(builder, ec2Instance, infraMapping.getUuid());
-    return builder.build();
   }
 
   public Instance buildInstanceUsingHostInfo(WorkflowExecution workflowExecution, Artifact artifact,
@@ -537,6 +332,37 @@ public class InstanceHelper {
           builder, hostInfo, infraMapping.getInfraMappingType(), phaseExecutionData.getInfraMappingId());
     }
     return builder.build();
+  }
+
+  public void setInstanceInfoAndKey(
+      InstanceBuilder builder, com.amazonaws.services.ec2.model.Instance ec2Instance, String infraMappingId) {
+    String privateDnsNameWithSuffix = ec2Instance.getPrivateDnsName();
+    String privateDnsName = getPrivateDnsName(privateDnsNameWithSuffix);
+    HostInstanceKey hostInstanceKey =
+        HostInstanceKey.builder().hostName(privateDnsName).infraMappingId(infraMappingId).build();
+    builder.hostInstanceKey(hostInstanceKey);
+
+    InstanceInfo instanceInfo = Ec2InstanceInfo.builder()
+                                    .ec2Instance(ec2Instance)
+                                    .hostName(privateDnsName)
+                                    .hostPublicDns(ec2Instance.getPublicDnsName())
+                                    .build();
+
+    builder.instanceInfo(instanceInfo);
+  }
+
+  private String getPrivateDnsName(String privateDnsNameWithSuffix) {
+    // e.g. null, "", "   "
+    if (StringUtils.isEmpty(privateDnsNameWithSuffix) || StringUtils.isBlank(privateDnsNameWithSuffix)) {
+      return StringUtils.EMPTY;
+    }
+
+    // "ip-172-31-11-6.ec2.internal", we return ip-172-31-11-6
+    if (privateDnsNameWithSuffix.indexOf('.') != -1) {
+      return privateDnsNameWithSuffix.substring(0, privateDnsNameWithSuffix.indexOf('.'));
+    }
+
+    return privateDnsNameWithSuffix;
   }
 
   public InstanceBuilder buildInstanceBase(WorkflowExecution workflowExecution, Artifact artifact,
@@ -612,91 +438,6 @@ public class InstanceHelper {
     builder.instanceInfo(instanceInfo);
   }
 
-  public InstanceBuilder buildInstanceBase(
-      String instanceId, InfrastructureMapping infraMapping, DeploymentInfo deploymentInfo) {
-    InstanceBuilder builder = this.buildInstanceBase(instanceId, infraMapping);
-    if (deploymentInfo != null) {
-      builder.lastDeployedAt(deploymentInfo.getDeployedAt())
-          .lastDeployedById(deploymentInfo.getDeployedById())
-          .lastDeployedByName(deploymentInfo.getDeployedByName())
-          .lastWorkflowExecutionId(deploymentInfo.getWorkflowExecutionId())
-          .lastWorkflowExecutionName(deploymentInfo.getWorkflowExecutionName())
-          .lastArtifactId(deploymentInfo.getArtifactId())
-          .lastArtifactName(deploymentInfo.getArtifactName())
-          .lastArtifactStreamId(deploymentInfo.getArtifactStreamId())
-          .lastArtifactSourceName(deploymentInfo.getArtifactSourceName())
-          .lastArtifactBuildNum(deploymentInfo.getArtifactBuildNum())
-          .lastPipelineExecutionId(deploymentInfo.getPipelineExecutionId())
-          .lastPipelineExecutionName(deploymentInfo.getPipelineExecutionName());
-    }
-
-    return builder;
-  }
-
-  public InstanceBuilder buildInstanceBase(String instanceUuid, InfrastructureMapping infraMapping) {
-    String appId = infraMapping.getAppId();
-    Application application = appService.get(appId);
-    Validator.notNullCheck("Application is null for the given appId: " + appId, application);
-    Environment environment = environmentService.get(appId, infraMapping.getEnvId(), false);
-    Validator.notNullCheck("Environment is null for the given id: " + infraMapping.getEnvId(), environment);
-    Service service = serviceResourceService.get(appId, infraMapping.getServiceId());
-    Validator.notNullCheck("Service is null for the given id: " + infraMapping.getServiceId(), service);
-    String infraMappingType = infraMapping.getInfraMappingType();
-
-    if (instanceUuid == null) {
-      instanceUuid = generateUuid();
-    }
-
-    InstanceBuilder builder = Instance.builder()
-                                  .uuid(instanceUuid)
-                                  .accountId(application.getAccountId())
-                                  .appId(appId)
-                                  .appName(application.getName())
-                                  .envName(environment.getName())
-                                  .envId(infraMapping.getEnvId())
-                                  .envType(environment.getEnvironmentType())
-                                  .computeProviderId(infraMapping.getComputeProviderSettingId())
-                                  .computeProviderName(infraMapping.getComputeProviderName())
-                                  .infraMappingId(infraMapping.getUuid())
-                                  .infraMappingType(infraMappingType)
-                                  .serviceId(infraMapping.getServiceId())
-                                  .serviceName(service.getName());
-    instanceUtil.setInstanceType(builder, infraMappingType);
-
-    return builder;
-  }
-
-  private void setInstanceInfoAndKey(
-      InstanceBuilder builder, com.amazonaws.services.ec2.model.Instance ec2Instance, String infraMappingId) {
-    String privateDnsNameWithSuffix = ec2Instance.getPrivateDnsName();
-    String privateDnsName = getPrivateDnsName(privateDnsNameWithSuffix);
-    HostInstanceKey hostInstanceKey =
-        HostInstanceKey.builder().hostName(privateDnsName).infraMappingId(infraMappingId).build();
-    builder.hostInstanceKey(hostInstanceKey);
-
-    InstanceInfo instanceInfo = Ec2InstanceInfo.builder()
-                                    .ec2Instance(ec2Instance)
-                                    .hostName(privateDnsName)
-                                    .hostPublicDns(ec2Instance.getPublicDnsName())
-                                    .build();
-
-    builder.instanceInfo(instanceInfo);
-  }
-
-  private String getPrivateDnsName(String privateDnsNameWithSuffix) {
-    // e.g. null, "", "   "
-    if (StringUtils.isEmpty(privateDnsNameWithSuffix) || StringUtils.isBlank(privateDnsNameWithSuffix)) {
-      return StringUtils.EMPTY;
-    }
-
-    // "ip-172-31-11-6.ec2.internal", we return ip-172-31-11-6
-    if (privateDnsNameWithSuffix.indexOf('.') != -1) {
-      return privateDnsNameWithSuffix.substring(0, privateDnsNameWithSuffix.indexOf('.'));
-    }
-
-    return privateDnsNameWithSuffix;
-  }
-
   public void handleDeploymentEvent(DeploymentEvent deploymentEvent) {
     DeploymentInfo deploymentInfo = deploymentEvent.getDeploymentInfo();
     if (deploymentInfo == null) {
@@ -723,6 +464,15 @@ public class InstanceHelper {
       // forever in case of exception
       logger.error("Exception while processing phase completion event.", ex);
     }
+  }
+
+  private Optional<InstanceHandler> getInstanceHandler(InfrastructureMapping infraMapping) {
+    InfrastructureMappingType infrastructureMappingType =
+        Util.getEnumFromString(InfrastructureMappingType.class, infraMapping.getInfraMappingType());
+    if (isSupported(infrastructureMappingType)) {
+      return Optional.of(instanceHandlerFactory.getInstanceHandler(infrastructureMappingType));
+    }
+    return Optional.empty();
   }
 
   private boolean isSupported(InfrastructureMappingType infrastructureMappingType) {
