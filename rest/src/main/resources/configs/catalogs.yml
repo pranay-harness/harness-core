@@ -298,8 +298,6 @@ CLOUD_PROVIDERS:
       value: AZURE
     - name: Physical Data Center
       value: PHYSICAL_DATA_CENTER
-    - name: Direct Kubernetes
-      value: DIRECT
     - name: Kubernetes Cluster
       value: KUBERNETES_CLUSTER
     - name: Pivotal Cloud Foundry

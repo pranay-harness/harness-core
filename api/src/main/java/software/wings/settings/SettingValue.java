@@ -206,7 +206,7 @@ public abstract class SettingValue implements ExtensionPoint {
     /**
      * Direct connection setting variable types.
      */
-    DIRECT("Direct Kubernetes"),
+    @Deprecated DIRECT("Direct Kubernetes"),
 
     /**
      * Kubernetes Cluster setting variable types.
