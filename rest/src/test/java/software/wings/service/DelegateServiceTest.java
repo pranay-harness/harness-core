@@ -360,7 +360,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldDownloadKubernetes() throws IOException, TemplateException {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
-    File zipFile = delegateService.downloadKubernetes("https://localhost:9090", ACCOUNT_ID);
+    File zipFile = delegateService.downloadKubernetes("https://localhost:9090", ACCOUNT_ID, "harness-delegate");
     try (ZipArchiveInputStream zipArchiveInputStream = new ZipArchiveInputStream(new FileInputStream(zipFile))) {
       assertThat(zipArchiveInputStream.getNextZipEntry().getName()).isEqualTo(KUBERNETES_DELEGATE + "/");
 

@@ -4,7 +4,8 @@ metadata:
   labels:
     harness.io/app: harness-delegate
     harness.io/account: ${kubernetesAccountLabel}
-  name: harness-delegate-${kubernetesAccountLabel}
+    harness.io/name: ${delegateName}
+  name: ${delegateName}-${kubernetesAccountLabel}
   namespace: harness-delegate
 spec:
   replicas: 2
@@ -12,12 +13,14 @@ spec:
     matchLabels:
       harness.io/app: harness-delegate
       harness.io/account: ${kubernetesAccountLabel}
+      harness.io/name: ${delegateName}
   serviceName: ""
   template:
     metadata:
       labels:
         harness.io/app: harness-delegate
         harness.io/account: ${kubernetesAccountLabel}
+        harness.io/name: ${delegateName}
     spec:
       containers:
       - image: harness/delegate:latest
@@ -42,6 +45,8 @@ spec:
           value: ${delegateStorageUrl}
         - name: DELEGATE_CHECK_LOCATION
           value: ${delegateCheckLocation}
+        - name: DELEGATE_NAME
+          value: ${delegateName}
         - name: DESCRIPTION
           value: description here
         - name: PROXY_HOST

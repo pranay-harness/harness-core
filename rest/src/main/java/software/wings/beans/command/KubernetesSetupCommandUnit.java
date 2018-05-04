@@ -8,6 +8,7 @@ import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
 import static software.wings.beans.command.ContainerResizeCommandUnit.DASH_STRING;
@@ -27,6 +28,8 @@ import static software.wings.utils.KubernetesConvention.getKubernetesRegistrySec
 import static software.wings.utils.KubernetesConvention.getKubernetesServiceName;
 import static software.wings.utils.KubernetesConvention.getPrefixFromControllerName;
 import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
+import static software.wings.utils.message.MessageConstants.DELEGATE_DATA;
+import static software.wings.utils.message.MessageConstants.DELEGATE_NAME;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -85,7 +88,6 @@ import me.snowdrop.istio.api.model.IstioResource;
 import me.snowdrop.istio.api.model.IstioResourceBuilder;
 import me.snowdrop.istio.api.model.IstioResourceFluent.RouteRuleSpecNested;
 import me.snowdrop.istio.api.model.v1.routing.RouteRule;
-import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,11 +107,13 @@ import software.wings.beans.container.KubernetesServiceType;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.KubernetesConvention;
 import software.wings.utils.Misc;
+import software.wings.utils.message.MessageService;
 
 import java.io.IOException;
 import java.time.Clock;
@@ -120,6 +124,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -142,11 +147,12 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   @Transient private static final String SERVICE_NAME_PLACEHOLDER_REGEX = "\\$\\{SERVICE_NAME}";
   @Transient private static final String SERVICE_PORT_PLACEHOLDER_REGEX = "\\$\\{SERVICE_PORT}";
 
-  @Inject @Transient private transient GkeClusterService gkeClusterService;
-  @Inject @Transient private transient KubernetesContainerService kubernetesContainerService;
-  @Inject @Transient private transient TimeLimiter timeLimiter;
-  @Inject @Transient private transient Clock clock;
-  @Inject @Transient private transient AzureHelperService azureHelperService;
+  @Inject private transient GkeClusterService gkeClusterService;
+  @Inject private transient KubernetesContainerService kubernetesContainerService;
+  @Inject private transient TimeLimiter timeLimiter;
+  @Inject private transient Clock clock;
+  @Inject private transient AzureHelperService azureHelperService;
+  @Inject private transient MessageService messageService;
 
   public KubernetesSetupCommandUnit() {
     super(CommandUnitType.KUBERNETES_SETUP);
@@ -170,8 +176,15 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         kubernetesConfig = (KubernetesConfig) cloudProviderSetting.getValue();
         encryptedDataDetails = edd;
       } else if (cloudProviderSetting.getValue() instanceof KubernetesClusterConfig) {
-        kubernetesConfig = ((KubernetesClusterConfig) cloudProviderSetting.getValue())
-                               .createKubernetesConfig(setupParams.getNamespace());
+        KubernetesClusterConfig config = (KubernetesClusterConfig) cloudProviderSetting.getValue();
+        String delegateName = messageService.getData(DELEGATE_DATA, DELEGATE_NAME, String.class);
+        if (config.isUseKubernetesDelegate() && !Objects.equals(delegateName, config.getDelegateName())) {
+          throw new InvalidRequestException(String.format("Kubernetes delegate name [%s] doesn't match "
+                  + "cloud provider delegate name [%s] for kubernetes cluster cloud provider [%s]",
+              delegateName, config.getDelegateName(), cloudProviderSetting.getName()));
+        }
+        kubernetesConfig = config.createKubernetesConfig(setupParams.getNamespace());
+
         encryptedDataDetails = edd;
       } else if (cloudProviderSetting.getValue() instanceof AzureConfig) {
         AzureConfig azureConfig = (AzureConfig) cloudProviderSetting.getValue();
@@ -863,9 +876,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   }
 
   public String getApiVersionForHPA(String yamlConfig) {
-    return (StringUtils.isEmpty(yamlConfig) || StringUtils.isBlank(yamlConfig))
-        ? ContainerApiVersions.KUBERNETES_V1.getVersionName()
-        : ContainerApiVersions.KUBERNETES_V2_BETA1.getVersionName();
+    return isBlank(yamlConfig) ? ContainerApiVersions.KUBERNETES_V1.getVersionName()
+                               : ContainerApiVersions.KUBERNETES_V2_BETA1.getVersionName();
   }
 
   private Secret createRegistrySecret(

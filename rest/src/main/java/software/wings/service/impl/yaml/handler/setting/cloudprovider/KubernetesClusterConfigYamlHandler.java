@@ -24,6 +24,8 @@ public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler
     KubernetesClusterConfig kubernetesClusterConfig = (KubernetesClusterConfig) settingAttribute.getValue();
     KubernetesClusterConfig.Yaml yaml = KubernetesClusterConfig.Yaml.builder().build();
 
+    yaml.setUseKubernetesDelegate(kubernetesClusterConfig.isUseKubernetesDelegate());
+    yaml.setDelegateName(kubernetesClusterConfig.getDelegateName());
     yaml.setType(kubernetesClusterConfig.getType());
     yaml.setMasterUrl(kubernetesClusterConfig.getMasterUrl());
     yaml.setUsername(kubernetesClusterConfig.getUsername());
@@ -78,6 +80,8 @@ public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler
 
     KubernetesClusterConfig kubernetesClusterConfig = KubernetesClusterConfig.builder().accountId(accountId).build();
 
+    kubernetesClusterConfig.setUseKubernetesDelegate(yaml.isUseKubernetesDelegate());
+    kubernetesClusterConfig.setDelegateName(yaml.getDelegateName());
     kubernetesClusterConfig.setMasterUrl(yaml.getMasterUrl());
     kubernetesClusterConfig.setUsername(yaml.getUsername());
     kubernetesClusterConfig.setClientKeyAlgo(yaml.getClientKeyAlgo());

@@ -38,6 +38,13 @@ then
     sed -i "s|_delegateCheckLocation_|${DELEGATE_CHECK_LOCATION}|" /opt/harness-delegate/delegate.sh
 fi
 
+if [[ -v "DESCRIPTION" ]]
+then
+    sed -i "s|_description_|${DESCRIPTION}|" /opt/harness-delegate/delegate.sh
+else
+    sed -i "s|_description_|description here|" /opt/harness-delegate/delegate.sh
+fi
+
 if [[ -v "PROXY_HOST" ]]
 then
     sed -i "s|_proxyHost_|${PROXY_HOST}|" /opt/harness-delegate/start.sh
@@ -71,13 +78,6 @@ then
     sed -i "s|_deployMode_|${DEPLOY_MODE}|" /opt/harness-delegate/delegate.sh
 else
     sed -i "s|_deployMode_|AWS|" /opt/harness-delegate/delegate.sh
-fi
-
-if [[ -v "DESCRIPTION" ]]
-then
-    sed -i "s|_description_|${DESCRIPTION}|" /opt/harness-delegate/delegate.sh
-else
-    sed -i "s|_description_|description here|" /opt/harness-delegate/delegate.sh
 fi
 
 if [[ -v "POLL_FOR_TASKS" ]]

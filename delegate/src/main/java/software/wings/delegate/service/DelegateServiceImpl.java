@@ -21,9 +21,11 @@ import static software.wings.managerclient.ManagerClientFactory.TRUST_ALL_CERTS;
 import static software.wings.managerclient.SafeHttpCall.execute;
 import static software.wings.utils.Misc.getDurationString;
 import static software.wings.utils.message.MessageConstants.DELEGATE_DASH;
+import static software.wings.utils.message.MessageConstants.DELEGATE_DATA;
 import static software.wings.utils.message.MessageConstants.DELEGATE_GO_AHEAD;
 import static software.wings.utils.message.MessageConstants.DELEGATE_HEARTBEAT;
 import static software.wings.utils.message.MessageConstants.DELEGATE_IS_NEW;
+import static software.wings.utils.message.MessageConstants.DELEGATE_NAME;
 import static software.wings.utils.message.MessageConstants.DELEGATE_RESTART_NEEDED;
 import static software.wings.utils.message.MessageConstants.DELEGATE_RESUME;
 import static software.wings.utils.message.MessageConstants.DELEGATE_SHUTDOWN_PENDING;
@@ -229,10 +231,23 @@ public class DelegateServiceImpl implements DelegateService {
       String description = "description here".equals(delegateConfiguration.getDescription())
           ? ""
           : delegateConfiguration.getDescription();
+
+      String delegateName = System.getenv().get("DELEGATE_NAME");
+      if (isNotBlank(delegateName)) {
+        logger.info("Registering delegate with delegate name: {}", delegateName);
+        messageService.putData(DELEGATE_DATA, DELEGATE_NAME, delegateName);
+      } else {
+        delegateName = messageService.getData(DELEGATE_DATA, DELEGATE_NAME, String.class);
+        if (delegateName == null) {
+          delegateName = "";
+        }
+      }
+
       Delegate.Builder builder = aDelegate()
                                      .withIp(getLocalHostAddress())
                                      .withAccountId(accountId)
                                      .withHostName(hostName)
+                                     .withDelegateName(delegateName)
                                      .withDescription(description)
                                      .withVersion(getVersion())
                                      .withSupportedTaskTypes(getSupportedTaskTypes())

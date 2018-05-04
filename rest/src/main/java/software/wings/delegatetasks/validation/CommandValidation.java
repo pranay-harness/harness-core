@@ -2,10 +2,12 @@ package software.wings.delegatetasks.validation;
 
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.network.Http.connectableHttpUrl;
-import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
 import static software.wings.utils.SshHelperUtil.getSshSessionConfig;
 import static software.wings.utils.WinRmHelperUtil.HandleWinRmClientException;
+import static software.wings.utils.message.MessageConstants.DELEGATE_DATA;
+import static software.wings.utils.message.MessageConstants.DELEGATE_NAME;
 
 import com.google.inject.Inject;
 
@@ -38,8 +40,10 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
+import software.wings.utils.message.MessageService;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 /**
@@ -49,9 +53,10 @@ public class CommandValidation extends AbstractDelegateValidateTask {
   private static final String ALWAYS_TRUE = "ALWAYS_TRUE";
   @Transient private static final Logger logger = LoggerFactory.getLogger(CommandValidation.class);
 
-  @Inject @Transient private transient EncryptionService encryptionService;
-  @Inject @Transient private transient GkeClusterService gkeClusterService;
-  @Inject @Transient private transient AzureHelperService azureHelperService;
+  @Inject private transient EncryptionService encryptionService;
+  @Inject private transient GkeClusterService gkeClusterService;
+  @Inject private transient AzureHelperService azureHelperService;
+  @Inject private transient MessageService messageService;
 
   public CommandValidation(
       String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {
@@ -61,7 +66,7 @@ public class CommandValidation extends AbstractDelegateValidateTask {
   @Override
   public List<DelegateConnectionResult> validate() {
     Object[] parameters = getParameters();
-    return asList(validate((CommandExecutionContext) parameters[1]));
+    return singletonList(validate((CommandExecutionContext) parameters[1]));
   }
 
   private DelegateConnectionResult validate(CommandExecutionContext context) {
@@ -90,9 +95,8 @@ public class CommandValidation extends AbstractDelegateValidateTask {
   }
 
   private DelegateConnectionResult validateHostSsh(CommandExecutionContext context) {
-    String criteria = getCriteria(context);
     String hostName = context.getHost().getPublicDns();
-    DelegateConnectionResultBuilder resultBuilder = DelegateConnectionResult.builder().criteria(criteria);
+    DelegateConnectionResultBuilder resultBuilder = DelegateConnectionResult.builder().criteria(getCriteria(context));
     try {
       getSSHSession(getSshSessionConfig(hostName, "HOST_CONNECTION_TEST", context, 20)).disconnect();
       resultBuilder.validated(true);
@@ -104,8 +108,7 @@ public class CommandValidation extends AbstractDelegateValidateTask {
   }
 
   private DelegateConnectionResult validateHostWinRm(CommandExecutionContext context) {
-    String hostName = context.getHost().getPublicDns();
-    DelegateConnectionResultBuilder resultBuilder = DelegateConnectionResult.builder().criteria(hostName);
+    DelegateConnectionResultBuilder resultBuilder = DelegateConnectionResult.builder().criteria(getCriteria(context));
     WinRmSessionConfig config = context.winrmSessionConfig("HOST_CONNECTION_TEST");
     try (WinRmSession session = new WinRmSession(config)) {
       resultBuilder.validated(true);
@@ -117,10 +120,15 @@ public class CommandValidation extends AbstractDelegateValidateTask {
   }
 
   private DelegateConnectionResult validateKubernetes(CommandExecutionContext context) {
-    String criteria = getKubernetesMasterUrl(context);
-    DelegateConnectionResultBuilder resultBuilder = DelegateConnectionResult.builder().criteria(criteria);
-    resultBuilder.validated(connectableHttpUrl(getKubernetesMasterUrl(context)));
-    return resultBuilder.build();
+    SettingValue config = context.getCloudProviderSetting().getValue();
+    boolean validated;
+    if (config instanceof KubernetesClusterConfig && ((KubernetesClusterConfig) config).isUseKubernetesDelegate()) {
+      String delegateName = messageService.getData(DELEGATE_DATA, DELEGATE_NAME, String.class);
+      validated = Objects.equals(delegateName, ((KubernetesClusterConfig) config).getDelegateName());
+    } else {
+      validated = connectableHttpUrl(getKubernetesMasterUrl(context));
+    }
+    return DelegateConnectionResult.builder().criteria(getCriteria(context)).validated(validated).build();
   }
 
   private DelegateConnectionResult validateEcs(CommandExecutionContext context) {
@@ -130,10 +138,10 @@ public class CommandValidation extends AbstractDelegateValidateTask {
     } else if (context.getContainerResizeParams() != null) {
       region = ((EcsResizeParams) context.getContainerResizeParams()).getRegion();
     }
-    DelegateConnectionResultBuilder resultBuilder =
-        DelegateConnectionResult.builder().criteria(getAwsRegionCriteria(region));
-    resultBuilder.validated(region == null || AwsHelperService.isInAwsRegion(region));
-    return resultBuilder.build();
+    return DelegateConnectionResult.builder()
+        .criteria(getCriteria(context))
+        .validated(region == null || AwsHelperService.isInAwsRegion(region))
+        .build();
   }
 
   private DelegateConnectionResult validateAwsCodeDelpoy(CommandExecutionContext context) {
@@ -141,16 +149,14 @@ public class CommandValidation extends AbstractDelegateValidateTask {
     if (context.getCodeDeployParams() != null) {
       region = context.getCodeDeployParams().getRegion();
     }
-    DelegateConnectionResultBuilder resultBuilder =
-        DelegateConnectionResult.builder().criteria(getAwsRegionCriteria(region));
-    resultBuilder.validated(region == null || AwsHelperService.isInAwsRegion(region));
-    return resultBuilder.build();
+    return DelegateConnectionResult.builder()
+        .criteria(getCriteria(context))
+        .validated(region == null || AwsHelperService.isInAwsRegion(region))
+        .build();
   }
 
   private DelegateConnectionResult validateAlwaysTrue() {
-    DelegateConnectionResultBuilder resultBuilder = DelegateConnectionResult.builder().criteria(ALWAYS_TRUE);
-    resultBuilder.validated(true);
-    return resultBuilder.build();
+    return DelegateConnectionResult.builder().criteria(ALWAYS_TRUE).validated(true).build();
   }
 
   private void decryptCredentials(CommandExecutionContext context) {
@@ -164,7 +170,7 @@ public class CommandValidation extends AbstractDelegateValidateTask {
     }
     if (context.getWinrmConnectionAttributes() != null) {
       encryptionService.decrypt(
-          (Encryptable) context.getWinrmConnectionAttributes(), context.getWinrmConnectionEncryptedDataDetails());
+          context.getWinrmConnectionAttributes(), context.getWinrmConnectionEncryptedDataDetails());
     }
   }
 
@@ -211,7 +217,7 @@ public class CommandValidation extends AbstractDelegateValidateTask {
 
   @Override
   public List<String> getCriteria() {
-    return asList(getCriteria((CommandExecutionContext) getParameters()[1]));
+    return singletonList(getCriteria((CommandExecutionContext) getParameters()[1]));
   }
 
   private String getCriteria(CommandExecutionContext context) {
@@ -219,7 +225,10 @@ public class CommandValidation extends AbstractDelegateValidateTask {
     DeploymentType deploymentType = DeploymentType.valueOf(context.getDeploymentType());
     switch (deploymentType) {
       case KUBERNETES:
-        return getKubernetesMasterUrl(context);
+        SettingValue config = context.getCloudProviderSetting().getValue();
+        return config instanceof KubernetesClusterConfig && ((KubernetesClusterConfig) config).isUseKubernetesDelegate()
+            ? "delegate-name: " + ((KubernetesClusterConfig) config).getDelegateName()
+            : getKubernetesMasterUrl(context);
       case ECS:
         if (context.getContainerSetupParams() != null) {
           region = ((EcsSetupParams) context.getContainerSetupParams()).getRegion();

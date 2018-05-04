@@ -436,10 +436,6 @@ public interface Constants {
   String DELEGATE_DIR = "harness-delegate";
   String DOCKER_DELEGATE = "harness-delegate-docker";
   String KUBERNETES_DELEGATE = "harness-delegate-kubernetes";
-  /**
-   * The constant DELEGATE_NAME.
-   */
-  String DELEGATE_NAME = "Harness delegate";
 
   /**
    * The constant MAX_DELEGATE_LAST_HEARTBEAT.

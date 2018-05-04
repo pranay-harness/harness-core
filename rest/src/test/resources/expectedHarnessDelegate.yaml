@@ -4,6 +4,7 @@ metadata:
   labels:
     harness.io/app: harness-delegate
     harness.io/account: accoun
+    harness.io/name: harness-delegate
   name: harness-delegate-accoun
   namespace: harness-delegate
 spec:
@@ -12,12 +13,14 @@ spec:
     matchLabels:
       harness.io/app: harness-delegate
       harness.io/account: accoun
+      harness.io/name: harness-delegate
   serviceName: ""
   template:
     metadata:
       labels:
         harness.io/app: harness-delegate
         harness.io/account: accoun
+        harness.io/name: harness-delegate
     spec:
       containers:
       - image: harness/delegate:latest
@@ -42,6 +45,8 @@ spec:
           value: http://localhost:8888
         - name: DELEGATE_CHECK_LOCATION
           value: delegateci.txt
+        - name: DELEGATE_NAME
+          value: harness-delegate
         - name: DESCRIPTION
           value: description here
         - name: PROXY_HOST

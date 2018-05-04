@@ -1,6 +1,0 @@
-{
-  "password" : {"ui:widget" : "password"},
-  "custom:encryptedFields" : ["password", "caCert", "clientCert", "clientKey", "clientKeyPassphrase"],
-  "type" : {"ui:widget" : "hidden"},
-  "ui:order" : [ "type", "masterUrl", "username", "password", "caCert", "clientCert", "clientKey", "clientKeyPassphrase", "clientKeyAlgo" ]
-}
