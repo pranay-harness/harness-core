@@ -91,7 +91,7 @@ public class DelegateResource {
   }
 
   @GET
-  @Path("kubernetesDelegateNames")
+  @Path("kubernetes-delegates")
   @Timed
   @ExceptionMetered
   public RestResponse<List<String>> kubernetesDelegateNames(
