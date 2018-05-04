@@ -13,6 +13,7 @@ import migrations.all.DirectKubernetesToCloudProvider;
 import migrations.all.FixInstanceData;
 import migrations.all.FixMaxInstancesFieldInContainerSetup;
 import migrations.all.GitSyncToAllAccounts;
+import migrations.all.LogAnalysisExperimentalRecordsMigration;
 import migrations.all.LogAnalysisRecordsMigration;
 import migrations.all.LogDataRecordsMigration;
 import migrations.all.LogFeedbackRecordsMigration;
@@ -62,6 +63,7 @@ public class MigrationList {
         .add(Pair.of(128, LogAnalysisRecordsMigration.class))
         .add(Pair.of(129, LogFeedbackRecordsMigration.class))
         .add(Pair.of(130, FixInstanceData.class))
+        .add(Pair.of(131, LogAnalysisExperimentalRecordsMigration.class))
         .build();
   }
 }
