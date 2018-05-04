@@ -43,7 +43,7 @@ public class SplunkConfig extends SettingValue implements Encryptable {
     super(SettingVariableTypes.SPLUNK.name());
   }
 
-  public SplunkConfig(String splunkUrl, String username, char[] password, String accountId, String encryptedPassword) {
+  private SplunkConfig(String splunkUrl, String username, char[] password, String accountId, String encryptedPassword) {
     this();
     this.splunkUrl = splunkUrl;
     this.username = username;

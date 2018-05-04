@@ -29,6 +29,7 @@ import software.wings.yaml.setting.VerificationProviderYaml;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @ToString(exclude = "password")
+@Builder
 public class ElkConfig extends SettingValue implements Encryptable {
   @Attributes(required = true, title = "Connector type")
   @DefaultValue("ELASTIC_SEARCH_SERVER")
@@ -71,8 +72,17 @@ public class ElkConfig extends SettingValue implements Encryptable {
     super(SettingVariableTypes.ELK.name());
   }
 
-  public ElkConfig(SettingVariableTypes type) {
-    super(type.name());
+  private ElkConfig(ElkConnector elkConnector, String elkUrl, String username, char[] password, String accountId,
+      String kibanaVersion, String encryptedPassword, ElkValidationType validationType) {
+    this();
+    this.elkConnector = elkConnector;
+    this.elkUrl = elkUrl;
+    this.username = username;
+    this.password = password;
+    this.accountId = accountId;
+    this.kibanaVersion = kibanaVersion;
+    this.encryptedPassword = encryptedPassword;
+    this.validationType = validationType;
   }
 
   @Data
