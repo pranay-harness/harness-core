@@ -68,10 +68,31 @@ def test_log_ml_out_2():
 
     sio = SplunkIntelOptimized(corpus, SplunkIntelOptimized.parse(['--sim_threshold', '0.9']))
     result = sio.run()
-    assert len(result.anom_clusters) == 3
-    assert result.anom_clusters[0].values()[0]['cluster_label'] == 0
-    assert result.anom_clusters[1].values()[0]['cluster_label'] == 1
-    assert result.anom_clusters[2].values()[0]['cluster_label'] == 2
+    result_dict = json.loads(result.get_output_for_notebook_as_json())
+    expected_result = FileLoader.load_data('resources/logs/log_ml_out_2_expected_result.json')
+
+    # make sure x, y are removed before comparison
+    for key in ['control_clusters', 'test_clusters', 'unknown_clusters']:
+        for val in result_dict[key].values():
+            for sub_val in val.values():
+                del sub_val['x']
+                del sub_val['y']
+
+    for key in ['control_clusters', 'test_clusters', 'unknown_clusters']:
+        for val in expected_result[key].values():
+            for sub_val in val.values():
+                del sub_val['x']
+                del sub_val['y']
+
+    assert bool(expected_result['control_events'] == result_dict['control_events'])
+    assert bool(expected_result['test_events'] == result_dict['test_events'])
+    assert bool(expected_result['unknown_events'] == result_dict['unknown_events'])
+    assert bool(expected_result['control_clusters'] == result_dict['control_clusters'])
+    assert bool(expected_result['test_clusters'] == result_dict['test_clusters'])
+    assert bool(expected_result['unknown_clusters'] == result_dict['unknown_clusters'])
+
+
+
 
 
 def main(args):
