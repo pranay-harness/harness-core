@@ -67,7 +67,6 @@ import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
 import static software.wings.sm.StateType.AWS_AMI_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.AWS_AMI_SERVICE_ROLLBACK;
 import static software.wings.sm.StateType.AWS_AMI_SERVICE_SETUP;
-import static software.wings.sm.StateType.AWS_CLUSTER_SETUP;
 import static software.wings.sm.StateType.AWS_CODEDEPLOY_ROLLBACK;
 import static software.wings.sm.StateType.AWS_CODEDEPLOY_STATE;
 import static software.wings.sm.StateType.AWS_LAMBDA_ROLLBACK;
@@ -115,7 +114,6 @@ import software.wings.beans.BasicOrchestrationWorkflow;
 import software.wings.beans.BuildWorkflow;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CustomOrchestrationWorkflow;
-import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.ExecutionScope;
@@ -2125,16 +2123,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     if (serviceSetupRequired) {
       InfrastructureMapping infraMapping = infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
-      if (infraMapping instanceof EcsInfrastructureMapping
-          && Constants.RUNTIME.equals(((EcsInfrastructureMapping) infraMapping).getClusterName())) {
-        workflowPhase.addPhaseStep(aPhaseStep(CLUSTER_SETUP, Constants.SETUP_CLUSTER)
-                                       .addStep(aGraphNode()
-                                                    .withId(generateUuid())
-                                                    .withType(AWS_CLUSTER_SETUP.name())
-                                                    .withName("AWS Cluster Setup")
-                                                    .build())
-                                       .build());
-      }
       workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
                                      .addStep(aGraphNode()
                                                   .withId(generateUuid())

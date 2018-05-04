@@ -22,8 +22,6 @@ import static software.wings.api.DeploymentType.WINRM;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.FeatureName.AZURE_SUPPORT;
-import static software.wings.beans.FeatureName.ECS_CREATE_CLUSTER;
-import static software.wings.beans.FeatureName.KUBERNETES_CREATE_CLUSTER;
 import static software.wings.beans.FeatureName.PIVOTAL_CLOUD_FOUNDRY_SUPPORT;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
@@ -95,7 +93,6 @@ import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.cloudprovider.aws.AwsCodeDeployService;
-import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -338,12 +335,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   private void validateEcsInfraMapping(EcsInfrastructureMapping infraMapping, SettingAttribute computeProviderSetting) {
-    if (Constants.RUNTIME.equals(infraMapping.getClusterName())) {
-      if (!featureFlagService.isEnabled(ECS_CREATE_CLUSTER, computeProviderSetting.getAccountId())) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT)
-            .addParam("args", "Creating a cluster at runtime is not yet supported for ECS.");
-      }
-    }
     SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
     Validator.notNullCheck("SettingAttribute", settingAttribute);
     String clusterName = infraMapping.getClusterName();
@@ -370,12 +361,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   private void validateGcpInfraMapping(
       GcpKubernetesInfrastructureMapping infraMapping, SettingAttribute computeProviderSetting) {
-    if (Constants.RUNTIME.equals(infraMapping.getClusterName())) {
-      if (!featureFlagService.isEnabled(KUBERNETES_CREATE_CLUSTER, computeProviderSetting.getAccountId())) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT)
-            .addParam("args", "Creating a cluster at runtime is not yet supported for Kubernetes.");
-      }
-    }
     SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
     Validator.notNullCheck("SettingAttribute", settingAttribute);
     String clusterName = infraMapping.getClusterName();
