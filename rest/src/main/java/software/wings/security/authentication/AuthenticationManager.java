@@ -1,5 +1,6 @@
 package software.wings.security.authentication;
 
+import static software.wings.beans.ErrorCode.INVALID_CREDENTIAL;
 import static software.wings.beans.ErrorCode.INVALID_TOKEN;
 import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
 import static software.wings.exception.WingsException.USER;
@@ -98,24 +99,40 @@ public class AuthenticationManager {
         .withTwoFactorJwtToken(jwtToken)
         .build();
   }
-  public User defaultLogin(String... credentials) {
-    User user = passwordBasedAuthHandler.authenticate(credentials);
-    if (user.isTwoFactorAuthenticationEnabled()) {
-      return generate2faJWTToken(user);
-    } else {
-      return authenticationUtil.generateBearerTokenForUser(user);
+  public User defaultLogin(String basicToken) {
+    try {
+      String[] decryptedData = new String(Base64.getDecoder().decode(basicToken)).split(":");
+      if (decryptedData.length < 2) {
+        throw new WingsException(INVALID_CREDENTIAL);
+      }
+      String userName = decryptedData[0];
+      String password = decryptedData[1];
+      User user = passwordBasedAuthHandler.authenticate(userName, password);
+      if (user.isTwoFactorAuthenticationEnabled()) {
+        return generate2faJWTToken(user);
+      } else {
+        return authenticationUtil.generateBearerTokenForUser(user);
+      }
+    } catch (Exception e) {
+      logger.warn("Failed to login via default mechanism", e);
+      throw new WingsException(INVALID_CREDENTIAL);
     }
   }
 
   public User ssoRedirectLogin(String jwtSecret) {
-    User user = userService.verifyJWTToken(jwtSecret, JWT_CATEGORY.SSO_REDIRECT);
-    if (user == null) {
-      throw new WingsException(USER_DOES_NOT_EXIST);
-    }
-    if (user.isTwoFactorAuthenticationEnabled()) {
-      return generate2faJWTToken(user);
-    } else {
-      return authenticationUtil.generateBearerTokenForUser(user);
+    try {
+      User user = userService.verifyJWTToken(jwtSecret, JWT_CATEGORY.SSO_REDIRECT);
+      if (user == null) {
+        throw new WingsException(USER_DOES_NOT_EXIST);
+      }
+      if (user.isTwoFactorAuthenticationEnabled()) {
+        return generate2faJWTToken(user);
+      } else {
+        return authenticationUtil.generateBearerTokenForUser(user);
+      }
+    } catch (Exception e) {
+      logger.warn("Failed to login via SSO", e);
+      throw new WingsException(INVALID_CREDENTIAL);
     }
   }
 

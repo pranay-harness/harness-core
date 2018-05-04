@@ -42,7 +42,6 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserService;
 
 import java.net.URISyntaxException;
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
@@ -319,11 +318,8 @@ public class UserResource {
   @Timed
   @ExceptionMetered
   public RestResponse<User> login(@HeaderParam(HttpHeaders.AUTHORIZATION) String authorization) {
-    String basicToken = authenticationManager.extractToken(authorization, "Basic");
-    String[] decryptedData = new String(Base64.getDecoder().decode(basicToken)).split(":");
-    String userName = decryptedData[0];
-    String password = decryptedData[1];
-    return new RestResponse<User>(authenticationManager.defaultLogin(userName, password));
+    return new RestResponse<User>(
+        authenticationManager.defaultLogin(authenticationManager.extractToken(authorization, "Basic")));
   }
 
   /**
