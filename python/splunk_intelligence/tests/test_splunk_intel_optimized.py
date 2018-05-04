@@ -51,7 +51,7 @@ def test_log_ml_out_1():
     assert len(result.anom_clusters) == 2
 
 
-# Uses the analysis output to setup a test case
+# # Uses the analysis output to setup a test case
 def test_log_ml_out_2():
     data = FileLoader.load_data('resources/logs/log_ml_out_2.json')
     control = data['control_events']
@@ -89,7 +89,19 @@ def test_log_ml_out_2():
     assert bool(expected_result['unknown_events'] == result_dict['unknown_events'])
     assert bool(expected_result['control_clusters'] == result_dict['control_clusters'])
     assert bool(expected_result['test_clusters'] == result_dict['test_clusters'])
-    assert bool(expected_result['unknown_clusters'] == result_dict['unknown_clusters'])
+
+    # anom cluster might have different labels
+    matched_anom = 0
+    for anom in result_dict['unknown_clusters'].values():
+        # remove cluster lable, it is not the same each time
+        del anom.values()[0]['cluster_label']
+        for exp_anom in expected_result['unknown_clusters'].values():
+            if 'cluster_label' in exp_anom.values()[0]:
+                del exp_anom.values()[0]['cluster_label']
+            if bool(anom==exp_anom):
+                matched_anom +=1
+                break
+    assert matched_anom == 3
 
 
 
