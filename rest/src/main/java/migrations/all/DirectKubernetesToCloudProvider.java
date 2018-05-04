@@ -72,7 +72,7 @@ public class DirectKubernetesToCloudProvider implements Migration {
               env = environmentService.get(app.getUuid(), envId, false);
             } catch (Exception e) {
               logger.info("Deleting for missing env: [{}], Infra: [{}]", envId, directInfra.getName());
-              infrastructureMappingService.delete(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
+              wingsPersistence.delete(infrastructureMapping);
             }
 
             if (env != null) {
@@ -125,6 +125,10 @@ public class DirectKubernetesToCloudProvider implements Migration {
 
                 wingsPersistence.updateFields(
                     infrastructureMapping.getClass(), infrastructureMapping.getUuid(), keyValuePairs, fieldsToRemove);
+
+                logger.info("Successfully Migrated env: [{}], Infra: [{}], to CloudProvider: {}", envId,
+                    directInfra.getName(), cloudProviderName);
+
               } catch (Exception e) {
                 logger.info(
                     "Exception migrating env: [{}], Infra: [{}], Exception: {}", envId, directInfra.getName(), e);
