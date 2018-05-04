@@ -424,6 +424,6 @@ public class SplunkV2StateTest extends WingsBaseTest {
   @Test
   public void testTimestampFormat() {
     SimpleDateFormat sdf = new SimpleDateFormat(ElkAnalysisState.DEFAULT_TIME_FORMAT);
-    assertNotNull(sdf.parse("2013-10-07T12:13:27.000132Z", new ParsePosition(0)));
+    assertNotNull(sdf.parse("2013-10-07T12:13:27.001Z", new ParsePosition(0)));
   }
 }

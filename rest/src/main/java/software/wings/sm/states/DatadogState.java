@@ -54,14 +54,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class DatadogState extends AbstractMetricAnalysisState {
   @Transient @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(DatadogState.class);
-
-  private static final String metricDataQuery = "query";
-
-  //  private static final String[] metrics = {"System,system.load.1,RESP_TIME", "System,system.cpu.system,RESP_TIME",
-  //      "System,system.disk.used,RESP_TIME", "System,system.mem.used,RESP_TIME"};
 
   public DatadogState(String name) {
     super(name, StateType.DATA_DOG);
@@ -295,7 +291,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
     try {
       String yaml = Resources.toString(url, Charsets.UTF_8);
       Map<String, List<Metric>> metricsMap = yamlUtils.read(yaml, new TypeReference<Map<String, List<Metric>>>() {});
-      return metricsMap.get("Servlet");
+      return metricsMap.values().stream().flatMap(metric -> metric.stream()).collect(Collectors.toList());
     } catch (Exception ex) {
       throw new WingsException("Unable to load datadog metrics", ex);
     }
