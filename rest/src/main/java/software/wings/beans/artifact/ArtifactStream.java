@@ -46,6 +46,7 @@ import java.util.List;
 public abstract class ArtifactStream extends Base {
   protected static final DateFormat dateFormat = new SimpleDateFormat("HHMMSS");
 
+  public static final String SERVICE_ID_KEY = "serviceId";
   public static final String ARTIFACT_STREAM_TYPE_KEY = "artifactStreamType";
   public static final String METADATA_ONLY_KEY = "metadataOnly";
 
