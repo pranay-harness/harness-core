@@ -63,6 +63,9 @@ import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.ServiceTemplate;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.lock.AcquiredLock;
@@ -118,14 +121,15 @@ public class ZombieHunterJob implements Job {
     private Exterminator exterminator;
   }
 
-  public static final String SERVICE_ID = "serviceId";
+  public static final String ENVIRONMENTS = "environments";
   public static final String SERVICES = "services";
 
   protected static final List<ZombieType> zombieTypes =
       asList(new ZombieType("applications", "accountId", asList("accounts"), null),
-          new ZombieType("artifactStream", SERVICE_ID, asList(SERVICES), null),
-          new ZombieType("infrastructureMapping", SERVICE_ID, asList(SERVICES), null),
-          new ZombieType("serviceTemplates", SERVICE_ID, asList(SERVICES), null),
+          new ZombieType("artifactStream", ArtifactStream.SERVICE_ID_KEY, asList(SERVICES), null),
+          new ZombieType("infrastructureMapping", InfrastructureMapping.SERVICE_ID_KEY, asList(SERVICES), null),
+          new ZombieType("infrastructureMapping", InfrastructureMapping.ENV_ID_KEY, asList(ENVIRONMENTS), null),
+          new ZombieType("serviceTemplates", ServiceTemplate.SERVICE_ID_KEY, asList(SERVICES), null),
           new ZombieType("serviceVariables", "entityId", asList(SERVICES, "serviceTemplates", "environments"), null));
 
   public static final Duration interval = Duration.ofDays(1);
@@ -134,7 +138,7 @@ public class ZombieHunterJob implements Job {
   public static OffsetDateTime nextHuntingExpedition(int index) {
     final long huntingCycles = Duration.between(OUTBREAK_DAY, today).getSeconds() / cycle.getSeconds();
     OffsetDateTime currentHuntingCycle = OUTBREAK_DAY.plus(huntingCycles * cycle.getSeconds(), ChronoUnit.SECONDS);
-    OffsetDateTime date = currentHuntingCycle.plus(interval.multipliedBy(index)).plus(1, ChronoUnit.HOURS);
+    OffsetDateTime date = currentHuntingCycle.plus(interval.multipliedBy(index)).plus(8, ChronoUnit.HOURS);
     if (date.isBefore(today)) {
       date = date.plus(cycle);
     }

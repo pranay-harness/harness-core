@@ -50,6 +50,7 @@ import java.util.stream.Stream;
 @Indexes(@Index(fields = { @Field("appId")
                            , @Field("envId"), @Field("name") }, options = @IndexOptions(unique = true)))
 public abstract class InfrastructureMapping extends Base {
+  public static final String SERVICE_ID_KEY = "serviceId";
   public static final String ENV_ID_KEY = "envId";
   public static final String NAME_KEY = "name";
 
