@@ -1,12 +1,14 @@
 package software.wings.security.authentication;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
+import org.apache.commons.codec.binary.Base64;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -107,12 +109,29 @@ public class AuthenticationManagerTest extends WingsBaseTest {
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1));
     when(AUTHENTICATION_UTL.getUser("testUser@test.com")).thenReturn(mockUser);
 
-    when(PASSWORD_BASED_AUTH_HANDLER.authenticate(Matchers.anyString())).thenReturn(mockUser);
+    when(PASSWORD_BASED_AUTH_HANDLER.authenticate(Matchers.anyString(), Matchers.anyString())).thenReturn(mockUser);
     User authenticatedUser = mock(User.class);
     when(authenticatedUser.getToken()).thenReturn("TestToken");
     when(AUTHENTICATION_UTL.generateBearerTokenForUser(mockUser)).thenReturn(authenticatedUser);
-    User user = authenticationManager.defaultLogin("testUser@test.com");
+    User user = authenticationManager.defaultLogin(Base64.encodeBase64String("testUser@test.com:password".getBytes()));
     assertThat(user.getToken()).isEqualTo("TestToken");
+  }
+
+  @Test
+  public void testFakeTokens() {
+    try {
+      authenticationManager.defaultLogin("FakeToken");
+      failBecauseExceptionWasNotThrown(WingsException.class);
+    } catch (WingsException e) {
+      assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_CREDENTIAL.name());
+    }
+
+    try {
+      authenticationManager.defaultLogin(Base64.encodeBase64String("testUser@test.com".getBytes()));
+      failBecauseExceptionWasNotThrown(WingsException.class);
+    } catch (WingsException e) {
+      assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_CREDENTIAL.name());
+    }
   }
 
   @Test
