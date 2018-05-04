@@ -6,13 +6,8 @@ import static software.wings.service.impl.instance.InstanceHandler.AUTO_SCALE;
 
 import com.google.inject.Inject;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.BulkWriteOperation;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
 import migrations.Migration;
 import org.apache.commons.lang3.StringUtils;
-import org.mongodb.morphia.query.MorphiaIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
@@ -40,12 +35,8 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.utils.Util;
-import software.wings.waitnotify.WaitInstance;
 
 import java.time.Duration;
-import java.time.Instant;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -175,41 +166,6 @@ public class FixInstanceData implements Migration {
         }
       });
     });
-
-    final DBCollection collection = wingsPersistence.getCollection("waitInstances");
-    BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
-
-    final MorphiaIterator<WaitInstance, WaitInstance> waitInstances = wingsPersistence.createQuery(WaitInstance.class)
-                                                                          .field("validUntil")
-                                                                          .doesNotExist()
-                                                                          .project("createdAt", true)
-                                                                          .fetch();
-
-    int i = 1;
-    try (DBCursor ignored = waitInstances.getCursor()) {
-      while (waitInstances.hasNext()) {
-        final WaitInstance waitInstance = waitInstances.next();
-        final ZonedDateTime zonedDateTime =
-            Instant.ofEpochMilli(waitInstance.getCreatedAt()).atZone(ZoneOffset.UTC).plusMonths(1);
-
-        if (i % 1000 == 0) {
-          bulkWriteOperation.execute();
-          bulkWriteOperation = collection.initializeUnorderedBulkOperation();
-          logger.info("WaitInstance: {} updated", i);
-        }
-        ++i;
-
-        bulkWriteOperation
-            .find(wingsPersistence.createQuery(WaitInstance.class)
-                      .filter(WaitInstance.ID_KEY, waitInstance.getUuid())
-                      .getQueryObject())
-            .updateOne(new BasicDBObject(
-                "$set", new BasicDBObject("validUntil", java.util.Date.from(zonedDateTime.toInstant()))));
-      }
-    }
-    if (i % 1000 != 1) {
-      bulkWriteOperation.execute();
-    }
   }
 
   private Optional<Instance> getInstanceFromPreviousDeployment(
