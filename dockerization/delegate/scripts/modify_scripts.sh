@@ -86,3 +86,10 @@ then
 else
     sed -i "s|_pollForTasks_|false|" /opt/harness-delegate/delegate.sh
 fi
+
+if [[ -v "INSTALL_HELM" ]]
+then
+    sed -i "s|_installHelm_|${INSTALL_HELM}|" /opt/harness-delegate/start.sh
+else
+    sed -i "s|_installHelm_|false|" /opt/harness-delegate/start.sh
+fi

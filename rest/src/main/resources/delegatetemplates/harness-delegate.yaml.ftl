@@ -59,4 +59,6 @@ spec:
           value: ""
         - name: POLL_FOR_TASKS
           value: "false"
+        - name: INSTALL_HELM
+          value: "false"
       restartPolicy: Always

@@ -64,6 +64,24 @@ then
   exit 1
 fi
 
+INSTALL_HELM=_installHelm_
+if [[ $INSTALL_HELM == "true" ]]
+then
+  echo "Installing Helm..."
+  curl -#k https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get | bash
+  helm init --client-only
+
+  echo "Installing kubectl..."
+  apt-get update && apt-get install -y apt-transport-https
+  curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+  cat <<EOF >/etc/apt/sources.list.d/kubernetes.list
+deb http://apt.kubernetes.io/ kubernetes-xenial main
+EOF
+  apt-get update
+  apt-get install -y kubectl
+  kubectl config view
+fi
+
 echo "Checking Watcher latest version..."
 WATCHER_STORAGE_URL=_watcherStorageUrl_
 REMOTE_WATCHER_LATEST=$(curl -#k $WATCHER_STORAGE_URL/_watcherCheckLocation_)

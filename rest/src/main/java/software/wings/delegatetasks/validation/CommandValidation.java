@@ -117,13 +117,10 @@ public class CommandValidation extends AbstractDelegateValidateTask {
 
   private DelegateConnectionResult validateKubernetes(CommandExecutionContext context) {
     SettingValue config = context.getCloudProviderSetting().getValue();
-    boolean validated;
-    if (config instanceof KubernetesClusterConfig && ((KubernetesClusterConfig) config).isUseKubernetesDelegate()) {
-      String delegateName = System.getenv().get("DELEGATE_NAME");
-      validated = Objects.equals(delegateName, ((KubernetesClusterConfig) config).getDelegateName());
-    } else {
-      validated = connectableHttpUrl(getKubernetesMasterUrl(context));
-    }
+    boolean validated =
+        config instanceof KubernetesClusterConfig && ((KubernetesClusterConfig) config).isUseKubernetesDelegate()
+        ? Objects.equals(System.getenv().get("DELEGATE_NAME"), ((KubernetesClusterConfig) config).getDelegateName())
+        : connectableHttpUrl(getKubernetesMasterUrl(context));
     return DelegateConnectionResult.builder().criteria(getCriteria(context)).validated(validated).build();
   }
 
