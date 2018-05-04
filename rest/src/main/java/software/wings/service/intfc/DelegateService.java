@@ -25,6 +25,8 @@ import javax.validation.Valid;
 public interface DelegateService {
   PageResponse<Delegate> list(PageRequest<Delegate> pageRequest);
 
+  List<String> getKubernetesDelegateNames(String accountId);
+
   Delegate get(String accountId, String delegateId);
 
   Delegate update(@Valid Delegate delegate);
@@ -38,7 +40,8 @@ public interface DelegateService {
 
   File downloadScripts(String managerHost, String accountId) throws IOException, TemplateException;
   File downloadDocker(String managerHost, String accountId) throws IOException, TemplateException;
-  File downloadKubernetes(String managerHost, String accountId) throws IOException, TemplateException;
+  File downloadKubernetes(String managerHost, String accountId, String delegateName)
+      throws IOException, TemplateException;
 
   Delegate add(Delegate delegate);
 

@@ -8,8 +8,10 @@ import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
+import static java.util.Comparator.naturalOrder;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -85,7 +87,6 @@ import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.DelegatesDownAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
-import software.wings.common.Constants;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -111,7 +112,6 @@ import java.io.StringWriter;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -149,6 +149,21 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public PageResponse<Delegate> list(PageRequest<Delegate> pageRequest) {
     return wingsPersistence.query(Delegate.class, pageRequest);
+  }
+
+  @Override
+  public List<String> getKubernetesDelegateNames(String accountId) {
+    return wingsPersistence.createQuery(Delegate.class)
+        .filter("accountId", accountId)
+        .field("delegateName")
+        .exists()
+        .project("delegateName", true)
+        .asList()
+        .stream()
+        .map(Delegate::getDelegateName)
+        .distinct()
+        .sorted(naturalOrder())
+        .collect(toList());
   }
 
   @Override
@@ -232,7 +247,7 @@ public class DelegateServiceImpl implements DelegateService {
       throws IOException, TemplateException {
     logger.info("Checking delegate for upgrade: {}", delegateId);
 
-    ImmutableMap<Object, Object> scriptParams = getJarAndScriptRunTimeParamMap(accountId, version, managerHost);
+    ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(accountId, version, managerHost);
 
     DelegateScripts delegateScripts = new DelegateScripts();
     delegateScripts.setDelegateId(delegateId);
@@ -276,8 +291,13 @@ public class DelegateServiceImpl implements DelegateService {
     }
   }
 
-  private ImmutableMap<Object, Object> getJarAndScriptRunTimeParamMap(
+  private ImmutableMap<String, String> getJarAndScriptRunTimeParamMap(
       String accountId, String version, String managerHost) {
+    return getJarAndScriptRunTimeParamMap(accountId, version, managerHost, null);
+  }
+
+  private ImmutableMap<String, String> getJarAndScriptRunTimeParamMap(
+      String accountId, String version, String managerHost, String delegateName) {
     String latestVersion = null;
     String jarRelativePath;
     String delegateJarDownloadUrl = null;
@@ -325,19 +345,22 @@ public class DelegateServiceImpl implements DelegateService {
       String watcherCheckLocation = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf('/') + 1);
 
       Account account = accountService.get(accountId);
-      return ImmutableMap.builder()
-          .put("accountId", accountId)
-          .put("accountSecret", account.getAccountKey())
-          .put("upgradeVersion", latestVersion)
-          .put("currentVersion", version)
-          .put("managerHostAndPort", managerHost)
-          .put("watcherStorageUrl", watcherStorageUrl)
-          .put("watcherCheckLocation", watcherCheckLocation)
-          .put("delegateStorageUrl", delegateStorageUrl)
-          .put("delegateCheckLocation", delegateCheckLocation)
-          .put("deployMode", mainConfiguration.getDeployMode())
-          .put("kubernetesAccountLabel", getAccountIdentifier(accountId))
-          .build();
+      ImmutableMap.Builder<String, String> params = ImmutableMap.<String, String>builder()
+                                                        .put("accountId", accountId)
+                                                        .put("accountSecret", account.getAccountKey())
+                                                        .put("upgradeVersion", latestVersion)
+                                                        .put("currentVersion", version)
+                                                        .put("managerHostAndPort", managerHost)
+                                                        .put("watcherStorageUrl", watcherStorageUrl)
+                                                        .put("watcherCheckLocation", watcherCheckLocation)
+                                                        .put("delegateStorageUrl", delegateStorageUrl)
+                                                        .put("delegateCheckLocation", delegateCheckLocation)
+                                                        .put("deployMode", mainConfiguration.getDeployMode().name())
+                                                        .put("kubernetesAccountLabel", getAccountIdentifier(accountId));
+      if (isNotBlank(delegateName)) {
+        params.put("delegateName", delegateName);
+      }
+      return params.build();
     }
     return null;
   }
@@ -350,7 +373,8 @@ public class DelegateServiceImpl implements DelegateService {
       out.putArchiveEntry(new ZipArchiveEntry(DELEGATE_DIR + "/"));
       out.closeArchiveEntry();
 
-      Map scriptParams = getJarAndScriptRunTimeParamMap(accountId, "0.0.0", managerHost); // first version is 0.0.0
+      ImmutableMap<String, String> scriptParams =
+          getJarAndScriptRunTimeParamMap(accountId, "0.0.0", managerHost); // first version is 0.0.0
 
       File start = File.createTempFile("start", ".sh");
       try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(start))) {
@@ -441,7 +465,8 @@ public class DelegateServiceImpl implements DelegateService {
       out.putArchiveEntry(new ZipArchiveEntry(DOCKER_DELEGATE + "/"));
       out.closeArchiveEntry();
 
-      Map scriptParams = getJarAndScriptRunTimeParamMap(accountId, "0.0.0", managerHost); // first version is 0.0.0
+      ImmutableMap<String, String> scriptParams =
+          getJarAndScriptRunTimeParamMap(accountId, "0.0.0", managerHost); // first version is 0.0.0
 
       File launch = File.createTempFile("launch-harness-delegate", ".sh");
       try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(launch))) {
@@ -476,14 +501,16 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  public File downloadKubernetes(String managerHost, String accountId) throws IOException, TemplateException {
+  public File downloadKubernetes(String managerHost, String accountId, String delegateName)
+      throws IOException, TemplateException {
     File kubernetesDelegateFile = File.createTempFile(KUBERNETES_DELEGATE, ".zip");
 
     try (ZipArchiveOutputStream out = new ZipArchiveOutputStream(kubernetesDelegateFile)) {
       out.putArchiveEntry(new ZipArchiveEntry(KUBERNETES_DELEGATE + "/"));
       out.closeArchiveEntry();
 
-      Map scriptParams = getJarAndScriptRunTimeParamMap(accountId, "0.0.0", managerHost); // first version is 0.0.0
+      ImmutableMap<String, String> scriptParams =
+          getJarAndScriptRunTimeParamMap(accountId, "0.0.0", managerHost, delegateName); // first version is 0.0.0
 
       File yaml = File.createTempFile("harness-delegate", ".yaml");
       try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(yaml))) {
@@ -640,7 +667,7 @@ public class DelegateServiceImpl implements DelegateService {
 
     NotifyResponseData responseData = delegateTaskRef.get().getNotifyResponse();
     if (responseData == null) {
-      throw new WingsException(ErrorCode.REQUEST_TIMEOUT).addParam("name", Constants.DELEGATE_NAME);
+      throw new WingsException(ErrorCode.REQUEST_TIMEOUT).addParam("name", "Harness delegate");
     }
 
     logger.info("Returned response to calling function for delegate task [{}] ", delegateTask.getUuid());

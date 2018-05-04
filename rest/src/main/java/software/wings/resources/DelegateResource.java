@@ -91,6 +91,15 @@ public class DelegateResource {
   }
 
   @GET
+  @Path("kubernetesDelegateNames")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<String>> kubernetesDelegateNames(
+      @Context HttpServletRequest request, @QueryParam("accountId") @NotEmpty String accountId) {
+    return new RestResponse<>(delegateService.getKubernetesDelegateNames(accountId));
+  }
+
+  @GET
   @Path("{delegateId}")
   @Timed
   @ExceptionMetered
@@ -217,8 +226,8 @@ public class DelegateResource {
   @Path("downloadUrl")
   @Timed
   @ExceptionMetered
-  public RestResponse<Map<String, String>> downloadUrl(@Context HttpServletRequest request,
-      @QueryParam("accountId") @NotEmpty String accountId) throws IOException, TemplateException {
+  public RestResponse<Map<String, String>> downloadUrl(
+      @Context HttpServletRequest request, @QueryParam("accountId") @NotEmpty String accountId) {
     String url = getManagerUrl(request);
 
     return new RestResponse<>(ImmutableMap.of("downloadUrl",
@@ -231,8 +240,9 @@ public class DelegateResource {
   @Path("download")
   @Timed
   @ExceptionMetered
-  public Response downloadZip(@Context HttpServletRequest request, @QueryParam("accountId") @NotEmpty String accountId,
-      @QueryParam("token") @NotEmpty String token) throws IOException, TemplateException {
+  public Response downloadScripts(@Context HttpServletRequest request,
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("token") @NotEmpty String token)
+      throws IOException, TemplateException {
     downloadTokenService.validateDownloadToken("delegate." + accountId, token);
     File delegateFile = delegateService.downloadScripts(getManagerUrl(request), accountId);
     return Response.ok(delegateFile)
@@ -265,10 +275,10 @@ public class DelegateResource {
   @Timed
   @ExceptionMetered
   public Response downloadKubernetes(@Context HttpServletRequest request,
-      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("token") @NotEmpty String token)
-      throws IOException, TemplateException {
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("delegateName") @NotEmpty String delegateName,
+      @QueryParam("token") @NotEmpty String token) throws IOException, TemplateException {
     downloadTokenService.validateDownloadToken("delegate." + accountId, token);
-    File delegateFile = delegateService.downloadKubernetes(getManagerUrl(request), accountId);
+    File delegateFile = delegateService.downloadKubernetes(getManagerUrl(request), accountId, delegateName);
     return Response.ok(delegateFile)
         .header("Content-Transfer-Encoding", "binary")
         .type("application/zip; charset=binary")

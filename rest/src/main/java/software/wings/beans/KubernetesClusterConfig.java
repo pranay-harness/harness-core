@@ -4,8 +4,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
-import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -25,34 +23,38 @@ import software.wings.yaml.setting.CloudProviderYaml;
 @EqualsAndHashCode(callSuper = true)
 @Builder
 public class KubernetesClusterConfig extends SettingValue implements Encryptable {
-  @Attributes(title = "Master URL", required = true) @NotEmpty private String masterUrl;
-  @Attributes(title = "User Name") private String username;
-  @Encrypted @Attributes(title = "Password") private char[] password;
-  @Encrypted @Attributes(title = "CA Certificate") private char[] caCert;
-  @Encrypted @Attributes(title = "Client Certificate") private char[] clientCert;
-  @Encrypted @Attributes(title = "Client Key") private char[] clientKey;
-  @Encrypted @Attributes(title = "Client Key Passphrase") private char[] clientKeyPassphrase;
-  @Attributes(title = "Client Key Algorithm") private String clientKeyAlgo;
+  private boolean useKubernetesDelegate;
+  private String delegateName;
+  private String masterUrl;
+  private String username;
+  @Encrypted private char[] password;
+  @Encrypted private char[] caCert;
+  @Encrypted private char[] clientCert;
+  @Encrypted private char[] clientKey;
+  @Encrypted private char[] clientKeyPassphrase;
+  private String clientKeyAlgo;
 
-  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
-  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedCaCert;
-  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedClientCert;
-  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedClientKey;
-  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedClientKeyPassphrase;
+  @JsonView(JsonViews.Internal.class) private String encryptedPassword;
+  @JsonView(JsonViews.Internal.class) private String encryptedCaCert;
+  @JsonView(JsonViews.Internal.class) private String encryptedClientCert;
+  @JsonView(JsonViews.Internal.class) private String encryptedClientKey;
+  @JsonView(JsonViews.Internal.class) private String encryptedClientKeyPassphrase;
 
-  @SchemaIgnore @NotEmpty private String accountId;
+  @NotEmpty private String accountId;
 
-  @SchemaIgnore @Transient private boolean decrypted;
+  @Transient private boolean decrypted;
 
   public KubernetesClusterConfig() {
     super(SettingVariableTypes.KUBERNETES_CLUSTER.name());
   }
 
-  public KubernetesClusterConfig(String masterUrl, String username, char[] password, char[] caCert, char[] clientCert,
-      char[] clientKey, char[] clientKeyPassphrase, String clientKeyAlgo, String encryptedPassword,
-      String encryptedCaCert, String encryptedClientCert, String encryptedClientKey,
-      String encryptedClientKeyPassphrase, String accountId, boolean decrypted) {
+  public KubernetesClusterConfig(boolean useKubernetesDelegate, String delegateName, String masterUrl, String username,
+      char[] password, char[] caCert, char[] clientCert, char[] clientKey, char[] clientKeyPassphrase,
+      String clientKeyAlgo, String encryptedPassword, String encryptedCaCert, String encryptedClientCert,
+      String encryptedClientKey, String encryptedClientKeyPassphrase, String accountId, boolean decrypted) {
     this();
+    this.useKubernetesDelegate = useKubernetesDelegate;
+    this.delegateName = delegateName;
     this.masterUrl = masterUrl;
     this.username = username;
     this.password = password;
@@ -70,14 +72,19 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
     this.decrypted = decrypted;
   }
 
-  @SchemaIgnore
   public KubernetesConfig createKubernetesConfig(String namespace) {
+    String namespaceNotBlank = isNotBlank(namespace) ? namespace : "default";
+
+    if (isUseKubernetesDelegate()) {
+      return KubernetesConfig.builder().namespace(namespaceNotBlank).build();
+    }
+
     KubernetesConfigBuilder kubernetesConfig = KubernetesConfig.builder()
                                                    .accountId(getAccountId())
                                                    .masterUrl(masterUrl)
                                                    .username(username)
                                                    .clientKeyAlgo(clientKeyAlgo)
-                                                   .namespace(isNotBlank(namespace) ? namespace : "default");
+                                                   .namespace(namespaceNotBlank);
     if (isNotBlank(encryptedPassword)) {
       kubernetesConfig.encryptedPassword(encryptedPassword);
     } else {
@@ -115,6 +122,8 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = false)
   public static class Yaml extends CloudProviderYaml {
+    private boolean useKubernetesDelegate;
+    private String delegateName;
     private String masterUrl;
     private String username;
     private String password;
@@ -125,10 +134,12 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
     private String clientKeyAlgo;
 
     @lombok.Builder
-    public Yaml(String type, String harnessApiVersion, String masterUrl, String username, String password,
-        String caCert, String clientCert, String clientKey, String clientKeyPassphrase, String clientKeyAlgo,
-        UsageRestrictions usageRestrictions) {
+    public Yaml(boolean useKubernetesDelegate, String delegateName, String type, String harnessApiVersion,
+        String masterUrl, String username, String password, String caCert, String clientCert, String clientKey,
+        String clientKeyPassphrase, String clientKeyAlgo, UsageRestrictions usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
+      this.useKubernetesDelegate = useKubernetesDelegate;
+      this.delegateName = delegateName;
       this.masterUrl = masterUrl;
       this.username = username;
       this.password = password;

@@ -20,12 +20,9 @@ import java.io.IOException;
 
 public class KubernetesClusterConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
   @InjectMocks @Inject private KubernetesClusterConfigYamlHandler yamlHandler;
-  public static final String masterUrl = "dummyMasterUrl";
+  private static final String masterUrl = "dummyMasterUrl";
   public static final String username = "dummyUsername";
   public static final String password = "dummyPassword";
-
-  private String invalidYamlContent = "type: KUBERNETES_CLUSTER\n"
-      + "username: dummyUsername";
 
   private Class yamlClass = KubernetesClusterConfig.Yaml.class;
 
@@ -37,14 +34,6 @@ public class KubernetesClusterConfigYamlHandlerTest extends BaseSettingValueConf
     assertEquals(kubernetesClusterConfigName, settingAttributeSaved.getName());
 
     testCRUD(generateSettingValueYamlConfig(kubernetesClusterConfigName, settingAttributeSaved));
-  }
-
-  @Test
-  public void testFailures() throws HarnessException, IOException {
-    String kubernetesClusterConfigName = "KubernetesCluster-" + System.currentTimeMillis();
-
-    SettingAttribute settingAttributeSaved = createKubernetesClusterConfigProvider(kubernetesClusterConfigName);
-    testFailureScenario(generateSettingValueYamlConfig(kubernetesClusterConfigName, settingAttributeSaved));
   }
 
   private SettingAttribute createKubernetesClusterConfigProvider(String kubernetesClusterConfigName) {
@@ -69,7 +58,6 @@ public class KubernetesClusterConfigYamlHandlerTest extends BaseSettingValueConf
         .yamlClass(yamlClass)
         .settingAttributeSaved(settingAttributeSaved)
         .yamlDirPath(cloudProviderYamlDir)
-        .invalidYamlContent(invalidYamlContent)
         .name(name)
         .configclazz(KubernetesClusterConfig.class)
         .updateMethodName("setMasterUrl")

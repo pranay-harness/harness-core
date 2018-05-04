@@ -8,6 +8,7 @@ import static io.harness.network.Http.getOkHttpClientBuilder;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static okhttp3.ConnectionSpec.CLEARTEXT;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.common.Constants.HARNESS_REVISION;
 
@@ -102,10 +103,10 @@ public class KubernetesHelperService {
       namespace = kubernetesConfig.getNamespace().trim();
       configBuilder.withNamespace(namespace);
     }
-    if (kubernetesConfig.getMasterUrl() != null) {
+    if (isNotBlank(kubernetesConfig.getMasterUrl())) {
       configBuilder.withMasterUrl(kubernetesConfig.getMasterUrl().trim());
     }
-    if (kubernetesConfig.getUsername() != null) {
+    if (isNotBlank(kubernetesConfig.getUsername())) {
       configBuilder.withUsername(kubernetesConfig.getUsername().trim());
     }
     if (kubernetesConfig.getPassword() != null) {
@@ -127,11 +128,18 @@ public class KubernetesHelperService {
       configBuilder.withClientKeyAlgo(kubernetesConfig.getClientKeyAlgo().trim());
     }
 
-    if (isNotEmpty(apiVersion)) {
+    if (isNotBlank(apiVersion)) {
       configBuilder.withApiVersion(apiVersion);
     }
 
     Config config = configBuilder.build();
+
+    if (isBlank(config.getMasterUrl())) {
+      System.setProperty(Config.KUBERNETES_AUTH_TRYSERVICEACCOUNT_SYSTEM_PROPERTY, "true");
+      config = Config.autoConfigure(null);
+      config.setNamespace(namespace);
+    }
+
     OkHttpClient okHttpClient = createHttpClientWithProxySetting(config);
     try (DefaultKubernetesClient client = new DefaultKubernetesClient(okHttpClient, config)) {
       return client.inNamespace(namespace);

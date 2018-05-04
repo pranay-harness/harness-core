@@ -1,7 +1,6 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -29,13 +28,13 @@ public class KubernetesConfig extends SettingValue implements Encryptable {
   @Encrypted private char[] clientKeyPassphrase;
   private String clientKeyAlgo;
   private String namespace;
-  @NotEmpty @SchemaIgnore private String accountId;
+  @NotEmpty private String accountId;
 
-  @SchemaIgnore private String encryptedPassword;
-  @SchemaIgnore private String encryptedCaCert;
-  @SchemaIgnore private String encryptedClientCert;
-  @SchemaIgnore private String encryptedClientKey;
-  @SchemaIgnore private String encryptedClientKeyPassphrase;
+  private String encryptedPassword;
+  private String encryptedCaCert;
+  private String encryptedClientCert;
+  private String encryptedClientKey;
+  private String encryptedClientKeyPassphrase;
 
   /**
    * Instantiates a new setting value.

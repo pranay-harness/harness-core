@@ -177,13 +177,12 @@ public class SettingValidationService {
     return true;
   }
 
-  private void validatePcfConfig(SettingAttribute settingAttribute, PcfConfig settingValue) {
+  private void validatePcfConfig(SettingAttribute settingAttribute, PcfConfig pcfConfig) {
     if (!featureFlagService.isEnabled(PIVOTAL_CLOUD_FOUNDRY_SUPPORT, settingAttribute.getAccountId())) {
       throw new WingsException(ErrorCode.INVALID_REQUEST)
           .addParam("message", "Adding Pivotal Cloud Foundry as Cloud Provider is not supported yet.");
     }
-    PcfConfig PcfConfig = settingValue;
-    pcfHelperService.validate(PcfConfig);
+    pcfHelperService.validate(pcfConfig);
   }
 
   private void validateKubernetesClusterConfig(SettingAttribute settingAttribute) {

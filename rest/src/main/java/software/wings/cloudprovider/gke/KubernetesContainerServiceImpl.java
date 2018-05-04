@@ -33,6 +33,7 @@ import io.fabric8.kubernetes.api.model.Event;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
+import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.fabric8.kubernetes.api.model.NamespaceList;
 import io.fabric8.kubernetes.api.model.NodeList;
@@ -111,6 +112,15 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Inject private KubernetesHelperService kubernetesHelperService = new KubernetesHelperService();
   @Inject private TimeLimiter timeLimiter;
   @Inject private Clock clock;
+
+  @Override
+  public List<Namespace> listNamespaces(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+        .namespaces()
+        .list()
+        .getItems();
+  }
 
   @Override
   public HasMetadata createController(

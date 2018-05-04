@@ -3,6 +3,7 @@ package software.wings.cloudprovider.gke;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
+import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.NodeList;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.Secret;
@@ -23,6 +24,8 @@ import java.util.Optional;
  * Created by brett on 2/10/17.
  */
 public interface KubernetesContainerService {
+  List<Namespace> listNamespaces(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails);
+
   HasMetadata createController(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, HasMetadata definition);
 

@@ -224,7 +224,9 @@ public class ContainerServiceImpl implements ContainerService {
                 containerServiceParams.getSubscriptionId(), containerServiceParams.getResourceGroup(),
                 containerServiceParams.getClusterName(), containerServiceParams.getNamespace());
         kubernetesConfig.setDecrypted(true);
+        // TODO - switch to list namespaces?
         kubernetesContainerService.listControllers(kubernetesConfig, containerServiceParams.getEncryptionDetails());
+        // kubernetesContainerService.listNamespaces(kubernetesConfig, containerServiceParams.getEncryptionDetails());
         return true;
       } else {
         throw new WingsException(ErrorCode.INVALID_ARGUMENT, "Invalid Argument: Not a valid AKS cluster");
@@ -233,11 +235,15 @@ public class ContainerServiceImpl implements ContainerService {
       KubernetesClusterConfig kubernetesClusterConfig = (KubernetesClusterConfig) value;
       KubernetesConfig kubernetesConfig =
           kubernetesClusterConfig.createKubernetesConfig(containerServiceParams.getNamespace());
+      // TODO - switch to list namespaces?
       kubernetesContainerService.listControllers(kubernetesConfig, containerServiceParams.getEncryptionDetails());
+      // kubernetesContainerService.listNamespaces(kubernetesConfig, containerServiceParams.getEncryptionDetails());
       return true;
     } else if (isKubernetesClusterConfig(value)) {
       KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
+      // TODO - switch to list namespaces?
       kubernetesContainerService.listControllers(kubernetesConfig, containerServiceParams.getEncryptionDetails());
+      // kubernetesContainerService.listNamespaces(kubernetesConfig, containerServiceParams.getEncryptionDetails());
       return true;
     }
 

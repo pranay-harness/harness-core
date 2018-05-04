@@ -25,6 +25,7 @@ public class Delegate extends Base {
   private boolean connected;
   private String ip;
   private String hostName;
+  private String delegateName;
   private long lastHeartBeat;
   private String version;
   private List<String> supportedTaskTypes;
@@ -43,6 +44,7 @@ public class Delegate extends Base {
     private String ip;
     private String description;
     private String hostName;
+    private String delegateName;
     private long lastHeartBeat;
     private String version;
     private List<String> supportedTaskTypes;
@@ -89,6 +91,11 @@ public class Delegate extends Base {
 
     public Builder withHostName(String hostName) {
       this.hostName = hostName;
+      return this;
+    }
+
+    public Builder withDelegateName(String delegateName) {
+      this.delegateName = delegateName;
       return this;
     }
 
@@ -160,6 +167,7 @@ public class Delegate extends Base {
           .withConnected(connected)
           .withIp(ip)
           .withHostName(hostName)
+          .withDelegateName(delegateName)
           .withLastHeartBeat(lastHeartBeat)
           .withVersion(version)
           .withSupportedTaskTypes(supportedTaskTypes)
@@ -182,6 +190,7 @@ public class Delegate extends Base {
       delegate.setConnected(connected);
       delegate.setIp(ip);
       delegate.setHostName(hostName);
+      delegate.setDelegateName(delegateName);
       delegate.setLastHeartBeat(lastHeartBeat);
       delegate.setVersion(version);
       delegate.setSupportedTaskTypes(supportedTaskTypes);
