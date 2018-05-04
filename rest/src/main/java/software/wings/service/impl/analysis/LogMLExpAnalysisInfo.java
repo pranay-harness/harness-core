@@ -8,7 +8,7 @@ import software.wings.sm.StateType;
 @Builder
 public class LogMLExpAnalysisInfo {
   private String stateExecutionId;
-  private String applicationId;
+  private String appId;
   private StateType stateType;
   private String expName;
   private String envId;

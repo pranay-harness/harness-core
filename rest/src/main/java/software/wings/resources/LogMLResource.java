@@ -92,6 +92,7 @@ public class LogMLResource {
     mlAnalysisResponse.setLogCollectionMinute(logCollectionMinute);
     mlAnalysisResponse.setBaseLineCreated(isBaselineCreated);
     mlAnalysisResponse.setBaseLineExecutionId(baseLineExecutionId);
+    mlAnalysisResponse.setAppId(applicationId);
     return new RestResponse<>(
         analysisService.saveLogAnalysisRecords(mlAnalysisResponse, stateType, Optional.of(taskId)));
   }

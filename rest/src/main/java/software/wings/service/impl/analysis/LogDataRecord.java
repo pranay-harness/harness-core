@@ -69,6 +69,7 @@ public class LogDataRecord extends Base {
       record.setStateExecutionId(stateExecutionId);
       record.setQuery(logElement.getQuery());
       record.setApplicationId(applicationId);
+      record.setAppId(applicationId);
       record.setClusterLabel(logElement.getClusterLabel());
       record.setHost(logElement.getHost());
       record.setTimeStamp(logElement.getTimeStamp());

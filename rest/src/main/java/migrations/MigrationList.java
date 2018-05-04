@@ -12,6 +12,9 @@ import migrations.all.CreateSupportUserGroupsAndRenameAccountAdmin;
 import migrations.all.DirectKubernetesToCloudProvider;
 import migrations.all.FixMaxInstancesFieldInContainerSetup;
 import migrations.all.GitSyncToAllAccounts;
+import migrations.all.LogAnalysisRecordsMigration;
+import migrations.all.LogDataRecordsMigration;
+import migrations.all.LogFeedbackRecordsMigration;
 import migrations.all.NewRelicMetricNameCronRemoval;
 import migrations.all.ServiceKeywordsMigration;
 import migrations.all.ServiceVariableReferentialIntegrity;
@@ -54,6 +57,9 @@ public class MigrationList {
         .add(Pair.of(124, BaseMigration.class))
         .add(Pair.of(125, ServiceVariableReferentialIntegrity.class))
         .add(Pair.of(126, DirectKubernetesToCloudProvider.class))
+        .add(Pair.of(127, LogDataRecordsMigration.class))
+        .add(Pair.of(128, LogAnalysisRecordsMigration.class))
+        .add(Pair.of(129, LogFeedbackRecordsMigration.class))
         .build();
   }
 }

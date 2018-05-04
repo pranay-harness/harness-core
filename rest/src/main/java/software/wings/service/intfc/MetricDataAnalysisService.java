@@ -52,7 +52,7 @@ public interface MetricDataAnalysisService {
 
   NewRelicMetricAnalysisRecord getMetricsAnalysis(String stateExecutionId, String workflowExecutionId);
 
-  boolean isStateValid(String appdId, String stateExecutionID);
+  boolean isStateValid(String appId, String stateExecutionID);
 
   NewRelicMetricDataRecord getLastHeartBeat(
       StateType stateType, String stateExecutionId, String workflowExecutionId, String serviceId);
