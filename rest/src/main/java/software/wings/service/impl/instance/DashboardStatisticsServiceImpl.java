@@ -25,6 +25,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.mongodb.morphia.aggregation.Group;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.query.Query;
@@ -808,10 +809,8 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     return query;
   }
 
-  /**
-   * DONT DELETE THESE CLASSES, These are used by morphia.
-   */
   @Data
+  @NoArgsConstructor
   public static final class AggregationInfo {
     @Id private ID _id;
     private long count;
@@ -822,20 +821,16 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     private ArtifactInfo artifactInfo;
     private List<EntitySummary> instanceInfoList;
 
-    /**
-     * DONT DELETE THESE CLASSES, These are used by morphia.
-     */
     @Data
+    @NoArgsConstructor
     protected static final class EnvInfo {
       private String id;
       private String name;
       private String type;
     }
 
-    /**
-     * DONT DELETE THESE CLASSES, These are used by morphia.
-     */
     @Data
+    @NoArgsConstructor
     protected static final class ArtifactInfo {
       private String id;
       private String name;
@@ -847,6 +842,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     }
 
     @Data
+    @NoArgsConstructor
     public static final class ID {
       private String serviceId;
       private String envId;
@@ -854,10 +850,8 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     }
   }
 
-  /**
-   * DONT DELETE THESE CLASSES, These are used by morphia.
-   */
   @Data
+  @NoArgsConstructor
   public static class FlatEntitySummaryStats {
     private String entityId;
     private String entityName;
@@ -865,19 +859,15 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     private int count;
   }
 
-  /**
-   * DONT DELETE THESE CLASSES, These are used by morphia.
-   */
   @Data
+  @NoArgsConstructor
   public static class EnvironmentSummaryStats {
     private String envType;
     private int count;
   }
 
-  /**
-   * DONT DELETE THESE CLASSES, These are used by morphia.
-   */
   @Data
+  @NoArgsConstructor
   public static class InstanceCount {
     private int count;
   }
