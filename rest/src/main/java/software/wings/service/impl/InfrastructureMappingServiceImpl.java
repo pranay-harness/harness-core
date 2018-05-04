@@ -1465,19 +1465,15 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       String accountId = appService.getAccountIdByAppId(appId);
       if (featureFlagService.isEnabled(AZURE_SUPPORT, accountId)) {
         infraTypes.put(KUBERNETES,
-            asList(SettingVariableTypes.GCP, SettingVariableTypes.AZURE, SettingVariableTypes.DIRECT,
-                SettingVariableTypes.KUBERNETES_CLUSTER));
+            asList(SettingVariableTypes.GCP, SettingVariableTypes.AZURE, SettingVariableTypes.KUBERNETES_CLUSTER));
         if (featureFlagService.isEnabled(FeatureName.HELM, accountId)) {
           infraTypes.put(HELM,
-              asList(SettingVariableTypes.GCP, SettingVariableTypes.AZURE, SettingVariableTypes.DIRECT,
-                  SettingVariableTypes.KUBERNETES_CLUSTER));
+              asList(SettingVariableTypes.GCP, SettingVariableTypes.AZURE, SettingVariableTypes.KUBERNETES_CLUSTER));
         }
       } else {
-        infraTypes.put(KUBERNETES,
-            asList(SettingVariableTypes.GCP, SettingVariableTypes.DIRECT, SettingVariableTypes.KUBERNETES_CLUSTER));
+        infraTypes.put(KUBERNETES, asList(SettingVariableTypes.GCP, SettingVariableTypes.KUBERNETES_CLUSTER));
         if (featureFlagService.isEnabled(FeatureName.HELM, accountId)) {
-          infraTypes.put(HELM,
-              asList(SettingVariableTypes.GCP, SettingVariableTypes.DIRECT, SettingVariableTypes.KUBERNETES_CLUSTER));
+          infraTypes.put(HELM, asList(SettingVariableTypes.GCP, SettingVariableTypes.KUBERNETES_CLUSTER));
         }
       }
     } else if (artifactType == ArtifactType.AWS_CODEDEPLOY) {
