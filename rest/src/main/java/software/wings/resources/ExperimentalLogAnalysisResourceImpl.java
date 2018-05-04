@@ -65,6 +65,7 @@ public class ExperimentalLogAnalysisResourceImpl implements ExperimentalLogAnaly
         mlAnalysisResponse.setEnvId(workflowExecution.getEnvId());
       }
       mlAnalysisResponse.setApplicationId(applicationId);
+      mlAnalysisResponse.setAppId(applicationId);
       mlAnalysisResponse.setStateExecutionId(stateExecutionId);
       mlAnalysisResponse.setLogCollectionMinute(logCollectionMinute);
       mlAnalysisResponse.setBaseLineCreated(isBaselineCreated);

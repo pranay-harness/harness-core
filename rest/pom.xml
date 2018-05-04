@@ -808,6 +808,9 @@
                                     </limits>
                                 </rule>
                             </rules>
+                            <excludes>
+                                <exclude>**/migrations/all/*.class</exclude>
+                            </excludes>
                         </configuration>
                     </execution>
                 </executions>
