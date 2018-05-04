@@ -54,7 +54,7 @@ import java.util.concurrent.TimeUnit;
 public class ElkAnalysisState extends AbstractLogAnalysisState {
   @SchemaIgnore @Transient protected static final String DEFAULT_TIME_FIELD = "@timestamp";
 
-  @SchemaIgnore @Transient protected static final String DEFAULT_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+  @SchemaIgnore @Transient protected static final String DEFAULT_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSX";
 
   @SchemaIgnore @Transient private static final Logger logger = LoggerFactory.getLogger(ElkAnalysisState.class);
 
@@ -73,7 +73,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
   @Attributes(required = true, title = "Message Field") @DefaultValue("message") protected String messageField;
 
   @Attributes(required = true, title = "Timestamp format")
-  @DefaultValue("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+  @DefaultValue("yyyy-MM-dd'T'HH:mm:ss.SSSX")
   private String timestampFormat;
 
   @Attributes(required = true, title = "Query Type") @DefaultValue("TERM") private String queryType;

@@ -182,7 +182,7 @@ public class LogzAnalysisState extends ElkAnalysisState {
 
   @Override
   @Attributes(required = true, title = "Timestamp format")
-  @DefaultValue("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
+  @DefaultValue("yyyy-MM-dd'T'HH:mm:ss.SSSX")
   public String getTimestampFormat() {
     return super.getTimestampFormat();
   }
