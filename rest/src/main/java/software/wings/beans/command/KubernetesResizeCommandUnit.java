@@ -37,6 +37,7 @@ import software.wings.beans.Log.LogLevel;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -46,6 +47,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -175,6 +177,13 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
       kubernetesConfig = (KubernetesConfig) contextData.settingAttribute.getValue();
       encryptedDataDetails.addAll(contextData.encryptedDataDetails);
     } else if (contextData.settingAttribute.getValue() instanceof KubernetesClusterConfig) {
+      KubernetesClusterConfig config = (KubernetesClusterConfig) contextData.settingAttribute.getValue();
+      String delegateName = System.getenv().get("DELEGATE_NAME");
+      if (config.isUseKubernetesDelegate() && !Objects.equals(delegateName, config.getDelegateName())) {
+        throw new InvalidRequestException(String.format("Kubernetes delegate name [%s] doesn't match "
+                + "cloud provider delegate name [%s] for kubernetes cluster cloud provider [%s]",
+            delegateName, config.getDelegateName(), contextData.settingAttribute.getName()));
+      }
       kubernetesConfig = ((KubernetesClusterConfig) contextData.settingAttribute.getValue())
                              .createKubernetesConfig(resizeParams.getNamespace());
       encryptedDataDetails.addAll(contextData.encryptedDataDetails);

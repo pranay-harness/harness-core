@@ -260,8 +260,6 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExpressionProcessorFactory;
 import software.wings.utils.HostValidationService;
 import software.wings.utils.HostValidationServiceImpl;
-import software.wings.utils.message.MessageService;
-import software.wings.utils.message.MessageServiceUnsupported;
 
 import java.time.Clock;
 
@@ -399,7 +397,6 @@ public class WingsModule extends AbstractModule {
     bind(WhitelistService.class).to(WhitelistServiceImpl.class);
     bind(ApiKeyService.class).to(ApiKeyServiceImpl.class);
     bind(ExternalApiRateLimitingService.class).to(ExternalApiRateLimitingServiceImpl.class);
-    bind(MessageService.class).to(MessageServiceUnsupported.class).in(Singleton.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);

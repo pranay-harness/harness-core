@@ -28,8 +28,6 @@ import static software.wings.utils.KubernetesConvention.getKubernetesRegistrySec
 import static software.wings.utils.KubernetesConvention.getKubernetesServiceName;
 import static software.wings.utils.KubernetesConvention.getPrefixFromControllerName;
 import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
-import static software.wings.utils.message.MessageConstants.DELEGATE_DATA;
-import static software.wings.utils.message.MessageConstants.DELEGATE_NAME;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -113,7 +111,6 @@ import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.KubernetesConvention;
 import software.wings.utils.Misc;
-import software.wings.utils.message.MessageService;
 
 import java.io.IOException;
 import java.time.Clock;
@@ -152,7 +149,6 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   @Inject private transient TimeLimiter timeLimiter;
   @Inject private transient Clock clock;
   @Inject private transient AzureHelperService azureHelperService;
-  @Inject private transient MessageService messageService;
 
   public KubernetesSetupCommandUnit() {
     super(CommandUnitType.KUBERNETES_SETUP);
@@ -177,7 +173,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         encryptedDataDetails = edd;
       } else if (cloudProviderSetting.getValue() instanceof KubernetesClusterConfig) {
         KubernetesClusterConfig config = (KubernetesClusterConfig) cloudProviderSetting.getValue();
-        String delegateName = messageService.getData(DELEGATE_DATA, DELEGATE_NAME, String.class);
+        String delegateName = System.getenv().get("DELEGATE_NAME");
         if (config.isUseKubernetesDelegate() && !Objects.equals(delegateName, config.getDelegateName())) {
           throw new InvalidRequestException(String.format("Kubernetes delegate name [%s] doesn't match "
                   + "cloud provider delegate name [%s] for kubernetes cluster cloud provider [%s]",
