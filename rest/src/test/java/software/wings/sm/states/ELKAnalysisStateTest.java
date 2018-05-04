@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -11,6 +12,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
+import static software.wings.sm.states.ElkAnalysisState.DEFAULT_TIME_FIELD;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -28,9 +30,9 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTask.Status;
+import software.wings.beans.ElkConfig;
 import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SplunkConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
 import software.wings.beans.artifact.Artifact;
@@ -42,16 +44,20 @@ import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
+import software.wings.service.impl.analysis.ElkConnector;
+import software.wings.service.impl.analysis.ElkValidationType;
 import software.wings.service.impl.analysis.LogAnalysisExecutionData;
 import software.wings.service.impl.analysis.LogAnalysisResponse;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
-import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
+import software.wings.service.impl.elk.ElkDataCollectionInfo;
+import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionBaselineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.analysis.AnalysisService;
+import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContextImpl;
@@ -64,8 +70,6 @@ import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.text.ParseException;
-import java.text.ParsePosition;
-import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -77,7 +81,7 @@ import java.util.UUID;
 /**
  * Created by rsingh on 10/9/17.
  */
-public class SplunkV2StateTest extends WingsBaseTest {
+public class ELKAnalysisStateTest extends WingsBaseTest {
   private String accountId;
   private String appId;
   private String stateExecutionId;
@@ -108,7 +112,8 @@ public class SplunkV2StateTest extends WingsBaseTest {
   @Mock private Artifact artifact;
   @Mock private StateExecutionInstance stateExecutionInstance;
   @Mock private QuartzScheduler jobScheduler;
-  private SplunkV2State splunkState;
+  @Mock private ElkAnalysisService elkAnalysisService;
+  private ElkAnalysisState elkAnalysisState;
 
   @Before
   public void setup() {
@@ -135,6 +140,7 @@ public class SplunkV2StateTest extends WingsBaseTest {
     when(executionContext.getWorkflowExecutionId()).thenReturn(workflowExecutionId);
     when(executionContext.getStateExecutionInstanceId()).thenReturn(stateExecutionId);
     when(executionContext.getWorkflowExecutionName()).thenReturn("dummy workflow");
+    when(executionContext.renderExpression(anyString())).then(returnsFirstArg());
 
     when(phaseElement.getServiceElement())
         .thenReturn(ServiceElement.Builder.aServiceElement().withName("dummy").withUuid("1").build());
@@ -155,31 +161,31 @@ public class SplunkV2StateTest extends WingsBaseTest {
 
     when(jobScheduler.scheduleJob(anyObject(), anyObject())).thenReturn(new Date());
 
-    splunkState = new SplunkV2State("SplunkState");
-    splunkState.setQuery("exception");
-    splunkState.setTimeDuration("15");
-    setInternalState(splunkState, "appService", appService);
-    setInternalState(splunkState, "configuration", configuration);
-    setInternalState(splunkState, "analysisService", analysisService);
-    setInternalState(splunkState, "settingsService", settingsService);
-    setInternalState(splunkState, "waitNotifyEngine", waitNotifyEngine);
-    setInternalState(splunkState, "delegateService", delegateService);
-    setInternalState(splunkState, "jobScheduler", jobScheduler);
-    setInternalState(splunkState, "secretManager", secretManager);
-    setInternalState(splunkState, "workflowExecutionService", workflowExecutionService);
-    setInternalState(splunkState, "continuousVerificationService", continuousVerificationService);
-    setInternalState(splunkState, "workflowExecutionBaselineService", workflowExecutionBaselineService);
+    elkAnalysisState = new ElkAnalysisState("ElkAnalysisState");
+    elkAnalysisState.setQuery("exception");
+    elkAnalysisState.setTimeDuration("15");
+    setInternalState(elkAnalysisState, "appService", appService);
+    setInternalState(elkAnalysisState, "configuration", configuration);
+    setInternalState(elkAnalysisState, "analysisService", analysisService);
+    setInternalState(elkAnalysisState, "settingsService", settingsService);
+    setInternalState(elkAnalysisState, "waitNotifyEngine", waitNotifyEngine);
+    setInternalState(elkAnalysisState, "delegateService", delegateService);
+    setInternalState(elkAnalysisState, "jobScheduler", jobScheduler);
+    setInternalState(elkAnalysisState, "secretManager", secretManager);
+    setInternalState(elkAnalysisState, "workflowExecutionService", workflowExecutionService);
+    setInternalState(elkAnalysisState, "continuousVerificationService", continuousVerificationService);
+    setInternalState(elkAnalysisState, "workflowExecutionBaselineService", workflowExecutionBaselineService);
   }
 
   @Test
   public void testDefaultComparsionStrategy() {
-    SplunkV2State splunkState = new SplunkV2State("SplunkState");
-    assertEquals(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS, splunkState.getComparisonStrategy());
+    ElkAnalysisState elkAnalysisState = new ElkAnalysisState("ElkAnalysisState");
+    assertEquals(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS, elkAnalysisState.getComparisonStrategy());
   }
 
   @Test
   public void noTestNodes() {
-    SplunkV2State spyState = spy(splunkState);
+    ElkAnalysisState spyState = spy(elkAnalysisState);
     doReturn(Collections.emptySet()).when(spyState).getCanaryNewHostNames(executionContext);
     doReturn(Collections.emptySet()).when(spyState).getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
@@ -189,10 +195,9 @@ public class SplunkV2StateTest extends WingsBaseTest {
     assertEquals(ExecutionStatus.SUCCESS, response.getExecutionStatus());
     assertEquals("Could not find hosts to analyze!", response.getErrorMessage());
 
-    LogMLAnalysisSummary analysisSummary =
-        analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
+    LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.ELK);
     assertEquals(RiskLevel.NA, analysisSummary.getRiskLevel());
-    assertEquals(splunkState.getQuery(), analysisSummary.getQuery());
+    assertEquals(elkAnalysisState.getQuery(), analysisSummary.getQuery());
     assertEquals(response.getErrorMessage(), analysisSummary.getAnalysisSummaryMessage());
     assertTrue(analysisSummary.getControlClusters().isEmpty());
     assertTrue(analysisSummary.getTestClusters().isEmpty());
@@ -201,8 +206,8 @@ public class SplunkV2StateTest extends WingsBaseTest {
 
   @Test
   public void noControlNodesCompareWithCurrent() {
-    splunkState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
-    SplunkV2State spyState = spy(splunkState);
+    elkAnalysisState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
+    ElkAnalysisState spyState = spy(elkAnalysisState);
     doReturn(Collections.singleton("some-host")).when(spyState).getCanaryNewHostNames(executionContext);
     doReturn(Collections.emptySet()).when(spyState).getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
@@ -213,10 +218,9 @@ public class SplunkV2StateTest extends WingsBaseTest {
     assertEquals("Skipping analysis due to lack of baseline hosts. Make sure you have at least two phases defined.",
         response.getErrorMessage());
 
-    LogMLAnalysisSummary analysisSummary =
-        analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
+    LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.ELK);
     assertEquals(RiskLevel.NA, analysisSummary.getRiskLevel());
-    assertEquals(splunkState.getQuery(), analysisSummary.getQuery());
+    assertEquals(elkAnalysisState.getQuery(), analysisSummary.getQuery());
     assertEquals(response.getErrorMessage(), analysisSummary.getAnalysisSummaryMessage());
     assertTrue(analysisSummary.getControlClusters().isEmpty());
     assertTrue(analysisSummary.getTestClusters().isEmpty());
@@ -225,8 +229,8 @@ public class SplunkV2StateTest extends WingsBaseTest {
 
   @Test
   public void compareWithCurrentSameTestAndControlNodes() {
-    splunkState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
-    SplunkV2State spyState = spy(splunkState);
+    elkAnalysisState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
+    ElkAnalysisState spyState = spy(elkAnalysisState);
     doReturn(Sets.newHashSet("some-host")).when(spyState).getCanaryNewHostNames(executionContext);
     doReturn(Sets.newHashSet("some-host")).when(spyState).getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
@@ -237,10 +241,9 @@ public class SplunkV2StateTest extends WingsBaseTest {
     assertEquals("Skipping analysis due to lack of baseline hosts. Make sure you have at least two phases defined.",
         response.getErrorMessage());
 
-    LogMLAnalysisSummary analysisSummary =
-        analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
+    LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.ELK);
     assertEquals(RiskLevel.NA, analysisSummary.getRiskLevel());
-    assertEquals(splunkState.getQuery(), analysisSummary.getQuery());
+    assertEquals(elkAnalysisState.getQuery(), analysisSummary.getQuery());
     assertEquals(response.getErrorMessage(), analysisSummary.getAnalysisSummaryMessage());
     assertTrue(analysisSummary.getControlClusters().isEmpty());
     assertTrue(analysisSummary.getTestClusters().isEmpty());
@@ -250,20 +253,37 @@ public class SplunkV2StateTest extends WingsBaseTest {
   @Test
   public void testTriggerCollection() throws ParseException {
     assertEquals(0, wingsPersistence.createQuery(DelegateTask.class).asList().size());
-    SplunkConfig splunkConfig = SplunkConfig.builder()
-                                    .accountId(accountId)
-                                    .splunkUrl("splunk-url")
-                                    .username("splunk-user")
-                                    .password("splunk-pwd".toCharArray())
-                                    .build();
+    ElkConfig elkConfig = ElkConfig.builder()
+                              .accountId(accountId)
+                              .elkConnector(ElkConnector.ELASTIC_SEARCH_SERVER)
+                              .elkUrl(UUID.randomUUID().toString())
+                              .username(UUID.randomUUID().toString())
+                              .password(UUID.randomUUID().toString().toCharArray())
+                              .validationType(ElkValidationType.PASSWORD)
+                              .kibanaVersion(String.valueOf(0))
+                              .build();
+
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
                                             .withAccountId(accountId)
-                                            .withName("splunk-config")
-                                            .withValue(splunkConfig)
+                                            .withName("elk-config")
+                                            .withValue(elkConfig)
                                             .build();
     wingsPersistence.save(settingAttribute);
-    splunkState.setAnalysisServerConfigId(settingAttribute.getUuid());
-    SplunkV2State spyState = spy(splunkState);
+    elkAnalysisState.setAnalysisServerConfigId(settingAttribute.getUuid());
+
+    String indices = UUID.randomUUID().toString();
+    elkAnalysisState.setIndices(indices);
+
+    String messageField = UUID.randomUUID().toString();
+    elkAnalysisState.setMessageField(messageField);
+
+    String timestampFieldFormat = UUID.randomUUID().toString();
+    elkAnalysisState.setTimestampFormat(timestampFieldFormat);
+
+    elkAnalysisState.setQueryType(ElkQueryType.MATCH.name());
+    elkAnalysisState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
+
+    ElkAnalysisState spyState = spy(elkAnalysisState);
     doReturn(Collections.singleton("test")).when(spyState).getCanaryNewHostNames(executionContext);
     doReturn(Collections.singleton("control")).when(spyState).getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
@@ -274,32 +294,35 @@ public class SplunkV2StateTest extends WingsBaseTest {
 
     ExecutionResponse response = spyState.execute(executionContext);
     assertEquals(ExecutionStatus.RUNNING, response.getExecutionStatus());
-    assertEquals(
-        "No baseline was set for the workflow. Workflow running with auto baseline. No previous execution found. This will be the baseline run.",
-        response.getErrorMessage());
+    assertEquals("Log Verification running.", response.getErrorMessage());
 
     List<DelegateTask> tasks = wingsPersistence.createQuery(DelegateTask.class).asList();
     assertEquals(1, tasks.size());
     DelegateTask task = tasks.get(0);
-    assertEquals(TaskType.SPLUNK_COLLECT_LOG_DATA.name(), task.getTaskType());
+    assertEquals(TaskType.ELK_COLLECT_LOG_DATA.name(), task.getTaskType());
 
-    final SplunkDataCollectionInfo expectedCollectionInfo =
-        SplunkDataCollectionInfo.builder()
-            .splunkConfig(splunkConfig)
+    final ElkDataCollectionInfo expectedCollectionInfo =
+        ElkDataCollectionInfo.builder()
+            .elkConfig(elkConfig)
+            .indices(indices)
+            .messageField(messageField)
+            .timestampField(DEFAULT_TIME_FIELD)
+            .timestampFieldFormat(timestampFieldFormat)
+            .queryType(ElkQueryType.MATCH)
             .accountId(accountId)
             .applicationId(appId)
             .stateExecutionId(stateExecutionId)
             .workflowId(workflowId)
             .workflowExecutionId(workflowExecutionId)
             .serviceId(serviceId)
-            .queries(Sets.newHashSet(splunkState.getQuery().split(",")))
+            .queries(Sets.newHashSet(elkAnalysisState.getQuery().split(",")))
             .startMinute(0)
             .startMinute(0)
-            .collectionTime(Integer.parseInt(splunkState.getTimeDuration()))
-            .hosts(Collections.singleton("test"))
-            .encryptedDataDetails(Collections.emptyList())
+            .collectionTime(Integer.parseInt(elkAnalysisState.getTimeDuration()))
+            .hosts(Sets.newHashSet("test", "control"))
+            .encryptedDataDetails(secretManager.getEncryptionDetails(elkConfig, null, null))
             .build();
-    final SplunkDataCollectionInfo actualCollectionInfo = (SplunkDataCollectionInfo) task.getParameters()[0];
+    final ElkDataCollectionInfo actualCollectionInfo = (ElkDataCollectionInfo) task.getParameters()[0];
     expectedCollectionInfo.setStartTime(actualCollectionInfo.getStartTime());
     assertEquals(expectedCollectionInfo, actualCollectionInfo);
     assertEquals(accountId, task.getAccountId());
@@ -332,7 +355,7 @@ public class SplunkV2StateTest extends WingsBaseTest {
                                                   .build();
     Map<String, NotifyResponseData> responseMap = new HashMap<>();
     responseMap.put("somekey", logAnalysisResponse);
-    splunkState.handleAsyncResponse(executionContext, responseMap);
+    elkAnalysisState.handleAsyncResponse(executionContext, responseMap);
 
     cvExecutionMetaData =
         continuousVerificationService.getCVExecutionMetaData(accountId, 1519200000000L, 1519200000001L);
@@ -345,83 +368,5 @@ public class SplunkV2StateTest extends WingsBaseTest {
                                                    .get("BASIC")
                                                    .get(0);
     assertEquals(ExecutionStatus.FAILED, continuousVerificationExecutionMetaData1.getExecutionStatus());
-  }
-
-  @Test
-  public void handleAsyncSummaryFail() {
-    LogAnalysisExecutionData logAnalysisExecutionData =
-        LogAnalysisExecutionData.builder()
-            .correlationId(UUID.randomUUID().toString())
-            .stateExecutionInstanceId(stateExecutionId)
-            .serverConfigId(UUID.randomUUID().toString())
-            .query(splunkState.getQuery())
-            .timeDuration(Integer.parseInt(splunkState.getTimeDuration()))
-            .canaryNewHostNames(Sets.newHashSet("test1", "test2"))
-            .lastExecutionNodes(Sets.newHashSet("control1", "control2", "control3"))
-            .build();
-
-    logAnalysisExecutionData.setErrorMsg(UUID.randomUUID().toString());
-
-    LogAnalysisResponse response = LogAnalysisResponse.Builder.aLogAnalysisResponse()
-                                       .withExecutionStatus(ExecutionStatus.ERROR)
-                                       .withLogAnalysisExecutionData(logAnalysisExecutionData)
-                                       .build();
-
-    Map<String, NotifyResponseData> responseMap = new HashMap<>();
-    responseMap.put("somekey", response);
-
-    ExecutionResponse executionResponse = splunkState.handleAsyncResponse(executionContext, responseMap);
-    assertEquals(ExecutionStatus.ERROR, executionResponse.getExecutionStatus());
-    assertEquals(logAnalysisExecutionData.getErrorMsg(), executionResponse.getErrorMessage());
-    assertEquals(logAnalysisExecutionData, executionResponse.getStateExecutionData());
-  }
-
-  @Test
-  public void handleAsyncSummaryPassNoData() {
-    LogAnalysisExecutionData logAnalysisExecutionData =
-        LogAnalysisExecutionData.builder()
-            .correlationId(UUID.randomUUID().toString())
-            .stateExecutionInstanceId(stateExecutionId)
-            .serverConfigId(UUID.randomUUID().toString())
-            .query(splunkState.getQuery())
-            .timeDuration(Integer.parseInt(splunkState.getTimeDuration()))
-            .canaryNewHostNames(Sets.newHashSet("test1", "test2"))
-            .lastExecutionNodes(Sets.newHashSet("control1", "control2", "control3"))
-            .build();
-
-    logAnalysisExecutionData.setErrorMsg(UUID.randomUUID().toString());
-
-    LogAnalysisResponse response = LogAnalysisResponse.Builder.aLogAnalysisResponse()
-                                       .withExecutionStatus(ExecutionStatus.SUCCESS)
-                                       .withLogAnalysisExecutionData(logAnalysisExecutionData)
-                                       .build();
-
-    Map<String, NotifyResponseData> responseMap = new HashMap<>();
-    responseMap.put("somekey", response);
-
-    SplunkV2State spyState = spy(splunkState);
-    doReturn(Collections.singleton("test")).when(spyState).getCanaryNewHostNames(executionContext);
-    doReturn(Collections.singleton("control")).when(spyState).getLastExecutionNodes(executionContext);
-    doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
-    doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
-
-    ExecutionResponse executionResponse = spyState.handleAsyncResponse(executionContext, responseMap);
-    assertEquals(ExecutionStatus.SUCCESS, executionResponse.getExecutionStatus());
-    assertEquals("No data found with given queries. Skipped Analysis", executionResponse.getErrorMessage());
-
-    LogMLAnalysisSummary analysisSummary =
-        analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
-    assertEquals(RiskLevel.NA, analysisSummary.getRiskLevel());
-    assertEquals(splunkState.getQuery(), analysisSummary.getQuery());
-    assertEquals(executionResponse.getErrorMessage(), analysisSummary.getAnalysisSummaryMessage());
-    assertTrue(analysisSummary.getControlClusters().isEmpty());
-    assertTrue(analysisSummary.getTestClusters().isEmpty());
-    assertTrue(analysisSummary.getUnknownClusters().isEmpty());
-  }
-
-  @Test
-  public void testTimestampFormat() {
-    SimpleDateFormat sdf = new SimpleDateFormat(ElkAnalysisState.DEFAULT_TIME_FORMAT);
-    assertNotNull(sdf.parse("2013-10-07T12:13:27.001Z", new ParsePosition(0)));
   }
 }
