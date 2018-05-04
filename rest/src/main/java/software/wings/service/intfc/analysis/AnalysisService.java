@@ -36,21 +36,21 @@ public interface AnalysisService {
       ClusterLevel clusterLevel, StateType stateType);
 
   boolean isLogDataCollected(
-      String applicationId, String stateExecutionId, String query, int logCollectionMinute, StateType splunkv2);
+      String appId, String stateExecutionId, String query, int logCollectionMinute, StateType splunkv2);
 
   Boolean saveLogAnalysisRecords(LogMLAnalysisRecord mlAnalysisResponse, StateType stateType, Optional<String> taskId);
 
   LogMLAnalysisRecord getLogAnalysisRecords(
-      String applicationId, String stateExecutionId, String query, StateType stateType, Integer logCollectionMinute);
+      String appId, String stateExecutionId, String query, StateType stateType, Integer logCollectionMinute);
 
-  LogMLAnalysisSummary getAnalysisSummary(String stateExecutionId, String applicationId, StateType stateType);
+  LogMLAnalysisSummary getAnalysisSummary(String stateExecutionId, String appId, StateType stateType);
   LogMLAnalysisSummary getExperimentalAnalysisSummary(
-      String stateExecutionId, String applicationId, StateType stateType, String expName);
+      String stateExecutionId, String appId, StateType stateType, String expName);
   List<LogMLExpAnalysisInfo> getExpAnalysisInfoList();
 
   void validateConfig(@NotNull SettingAttribute settingAttribute, StateType stateType);
 
-  boolean isBaselineCreated(AnalysisComparisonStrategy comparisonStrategy, StateType stateType, String applicationId,
+  boolean isBaselineCreated(AnalysisComparisonStrategy comparisonStrategy, StateType stateType, String appId,
       String workflowId, String workflowExecutionId, String serviceId);
 
   Object getLogSample(String accountId, String analysisServerConfigId, String index, StateType stateType);
@@ -65,9 +65,9 @@ public interface AnalysisService {
   void deleteClusterLevel(StateType stateType, String stateExecutionId, String appId, String searchQuery,
       Set<String> host, int logCollectionMinute, ClusterLevel... clusterLevels);
 
-  boolean isStateValid(String appdId, String stateExecutionID);
+  boolean isStateValid(String appId, String stateExecutionID);
 
-  int getCollectionMinuteForLevel(String query, String appdId, String stateExecutionId, StateType type,
+  int getCollectionMinuteForLevel(String query, String appId, String stateExecutionId, StateType type,
       ClusterLevel clusterLevel, Set<String> testNodes);
 
   Optional<LogDataRecord> getHearbeatRecordForL0(String appId, String stateExecutionId, StateType type, String host);
@@ -75,7 +75,7 @@ public interface AnalysisService {
   boolean isProcessingComplete(
       String query, String appId, String stateExecutionId, StateType type, int timeDurationMins);
 
-  boolean hasDataRecords(String query, String appdId, String stateExecutionId, StateType type, Set<String> nodes,
+  boolean hasDataRecords(String query, String appId, String stateExecutionId, StateType type, Set<String> nodes,
       ClusterLevel level, int logCollectionMinute);
 
   String getLastSuccessfulWorkflowExecutionIdWithLogs(

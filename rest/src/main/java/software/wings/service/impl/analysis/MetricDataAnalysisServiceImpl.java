@@ -557,9 +557,9 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   }
 
   @Override
-  public boolean isStateValid(String appdId, String stateExecutionID) {
+  public boolean isStateValid(String appId, String stateExecutionID) {
     StateExecutionInstance stateExecutionInstance =
-        workflowExecutionService.getStateExecutionData(appdId, stateExecutionID);
+        workflowExecutionService.getStateExecutionData(appId, stateExecutionID);
     return stateExecutionInstance != null && !stateExecutionInstance.getStatus().isFinalStatus();
   }
 

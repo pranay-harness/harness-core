@@ -11,7 +11,12 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
+import software.wings.beans.EmbeddedUser;
+import software.wings.service.impl.analysis.AnalysisServiceImpl.CLUSTER_TYPE;
+import software.wings.service.impl.analysis.AnalysisServiceImpl.LogMLFeedbackType;
 import software.wings.sm.StateType;
+
+import java.util.List;
 
 @Entity(value = "logMlFeedbackRecords", noClassnameStored = true)
 @Indexes({
@@ -20,7 +25,6 @@ import software.wings.sm.StateType;
   }, options = @IndexOptions(unique = true, name = "logFeedbackUniqueIdx"))
 })
 @Data
-@Builder
 @EqualsAndHashCode(callSuper = false)
 public class LogMLFeedbackRecord extends Base {
   @NotEmpty @Indexed private String applicationId;
@@ -46,4 +50,25 @@ public class LogMLFeedbackRecord extends Base {
   @NotEmpty private String logMD5Hash;
 
   private String comment;
+
+  @Builder
+  public LogMLFeedbackRecord(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
+      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords, String entityYamlPath,
+      String applicationId, String serviceId, String workflowId, String workflowExecutionId, String stateExecutionId,
+      StateType stateType, int clusterLabel, CLUSTER_TYPE clusterType, LogMLFeedbackType logMLFeedbackType,
+      String logMessage, String logMD5Hash, String comment) {
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
+    this.applicationId = applicationId;
+    this.serviceId = serviceId;
+    this.workflowId = workflowId;
+    this.workflowExecutionId = workflowExecutionId;
+    this.stateExecutionId = stateExecutionId;
+    this.stateType = stateType;
+    this.clusterLabel = clusterLabel;
+    this.clusterType = clusterType;
+    this.logMLFeedbackType = logMLFeedbackType;
+    this.logMessage = logMessage;
+    this.logMD5Hash = logMD5Hash;
+    this.comment = comment;
+  }
 }

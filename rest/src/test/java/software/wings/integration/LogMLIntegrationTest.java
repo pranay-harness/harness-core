@@ -212,7 +212,7 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
       List<LogDataRecord> rv = gson.fromJson(br, type);
       rv.forEach(logDataRecord -> {
         logDataRecord.setAppId(appId);
-        logDataRecord.setApplicationId(appId);
+        logDataRecord.setAppId(appId);
         logDataRecord.setWorkflowId(workflowId);
         logDataRecord.setWorkflowExecutionId(workflowExecutionId);
         logDataRecord.setStateExecutionId(stateExecutionId);
@@ -225,7 +225,7 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
   @Test
   @Ignore
   public void testPurge() throws Exception {
-    final String sameApplicationId = "some-application";
+    final String sameAppId = "some-application";
     final String sameServiceId = "some-service";
     int numOfWorkFlows = 3;
     int numOfExecutionPerWorkFlow = 5;
@@ -236,12 +236,12 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
     Map<String, String> workFlowToStateExecution = new HashMap<>();
     int totalRecordsInserted = 0;
     for (int workflowNum = 0; workflowNum < numOfWorkFlows; workflowNum++) {
-      Workflow workflow = aWorkflow().withAppId(sameApplicationId).withName("workflow-" + workflowNum).build();
+      Workflow workflow = aWorkflow().withAppId(sameAppId).withName("workflow-" + workflowNum).build();
       String workFlowId = wingsPersistence.save(workflow);
       for (int executionNum = 0; executionNum < numOfExecutionPerWorkFlow; executionNum++) {
         WorkflowExecution workflowExecution = aWorkflowExecution()
                                                   .withWorkflowId(workFlowId)
-                                                  .withAppId(sameApplicationId)
+                                                  .withAppId(sameAppId)
                                                   .withName(workFlowId + "-execution-" + executionNum)
                                                   .withStatus(ExecutionStatus.SUCCESS)
                                                   .build();
@@ -255,8 +255,8 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
             WebTarget target = client.target(API_BASE + "/" + AbstractLogAnalysisState.getStateBaseUrl(stateType)
                 + LogAnalysisResource.ANALYSIS_STATE_SAVE_LOG_URL + "?accountId=" + accountId
                 + "&clusterLevel=" + ClusterLevel.L2.name() + "&stateExecutionId=" + stateExecutionId
-                + "&workflowId=" + workFlowId + "&workflowExecutionId=" + workFlowExecutionId
-                + "&appId=" + sameApplicationId + "&serviceId=" + sameServiceId);
+                + "&workflowId=" + workFlowId + "&workflowExecutionId=" + workFlowExecutionId + "&appId=" + sameAppId
+                + "&serviceId=" + sameServiceId);
 
             for (Entry<Integer, List<LogElement>> entry : recordsByMinute.entrySet()) {
               totalRecordsInserted += entry.getValue().size();
@@ -842,16 +842,13 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
 
     final String workflowId = "some-workflow";
     final String query = "some-query";
-    final String applicationId = "some-application";
+    final String appId = "some-application";
     final String serviceId = "some-service";
     final TreeBasedTable<Integer, Integer, List<LogDataRecord>> addedMessages = TreeBasedTable.create();
     final Set<String> hosts = new HashSet<>();
 
-    WorkflowExecution workflowExecution = aWorkflowExecution()
-                                              .withStatus(ExecutionStatus.SUCCESS)
-                                              .withWorkflowId(workflowId)
-                                              .withAppId(applicationId)
-                                              .build();
+    WorkflowExecution workflowExecution =
+        aWorkflowExecution().withStatus(ExecutionStatus.SUCCESS).withWorkflowId(workflowId).withAppId(appId).build();
     wingsPersistence.save(workflowExecution);
     for (int executionNumber = 1; executionNumber <= numOfExecutions; executionNumber++) {
       final String stateExecutionId = "se" + executionNumber;
@@ -872,7 +869,7 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
             logDataRecord.setWorkflowExecutionId(workflowExecution.getUuid());
             logDataRecord.setStateExecutionId(stateExecutionId);
             logDataRecord.setQuery(query);
-            logDataRecord.setApplicationId(applicationId);
+            logDataRecord.setAppId(appId);
             logDataRecord.setClusterLabel(clusterLabel);
             logDataRecord.setHost(host);
             logDataRecord.setTimeStamp(timeStamp);
@@ -901,8 +898,7 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
       WebTarget target = client.target(API_BASE + "/" + LogAnalysisResource.LOG_ANALYSIS + "/get-logs?accountId="
           + accountId + "&clusterLevel=" + ClusterLevel.L0.name() + "&compareCurrent=true&workflowExecutionId="
           + workflowExecution.getUuid() + "&stateType=" + StateType.SPLUNKV2);
-      final LogRequest logRequest =
-          new LogRequest(query, applicationId, "se2", workflowId, serviceId, hosts, collectionMinute);
+      final LogRequest logRequest = new LogRequest(query, appId, "se2", workflowId, serviceId, hosts, collectionMinute);
       RestResponse<List<LogDataRecord>> restResponse = getRequestBuilderWithAuthHeader(target).post(
           entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<List<LogDataRecord>>>() {});
       assertEquals(
@@ -920,14 +916,14 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
 
     final String workflowId = "some-workflow";
     final String query = "some-query";
-    final String applicationId = "some-application";
+    final String appId = "some-application";
     final String serviceId = "some-service";
     final TreeBasedTable<Integer, Integer, List<LogDataRecord>> addedMessages = TreeBasedTable.create();
 
     WorkflowExecution workflowExecution = aWorkflowExecution()
                                               .withStatus(ExecutionStatus.SUCCESS)
                                               .withWorkflowId(workflowId)
-                                              .withAppId(applicationId)
+                                              .withAppId(appId)
                                               .withStateMachineId(UUID.randomUUID().toString())
                                               .build();
     wingsPersistence.save(workflowExecution);
@@ -935,7 +931,7 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
     stateMachine.setInitialStateName("some-state");
     stateMachine.setStates(Lists.newArrayList(new ApprovalState(stateMachine.getInitialStateName())));
     stateMachine.setUuid(workflowExecution.getStateMachineId());
-    stateMachine.setAppId(applicationId);
+    stateMachine.setAppId(appId);
     wingsPersistence.save(stateMachine);
     Set<String> hosts = new HashSet<>();
 
@@ -957,7 +953,7 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
             logDataRecord.setWorkflowId(workflowId);
             logDataRecord.setStateExecutionId(stateExecutionId);
             logDataRecord.setQuery(query);
-            logDataRecord.setApplicationId(applicationId);
+            logDataRecord.setAppId(appId);
             logDataRecord.setClusterLabel(clusterLabel);
             logDataRecord.setHost(host);
             logDataRecord.setTimeStamp(timeStamp);
@@ -986,8 +982,8 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
       WebTarget target = client.target(API_BASE + "/" + LogAnalysisResource.LOG_ANALYSIS + "/get-logs?accountId="
           + accountId + "&clusterLevel=" + ClusterLevel.L0.name() + "&compareCurrent=false&workflowExecutionId="
           + workflowExecution.getUuid() + "&stateType=" + StateType.SPLUNKV2);
-      final LogRequest logRequest = new LogRequest(
-          query, applicationId, UUID.randomUUID().toString(), workflowId, serviceId, hosts, collectionMinute);
+      final LogRequest logRequest =
+          new LogRequest(query, appId, UUID.randomUUID().toString(), workflowId, serviceId, hosts, collectionMinute);
       RestResponse<List<LogDataRecord>> restResponse = getRequestBuilderWithAuthHeader(target).post(
           entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<List<LogDataRecord>>>() {});
       assertEquals("failed for minute " + collectionMinute, addedMessages.get(numOfExecutions, collectionMinute),

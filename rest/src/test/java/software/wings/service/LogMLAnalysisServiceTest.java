@@ -574,7 +574,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
 
     LogMLAnalysisRecord record = new LogMLAnalysisRecord();
     record.setStateExecutionId(stateExecutionId);
-    record.setApplicationId(appId);
+    record.setAppId(appId);
     record.setStateType(StateType.SPLUNKV2);
     record.setLogCollectionMinute(-1);
     record.setAnalysisSummaryMessage("This is a -1 test");
@@ -605,7 +605,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
 
     LogMLAnalysisRecord record = new LogMLAnalysisRecord();
     record.setStateExecutionId(stateExecutionId);
-    record.setApplicationId(appId);
+    record.setAppId(appId);
     record.setStateType(StateType.SPLUNKV2);
     record.setLogCollectionMinute(0);
     record.setAnalysisSummaryMessage("This is a -1 test");
@@ -637,7 +637,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
 
     LogMLAnalysisRecord record = new LogMLAnalysisRecord();
     record.setStateExecutionId(stateExecutionId);
-    record.setApplicationId(appId);
+    record.setAppId(appId);
     record.setStateType(StateType.SPLUNKV2);
     record.setLogCollectionMinute(0);
     record.setQuery(UUID.randomUUID().toString());
@@ -682,7 +682,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
 
     LogMLAnalysisRecord record = new LogMLAnalysisRecord();
     record.setStateExecutionId(stateExecutionId);
-    record.setApplicationId(appId);
+    record.setAppId(appId);
     record.setStateType(StateType.SPLUNKV2);
     record.setLogCollectionMinute(0);
     record.setQuery(UUID.randomUUID().toString());
@@ -742,7 +742,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
 
     LogMLAnalysisRecord record = new LogMLAnalysisRecord();
     record.setStateExecutionId(stateExecutionId);
-    record.setApplicationId(appId);
+    record.setAppId(appId);
     record.setStateType(StateType.SPLUNKV2);
     record.setLogCollectionMinute(0);
     record.setQuery(UUID.randomUUID().toString());
@@ -790,7 +790,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
       hosts.add(host);
 
       LogDataRecord logDataRecord = new LogDataRecord();
-      logDataRecord.setApplicationId(appId);
+      logDataRecord.setAppId(appId);
       logDataRecord.setStateExecutionId(stateExecutionId);
       logDataRecord.setStateType(StateType.SPLUNKV2);
       logDataRecord.setClusterLevel(ClusterLevel.H1);
@@ -826,7 +826,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
       hosts.add(host);
 
       LogDataRecord logDataRecord = new LogDataRecord();
-      logDataRecord.setApplicationId(appId);
+      logDataRecord.setAppId(appId);
       logDataRecord.setStateExecutionId(stateExecutionId);
       logDataRecord.setStateType(StateType.SPLUNKV2);
       logDataRecord.setClusterLevel(ClusterLevel.H1);
@@ -861,7 +861,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
       hosts.add(host);
 
       LogDataRecord logDataRecord = new LogDataRecord();
-      logDataRecord.setApplicationId(appId);
+      logDataRecord.setAppId(appId);
       logDataRecord.setStateExecutionId(stateExecutionId);
       logDataRecord.setStateType(StateType.SPLUNKV2);
       logDataRecord.setClusterLevel(ClusterLevel.L1);
@@ -892,7 +892,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
       hosts.add(host);
 
       LogDataRecord logDataRecord = new LogDataRecord();
-      logDataRecord.setApplicationId(appId);
+      logDataRecord.setAppId(appId);
       logDataRecord.setStateExecutionId(stateExecutionId);
       logDataRecord.setStateType(StateType.SPLUNKV2);
       logDataRecord.setClusterLevel(ClusterLevel.H0);
@@ -924,7 +924,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
       hosts.add(host);
 
       LogDataRecord logDataRecord = new LogDataRecord();
-      logDataRecord.setApplicationId(appId);
+      logDataRecord.setAppId(appId);
       logDataRecord.setStateExecutionId(stateExecutionId);
       logDataRecord.setStateType(StateType.SPLUNKV2);
       logDataRecord.setClusterLevel(ClusterLevel.H0);
@@ -987,7 +987,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     String jsonTxt = IOUtils.toString(is, Charset.defaultCharset());
     LogMLAnalysisRecord records = JsonUtils.asObject(jsonTxt, LogMLAnalysisRecord.class);
     records.setStateType(StateType.ELK);
-    records.setApplicationId(appId);
+    records.setAppId(appId);
     String stateExecutionId = UUID.randomUUID().toString();
     records.setStateExecutionId(stateExecutionId);
     records.setAnalysisSummaryMessage("10");
@@ -1016,7 +1016,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
 
     LogMLAnalysisRecord records = JsonUtils.asObject(jsonTxt, LogMLAnalysisRecord.class);
     records.setStateType(StateType.ELK);
-    records.setApplicationId(appId);
+    records.setAppId(appId);
     records.setStateExecutionId(stateExecutionId);
     records.setAnalysisSummaryMessage("10");
     analysisService.saveLogAnalysisRecords(records, StateType.ELK, Optional.empty());
