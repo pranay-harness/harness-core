@@ -69,7 +69,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
   }
 
   public void setQuery(String query) {
-    this.query = query;
+    this.query = query.trim();
   }
 
   private void cleanUpForRetry(ExecutionContext executionContext) {

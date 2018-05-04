@@ -58,6 +58,7 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 import software.wings.sm.states.ApprovalState;
+import software.wings.sm.states.ElkAnalysisState;
 import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
@@ -1030,6 +1031,13 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
                                       .build();
 
     analysisService.saveFeedback(logMLFeedback, StateType.ELK);
+  }
+
+  @Test
+  public void logQueryTrim() {
+    ElkAnalysisState elkAnalysisState = new ElkAnalysisState("some name");
+    elkAnalysisState.setQuery(" er ror ");
+    assertEquals("er ror", elkAnalysisState.getQuery());
   }
 
   private void formatDate() throws Exception {
