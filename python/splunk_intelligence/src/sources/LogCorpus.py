@@ -530,7 +530,7 @@ class LogCorpus(object):
                                score=self.score
                                ))
 
-    @property
+
     def get_output_for_notebook_as_json(self):
 
         return json.dumps(dict(control_events=self.control_events, test_events=self.test_events,
