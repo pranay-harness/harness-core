@@ -39,10 +39,4 @@ public interface MessageConstants {
   // Messages received by watcher from delegate processes
   String NEW_DELEGATE = "new-delegate";
   String DELEGATE_STARTED = "delegate-started";
-
-  // Delegate data name for data persisting longer than one process
-  String DELEGATE_DATA = "delegate-data";
-
-  // Persisted data fields
-  String DELEGATE_NAME = "delegateName";
 }

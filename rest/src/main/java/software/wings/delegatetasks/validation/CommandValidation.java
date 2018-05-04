@@ -6,8 +6,6 @@ import static java.util.Collections.singletonList;
 import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
 import static software.wings.utils.SshHelperUtil.getSshSessionConfig;
 import static software.wings.utils.WinRmHelperUtil.HandleWinRmClientException;
-import static software.wings.utils.message.MessageConstants.DELEGATE_DATA;
-import static software.wings.utils.message.MessageConstants.DELEGATE_NAME;
 
 import com.google.inject.Inject;
 
@@ -40,7 +38,6 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
-import software.wings.utils.message.MessageService;
 
 import java.util.List;
 import java.util.Objects;
@@ -56,7 +53,6 @@ public class CommandValidation extends AbstractDelegateValidateTask {
   @Inject private transient EncryptionService encryptionService;
   @Inject private transient GkeClusterService gkeClusterService;
   @Inject private transient AzureHelperService azureHelperService;
-  @Inject private transient MessageService messageService;
 
   public CommandValidation(
       String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {
@@ -123,7 +119,7 @@ public class CommandValidation extends AbstractDelegateValidateTask {
     SettingValue config = context.getCloudProviderSetting().getValue();
     boolean validated;
     if (config instanceof KubernetesClusterConfig && ((KubernetesClusterConfig) config).isUseKubernetesDelegate()) {
-      String delegateName = messageService.getData(DELEGATE_DATA, DELEGATE_NAME, String.class);
+      String delegateName = System.getenv().get("DELEGATE_NAME");
       validated = Objects.equals(delegateName, ((KubernetesClusterConfig) config).getDelegateName());
     } else {
       validated = connectableHttpUrl(getKubernetesMasterUrl(context));
