@@ -172,7 +172,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
           if (newDeploymentInfo == null && isNotEmpty(instancesInDB)) {
             Optional<Instance> instanceWithExecutionInfoOptional = getInstanceWithExecutionInfo(instancesInDB);
             if (!instanceWithExecutionInfoOptional.isPresent()) {
-              logger.error("Couldn't find an instance from a previous deployment for inframapping {}", infraMappingId);
+              logger.warn("Couldn't find an instance from a previous deployment for inframapping {}", infraMappingId);
               return;
             }
 
