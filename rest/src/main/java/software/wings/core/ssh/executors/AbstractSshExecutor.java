@@ -146,47 +146,48 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       logger.info("Session fetched in " + (System.currentTimeMillis() - start) + " ms");
 
       ((ChannelExec) channel).setPty(true);
-      OutputStream outputStream = channel.getOutputStream();
-      InputStream inputStream = channel.getInputStream();
-      ((ChannelExec) channel).setCommand(command);
-      saveExecutionLog(format("Connecting to %s ....", config.getHost()));
-      channel.connect();
-      saveExecutionLog(format("Connection to %s established", config.getHost()));
-      saveExecutionLog(format("Executing command %s ...", command));
+      try (OutputStream outputStream = channel.getOutputStream(); InputStream inputStream = channel.getInputStream()) {
+        ((ChannelExec) channel).setCommand(command);
+        saveExecutionLog(format("Connecting to %s ....", config.getHost()));
+        channel.connect();
+        saveExecutionLog(format("Connection to %s established", config.getHost()));
+        saveExecutionLog(format("Executing command %s ...", command));
 
-      int totalBytesRead = 0;
-      byte[] byteBuffer = new byte[1024];
-      String text = "";
+        int totalBytesRead = 0;
+        byte[] byteBuffer = new byte[1024];
+        String text = "";
 
-      while (true) {
-        while (inputStream.available() > 0) {
-          int numOfBytesRead = inputStream.read(byteBuffer, 0, 1024);
-          if (numOfBytesRead < 0) {
-            break;
+        while (true) {
+          while (inputStream.available() > 0) {
+            int numOfBytesRead = inputStream.read(byteBuffer, 0, 1024);
+            if (numOfBytesRead < 0) {
+              break;
+            }
+            totalBytesRead += numOfBytesRead;
+            if (totalBytesRead >= MAX_BYTES_READ_PER_CHANNEL) {
+              // TODO: better error reporting
+              throw new WingsException(UNKNOWN_ERROR);
+            }
+            String dataReadFromTheStream = new String(byteBuffer, 0, numOfBytesRead, UTF_8);
+            if (output != null) {
+              output.append(dataReadFromTheStream);
+            }
+
+            text += dataReadFromTheStream;
+            text = processStreamData(text, false, outputStream);
           }
-          totalBytesRead += numOfBytesRead;
-          if (totalBytesRead >= MAX_BYTES_READ_PER_CHANNEL) {
-            throw new WingsException(UNKNOWN_ERROR); // TODO: better error reporting
-          }
-          String dataReadFromTheStream = new String(byteBuffer, 0, numOfBytesRead, UTF_8);
-          if (output != null) {
-            output.append(dataReadFromTheStream);
+
+          if (text.length() > 0) {
+            text = processStreamData(text, true, outputStream); // finished reading. update logs
           }
 
-          text += dataReadFromTheStream;
-          text = processStreamData(text, false, outputStream);
+          if (channel.isClosed()) {
+            commandExecutionStatus = channel.getExitStatus() == 0 ? SUCCESS : FAILURE;
+            saveExecutionLog("Command finished with status " + commandExecutionStatus, commandExecutionStatus);
+            return commandExecutionStatus;
+          }
+          sleep(Duration.ofSeconds(1));
         }
-
-        if (text.length() > 0) {
-          text = processStreamData(text, true, outputStream); // finished reading. update logs
-        }
-
-        if (channel.isClosed()) {
-          commandExecutionStatus = channel.getExitStatus() == 0 ? SUCCESS : FAILURE;
-          saveExecutionLog("Command finished with status " + commandExecutionStatus, commandExecutionStatus);
-          return commandExecutionStatus;
-        }
-        sleep(Duration.ofSeconds(1));
       }
     } catch (Exception ex) {
       logger.error("ex-Session fetched in " + (System.currentTimeMillis() - start) / 1000);
@@ -442,41 +443,39 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       ((ChannelExec) channel).setCommand(command);
 
       // get I/O streams for remote scp
-      OutputStream out = channel.getOutputStream();
-      InputStream in = channel.getInputStream();
+      try (OutputStream out = channel.getOutputStream(); InputStream in = channel.getInputStream()) {
+        saveExecutionLog(format("Connecting to %s ....", config.getHost()));
+        channel.connect();
 
-      saveExecutionLog(format("Connecting to %s ....", config.getHost()));
-      channel.connect();
+        if (checkAck(in) != 0) {
+          saveExecutionLogError("SCP connection initiation failed");
+          return FAILURE;
+        } else {
+          saveExecutionLog(format("Connection to %s established", config.getHost()));
+        }
 
-      if (checkAck(in) != 0) {
-        saveExecutionLogError("SCP connection initiation failed");
-        return FAILURE;
-      } else {
-        saveExecutionLog(format("Connection to %s established", config.getHost()));
+        // send "C0644 filesize filename", where filename should not include '/'
+        command = "C0644 " + fileInfo.getValue() + " " + fileInfo.getKey() + "\n";
+
+        out.write(command.getBytes(UTF_8));
+        out.flush();
+        if (checkAck(in) != 0) {
+          saveExecutionLogError("SCP connection initiation failed");
+          return commandExecutionStatus;
+        }
+        saveExecutionLog("Begin file transfer " + fileInfo.getKey() + " to " + config.getHost() + ":" + remoteFilePath);
+        fileProvider.downloadToStream(out);
+        out.write(new byte[1], 0, 1);
+        out.flush();
+
+        if (checkAck(in) != 0) {
+          saveExecutionLogError("File transfer failed");
+          return commandExecutionStatus;
+        }
+        commandExecutionStatus = SUCCESS;
+        saveExecutionLog("File successfully transferred");
+        channel.disconnect();
       }
-
-      // send "C0644 filesize filename", where filename should not include '/'
-      command = "C0644 " + fileInfo.getValue() + " " + fileInfo.getKey() + "\n";
-
-      out.write(command.getBytes(UTF_8));
-      out.flush();
-      if (checkAck(in) != 0) {
-        saveExecutionLogError("SCP connection initiation failed");
-        return commandExecutionStatus;
-      }
-      saveExecutionLog("Begin file transfer " + fileInfo.getKey() + " to " + config.getHost() + ":" + remoteFilePath);
-      fileProvider.downloadToStream(out);
-      out.write(new byte[1], 0, 1);
-      out.flush();
-
-      if (checkAck(in) != 0) {
-        saveExecutionLogError("File transfer failed");
-        return commandExecutionStatus;
-      }
-      commandExecutionStatus = SUCCESS;
-      saveExecutionLog("File successfully transferred");
-      out.close();
-      channel.disconnect();
     } catch (IOException | ExecutionException | JSchException ex) {
       if (ex instanceof FileNotFoundException) {
         saveExecutionLogError("File not found");
