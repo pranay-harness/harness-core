@@ -62,7 +62,6 @@ public class ShellScriptTask extends AbstractDelegateRunnableTask {
     switch (parameters.getConnectionType()) {
       case SSH: {
         SshExecutor executor = sshExecutorFactory.getExecutor(ExecutorType.KEY_AUTH);
-
         try {
           SshSessionConfig expectedSshConfig = parameters.sshSessionConfig(encryptionService);
           executor.init(expectedSshConfig);
