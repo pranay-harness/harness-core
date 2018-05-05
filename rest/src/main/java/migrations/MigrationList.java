@@ -11,6 +11,7 @@ import migrations.all.CreateDefaultUserGroupsAndAddToExistingUsers;
 import migrations.all.CreateSupportUserGroupsAndRenameAccountAdmin;
 import migrations.all.DirectKubernetesToCloudProvider;
 import migrations.all.FixInstanceData;
+import migrations.all.FixInstanceDataForAwsSSH;
 import migrations.all.FixMaxInstancesFieldInContainerSetup;
 import migrations.all.GitSyncToAllAccounts;
 import migrations.all.LogAnalysisExperimentalRecordsMigration;
@@ -64,6 +65,7 @@ public class MigrationList {
         .add(Pair.of(129, LogFeedbackRecordsMigration.class))
         .add(Pair.of(130, FixInstanceData.class))
         .add(Pair.of(131, LogAnalysisExperimentalRecordsMigration.class))
+        .add(Pair.of(132, FixInstanceDataForAwsSSH.class))
         .build();
   }
 }
