@@ -21,6 +21,7 @@ import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.common.Constants.DELEGATE_DIR;
 import static software.wings.common.Constants.DOCKER_DELEGATE;
 import static software.wings.common.Constants.KUBERNETES_DELEGATE;
+import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.sm.ExecutionStatusData.Builder.anExecutionStatusData;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -124,7 +125,9 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Test
   public void shouldList() {
     Delegate delegate = wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().build());
-    assertThat(delegateService.list(aPageRequest().build())).hasSize(1).containsExactly(delegate);
+    assertThat(delegateService.list(aPageRequest().addFilter(Delegate.ACCOUNT_ID_KEY, Operator.EQ, ACCOUNT_ID).build()))
+        .hasSize(1)
+        .containsExactly(delegate);
   }
 
   @Test
@@ -158,7 +161,8 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldDelete() {
     String id = wingsPersistence.save(BUILDER.but().build());
     delegateService.delete(ACCOUNT_ID, id);
-    assertThat(wingsPersistence.list(Delegate.class)).hasSize(0);
+    assertThat(wingsPersistence.createQuery(Delegate.class).filter(Delegate.ACCOUNT_ID_KEY, ACCOUNT_ID).asList())
+        .hasSize(0);
   }
 
   @Test
@@ -519,7 +523,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     delegateService.deleteOldTasks(0);
 
-    List<DelegateTask> delegateTasks = wingsPersistence.createQuery(DelegateTask.class).asList();
+    List<DelegateTask> delegateTasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).asList();
     assertThat(delegateTasks.size()).isEqualTo(0);
   }
 }

@@ -1,6 +1,7 @@
 package migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static software.wings.dl.HQuery.excludeAuthority;
 
 import com.google.inject.Inject;
 
@@ -45,7 +46,7 @@ public class DirectKubernetesToCloudProvider implements Migration {
   public void migrate() {
     logger.info("Converting Direct Kubernetes to Cloud Providers");
     int totalCount = 0;
-    List<Account> accounts = wingsPersistence.list(Account.class);
+    List<Account> accounts = wingsPersistence.createQuery(Account.class, excludeAuthority).asList();
     for (Account account : accounts) {
       List<Application> apps =
           wingsPersistence.createQuery(Application.class).filter("accountId", account.getUuid()).asList();

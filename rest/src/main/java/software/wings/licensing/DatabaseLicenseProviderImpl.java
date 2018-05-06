@@ -1,5 +1,7 @@
 package software.wings.licensing;
 
+import static software.wings.dl.HQuery.excludeAuthority;
+
 import com.google.inject.Inject;
 
 import software.wings.beans.License;
@@ -15,7 +17,7 @@ public class DatabaseLicenseProviderImpl implements LicenseProvider {
 
   @Override
   public List<License> getActiveLicenses() {
-    return wingsPersistence.list(License.class);
+    return wingsPersistence.createQuery(License.class, excludeAuthority).asList();
   }
 
   @Override

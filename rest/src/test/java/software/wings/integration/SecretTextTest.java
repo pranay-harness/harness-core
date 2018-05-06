@@ -250,7 +250,7 @@ public class SecretTextTest extends WingsBaseTest {
 
     query = wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT);
     assertEquals(1, query.count());
-    encryptedData = query.asList().get(0);
+    encryptedData = query.get();
     assertEquals(secretName, encryptedData.getName());
     assertNotNull(encryptedData.getEncryptionKey());
     assertNotNull(encryptedData.getEncryptedValue());
@@ -367,15 +367,14 @@ public class SecretTextTest extends WingsBaseTest {
     encryptionService.decrypt(
         savedVariable, secretManager.getEncryptionDetails(savedVariable, appId, workflowExecutionId));
     assertEquals(secretValue1, String.valueOf(savedVariable.getValue()));
-    EncryptedData encryptedData =
-        wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName1).asList().get(0);
+    EncryptedData encryptedData = wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName1).get();
     assertEquals(1, encryptedData.getParentIds().size());
     assertEquals(serviceVariable.getUuid(), encryptedData.getParentIds().iterator().next());
 
-    encryptedData = wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName2).asList().get(0);
+    encryptedData = wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName2).get();
     assertNull(encryptedData.getParentIds());
 
-    encryptedData = wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName3).asList().get(0);
+    encryptedData = wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName3).get();
     assertNull(encryptedData.getParentIds());
 
     savedVariable.setValue(secretId2.toCharArray());
@@ -386,14 +385,14 @@ public class SecretTextTest extends WingsBaseTest {
         savedVariable, secretManager.getEncryptionDetails(savedVariable, appId, workflowExecutionId));
     assertEquals(secretValue2, String.valueOf(savedVariable.getValue()));
 
-    encryptedData = wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName1).asList().get(0);
+    encryptedData = wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName1).get();
     assertNull(encryptedData.getParentIds());
 
-    encryptedData = wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName2).asList().get(0);
+    encryptedData = wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName2).get();
     assertEquals(1, encryptedData.getParentIds().size());
     assertEquals(serviceVariable.getUuid(), encryptedData.getParentIds().iterator().next());
 
-    encryptedData = wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName3).asList().get(0);
+    encryptedData = wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName3).get();
     assertNull(encryptedData.getParentIds());
 
     String updatedName = "updatedName" + generateUuid();
@@ -411,13 +410,13 @@ public class SecretTextTest extends WingsBaseTest {
         savedVariable, secretManager.getEncryptionDetails(savedVariable, appId, workflowExecutionId));
     assertEquals(secretValue3, String.valueOf(savedVariable.getValue()));
 
-    encryptedData = wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName1).asList().get(0);
+    encryptedData = wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName1).get();
     assertNull(encryptedData.getParentIds());
 
-    encryptedData = wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName2).asList().get(0);
+    encryptedData = wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName2).get();
     assertNull(encryptedData.getParentIds());
 
-    encryptedData = wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName3).asList().get(0);
+    encryptedData = wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName3).get();
     assertEquals(1, encryptedData.getParentIds().size());
     assertEquals(serviceVariable.getUuid(), encryptedData.getParentIds().iterator().next());
 
@@ -429,14 +428,14 @@ public class SecretTextTest extends WingsBaseTest {
         savedVariable, secretManager.getEncryptionDetails(savedVariable, appId, workflowExecutionId));
     assertEquals(secretValue1, String.valueOf(savedVariable.getValue()));
 
-    encryptedData = wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName1).asList().get(0);
+    encryptedData = wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName1).get();
     assertEquals(1, encryptedData.getParentIds().size());
     assertEquals(serviceVariable.getUuid(), encryptedData.getParentIds().iterator().next());
 
-    encryptedData = wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName2).asList().get(0);
+    encryptedData = wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName2).get();
     assertNull(encryptedData.getParentIds());
 
-    encryptedData = wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName3).asList().get(0);
+    encryptedData = wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName3).get();
     assertNull(encryptedData.getParentIds());
   }
 
@@ -485,7 +484,7 @@ public class SecretTextTest extends WingsBaseTest {
 
       query = wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT);
       assertEquals(1, query.count());
-      encryptedData = query.asList().get(0);
+      encryptedData = query.get();
       assertEquals(secretName, encryptedData.getName());
       assertNotNull(encryptedData.getEncryptionKey());
       assertNotNull(encryptedData.getEncryptedValue());
@@ -506,7 +505,7 @@ public class SecretTextTest extends WingsBaseTest {
 
       query = wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT);
       assertEquals(1, query.count());
-      encryptedData = query.asList().get(0);
+      encryptedData = query.get();
       assertEquals(secretName, encryptedData.getName());
       assertNotNull(encryptedData.getEncryptionKey());
       assertNotNull(encryptedData.getEncryptedValue());
@@ -527,7 +526,7 @@ public class SecretTextTest extends WingsBaseTest {
 
     query = wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT);
     assertEquals(1, query.count());
-    encryptedData = query.asList().get(0);
+    encryptedData = query.get();
     assertEquals(secretName, encryptedData.getName());
     assertNotNull(encryptedData.getEncryptionKey());
     assertNotNull(encryptedData.getEncryptedValue());
@@ -583,7 +582,7 @@ public class SecretTextTest extends WingsBaseTest {
 
       query = wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT);
       assertEquals(1, query.count());
-      encryptedData = query.asList().get(0);
+      encryptedData = query.get();
       assertEquals(secretName, encryptedData.getName());
       assertNotNull(encryptedData.getEncryptionKey());
       assertNotNull(encryptedData.getEncryptedValue());
@@ -732,7 +731,7 @@ public class SecretTextTest extends WingsBaseTest {
 
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT);
     assertEquals(1, query.count());
-    EncryptedData encryptedData = query.asList().get(0);
+    EncryptedData encryptedData = query.get();
     assertEquals(secretName, encryptedData.getName());
     assertNotNull(encryptedData.getEncryptionKey());
     assertNotNull(encryptedData.getEncryptedValue());
@@ -798,7 +797,7 @@ public class SecretTextTest extends WingsBaseTest {
 
     query = wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE);
     assertEquals(1, query.count());
-    encryptedData = query.asList().get(0);
+    encryptedData = query.get();
     assertEquals(secretName, encryptedData.getName());
     assertNotNull(encryptedData.getEncryptionKey());
     assertNotNull(encryptedData.getEncryptedValue());
@@ -832,7 +831,7 @@ public class SecretTextTest extends WingsBaseTest {
 
     query = wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE);
     assertEquals(1, query.count());
-    encryptedData = query.asList().get(0);
+    encryptedData = query.get();
     assertEquals(newSecretName, encryptedData.getName());
     assertNotNull(encryptedData.getEncryptionKey());
     assertNotNull(encryptedData.getEncryptedValue());
@@ -936,7 +935,7 @@ public class SecretTextTest extends WingsBaseTest {
 
       query = wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE);
       assertEquals(1, query.count());
-      encryptedData = query.asList().get(0);
+      encryptedData = query.get();
       assertEquals(secretName, encryptedData.getName());
       assertNotNull(encryptedData.getEncryptionKey());
       assertNotNull(encryptedData.getEncryptedValue());
@@ -957,7 +956,7 @@ public class SecretTextTest extends WingsBaseTest {
 
       query = wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE);
       assertEquals(1, query.count());
-      encryptedData = query.asList().get(0);
+      encryptedData = query.get();
       assertEquals(secretName, encryptedData.getName());
       assertNotNull(encryptedData.getEncryptionKey());
       assertNotNull(encryptedData.getEncryptedValue());
@@ -978,7 +977,7 @@ public class SecretTextTest extends WingsBaseTest {
 
     query = wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE);
     assertEquals(1, query.count());
-    encryptedData = query.asList().get(0);
+    encryptedData = query.get();
     assertEquals(secretName, encryptedData.getName());
     assertNotNull(encryptedData.getEncryptionKey());
     assertNotNull(encryptedData.getEncryptedValue());
@@ -1049,7 +1048,7 @@ public class SecretTextTest extends WingsBaseTest {
 
       query = wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE);
       assertEquals(1, query.count());
-      encryptedData = query.asList().get(0);
+      encryptedData = query.get();
       assertEquals(secretName, encryptedData.getName());
       assertNotNull(encryptedData.getEncryptionKey());
       assertNotNull(encryptedData.getEncryptedValue());
@@ -1143,7 +1142,7 @@ public class SecretTextTest extends WingsBaseTest {
 
     query = wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE);
     assertEquals(1, query.count());
-    encryptedData = query.asList().get(0);
+    encryptedData = query.get();
     assertEquals(secretName, encryptedData.getName());
     assertNotNull(encryptedData.getEncryptionKey());
     assertNotNull(encryptedData.getEncryptedValue());

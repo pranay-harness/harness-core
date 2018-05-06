@@ -3,6 +3,7 @@ package software.wings.waitnotify;
 import static com.google.common.collect.ImmutableMap.of;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
+import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.waitnotify.StringNotifyResponseData.Builder.aStringNotifyResponseData;
 
 import com.google.inject.Inject;
@@ -50,7 +51,7 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
 
     assertThat(wingsPersistence.get(WaitInstance.class, waitInstanceId)).isNotNull();
 
-    assertThat(wingsPersistence.list(WaitQueue.class))
+    assertThat(wingsPersistence.createQuery(WaitQueue.class, excludeAuthority).asList())
         .hasSize(1)
         .extracting(WaitQueue::getWaitInstanceId, WaitQueue::getCorrelationId)
         .containsExactly(tuple(waitInstanceId, "123"));
@@ -80,7 +81,7 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
 
     assertThat(wingsPersistence.get(WaitInstance.class, waitInstanceId)).isNotNull();
 
-    assertThat(wingsPersistence.list(WaitQueue.class))
+    assertThat(wingsPersistence.createQuery(WaitQueue.class, excludeAuthority).asList())
         .hasSize(3)
         .extracting(WaitQueue::getWaitInstanceId, WaitQueue::getCorrelationId)
         .containsExactly(tuple(waitInstanceId, "123"), tuple(waitInstanceId, "456"), tuple(waitInstanceId, "789"));
@@ -139,12 +140,12 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
     String waitInstanceId2 = waitNotifyEngine.waitForAll(new TestNotifyCallback(), "123");
     String waitInstanceId3 = waitNotifyEngine.waitForAll(new TestNotifyCallback(), "123");
 
-    assertThat(wingsPersistence.list(WaitInstance.class))
+    assertThat(wingsPersistence.createQuery(WaitInstance.class, excludeAuthority).asList())
         .hasSize(3)
         .extracting(WaitInstance::getUuid)
         .containsExactly(waitInstanceId1, waitInstanceId2, waitInstanceId3);
 
-    assertThat(wingsPersistence.list(WaitQueue.class))
+    assertThat(wingsPersistence.createQuery(WaitQueue.class, excludeAuthority).asList())
         .hasSize(3)
         .extracting(WaitQueue::getWaitInstanceId, WaitQueue::getCorrelationId)
         .containsExactly(tuple(waitInstanceId1, "123"), tuple(waitInstanceId2, "123"), tuple(waitInstanceId3, "123"));
@@ -165,9 +166,6 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
     assertThat(callCount.get()).isEqualTo(3);
   }
 
-  /**
-   * Created by peeyushaggarwal on 4/5/16.
-   */
   public static class TestNotifyCallback implements NotifyCallback {
     /* (non-Javadoc)
      * @see software.wings.waitnotify.NotifyCallback#notify(java.util.Map)
