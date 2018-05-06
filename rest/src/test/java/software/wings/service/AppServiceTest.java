@@ -20,6 +20,7 @@ import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotifi
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.Setup.Builder.aSetup;
+import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
@@ -119,7 +120,7 @@ public class AppServiceTest extends WingsBaseTest {
   @Before
   public void setUp() throws Exception {
     when(wingsPersistence.createQuery(Application.class)).thenReturn(query);
-    when(wingsPersistence.createAuthExemptedQuery(Application.class)).thenReturn(query);
+    when(wingsPersistence.createQuery(Application.class, excludeAuthority)).thenReturn(query);
     when(wingsPersistence.createUpdateOperations(Application.class)).thenReturn(updateOperations);
     when(query.filter(any(), any())).thenReturn(query);
     when(updateOperations.set(any(), any())).thenReturn(updateOperations);

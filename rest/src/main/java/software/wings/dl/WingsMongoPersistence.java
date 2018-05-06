@@ -7,6 +7,7 @@ import static java.lang.System.currentTimeMillis;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.dl.HQuery.allChecks;
 import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.WingsReflectionUtils.getDeclaredAndInheritedFields;
@@ -49,6 +50,7 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
+import software.wings.dl.HQuery.QueryChecks;
 import software.wings.exception.WingsException;
 import software.wings.security.EncryptionType;
 import software.wings.security.UserRequestContext;
@@ -472,29 +474,22 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req) {
-    return query(cls, req, false);
+    return query(cls, req, allChecks);
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, boolean disableValidation) {
-    return query(cls, req, disableValidation, false);
-  }
-
-  @Override
-  public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, boolean disableValidation, boolean authExempted) {
+  public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, Set<QueryChecks> queryChecks) {
     if (!authFilters(req, cls)) {
       return aPageResponse().withTotal(0).build();
     }
     ReadPref readPref = req.getReadPref() != null ? req.getReadPref() : ReadPref.NORMAL;
     AdvancedDatastore advancedDatastore = datastoreMap.get(readPref);
     Query<T> query = advancedDatastore.createQuery(cls);
-    ((HQuery) query).setExemptedRequest(authExempted);
-    if (disableValidation) {
-      query.disableValidation();
-    }
+
+    ((HQuery) query).setQueryChecks(queryChecks);
     Mapper mapper = ((DatastoreImpl) advancedDatastore).getMapper();
 
     return MongoHelper.queryPageRequest(query, mapper, cls, req);
@@ -530,9 +525,9 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   }
 
   @Override
-  public <T> Query<T> createAuthExemptedQuery(Class<T> cls) {
+  public <T> Query<T> createQuery(Class<T> cls, Set<QueryChecks> queryChecks) {
     Query<T> query = createQuery(cls, ReadPref.NORMAL);
-    ((HQuery) query).setExemptedRequest(true);
+    ((HQuery) query).setQueryChecks(queryChecks);
     return query;
   }
 

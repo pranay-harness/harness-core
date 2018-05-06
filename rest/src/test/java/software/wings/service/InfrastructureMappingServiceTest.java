@@ -31,6 +31,7 @@ import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
+import static software.wings.dl.HQuery.allChecks;
 import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.DIRECT;
@@ -194,11 +195,11 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
     PageRequest<InfrastructureMapping> pageRequest = new PageRequest<>();
     PageResponse pageResponse = aPageResponse().withResponse(singletonList(physicalInfrastructureMapping)).build();
-    when(wingsPersistence.query(InfrastructureMapping.class, pageRequest, false)).thenReturn(pageResponse);
+    when(wingsPersistence.query(InfrastructureMapping.class, pageRequest, allChecks)).thenReturn(pageResponse);
 
     PageResponse<InfrastructureMapping> infrastructureMappings = infrastructureMappingService.list(pageRequest);
     assertThat(infrastructureMappings).hasSize(1).containsExactly(physicalInfrastructureMapping);
-    verify(wingsPersistence).query(InfrastructureMapping.class, pageRequest, false);
+    verify(wingsPersistence).query(InfrastructureMapping.class, pageRequest, allChecks);
   }
 
   @Test

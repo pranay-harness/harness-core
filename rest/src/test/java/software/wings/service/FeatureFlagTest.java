@@ -3,6 +3,7 @@ package software.wings.service;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
@@ -60,7 +61,7 @@ public class FeatureFlagTest extends WingsBaseTest {
    */
   @Before
   public void setUp() throws Exception {
-    when(wingsPersistence.createQuery(FeatureFlag.class)).thenReturn(query);
+    when(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority)).thenReturn(query);
     when(query.filter("name", FEATURE.name())).thenReturn(query);
 
     ffPageRequest.addFilter("name", SearchFilter.Operator.EQ, FEATURE.name());

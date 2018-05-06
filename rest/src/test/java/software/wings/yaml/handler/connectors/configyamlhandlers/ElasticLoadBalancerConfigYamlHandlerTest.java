@@ -48,7 +48,7 @@ public class ElasticLoadBalancerConfigYamlHandlerTest extends BaseSettingValueCo
     List<InfrastructureMapping> list = new ArrayList<>();
     PageResponse<InfrastructureMapping> pageResponse = new PageResponse<>();
     pageResponse.setResponse(list);
-    doReturn(pageResponse).when(infrastructureMappingService).list(any(), any(Boolean.class));
+    doReturn(pageResponse).when(infrastructureMappingService).list(any(), any());
   }
 
   @Test

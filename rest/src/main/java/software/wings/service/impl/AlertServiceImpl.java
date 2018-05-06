@@ -14,6 +14,7 @@ import static software.wings.beans.alert.AlertType.ApprovalNeeded;
 import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 import static software.wings.beans.alert.AlertType.NoActiveDelegates;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
+import static software.wings.dl.HQuery.excludeAuthority;
 
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
@@ -225,7 +226,7 @@ public class AlertServiceImpl implements AlertService {
         while (true) {
           List<Key<Alert>> alertKeys = new ArrayList<>();
           try {
-            alertKeys.addAll(wingsPersistence.createAuthExemptedQuery(Alert.class)
+            alertKeys.addAll(wingsPersistence.createQuery(Alert.class, excludeAuthority)
                                  .filter("status", Closed)
                                  .field("createdAt")
                                  .lessThan(System.currentTimeMillis() - retentionMillis)

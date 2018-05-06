@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static software.wings.dl.HQuery.excludeAuthority;
 
 import com.google.api.client.repackaged.com.google.common.base.Throwables;
 import com.google.inject.Inject;
@@ -13,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
-import software.wings.dl.HQuery;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FeatureFlagService;
 
@@ -29,8 +29,7 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
 
   @Override
   public boolean isEnabled(@NotNull FeatureName featureName, String accountId) {
-    Query<FeatureFlag> query = wingsPersistence.createQuery(FeatureFlag.class);
-    ((HQuery) query).setExemptedRequest(true);
+    Query<FeatureFlag> query = wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority);
 
     FeatureFlag featureFlag = query.filter("name", featureName.name()).get();
 
@@ -62,7 +61,8 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
 
   @Override
   public void initializeFeatureFlags() {
-    List<FeatureFlag> persistedFeatureFlags = wingsPersistence.createAuthExemptedQuery(FeatureFlag.class).asList();
+    List<FeatureFlag> persistedFeatureFlags =
+        wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).asList();
     Set<String> definedNames = Arrays.stream(FeatureName.values()).map(FeatureName::name).collect(toSet());
     persistedFeatureFlags.forEach(flag -> flag.setObsolete(!definedNames.contains(flag.getName())));
     wingsPersistence.save(persistedFeatureFlags);

@@ -7,6 +7,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
+import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.common.collect.Lists;
@@ -46,7 +47,7 @@ public final class NotifyResponseCleanupHandler implements Runnable {
     try {
       PageResponse<NotifyResponse> notifyPageResponses = wingsPersistence.query(NotifyResponse.class,
           aPageRequest().addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS).addFieldsIncluded(ID_KEY).build(),
-          false, true);
+          excludeAuthority);
       if (isEmpty(notifyPageResponses)) {
         logger.debug("There are no NotifyResponse entries to cleanup");
         return;
@@ -54,7 +55,7 @@ public final class NotifyResponseCleanupHandler implements Runnable {
 
       List<String> correlationIds = notifyPageResponses.stream().map(NotifyResponse::getUuid).collect(toList());
       PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class,
-          aPageRequest().addFilter("correlationId", Operator.IN, correlationIds.toArray()).build(), false, true);
+          aPageRequest().addFilter("correlationId", Operator.IN, correlationIds.toArray()).build(), excludeAuthority);
 
       Map<String, List<WaitQueue>> waitQueueMap = new HashMap<>();
 

@@ -25,6 +25,7 @@ import static software.wings.beans.FeatureName.AZURE_SUPPORT;
 import static software.wings.beans.FeatureName.PIVOTAL_CLOUD_FOUNDRY_SUPPORT;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
+import static software.wings.dl.HQuery.allChecks;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.exception.WingsException.USER;
@@ -94,6 +95,7 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.cloudprovider.aws.AwsCodeDeployService;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.dl.HQuery.QueryChecks;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -182,14 +184,14 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   @Override
   public PageResponse<InfrastructureMapping> list(PageRequest<InfrastructureMapping> pageRequest) {
-    return list(pageRequest, false);
+    return list(pageRequest, allChecks);
   }
 
   @Override
   public PageResponse<InfrastructureMapping> list(
-      PageRequest<InfrastructureMapping> pageRequest, boolean disableValidation) {
+      PageRequest<InfrastructureMapping> pageRequest, Set<QueryChecks> queryChecks) {
     PageResponse<InfrastructureMapping> pageResponse =
-        wingsPersistence.query(InfrastructureMapping.class, pageRequest, disableValidation);
+        wingsPersistence.query(InfrastructureMapping.class, pageRequest, queryChecks);
     if (pageResponse != null && pageResponse.getResponse() != null) {
       for (InfrastructureMapping infrastructureMapping : pageResponse.getResponse()) {
         try {

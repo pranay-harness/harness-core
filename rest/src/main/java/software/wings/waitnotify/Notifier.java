@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
+import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
@@ -47,8 +48,8 @@ public class Notifier implements Runnable {
 
     try (AcquiredLock lock =
              persistentLocker.acquireLock(Notifier.class, Notifier.class.getName(), Duration.ofMinutes(1))) {
-      PageResponse<NotifyResponse> notifyPageResponses = wingsPersistence.query(
-          NotifyResponse.class, aPageRequest().withLimit(UNLIMITED).addFieldsIncluded(ID_KEY).build(), false, true);
+      PageResponse<NotifyResponse> notifyPageResponses = wingsPersistence.query(NotifyResponse.class,
+          aPageRequest().withLimit(UNLIMITED).addFieldsIncluded(ID_KEY).build(), excludeAuthority);
 
       if (isEmpty(notifyPageResponses)) {
         logger.debug("There are no NotifyResponse entries to process");
@@ -60,7 +61,7 @@ public class Notifier implements Runnable {
       // Get wait queue entries
       PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class,
           aPageRequest().withLimit(UNLIMITED).addFilter("correlationId", Operator.IN, correlationIds.toArray()).build(),
-          false, true);
+          excludeAuthority);
 
       if (isEmpty(waitQueuesResponse)) {
         if (correlationIds.size() > 200) {

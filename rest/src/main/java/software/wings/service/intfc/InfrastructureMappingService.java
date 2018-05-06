@@ -9,6 +9,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceInstanceSelectionParams;
 import software.wings.beans.infrastructure.Host;
+import software.wings.dl.HQuery.QueryChecks;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
@@ -29,7 +30,8 @@ import javax.validation.constraints.NotNull;
 public interface InfrastructureMappingService extends OwnedByEnvironment {
   PageResponse<InfrastructureMapping> list(PageRequest<InfrastructureMapping> pageRequest);
 
-  PageResponse<InfrastructureMapping> list(PageRequest<InfrastructureMapping> pageRequest, boolean disableValidation);
+  PageResponse<InfrastructureMapping> list(
+      PageRequest<InfrastructureMapping> pageRequest, Set<QueryChecks> queryChecks);
 
   @ValidationGroups(Create.class) InfrastructureMapping save(@Valid InfrastructureMapping infrastructureMapping);
 

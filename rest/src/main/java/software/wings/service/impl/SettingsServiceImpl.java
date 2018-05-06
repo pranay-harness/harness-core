@@ -23,6 +23,7 @@ import static software.wings.common.Constants.DEFAULT_RUNTIME_PATH;
 import static software.wings.common.Constants.DEFAULT_STAGING_PATH;
 import static software.wings.common.Constants.RUNTIME_PATH;
 import static software.wings.common.Constants.STAGING_PATH;
+import static software.wings.dl.HQuery.excludeValidate;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.exception.WingsException.USER;
@@ -453,7 +454,7 @@ public class SettingsServiceImpl implements SettingsService {
                         .addFilter("loadBalancerId", EQ, connectorSetting.getUuid())
                         .withLimit(PageRequest.UNLIMITED)
                         .build(),
-                  true)
+                  excludeValidate)
               .getResponse();
 
       List<String> infraMappingNames =

@@ -9,6 +9,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import software.wings.beans.Base;
 import software.wings.beans.ReadPref;
+import software.wings.dl.HQuery.QueryChecks;
 
 import java.util.List;
 import java.util.Map;
@@ -292,25 +293,13 @@ public interface WingsPersistence {
   /**
    * Query page response.
    *
-   * @param <T>               the type parameter
-   * @param cls               the cls
-   * @param req               the req
-   * @param disableValidation the disable validation
-   * @return the page response
+   * @param <T>          the type parameter
+   * @param cls          the cls
+   * @param req          the req
+   * @param queryChecks  the query checks
+   * @return             the page response
    */
-  <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, boolean disableValidation);
-
-  /**
-   * Query page response.
-   *
-   * @param <T>               the type parameter
-   * @param cls               the cls
-   * @param req               the req
-   * @param disableValidation the disable validation
-   * @param authExempted      the auth exempted
-   * @return the page response
-   */
-  <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, boolean disableValidation, boolean authExempted);
+  <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, Set<QueryChecks> queryChecks);
 
   /**
    * Creates the query.
@@ -322,13 +311,14 @@ public interface WingsPersistence {
   <T> Query<T> createQuery(Class<T> cls);
 
   /**
-   * Create query query.
+   * Creates the query.
    *
-   * @param <T> the type parameter
-   * @param cls the cls
-   * @return the query
+   * @param <T>          the generic type
+   * @param cls          the cls
+   * @param queryChecks  the query checks
+   * @return             the query
    */
-  <T> Query<T> createAuthExemptedQuery(Class<T> cls);
+  <T> Query<T> createQuery(Class<T> cls, Set<QueryChecks> queryChecks);
 
   /**
    * Creates the query.
@@ -336,7 +326,7 @@ public interface WingsPersistence {
    * @param <T>      the generic type
    * @param cls      the cls
    * @param readPref the read pref
-   * @return the query
+   * @return         the query
    */
   <T> Query<T> createQuery(Class<T> cls, ReadPref readPref);
 
@@ -386,8 +376,8 @@ public interface WingsPersistence {
    * but that embedded object is a base class and if we are referring to a field from the derived class, validation
    * fails right now. This is a stop gap solution until that is fixed.
    *
-   * @param collectionClass   the collection class
-   * @param disableValidation the disable validation
+   * @param  collectionClass   the collection class
+   * @param  disableValidation the disable validation
    * @return query
    */
   Query createAuthorizedQuery(Class collectionClass, boolean disableValidation);

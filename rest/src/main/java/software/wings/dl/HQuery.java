@@ -1,8 +1,10 @@
 package software.wings.dl;
 
 import static java.lang.String.format;
+import static software.wings.dl.HQuery.QueryChecks.AUTHORITY;
+import static software.wings.dl.HQuery.QueryChecks.COUNT;
+import static software.wings.dl.HQuery.QueryChecks.VALIDATE;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.Sets;
 
 import com.mongodb.DBCollection;
@@ -17,6 +19,7 @@ import org.mongodb.morphia.query.QueryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
@@ -27,15 +30,25 @@ import java.util.Set;
  */
 public class HQuery<T> extends QueryImpl<T> {
   private static final Logger logger = LoggerFactory.getLogger(HQuery.class);
+
+  public enum QueryChecks { VALIDATE, AUTHORITY, COUNT }
+
+  public static Set<QueryChecks> allChecks = EnumSet.<QueryChecks>of(VALIDATE, AUTHORITY, COUNT);
+  public static Set<QueryChecks> excludeValidate = EnumSet.<QueryChecks>of(AUTHORITY, COUNT);
+  public static Set<QueryChecks> excludeAuthority = EnumSet.<QueryChecks>of(VALIDATE, COUNT);
+  public static Set<QueryChecks> excludeCount = EnumSet.<QueryChecks>of(AUTHORITY, VALIDATE);
+
+  private Set<QueryChecks> queryChecks = allChecks;
+
   private static Set<String> requiredFilterArgs = Sets.newHashSet("accountId", "accounts", "appId");
-  private boolean exemptedRequest;
 
-  public boolean isExemptedRequest() {
-    return exemptedRequest;
-  }
-
-  public void setExemptedRequest(boolean exemptedRequest) {
-    this.exemptedRequest = exemptedRequest;
+  public void setQueryChecks(Set<QueryChecks> queryChecks) {
+    this.queryChecks = queryChecks;
+    if (queryChecks.contains(VALIDATE)) {
+      enableValidation();
+    } else {
+      disableValidation();
+    }
   }
 
   /**
@@ -50,6 +63,10 @@ public class HQuery<T> extends QueryImpl<T> {
   }
 
   private void checkKeyListSize(List<Key<T>> list) {
+    if (!allChecks.contains(COUNT)) {
+      return;
+    }
+
     if (list.size() > 5000) {
       if (logger.isErrorEnabled()) {
         logger.error(format("Key list query returns %d items.", list.size()), new Exception(""));
@@ -58,6 +75,10 @@ public class HQuery<T> extends QueryImpl<T> {
   }
 
   private void checkListSize(List<T> list) {
+    if (!allChecks.contains(COUNT)) {
+      return;
+    }
+
     if (list.size() > 1000) {
       if (logger.isErrorEnabled()) {
         logger.error(format("List query returns %d items.", list.size()), new Exception(""));
@@ -106,12 +127,13 @@ public class HQuery<T> extends QueryImpl<T> {
   }
 
   private void enforceHarnessRules() {
-    boolean requiredArgFound = exemptedRequest
-        || this.getChildren().stream().map(Criteria::getFieldName).anyMatch(requiredFilterArgs::contains);
-    if (!requiredArgFound) {
-      logger.warn(
-          "HQUERY-ENFORCEMENT: appId or accountId must be present in any List(Object/Key)/Get/Count/Search query. ST: [{}]",
-          Throwables.getStackTraceAsString(new Throwable()));
+    if (!allChecks.contains(AUTHORITY)) {
+      return;
+    }
+
+    if (!this.getChildren().stream().map(Criteria::getFieldName).anyMatch(requiredFilterArgs::contains)) {
+      logger.warn("QUERY-ENFORCEMENT: appId or accountId must be present in List(Object/Key)/Get/Count/Search query",
+          new Exception(""));
     }
   }
 }
