@@ -46,6 +46,7 @@ public class StateExecutionInstance extends Base {
   public static final String PHASE_SUBWORKFLOW_ID_KEY = "phaseSubWorkflowId";
   public static final String PIPELINE_STATE_ELEMENT_ID_KEY = "pipelineStateElementId";
   public static final String PREV_INSTANCE_ID_KEY = "prevInstanceId";
+  public static final String ROLLBACK_KEY = "rollback";
   public static final String STATE_EXECUTION_DATA_HISTORY_KEY = "stateExecutionDataHistory";
   public static final String STATE_EXECUTION_MAP_KEY = "stateExecutionMap";
   public static final String STATE_NAME_KEY = "stateName";

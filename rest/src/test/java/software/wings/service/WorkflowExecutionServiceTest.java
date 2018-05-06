@@ -1,39 +1,26 @@
 package software.wings.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptySet;
-import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
-import static software.wings.beans.CountsByStatuses.Builder.aCountsByStatuses;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
-import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
-import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
-import static software.wings.sm.ExecutionStatus.RUNNING;
-import static software.wings.sm.ExecutionStatus.SUCCESS;
-import static software.wings.sm.ExecutionStatus.WAITING;
-import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.StateMachine.StateMachineBuilder.aStateMachine;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.DEFAULT_VERSION;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_INSTANCE_ID;
-import static software.wings.utils.WingsTestConstants.STATE_MACHINE_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
@@ -51,11 +38,9 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import software.wings.WingsBaseTest;
-import software.wings.beans.CountsByStatuses;
 import software.wings.beans.EntityType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.GraphNode;
 import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.Workflow;
@@ -72,14 +57,8 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.sm.ExecutionStatus;
-import software.wings.sm.StateExecutionInstance;
-import software.wings.sm.StateMachine;
 import software.wings.sm.StateMachineExecutionSimulator;
 import software.wings.waitnotify.NotifyEventListener;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * The Class workflowExecutionServiceTest.
@@ -141,302 +120,6 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
         workflowExecutionService.listExecutions(pageRequest, false, true, false, true);
     assertThat(pageResponse2).isNotNull().isEqualTo(pageResponse);
     verify(wingsPersistence).query(WorkflowExecution.class, pageRequest);
-  }
-
-  @Test
-  public void shouldListCompletedExecutions() {
-    CountsByStatuses countsByStatuses = aCountsByStatuses().build();
-
-    when(wingsPersistence.get(StateMachine.class, APP_ID, STATE_MACHINE_ID)).thenReturn(aStateMachine().build());
-    PageRequest<WorkflowExecution> pageRequest = aPageRequest().build();
-    PageResponse<WorkflowExecution> pageResponse = aPageResponse()
-                                                       .withResponse(asList(aWorkflowExecution()
-                                                                                .withAppId(APP_ID)
-                                                                                .withUuid(generateUuid())
-                                                                                .withEnvId(ENV_ID)
-                                                                                .withStateMachineId(STATE_MACHINE_ID)
-                                                                                .withStatus(SUCCESS)
-                                                                                .build(),
-                                                           aWorkflowExecution()
-                                                               .withAppId(APP_ID)
-                                                               .withUuid(generateUuid())
-                                                               .withEnvId(ENV_ID)
-                                                               .withStateMachineId(STATE_MACHINE_ID)
-                                                               .withStatus(SUCCESS)
-                                                               .withBreakdown(countsByStatuses)
-                                                               .build(),
-                                                           aWorkflowExecution()
-                                                               .withAppId(APP_ID)
-                                                               .withUuid(generateUuid())
-                                                               .withEnvId(ENV_ID)
-                                                               .withStateMachineId(STATE_MACHINE_ID)
-                                                               .withStatus(ExecutionStatus.FAILED)
-                                                               .withBreakdown(countsByStatuses)
-                                                               .build(),
-                                                           aWorkflowExecution()
-                                                               .withAppId(APP_ID)
-                                                               .withUuid(generateUuid())
-                                                               .withEnvId(ENV_ID)
-                                                               .withStateMachineId(STATE_MACHINE_ID)
-                                                               .withStatus(ExecutionStatus.ABORTED)
-                                                               .build()))
-                                                       .build();
-    when(wingsPersistence.query(WorkflowExecution.class, pageRequest)).thenReturn(pageResponse);
-
-    PageResponse<StateExecutionInstance> stateExecutionInstancePageResponse = aPageResponse().build();
-    when(wingsPersistence.queryAll(eq(StateExecutionInstance.class), any(PageRequest.class)))
-        .thenReturn(stateExecutionInstancePageResponse.getResponse());
-
-    when(stateMachineExecutionSimulator.getStatusBreakdown(
-             eq(APP_ID), eq(ENV_ID), any(StateMachine.class), any(PageResponse.class)))
-        .thenReturn(countsByStatuses);
-
-    PageResponse<WorkflowExecution> pageResponse2 =
-        workflowExecutionService.listExecutions(pageRequest, false, true, false, true);
-    assertThat(pageResponse2).isNotNull().isEqualTo(pageResponse);
-    verify(wingsPersistence, times(1)).query(WorkflowExecution.class, pageRequest);
-    verify(wingsPersistence, times(2)).queryAll(eq(StateExecutionInstance.class), any(PageRequest.class));
-    verify(updateOperations, times(2)).set("breakdown", countsByStatuses);
-    verify(stateMachineExecutionSimulator, times(2))
-        .getStatusBreakdown(eq(APP_ID), eq(ENV_ID), any(StateMachine.class), any(PageResponse.class));
-  }
-
-  @Test
-  public void shouldListRunningExecutions() {
-    CountsByStatuses countsByStatuses = aCountsByStatuses().build();
-
-    when(wingsPersistence.get(StateMachine.class, APP_ID, STATE_MACHINE_ID)).thenReturn(aStateMachine().build());
-    PageRequest<WorkflowExecution> pageRequest = aPageRequest().build();
-    PageResponse<WorkflowExecution> pageResponse = aPageResponse()
-                                                       .withResponse(asList(aWorkflowExecution()
-                                                                                .withAppId(APP_ID)
-                                                                                .withUuid(generateUuid())
-                                                                                .withEnvId(ENV_ID)
-                                                                                .withStateMachineId(STATE_MACHINE_ID)
-                                                                                .withStatus(SUCCESS)
-                                                                                .build(),
-                                                           aWorkflowExecution()
-                                                               .withAppId(APP_ID)
-                                                               .withUuid(generateUuid())
-                                                               .withEnvId(ENV_ID)
-                                                               .withStateMachineId(STATE_MACHINE_ID)
-                                                               .withStatus(SUCCESS)
-                                                               .withBreakdown(countsByStatuses)
-                                                               .build(),
-                                                           aWorkflowExecution()
-                                                               .withAppId(APP_ID)
-                                                               .withUuid(generateUuid())
-                                                               .withEnvId(ENV_ID)
-                                                               .withStateMachineId(STATE_MACHINE_ID)
-                                                               .withStatus(ExecutionStatus.FAILED)
-                                                               .withBreakdown(countsByStatuses)
-                                                               .build(),
-                                                           aWorkflowExecution()
-                                                               .withAppId(APP_ID)
-                                                               .withUuid(generateUuid())
-                                                               .withEnvId(ENV_ID)
-                                                               .withStateMachineId(STATE_MACHINE_ID)
-                                                               .withStatus(ExecutionStatus.RUNNING)
-                                                               .build()))
-                                                       .build();
-    when(wingsPersistence.query(WorkflowExecution.class, pageRequest)).thenReturn(pageResponse);
-
-    when(stateExecutionServiceMock.executionStatesMap(any(), any()))
-        .thenReturn(new HashMap<String, StateExecutionInstance>());
-
-    when(stateMachineExecutionSimulator.getStatusBreakdown(
-             eq(APP_ID), eq(ENV_ID), any(StateMachine.class), any(PageResponse.class)))
-        .thenReturn(countsByStatuses);
-
-    PageResponse<WorkflowExecution> pageResponse2 =
-        workflowExecutionService.listExecutions(pageRequest, false, true, false, true);
-    assertThat(pageResponse2).isNotNull().isEqualTo(pageResponse);
-    verify(wingsPersistence, times(1)).query(WorkflowExecution.class, pageRequest);
-    verify(wingsPersistence, times(2)).queryAll(eq(StateExecutionInstance.class), any(PageRequest.class));
-    verify(updateOperations, times(1)).set("breakdown", countsByStatuses);
-    verify(stateMachineExecutionSimulator, times(2))
-        .getStatusBreakdown(eq(APP_ID), eq(ENV_ID), any(StateMachine.class), any(PageResponse.class));
-  }
-
-  @Test
-  public void shouldListPausedExecutions() {
-    CountsByStatuses countsByStatuses = aCountsByStatuses().build();
-
-    when(wingsPersistence.get(StateMachine.class, APP_ID, STATE_MACHINE_ID)).thenReturn(aStateMachine().build());
-    PageRequest<WorkflowExecution> pageRequest = aPageRequest().build();
-    PageResponse<WorkflowExecution> pageResponse = aPageResponse()
-                                                       .withResponse(asList(aWorkflowExecution()
-                                                                                .withAppId(APP_ID)
-                                                                                .withUuid(generateUuid())
-                                                                                .withEnvId(ENV_ID)
-                                                                                .withStateMachineId(STATE_MACHINE_ID)
-                                                                                .withStatus(SUCCESS)
-                                                                                .build(),
-                                                           aWorkflowExecution()
-                                                               .withAppId(APP_ID)
-                                                               .withUuid(generateUuid())
-                                                               .withEnvId(ENV_ID)
-                                                               .withStateMachineId(STATE_MACHINE_ID)
-                                                               .withStatus(SUCCESS)
-                                                               .withBreakdown(countsByStatuses)
-                                                               .build(),
-                                                           aWorkflowExecution()
-                                                               .withAppId(APP_ID)
-                                                               .withUuid(WORKFLOW_ID)
-                                                               .withEnvId(ENV_ID)
-                                                               .withStateMachineId(STATE_MACHINE_ID)
-                                                               .withStatus(ExecutionStatus.RUNNING)
-                                                               .build()))
-                                                       .build();
-    when(wingsPersistence.query(WorkflowExecution.class, pageRequest)).thenReturn(pageResponse);
-
-    final Map<String, StateExecutionInstance> executionInstanceMap =
-        asList(aStateExecutionInstance().withUuid(generateUuid()).withStatus(SUCCESS).build(),
-            aStateExecutionInstance().withUuid(generateUuid()).withStatus(ExecutionStatus.PAUSED).build(),
-            aStateExecutionInstance().withUuid(generateUuid()).withStatus(ExecutionStatus.FAILED).build())
-            .stream()
-            .collect(toMap(StateExecutionInstance::getUuid, identity()));
-
-    when(stateExecutionServiceMock.executionStatesMap(any(), any())).thenReturn(executionInstanceMap);
-
-    when(stateMachineExecutionSimulator.getStatusBreakdown(
-             eq(APP_ID), eq(ENV_ID), any(StateMachine.class), any(PageResponse.class)))
-        .thenReturn(countsByStatuses);
-
-    PageResponse<WorkflowExecution> pageResponse2 =
-        workflowExecutionService.listExecutions(pageRequest, false, true, false, true);
-    assertThat(pageResponse2)
-        .isNotNull()
-        .isEqualTo(pageResponse)
-        .extracting(WorkflowExecution::getStatus)
-        .containsExactly(SUCCESS, SUCCESS, ExecutionStatus.PAUSED);
-    verify(wingsPersistence, times(1)).query(WorkflowExecution.class, pageRequest);
-    verify(wingsPersistence, times(2)).queryAll(eq(StateExecutionInstance.class), any(PageRequest.class));
-    verify(updateOperations, times(1)).set("breakdown", countsByStatuses);
-    verify(stateMachineExecutionSimulator, times(2))
-        .getStatusBreakdown(eq(APP_ID), eq(ENV_ID), any(StateMachine.class), any(PageResponse.class));
-  }
-
-  @Test
-  public void shouldListWaitingExecutions() {
-    CountsByStatuses countsByStatuses = aCountsByStatuses().build();
-
-    when(wingsPersistence.get(StateMachine.class, APP_ID, STATE_MACHINE_ID)).thenReturn(aStateMachine().build());
-    PageRequest<WorkflowExecution> pageRequest = aPageRequest().build();
-    PageResponse<WorkflowExecution> pageResponse = aPageResponse()
-                                                       .withTotal(3)
-                                                       .withResponse(asList(aWorkflowExecution()
-                                                                                .withAppId(APP_ID)
-                                                                                .withUuid(generateUuid())
-                                                                                .withEnvId(ENV_ID)
-                                                                                .withStateMachineId(STATE_MACHINE_ID)
-                                                                                .withStatus(SUCCESS)
-                                                                                .build(),
-                                                           aWorkflowExecution()
-                                                               .withAppId(APP_ID)
-                                                               .withUuid(generateUuid())
-                                                               .withEnvId(ENV_ID)
-                                                               .withStateMachineId(STATE_MACHINE_ID)
-                                                               .withStatus(SUCCESS)
-                                                               .withBreakdown(countsByStatuses)
-                                                               .build(),
-                                                           aWorkflowExecution()
-                                                               .withAppId(APP_ID)
-                                                               .withUuid(WORKFLOW_ID)
-                                                               .withEnvId(ENV_ID)
-                                                               .withStateMachineId(STATE_MACHINE_ID)
-                                                               .withStatus(ExecutionStatus.RUNNING)
-                                                               .build()))
-                                                       .build();
-    when(wingsPersistence.query(WorkflowExecution.class, pageRequest)).thenReturn(pageResponse);
-
-    final Map<String, StateExecutionInstance> executionInstanceMap =
-        asList(aStateExecutionInstance().withUuid(generateUuid()).withStatus(SUCCESS).build(),
-            aStateExecutionInstance().withUuid(generateUuid()).withStatus(WAITING).build(),
-            aStateExecutionInstance().withUuid(generateUuid()).withStatus(ExecutionStatus.FAILED).build())
-            .stream()
-            .collect(toMap(StateExecutionInstance::getUuid, identity()));
-
-    when(stateExecutionServiceMock.executionStatesMap(any(), any())).thenReturn(executionInstanceMap);
-
-    when(stateMachineExecutionSimulator.getStatusBreakdown(
-             eq(APP_ID), eq(ENV_ID), any(StateMachine.class), any(PageResponse.class)))
-        .thenReturn(countsByStatuses);
-
-    PageResponse<WorkflowExecution> pageResponse2 =
-        workflowExecutionService.listExecutions(pageRequest, false, true, false, true);
-    assertThat(pageResponse2)
-        .isNotNull()
-        .isEqualTo(pageResponse)
-        .extracting(WorkflowExecution::getStatus)
-        .containsExactly(SUCCESS, SUCCESS, WAITING);
-    verify(wingsPersistence, times(1)).query(WorkflowExecution.class, pageRequest);
-    verify(wingsPersistence, times(2)).queryAll(eq(StateExecutionInstance.class), any(PageRequest.class));
-    verify(updateOperations, times(1)).set("breakdown", countsByStatuses);
-    verify(stateMachineExecutionSimulator, times(2))
-        .getStatusBreakdown(eq(APP_ID), eq(ENV_ID), any(StateMachine.class), any(PageResponse.class));
-  }
-
-  @Test
-  public void populateGraphForRunningExecutions() {
-    CountsByStatuses countsByStatuses = aCountsByStatuses().build();
-
-    when(wingsPersistence.get(StateMachine.class, APP_ID, STATE_MACHINE_ID)).thenReturn(aStateMachine().build());
-    PageRequest<WorkflowExecution> pageRequest = aPageRequest().build();
-    PageResponse<WorkflowExecution> pageResponse = aPageResponse()
-                                                       .withResponse(asList(aWorkflowExecution()
-                                                                                .withAppId(APP_ID)
-                                                                                .withUuid(generateUuid())
-                                                                                .withEnvId(ENV_ID)
-                                                                                .withStateMachineId(STATE_MACHINE_ID)
-                                                                                .withStatus(SUCCESS)
-                                                                                .build(),
-                                                           aWorkflowExecution()
-                                                               .withAppId(APP_ID)
-                                                               .withUuid(generateUuid())
-                                                               .withEnvId(ENV_ID)
-                                                               .withStateMachineId(STATE_MACHINE_ID)
-                                                               .withStatus(SUCCESS)
-                                                               .withBreakdown(countsByStatuses)
-                                                               .build(),
-                                                           aWorkflowExecution()
-                                                               .withAppId(APP_ID)
-                                                               .withUuid(WORKFLOW_ID)
-                                                               .withEnvId(ENV_ID)
-                                                               .withStateMachineId(STATE_MACHINE_ID)
-                                                               .withStatus(ExecutionStatus.RUNNING)
-                                                               .build()))
-                                                       .build();
-    when(wingsPersistence.query(WorkflowExecution.class, pageRequest)).thenReturn(pageResponse);
-
-    Map<String, StateExecutionInstance> stateExecutionInstanceMap =
-        asList(aStateExecutionInstance().withUuid(generateUuid()).withStatus(SUCCESS).build(),
-            aStateExecutionInstance().withUuid(generateUuid()).withStatus(ExecutionStatus.RUNNING).build(),
-            aStateExecutionInstance().withUuid(generateUuid()).withStatus(ExecutionStatus.FAILED).build())
-            .stream()
-            .collect(toMap(StateExecutionInstance::getUuid, identity()));
-
-    when(stateExecutionServiceMock.executionStatesMap(any(), any())).thenReturn(stateExecutionInstanceMap);
-
-    when(stateMachineExecutionSimulator.getStatusBreakdown(
-             eq(APP_ID), eq(ENV_ID), any(StateMachine.class), any(PageResponse.class)))
-        .thenReturn(countsByStatuses);
-    GraphNode node = aGraphNode().build();
-    when(graphRenderer.generateHierarchyNode(stateExecutionInstanceMap, emptySet())).thenReturn(node);
-    PageResponse<WorkflowExecution> pageResponse2 =
-        workflowExecutionService.listExecutions(pageRequest, true, true, false, true);
-    assertThat(pageResponse2)
-        .isNotNull()
-        .isEqualTo(pageResponse)
-        .extracting(WorkflowExecution::getStatus)
-        .containsExactly(SUCCESS, SUCCESS, RUNNING);
-    assertThat(pageResponse2.get(2).getExecutionNode()).isEqualTo(node);
-    verify(wingsPersistence, times(1)).query(WorkflowExecution.class, pageRequest);
-    verify(wingsPersistence, times(2)).queryAll(eq(StateExecutionInstance.class), any(PageRequest.class));
-    verify(updateOperations, times(1)).set("breakdown", countsByStatuses);
-    verify(stateMachineExecutionSimulator, times(2))
-        .getStatusBreakdown(eq(APP_ID), eq(ENV_ID), any(StateMachine.class), any(PageResponse.class));
-    verify(graphRenderer, times(1)).generateHierarchyNode(stateExecutionInstanceMap, emptySet());
   }
 
   /**

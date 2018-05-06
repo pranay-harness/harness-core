@@ -55,8 +55,10 @@ import static software.wings.sm.ExecutionStatus.WAITING;
 import static software.wings.sm.InfraMappingSummary.Builder.anInfraMappingSummary;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 import static software.wings.sm.StateType.APPROVAL;
+import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.sm.StateType.PHASE;
+import static software.wings.sm.StateType.PHASE_STEP;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.base.Preconditions;
@@ -71,6 +73,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
@@ -1761,7 +1764,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .addFilter("appId", EQ, workflowExecution.getAppId())
             .addFilter("executionUuid", EQ, workflowExecution.getUuid())
             .addFilter("stateType", Operator.IN, StateType.REPEAT.name(), StateType.FORK.name(),
-                StateType.SUB_WORKFLOW.name(), StateType.PHASE.name(), StateType.PHASE_STEP.name())
+                StateType.SUB_WORKFLOW.name(), StateType.PHASE.name(), PHASE_STEP.name())
             .addFilter("parentInstanceId", Operator.NOT_EXISTS)
             .addFilter("createdAt", GE, workflowExecution.getCreatedAt())
             .addOrder("createdAt", OrderType.ASC)
@@ -1862,17 +1865,19 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     } else {
       StateMachine sm =
           wingsPersistence.get(StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
-      PageRequest<StateExecutionInstance> req =
-          aPageRequest()
-              .withReadPref(CRITICAL)
-              .withLimit(PageRequest.UNLIMITED)
-              .addFilter("appId", EQ, workflowExecution.getAppId())
-              .addFilter("executionUuid", EQ, workflowExecution.getUuid())
-              .addFilter("createdAt", GE, workflowExecution.getCreatedAt())
-              .addFieldsIncluded("uuid", "displayName", "contextElement", "parentInstanceId", "status")
-              .build();
 
-      List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(req);
+      List<StateExecutionInstance> allStateExecutionInstances =
+          wingsPersistence.createQuery(StateExecutionInstance.class)
+              .filter(StateExecutionInstance.APP_ID_KEY, workflowExecution.getAppId())
+              .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflowExecution.getUuid())
+              .field(StateExecutionInstance.CREATED_AT_KEY)
+              .greaterThanOrEq(workflowExecution.getCreatedAt())
+              .project(StateExecutionInstance.CONTEXT_ELEMENT_KEY, true)
+              .project(StateExecutionInstance.DISPLAY_NAME_KEY, true)
+              .project(StateExecutionInstance.ID_KEY, true)
+              .project(StateExecutionInstance.PARENT_INSTANCE_ID_KEY, true)
+              .project(StateExecutionInstance.STATUS_KEY, true)
+              .asList();
 
       breakdown = stateMachineExecutionSimulator.getStatusBreakdown(
           workflowExecution.getAppId(), workflowExecution.getEnvId(), sm, allStateExecutionInstances);
@@ -1907,17 +1912,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   private CountsByStatuses getBreakdownFromPhases(WorkflowExecution workflowExecution) {
     CountsByStatuses breakdown = new CountsByStatuses();
-    PageRequest<StateExecutionInstance> req = aPageRequest()
-                                                  .withReadPref(CRITICAL)
-                                                  .withLimit(PageRequest.UNLIMITED)
-                                                  .addFilter("appId", EQ, workflowExecution.getAppId())
-                                                  .addFilter("executionUuid", EQ, workflowExecution.getUuid())
-                                                  .addFilter("createdAt", GE, workflowExecution.getCreatedAt())
-                                                  .addFilter("stateType", EQ, PHASE.name())
-                                                  .addFilter("rollback", EQ, false)
-                                                  .build();
 
-    List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(req);
+    List<StateExecutionInstance> allStateExecutionInstances =
+        wingsPersistence.createQuery(StateExecutionInstance.class)
+            .filter(StateExecutionInstance.APP_ID_KEY, workflowExecution.getAppId())
+            .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflowExecution.getUuid())
+            .filter(StateExecutionInstance.STATE_TYPE_KEY, PHASE.name())
+            .filter(StateExecutionInstance.ROLLBACK_KEY, false)
+            .field(StateExecutionInstance.CREATED_AT_KEY)
+            .greaterThanOrEq(workflowExecution.getCreatedAt())
+            .asList();
+
     if (isEmpty(allStateExecutionInstances)) {
       breakdown.setSuccess(0);
     }
@@ -1972,26 +1977,19 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         .size();
   }
 
-  private List<StateExecutionInstance> getAllStateExecutionInstances(PageRequest<StateExecutionInstance> req) {
-    return wingsPersistence.queryAll(StateExecutionInstance.class, req);
-  }
-
   // @TODO_PCF
   @Override
   public List<ElementExecutionSummary> getElementsSummary(
       String appId, String executionUuid, String parentStateExecutionInstanceId) {
-    PageRequest<StateExecutionInstance> pageRequest =
-        aPageRequest()
-            .withReadPref(CRITICAL)
-            .withLimit(PageRequest.UNLIMITED)
-            .addFilter("appId", EQ, appId)
-            .addFilter("executionUuid", EQ, executionUuid)
-            .addFilter("parentInstanceId", Operator.IN, parentStateExecutionInstanceId)
-            .addOrder("createdAt", OrderType.ASC)
-            .addFieldsExcluded("contextElements")
-            .build();
+    List<StateExecutionInstance> allStateExecutionInstances =
+        wingsPersistence.createQuery(StateExecutionInstance.class)
+            .filter(StateExecutionInstance.APP_ID_KEY, appId)
+            .filter(StateExecutionInstance.EXECUTION_UUID_KEY, executionUuid)
+            .filter(StateExecutionInstance.PARENT_INSTANCE_ID_KEY, parentStateExecutionInstanceId)
+            .order(Sort.ascending(StateExecutionInstance.CREATED_AT_KEY))
+            .project(StateExecutionInstance.CONTEXT_ELEMENTS_KEY, false)
+            .asList();
 
-    List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(pageRequest);
     if (isEmpty(allStateExecutionInstances)) {
       return null;
     }
@@ -2021,7 +2019,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           continue;
         }
         if ((nextStateType == StateType.REPEAT || nextStateType == StateType.FORK || nextStateType == StateType.PHASE
-                || nextStateType == StateType.PHASE_STEP || nextStateType == StateType.SUB_WORKFLOW)
+                || nextStateType == PHASE_STEP || nextStateType == StateType.SUB_WORKFLOW)
             && next.getStateExecutionData() instanceof ElementStateExecutionData) {
           ElementStateExecutionData elementStateExecutionData =
               (ElementStateExecutionData) next.getStateExecutionData();
@@ -2074,20 +2072,22 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Override
   public PhaseExecutionSummary getPhaseExecutionSummary(
       String appId, String executionUuid, String stateExecutionInstanceId) {
-    PhaseExecutionSummary phaseExecutionSummary = new PhaseExecutionSummary();
-    PageRequest<StateExecutionInstance> pageRequest =
-        aPageRequest()
-            .withReadPref(CRITICAL)
-            .withLimit(PageRequest.UNLIMITED)
-            .addFilter("appId", EQ, appId)
-            .addFilter("executionUuid", EQ, executionUuid)
-            .addFilter("parentInstanceId", Operator.IN, stateExecutionInstanceId)
-            .addFilter("stateType", EQ, StateType.PHASE_STEP.name())
-            .addFieldsIncluded(
-                "uuid", "parentInstanceId", "contextElement", "status", "stateType", "displayName", "stateExecutionMap")
-            .build();
+    List<StateExecutionInstance> allStateExecutionInstances =
+        wingsPersistence.createQuery(StateExecutionInstance.class)
+            .filter(StateExecutionInstance.APP_ID_KEY, appId)
+            .filter(StateExecutionInstance.EXECUTION_UUID_KEY, executionUuid)
+            .filter(StateExecutionInstance.PARENT_INSTANCE_ID_KEY, stateExecutionInstanceId)
+            .filter(StateExecutionInstance.STATE_TYPE_KEY, PHASE_STEP.name())
+            .project(StateExecutionInstance.CONTEXT_ELEMENT_KEY, true)
+            .project(StateExecutionInstance.DISPLAY_NAME_KEY, true)
+            .project(StateExecutionInstance.ID_KEY, true)
+            .project(StateExecutionInstance.PARENT_INSTANCE_ID_KEY, true)
+            .project(StateExecutionInstance.STATE_EXECUTION_MAP_KEY, true)
+            .project(StateExecutionInstance.STATE_TYPE_KEY, true)
+            .project(StateExecutionInstance.STATUS_KEY, true)
+            .asList();
 
-    List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(pageRequest);
+    PhaseExecutionSummary phaseExecutionSummary = new PhaseExecutionSummary();
     if (isEmpty(allStateExecutionInstances)) {
       return null;
     }
@@ -2112,18 +2112,21 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     List<String> parentInstanceIds = asList(stateExecutionInstanceId);
     while (isNotEmpty(parentInstanceIds)) {
-      PageRequest<StateExecutionInstance> pageRequest =
-          aPageRequest()
-              .withReadPref(CRITICAL)
-              .withLimit(PageRequest.UNLIMITED)
-              .addFilter("appId", EQ, appId)
-              .addFilter("executionUuid", EQ, executionUuid)
-              .addFilter("parentInstanceId", Operator.IN, parentInstanceIds.toArray())
-              .addFieldsIncluded("uuid", "parentInstanceId", "contextElement", "status", "stateType", "displayName",
-                  "stateExecutionMap")
-              .build();
+      List<StateExecutionInstance> allStateExecutionInstances =
+          wingsPersistence.createQuery(StateExecutionInstance.class)
+              .filter(StateExecutionInstance.APP_ID_KEY, appId)
+              .filter(StateExecutionInstance.EXECUTION_UUID_KEY, executionUuid)
+              .field(StateExecutionInstance.PARENT_INSTANCE_ID_KEY)
+              .in(parentInstanceIds)
+              .project(StateExecutionInstance.CONTEXT_ELEMENT_KEY, true)
+              .project(StateExecutionInstance.DISPLAY_NAME_KEY, true)
+              .project(StateExecutionInstance.ID_KEY, true)
+              .project(StateExecutionInstance.PARENT_INSTANCE_ID_KEY, true)
+              .project(StateExecutionInstance.STATE_EXECUTION_MAP_KEY, true)
+              .project(StateExecutionInstance.STATE_TYPE_KEY, true)
+              .project(StateExecutionInstance.STATUS_KEY, true)
+              .asList();
 
-      List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(pageRequest);
       if (isEmpty(allStateExecutionInstances)) {
         return null;
       }
@@ -2151,16 +2154,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   public List<Artifact> getArtifactsCollected(String appId, String executionUuid) {
-    PageRequest<StateExecutionInstance> pageRequest =
-        aPageRequest()
-            .withReadPref(CRITICAL)
-            .withLimit(UNLIMITED)
-            .addFilter("appId", EQ, appId)
-            .addFilter("executionUuid", EQ, executionUuid)
-            .addFilter("stateType", EQ, StateType.ARTIFACT_COLLECTION.name())
-            .build();
+    List<StateExecutionInstance> allStateExecutionInstances =
+        wingsPersistence.createQuery(StateExecutionInstance.class)
+            .filter(StateExecutionInstance.APP_ID_KEY, appId)
+            .filter(StateExecutionInstance.EXECUTION_UUID_KEY, executionUuid)
+            .filter(StateExecutionInstance.STATE_TYPE_KEY, ARTIFACT_COLLECTION.name())
+            .asList();
 
-    List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(pageRequest);
     if (isEmpty(allStateExecutionInstances)) {
       return null;
     }

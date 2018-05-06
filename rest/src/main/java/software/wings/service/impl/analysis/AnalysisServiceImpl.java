@@ -692,13 +692,18 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   @Override
   public List<LogMLExpAnalysisInfo> getExpAnalysisInfoList() {
-    PageRequest<ExperimentalLogMLAnalysisRecord> pageRequest =
-        aPageRequest()
-            .addFieldsIncluded("stateExecutionId", "appId", "stateType", "experiment_name", "createdAt", "envId",
-                "workflowExecutionId")
-            .build();
-    List<ExperimentalLogMLAnalysisRecord> experimentalLogMLAnalysisRecords =
-        wingsPersistence.queryAll(ExperimentalLogMLAnalysisRecord.class, pageRequest);
+    final Query<ExperimentalLogMLAnalysisRecord> analysisRecords =
+        wingsPersistence.createAuthExemptedQuery(ExperimentalLogMLAnalysisRecord.class)
+            .project("stateExecutionId", true)
+            .project("appId", true)
+            .project("stateType", true)
+            .project("experiment_name", true)
+            .project("createdAt", true)
+            .project("envId", true)
+            .project("workflowExecutionId", true);
+
+    List<ExperimentalLogMLAnalysisRecord> experimentalLogMLAnalysisRecords = analysisRecords.asList();
+
     List<LogMLExpAnalysisInfo> result = new ArrayList<>();
     experimentalLogMLAnalysisRecords.forEach(record -> {
       result.add(LogMLExpAnalysisInfo.builder()

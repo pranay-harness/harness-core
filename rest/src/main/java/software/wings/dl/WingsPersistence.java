@@ -280,16 +280,6 @@ public interface WingsPersistence {
   <T extends Base> boolean delete(T entity);
 
   /**
-   * Query All - it should be rarely used.
-   *
-   * @param <T> the generic type
-   * @param cls the cls
-   * @param req the req
-   * @return the page response
-   */
-  <T> List<T> queryAll(Class<T> cls, PageRequest<T> req);
-
-  /**
    * Query.
    *
    * @param <T> the generic type
@@ -334,13 +324,8 @@ public interface WingsPersistence {
   /**
    * Create query query.
    *
-<<<<<<< HEAD
    * @param <T> the type parameter
    * @param cls the cls
-=======
-   * @param <T>          the type parameter
-   * @param cls          the cls
->>>>>>> master
    * @return the query
    */
   <T> Query<T> createAuthExemptedQuery(Class<T> cls);
@@ -388,11 +373,7 @@ public interface WingsPersistence {
    * This api is preferred over createQuery() api.
    *
    * @param collectionClass the collection class
-<<<<<<< HEAD
-   * @return query query
-=======
    * @return query
->>>>>>> master
    */
   Query createAuthorizedQuery(Class collectionClass);
 
@@ -407,11 +388,7 @@ public interface WingsPersistence {
    *
    * @param collectionClass   the collection class
    * @param disableValidation the disable validation
-<<<<<<< HEAD
-   * @return query query
-=======
    * @return query
->>>>>>> master
    */
   Query createAuthorizedQuery(Class collectionClass, boolean disableValidation);
 }

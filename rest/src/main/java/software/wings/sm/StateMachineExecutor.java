@@ -15,8 +15,6 @@ import static software.wings.beans.ErrorCode.STATE_NOT_FOR_TYPE;
 import static software.wings.beans.ReadPref.CRITICAL;
 import static software.wings.beans.ReadPref.NORMAL;
 import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.SearchFilter.Operator.GE;
-import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
@@ -63,7 +61,6 @@ import software.wings.beans.ErrorStrategy;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.common.Constants;
-import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsDeque;
 import software.wings.dl.WingsPersistence;
@@ -88,8 +85,9 @@ import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -1158,8 +1156,8 @@ public class StateMachineExecutor {
         break;
       }
       case ABORT_ALL: {
-        abortInstancesByStatus(
-            workflowExecutionInterrupt, workflowExecution, NEW, QUEUED, RUNNING, STARTING, PAUSED, PAUSING, WAITING);
+        abortInstancesByStatus(workflowExecutionInterrupt, workflowExecution,
+            EnumSet.<ExecutionStatus>of(NEW, QUEUED, RUNNING, STARTING, PAUSED, PAUSING, WAITING));
         break;
       }
       case END_EXECUTION:
@@ -1192,19 +1190,18 @@ public class StateMachineExecutor {
   }
 
   private void endExecution(ExecutionInterrupt workflowExecutionInterrupt, WorkflowExecution workflowExecution) {
-    abortInstancesByStatus(
-        workflowExecutionInterrupt, workflowExecution, NEW, QUEUED, RUNNING, STARTING, PAUSED, PAUSING);
-    PageRequest<StateExecutionInstance> pageRequest =
-        aPageRequest()
-            .withReadPref(CRITICAL)
-            .withLimit(PageRequest.UNLIMITED)
-            .addFilter("appId", EQ, workflowExecutionInterrupt.getAppId())
-            .addFilter("executionUuid", EQ, workflowExecutionInterrupt.getExecutionUuid())
-            .addFilter("status", IN, WAITING)
-            .addFilter("createdAt", GE, workflowExecution.getCreatedAt())
-            .build();
+    abortInstancesByStatus(workflowExecutionInterrupt, workflowExecution,
+        EnumSet.<ExecutionStatus>of(NEW, QUEUED, RUNNING, STARTING, PAUSED, PAUSING));
 
-    List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(pageRequest);
+    List<StateExecutionInstance> allStateExecutionInstances =
+        wingsPersistence.createQuery(StateExecutionInstance.class)
+            .filter(StateExecutionInstance.APP_ID_KEY, workflowExecutionInterrupt.getAppId())
+            .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflowExecutionInterrupt.getExecutionUuid())
+            .filter(StateExecutionInstance.STATUS_KEY, WAITING)
+            .field(StateExecutionInstance.CREATED_AT_KEY)
+            .greaterThanOrEq(workflowExecution.getCreatedAt())
+            .asList();
+
     for (StateExecutionInstance stateExecutionInstance : allStateExecutionInstances) {
       StateMachine sm = wingsPersistence.get(StateMachine.class, workflowExecutionInterrupt.getAppId(),
           stateExecutionInstance.getStateMachineId(), CRITICAL);
@@ -1215,22 +1212,21 @@ public class StateMachineExecutor {
     }
   }
 
-  private void abortInstancesByStatus(
-      ExecutionInterrupt workflowExecutionInterrupt, WorkflowExecution workflowExecution, ExecutionStatus... statuses) {
+  private void abortInstancesByStatus(ExecutionInterrupt workflowExecutionInterrupt,
+      WorkflowExecution workflowExecution, Collection<ExecutionStatus> statuses) {
     if (!markAbortingState(workflowExecutionInterrupt, workflowExecution, statuses)) {
       return;
     }
-    PageRequest<StateExecutionInstance> pageRequest =
-        aPageRequest()
-            .withReadPref(CRITICAL)
-            .withLimit(PageRequest.UNLIMITED)
-            .addFilter("appId", EQ, workflowExecutionInterrupt.getAppId())
-            .addFilter("executionUuid", EQ, workflowExecutionInterrupt.getExecutionUuid())
-            .addFilter("status", IN, ABORTING)
-            .addFilter("createdAt", GE, workflowExecution.getCreatedAt())
-            .build();
 
-    List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(pageRequest);
+    List<StateExecutionInstance> allStateExecutionInstances =
+        wingsPersistence.createQuery(StateExecutionInstance.class)
+            .filter(StateExecutionInstance.APP_ID_KEY, workflowExecutionInterrupt.getAppId())
+            .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflowExecutionInterrupt.getExecutionUuid())
+            .filter(StateExecutionInstance.STATUS_KEY, ABORTING)
+            .field(StateExecutionInstance.CREATED_AT_KEY)
+            .greaterThanOrEq(workflowExecution.getCreatedAt())
+            .asList();
+
     if (isEmpty(allStateExecutionInstances)) {
       logger.warn(
           "ABORT_ALL workflowExecutionInterrupt: {} being ignored as no running instance found for executionUuid: {}",
@@ -1322,25 +1318,22 @@ public class StateMachineExecutor {
     }
   }
 
-  private List<StateExecutionInstance> getAllStateExecutionInstances(PageRequest<StateExecutionInstance> req) {
-    return wingsPersistence.queryAll(StateExecutionInstance.class, req);
-  }
-
-  private boolean markAbortingState(
-      ExecutionInterrupt workflowExecutionInterrupt, WorkflowExecution workflowExecution, ExecutionStatus... statuses) {
+  private boolean markAbortingState(ExecutionInterrupt workflowExecutionInterrupt, WorkflowExecution workflowExecution,
+      Collection<ExecutionStatus> statuses) {
     // Get all that are eligible for aborting
-    PageRequest<StateExecutionInstance> pageRequest =
-        aPageRequest()
-            .withReadPref(CRITICAL)
-            .withLimit(PageRequest.UNLIMITED)
-            .addFilter("appId", EQ, workflowExecutionInterrupt.getAppId())
-            .addFilter("executionUuid", EQ, workflowExecutionInterrupt.getExecutionUuid())
-            .addFilter("status", IN, Arrays.copyOf(statuses, statuses.length, Object[].class))
-            .addFilter("createdAt", GE, workflowExecution.getCreatedAt())
-            .addFieldsIncluded("uuid", "stateType")
-            .build();
 
-    List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(pageRequest);
+    List<StateExecutionInstance> allStateExecutionInstances =
+        wingsPersistence.createQuery(StateExecutionInstance.class)
+            .filter(StateExecutionInstance.APP_ID_KEY, workflowExecutionInterrupt.getAppId())
+            .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflowExecutionInterrupt.getExecutionUuid())
+            .field(StateExecutionInstance.STATUS_KEY)
+            .in(statuses)
+            .field(StateExecutionInstance.CREATED_AT_KEY)
+            .greaterThanOrEq(workflowExecution.getCreatedAt())
+            .project(StateExecutionInstance.ID_KEY, true)
+            .project(StateExecutionInstance.STATE_TYPE_KEY, true)
+            .asList();
+
     if (isEmpty(allStateExecutionInstances)) {
       logger.warn("No stateExecutionInstance could be marked as ABORTING - appId: {}, executionUuid: {}",
           workflowExecutionInterrupt.getAppId(), workflowExecutionInterrupt.getExecutionUuid());
@@ -1397,19 +1390,17 @@ public class StateMachineExecutor {
       return allInstanceIds;
     }
 
-    // Query children
-    PageRequest<StateExecutionInstance> pageRequest =
-        aPageRequest()
-            .withReadPref(CRITICAL)
-            .withLimit(PageRequest.UNLIMITED)
-            .addFilter("appId", EQ, workflowExecutionInterrupt.getAppId())
-            .addFilter("executionUuid", EQ, workflowExecutionInterrupt.getExecutionUuid())
-            .addFilter("parentInstanceId", IN, parentInstanceIds.toArray())
-            .addFilter("status", IN, NEW, QUEUED, STARTING, RUNNING, PAUSED, PAUSING, WAITING)
-            .addFilter("createdAt", GE, workflowExecution.getCreatedAt())
-            .build();
-
-    List<StateExecutionInstance> childInstances = getAllStateExecutionInstances(pageRequest);
+    List<StateExecutionInstance> childInstances =
+        wingsPersistence.createQuery(StateExecutionInstance.class)
+            .filter(StateExecutionInstance.APP_ID_KEY, workflowExecutionInterrupt.getAppId())
+            .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflowExecutionInterrupt.getExecutionUuid())
+            .field(StateExecutionInstance.PARENT_INSTANCE_ID_KEY)
+            .in(parentInstanceIds)
+            .field(StateExecutionInstance.STATUS_KEY)
+            .in(EnumSet.<ExecutionStatus>of(NEW, QUEUED, STARTING, RUNNING, PAUSED, PAUSING, WAITING))
+            .field(StateExecutionInstance.CREATED_AT_KEY)
+            .greaterThanOrEq(workflowExecution.getCreatedAt())
+            .asList();
 
     // get distinct parent Ids
     List<String> parentIdsHavingChildren =
@@ -1427,7 +1418,7 @@ public class StateMachineExecutor {
     // TODO: convert this not to use Query directly after default createdAt sorting is taken off
     Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class, CRITICAL)
                                               .filter(ID_KEY, stateExecutionInstanceId)
-                                              .filter("appId", appId);
+                                              .filter(StateExecutionInstance.APP_ID_KEY, appId);
     if (executionUuid != null) {
       query.filter("executionUuid", executionUuid);
     }

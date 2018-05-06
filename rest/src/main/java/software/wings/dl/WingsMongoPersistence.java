@@ -1,7 +1,6 @@
 package software.wings.dl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
@@ -466,23 +465,6 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     }
     WriteResult result = primaryDatastore.delete(object);
     return !(result == null || result.getN() == 0);
-  }
-
-  /**
-   * {@inheritDoc}
-   * It should be rarely used
-   */
-  @Override
-  public <T> List<T> queryAll(Class<T> cls, PageRequest<T> req) {
-    PageResponse<T> res = query(cls, req);
-    List<T> ret = new ArrayList<>();
-    while (isNotEmpty(res)) {
-      ret.addAll(res.getResponse());
-      req.setOffset(String.valueOf(ret.size()));
-      res = query(cls, req);
-    }
-    checkListSize(ret);
-    return ret;
   }
 
   /**
