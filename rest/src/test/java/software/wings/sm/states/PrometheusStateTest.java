@@ -260,7 +260,7 @@ public class PrometheusStateTest extends WingsBaseTest {
 
   @Test
   public void testTriggerCollection() throws ParseException {
-    assertEquals(0, wingsPersistence.createQuery(DelegateTask.class).asList().size());
+    assertEquals(0, wingsPersistence.createQuery(DelegateTask.class).count());
     PrometheusConfig prometheusConfig = PrometheusConfig.builder().accountId(accountId).url("prometheus-url").build();
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
                                             .withAccountId(accountId)
@@ -332,7 +332,7 @@ public class PrometheusStateTest extends WingsBaseTest {
     assertEquals(ExecutionStatus.RUNNING, continuousVerificationExecutionMetaData1.getExecutionStatus());
 
     // assert metric templates
-    assertEquals(1, wingsPersistence.createQuery(TimeSeriesMetricTemplates.class).asList().size());
+    assertEquals(1, wingsPersistence.createQuery(TimeSeriesMetricTemplates.class).count());
     Map<String, TimeSeriesMetricDefinition> metricTemplates =
         metricDataAnalysisService.getMetricTemplates(StateType.PROMETHEUS, stateExecutionId);
     assertEquals(1, metricTemplates.size());

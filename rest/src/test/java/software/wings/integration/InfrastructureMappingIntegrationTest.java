@@ -9,6 +9,7 @@ import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrast
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServiceInstanceSelectionParams;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 
 import com.google.inject.Inject;
@@ -28,12 +29,12 @@ import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.HostConnectionAttributes.ConnectionType;
 import software.wings.beans.PhysicalInfrastructureMapping;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
-import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.AppService;
@@ -125,7 +126,10 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
         .containsExactlyInAnyOrder("host1", "host2");
 
     // Test exclusion
-    List<ServiceInstance> allServiceInstances = serviceInstanceService.list(new PageRequest<>()).getResponse();
+    List<ServiceInstance> allServiceInstances =
+        serviceInstanceService
+            .list(aPageRequest().addFilter(ServiceInstance.APP_ID_KEY, Operator.EQ, app.getUuid()).build())
+            .getResponse();
 
     // Exclude 1st service instance
     serviceInstances =

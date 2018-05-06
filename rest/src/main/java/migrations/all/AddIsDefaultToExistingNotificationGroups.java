@@ -1,6 +1,7 @@
 package migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 
@@ -30,7 +31,8 @@ public class AddIsDefaultToExistingNotificationGroups implements Migration {
   public void migrate() {
     PageRequest<NotificationGroup> pageRequest = aPageRequest().withLimit(UNLIMITED).build();
     logger.info("Retrieving notificationGroups");
-    PageResponse<NotificationGroup> pageResponse = wingsPersistence.query(NotificationGroup.class, pageRequest);
+    PageResponse<NotificationGroup> pageResponse =
+        wingsPersistence.query(NotificationGroup.class, pageRequest, excludeAuthority);
 
     List<NotificationGroup> notificationGroups = pageResponse.getResponse();
     if (pageResponse.isEmpty() || isEmpty(notificationGroups)) {

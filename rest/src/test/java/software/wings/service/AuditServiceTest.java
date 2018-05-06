@@ -3,6 +3,7 @@ package software.wings.service;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
+import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.security.UserThreadLocal.userGuard;
 
@@ -16,7 +17,7 @@ import software.wings.audit.AuditHeader;
 import software.wings.beans.HttpMethod;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
-import software.wings.dl.PageRequest;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.dl.PageResponse;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AuditService;
@@ -122,7 +123,7 @@ public class AuditServiceTest extends WingsBaseTest {
     createAuditHeader();
 
     auditService.deleteAuditRecords(0);
-    assertThat(auditService.list(new PageRequest<>())).hasSize(0);
+    assertThat(auditService.list(aPageRequest().addFilter(ArtifactStream.APP_ID_KEY, EQ, appId).build())).hasSize(0);
   }
 
   @Test
@@ -133,6 +134,6 @@ public class AuditServiceTest extends WingsBaseTest {
     createAuditHeader();
 
     auditService.deleteAuditRecords(1 * 24 * 60 * 60 * 1000);
-    assertThat(auditService.list(new PageRequest<>())).hasSize(4);
+    assertThat(auditService.list(aPageRequest().addFilter(ArtifactStream.APP_ID_KEY, EQ, appId).build())).hasSize(4);
   }
 }

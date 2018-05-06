@@ -63,7 +63,7 @@ public class HQuery<T> extends QueryImpl<T> {
   }
 
   private void checkKeyListSize(List<Key<T>> list) {
-    if (!allChecks.contains(COUNT)) {
+    if (!queryChecks.contains(COUNT)) {
       return;
     }
 
@@ -75,7 +75,7 @@ public class HQuery<T> extends QueryImpl<T> {
   }
 
   private void checkListSize(List<T> list) {
-    if (!allChecks.contains(COUNT)) {
+    if (!queryChecks.contains(COUNT)) {
       return;
     }
 
@@ -127,7 +127,7 @@ public class HQuery<T> extends QueryImpl<T> {
   }
 
   private void enforceHarnessRules() {
-    if (!allChecks.contains(AUTHORITY)) {
+    if (!queryChecks.contains(AUTHORITY)) {
       return;
     }
 

@@ -252,7 +252,7 @@ public class ELKAnalysisStateTest extends WingsBaseTest {
 
   @Test
   public void testTriggerCollection() throws ParseException {
-    assertEquals(0, wingsPersistence.createQuery(DelegateTask.class).asList().size());
+    assertEquals(0, wingsPersistence.createQuery(DelegateTask.class).count());
     ElkConfig elkConfig = ElkConfig.builder()
                               .accountId(accountId)
                               .elkConnector(ElkConnector.ELASTIC_SEARCH_SERVER)

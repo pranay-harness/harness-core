@@ -1539,6 +1539,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     stateExecutionInstance.getInterruptHistory().stream().forEach(effect -> map.put(effect.getInterruptId(), effect));
 
     List<StateExecutionInterrupt> interrupts = wingsPersistence.createQuery(ExecutionInterrupt.class)
+                                                   .filter(ExecutionInterrupt.APP_ID_KEY, appId)
                                                    .filter("stateExecutionInstanceId", stateExecutionInstanceId)
                                                    .asList()
                                                    .stream()
@@ -1551,6 +1552,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     if (isNotEmpty(stateExecutionInstance.getInterruptHistory())) {
       wingsPersistence.createQuery(ExecutionInterrupt.class)
+          .filter(ExecutionInterrupt.APP_ID_KEY, appId)
           .field(ID_KEY)
           .in(map.keySet())
           .asList()

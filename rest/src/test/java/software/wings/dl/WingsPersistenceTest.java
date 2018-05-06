@@ -10,6 +10,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
+import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
@@ -99,7 +100,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
 
     PageRequest<TestEntity> req = new PageRequest<>();
     req.addFilter("fieldA", Operator.IN, new Object[] {"fieldA11", "fieldA21"});
-    PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req);
+    PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req, excludeAuthority);
     assertThat(res).isNotNull();
     assertThat(res.size()).isEqualTo(2);
   }
@@ -123,7 +124,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
 
     PageRequest<TestEntity> req = new PageRequest<>();
     req.addFilter("fieldList", Operator.IN, "fieldList11", "fieldList13", "fieldList21");
-    PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req);
+    PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req, excludeAuthority);
     assertThat(res).isNotNull();
     assertThat(res.size()).isEqualTo(2);
   }
@@ -156,8 +157,8 @@ public class WingsPersistenceTest extends WingsBaseTest {
     TestEntityB b311 = new TestEntityB();
     b311.setUuid(b31.getUuid());
 
-    PageResponse<TestEntity> res = wingsPersistence.query(
-        TestEntity.class, aPageRequest().addFilter("testEntityBList", Operator.HAS, b111, b311).build());
+    PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class,
+        aPageRequest().addFilter("testEntityBList", Operator.HAS, b111, b311).build(), excludeAuthority);
 
     assertThat(res).isNotNull();
     assertThat(res.size()).isEqualTo(2);
@@ -180,7 +181,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
     order.setOrderType(OrderType.DESC);
     req.addOrder(order);
 
-    PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req);
+    PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req, excludeAuthority);
 
     assertPaginationResult(res);
   }
@@ -207,7 +208,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
     req.setOffset("1");
     req.setUriInfo(uriInfo);
 
-    PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req);
+    PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req, excludeAuthority);
 
     assertPaginationResult(res);
   }
@@ -230,7 +231,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
     PageRequest<TestEntity> req = new PageRequest<>();
     req.setUriInfo(uriInfo);
 
-    PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req);
+    PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req, excludeAuthority);
 
     assertThat(res).isNotNull().hasSize(2);
   }
@@ -256,7 +257,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
     PageRequest<TestEntity> req = new PageRequest<>();
     req.setUriInfo(uriInfo);
 
-    PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req);
+    PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req, excludeAuthority);
 
     assertThat(res).isNotNull().hasSize(2);
     assertThat(res.get(0)).isNotNull();
@@ -287,7 +288,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
     req.setOffset("1");
     req.setUriInfo(uriInfo);
 
-    PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req);
+    PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req, excludeAuthority);
 
     assertThat(res).isNotNull().hasSize(2);
     assertThat(res.getResponse()).extracting(TestEntity::getFieldA).containsExactly("fieldA15", "fieldA14");
@@ -327,14 +328,14 @@ public class WingsPersistenceTest extends WingsBaseTest {
     PageRequest<TestEntityC> req = new PageRequest<>();
     req.setUriInfo(uriInfo);
 
-    PageResponse<TestEntityC> res = wingsPersistence.query(TestEntityC.class, req);
+    PageResponse<TestEntityC> res = wingsPersistence.query(TestEntityC.class, req, excludeAuthority);
 
     assertThat(res).isNotNull().hasSize(2);
 
     queryParams.clear();
     queryParams.put("testEntityBs", Lists.newArrayList(testEntityB2.getUuid()));
 
-    res = wingsPersistence.query(TestEntityC.class, req);
+    res = wingsPersistence.query(TestEntityC.class, req, excludeAuthority);
 
     assertThat(res).isNotNull().hasSize(1);
   }
@@ -427,7 +428,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
                     .build())
             .build();
 
-    PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req);
+    PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req, excludeAuthority);
     assertThat(res).isNotNull().doesNotContainNull().hasSize(2).extracting("mapField").contains(map, map2);
   }
 
@@ -508,7 +509,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
     req.addOrder(order);
 
     req.setOptions(asList(PageRequest.Option.LIST));
-    PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req);
+    PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req, excludeAuthority);
     assertThat(res).isNotNull();
     assertThat(res.getTotal()).isNull();
     assertThat(res.getResponse()).isNotNull().hasSize(5);
@@ -526,7 +527,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
     req.addOrder("fieldA", OrderType.DESC);
 
     req.setOptions(asList(PageRequest.Option.LIST, PageRequest.Option.COUNT));
-    PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req);
+    PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req, excludeAuthority);
     assertThat(res).isNotNull();
     assertThat(res.getTotal()).isNotNull().isEqualTo(5);
     assertThat(res.getResponse()).isNotNull().hasSize(5);

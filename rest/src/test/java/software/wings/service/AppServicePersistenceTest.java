@@ -2,6 +2,7 @@ package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -64,7 +65,8 @@ public class AppServicePersistenceTest extends WingsBaseTest {
     alertService.openAlert(ACCOUNT_ID, appId, AlertType.ApprovalNeeded, ApprovalNeededAlert.builder().build()).get();
 
     // Make sure that we added the two alerts
-    PageResponse<Alert> alerts = alertService.list(aPageRequest().build());
+    PageResponse<Alert> alerts =
+        alertService.list(aPageRequest().addFilter(Alert.ACCOUNT_ID_KEY, EQ, ACCOUNT_ID).build());
 
     assertThat(alerts.size()).isEqualTo(2);
 
@@ -82,7 +84,7 @@ public class AppServicePersistenceTest extends WingsBaseTest {
     listener.waitToSatisfy(10000);
 
     // Make sure that just the alert for the application are deleted
-    alerts = alertService.list(aPageRequest().build());
+    alerts = alertService.list(aPageRequest().addFilter(Alert.ACCOUNT_ID_KEY, EQ, ACCOUNT_ID).build());
 
     assertThat(alerts.size()).isEqualTo(1);
   }

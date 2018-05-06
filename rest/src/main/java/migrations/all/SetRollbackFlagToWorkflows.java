@@ -2,6 +2,7 @@ package migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 
@@ -32,7 +33,7 @@ public class SetRollbackFlagToWorkflows implements Migration {
   public void migrate() {
     PageRequest<Application> pageRequest = aPageRequest().withLimit(UNLIMITED).build();
     logger.info("Retrieving applications");
-    PageResponse<Application> pageResponse = wingsPersistence.query(Application.class, pageRequest);
+    PageResponse<Application> pageResponse = wingsPersistence.query(Application.class, pageRequest, excludeAuthority);
 
     List<Application> apps = pageResponse.getResponse();
     if (pageResponse.isEmpty() || isEmpty(apps)) {

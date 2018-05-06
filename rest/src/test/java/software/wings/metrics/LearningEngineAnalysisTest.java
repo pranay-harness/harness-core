@@ -63,7 +63,7 @@ public class LearningEngineAnalysisTest extends WingsBaseTest {
       learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
     }
 
-    assertEquals(numOfTasks, wingsPersistence.createQuery(LearningEngineAnalysisTask.class).asList().size());
+    assertEquals(numOfTasks, wingsPersistence.createQuery(LearningEngineAnalysisTask.class).count());
 
     for (int i = 1; i <= numOfTasks; i++) {
       LearningEngineAnalysisTask analysisTask =
@@ -160,7 +160,7 @@ public class LearningEngineAnalysisTest extends WingsBaseTest {
     }
     Thread.sleep(TimeUnit.SECONDS.toMillis(10));
 
-    assertEquals(numOfTasks, wingsPersistence.createQuery(LearningEngineAnalysisTask.class).asList().size());
+    assertEquals(numOfTasks, wingsPersistence.createQuery(LearningEngineAnalysisTask.class).count());
 
     for (int i = 1; i <= numOfTasks; i++) {
       LearningEngineAnalysisTask analysisTask =
