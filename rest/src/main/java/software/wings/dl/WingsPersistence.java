@@ -20,25 +20,6 @@ import java.util.Set;
  */
 public interface WingsPersistence {
   /**
-   * List.
-   *
-   * @param <T> the generic type
-   * @param cls the cls
-   * @return the list
-   */
-  <T extends Base> List<T> list(Class<T> cls);
-
-  /**
-   * List.
-   *
-   * @param <T>      the generic type
-   * @param cls      the cls
-   * @param readPref the read pref
-   * @return the list
-   */
-  <T extends Base> List<T> list(Class<T> cls, ReadPref readPref);
-
-  /**
    * Gets the.
    *
    * @param <T> the generic type

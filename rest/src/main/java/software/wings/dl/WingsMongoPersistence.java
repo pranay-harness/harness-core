@@ -2,7 +2,6 @@ package software.wings.dl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -103,59 +102,21 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     this.datastoreMap = datastoreMap;
   }
 
-  private <T> void checkListSize(List<T> list) {
-    if (list.size() > 1000) {
-      if (logger.isErrorEnabled()) {
-        logger.error(format("List query returns %d items.", list.size()), new Exception(""));
-      }
-    }
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public <T extends Base> List<T> list(Class<T> cls) {
-    return list(cls, ReadPref.NORMAL);
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public <T extends Base> List<T> list(Class<T> cls, ReadPref readPref) {
-    final List<T> list = datastoreMap.get(readPref).find(cls).asList();
-    checkListSize(list);
-    return list;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public <T extends Base> T get(Class<T> cls, String id) {
     return get(cls, id, ReadPref.NORMAL);
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public <T extends Base> T get(Class<T> cls, String appId, String id) {
     return get(cls, appId, id, ReadPref.NORMAL);
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public <T extends Base> T get(Class<T> cls, String appId, String id, ReadPref readPref) {
     return createQuery(cls, readPref).filter("appId", appId).filter(ID_KEY, id).get();
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public <T extends Base> T get(Class<T> cls, String id, ReadPref readPref) {
     return createQuery(cls, readPref).filter(ID_KEY, id).get();
@@ -166,9 +127,6 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     return query.get();
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public <T extends Base> T get(Class<T> cls, PageRequest<T> req) {
     req.setLimit("1");
@@ -185,9 +143,6 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     return (String) key.getId();
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public <T extends Base> String save(T object) {
     encryptIfNecessary(object);
@@ -196,9 +151,6 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     return (String) key.getId();
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public <T extends Base> List<String> save(List<T> ts) {
     ts.removeIf(Objects::isNull);
@@ -209,9 +161,6 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     return ids;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public <T extends Base> List<String> saveIgnoringDuplicateKeys(List<T> ts) {
     for (Iterator<T> iterator = ts.iterator(); iterator.hasNext();) {
@@ -235,9 +184,6 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     return ids;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public <T extends Base> T saveAndGet(Class<T> cls, T object) {
     Object id = save(object);
@@ -248,11 +194,6 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     return query.get();
   }
 
-  /**
-   * {@inheritDoc}
-   *
-   * @return
-   */
   @Override
   public <T> UpdateResults update(Query<T> updateQuery, UpdateOperations<T> updateOperations) {
     // TODO: add encryption handling; right now no encrypted classes use update
@@ -299,9 +240,6 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     return primaryDatastore.findAndModify(query, updateOperations, findAndModifyOptions);
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public <T extends Base> UpdateResults update(T ent, UpdateOperations<T> ops) {
     // TODO: add encryption handling; right now no encrypted classes use update
@@ -318,9 +256,6 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     return primaryDatastore.update(ent, ops);
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public <T> void updateField(Class<T> cls, String entityId, String fieldName, Object value) {
     Map<String, Object> keyValuePairs = new HashMap<>();
@@ -333,9 +268,6 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     updateFields(cls, entityId, keyValuePairs, Collections.emptySet());
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public <T> void updateFields(
       Class<T> cls, String entityId, Map<String, Object> keyValuePairs, Set<String> fieldsToRemove) {
@@ -419,9 +351,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     }
     return encryptedFields.contains(f);
   }
-  /**
-   * {@inheritDoc}
-   */
+
   @Override
   public <T extends Base> boolean delete(Class<T> cls, String uuid) {
     if (cls.equals(SettingAttribute.class) || Encryptable.class.isAssignableFrom(cls)) {
@@ -432,18 +362,12 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     return !(result == null || result.getN() == 0);
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public <T extends Base> boolean delete(Class<T> cls, String appId, String uuid) {
     Query<T> query = primaryDatastore.createQuery(cls).filter(ID_KEY, uuid).filter("appId", appId);
     return delete(query);
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public <T extends Base> boolean delete(Query<T> query) {
     if (query.getEntityClass().equals(SettingAttribute.class)
@@ -457,9 +381,6 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     return !(result == null || result.getN() == 0);
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public <T extends Base> boolean delete(T object) {
     if (SettingAttribute.class.isInstance(object) || Encryptable.class.isInstance(object)) {
@@ -469,17 +390,11 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     return !(result == null || result.getN() == 0);
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req) {
     return query(cls, req, allChecks);
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, Set<QueryChecks> queryChecks) {
     if (!authFilters(req, cls)) {
@@ -495,9 +410,6 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     return MongoHelper.queryPageRequest(query, mapper, cls, req);
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public <T> long getCount(Class<T> cls, PageRequest<T> req) {
     AdvancedDatastore advancedDatastore =
@@ -508,17 +420,11 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     return MongoHelper.getCount(query, mapper, cls, req);
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public <T> UpdateOperations<T> createUpdateOperations(Class<T> cls) {
     return primaryDatastore.createUpdateOperations(cls);
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public <T> Query<T> createQuery(Class<T> cls) {
     return createQuery(cls, ReadPref.NORMAL);
@@ -531,58 +437,37 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     return query;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public <T> Query<T> createQuery(Class<T> cls, ReadPref readPref) {
     return datastoreMap.get(readPref).createQuery(cls);
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public GridFSBucket getOrCreateGridFSBucket(String bucketName) {
     return GridFSBuckets.create(
         primaryDatastore.getMongo().getDatabase(primaryDatastore.getDB().getName()), bucketName);
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public AdvancedDatastore getDatastore() {
     return primaryDatastore;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public void close() {
     primaryDatastore.getMongo().close();
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public DBCollection getCollection(String collectionName) {
     return primaryDatastore.getDB().getCollection(collectionName);
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public void start() throws Exception {
     // Do nothing
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public void stop() throws Exception {
     close();
