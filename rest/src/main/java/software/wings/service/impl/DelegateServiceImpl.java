@@ -37,6 +37,7 @@ import static software.wings.common.Constants.DOCKER_DELEGATE;
 import static software.wings.common.Constants.KUBERNETES_DELEGATE;
 import static software.wings.common.Constants.MAX_DELEGATE_LAST_HEARTBEAT;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.DELEGATE_STATE_NOTIFICATION;
+import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.exception.WingsException.USER_ADMIN;
@@ -986,7 +987,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private List<DelegateTaskEvent> getQueuedEvents(boolean sync) {
-    return wingsPersistence.createAuthExemptedQuery(DelegateTask.class)
+    return wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
         .filter("status", QUEUED)
         .filter("async", !sync)
         .field("delegateId")
@@ -1004,7 +1005,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private List<DelegateTaskEvent> getAbortedEvents(String delegateId) {
-    Query<DelegateTask> abortedQuery = wingsPersistence.createAuthExemptedQuery(DelegateTask.class)
+    Query<DelegateTask> abortedQuery = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
                                            .filter("status", ABORTED)
                                            .filter("async", true)
                                            .filter("delegateId", delegateId);
@@ -1036,7 +1037,7 @@ public class DelegateServiceImpl implements DelegateService {
         while (true) {
           List<Key<DelegateTask>> delegateTaskKeys = new ArrayList<>();
           try {
-            Query<DelegateTask> query = wingsPersistence.createAuthExemptedQuery(DelegateTask.class)
+            Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
                                             .field("createdAt")
                                             .lessThan(clock.millis() - retentionMillis);
             delegateTaskKeys.addAll(query.asKeyList(new FindOptions().limit(limit).batchSize(batchSize)));

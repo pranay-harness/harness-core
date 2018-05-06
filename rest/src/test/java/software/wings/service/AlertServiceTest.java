@@ -16,6 +16,7 @@ import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 import static software.wings.beans.alert.AlertType.NoActiveDelegates;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 import static software.wings.beans.alert.NoEligibleDelegatesAlert.NoEligibleDelegatesAlertBuilder.aNoEligibleDelegatesAlert;
+import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -118,7 +119,7 @@ public class AlertServiceTest extends WingsBaseTest {
     when(executorService.submit(runnableCaptor.capture())).then(executeRunnable(runnableCaptor));
     when(wingsPersistence.createUpdateOperations(Alert.class)).thenReturn(updateOperations);
     when(wingsPersistence.createQuery(Alert.class)).thenReturn(query);
-    when(wingsPersistence.createAuthExemptedQuery(Alert.class)).thenReturn(query);
+    when(wingsPersistence.createQuery(Alert.class, excludeAuthority)).thenReturn(query);
     when(query.filter(any(), any())).thenReturn(query);
     when(query.field(any())).thenReturn(end);
     when(end.lessThan(any())).thenReturn(query);

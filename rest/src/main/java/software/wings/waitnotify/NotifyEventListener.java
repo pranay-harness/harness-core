@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 
@@ -69,7 +70,7 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
                                      .withReadPref(ReadPref.CRITICAL)
                                      .addFilter("waitInstanceId", EQ, waitInstanceId)
                                      .build();
-    PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class, req, false, true);
+    PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class, req, excludeAuthority);
 
     if (isEmpty(waitQueuesResponse)) {
       logger.warn("No entry in the waitQueue found for the waitInstanceId:[{}] skipping ...", waitInstanceId);
@@ -102,7 +103,7 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
             .withLimit(PageRequest.UNLIMITED)
             .build();
     PageResponse<NotifyResponse> notifyResponses =
-        wingsPersistence.query(NotifyResponse.class, notifyResponseReq, false, true);
+        wingsPersistence.query(NotifyResponse.class, notifyResponseReq, excludeAuthority);
 
     correlationIds = notifyResponses.stream().map(NotifyResponse::getUuid).collect(toList());
 

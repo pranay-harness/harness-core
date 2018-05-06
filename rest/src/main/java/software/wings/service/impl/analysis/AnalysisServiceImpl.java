@@ -7,6 +7,7 @@ import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
+import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.common.collect.Sets;
@@ -693,7 +694,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Override
   public List<LogMLExpAnalysisInfo> getExpAnalysisInfoList() {
     final Query<ExperimentalLogMLAnalysisRecord> analysisRecords =
-        wingsPersistence.createAuthExemptedQuery(ExperimentalLogMLAnalysisRecord.class)
+        wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class, excludeAuthority)
             .project("stateExecutionId", true)
             .project("appId", true)
             .project("stateType", true)

@@ -35,6 +35,7 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.GE;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.PIPELINE;
+import static software.wings.dl.HQuery.excludeValidate;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
@@ -1679,7 +1680,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .build();
 
     PageResponse<StateExecutionInstance> query =
-        wingsPersistence.query(StateExecutionInstance.class, pageRequest, true);
+        wingsPersistence.query(StateExecutionInstance.class, pageRequest, excludeValidate);
     return query.getResponse();
   }
 
