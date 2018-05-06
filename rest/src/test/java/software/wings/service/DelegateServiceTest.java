@@ -53,6 +53,7 @@ import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateScripts;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Event.Type;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.TaskType;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Cache;
@@ -200,7 +201,9 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .withTags(new ArrayList<>())
                                     .build();
     delegateService.queueTask(delegateTask);
-    assertThat(wingsPersistence.get(DelegateTask.class, aPageRequest().build())).isEqualTo(delegateTask);
+    assertThat(wingsPersistence.get(
+                   DelegateTask.class, aPageRequest().addFilter(DelegateTask.APP_ID_KEY, Operator.EQ, APP_ID).build()))
+        .isEqualTo(delegateTask);
   }
 
   @Test
@@ -512,7 +515,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     wingsPersistence.save(aDelegateTask().withUuid("ID2").withStatus(DelegateTask.Status.ERROR).build());
     wingsPersistence.save(aDelegateTask().withUuid("ID3").withStatus(DelegateTask.Status.QUEUED).build());
     wingsPersistence.save(aDelegateTask().withUuid("ID4").withStatus(DelegateTask.Status.STARTED).build());
-    assertThat(wingsPersistence.createQuery(DelegateTask.class).asList().size()).isEqualTo(4);
+    assertThat(wingsPersistence.createQuery(DelegateTask.class).count()).isEqualTo(4);
 
     delegateService.deleteOldTasks(0);
 

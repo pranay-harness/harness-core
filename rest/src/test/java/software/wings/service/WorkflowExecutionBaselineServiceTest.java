@@ -191,8 +191,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
     Set<WorkflowExecutionBaseline> workflowExecutionBaselines =
         workflowExecutionService.markBaseline(appId, workflowExecutionId, true);
     assertEquals(numOfWorkflowExecutions, workflowExecutionBaselines.size());
-    assertEquals(
-        numOfWorkflowExecutions, wingsPersistence.createQuery(WorkflowExecutionBaseline.class).asList().size());
+    assertEquals(numOfWorkflowExecutions, wingsPersistence.createQuery(WorkflowExecutionBaseline.class).count());
 
     for (WorkflowExecutionBaseline baseline : workflowExecutionBaselines) {
       assertEquals(appId, baseline.getAppId());
@@ -232,8 +231,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
     // mark again and verify
     workflowExecutionBaselines = workflowExecutionService.markBaseline(appId, workflowExecutionId, true);
     assertEquals(numOfWorkflowExecutions, workflowExecutionBaselines.size());
-    assertEquals(
-        numOfWorkflowExecutions, wingsPersistence.createQuery(WorkflowExecutionBaseline.class).asList().size());
+    assertEquals(numOfWorkflowExecutions, wingsPersistence.createQuery(WorkflowExecutionBaseline.class).count());
 
     for (WorkflowExecutionBaseline baseline : workflowExecutionBaselines) {
       assertEquals(appId, baseline.getAppId());
@@ -322,8 +320,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
       Set<WorkflowExecutionBaseline> workflowExecutionBaselines =
           workflowExecutionService.markBaseline(appId, pipeLineExecId, true);
       assertEquals(numOfWorkflowExecutions, workflowExecutionBaselines.size());
-      assertEquals(
-          numOfWorkflowExecutions, wingsPersistence.createQuery(WorkflowExecutionBaseline.class).asList().size());
+      assertEquals(numOfWorkflowExecutions, wingsPersistence.createQuery(WorkflowExecutionBaseline.class).count());
 
       for (WorkflowExecutionBaseline baseline : workflowExecutionBaselines) {
         assertEquals(appId, baseline.getAppId());
@@ -356,7 +353,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
       // unmark and verify
       workflowExecutionBaselines = workflowExecutionService.markBaseline(appId, pipeLineExecId, false);
       assertEquals(numOfWorkflowExecutions, workflowExecutionBaselines.size());
-      assertEquals(0, wingsPersistence.createQuery(WorkflowExecutionBaseline.class).asList().size());
+      assertEquals(0, wingsPersistence.createQuery(WorkflowExecutionBaseline.class).count());
 
       for (WorkflowExecutionBaseline baseline : workflowExecutionBaselines) {
         assertEquals(appId, baseline.getAppId());
@@ -381,8 +378,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
       // mark again and verify
       workflowExecutionBaselines = workflowExecutionService.markBaseline(appId, pipeLineExecId, true);
       assertEquals(numOfWorkflowExecutions, workflowExecutionBaselines.size());
-      assertEquals(
-          numOfWorkflowExecutions, wingsPersistence.createQuery(WorkflowExecutionBaseline.class).asList().size());
+      assertEquals(numOfWorkflowExecutions, wingsPersistence.createQuery(WorkflowExecutionBaseline.class).count());
 
       for (WorkflowExecutionBaseline baseline : workflowExecutionBaselines) {
         assertEquals(appId, baseline.getAppId());
@@ -444,7 +440,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
       Set<WorkflowExecutionBaseline> workflowExecutionBaselines =
           workflowExecutionService.markBaseline(appId, workflowExecutionId, true);
       assertEquals(1, workflowExecutionBaselines.size());
-      assertEquals(1, wingsPersistence.createQuery(WorkflowExecutionBaseline.class).asList().size());
+      assertEquals(1, wingsPersistence.createQuery(WorkflowExecutionBaseline.class).count());
       WorkflowExecutionBaseline baseline = workflowExecutionBaselines.iterator().next();
       assertEquals(appId, baseline.getAppId());
       assertEquals(workflowId, baseline.getWorkflowId());
@@ -463,7 +459,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
       // unmark and test
       workflowExecutionBaselines = workflowExecutionService.markBaseline(appId, workflowExecutionId, false);
       assertEquals(1, workflowExecutionBaselines.size());
-      assertEquals(0, wingsPersistence.createQuery(WorkflowExecutionBaseline.class).asList().size());
+      assertEquals(0, wingsPersistence.createQuery(WorkflowExecutionBaseline.class).count());
 
       for (String executionId : workflowExecutionIds) {
         WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, executionId);
@@ -473,7 +469,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
       // mark again and test
       workflowExecutionBaselines = workflowExecutionService.markBaseline(appId, workflowExecutionId, true);
       assertEquals(1, workflowExecutionBaselines.size());
-      assertEquals(1, wingsPersistence.createQuery(WorkflowExecutionBaseline.class).asList().size());
+      assertEquals(1, wingsPersistence.createQuery(WorkflowExecutionBaseline.class).count());
 
       for (String executionId : workflowExecutionIds) {
         WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, executionId);
@@ -689,8 +685,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
     Set<WorkflowExecutionBaseline> workflowExecutionBaselines =
         workflowExecutionService.markBaseline(appId, workflowExecutionId, true);
     assertEquals(numOfWorkflowExecutions, workflowExecutionBaselines.size());
-    assertEquals(
-        numOfWorkflowExecutions, wingsPersistence.createQuery(WorkflowExecutionBaseline.class).asList().size());
+    assertEquals(numOfWorkflowExecutions, wingsPersistence.createQuery(WorkflowExecutionBaseline.class).count());
 
     for (WorkflowExecutionBaseline baseline : workflowExecutionBaselines) {
       assertEquals(appId, baseline.getAppId());

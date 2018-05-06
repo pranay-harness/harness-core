@@ -4,13 +4,13 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.atteo.evo.inflector.English.plural;
+import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import software.wings.beans.Base;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.NotificationChannelType;
 import software.wings.beans.NotificationGroup;
@@ -91,7 +91,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
 
   @Override
   public NotificationGroup readNotificationGroup(String accountId, String notificationGroupId) {
-    return wingsPersistence.get(NotificationGroup.class, Base.GLOBAL_APP_ID, notificationGroupId);
+    return wingsPersistence.get(NotificationGroup.class, GLOBAL_APP_ID, notificationGroupId);
   }
 
   @Override
@@ -119,7 +119,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
   public NotificationGroup updateNotificationGroup(NotificationGroup notificationGroup) {
     checkIfChangeInDefaultNotificationGroup(notificationGroup);
     NotificationGroup existingGroup =
-        wingsPersistence.get(NotificationGroup.class, Base.GLOBAL_APP_ID, notificationGroup.getUuid());
+        wingsPersistence.get(NotificationGroup.class, GLOBAL_APP_ID, notificationGroup.getUuid());
     if (!existingGroup.isEditable()) {
       throw new InvalidRequestException("Default Notification Group can not be updated");
     }
@@ -132,8 +132,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
 
   @Override
   public boolean deleteNotificationGroups(String accountId, String notificationGroupId) {
-    NotificationGroup notificationGroup =
-        wingsPersistence.get(NotificationGroup.class, Base.GLOBAL_APP_ID, notificationGroupId);
+    NotificationGroup notificationGroup = wingsPersistence.get(NotificationGroup.class, notificationGroupId);
     if (!notificationGroup.isEditable()) {
       throw new InvalidRequestException("Default Notification group can not be deleted");
     }
@@ -162,7 +161,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
     }
 
     yamlChangeSetHelper.notificationGroupYamlChangeSet(notificationGroup, ChangeType.DELETE);
-    return wingsPersistence.delete(NotificationGroup.class, Base.GLOBAL_APP_ID, notificationGroupId);
+    return wingsPersistence.delete(NotificationGroup.class, notificationGroupId);
   }
 
   @Override

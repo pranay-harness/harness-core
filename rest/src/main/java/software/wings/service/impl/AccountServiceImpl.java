@@ -232,7 +232,10 @@ public class AccountServiceImpl implements AccountService {
 
   private void createSystemAppContainers(Account account) {
     List<SystemCatalog> systemCatalogs =
-        systemCatalogService.list(aPageRequest().addFilter("catalogType", EQ, APPSTACK).build());
+        systemCatalogService.list(aPageRequest()
+                                      .addFilter(SystemCatalog.APP_ID_KEY, EQ, GLOBAL_APP_ID)
+                                      .addFilter("catalogType", EQ, APPSTACK)
+                                      .build());
     logger.debug("Creating default system app containers  ");
     for (SystemCatalog systemCatalog : systemCatalogs) {
       AppContainer appContainer = anAppContainer()

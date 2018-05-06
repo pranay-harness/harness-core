@@ -249,7 +249,7 @@ public class SplunkV2StateTest extends WingsBaseTest {
 
   @Test
   public void testTriggerCollection() throws ParseException {
-    assertEquals(0, wingsPersistence.createQuery(DelegateTask.class).asList().size());
+    assertEquals(0, wingsPersistence.createQuery(DelegateTask.class).count());
     SplunkConfig splunkConfig = SplunkConfig.builder()
                                     .accountId(accountId)
                                     .splunkUrl("splunk-url")

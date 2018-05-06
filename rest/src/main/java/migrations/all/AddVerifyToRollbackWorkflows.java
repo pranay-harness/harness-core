@@ -5,6 +5,7 @@ import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
 import static software.wings.beans.PhaseStepType.WRAP_UP;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 
@@ -36,7 +37,7 @@ public class AddVerifyToRollbackWorkflows implements Migration {
   public void migrate() {
     PageRequest<Application> pageRequest = aPageRequest().withLimit(UNLIMITED).build();
     logger.info("Retrieving applications");
-    PageResponse<Application> pageResponse = wingsPersistence.query(Application.class, pageRequest);
+    PageResponse<Application> pageResponse = wingsPersistence.query(Application.class, pageRequest, excludeAuthority);
 
     List<Application> apps = pageResponse.getResponse();
     if (pageResponse.isEmpty() || isEmpty(apps)) {

@@ -3,6 +3,8 @@ package software.wings.service;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
@@ -17,7 +19,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
-import software.wings.dl.PageRequest;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
@@ -66,7 +67,9 @@ public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
   public void shouldListAllArtifactStreams() {
     List<ArtifactStream> artifactStreams = Lists.newArrayList();
     artifactStreams.add(artifactStreamService.create(artifactStream));
-    assertThat(artifactStreamService.list(new PageRequest<>())).hasSameElementsAs(artifactStreams);
+    assertThat(artifactStreamService.list(
+                   aPageRequest().addFilter(ArtifactStream.APP_ID_KEY, EQ, artifactStream.getAppId()).build()))
+        .hasSameElementsAs(artifactStreams);
   }
 
   /**
@@ -76,6 +79,8 @@ public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
   public void shouldDeleteArtifactStream() {
     ArtifactStream dbArtifactStream = artifactStreamService.create(artifactStream);
     artifactStreamService.delete(dbArtifactStream.getAppId(), dbArtifactStream.getUuid());
-    assertThat(artifactStreamService.list(new PageRequest<>())).hasSize(0);
+    assertThat(artifactStreamService.list(
+                   aPageRequest().addFilter(ArtifactStream.APP_ID_KEY, EQ, dbArtifactStream.getAppId()).build()))
+        .hasSize(0);
   }
 }

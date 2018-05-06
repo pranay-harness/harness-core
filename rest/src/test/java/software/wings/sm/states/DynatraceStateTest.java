@@ -188,7 +188,7 @@ public class DynatraceStateTest extends WingsBaseTest {
 
   @Test
   public void testTriggerCollection() throws ParseException {
-    assertEquals(0, wingsPersistence.createQuery(DelegateTask.class).asList().size());
+    assertEquals(0, wingsPersistence.createQuery(DelegateTask.class).count());
     DynaTraceConfig dynaTraceConfig = DynaTraceConfig.builder()
                                           .accountId(accountId)
                                           .dynaTraceUrl("dynatrace-url")

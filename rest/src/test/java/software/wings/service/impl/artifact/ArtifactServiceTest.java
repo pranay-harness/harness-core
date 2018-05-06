@@ -8,6 +8,7 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.Artifact.ContentStatus.DELETED;
 import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADED;
@@ -21,6 +22,7 @@ import static software.wings.beans.artifact.Artifact.Status.QUEUED;
 import static software.wings.beans.artifact.Artifact.Status.READY;
 import static software.wings.beans.artifact.Artifact.Status.RUNNING;
 import static software.wings.beans.artifact.ArtifactFile.Builder.anArtifactFile;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
@@ -823,7 +825,9 @@ public class ArtifactServiceTest extends WingsBaseTest {
     wingsRule.getDatastore().save(savedArtifact);
 
     artifactService.deleteArtifacts(1);
-    assertThat(artifactService.list(new PageRequest<>(), false)).hasSize(1);
+    assertThat(artifactService.list(
+                   aPageRequest().addFilter(Artifact.APP_ID_KEY, EQ, savedArtifact.getAppId()).build(), false))
+        .hasSize(1);
   }
 
   @Test

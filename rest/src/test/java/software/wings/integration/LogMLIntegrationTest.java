@@ -271,7 +271,7 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
     }
 
     Query<LogDataRecord> logDataRecordQuery = wingsPersistence.createQuery(LogDataRecord.class);
-    assertEquals(totalRecordsInserted, logDataRecordQuery.asList().size());
+    assertEquals(totalRecordsInserted, logDataRecordQuery.count());
     analysisService.purgeLogs();
     logDataRecordQuery = wingsPersistence.createQuery(LogDataRecord.class);
     List<LogDataRecord> logDataRecords = logDataRecordQuery.asList();

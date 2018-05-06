@@ -937,10 +937,10 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     }
 
     wingsPersistence.save(logDataRecords);
-    assertEquals(numOfHosts, wingsPersistence.createQuery(LogDataRecord.class).asList().size());
+    assertEquals(numOfHosts, wingsPersistence.createQuery(LogDataRecord.class).count());
     analysisService.deleteClusterLevel(
         StateType.SPLUNKV2, stateExecutionId, appId, query, hosts, logCollectionMinute, ClusterLevel.H0);
-    assertEquals(0, wingsPersistence.createQuery(LogDataRecord.class).asList().size());
+    assertEquals(0, wingsPersistence.createQuery(LogDataRecord.class).count());
   }
 
   private SplunkAnalysisCluster getRandomClusterEvent() {

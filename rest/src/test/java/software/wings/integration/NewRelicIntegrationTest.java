@@ -226,7 +226,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
 
       Query<NewRelicMetricDataRecord> query =
           wingsPersistence.createQuery(NewRelicMetricDataRecord.class).filter("stateExecutionId", stateExecutionId);
-      assertEquals((batchNum + 1) * numOfMetricsPerBatch * hosts.size() * numOfMinutes, query.asList().size());
+      assertEquals((batchNum + 1) * numOfMetricsPerBatch * hosts.size() * numOfMinutes, query.count());
     }
   }
 

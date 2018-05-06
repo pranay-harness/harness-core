@@ -1,6 +1,7 @@
 package software.wings.integration;
 
 import static org.awaitility.Awaitility.await;
+import static software.wings.dl.HQuery.excludeAuthority;
 
 import org.awaitility.Duration;
 import org.hamcrest.CoreMatchers;
@@ -17,7 +18,7 @@ public class DelegateRegistrationIntegrationTest extends BaseIntegrationTest {
   @Test
   public void shouldWaitForADelegateToRegister() {
     await().with().pollInterval(Duration.ONE_SECOND).timeout(5, TimeUnit.MINUTES).until(() -> {
-      List<Delegate> delegates = wingsPersistence.createQuery(Delegate.class).asList();
+      List<Delegate> delegates = wingsPersistence.createQuery(Delegate.class, excludeAuthority).asList();
       boolean connected = delegates.stream().anyMatch(Delegate::isConnected);
       logger.info("isDelegateConnected = {}", connected);
       return connected;

@@ -14,6 +14,7 @@ import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.CO
 import static software.wings.beans.command.CommandUnitType.EXEC;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.command.InitSshCommandUnit.INITIALIZE_UNIT;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
@@ -42,13 +43,13 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Activity;
 import software.wings.beans.Event.Type;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.command.CleanupSshCommandUnit;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.InitSshCommandUnit;
-import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.EventEmitter.Channel;
@@ -106,7 +107,9 @@ public class ActivityServiceTest extends WingsBaseTest {
                             .build();
     activity.setAppId(APP_ID);
     wingsPersistence.save(activity);
-    assertThat(activityService.list(new PageRequest<>())).hasSize(1).containsExactly(activity);
+    assertThat(activityService.list(aPageRequest().addFilter(Activity.APP_ID_KEY, Operator.EQ, APP_ID).build()))
+        .hasSize(1)
+        .containsExactly(activity);
   }
 
   /**
