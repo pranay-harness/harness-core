@@ -2,8 +2,9 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
-import static java.util.stream.Collectors.toList;
 import static org.atteo.evo.inflector.English.plural;
+import static software.wings.beans.Base.ACCOUNT_ID_KEY;
+import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
@@ -11,14 +12,15 @@ import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import software.wings.beans.CanaryOrchestrationWorkflow;
+import com.mongodb.DBCursor;
+import org.mongodb.morphia.query.MorphiaIterator;
+import software.wings.beans.Application;
 import software.wings.beans.NotificationChannelType;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.Role;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
-import software.wings.beans.WorkflowType;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -30,6 +32,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.Validator;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -137,25 +140,30 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
       throw new InvalidRequestException("Default Notification group can not be deleted");
     }
 
-    List<Workflow> workflows =
-        workflowService
-            .listWorkflows(aPageRequest()
-                               .withLimit(PageRequest.UNLIMITED)
-                               .addFilter("workflowType", Operator.EQ, WorkflowType.ORCHESTRATION)
-                               .build())
-            .getResponse();
-    List<String> inUse = workflows.stream()
-                             .filter(workflow
-                                 -> workflow.getOrchestrationWorkflow() instanceof CanaryOrchestrationWorkflow
-                                     && ((CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow())
-                                            .getNotificationRules()
-                                            .stream()
-                                            .anyMatch(notificationRule
-                                                -> notificationRule.getNotificationGroups().stream().anyMatch(
-                                                    ng -> ng.getUuid().equals(notificationGroupId))))
-                             .map(Workflow::getName)
-                             .collect(toList());
-    if (!inUse.isEmpty()) {
+    List<String> inUse = new ArrayList<>();
+
+    wingsPersistence.createQuery(Application.class)
+        .filter(ACCOUNT_ID_KEY, accountId)
+        .asKeyList()
+        .stream()
+        .map(key -> key.getId().toString())
+        .forEach(appId -> {
+          final MorphiaIterator<Workflow, Workflow> workflows =
+              wingsPersistence.createQuery(Workflow.class).filter(APP_ID_KEY, appId).fetch();
+
+          try (DBCursor cursor = workflows.getCursor()) {
+            while (workflows.hasNext()) {
+              Workflow workflow = workflows.next();
+              if (workflow.getOrchestrationWorkflow() != null
+                  && workflow.getOrchestrationWorkflow().getNotificationRules().stream().anyMatch(notificationRule
+                         -> notificationRule.getNotificationGroups().stream().anyMatch(
+                             ng -> ng.getUuid().equals(notificationGroupId)))) {
+                inUse.add(workflow.getName());
+              }
+            }
+          }
+        });
+    if (isNotEmpty(inUse)) {
       throw new InvalidRequestException(format("'%s' is in use by %d workflow%s: '%s'", notificationGroup.getName(),
           inUse.size(), plural("workflow", inUse.size()), Joiner.on("', '").join(inUse)));
     }
