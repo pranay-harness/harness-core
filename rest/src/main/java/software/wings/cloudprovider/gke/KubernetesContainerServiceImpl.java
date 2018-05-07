@@ -311,18 +311,19 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           format("Controller [%s] in cluster [%s] stays at %s instances", controllerName, clusterName, previousCount));
     }
     return getContainerInfosWhenReady(kubernetesConfig, encryptedDataDetails, controllerName, previousCount,
-        desiredCount, serviceSteadyStateTimeout, originalPods, false, executionLogCallback, sizeChanged, startTime);
+        serviceSteadyStateTimeout, originalPods, false, executionLogCallback, sizeChanged, startTime);
   }
 
   @Override
   public List<ContainerInfo> getContainerInfosWhenReady(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int previousCount, int desiredCount,
+      List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int previousCount,
       int serviceSteadyStateTimeout, List<Pod> originalPods, boolean isDaemonSet,
       ExecutionLogCallback executionLogCallback, boolean wait, long startTime) {
     List<Pod> pods = wait
-        ? waitForPodsToBeRunning(kubernetesConfig, encryptedDataDetails, controllerName, previousCount, desiredCount,
+        ? waitForPodsToBeRunning(kubernetesConfig, encryptedDataDetails, controllerName, previousCount,
               serviceSteadyStateTimeout, originalPods, isDaemonSet, startTime, executionLogCallback)
         : originalPods;
+    int desiredCount = getControllerPodCount(getController(kubernetesConfig, encryptedDataDetails, controllerName));
     List<ContainerInfo> containerInfos = new ArrayList<>();
     boolean hasErrors = false;
     if (pods.size() != desiredCount) {
@@ -498,8 +499,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     } else if (controller instanceof StatefulSet) {
       return ((StatefulSet) controller).getSpec().getReplicas();
     } else if (controller instanceof DaemonSet) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
-          .addParam("args", "DaemonSet runs one instance per cluster node and cannot be scaled.");
+      return ((DaemonSet) controller).getStatus().getDesiredNumberScheduled();
     }
     return null;
   }
@@ -892,7 +892,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   private List<Pod> waitForPodsToBeRunning(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int previousCount, int desiredCount,
+      List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int previousCount,
       int serviceSteadyStateTimeout, List<Pod> originalPods, boolean isDaemonSet, long startTime,
       ExecutionLogCallback executionLogCallback) {
     HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, controllerName);
@@ -913,6 +913,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         Set<String> seenEvents = new HashSet<>();
 
         while (true) {
+          int desiredCount =
+              getControllerPodCount(getController(kubernetesConfig, encryptedDataDetails, controllerName));
           List<Pod> pods = kubernetesClient.pods().inNamespace(namespace).withLabels(labels).list().getItems();
 
           // Delete failed pods

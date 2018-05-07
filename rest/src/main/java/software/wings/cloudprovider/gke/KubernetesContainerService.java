@@ -62,7 +62,7 @@ public interface KubernetesContainerService {
       int count, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback);
 
   List<ContainerInfo> getContainerInfosWhenReady(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int previousCount, int desiredCount,
+      List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int previousCount,
       int serviceSteadyStateTimeout, List<Pod> originalPods, boolean isDaemonSet,
       ExecutionLogCallback executionLogCallback, boolean wait, long startTime);
 

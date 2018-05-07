@@ -23,6 +23,7 @@ import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.beans.command.LogCallback;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
@@ -164,10 +165,8 @@ public class ContainerDeploymentDelegateHelper {
               .flatMap(controller
                   -> kubernetesContainerService
                          .getContainerInfosWhenReady(kubernetesConfig, containerServiceParams.getEncryptionDetails(),
-                             controller.getMetadata().getName(), 0,
-                             kubernetesContainerService.getControllerPodCount(controller),
-                             (int) TimeUnit.MINUTES.toMinutes(30), new ArrayList<>(),
-                             controller.getKind().equals("DaemonSet"), executionLogCallback, true, 0)
+                             controller.getMetadata().getName(), 0, (int) TimeUnit.MINUTES.toMinutes(30),
+                             new ArrayList<>(), controller.getKind().equals("DaemonSet"), executionLogCallback, true, 0)
                          .stream())
               .collect(Collectors.toList());
     }
@@ -176,8 +175,8 @@ public class ContainerDeploymentDelegateHelper {
 
   public List<ContainerInfo> getContainerInfosWhenReadyByLabel(String labelName, String labelValue,
       ContainerServiceParams containerServiceParams, KubernetesConfig kubernetesConfig,
-      ExecutionLogCallback executionLogCallback) {
-    return getContainerInfosWhenReadyByLabels(
-        containerServiceParams, kubernetesConfig, executionLogCallback, ImmutableMap.of(labelName, labelValue));
+      LogCallback executionLogCallback) {
+    return getContainerInfosWhenReadyByLabels(containerServiceParams, kubernetesConfig,
+        (ExecutionLogCallback) executionLogCallback, ImmutableMap.of(labelName, labelValue));
   }
 }

@@ -8,6 +8,7 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.beans.command.LogCallback;
 import software.wings.exception.HarnessException;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.helm.HelmCommandExecutionResponse;
@@ -42,9 +43,7 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
     HelmCommandRequest helmCommandRequest = (HelmCommandRequest) parameters[0];
     HelmCommandResponse commandResponse;
 
-    ExecutionLogCallback executionLogCallback =
-        new ExecutionLogCallback(delegateLogService, helmCommandRequest.getAccountId(), helmCommandRequest.getAppId(),
-            helmCommandRequest.getActivityId(), helmCommandRequest.getCommandName());
+    LogCallback executionLogCallback = getExecutionLogCallback(helmCommandRequest);
 
     try {
       String configLocation = containerDeploymentDelegateHelper.createAndGetKubeConfigLocation(
@@ -52,11 +51,10 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
       helmCommandRequest.setKubeConfigLocation(configLocation);
       HelmCommandResponse helmCommandResponse = helmDeployService.ensureHelmCliAndTillerInstalled(helmCommandRequest);
 
-      if (isAsync()) {
-        executionLogCallback.saveExecutionLog(helmCommandResponse.getOutput());
-        executionLogCallback.saveExecutionLog(
-            "Started executing helm command", LogLevel.INFO, CommandExecutionStatus.RUNNING);
-      }
+      executionLogCallback.saveExecutionLog(helmCommandResponse.getOutput());
+      executionLogCallback.saveExecutionLog(
+          "Started executing helm command", LogLevel.INFO, CommandExecutionStatus.RUNNING);
+
       switch (helmCommandRequest.getHelmCommandType()) {
         case INSTALL:
           commandResponse =
@@ -80,16 +78,31 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
           .build();
     }
 
-    if (isAsync()) {
-      executionLogCallback.saveExecutionLog(
-          "Command finished with status " + commandResponse.getCommandExecutionStatus(), LogLevel.INFO,
-          commandResponse.getCommandExecutionStatus());
-    }
+    executionLogCallback.saveExecutionLog("Command finished with status " + commandResponse.getCommandExecutionStatus(),
+        LogLevel.INFO, commandResponse.getCommandExecutionStatus());
 
     return HelmCommandExecutionResponse.builder()
         .commandExecutionStatus(commandResponse.getCommandExecutionStatus())
         .helmCommandResponse(commandResponse)
         .errorMessage(commandResponse.getOutput())
         .build();
+  }
+
+  protected LogCallback getExecutionLogCallback(HelmCommandRequest helmCommandRequest) {
+    return isAsync()
+        ? new ExecutionLogCallback(delegateLogService, helmCommandRequest.getAccountId(), helmCommandRequest.getAppId(),
+              helmCommandRequest.getActivityId(), helmCommandRequest.getCommandName())
+        : new NoopExecutionCallback();
+  }
+
+  public class NoopExecutionCallback implements LogCallback {
+    @Override
+    public void saveExecutionLog(String line) {}
+
+    @Override
+    public void saveExecutionLog(String line, LogLevel logLevel) {}
+
+    @Override
+    public void saveExecutionLog(String line, LogLevel logLevel, CommandExecutionStatus commandExecutionStatus) {}
   }
 }
