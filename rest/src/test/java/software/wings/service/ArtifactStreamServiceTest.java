@@ -7,7 +7,6 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
@@ -33,7 +32,7 @@ import org.mockito.Mock;
 import org.quartz.JobDetail;
 import org.quartz.Trigger;
 import software.wings.WingsBaseTest;
-import software.wings.beans.SearchFilter;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.artifact.AcrArtifactStream;
 import software.wings.beans.artifact.AmazonS3ArtifactStream;
 import software.wings.beans.artifact.AmiArtifactStream;
@@ -1198,8 +1197,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     ArtifactStream savedArtifactStream = artifactStreamService.create(artifactoryArtifactStream);
     assertThat(savedArtifactStream).isNotNull();
 
-    PageRequest<ArtifactStream> pageRequest =
-        aPageRequest().addFilter(aSearchFilter().withField("appId", SearchFilter.Operator.EQ, APP_ID).build()).build();
+    PageRequest<ArtifactStream> pageRequest = aPageRequest().addFilter("appId", Operator.EQ, APP_ID).build();
 
     List<ArtifactStream> artifactStreams = artifactStreamService.list(pageRequest);
     assertThat(artifactStreams).isNotEmpty().size().isEqualTo(2);

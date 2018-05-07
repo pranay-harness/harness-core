@@ -8,7 +8,6 @@ import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
-import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.yaml.Change.ChangeType.ADD;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
@@ -27,6 +26,7 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
+import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.PageRequestBuilder;
@@ -490,7 +490,7 @@ public class ConfigServiceImpl implements ConfigService {
                     .addFilter("appId", Operator.EQ, appId)
                     .addFilter("templateId", Operator.EQ, templateId)
                     .addFilter("entityId", Operator.EQ, entityId)
-                    .addFilter(aSearchFilter().build())
+                    .addFilter(SearchFilter.builder().build())
                     .build())
         .getResponse();
   }
@@ -503,7 +503,7 @@ public class ConfigServiceImpl implements ConfigService {
                                            .addFilter("appId", Operator.EQ, appId)
                                            .addFilter("entityType", Operator.EQ, EntityType.ENVIRONMENT)
                                            .addFilter("entityId", Operator.EQ, envId)
-                                           .addFilter(aSearchFilter().build())
+                                           .addFilter(SearchFilter.builder().build())
                                            .build())
                                       .getResponse();
 
@@ -512,7 +512,7 @@ public class ConfigServiceImpl implements ConfigService {
                                  .addFilter("appId", Operator.EQ, appId)
                                  .addFilter("entityType", Operator.EQ, EntityType.SERVICE_TEMPLATE)
                                  .addFilter("envId", Operator.EQ, envId)
-                                 .addFilter(aSearchFilter().build())
+                                 .addFilter(SearchFilter.builder().build())
                                  .build())
                             .getResponse();
 
