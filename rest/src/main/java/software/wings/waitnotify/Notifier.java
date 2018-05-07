@@ -60,7 +60,7 @@ public class Notifier implements Runnable {
 
       // Get wait queue entries
       PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class,
-          aPageRequest().withLimit(UNLIMITED).addFilter("correlationId", Operator.IN, correlationIds.toArray()).build(),
+          aPageRequest().withLimit(UNLIMITED).addFilter("correlationId", Operator.IN, correlationIds).build(),
           excludeAuthority);
 
       if (isEmpty(waitQueuesResponse)) {

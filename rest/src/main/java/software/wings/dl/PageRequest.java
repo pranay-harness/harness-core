@@ -1,7 +1,6 @@
 package software.wings.dl;
 
 import static java.util.Arrays.asList;
-import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SortOrder.Builder.aSortOrder;
 
 import com.google.common.base.MoreObjects;
@@ -16,6 +15,7 @@ import software.wings.beans.Base;
 import software.wings.beans.ReadPref;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.SearchFilter.SearchFilterBuilder;
 import software.wings.beans.SortOrder;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.utils.Misc;
@@ -312,23 +312,25 @@ public class PageRequest<T> {
     }
     for (int index = 0; index < fieldCount; index++) {
       String key = "search[" + index + "]";
-      SearchFilter filter = new SearchFilter();
-      filter.setFieldName(map.getFirst(key + "[field]"));
+      final String name = map.getFirst(key + "[field]");
+
+      final SearchFilterBuilder filterBuilder = SearchFilter.builder();
+      filterBuilder.fieldName(name);
       if (map.containsKey(key + "[op]")) {
-        filter.setOp(Operator.valueOf(map.getFirst(key + "[op]")));
+        filterBuilder.op(Operator.valueOf(map.getFirst(key + "[op]")));
       }
       if (map.containsKey(key + "[value]")) {
-        MappedField mappedField = mappedClass.getMappedField(filter.getFieldName());
+        MappedField mappedField = mappedClass.getMappedField(name);
         if (mappedField != null
             && asList(Long.TYPE, Integer.TYPE, Short.TYPE, Byte.TYPE).contains(mappedField.getType())) {
-          filter.setFieldValues(Long.parseLong(map.getFirst(key + "[value]")));
+          filterBuilder.fieldValues(new Object[] {Long.parseLong(map.getFirst(key + "[value]"))});
         } else if (mappedField != null && asList(Boolean.TYPE).contains(mappedField.getType())) {
-          filter.setFieldValues(Boolean.parseBoolean(map.getFirst(key + "[value]")));
+          filterBuilder.fieldValues(new Object[] {Boolean.parseBoolean(map.getFirst(key + "[value]"))});
         } else {
-          filter.setFieldValues(map.get(key + "[value]").toArray());
+          filterBuilder.fieldValues(map.get(key + "[value]").toArray());
         }
       }
-      filters.add(filter);
+      filters.add(filterBuilder.build());
     }
     for (int index = 0; index < orderCount; index++) {
       String key = "sort[" + index + "]";
@@ -411,11 +413,7 @@ public class PageRequest<T> {
    * @param op         Operator for filter.
    */
   public void addFilter(String fieldName, Operator op, Object... fieldValues) {
-    SearchFilter filter = new SearchFilter();
-    filter.setFieldName(fieldName);
-    filter.setFieldValues(fieldValues);
-    filter.setOp(op);
-    filters.add(filter);
+    filters.add(SearchFilter.builder().fieldName(fieldName).op(op).fieldValues(fieldValues).build());
   }
 
   /* (non-Javadoc)
@@ -550,7 +548,7 @@ public class PageRequest<T> {
      * @return the builder
      */
     public PageRequestBuilder addFilter(String fieldName, Operator op, Object... fieldValues) {
-      filters.add(aSearchFilter().withField(fieldName, op, fieldValues).build());
+      filters.add(SearchFilter.builder().fieldName(fieldName).op(op).fieldValues(fieldValues).build());
       return this;
     }
 

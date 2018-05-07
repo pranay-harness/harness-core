@@ -9,7 +9,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -421,11 +420,9 @@ public class WingsPersistenceTest extends WingsBaseTest {
 
     PageRequest<TestEntity> req =
         aPageRequest()
-            .addFilter(
-                aSearchFilter()
-                    .withField(null, Operator.OR, aSearchFilter().withField("mapField.abc", Operator.EXISTS).build(),
-                        aSearchFilter().withField("mapField.def", Operator.EXISTS).build())
-                    .build())
+            .addFilter(null, Operator.OR,
+                new Object[] {SearchFilter.builder().fieldName("mapField.abc").op(Operator.EXISTS).build(),
+                    SearchFilter.builder().fieldName("mapField.def").op(Operator.EXISTS).build()})
             .build();
 
     PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req, excludeAuthority);
@@ -497,11 +494,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
     createEntitiesForPagination();
 
     PageRequest<TestEntity> req = new PageRequest<>();
-    SearchFilter filter = new SearchFilter();
-    filter.setFieldValues("fieldA1");
-    filter.setFieldName("fieldA");
-    filter.setOp(Operator.CONTAINS);
-    req.addFilter(filter);
+    req.addFilter("fieldA", Operator.CONTAINS, "fieldA1");
 
     SortOrder order = new SortOrder();
     order.setFieldName("fieldA");
