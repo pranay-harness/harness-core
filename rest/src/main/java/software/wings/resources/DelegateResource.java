@@ -232,6 +232,12 @@ public class DelegateResource {
 
     return new RestResponse<>(ImmutableMap.of("downloadUrl",
         url + request.getRequestURI().replace("downloadUrl", "download") + "?accountId=" + accountId
+            + "&token=" + downloadTokenService.createDownloadToken("delegate." + accountId),
+        "dockerUrl",
+        url + request.getRequestURI().replace("downloadUrl", "docker") + "?accountId=" + accountId
+            + "&token=" + downloadTokenService.createDownloadToken("delegate." + accountId),
+        "kubernetesUrl",
+        url + request.getRequestURI().replace("downloadUrl", "kubernetes") + "?accountId=" + accountId
             + "&token=" + downloadTokenService.createDownloadToken("delegate." + accountId)));
   }
 
