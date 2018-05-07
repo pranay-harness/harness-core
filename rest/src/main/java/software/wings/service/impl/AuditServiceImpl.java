@@ -5,6 +5,7 @@ import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.service.intfc.FileService.FileBucket;
 
 import com.google.common.util.concurrent.TimeLimiter;
@@ -151,7 +152,7 @@ public class AuditServiceImpl implements AuditService {
       logger.info("Start: Deleting audit records older than {} days", days);
       timeLimiter.callWithTimeout(() -> {
         while (true) {
-          List<AuditHeader> auditHeaders = wingsPersistence.createQuery(AuditHeader.class)
+          List<AuditHeader> auditHeaders = wingsPersistence.createQuery(AuditHeader.class, excludeAuthority)
                                                .field("createdAt")
                                                .lessThan(System.currentTimeMillis() - retentionMillis)
                                                .asList(new FindOptions().limit(limit).batchSize(batchSize));

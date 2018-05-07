@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -218,7 +219,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
     // unmark the baseline and verify
     workflowExecutionBaselines = workflowExecutionService.markBaseline(appId, workflowExecutionId, false);
     assertEquals(numOfWorkflowExecutions, workflowExecutionBaselines.size());
-    assertTrue(wingsPersistence.createQuery(WorkflowExecutionBaseline.class).asList().isEmpty());
+    assertThat(wingsPersistence.createQuery(WorkflowExecutionBaseline.class).count()).isEqualTo(0);
     savedPipelineExecution = wingsPersistence.get(WorkflowExecution.class, workflowExecutionId);
 
     pipelineExecution = savedPipelineExecution.getPipelineExecution();

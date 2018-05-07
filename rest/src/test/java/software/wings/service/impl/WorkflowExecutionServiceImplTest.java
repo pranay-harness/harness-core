@@ -20,6 +20,7 @@ import static software.wings.beans.GraphLink.Builder.aLink;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig;
+import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -80,7 +81,6 @@ import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
@@ -416,10 +416,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .extracting("status")
         .contains("FAILED", "FAILED");
 
-    PageRequest<WorkflowExecution> pageRequest = aPageRequest()
-                                                     .addFilter("appId", Operator.EQ, app.getUuid())
-                                                     .addFilter("uuid", Operator.EQ, workflowExecution.getUuid())
-                                                     .build();
+    PageRequest<WorkflowExecution> pageRequest =
+        aPageRequest().addFilter("appId", EQ, app.getUuid()).addFilter("uuid", EQ, workflowExecution.getUuid()).build();
     PageResponse<WorkflowExecution> res = workflowExecutionService.listExecutions(pageRequest, true);
     assertThat(res).isNotNull().hasSize(1).doesNotContainNull();
 
@@ -717,8 +715,10 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertThat(pipeline).isNotNull();
     assertThat(pipeline.getUuid()).isNotNull();
 
-    PageRequest<StateMachine> req = new PageRequest<>();
-    req.addFilter("originId", Operator.EQ, pipeline.getUuid());
+    PageRequest<StateMachine> req = aPageRequest()
+                                        .addFilter(StateMachine.APP_ID_KEY, EQ, app.getUuid())
+                                        .addFilter(StateMachine.ORIGIN_ID_KEY, EQ, pipeline.getUuid())
+                                        .build();
     PageResponse<StateMachine> res = workflowService.listStateMachines(req);
 
     assertThat(res).isNotNull().hasSize(1).doesNotContainNull();
@@ -798,8 +798,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   private WorkflowElement getWorkflowElement(String appId, WorkflowExecution workflowExecution) {
     StateExecutionInstance stateExecutionInstance = wingsPersistence.get(StateExecutionInstance.class,
         PageRequestBuilder.aPageRequest()
-            .addFilter("appId", Operator.EQ, appId)
-            .addFilter("executionUuid", Operator.EQ, workflowExecution.getUuid())
+            .addFilter("appId", EQ, appId)
+            .addFilter("executionUuid", EQ, workflowExecution.getUuid())
             .build());
 
     assertThat(stateExecutionInstance).isNotNull();
@@ -839,9 +839,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   public void shouldUpdateFailedCount() throws InterruptedException {
     String appId = app.getUuid();
     triggerWorkflow(appId, env);
-    WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
+    WorkflowExecution workflowExecution = wingsPersistence.get(
+        WorkflowExecution.class, aPageRequest().addFilter(WorkflowExecution.APP_ID_KEY, EQ, appId).build());
     workflowExecutionService.incrementFailed(workflowExecution.getAppId(), workflowExecution.getUuid(), 1);
-    workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
+    workflowExecution = wingsPersistence.get(
+        WorkflowExecution.class, aPageRequest().addFilter(WorkflowExecution.APP_ID_KEY, EQ, appId).build());
     assertThat(workflowExecution.getBreakdown().getFailed()).isEqualTo(1);
     logger.info("shouldUpdateFailedCount test done");
   }
@@ -965,7 +967,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     // 2nd workflow
     Workflow workflow = createExecutableWorkflow(appId, env);
-    PageRequest<Workflow> pageRequest = new PageRequest<>();
+    PageRequest<Workflow> pageRequest = aPageRequest().addFilter(Workflow.APP_ID_KEY, EQ, appId).build();
     PageResponse<Workflow> res = workflowService.listWorkflows(pageRequest, null);
 
     assertThat(res).isNotNull().hasSize(2);
@@ -1906,13 +1908,15 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .extracting(WorkflowExecution::getUuid, WorkflowExecution::getStatus)
         .containsExactly(executionId, ExecutionStatus.SUCCESS);
 
-    List<StateExecutionInstance> response = wingsPersistence
-                                                .query(StateExecutionInstance.class,
-                                                    PageRequestBuilder.aPageRequest()
-                                                        .addFilter("executionUuid", Operator.EQ, execution.getUuid())
-                                                        .addFilter("stateType", Operator.EQ, "EMAIL")
-                                                        .build())
-                                                .getResponse();
+    List<StateExecutionInstance> response =
+        wingsPersistence
+            .query(StateExecutionInstance.class,
+                PageRequestBuilder.aPageRequest()
+                    .addFilter(StateExecutionInstance.APP_ID_KEY, EQ, appId)
+                    .addFilter(StateExecutionInstance.EXECUTION_UUID_KEY, EQ, execution.getUuid())
+                    .addFilter(StateExecutionInstance.STATE_TYPE_KEY, EQ, "EMAIL")
+                    .build())
+            .getResponse();
     assertThat(response).isNotNull().isNotEmpty();
     List<ContextElement> elements = response.get(0)
                                         .getContextElements()

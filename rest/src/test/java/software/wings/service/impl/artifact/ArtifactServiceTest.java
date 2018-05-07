@@ -62,7 +62,6 @@ import software.wings.collect.CollectEvent;
 import software.wings.common.Constants;
 import software.wings.core.queue.Queue;
 import software.wings.dl.HQuery;
-import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
@@ -260,7 +259,9 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Test
   public void shouldListArtifact() {
     Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
-    assertThat(artifactService.list(new PageRequest<>(), false)).hasSize(1).containsExactly(savedArtifact);
+    assertThat(artifactService.list(aPageRequest().addFilter(Artifact.APP_ID_KEY, EQ, APP_ID).build(), false))
+        .hasSize(1)
+        .containsExactly(savedArtifact);
   }
 
   @Test
@@ -268,7 +269,8 @@ public class ArtifactServiceTest extends WingsBaseTest {
     when(serviceResourceService.get(APP_ID, SERVICE_ID))
         .thenReturn(Service.builder().appId(APP_ID).artifactType(ArtifactType.WAR).uuid(SERVICE_ID).build());
     Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
-    PageResponse<Artifact> artifacts = artifactService.list(new PageRequest<>(), true);
+    PageResponse<Artifact> artifacts =
+        artifactService.list(aPageRequest().addFilter(Artifact.APP_ID_KEY, EQ, APP_ID).build(), true);
     assertThat(artifacts).hasSize(1).extracting(Artifact::getUuid).contains(savedArtifact.getUuid());
     assertThat(artifacts).extracting(Artifact::getServices).hasSize(1);
   }
@@ -286,7 +288,8 @@ public class ArtifactServiceTest extends WingsBaseTest {
     artifactService.create(
         artifactBuilder.withMetadata(ImmutableMap.of(Constants.BUILD_NO, "todolist-1.0-15.x86_64.rpm")).but().build());
 
-    List<Artifact> artifacts = artifactService.listSortByBuildNo(new PageRequest<>());
+    List<Artifact> artifacts =
+        artifactService.listSortByBuildNo(aPageRequest().addFilter(Artifact.APP_ID_KEY, EQ, APP_ID).build());
 
     assertThat(artifacts)
         .hasSize(4)
@@ -674,7 +677,8 @@ public class ArtifactServiceTest extends WingsBaseTest {
     artifactService.create(jenkinsArtifact);
 
     artifactService.deleteArtifacts(50);
-    assertThat(artifactService.list(new PageRequest<>(), false)).hasSize(2);
+    assertThat(artifactService.list(aPageRequest().addFilter(Artifact.APP_ID_KEY, EQ, APP_ID).build(), false))
+        .hasSize(2);
   }
 
   @Test
@@ -705,7 +709,8 @@ public class ArtifactServiceTest extends WingsBaseTest {
 
     wingsRule.getDatastore().save(savedArtifact);
     artifactService.deleteArtifacts(0);
-    assertThat(artifactService.list(new PageRequest<>(), false)).hasSize(1);
+    assertThat(artifactService.list(aPageRequest().addFilter(Artifact.APP_ID_KEY, EQ, APP_ID).build(), false))
+        .hasSize(1);
   }
 
   @Test
@@ -745,7 +750,8 @@ public class ArtifactServiceTest extends WingsBaseTest {
     wingsRule.getDatastore().save(savedArtifact);
 
     artifactService.deleteArtifacts(0);
-    assertThat(artifactService.list(new PageRequest<>(), false)).hasSize(0);
+    assertThat(artifactService.list(aPageRequest().addFilter(Artifact.APP_ID_KEY, EQ, APP_ID).build(), false))
+        .hasSize(0);
   }
 
   @Test
@@ -785,7 +791,8 @@ public class ArtifactServiceTest extends WingsBaseTest {
     wingsRule.getDatastore().save(savedArtifact);
 
     artifactService.deleteArtifacts(0);
-    assertThat(artifactService.list(new PageRequest<>(), false)).hasSize(1);
+    assertThat(artifactService.list(aPageRequest().addFilter(Artifact.APP_ID_KEY, EQ, APP_ID).build(), false))
+        .hasSize(1);
   }
 
   @Test

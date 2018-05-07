@@ -205,7 +205,9 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     assignDelegateService.saveConnectionResults(results);
 
-    List<DelegateConnectionResult> saved = wingsPersistence.createQuery(DelegateConnectionResult.class).asList();
+    List<DelegateConnectionResult> saved = wingsPersistence.createQuery(DelegateConnectionResult.class)
+                                               .filter(DelegateConnectionResult.ACCOUNT_ID_KEY, ACCOUNT_ID)
+                                               .asList();
     assertThat(saved).isNotNull();
     assertThat(saved.size()).isEqualTo(1);
     assertThat(saved.get(0).getCriteria()).isEqualTo("criteria");

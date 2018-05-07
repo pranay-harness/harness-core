@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.service.impl.newrelic.LearningEngineAnalysisTask.TIME_SERIES_ANALYSIS_TASK_TIME_OUT;
 
 import com.google.inject.Inject;
@@ -71,13 +72,13 @@ public class LearningEngineAnalysisTest extends WingsBaseTest {
       assertEquals(ExecutionStatus.RUNNING, analysisTask.getExecutionStatus());
 
       assertEquals(numOfTasks - i,
-          wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+          wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
               .filter("executionStatus", ExecutionStatus.QUEUED)
               .filter("retry", 0)
               .asList()
               .size());
       assertEquals(i,
-          wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+          wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
               .filter("executionStatus", ExecutionStatus.RUNNING)
               .filter("retry", 1)
               .asList()
@@ -101,7 +102,7 @@ public class LearningEngineAnalysisTest extends WingsBaseTest {
     }
 
     List<LearningEngineAnalysisTask> learningEngineAnalysisTasks =
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class).asList();
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority).asList();
     assertEquals(1, learningEngineAnalysisTasks.size());
     LearningEngineAnalysisTask analysisTask = learningEngineAnalysisTasks.get(0);
     assertEquals(workflowExecutionId, analysisTask.getWorkflow_execution_id());
@@ -168,14 +169,14 @@ public class LearningEngineAnalysisTest extends WingsBaseTest {
       assertEquals(ExecutionStatus.RUNNING, analysisTask.getExecutionStatus());
 
       assertEquals(numOfTasks - i,
-          wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+          wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
               .field("lastUpdatedAt")
               .greaterThan(startTime)
               .filter("retry", 0)
               .asList()
               .size());
       assertEquals(i,
-          wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+          wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
               .field("lastUpdatedAt")
               .greaterThan(startTime)
               .filter("retry", 1)

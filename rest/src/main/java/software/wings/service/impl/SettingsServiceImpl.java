@@ -466,7 +466,11 @@ public class SettingsServiceImpl implements SettingsService {
       }
     } else {
       List<ArtifactStream> artifactStreams =
-          artifactStreamService.list(aPageRequest().addFilter("settingId", EQ, connectorSetting.getUuid()).build())
+          artifactStreamService
+              .list(aPageRequest()
+                        .addFilter(ArtifactStream.APP_ID_KEY, EQ, connectorSetting.getAppId())
+                        .addFilter("settingId", EQ, connectorSetting.getUuid())
+                        .build())
               .getResponse();
       if (!artifactStreams.isEmpty()) {
         List<String> artifactStreamNames = artifactStreams.stream()
@@ -488,6 +492,7 @@ public class SettingsServiceImpl implements SettingsService {
     List<InfrastructureMapping> infrastructureMappings =
         infrastructureMappingService
             .list(aPageRequest()
+                      .addFilter(InfrastructureMapping.APP_ID_KEY, EQ, cloudProviderSetting.getAppId())
                       .addFilter("computeProviderSettingId", EQ, cloudProviderSetting.getUuid())
                       .withLimit(PageRequest.UNLIMITED)
                       .build())
@@ -502,12 +507,14 @@ public class SettingsServiceImpl implements SettingsService {
           USER);
     }
 
-    List<ArtifactStream> artifactStreams = artifactStreamService
-                                               .list(aPageRequest()
-                                                         .addFilter("settingId", EQ, cloudProviderSetting.getUuid())
-                                                         .withLimit(PageRequest.UNLIMITED)
-                                                         .build())
-                                               .getResponse();
+    List<ArtifactStream> artifactStreams =
+        artifactStreamService
+            .list(aPageRequest()
+                      .addFilter(ArtifactStream.APP_ID_KEY, EQ, cloudProviderSetting.getAppId())
+                      .addFilter("settingId", EQ, cloudProviderSetting.getUuid())
+                      .withLimit(PageRequest.UNLIMITED)
+                      .build())
+            .getResponse();
     if (!artifactStreams.isEmpty()) {
       List<String> artifactStreamNames = artifactStreams.stream().map(ArtifactStream::getName).collect(toList());
       throw new InvalidRequestException(
