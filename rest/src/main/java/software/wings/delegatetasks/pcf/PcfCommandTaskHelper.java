@@ -269,16 +269,14 @@ public class PcfCommandTaskHelper {
     List<Pair<String, String>> fileIds = Lists.newArrayList();
     artifactFiles.forEach(artifactFile -> fileIds.add(Pair.of(artifactFile.getFileUuid(), null)));
 
+    FileIo.createDirectoryIfDoesNotExist(PCF_ARTIFACT_DOWNLOAD_DIR_PATH);
     File dir = new File(PCF_ARTIFACT_DOWNLOAD_DIR_PATH);
-    if (!dir.exists()) {
-      dir.mkdir();
-    }
 
     InputStream inputStream =
         delegateFileManager.downloadArtifactByFileId(FileBucket.ARTIFACTS, fileIds.get(0).getKey(), accountId, false);
 
     String fileName = System.currentTimeMillis() + artifactFiles.get(0).getName();
-    File artifactFile = new File(dir + "/" + fileName);
+    File artifactFile = new File(dir.getAbsolutePath() + "/" + fileName);
     artifactFile.createNewFile();
     IOUtils.copy(inputStream, new FileOutputStream(artifactFile));
     inputStream.close();

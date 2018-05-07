@@ -2,6 +2,7 @@ package software.wings.delegatetasks.pcf.pcftaskhandler;
 
 import com.google.inject.Singleton;
 
+import io.harness.data.structure.EmptyPredicate;
 import lombok.NoArgsConstructor;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -77,12 +78,13 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
       PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
     if (CollectionUtils.isNotEmpty(pcfCommandRouteUpdateRequest.getAppsToBeUpdated())) {
       for (String applicationName : pcfCommandRouteUpdateRequest.getAppsToBeUpdated()) {
-        executionLogCallback.saveExecutionLog("# Adding routs for application: " + applicationName);
+        executionLogCallback.saveExecutionLog("\n# Adding Routs");
+        executionLogCallback.saveExecutionLog("APPLICATION: " + applicationName);
+        executionLogCallback.saveExecutionLog(
+            "ROUTES: \n[" + getRouteString(pcfCommandRouteUpdateRequest.getRouteMaps()));
         // map
         pcfRequestConfig.setApplicationName(applicationName);
         pcfDeploymentManager.mapRouteMapForApplication(pcfRequestConfig, pcfCommandRouteUpdateRequest.getRouteMaps());
-        executionLogCallback.saveExecutionLog(
-            "# Adding routes for application: " + applicationName + " was successfully completed");
       }
     }
   }
@@ -91,13 +93,26 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
       PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
     if (CollectionUtils.isNotEmpty(pcfCommandRouteUpdateRequest.getAppsToBeUpdated())) {
       for (String applicationName : pcfCommandRouteUpdateRequest.getAppsToBeUpdated()) {
-        executionLogCallback.saveExecutionLog("# Unmapping routes from application: " + applicationName);
+        executionLogCallback.saveExecutionLog("\n# Unmapping Routes");
+        executionLogCallback.saveExecutionLog("APPLICATION: " + applicationName);
+        executionLogCallback.saveExecutionLog(
+            "ROUTES: \n[" + getRouteString(pcfCommandRouteUpdateRequest.getRouteMaps()));
         // unmap
         pcfRequestConfig.setApplicationName(applicationName);
         pcfDeploymentManager.unmapRouteMapForApplication(pcfRequestConfig, pcfCommandRouteUpdateRequest.getRouteMaps());
-        executionLogCallback.saveExecutionLog(
-            "# Unmapping routes from application: " + applicationName + " was successfully completed");
       }
+      executionLogCallback.saveExecutionLog("# Unmapping Routes was successfully completed");
     }
+  }
+
+  private String getRouteString(List<String> routeMaps) {
+    if (EmptyPredicate.isEmpty(routeMaps)) {
+      return StringUtils.EMPTY;
+    }
+
+    StringBuilder builder = new StringBuilder();
+    routeMaps.stream().forEach(routeMap -> builder.append("\n").append(routeMap));
+    builder.append("\n]");
+    return builder.toString();
   }
 }
