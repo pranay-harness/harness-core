@@ -15,7 +15,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
-import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.beans.command.LogCallback;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
@@ -51,8 +51,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   private static final Logger logger = LoggerFactory.getLogger(HelmDeployService.class);
 
   @Override
-  public HelmCommandResponse deploy(
-      HelmInstallCommandRequest commandRequest, ExecutionLogCallback executionLogCallback) {
+  public HelmCommandResponse deploy(HelmInstallCommandRequest commandRequest, LogCallback executionLogCallback) {
     try {
       HelmInstallCommandResponse commandResponse;
       executionLogCallback.saveExecutionLog(
@@ -63,10 +62,10 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
       if (helmCliResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.FAILURE)) {
         executionLogCallback.saveExecutionLog("No previous deployment found for release. Installing chart");
-        commandResponse = (HelmInstallCommandResponse) helmClient.install(commandRequest);
+        commandResponse = helmClient.install(commandRequest);
       } else {
         executionLogCallback.saveExecutionLog("Previous release exists for chart. Upgrading chart");
-        commandResponse = (HelmInstallCommandResponse) helmClient.upgrade(commandRequest);
+        commandResponse = helmClient.upgrade(commandRequest);
       }
       executionLogCallback.saveExecutionLog(commandResponse.getOutput());
       List<ContainerInfo> containerInfos = new ArrayList<>();
@@ -90,8 +89,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     }
   }
 
-  private List<ContainerInfo> fetchContainerInfo(
-      HelmCommandRequest commandRequest, ExecutionLogCallback executionLogCallback) {
+  private List<ContainerInfo> fetchContainerInfo(HelmCommandRequest commandRequest, LogCallback executionLogCallback) {
     ContainerServiceParams containerServiceParams = commandRequest.getContainerServiceParams();
 
     KubernetesConfig kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(containerServiceParams);
@@ -101,8 +99,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   }
 
   @Override
-  public HelmCommandResponse rollback(
-      HelmRollbackCommandRequest commandRequest, ExecutionLogCallback executionLogCallback) {
+  public HelmCommandResponse rollback(HelmRollbackCommandRequest commandRequest, LogCallback executionLogCallback) {
     try {
       HelmInstallCommandResponse commandResponse = helmClient.rollback(commandRequest);
       executionLogCallback.saveExecutionLog(commandResponse.getOutput());

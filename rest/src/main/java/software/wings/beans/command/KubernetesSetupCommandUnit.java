@@ -773,14 +773,16 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   private void listDaemonSetContainerInfosWhenReady(List<EncryptedDataDetail> encryptedDataDetails,
       int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback, KubernetesConfig kubernetesConfig,
       String containerServiceName, List<Pod> originalPods, long startTime, boolean isRollback) {
-    int desiredCount = kubernetesContainerService.getNodes(kubernetesConfig, encryptedDataDetails).getItems().size();
+    Optional<Integer> controllerPodCount =
+        kubernetesContainerService.getControllerPodCount(kubernetesConfig, encryptedDataDetails, containerServiceName);
+    int desiredCount = controllerPodCount.isPresent() ? controllerPodCount.get() : 0;
     int previousCount =
         kubernetesContainerService.getController(kubernetesConfig, encryptedDataDetails, containerServiceName) != null
         ? desiredCount
         : 0;
     List<ContainerInfo> containerInfos = kubernetesContainerService.getContainerInfosWhenReady(kubernetesConfig,
-        encryptedDataDetails, containerServiceName, previousCount, desiredCount, serviceSteadyStateTimeout,
-        originalPods, true, executionLogCallback, true, startTime);
+        encryptedDataDetails, containerServiceName, previousCount, serviceSteadyStateTimeout, originalPods, true,
+        executionLogCallback, true, startTime);
 
     boolean allContainersSuccess =
         containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);

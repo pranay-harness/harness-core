@@ -1,6 +1,6 @@
 package software.wings.helpers.ext.helm;
 
-import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.beans.command.LogCallback;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmReleaseHistoryCommandRequest;
@@ -23,7 +23,7 @@ public interface HelmDeployService {
    * @param executionLogCallback the execution log callback
    * @return the helm command response
    */
-  HelmCommandResponse deploy(HelmInstallCommandRequest commandRequest, ExecutionLogCallback executionLogCallback);
+  HelmCommandResponse deploy(HelmInstallCommandRequest commandRequest, LogCallback executionLogCallback);
 
   /**
    * Rollback helm command response.
@@ -32,7 +32,7 @@ public interface HelmDeployService {
    * @param executionLogCallback the execution log callback
    * @return the helm command response
    */
-  HelmCommandResponse rollback(HelmRollbackCommandRequest commandRequest, ExecutionLogCallback executionLogCallback);
+  HelmCommandResponse rollback(HelmRollbackCommandRequest commandRequest, LogCallback executionLogCallback);
 
   /**
    * Ensure helm cli and tiller installed helm command response.
