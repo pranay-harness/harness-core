@@ -20,7 +20,8 @@ public class SearchFilter {
     EXISTS,
     NOT_EXISTS,
     OR,
-    AND;
+    AND,
+    ELEMENT_MATCH;
   }
 
   private String fieldName;

@@ -6,7 +6,6 @@ import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.beans.SearchFilter.Operator.AND;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.EXISTS;
 import static software.wings.beans.SearchFilter.Operator.NOT_EXISTS;
@@ -15,6 +14,7 @@ import static software.wings.beans.SortOrder.OrderType.DESC;
 
 import com.google.common.base.Preconditions;
 
+import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.mapping.MappedClass;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Criteria;
@@ -50,8 +50,9 @@ public class MongoHelper {
    * @param req    the req
    * @return the page response
    */
-  public static <T> PageResponse<T> queryPageRequest(Query<T> q, Mapper mapper, Class<T> cls, PageRequest<T> req) {
-    q = MongoHelper.applyPageRequest(q, req, cls, mapper);
+  public static <T> PageResponse<T> queryPageRequest(
+      Datastore datastore, Query<T> q, Mapper mapper, Class<T> cls, PageRequest<T> req) {
+    q = MongoHelper.applyPageRequest(datastore, q, req, cls, mapper);
 
     PageResponse<T> response = new PageResponse<>(req);
 
@@ -84,8 +85,8 @@ public class MongoHelper {
    * @param req    the req
    * @return the page response
    */
-  public static <T> long getCount(Query<T> q, Mapper mapper, Class<T> cls, PageRequest<T> req) {
-    q = MongoHelper.applyPageRequest(q, req, cls, mapper);
+  public static <T> long getCount(Datastore datastore, Query<T> q, Mapper mapper, Class<T> cls, PageRequest<T> req) {
+    q = MongoHelper.applyPageRequest(datastore, q, req, cls, mapper);
 
     return q.count();
   }
@@ -100,7 +101,8 @@ public class MongoHelper {
    * @param mapper the mapper
    * @return the query
    */
-  public static <T> Query<T> applyPageRequest(Query<T> query, PageRequest<T> req, Class<T> cls, Mapper mapper) {
+  public static <T> Query<T> applyPageRequest(
+      Datastore datastore, Query<T> query, PageRequest<T> req, Class<T> cls, Mapper mapper) {
     if (req == null) {
       return query;
     }
@@ -116,25 +118,39 @@ public class MongoHelper {
           continue;
         }
 
-        if (filter.getOp() == OR || filter.getOp() == AND) {
-          List<Criteria> criterias = new ArrayList<>();
-          for (Object opFilter : filter.getFieldValues()) {
-            if (!(opFilter instanceof SearchFilter)) {
-              logger.error("OR/AND operator can only be used with SearchFiter values");
-              throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE);
+        switch (filter.getOp()) {
+          case OR:
+          case AND:
+            List<Criteria> criteria = new ArrayList<>();
+            for (Object opFilter : filter.getFieldValues()) {
+              if (!(opFilter instanceof SearchFilter)) {
+                logger.error("OR/AND operator can only be used with SearchFilter values");
+                throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE);
+              }
+              SearchFilter opSearchFilter = (SearchFilter) opFilter;
+              criteria.add(applyOperator(query.criteria(opSearchFilter.getFieldName()), opSearchFilter));
             }
-            SearchFilter opSearchFilter = (SearchFilter) opFilter;
-            criterias.add(applyOperator(query.criteria(opSearchFilter.getFieldName()), opSearchFilter));
-          }
 
-          if (filter.getOp() == OR) {
-            query.or(criterias.toArray(new Criteria[0]));
-          } else {
-            query.and(criterias.toArray(new Criteria[0]));
+            if (filter.getOp() == OR) {
+              query.or(criteria.toArray(new Criteria[0]));
+            } else {
+              query.and(criteria.toArray(new Criteria[0]));
+            }
+            break;
+          case ELEMENT_MATCH: {
+            assertOne(filter.getFieldValues());
+
+            final PageRequest request = (PageRequest) filter.getFieldValues()[0];
+            Query elementMatchQuery = datastore.createQuery(cls).disableValidation();
+            elementMatchQuery = applyPageRequest(datastore, elementMatchQuery, request, cls, mapper);
+
+            query.field(filter.getFieldName()).elemMatch(elementMatchQuery);
+            break;
           }
-        } else {
-          FieldEnd<? extends Query<T>> fieldEnd = query.field(filter.getFieldName());
-          query = applyOperator(fieldEnd, filter);
+          default:
+            FieldEnd<? extends Query<T>> fieldEnd = query.field(filter.getFieldName());
+            query = applyOperator(fieldEnd, filter);
+            break;
         }
       }
     }
@@ -166,6 +182,20 @@ public class MongoHelper {
     return query;
   }
 
+  private static void assertNone(Object[] values) {
+    if (isNotEmpty(values)) {
+      logger.error(
+          "Unexpected number of arguments {} in expression when none are expected", values.length, new Exception(""));
+    }
+  }
+
+  private static void assertOne(Object[] values) {
+    int length = values == null ? 0 : values.length;
+    if (length != 1) {
+      logger.error("Unexpected number of arguments {} in expression when 1 is expected", length, new Exception(""));
+    }
+  }
+
   private static <T> T applyOperator(FieldEnd<T> fieldEnd, SearchFilter filter) {
     if (!(filter.getOp() == EXISTS || filter.getOp() == NOT_EXISTS) && isEmpty(filter.getFieldValues())) {
       throw new InvalidRequestException("Unspecified fieldValue for search");
@@ -176,24 +206,31 @@ public class MongoHelper {
     }
     switch (op) {
       case LT:
+        assertOne(filter.getFieldValues());
         return fieldEnd.lessThan(filter.getFieldValues()[0]);
 
       case GT:
+        assertOne(filter.getFieldValues());
         return fieldEnd.greaterThan(filter.getFieldValues()[0]);
 
       case GE:
+        assertOne(filter.getFieldValues());
         return fieldEnd.greaterThanOrEq(filter.getFieldValues()[0]);
 
       case EQ:
+        assertOne(filter.getFieldValues());
         return fieldEnd.equal(filter.getFieldValues()[0]);
 
       case NOT_EQ:
+        assertOne(filter.getFieldValues());
         return fieldEnd.notEqual(filter.getFieldValues()[0]);
 
       case CONTAINS:
+        assertOne(filter.getFieldValues());
         return fieldEnd.containsIgnoreCase(String.valueOf(filter.getFieldValues()[0]));
 
       case STARTS_WITH:
+        assertOne(filter.getFieldValues());
         return fieldEnd.startsWithIgnoreCase(String.valueOf(filter.getFieldValues()[0]));
 
       case HAS:
@@ -206,9 +243,11 @@ public class MongoHelper {
         return fieldEnd.hasNoneOf(asList(filter.getFieldValues()));
 
       case EXISTS:
+        assertNone(filter.getFieldValues());
         return fieldEnd.exists();
 
       case NOT_EXISTS:
+        assertNone(filter.getFieldValues());
         return fieldEnd.doesNotExist();
 
       default:
