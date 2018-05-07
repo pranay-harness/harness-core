@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -318,6 +319,12 @@ public class PcfClientImpl implements PcfClient {
     // Add user provided environment variables
     if (pcfRequestConfig.getServiceVariables() != null) {
       for (Entry<String, String> entry : pcfRequestConfig.getServiceVariables().entrySet()) {
+        builder.environmentVariable(entry.getKey(), entry.getValue());
+      }
+    }
+
+    if (EmptyPredicate.isNotEmpty(applicationManifest.getEnvironmentVariables())) {
+      for (Map.Entry<String, Object> entry : applicationManifest.getEnvironmentVariables().entrySet()) {
         builder.environmentVariable(entry.getKey(), entry.getValue());
       }
     }
