@@ -19,6 +19,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_FILE;
 
@@ -238,7 +239,8 @@ public class KmsTest extends WingsBaseTest {
     kmsConfig.setAccountId(accountId);
     assertEquals(kmsConfig, savedConfig);
     assertEquals(name, savedConfig.getName());
-    List<EncryptedData> encryptedDataList = wingsPersistence.createQuery(EncryptedData.class).asList();
+    List<EncryptedData> encryptedDataList =
+        wingsPersistence.createQuery(EncryptedData.class, excludeAuthority).asList();
     assertEquals(numOfEncryptedValsForKms, encryptedDataList.size());
     for (EncryptedData encryptedData : encryptedDataList) {
       assertTrue(encryptedData.getName().equals(name + "_accessKey")
@@ -1150,8 +1152,9 @@ public class KmsTest extends WingsBaseTest {
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
     assertEquals(settingAttribute, savedAttribute);
     assertEquals(1, wingsPersistence.createQuery(SettingAttribute.class).count());
-    List<EncryptedData> encryptedDataList =
-        wingsPersistence.createQuery(EncryptedData.class).filter("type", SettingVariableTypes.APP_DYNAMICS).asList();
+    List<EncryptedData> encryptedDataList = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
+                                                .filter("type", SettingVariableTypes.APP_DYNAMICS)
+                                                .asList();
     assertEquals(1, encryptedDataList.size());
     EncryptedData encryptedData = encryptedDataList.get(0);
     assertEquals(accountId, encryptedData.getEncryptionKey());
@@ -1304,7 +1307,7 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(Type.TEXT, savedAttribute.getType());
     assertEquals("unencrypted", new String(savedAttribute.getValue()));
     assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).count());
-    assertNull(wingsPersistence.createQuery(EncryptedData.class)
+    assertNull(wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
                    .filter("type", SettingVariableTypes.SECRET_TEXT)
                    .asList()
                    .get(0)
@@ -2003,7 +2006,7 @@ public class KmsTest extends WingsBaseTest {
         encryptedEntities.put(settingAttribute.getUuid(), settingAttribute);
       }
 
-      Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class);
+      Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority);
       List<EncryptedData> encryptedData = new ArrayList<>();
       assertEquals(numOfEncryptedValsForKms + numOfSettingAttributes, query.count());
       for (EncryptedData data : query.asList()) {
@@ -2024,7 +2027,7 @@ public class KmsTest extends WingsBaseTest {
       secretManagementResource.transitionSecrets(
           accountId, EncryptionType.KMS, fromConfig.getUuid(), EncryptionType.KMS, toKmsConfig.getUuid());
       Thread.sleep(TimeUnit.SECONDS.toMillis(10));
-      query = wingsPersistence.createQuery(EncryptedData.class);
+      query = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority);
       // 2 kms configs have been saved so far
       assertEquals(2 * numOfEncryptedValsForKms + numOfSettingAttributes, query.count());
       encryptedData = new ArrayList<>();
@@ -2347,8 +2350,9 @@ public class KmsTest extends WingsBaseTest {
         FileUtils.readFileToString(download, Charset.defaultCharset()));
     assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).count());
 
-    List<EncryptedData> encryptedFileData =
-        wingsPersistence.createQuery(EncryptedData.class).filter("type", SettingVariableTypes.CONFIG_FILE).asList();
+    List<EncryptedData> encryptedFileData = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
+                                                .filter("type", SettingVariableTypes.CONFIG_FILE)
+                                                .asList();
     assertEquals(1, encryptedFileData.size());
     assertEquals(1, encryptedFileData.get(0).getParentIds().size());
     assertTrue(encryptedFileData.get(0).getParentIds().contains(configFileId));
@@ -2364,8 +2368,9 @@ public class KmsTest extends WingsBaseTest {
         FileUtils.readFileToString(download, Charset.defaultCharset()));
     assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).count());
 
-    encryptedFileData =
-        wingsPersistence.createQuery(EncryptedData.class).filter("type", SettingVariableTypes.CONFIG_FILE).asList();
+    encryptedFileData = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
+                            .filter("type", SettingVariableTypes.CONFIG_FILE)
+                            .asList();
     assertEquals(1, encryptedFileData.size());
     assertFalse(encryptedFileData.get(0).getParentIds().isEmpty());
 
@@ -2466,8 +2471,9 @@ public class KmsTest extends WingsBaseTest {
         FileUtils.readFileToString(download, Charset.defaultCharset()));
     assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).count());
 
-    List<EncryptedData> encryptedFileData =
-        wingsPersistence.createQuery(EncryptedData.class).filter("type", SettingVariableTypes.CONFIG_FILE).asList();
+    List<EncryptedData> encryptedFileData = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
+                                                .filter("type", SettingVariableTypes.CONFIG_FILE)
+                                                .asList();
     assertEquals(1, encryptedFileData.size());
     assertFalse(encryptedFileData.get(0).getParentIds().isEmpty());
     // test update
@@ -2568,8 +2574,10 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(numOfSettingAttributes, wingsPersistence.createQuery(SettingAttribute.class).count());
     assertEquals(1, wingsPersistence.createQuery(EncryptedData.class).count());
 
-    List<EncryptedData> encryptedDatas =
-        wingsPersistence.createQuery(EncryptedData.class).field("encryptionType").notEqual(EncryptionType.KMS).asList();
+    List<EncryptedData> encryptedDatas = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
+                                             .field("encryptionType")
+                                             .notEqual(EncryptionType.KMS)
+                                             .asList();
     assertEquals(1, encryptedDatas.size());
     EncryptedData encryptedData = encryptedDatas.get(0);
     assertEquals(EncryptionType.LOCAL, encryptedData.getEncryptionType());
@@ -2671,8 +2679,9 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(numOfSettingAttributes, wingsPersistence.createQuery(SettingAttribute.class).count());
     assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).count());
 
-    List<EncryptedData> encryptedDatas =
-        wingsPersistence.createQuery(EncryptedData.class).filter("encryptionType", EncryptionType.KMS).asList();
+    List<EncryptedData> encryptedDatas = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
+                                             .filter("encryptionType", EncryptionType.KMS)
+                                             .asList();
     assertEquals(1, encryptedDatas.size());
     EncryptedData encryptedData = encryptedDatas.get(0);
     assertEquals(EncryptionType.KMS, encryptedData.getEncryptionType());
@@ -2701,8 +2710,9 @@ public class KmsTest extends WingsBaseTest {
     for (String attributeId : attributeIds) {
       wingsPersistence.delete(SettingAttribute.class, attributeId);
       remainingAttrs.remove(attributeId);
-      encryptedDatas =
-          wingsPersistence.createQuery(EncryptedData.class).filter("encryptionType", EncryptionType.KMS).asList();
+      encryptedDatas = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
+                           .filter("encryptionType", EncryptionType.KMS)
+                           .asList();
       if (i == numOfSettingAttributes - 1) {
         assertTrue(encryptedDatas.isEmpty());
       } else {
@@ -2747,8 +2757,9 @@ public class KmsTest extends WingsBaseTest {
                                             .withName(UUID.randomUUID().toString())
                                             .build();
     attributeIds.add(wingsPersistence.save(settingAttribute));
-    List<EncryptedData> encryptedDataList =
-        wingsPersistence.createQuery(EncryptedData.class).filter("type", SettingVariableTypes.APP_DYNAMICS).asList();
+    List<EncryptedData> encryptedDataList = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
+                                                .filter("type", SettingVariableTypes.APP_DYNAMICS)
+                                                .asList();
     assertEquals(1, encryptedDataList.size());
 
     String yamlRef = secretManager.getEncryptedYamlRef(appDynamicsConfig);
@@ -2770,8 +2781,9 @@ public class KmsTest extends WingsBaseTest {
                            .withName(UUID.randomUUID().toString())
                            .build();
     SettingAttribute attributeCopy = settingsService.save(settingAttribute);
-    encryptedDataList =
-        wingsPersistence.createQuery(EncryptedData.class).filter("type", SettingVariableTypes.APP_DYNAMICS).asList();
+    encryptedDataList = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
+                            .filter("type", SettingVariableTypes.APP_DYNAMICS)
+                            .asList();
     assertEquals(1, encryptedDataList.size());
 
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, attributeCopy.getUuid());

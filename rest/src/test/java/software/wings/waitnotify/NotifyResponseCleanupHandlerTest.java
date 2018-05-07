@@ -7,6 +7,7 @@ package software.wings.waitnotify;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.waitnotify.StringNotifyResponseData.Builder.aStringNotifyResponseData;
 
 import com.google.inject.Inject;
@@ -46,7 +47,8 @@ public class NotifyResponseCleanupHandlerTest extends WingsBaseTest {
     reqNotifyRes.addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS);
     reqNotifyRes.setLimit(PageRequest.UNLIMITED);
     reqNotifyRes.addFieldsIncluded(ID_KEY);
-    PageResponse<NotifyResponse> notifyPageResponses = wingsPersistence.query(NotifyResponse.class, reqNotifyRes);
+    PageResponse<NotifyResponse> notifyPageResponses =
+        wingsPersistence.query(NotifyResponse.class, reqNotifyRes, excludeAuthority);
     assertThat(notifyPageResponses)
         .as("NotifyResponsesWithSuccessStatus")
         .isNotNull()
@@ -54,7 +56,7 @@ public class NotifyResponseCleanupHandlerTest extends WingsBaseTest {
         .hasSize(1);
     notifyResponseCleanupHandler.run();
 
-    notifyPageResponses = wingsPersistence.query(NotifyResponse.class, reqNotifyRes);
+    notifyPageResponses = wingsPersistence.query(NotifyResponse.class, reqNotifyRes, excludeAuthority);
     assertThat(notifyPageResponses)
         .as("NotifyResponsesWithSuccessStatus")
         .isNotNull()

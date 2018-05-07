@@ -9,6 +9,7 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
+import static software.wings.dl.HQuery.excludeAuthority;
 
 import com.google.common.io.Files;
 import com.google.inject.Inject;
@@ -149,7 +150,7 @@ public class LogServiceImpl implements LogService {
     long startTime = System.currentTimeMillis();
     logger.info("Purging activities Start time", startTime);
     final MorphiaIterator<Activity, Activity> nonPurgedActivityIterator =
-        wingsPersistence.createQuery(Activity.class)
+        wingsPersistence.createQuery(Activity.class, excludeAuthority)
             .filter("logPurged", false)
             .field("createdAt")
             .greaterThan(System.currentTimeMillis() - DataCleanUpJob.LOGS_RETENTION_TIME)
@@ -159,7 +160,7 @@ public class LogServiceImpl implements LogService {
       while (nonPurgedActivityIterator.hasNext()) {
         String activityId = nonPurgedActivityIterator.next().getUuid();
         List<String> idsToKeep = new ArrayList<>();
-        final MorphiaIterator<Log, Log> logIterator = wingsPersistence.createQuery(Log.class)
+        final MorphiaIterator<Log, Log> logIterator = wingsPersistence.createQuery(Log.class, excludeAuthority)
                                                           .filter("activityId", activityId)
                                                           .order("-createdAt")
                                                           .fetchEmptyEntities();
@@ -173,7 +174,7 @@ public class LogServiceImpl implements LogService {
         }
         if (idsToKeep.size() != 0) {
           logger.info("Deleting logs of size {} for activityId {}", idsToKeep.size(), activityId);
-          wingsPersistence.delete(wingsPersistence.createQuery(Log.class)
+          wingsPersistence.delete(wingsPersistence.createQuery(Log.class, excludeAuthority)
                                       .filter("activityId", activityId)
                                       .field("_id")
                                       .hasNoneOf(idsToKeep));

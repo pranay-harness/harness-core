@@ -2239,7 +2239,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       workflowExecutions.forEach(stageExecution -> {
         String executionUuid = stageExecution.getUuid();
         List<StateExecutionInstance> stateExecutionInstances =
-            wingsPersistence.createQuery(StateExecutionInstance.class).filter("executionUuid", executionUuid).asList();
+            wingsPersistence.createQuery(StateExecutionInstance.class)
+                .filter(StateExecutionInstance.APP_ID_KEY, appId)
+                .filter(StateExecutionInstance.EXECUTION_UUID_KEY, executionUuid)
+                .asList();
 
         boolean containsVerificationState = false;
         for (StateExecutionInstance stateExecutionInstance : stateExecutionInstances) {
