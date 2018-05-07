@@ -1,8 +1,6 @@
 package software.wings.resources;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static software.wings.security.PermissionAttribute.Action.EXECUTE;
-import static software.wings.security.PermissionAttribute.Action.READ;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
 import com.google.inject.Inject;
@@ -56,7 +54,7 @@ public class PreferenceResource {
   @GET
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = LOGGED_IN, action = READ)
+  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<PageResponse<Preference>> listPreferences(
       @QueryParam("accountId") @NotEmpty String accountId, @BeanParam PageRequest<Preference> pageRequest) {
     return new RestResponse<>(prefService.list(pageRequest));
@@ -74,7 +72,7 @@ public class PreferenceResource {
   @Timed
   @ExceptionMetered
   @Path("{preferenceId}")
-  @AuthRule(permissionType = LOGGED_IN, action = READ)
+  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<Preference> getPreference(@QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("userId") @NotEmpty String userId, @PathParam("preferenceId") String preferenceId) {
     return new RestResponse<>(prefService.get(accountId, userId, preferenceId));
@@ -91,7 +89,7 @@ public class PreferenceResource {
   @POST
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = LOGGED_IN, action = EXECUTE)
+  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<Preference> savePreference(@QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("userId") @NotEmpty String userId, Preference preference) {
     preference.setUserId(userId);
@@ -112,7 +110,7 @@ public class PreferenceResource {
   @Timed
   @ExceptionMetered
   @Path("{preferenceId}")
-  @AuthRule(permissionType = LOGGED_IN, action = EXECUTE)
+  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<Preference> updatePreference(@QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("userId") @NotEmpty String userId, @PathParam("preferenceId") String preferenceId,
       Preference preference) {
@@ -131,7 +129,7 @@ public class PreferenceResource {
   @Path("{preferenceId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = LOGGED_IN, action = EXECUTE)
+  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<Void> deletePreference(@QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("userId") @NotEmpty String userId, @PathParam("preferenceId") String preferenceId) {
     prefService.delete(accountId, userId, preferenceId);
