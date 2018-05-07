@@ -407,7 +407,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     ((HQuery) query).setQueryChecks(queryChecks);
     Mapper mapper = ((DatastoreImpl) advancedDatastore).getMapper();
 
-    return MongoHelper.queryPageRequest(query, mapper, cls, req);
+    return MongoHelper.queryPageRequest(advancedDatastore, query, mapper, cls, req);
   }
 
   @Override
@@ -417,7 +417,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     Query<T> query = advancedDatastore.createQuery(cls);
     Mapper mapper = ((DatastoreImpl) advancedDatastore).getMapper();
 
-    return MongoHelper.getCount(query, mapper, cls, req);
+    return MongoHelper.getCount(advancedDatastore, query, mapper, cls, req);
   }
 
   @Override
