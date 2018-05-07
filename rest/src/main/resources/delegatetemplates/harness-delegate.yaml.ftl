@@ -1,3 +1,10 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: harness-delegate
+
+---
+
 apiVersion: apps/v1beta1
 kind: StatefulSet
 metadata:
@@ -28,8 +35,8 @@ spec:
         name: harness-delegate-instance
         resources:
           limits:
-            cpu: "2"
-            memory: 8000Mi
+            cpu: "500m"
+            memory: "6Gi"
         env:
         - name: ACCOUNT_ID
           value: ${accountId}
