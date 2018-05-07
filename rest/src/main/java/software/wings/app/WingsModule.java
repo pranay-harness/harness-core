@@ -109,6 +109,7 @@ import software.wings.service.impl.NotificationServiceImpl;
 import software.wings.service.impl.NotificationSetupServiceImpl;
 import software.wings.service.impl.PipelineServiceImpl;
 import software.wings.service.impl.PluginServiceImpl;
+import software.wings.service.impl.PreferenceServiceImpl;
 import software.wings.service.impl.RoleServiceImpl;
 import software.wings.service.impl.SSOServiceImpl;
 import software.wings.service.impl.SSOSettingServiceImpl;
@@ -213,6 +214,7 @@ import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.PluginService;
+import software.wings.service.intfc.PreferenceService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.SSOService;
 import software.wings.service.intfc.SSOSettingService;
@@ -397,7 +399,7 @@ public class WingsModule extends AbstractModule {
     bind(WhitelistService.class).to(WhitelistServiceImpl.class);
     bind(ApiKeyService.class).to(ApiKeyServiceImpl.class);
     bind(ExternalApiRateLimitingService.class).to(ExternalApiRateLimitingServiceImpl.class);
-
+    bind(PreferenceService.class).to(PreferenceServiceImpl.class);
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);
     infrastructureProviderMapBinder.addBinding(SettingVariableTypes.AWS.name()).to(AwsInfrastructureProvider.class);
