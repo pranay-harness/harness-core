@@ -6,17 +6,21 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static software.wings.dl.HQuery.excludeAuthority;
 
+import com.google.api.client.repackaged.com.google.common.base.Splitter;
 import com.google.api.client.repackaged.com.google.common.base.Throwables;
 import com.google.inject.Inject;
 
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.app.DeployMode;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FeatureFlagService;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -26,6 +30,8 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
   private static final Logger logger = LoggerFactory.getLogger(FeatureFlagServiceImpl.class);
 
   @Inject private WingsPersistence wingsPersistence;
+
+  @Inject private MainConfiguration mainConfiguration;
 
   @Override
   public boolean isEnabled(@NotNull FeatureName featureName, String accountId) {
@@ -72,5 +78,28 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
                                             .map(name -> FeatureFlag.builder().name(name).enabled(false).build())
                                             .collect(toList());
     wingsPersistence.save(newFeatureFlags);
+
+    if (DeployMode.ONPREM.equals(mainConfiguration.getDeployMode())) {
+      onPremInstallUpdateFeatureFlags(definedNames);
+    }
+  }
+
+  private void onPremInstallUpdateFeatureFlags(Set<String> definedNames) {
+    String features = mainConfiguration.getFeatureNames();
+    List<String> enabledFeatures;
+    if (isNotEmpty(features)) {
+      enabledFeatures = Splitter.on(',').omitEmptyStrings().trimResults().splitToList(features);
+    } else {
+      enabledFeatures = new ArrayList<>();
+    }
+    definedNames.stream().forEach(name -> updateFeatureFlag(name, enabledFeatures.contains(name)));
+  }
+
+  public void updateFeatureFlag(String name, boolean enabled) {
+    wingsPersistence.update((Query) wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority)
+                                .criteria("name")
+                                .equal(name)
+                                .getQuery(),
+        wingsPersistence.createUpdateOperations(FeatureFlag.class).set("enabled", enabled));
   }
 }

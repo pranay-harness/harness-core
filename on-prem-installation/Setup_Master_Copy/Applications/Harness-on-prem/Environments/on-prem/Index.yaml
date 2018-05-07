@@ -101,3 +101,6 @@ variableOverrides:
   - name: HOST2
     value: <HOST2_PLACEHOLDER>
     valueType: TEXT
+  - name: FEATURES
+    value: RBAC
+    valueType: TEXT

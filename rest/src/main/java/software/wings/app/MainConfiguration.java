@@ -60,6 +60,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("smtp") private SmtpConfig smtpConfig;
   @JsonProperty("globalWhitelistConfig") private GlobalWhitelistConfig globalWhitelistConfig;
   @JsonProperty(defaultValue = "AWS") private DeployMode deployMode = DeployMode.AWS;
+  @JsonProperty("featuresEnabled") private String featureNames;
   private int applicationPort;
   private boolean sslEnabled;
 
