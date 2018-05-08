@@ -8,6 +8,7 @@ import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.exception.WingsException.USER;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -160,6 +161,20 @@ public class YamlGitServiceImpl implements YamlGitService {
     3. No write access
     4. Branch doesn't exist
     */
+
+    // Validate if SSH key is present
+    if (gitConfig.isKeyAuth()) {
+      if (gitConfig.getSshSettingAttribute() == null) {
+        throw new WingsException(ErrorCode.INVALID_REQUEST, USER).addParam("message", "SSH key can not be empty");
+      }
+    }
+    // Validate if username and password present
+    else {
+      if (gitConfig.getUsername() == null || gitConfig.getPassword() == null) {
+        throw new WingsException(ErrorCode.INVALID_REQUEST, USER)
+            .addParam("message", "Username and password can not be empty");
+      }
+    }
 
     try {
       GitCommandExecutionResponse gitCommandExecutionResponse =

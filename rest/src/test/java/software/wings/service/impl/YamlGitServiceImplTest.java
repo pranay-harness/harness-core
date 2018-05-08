@@ -36,6 +36,10 @@ public class YamlGitServiceImplTest {
   private @Mock AlertService alertService;
   private @Mock SecretManager secretManager;
 
+  private static final String TEST_GIT_REPO_URL = "https://github.com/rathn/SyncTest";
+  private static final String TEST_GIT_REPO_USER = "user";
+  private static final String TEST_GIT_REPO_PASSWORD = "password";
+
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
@@ -91,8 +95,13 @@ public class YamlGitServiceImplTest {
     doReturn(null).when(secretManager).getEncryptionDetails(any(), any(), any());
 
     try {
-      MethodUtils.invokeMethod(
-          yamlGitService, true, "validateGit", new Object[] {GitConfig.builder().accountId("ACCOUNT_ID").build()});
+      MethodUtils.invokeMethod(yamlGitService, true, "validateGit",
+          new Object[] {GitConfig.builder()
+                            .accountId("ACCOUNT_ID")
+                            .repoUrl(TEST_GIT_REPO_URL)
+                            .username(TEST_GIT_REPO_USER)
+                            .password(TEST_GIT_REPO_PASSWORD.toCharArray())
+                            .build()});
       fail("Was Expected to fail");
     } catch (Exception e) {
       assertTrue((((InvocationTargetException) e).getTargetException()) instanceof WingsException);
@@ -100,9 +109,13 @@ public class YamlGitServiceImplTest {
 
     verify(alertService).openAlert(any(), any(), any(), any());
     verify(alertService, times(0)).closeAlert(any(), any(), any(), any());
-    MethodUtils.invokeMethod(
-        yamlGitService, true, "validateGit", new Object[] {GitConfig.builder().accountId("ACCOUNT_ID").build()});
-
+    MethodUtils.invokeMethod(yamlGitService, true, "validateGit",
+        new Object[] {GitConfig.builder()
+                          .accountId("ACCOUNT_ID")
+                          .repoUrl(TEST_GIT_REPO_URL)
+                          .username(TEST_GIT_REPO_USER)
+                          .password(TEST_GIT_REPO_PASSWORD.toCharArray())
+                          .build()});
     verify(alertService).closeAlert(any(), any(), any(), any());
   }
 }
