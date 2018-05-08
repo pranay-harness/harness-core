@@ -27,8 +27,6 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = false)
 public class LogMLFeedbackRecord extends Base {
-  @NotEmpty @Indexed private String applicationId;
-
   @NotEmpty @Indexed private String serviceId;
 
   @NotEmpty @Indexed private String workflowId;
@@ -53,12 +51,11 @@ public class LogMLFeedbackRecord extends Base {
 
   @Builder
   public LogMLFeedbackRecord(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
-      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords, String entityYamlPath,
-      String applicationId, String serviceId, String workflowId, String workflowExecutionId, String stateExecutionId,
-      StateType stateType, int clusterLabel, CLUSTER_TYPE clusterType, LogMLFeedbackType logMLFeedbackType,
-      String logMessage, String logMD5Hash, String comment) {
+      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords, String entityYamlPath, String serviceId,
+      String workflowId, String workflowExecutionId, String stateExecutionId, StateType stateType, int clusterLabel,
+      CLUSTER_TYPE clusterType, LogMLFeedbackType logMLFeedbackType, String logMessage, String logMD5Hash,
+      String comment) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
-    this.applicationId = applicationId;
     this.serviceId = serviceId;
     this.workflowId = workflowId;
     this.workflowExecutionId = workflowExecutionId;
