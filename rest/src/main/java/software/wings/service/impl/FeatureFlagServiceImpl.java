@@ -2,46 +2,46 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.app.DeployMode.ONPREM;
 import static software.wings.dl.HQuery.excludeAuthority;
 
 import com.google.api.client.repackaged.com.google.common.base.Splitter;
-import com.google.api.client.repackaged.com.google.common.base.Throwables;
 import com.google.inject.Inject;
 
-import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.app.DeployMode;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FeatureFlagService;
 
-import java.util.ArrayList;
+import java.time.Clock;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import javax.validation.constraints.NotNull;
 
 public class FeatureFlagServiceImpl implements FeatureFlagService {
   private static final Logger logger = LoggerFactory.getLogger(FeatureFlagServiceImpl.class);
 
   @Inject private WingsPersistence wingsPersistence;
-
+  @Inject private Clock clock;
   @Inject private MainConfiguration mainConfiguration;
 
   @Override
   public boolean isEnabled(@NotNull FeatureName featureName, String accountId) {
-    Query<FeatureFlag> query = wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority);
-
-    FeatureFlag featureFlag = query.filter("name", featureName.name()).get();
+    FeatureFlag featureFlag =
+        wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", featureName.name()).get();
 
     if (featureFlag == null) {
       // we don't want to throw an exception - we just want to log the error
-      logger.info("FeatureFlag " + featureName.name() + " not found.");
+      logger.info("FeatureFlag {} not found.", featureName.name());
       return false;
     }
 
@@ -51,15 +51,12 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
 
     if (isEmpty(accountId)) {
       // we don't want to throw an exception - we just want to log the error
-      logger.warn(
-          "FeatureFlag isEnabled check without accountId\n{}", Throwables.getStackTraceAsString(new Exception("")));
+      logger.warn("FeatureFlag isEnabled check without accountId", new Exception(""));
       return false;
     }
 
     if (isNotEmpty(featureFlag.getAccountIds())) {
-      if (featureFlag.getAccountIds().contains(accountId)) {
-        return true;
-      }
+      return featureFlag.getAccountIds().contains(accountId);
     }
 
     return false;
@@ -67,39 +64,43 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
 
   @Override
   public void initializeFeatureFlags() {
-    List<FeatureFlag> persistedFeatureFlags =
-        wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).asList();
     Set<String> definedNames = Arrays.stream(FeatureName.values()).map(FeatureName::name).collect(toSet());
-    persistedFeatureFlags.forEach(flag -> flag.setObsolete(!definedNames.contains(flag.getName())));
-    wingsPersistence.save(persistedFeatureFlags);
-    Set<String> persistedNames = persistedFeatureFlags.stream().map(FeatureFlag::getName).collect(toSet());
+
+    // Mark persisted flags that are no longer defined as obsolete
+    wingsPersistence.update(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority)
+                                .filter("obsolete", false)
+                                .field("name")
+                                .notIn(definedNames),
+        wingsPersistence.createUpdateOperations(FeatureFlag.class).set("obsolete", true));
+
+    // Delete flags that were marked obsolete more than ten days ago
+    wingsPersistence.delete(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority)
+                                .filter("obsolete", true)
+                                .field("lastUpdatedAt")
+                                .lessThan(clock.millis() - TimeUnit.DAYS.toMillis(10)));
+
+    // Persist new flags initialized as enabled false
+    Set<String> persistedNames = wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority)
+                                     .project("name", true)
+                                     .asList()
+                                     .stream()
+                                     .map(FeatureFlag::getName)
+                                     .collect(toSet());
     List<FeatureFlag> newFeatureFlags = definedNames.stream()
                                             .filter(name -> !persistedNames.contains(name))
                                             .map(name -> FeatureFlag.builder().name(name).enabled(false).build())
                                             .collect(toList());
     wingsPersistence.save(newFeatureFlags);
 
-    if (DeployMode.ONPREM.equals(mainConfiguration.getDeployMode())) {
-      onPremInstallUpdateFeatureFlags(definedNames);
+    // For on-prem, set all enabled values from the list of enabled flags in the configuration
+    if (ONPREM.equals(mainConfiguration.getDeployMode())) {
+      String features = mainConfiguration.getFeatureNames();
+      List<String> enabled =
+          isBlank(features) ? emptyList() : Splitter.on(',').omitEmptyStrings().trimResults().splitToList(features);
+      for (String name : definedNames) {
+        wingsPersistence.update(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", name),
+            wingsPersistence.createUpdateOperations(FeatureFlag.class).set("enabled", enabled.contains(name)));
+      }
     }
-  }
-
-  private void onPremInstallUpdateFeatureFlags(Set<String> definedNames) {
-    String features = mainConfiguration.getFeatureNames();
-    List<String> enabledFeatures;
-    if (isNotEmpty(features)) {
-      enabledFeatures = Splitter.on(',').omitEmptyStrings().trimResults().splitToList(features);
-    } else {
-      enabledFeatures = new ArrayList<>();
-    }
-    definedNames.stream().forEach(name -> updateFeatureFlag(name, enabledFeatures.contains(name)));
-  }
-
-  public void updateFeatureFlag(String name, boolean enabled) {
-    wingsPersistence.update((Query) wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority)
-                                .criteria("name")
-                                .equal(name)
-                                .getQuery(),
-        wingsPersistence.createUpdateOperations(FeatureFlag.class).set("enabled", enabled));
   }
 }
