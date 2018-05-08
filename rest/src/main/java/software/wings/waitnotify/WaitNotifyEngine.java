@@ -91,7 +91,7 @@ public class WaitNotifyEngine {
   // If we get duplicate key exception this means that this correlation id was already handled. In rare cases
   // the delegate might get confused and send the response twice. Ignore two DuplicateKeyException per hour.
   // If more are observed that's alarming.
-  static RateLimiter duplicateKeyExceptionRateLimiter = RateLimiter.create(5.0 / Duration.ofHours(1).getSeconds());
+  static RateLimiter duplicateKeyExceptionRateLimiter = RateLimiter.create(8.0 / Duration.ofHours(1).getSeconds());
 
   private <T extends NotifyResponseData> String notify(String correlationId, T response, boolean error) {
     Preconditions.checkArgument(isNotEmpty(correlationId), "correlationId is null or empty");
