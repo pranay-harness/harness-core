@@ -45,6 +45,7 @@ public class NewRelicMetricValueDefinitionTest {
                      .timeStamp(System.currentTimeMillis())
                      .host("host")
                      .dataCollectionMinute(1)
+                     .values(new HashMap<>())
                      .build();
     testRecord.getValues().put(THROUGHPUT, 0.0);
     testRecord.getValues().put(REQUSET_PER_MINUTE, 0.0);
@@ -60,6 +61,7 @@ public class NewRelicMetricValueDefinitionTest {
                         .stateExecutionId("stateExecutionId")
                         .timeStamp(System.currentTimeMillis())
                         .host("host")
+                        .values(new HashMap<>())
                         .dataCollectionMinute(1)
                         .build();
 

@@ -170,6 +170,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
               final NewRelicMetricDataRecord metricDataRecord = new NewRelicMetricDataRecord();
               metricDataRecord.setName(metric.getName());
               metricDataRecord.setApplicationId(dataCollectionInfo.getApplicationId());
+              metricDataRecord.setAppId(dataCollectionInfo.getApplicationId());
               metricDataRecord.setWorkflowId(dataCollectionInfo.getWorkflowId());
               metricDataRecord.setWorkflowExecutionId(dataCollectionInfo.getWorkflowExecutionId());
               metricDataRecord.setServiceId(dataCollectionInfo.getServiceId());
@@ -355,6 +356,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                     .stateType(getStateType())
                     .name(HARNESS_HEARTBEAT_METRIC_NAME)
                     .applicationId(dataCollectionInfo.getApplicationId())
+                    .appId(dataCollectionInfo.getApplicationId())
                     .workflowId(dataCollectionInfo.getWorkflowId())
                     .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
                     .serviceId(dataCollectionInfo.getServiceId())

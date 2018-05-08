@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -14,6 +15,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
+import software.wings.beans.EmbeddedUser;
 import software.wings.beans.SortOrder;
 import software.wings.exception.WingsException;
 import software.wings.metrics.RiskLevel;
@@ -32,7 +34,7 @@ import java.util.List;
 })
 @Data
 @EqualsAndHashCode(callSuper = false)
-@Builder
+@NoArgsConstructor
 public class NewRelicMetricAnalysisRecord extends Base {
   @NotEmpty @Indexed private StateType stateType;
 
@@ -55,6 +57,26 @@ public class NewRelicMetricAnalysisRecord extends Base {
   private boolean showTimeSeries;
 
   private String baseLineExecutionId;
+
+  @Builder
+  public NewRelicMetricAnalysisRecord(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
+      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords, String entityYamlPath, StateType stateType,
+      String message, RiskLevel riskLevel, String applicationId, String workflowId, String workflowExecutionId,
+      String stateExecutionId, List<NewRelicMetricAnalysis> metricAnalyses, int analysisMinute, boolean showTimeSeries,
+      String baseLineExecutionId) {
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
+    this.stateType = stateType;
+    this.message = message;
+    this.riskLevel = riskLevel;
+    this.applicationId = applicationId;
+    this.workflowId = workflowId;
+    this.workflowExecutionId = workflowExecutionId;
+    this.stateExecutionId = stateExecutionId;
+    this.metricAnalyses = metricAnalyses;
+    this.analysisMinute = analysisMinute;
+    this.showTimeSeries = showTimeSeries;
+    this.baseLineExecutionId = baseLineExecutionId;
+  }
 
   public void addNewRelicMetricAnalysis(NewRelicMetricAnalysis analysis) {
     metricAnalyses.add(analysis);

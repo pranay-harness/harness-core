@@ -63,10 +63,11 @@ public class TimeSeriesResource {
   @LearningEngineAuth
   @ExceptionMetered
   public RestResponse<List<NewRelicMetricDataRecord>> getMetricData(@QueryParam("accountId") String accountId,
-      @QueryParam("stateType") StateType stateType, @QueryParam("workflowExecutionId") String workFlowExecutionId,
+      @QueryParam("appId") String appId, @QueryParam("stateType") StateType stateType,
+      @QueryParam("workflowExecutionId") String workFlowExecutionId,
       @QueryParam("compareCurrent") boolean compareCurrent, TSRequest request) throws IOException {
     if (compareCurrent) {
-      return new RestResponse<>(metricDataAnalysisService.getRecords(stateType, request.getWorkflowExecutionId(),
+      return new RestResponse<>(metricDataAnalysisService.getRecords(stateType, appId, request.getWorkflowExecutionId(),
           request.getStateExecutionId(), request.getWorkflowId(), request.getServiceId(), request.getNodes(),
           request.getAnalysisMinute(), request.getAnalysisStartMinute()));
     } else {
@@ -74,7 +75,7 @@ public class TimeSeriesResource {
         return new RestResponse<>(new ArrayList<>());
       }
 
-      return new RestResponse<>(metricDataAnalysisService.getPreviousSuccessfulRecords(stateType,
+      return new RestResponse<>(metricDataAnalysisService.getPreviousSuccessfulRecords(stateType, appId,
           request.getWorkflowId(), workFlowExecutionId, request.getServiceId(), request.getAnalysisMinute(),
           request.getAnalysisStartMinute()));
     }
