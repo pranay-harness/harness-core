@@ -30,8 +30,6 @@ import java.util.Map;
 public class LogMLAnalysisRecord extends Base {
   @NotEmpty @Indexed private String stateExecutionId;
 
-  @NotEmpty @Indexed private String applicationId;
-
   @NotEmpty @Indexed private StateType stateType;
 
   @NotEmpty @Indexed private int logCollectionMinute;

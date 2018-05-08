@@ -45,7 +45,6 @@ public class LogDataRecord extends Base {
 
   @NotEmpty @Indexed private String query;
 
-  @NotEmpty private String applicationId;
   @NotEmpty private String clusterLabel;
   @NotEmpty private String host;
 
@@ -68,7 +67,6 @@ public class LogDataRecord extends Base {
       record.setWorkflowExecutionId(workflowExecutionId);
       record.setStateExecutionId(stateExecutionId);
       record.setQuery(logElement.getQuery());
-      record.setApplicationId(applicationId);
       record.setAppId(applicationId);
       record.setClusterLabel(logElement.getClusterLabel());
       record.setHost(logElement.getHost());

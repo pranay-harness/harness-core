@@ -29,8 +29,6 @@ import java.util.Map;
 public class ExperimentalLogMLAnalysisRecord extends Base {
   @NotEmpty @Indexed private String stateExecutionId;
 
-  @NotEmpty @Indexed private String applicationId;
-
   @NotEmpty @Indexed private StateType stateType;
   @NotEmpty @Indexed private String experiment_name;
 

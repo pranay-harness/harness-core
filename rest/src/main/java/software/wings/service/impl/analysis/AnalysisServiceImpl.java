@@ -369,7 +369,6 @@ public class AnalysisServiceImpl implements AnalysisService {
     PhaseElement phaseElement = (PhaseElement) optionalElement.get();
 
     LogMLFeedbackRecord mlFeedbackRecord = LogMLFeedbackRecord.builder()
-                                               .applicationId(feedback.getAppId())
                                                .appId(feedback.getAppId())
                                                .serviceId(phaseElement.getServiceElement().getUuid())
                                                .workflowId(stateExecutionInstance.getWorkflowId())
@@ -505,11 +504,10 @@ public class AnalysisServiceImpl implements AnalysisService {
       wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(mlAnalysisResponse));
     }
     if (logger.isDebugEnabled()) {
-      logger.debug(
-          "inserted ml LogMLAnalysisRecord to persistence layer for app: " + mlAnalysisResponse.getApplicationId()
+      logger.debug("inserted ml LogMLAnalysisRecord to persistence layer for app: " + mlAnalysisResponse.getAppId()
           + " StateExecutionInstanceId: " + mlAnalysisResponse.getStateExecutionId());
     }
-    bumpClusterLevel(stateType, mlAnalysisResponse.getStateExecutionId(), mlAnalysisResponse.getApplicationId(),
+    bumpClusterLevel(stateType, mlAnalysisResponse.getStateExecutionId(), mlAnalysisResponse.getAppId(),
         mlAnalysisResponse.getQuery(), emptySet(), mlAnalysisResponse.getLogCollectionMinute(),
         ClusterLevel.getHeartBeatLevel(ClusterLevel.L2), ClusterLevel.getFinal());
     if (taskId.isPresent()) {
@@ -570,11 +568,10 @@ public class AnalysisServiceImpl implements AnalysisService {
       wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(mlAnalysisResponse));
     }
     if (logger.isDebugEnabled()) {
-      logger.debug(
-          "inserted ml LogMLAnalysisRecord to persistence layer for app: " + mlAnalysisResponse.getApplicationId()
+      logger.debug("inserted ml LogMLAnalysisRecord to persistence layer for app: " + mlAnalysisResponse.getAppId()
           + " StateExecutionInstanceId: " + mlAnalysisResponse.getStateExecutionId());
     }
-    bumpClusterLevel(stateType, mlAnalysisResponse.getStateExecutionId(), mlAnalysisResponse.getApplicationId(),
+    bumpClusterLevel(stateType, mlAnalysisResponse.getStateExecutionId(), mlAnalysisResponse.getAppId(),
         mlAnalysisResponse.getQuery(), emptySet(), mlAnalysisResponse.getLogCollectionMinute(),
         ClusterLevel.getHeartBeatLevel(ClusterLevel.L2), ClusterLevel.getFinal());
     if (taskId.isPresent()) {
@@ -1125,7 +1122,6 @@ public class AnalysisServiceImpl implements AnalysisService {
     final LogMLAnalysisRecord analysisRecord = new LogMLAnalysisRecord();
     analysisRecord.setLogCollectionMinute(-1);
     analysisRecord.setStateType(stateType);
-    analysisRecord.setApplicationId(appId);
     analysisRecord.setAppId(appId);
     analysisRecord.setStateExecutionId(stateExecutionId);
     analysisRecord.setQuery(query);
