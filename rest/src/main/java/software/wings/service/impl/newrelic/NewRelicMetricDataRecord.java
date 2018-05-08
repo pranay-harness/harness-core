@@ -15,10 +15,12 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
+import software.wings.beans.EmbeddedUser;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateType;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -36,7 +38,6 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class NewRelicMetricDataRecord extends Base {
   @NotEmpty @Indexed private StateType stateType;
@@ -65,4 +66,26 @@ public class NewRelicMetricDataRecord extends Base {
 
   // generic values
   @Default private Map<String, Double> values = new HashMap<>();
+
+  @Builder
+  public NewRelicMetricDataRecord(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
+      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords, String entityYamlPath, StateType stateType,
+      String name, String applicationId, String workflowId, String workflowExecutionId, String serviceId,
+      String stateExecutionId, long timeStamp, int dataCollectionMinute, String host, ClusterLevel level, String tag,
+      Map<String, Double> values) {
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
+    this.stateType = stateType;
+    this.name = name;
+    this.applicationId = applicationId;
+    this.workflowId = workflowId;
+    this.workflowExecutionId = workflowExecutionId;
+    this.serviceId = serviceId;
+    this.stateExecutionId = stateExecutionId;
+    this.timeStamp = timeStamp;
+    this.dataCollectionMinute = dataCollectionMinute;
+    this.host = host;
+    this.level = level;
+    this.tag = tag;
+    this.values = values;
+  }
 }

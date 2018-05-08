@@ -18,12 +18,16 @@ import migrations.all.LogAnalysisExperimentalRecordsMigration;
 import migrations.all.LogAnalysisRecordsMigration;
 import migrations.all.LogDataRecordsMigration;
 import migrations.all.LogFeedbackRecordsMigration;
+import migrations.all.NewRelicMetricAnalysisRecordsMigration;
+import migrations.all.NewRelicMetricDataRecordsMigration;
 import migrations.all.NewRelicMetricNameCronRemoval;
 import migrations.all.ServiceKeywordsMigration;
 import migrations.all.ServiceVariableReferentialIntegrity;
 import migrations.all.SetDaemonSetInWorkflowPhase;
 import migrations.all.SetRollbackFlagToWorkflows;
 import migrations.all.StateExecutionInstanceDisplayName;
+import migrations.all.TimeSeriesAnalysisRecordsMigration;
+import migrations.all.TimeSeriesMLScoresMigration;
 import migrations.all.TrimYamlMigration;
 import migrations.all.VerifyStepWorkflowOrder;
 import org.apache.commons.lang3.tuple.Pair;
@@ -66,6 +70,10 @@ public class MigrationList {
         .add(Pair.of(130, FixInstanceData.class))
         .add(Pair.of(131, LogAnalysisExperimentalRecordsMigration.class))
         .add(Pair.of(132, FixInstanceDataForAwsSSH.class))
+        .add(Pair.of(133, NewRelicMetricAnalysisRecordsMigration.class))
+        .add(Pair.of(134, NewRelicMetricDataRecordsMigration.class))
+        .add(Pair.of(135, TimeSeriesAnalysisRecordsMigration.class))
+        .add(Pair.of(136, TimeSeriesMLScoresMigration.class))
         .build();
   }
 }

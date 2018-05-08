@@ -190,7 +190,7 @@ public class AppDynamicsStateTest extends WingsBaseTest {
     when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
 
     when(metricAnalysisService.getLastSuccessfulWorkflowExecutionIdWithData(
-             StateType.APP_DYNAMICS, workflowId, serviceId))
+             StateType.APP_DYNAMICS, appId, workflowId, serviceId))
         .thenReturn(workflowExecutionId);
     ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
     assertEquals(ExecutionStatus.RUNNING, executionResponse.getExecutionStatus());
@@ -236,7 +236,7 @@ public class AppDynamicsStateTest extends WingsBaseTest {
     doReturn(serviceId).when(spyAppDynamicsState).getPhaseServiceId(executionContext);
 
     when(metricAnalysisService.getLastSuccessfulWorkflowExecutionIdWithData(
-             StateType.APP_DYNAMICS, workflowId, serviceId))
+             StateType.APP_DYNAMICS, appId, workflowId, serviceId))
         .thenReturn(workflowExecutionId);
     when(executionContext.renderExpression("${workflow.variables.AppDynamics_Server}"))
         .thenReturn(settingAttribute.getUuid());

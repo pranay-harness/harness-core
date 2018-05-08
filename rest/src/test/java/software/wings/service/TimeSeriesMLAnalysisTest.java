@@ -104,7 +104,7 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
         NewRelicMetricAnalysisRecord.builder()
             .analysisMinute(0)
             .metricAnalyses(Collections.singletonList(newRelicMetricAnalysis))
-            .applicationId(appId)
+            .appId(appId)
             .stateExecutionId(stateExecutionId)
             .workflowExecutionId(workflowExecutionId)
             .message("1 high risk anomaly")
@@ -185,7 +185,7 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
         NewRelicMetricAnalysisRecord.builder()
             .analysisMinute(0)
             .metricAnalyses(Lists.newArrayList(indexAnalysis, accountAnalyis, loginAnalysis))
-            .applicationId(appId)
+            .appId(appId)
             .stateExecutionId(stateExecutionId)
             .workflowExecutionId(workflowExecutionId)
             .message("1 high risk anomaly")
@@ -266,7 +266,7 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
         NewRelicMetricAnalysisRecord.builder()
             .analysisMinute(0)
             .metricAnalyses(Lists.newArrayList(indexAnalysis, accountAnalyis, loginAnalysis))
-            .applicationId(appId)
+            .appId(appId)
             .stateExecutionId(stateExecutionId)
             .workflowExecutionId(workflowExecutionId)
             .message("1 high risk anomaly")
@@ -347,7 +347,7 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
         NewRelicMetricAnalysisRecord.builder()
             .analysisMinute(0)
             .metricAnalyses(Lists.newArrayList(indexAnalysis, accountAnalyis, loginAnalysis))
-            .applicationId(appId)
+            .appId(appId)
             .stateExecutionId(stateExecutionId)
             .workflowExecutionId(workflowExecutionId)
             .message("1 high risk anomaly")
@@ -386,7 +386,7 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
         NewRelicMetricAnalysisRecord.builder()
             .analysisMinute(0)
             .metricAnalyses(Lists.newArrayList(newRelicMetricAnalysis1, newRelicMetricAnalysis2))
-            .applicationId(appId)
+            .appId(appId)
             .stateExecutionId(stateExecutionId)
             .workflowExecutionId(workflowExecutionId)
             .message("1 high risk anomaly")
@@ -422,7 +422,7 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
         it.remove();
       }
       record.setStateType(StateType.NEW_RELIC);
-      record.setApplicationId(appId);
+      record.setAppId(appId);
       record.setWorkflowId(workflowId);
       record.setWorkflowExecutionId(workflowExecutionId);
       record.setStateExecutionId(stateExecutionId);
@@ -445,7 +445,7 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
     newRelicResource.saveMetricData(accountId, appId, stateExecutionId, delegateTaskId, controlRecords);
     List<NewRelicMetricDataRecord> results =
         timeSeriesResource
-            .getMetricData(accountId, StateType.NEW_RELIC, workflowExecutionId, true,
+            .getMetricData(accountId, appId, StateType.NEW_RELIC, workflowExecutionId, true,
                 TSRequest.builder()
                     .applicationId(appId)
                     .workflowId(workflowId)
