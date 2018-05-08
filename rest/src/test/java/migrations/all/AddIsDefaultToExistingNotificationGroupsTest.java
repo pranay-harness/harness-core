@@ -28,6 +28,7 @@ public class AddIsDefaultToExistingNotificationGroupsTest extends WingsBaseTest 
   public void setUp() {
     initMocks(this);
   }
+
   @Test
   public void shouldMigrate() {
     doNothing().when(yamlChangeSetHelper).notificationGroupYamlChangeAsync(any(), any());

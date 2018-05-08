@@ -2,6 +2,7 @@ package migrations.all;
 
 import com.google.inject.Inject;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.dl.WingsPersistence;
@@ -15,6 +16,7 @@ public class SetRollbackFlagToWorkflowsTest extends WingsBaseTest {
   @Inject SetRollbackFlagToWorkflows migrator;
 
   @Test
+  @Ignore
   public void shouldMigrate() {
     migrator.migrate();
   }
