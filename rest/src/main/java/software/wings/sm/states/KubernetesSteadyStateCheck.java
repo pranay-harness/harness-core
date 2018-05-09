@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.Attributes;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.InstanceElement;
@@ -187,6 +188,14 @@ public class KubernetesSteadyStateCheck extends State {
     ContainerInfrastructureMapping containerInfraMapping =
         (ContainerInfrastructureMapping) infrastructureMappingService.get(
             app.getUuid(), phaseElement.getInfraMappingId());
+
+    if (CollectionUtils.isEmpty(labels)) {
+      throw new InvalidRequestException("Labels cannot be empty.");
+    }
+
+    Map<String, String> renderedLabels = labels.stream().collect(
+        Collectors.toMap(label -> label.getName(), label -> context.renderExpression(label.getValue())));
+
     Activity activity = createActivity(context);
     KubernetesSteadyStateCheckParams kubernetesSteadyStateCheckParams =
         KubernetesSteadyStateCheckParams.builder()
@@ -196,8 +205,7 @@ public class KubernetesSteadyStateCheck extends State {
             .commandName(KUBERNETES_STEADY_STATE_CHECK_COMMAND_NAME)
             .containerServiceParams(
                 containerDeploymentManagerHelper.getContainerServiceParams(containerInfraMapping, ""))
-            .labels(labels.stream().collect(
-                Collectors.toMap(label -> label.getName(), label -> context.renderExpression(label.getValue()))))
+            .labels(renderedLabels)
             .timeoutMillis(getTimeoutMillis() != null ? getTimeoutMillis() : DEFAULT_ASYNC_CALL_TIMEOUT)
             .build();
     DelegateTask delegateTask =
@@ -217,6 +225,7 @@ public class KubernetesSteadyStateCheck extends State {
         .withCorrelationIds(Arrays.asList(activity.getUuid()))
         .withStateExecutionData(KubernetesSteadyStateCheckExecutionData.builder()
                                     .activityId(activity.getUuid())
+                                    .labels(renderedLabels)
                                     .commandName(KUBERNETES_STEADY_STATE_CHECK_COMMAND_NAME)
                                     .build())
         .withDelegateTaskId(delegateTaskId)
