@@ -156,11 +156,11 @@ public class ContainerDeploymentManagerHelper {
     } else {
       settingAttribute = settingsService.get(containerInfraMapping.getComputeProviderSettingId());
       if (containerInfraMapping instanceof GcpKubernetesInfrastructureMapping) {
-        namespace = ((GcpKubernetesInfrastructureMapping) containerInfraMapping).getNamespace();
+        namespace = containerInfraMapping.getNamespace();
       } else if (containerInfraMapping instanceof AzureKubernetesInfrastructureMapping) {
         subscriptionId = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getSubscriptionId();
         resourceGroup = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getResourceGroup();
-        namespace = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getNamespace();
+        namespace = containerInfraMapping.getNamespace();
       } else if (containerInfraMapping instanceof EcsInfrastructureMapping) {
         region = ((EcsInfrastructureMapping) containerInfraMapping).getRegion();
       }

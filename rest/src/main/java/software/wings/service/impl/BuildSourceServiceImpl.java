@@ -128,7 +128,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   }
 
   @Override
-  public List getBuilds(String appId, String artifactStreamId, String settingId, int limit) {
+  public List<BuildDetails> getBuilds(String appId, String artifactStreamId, String settingId, int limit) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     SettingValue settingValue = getSettingValue(settingAttribute);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((Encryptable) settingValue);

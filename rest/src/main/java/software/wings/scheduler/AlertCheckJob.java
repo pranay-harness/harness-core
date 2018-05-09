@@ -40,17 +40,16 @@ public class AlertCheckJob implements Job {
   private static final Logger logger = LoggerFactory.getLogger(AlertCheckJob.class);
 
   public static final String GROUP = "ALERT_CHECK_CRON_GROUP";
-  public static final int POLL_INTERVAL = 300;
-
   public static final String ACCOUNT_ID = "accountId";
 
+  private static final int POLL_INTERVAL = 300;
   private static final long MAX_HB_TIMEOUT = TimeUnit.MINUTES.toMillis(5);
 
   @Inject private AlertService alertService;
   @Inject private WingsPersistence wingsPersistence;
-  @Inject DelegateService delegateService;
-  @Inject EmailHelperUtil emailHelperUtil;
-  @Inject MainConfiguration mainConfiguration;
+  @Inject private DelegateService delegateService;
+  @Inject private EmailHelperUtil emailHelperUtil;
+  @Inject private MainConfiguration mainConfiguration;
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
   @Inject private ExecutorService executorService;
@@ -103,7 +102,7 @@ public class AlertCheckJob implements Job {
     return wingsPersistence.createQuery(Delegate.class).filter(Delegate.ACCOUNT_ID_KEY, accountId).asList();
   }
 
-  public void checkForInvalidValidSMTP(String accountId) {
+  private void checkForInvalidValidSMTP(String accountId) {
     if (!emailHelperUtil.isSmtpConfigValid(mainConfiguration.getSmtpConfig())
         && !emailHelperUtil.isSmtpConfigValid(emailHelperUtil.getSmtpConfig(accountId))) {
       alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.INVALID_SMTP_CONFIGURATION,
@@ -116,8 +115,6 @@ public class AlertCheckJob implements Job {
   /**
    * If any delegate hasn't sent heartbeat for last MAX_HB_TIMEOUT (5 mins currently),
    * raise a dashboard alert
-   * @param accountId
-   * @param delegates
    */
   private void checkIfAnyDelegatesAreDown(String accountId, List<Delegate> delegates) {
     List<Delegate> delegatesDown =

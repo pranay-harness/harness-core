@@ -68,7 +68,7 @@ public interface BuildSourceService {
    * @param settingId        the setting id
    * @return the builds
    */
-  List getBuilds(String appId, String artifactStreamId, String settingId);
+  List<BuildDetails> getBuilds(String appId, String artifactStreamId, String settingId);
 
   /***
    * Gets builds with the limit
@@ -78,7 +78,7 @@ public interface BuildSourceService {
    * @param limit
    * @return
    */
-  List getBuilds(String appId, String artifactStreamId, String settingId, int limit);
+  List<BuildDetails> getBuilds(String appId, String artifactStreamId, String settingId, int limit);
 
   /**
    * Gets last successful build.

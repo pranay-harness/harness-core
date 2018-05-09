@@ -208,9 +208,6 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
 
   /**
    * Gets all  existing artifacts for the given artifact stream, and compares with artifact source data
-   * @param artifactStream
-   * @param builds
-   * @return
    */
   private Set<String> getNewBuildNumbers(ArtifactStream artifactStream, List<BuildDetails> builds) {
     Map<String, BuildDetails> buildNoDetails =
@@ -236,7 +233,7 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
     return buildArtifactPathDetails.keySet();
   }
 
-  private Query getArtifactQuery(ArtifactStream artifactStream) {
+  private Query<Artifact> getArtifactQuery(ArtifactStream artifactStream) {
     return wingsPersistence.createQuery(Artifact.class)
         .project("metadata", true)
         .filter(Artifact.APP_ID_KEY, artifactStream.getAppId())

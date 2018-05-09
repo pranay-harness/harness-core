@@ -6,6 +6,7 @@ import static io.harness.threading.Morpheus.quietSleep;
 import static java.time.Duration.ofMillis;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.helpers.ext.nexus.NexusServiceImpl.getBaseUrl;
@@ -21,6 +22,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.nexus.rest.model.ContentListResourceResponse;
+import org.sonatype.nexus.rest.model.RepositoryListResource;
 import org.sonatype.nexus.rest.model.RepositoryListResourceResponse;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -49,12 +51,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Stack;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.stream.Collectors;
 /**
  * Created by sgurubelli on 11/18/17.
  */
@@ -62,7 +62,7 @@ import java.util.stream.Collectors;
 public class NexusTwoServiceImpl {
   private static final Logger logger = LoggerFactory.getLogger(NexusTwoServiceImpl.class);
 
-  @Inject EncryptionService encryptionService;
+  @Inject private EncryptionService encryptionService;
   @Inject private ExecutorService executorService;
 
   public Map<String, String> getRepositories(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails)
@@ -75,7 +75,8 @@ public class NexusTwoServiceImpl {
     final Response<RepositoryListResourceResponse> response = request.execute();
     if (isSuccessful(response)) {
       logger.info("Retrieving repositories success");
-      return response.body().getData().stream().collect(Collectors.toMap(o -> o.getId(), o -> o.getName()));
+      return response.body().getData().stream().collect(
+          toMap(RepositoryListResource::getId, RepositoryListResource::getName));
     }
     logger.info("No repositories found returning empty map");
     return emptyMap();
@@ -117,10 +118,8 @@ public class NexusTwoServiceImpl {
 
   private void traverseInParallel(NexusRestClient nexusRestClient, NexusConfig nexusConfig, String repoKey, String path,
       Queue<Future> futures, Stack<FolderPath> paths) {
-    futures.add(executorService.submit((Callable<Void>) () -> {
-      paths.addAll(getFolderPaths(nexusRestClient, nexusConfig, repoKey, path));
-      return null;
-    }));
+    futures.add(
+        executorService.submit(() -> paths.addAll(getFolderPaths(nexusRestClient, nexusConfig, repoKey, path))));
   }
 
   public List<String> getArtifactNames(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,

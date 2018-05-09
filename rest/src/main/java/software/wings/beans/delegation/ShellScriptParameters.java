@@ -46,7 +46,7 @@ public class ShellScriptParameters {
   private final boolean executeOnDelegate;
 
   private Map<String, String> getResolvedEnvironmentVariables() {
-    Map<String, String> resolvedEnvironment = new HashMap();
+    Map<String, String> resolvedEnvironment = new HashMap<>();
 
     if (environment != null) {
       resolvedEnvironment.putAll(environment);
