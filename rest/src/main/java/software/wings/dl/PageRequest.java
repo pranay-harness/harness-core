@@ -1,5 +1,6 @@
 package software.wings.dl;
 
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static software.wings.beans.SortOrder.Builder.aSortOrder;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
@@ -19,6 +20,7 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SearchFilter.SearchFilterBuilder;
 import software.wings.beans.SortOrder;
 import software.wings.beans.SortOrder.OrderType;
+import software.wings.exception.InvalidRequestException;
 import software.wings.utils.Misc;
 
 import java.lang.reflect.Constructor;
@@ -296,6 +298,9 @@ public class PageRequest<T> {
     for (int index = 0; index < fieldCount; index++) {
       String key = "search[" + index + "]";
       final String name = map.getFirst(key + "[field]");
+      if (name == null) {
+        throw new InvalidRequestException(format("field name for index %d is missing", index));
+      }
 
       final SearchFilterBuilder filterBuilder = SearchFilter.builder();
       filterBuilder.fieldName(name);
