@@ -110,7 +110,9 @@ public class MongoHelper {
     MappedClass mappedClass = mapper.addMappedClass(cls);
 
     Preconditions.checkNotNull(query, "Query cannot be null");
-    req.populateFilters(mappedClass, mapper);
+    if (req.getUriInfo() != null) {
+      req.populateFilters(req.getUriInfo().getQueryParameters(), mappedClass, mapper);
+    }
 
     if (req.getFilters() != null) {
       for (SearchFilter filter : req.getFilters()) {

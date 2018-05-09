@@ -561,7 +561,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       }
       keyValuePairs.put("usePublicDns", awsInfrastructureMapping.isUsePublicDns());
       keyValuePairs.put("setDesiredCapacity", awsInfrastructureMapping.isSetDesiredCapacity());
-      keyValuePairs.put("hostNameConvention", awsInfrastructureMapping.getHostNameConvention());
+      if (awsInfrastructureMapping.getHostNameConvention() != null) {
+        keyValuePairs.put("hostNameConvention", awsInfrastructureMapping.getHostNameConvention());
+      } else {
+        fieldsToRemove.add("hostNameConvention");
+      }
       keyValuePairs.put("desiredCapacity", awsInfrastructureMapping.getDesiredCapacity());
       keyValuePairs.put("provisionInstances", awsInfrastructureMapping.isProvisionInstances());
       if (awsInfrastructureMapping.getAwsInstanceFilter() != null) {
@@ -603,7 +607,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       keyValuePairs.put("applicationName", codeDeployInfrastructureMapping.getApplicationName());
       keyValuePairs.put("deploymentGroup", codeDeployInfrastructureMapping.getDeploymentGroup());
       keyValuePairs.put("deploymentConfig", codeDeployInfrastructureMapping.getDeploymentConfig());
-      keyValuePairs.put("hostNameConvention", codeDeployInfrastructureMapping.getHostNameConvention());
+      if (codeDeployInfrastructureMapping.getHostNameConvention() != null) {
+        keyValuePairs.put("hostNameConvention", codeDeployInfrastructureMapping.getHostNameConvention());
+      } else {
+        fieldsToRemove.add("hostNameConvention");
+      }
     } else if (infrastructureMapping instanceof AwsAmiInfrastructureMapping) {
       AwsAmiInfrastructureMapping awsAmiInfrastructureMapping = (AwsAmiInfrastructureMapping) infrastructureMapping;
       keyValuePairs.put("region", awsAmiInfrastructureMapping.getRegion());
@@ -614,7 +622,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       if (awsAmiInfrastructureMapping.getTargetGroupArns() != null) {
         keyValuePairs.put("targetGroupArns", awsAmiInfrastructureMapping.getTargetGroupArns());
       }
-      keyValuePairs.put("hostNameConvention", awsAmiInfrastructureMapping.getHostNameConvention());
+      if (awsAmiInfrastructureMapping.getHostNameConvention() != null) {
+        keyValuePairs.put("hostNameConvention", awsAmiInfrastructureMapping.getHostNameConvention());
+      } else {
+        fieldsToRemove.add("hostNameConvention");
+      }
     } else if (infrastructureMapping instanceof PcfInfrastructureMapping) {
       PcfInfrastructureMapping pcfInfrastructureMapping = (PcfInfrastructureMapping) infrastructureMapping;
       validatePcfInfrastructureMapping(pcfInfrastructureMapping);
@@ -709,7 +721,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
 
     if (!forceDelete) {
-      ensureInfraMappingSafeToDelete(infrastructureMapping);
+      ensureSafeToDelete(appId, infraMappingId);
     }
 
     saveYamlChangeSet(infrastructureMapping, ChangeType.DELETE);
@@ -743,13 +755,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         services, descending -> descending.pruneByInfrastructureMapping(appId, infraMappingId));
   }
 
-  private void ensureInfraMappingSafeToDelete(InfrastructureMapping infrastructureMapping) {
-    List<Workflow> workflows = workflowService
-                                   .listWorkflows(aPageRequest()
-                                                      .withLimit(UNLIMITED)
-                                                      .addFilter("appId", Operator.EQ, infrastructureMapping.getAppId())
-                                                      .build())
-                                   .getResponse();
+  private void ensureSafeToDelete(@NotEmpty String appId, @NotEmpty String infraMappingId) {
+    List<Workflow> workflows =
+        workflowService
+            .listWorkflows(aPageRequest().withLimit(UNLIMITED).addFilter("appId", Operator.EQ, appId).build())
+
+            .getResponse();
 
     List<String> referencingWorkflowNames =
         workflows.stream()
@@ -760,7 +771,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                     ((CanaryOrchestrationWorkflow) wfl.getOrchestrationWorkflow()).getWorkflowPhaseIdMap();
                 return workflowPhaseIdMap.values().stream().anyMatch(workflowPhase
                     -> !workflowPhase.checkInfraTemplatized()
-                        && infrastructureMapping.getUuid().equals(workflowPhase.getInfraMappingId()));
+                        && infraMappingId.equals(workflowPhase.getInfraMappingId()));
               }
               return false;
             })
@@ -768,10 +779,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
             .collect(toList());
 
     if (!referencingWorkflowNames.isEmpty()) {
-      throw new InvalidRequestException(
-          format("Service Infrastructure is in use by %d %s [%s].", referencingWorkflowNames.size(),
-              plural("workflow", referencingWorkflowNames.size()), Joiner.on(", ").join(referencingWorkflowNames)),
-          USER);
+      throw new InvalidRequestException(format("Service Infrastructure %s is in use by %s %s [%s].", infraMappingId,
+          referencingWorkflowNames.size(), plural("workflow", referencingWorkflowNames.size()),
+          Joiner.on(", ").join(referencingWorkflowNames), USER));
     }
   }
 
