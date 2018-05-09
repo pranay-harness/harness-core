@@ -58,7 +58,6 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Queue;
 import java.util.Stack;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -217,10 +216,8 @@ public class JenkinsImpl implements Jenkins {
         while (!jobs.empty()) {
           Job job = jobs.pop();
           if (isFolderJob(job)) {
-            futures.add(executorService.submit((Callable<Void>) () -> {
-              jobs.addAll(jenkinsServer.getJobs(new FolderJob(job.getName(), job.getUrl())).values());
-              return null;
-            }));
+            futures.add(executorService.submit(
+                () -> jobs.addAll(jenkinsServer.getJobs(new FolderJob(job.getName(), job.getUrl())).values())));
           } else {
             String jobName = getJobNameFromUrl(job.getUrl());
             result.add(new JobDetails(jobName, job.getUrl(), false));

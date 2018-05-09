@@ -31,10 +31,10 @@ import java.util.function.Supplier;
  */
 public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegateRunnableTask {
   public static final String HARNESS_HEARTBEAT_METRIC_NAME = "Harness heartbeat metric";
-  protected static final int COLLECTION_PERIOD_MINS = 1;
+  private static final int COLLECTION_PERIOD_MINS = 1;
   protected static final int RETRIES = 3;
   protected final AtomicBoolean completed = new AtomicBoolean(false);
-  protected final Object lockObject = new Object();
+  private final Object lockObject = new Object();
   @Inject protected EncryptionService encryptionService;
   @Inject private ExecutorService executorService;
   @Inject @Named("verificationExecutor") private ScheduledExecutorService verificationExecutor;
@@ -49,7 +49,7 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
     super(delegateId, delegateTask, consumer, preExecute);
   }
 
-  protected void waitForCompletion() {
+  private void waitForCompletion() {
     synchronized (lockObject) {
       try {
         lockObject.wait();
@@ -117,8 +117,7 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
     }
   }
 
-  protected boolean saveMetrics(
-      String accountId, String appId, String stateExecutionId, List<NewRelicMetricDataRecord> records) {
+  boolean saveMetrics(String accountId, String appId, String stateExecutionId, List<NewRelicMetricDataRecord> records) {
     if (records.isEmpty()) {
       return true;
     }

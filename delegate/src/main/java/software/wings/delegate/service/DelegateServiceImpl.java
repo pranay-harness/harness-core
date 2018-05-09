@@ -607,35 +607,43 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void startHeartbeat() {
     logger.info("Starting heartbeat at interval {} ms", delegateConfiguration.getHeartbeatIntervalMs());
-    heartbeatExecutor.scheduleAtFixedRate(()
-                                              -> executorService.submit(() -> {
+    heartbeatExecutor.scheduleAtFixedRate(() -> {
       try {
-        sendHeartbeat();
-      } catch (Exception ex) {
-        logger.error("Exception while sending heartbeat", ex);
+        executorService.submit(() -> {
+          try {
+            sendHeartbeat();
+          } catch (Exception ex) {
+            logger.error("Exception while sending heartbeat", ex);
+          }
+        });
+      } catch (Exception e) {
+        logger.error("Exception while scheduling heartbeat", e);
       }
-    }),
-        0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
+    }, 0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
   }
 
   private void startLocalHeartbeat() {
-    localHeartbeatExecutor.scheduleAtFixedRate(()
-                                                   -> executorService.submit(() -> {
-      Map<String, Object> statusData = new HashMap<>();
-      statusData.put(DELEGATE_HEARTBEAT, clock.millis());
-      statusData.put(DELEGATE_VERSION, getVersion());
-      statusData.put(DELEGATE_IS_NEW, false);
-      statusData.put(DELEGATE_RESTART_NEEDED, doRestartDelegate());
-      statusData.put(DELEGATE_UPGRADE_NEEDED, upgradeNeeded.get());
-      statusData.put(DELEGATE_UPGRADE_PENDING, upgradePending.get());
-      statusData.put(DELEGATE_SHUTDOWN_PENDING, !acquireTasks.get());
-      if (!acquireTasks.get()) {
-        statusData.put(DELEGATE_SHUTDOWN_STARTED, stoppedAcquiringAt);
+    localHeartbeatExecutor.scheduleAtFixedRate(() -> {
+      try {
+        executorService.submit(() -> {
+          Map<String, Object> statusData = new HashMap<>();
+          statusData.put(DELEGATE_HEARTBEAT, clock.millis());
+          statusData.put(DELEGATE_VERSION, getVersion());
+          statusData.put(DELEGATE_IS_NEW, false);
+          statusData.put(DELEGATE_RESTART_NEEDED, doRestartDelegate());
+          statusData.put(DELEGATE_UPGRADE_NEEDED, upgradeNeeded.get());
+          statusData.put(DELEGATE_UPGRADE_PENDING, upgradePending.get());
+          statusData.put(DELEGATE_SHUTDOWN_PENDING, !acquireTasks.get());
+          if (!acquireTasks.get()) {
+            statusData.put(DELEGATE_SHUTDOWN_STARTED, stoppedAcquiringAt);
+          }
+          messageService.putAllData(DELEGATE_DASH + getProcessId(), statusData);
+          watchWatcher();
+        });
+      } catch (Exception e) {
+        logger.error("Exception while scheduling local heartbeat", e);
       }
-      messageService.putAllData(DELEGATE_DASH + getProcessId(), statusData);
-      watchWatcher();
-    }),
-        0, 10, TimeUnit.SECONDS);
+    }, 0, 10, TimeUnit.SECONDS);
   }
 
   private void watchWatcher() {
@@ -713,25 +721,43 @@ public class DelegateServiceImpl implements DelegateService {
                || now - lastHeartbeatReceivedAt.get() > HEARTBEAT_TIMEOUT);
   }
 
-  private void sendHeartbeat(Builder builder, Socket socket) throws IOException {
-    logger.info("Sending heartbeat...");
+  private void sendHeartbeat(Builder builder, Socket socket) {
     if (socket.status() == STATUS.OPEN || socket.status() == STATUS.REOPENED) {
-      socket.fire(JsonUtils.asJson(
-          builder.but()
-              .withLastHeartBeat(clock.millis())
-              .withConnected(true)
-              .withCurrentlyExecutingDelegateTasks(Lists.newArrayList(currentlyExecutingTasks.values()))
-              .build()));
-      lastHeartbeatSentAt.set(clock.millis());
+      logger.info("Sending heartbeat...");
+      try {
+        timeLimiter.callWithTimeout(
+            ()
+                -> socket.fire(JsonUtils.asJson(
+                    builder.but()
+                        .withLastHeartBeat(clock.millis())
+                        .withConnected(true)
+                        .withCurrentlyExecutingDelegateTasks(Lists.newArrayList(currentlyExecutingTasks.values()))
+                        .build())),
+            15L, TimeUnit.SECONDS, true);
+        lastHeartbeatSentAt.set(clock.millis());
+      } catch (UncheckedTimeoutException ex) {
+        logger.warn("Timed out sending heartbeat");
+      } catch (Exception e) {
+        logger.error("Error sending heartbeat", e);
+      }
+    } else {
+      logger.warn("Socket is not open");
     }
   }
 
-  private void sendHeartbeat() throws IOException {
+  private void sendHeartbeat() {
     logger.info("Sending heartbeat...");
-    Delegate response = execute(managerClient.delegateHeartbeat(delegateId, accountId));
-    if (delegateId.equals(response.getUuid())) {
-      lastHeartbeatSentAt.set(clock.millis());
-      lastHeartbeatReceivedAt.set(clock.millis());
+    try {
+      Delegate response = timeLimiter.callWithTimeout(
+          () -> execute(managerClient.delegateHeartbeat(delegateId, accountId)), 15L, TimeUnit.SECONDS, true);
+      if (delegateId.equals(response.getUuid())) {
+        lastHeartbeatSentAt.set(clock.millis());
+        lastHeartbeatReceivedAt.set(clock.millis());
+      }
+    } catch (UncheckedTimeoutException ex) {
+      logger.warn("Timed out sending heartbeat");
+    } catch (Exception e) {
+      logger.error("Error sending heartbeat", e);
     }
   }
 
@@ -887,15 +913,19 @@ public class DelegateServiceImpl implements DelegateService {
       Response<ResponseBody> response = null;
       try {
         logger.info("Sending response for task {} to manager", delegateTask.getUuid());
-        response = managerClient
-                       .sendTaskStatus(delegateId, delegateTask.getUuid(), accountId,
-                           aDelegateTaskResponse()
-                               .withTask(delegateTask)
-                               .withAccountId(accountId)
-                               .withResponse(notifyResponseData)
-                               .build())
-                       .execute();
+        response = timeLimiter.callWithTimeout(()
+                                                   -> managerClient
+                                                          .sendTaskStatus(delegateId, delegateTask.getUuid(), accountId,
+                                                              aDelegateTaskResponse()
+                                                                  .withTask(delegateTask)
+                                                                  .withAccountId(accountId)
+                                                                  .withResponse(notifyResponseData)
+                                                                  .build())
+                                                          .execute(),
+            30L, TimeUnit.SECONDS, true);
         logger.info("Task {} response sent to manager", delegateTask.getUuid());
+      } catch (UncheckedTimeoutException ex) {
+        logger.warn("Timed out sending response to manager");
       } catch (Exception e) {
         logger.error("Unable to send response to manager", e);
       } finally {

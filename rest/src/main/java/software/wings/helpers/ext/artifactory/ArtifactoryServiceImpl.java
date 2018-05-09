@@ -73,7 +73,6 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -508,10 +507,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
 
   private void traverseInParallel(Artifactory artifactory, String repoKey, Queue<Future> futures,
       List<FolderPath> paths, FolderPath folderPath, String path) {
-    futures.add(executorService.submit((Callable<Void>) () -> {
-      paths.addAll(getFolderPaths(artifactory, repoKey, path + folderPath.getUri()));
-      return null;
-    }));
+    futures.add(
+        executorService.submit(() -> paths.addAll(getFolderPaths(artifactory, repoKey, path + folderPath.getUri()))));
   }
 
   private String getGroupId(List<String> pathElems) {
