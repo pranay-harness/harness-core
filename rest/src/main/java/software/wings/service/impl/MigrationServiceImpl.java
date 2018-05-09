@@ -3,29 +3,28 @@ package software.wings.service.impl;
 import static java.time.Duration.ofMinutes;
 import static software.wings.beans.Schema.SCHEMA_ID;
 import static software.wings.beans.Schema.SchemaBuilder.aSchema;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.dl.HQuery.excludeAuthority;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import com.mongodb.DBCursor;
 import migrations.Migration;
 import migrations.MigrationList;
 import org.apache.commons.lang3.tuple.Pair;
+import org.mongodb.morphia.query.MorphiaIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Schema;
-import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
-import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.MigrationService;
 import software.wings.service.intfc.yaml.YamlGitService;
 
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -36,7 +35,6 @@ public class MigrationServiceImpl implements MigrationService {
   @Inject private PersistentLocker persistentLocker;
   @Inject private Injector injector;
   @Inject private YamlGitService yamlGitService;
-  @Inject private AccountService accountService;
 
   @Override
   public void runMigrations() {
@@ -45,7 +43,7 @@ public class MigrationServiceImpl implements MigrationService {
     int maxVersion = migrations.keySet().stream().mapToInt(Integer::intValue).max().orElse(0);
 
     try (
-        AcquiredLock lock = persistentLocker.waitToAcquireLock(Schema.class, SCHEMA_ID, ofMinutes(15), ofMinutes(20))) {
+        AcquiredLock lock = persistentLocker.waitToAcquireLock(Schema.class, SCHEMA_ID, ofMinutes(25), ofMinutes(27))) {
       if (lock == null) {
         throw new WingsException(ErrorCode.GENERAL_ERROR)
             .addParam("message", "The persistent lock was not acquired. That very unlikely, but yet it happened.");
@@ -75,14 +73,18 @@ public class MigrationServiceImpl implements MigrationService {
 
         logger.info("Running Git full sync on all the accounts");
 
-        PageRequest<Account> pageRequest = aPageRequest().addFieldsIncluded("_id", "accountName").build();
-        List<Account> accountList = accountService.list(pageRequest);
-        for (Account account : accountList) {
-          try {
-            yamlGitService.fullSync(account.getUuid(), false);
-          } catch (Exception ex) {
-            logger.error(
-                "Git full sync failed for account: {}. Reason is: {}", account.getAccountName(), ex.getMessage());
+        final MorphiaIterator<Account, Account> accounts =
+            wingsPersistence.createQuery(Account.class, excludeAuthority).project("accountName", true).fetch();
+
+        try (DBCursor cursor = accounts.getCursor()) {
+          while (accounts.hasNext()) {
+            Account account = accounts.next();
+            try {
+              yamlGitService.fullSync(account.getUuid(), false);
+            } catch (Exception ex) {
+              logger.error(
+                  "Git full sync failed for account: {}. Reason is: {}", account.getAccountName(), ex.getMessage());
+            }
           }
         }
 
