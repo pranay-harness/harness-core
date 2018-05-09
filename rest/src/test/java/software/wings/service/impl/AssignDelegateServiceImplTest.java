@@ -4,6 +4,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Delegate.Builder.aDelegate;
 import static software.wings.beans.Delegate.Status.ENABLED;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
@@ -205,9 +206,8 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     assignDelegateService.saveConnectionResults(results);
 
-    List<DelegateConnectionResult> saved = wingsPersistence.createQuery(DelegateConnectionResult.class)
-                                               .filter(DelegateConnectionResult.ACCOUNT_ID_KEY, ACCOUNT_ID)
-                                               .asList();
+    List<DelegateConnectionResult> saved =
+        wingsPersistence.createQuery(DelegateConnectionResult.class).filter(ACCOUNT_ID_KEY, ACCOUNT_ID).asList();
     assertThat(saved).isNotNull();
     assertThat(saved.size()).isEqualTo(1);
     assertThat(saved.get(0).getCriteria()).isEqualTo("criteria");
@@ -264,19 +264,21 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldGetConnectedWhitelistedDelegates() {
-    wingsPersistence.save(aDelegate()
-                              .withAccountId(ACCOUNT_ID)
-                              .withUuid(DELEGATE_ID)
-                              .withStatus(ENABLED)
-                              .withLastHeartBeat(clock.millis())
-                              .withConnected(true)
-                              .build());
+    Delegate delegate = aDelegate()
+                            .withAccountId(ACCOUNT_ID)
+                            .withUuid(DELEGATE_ID)
+                            .withStatus(ENABLED)
+                            .withLastHeartBeat(clock.millis())
+                            .withConnected(true)
+                            .build();
+    wingsPersistence.save(delegate);
     wingsPersistence.save(DelegateConnectionResult.builder()
                               .accountId(ACCOUNT_ID)
                               .delegateId(DELEGATE_ID)
                               .criteria("criteria")
                               .validated(true)
                               .build());
+    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID)).thenReturn(delegate);
 
     Object[] params = {"", "criteria"};
     DelegateTask delegateTask =
@@ -290,19 +292,21 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldNotGetConnectedWhitelistedDelegatesNotValidated() {
-    wingsPersistence.save(aDelegate()
-                              .withAccountId(ACCOUNT_ID)
-                              .withUuid(DELEGATE_ID)
-                              .withStatus(ENABLED)
-                              .withLastHeartBeat(clock.millis())
-                              .withConnected(true)
-                              .build());
+    Delegate delegate = aDelegate()
+                            .withAccountId(ACCOUNT_ID)
+                            .withUuid(DELEGATE_ID)
+                            .withStatus(ENABLED)
+                            .withLastHeartBeat(clock.millis())
+                            .withConnected(true)
+                            .build();
+    wingsPersistence.save(delegate);
     wingsPersistence.save(DelegateConnectionResult.builder()
                               .accountId(ACCOUNT_ID)
                               .delegateId(DELEGATE_ID)
                               .criteria("criteria")
                               .validated(false)
                               .build());
+    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID)).thenReturn(delegate);
 
     Object[] params = {"", "criteria"};
     DelegateTask delegateTask =
@@ -315,19 +319,21 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldNotGetConnectedWhitelistedDelegatesOldHeartbeat() {
-    wingsPersistence.save(aDelegate()
-                              .withAccountId(ACCOUNT_ID)
-                              .withUuid(DELEGATE_ID)
-                              .withStatus(ENABLED)
-                              .withLastHeartBeat(clock.millis() - MAX_DELEGATE_LAST_HEARTBEAT - 1000)
-                              .withConnected(true)
-                              .build());
+    Delegate delegate = aDelegate()
+                            .withAccountId(ACCOUNT_ID)
+                            .withUuid(DELEGATE_ID)
+                            .withStatus(ENABLED)
+                            .withLastHeartBeat(clock.millis() - MAX_DELEGATE_LAST_HEARTBEAT - 1000)
+                            .withConnected(true)
+                            .build();
+    wingsPersistence.save(delegate);
     wingsPersistence.save(DelegateConnectionResult.builder()
                               .accountId(ACCOUNT_ID)
                               .delegateId(DELEGATE_ID)
                               .criteria("criteria")
                               .validated(true)
                               .build());
+    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID)).thenReturn(delegate);
 
     Object[] params = {"", "criteria"};
     DelegateTask delegateTask =
@@ -340,19 +346,21 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldNotGetConnectedWhitelistedDelegatesOtherCriteria() {
-    wingsPersistence.save(aDelegate()
-                              .withAccountId(ACCOUNT_ID)
-                              .withUuid(DELEGATE_ID)
-                              .withStatus(ENABLED)
-                              .withLastHeartBeat(clock.millis())
-                              .withConnected(true)
-                              .build());
+    Delegate delegate = aDelegate()
+                            .withAccountId(ACCOUNT_ID)
+                            .withUuid(DELEGATE_ID)
+                            .withStatus(ENABLED)
+                            .withLastHeartBeat(clock.millis())
+                            .withConnected(true)
+                            .build();
+    wingsPersistence.save(delegate);
     wingsPersistence.save(DelegateConnectionResult.builder()
                               .accountId(ACCOUNT_ID)
                               .delegateId(DELEGATE_ID)
                               .criteria("criteria")
                               .validated(true)
                               .build());
+    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID)).thenReturn(delegate);
 
     Object[] params = {"", "criteria-other"};
     DelegateTask delegateTask =

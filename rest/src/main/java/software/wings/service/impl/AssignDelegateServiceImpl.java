@@ -124,21 +124,22 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   public List<String> connectedWhitelistedDelegates(DelegateTask task) {
     List<String> delegateIds = new ArrayList<>();
     try {
-      List<String> connectedDelegates = wingsPersistence.createQuery(Delegate.class)
-                                            .filter("accountId", task.getAccountId())
-                                            .field("lastHeartBeat")
-                                            .greaterThan(clock.millis() - MAX_DELEGATE_LAST_HEARTBEAT)
-                                            .asKeyList()
-                                            .stream()
-                                            .map(key -> key.getId().toString())
-                                            .collect(toList());
+      List<String> connectedEligibleDelegates = wingsPersistence.createQuery(Delegate.class)
+                                                    .filter("accountId", task.getAccountId())
+                                                    .field("lastHeartBeat")
+                                                    .greaterThan(clock.millis() - MAX_DELEGATE_LAST_HEARTBEAT)
+                                                    .asKeyList()
+                                                    .stream()
+                                                    .map(key -> key.getId().toString())
+                                                    .filter(delegateId -> canAssign(delegateId, task))
+                                                    .collect(toList());
 
       for (String criteria : TaskType.valueOf(task.getTaskType()).getCriteria(task, injector)) {
         if (isNotBlank(criteria)) {
           DelegateConnectionResult result = wingsPersistence.createQuery(DelegateConnectionResult.class)
                                                 .filter("accountId", task.getAccountId())
                                                 .field("delegateId")
-                                                .in(connectedDelegates)
+                                                .in(connectedEligibleDelegates)
                                                 .filter("criteria", criteria)
                                                 .get();
           if (result != null && result.isValidated()) {
