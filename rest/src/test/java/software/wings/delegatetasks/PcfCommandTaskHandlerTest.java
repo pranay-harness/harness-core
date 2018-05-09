@@ -52,7 +52,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class PcfCommandTaskHandlerTest extends WingsBaseTest {
   public static final String USERNMAE = "USERNMAE";
@@ -423,10 +425,17 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
         (PcfDeployCommandResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
 
     assertEquals(CommandExecutionStatus.SUCCESS, pcfDeployCommandResponse.getCommandExecutionStatus());
-    assertNotNull(pcfDeployCommandResponse.getInstanceTokens());
-    assertEquals(2, pcfDeployCommandResponse.getInstanceTokens().size());
-    assertTrue(pcfDeployCommandResponse.getInstanceTokens().contains("Guid:a_s_e__3:2"));
-    assertTrue(pcfDeployCommandResponse.getInstanceTokens().contains("Guid:a_s_e__4:1"));
+    assertNotNull(pcfDeployCommandResponse.getPcfInstanceElements());
+    assertEquals(2, pcfDeployCommandResponse.getPcfInstanceElements().size());
+
+    Set<String> pcfInstanceElements = new HashSet<>();
+    ((PcfDeployCommandResponse) pcfCommandExecutionResponse.getPcfCommandResponse())
+        .getPcfInstanceElements()
+        .forEach(pcfInstanceElement
+            -> pcfInstanceElements.add(
+                pcfInstanceElement.getApplicationId() + ":" + pcfInstanceElement.getInstanceIndex()));
+    assertTrue(pcfInstanceElements.contains("Guid:a_s_e__3:2"));
+    assertTrue(pcfInstanceElements.contains("Guid:a_s_e__4:1"));
   }
 
   @Test

@@ -7,13 +7,11 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
-import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder;
-import software.wings.api.PcfInstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.pcf.PcfDeployStateExecutionData;
@@ -312,7 +310,7 @@ public class PcfDeployState extends State {
     InstanceElementListParam instanceElementListParam =
         InstanceElementListParamBuilder.anInstanceElementListParam()
             .withInstanceElements(Collections.emptyList())
-            .withPcfInstanceElements(getPcfInstanceElements(pcfDeployCommandResponse.getInstanceTokens()))
+            .withPcfInstanceElements(pcfDeployCommandResponse.getPcfInstanceElements())
             .build();
 
     return ExecutionResponse.Builder.anExecutionResponse()
@@ -322,21 +320,6 @@ public class PcfDeployState extends State {
         .addContextElement(instanceElementListParam)
         .addNotifyElement(instanceElementListParam)
         .build();
-  }
-
-  private List<PcfInstanceElement> getPcfInstanceElements(List<String> instanceTokens) {
-    if (CollectionUtils.isEmpty(instanceTokens)) {
-      return Collections.EMPTY_LIST;
-    }
-
-    List<PcfInstanceElement> pcfInstanceElements = new ArrayList<>();
-    for (String instanceToken : instanceTokens) {
-      String[] arr = instanceToken.split(":");
-      pcfInstanceElements.add(
-          PcfInstanceElement.builder().applicationId(arr[0]).instanceIndex(arr[1]).displayName(instanceToken).build());
-    }
-
-    return pcfInstanceElements;
   }
 
   @Override
