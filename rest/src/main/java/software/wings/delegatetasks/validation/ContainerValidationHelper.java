@@ -25,6 +25,7 @@ import software.wings.service.impl.ContainerServiceParams;
 import software.wings.settings.SettingValue;
 
 import java.util.List;
+import java.util.Objects;
 
 @Singleton
 public class ContainerValidationHelper {
@@ -40,7 +41,11 @@ public class ContainerValidationHelper {
     if (value instanceof AwsConfig) {
       result.validated(AwsHelperService.isInAwsRegion(substringAfter(criteria, ":")));
     } else {
-      result.validated(connectableHttpUrl(getKubernetesMasterUrl(containerServiceParams)));
+      boolean validated =
+          value instanceof KubernetesClusterConfig && ((KubernetesClusterConfig) value).isUseKubernetesDelegate()
+          ? Objects.equals(System.getenv().get("DELEGATE_NAME"), ((KubernetesClusterConfig) value).getDelegateName())
+          : connectableHttpUrl(getKubernetesMasterUrl(containerServiceParams));
+      result.validated(validated);
     }
 
     return singletonList(result.build());
@@ -51,7 +56,9 @@ public class ContainerValidationHelper {
     if (value instanceof AwsConfig) {
       return "AWS:" + containerServiceParams.getRegion();
     } else {
-      return getKubernetesMasterUrl(containerServiceParams);
+      return value instanceof KubernetesClusterConfig && ((KubernetesClusterConfig) value).isUseKubernetesDelegate()
+          ? "delegate-name: " + ((KubernetesClusterConfig) value).getDelegateName()
+          : getKubernetesMasterUrl(containerServiceParams);
     }
   }
 
