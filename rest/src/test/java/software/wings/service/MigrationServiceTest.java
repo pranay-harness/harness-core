@@ -1,7 +1,8 @@
 package software.wings.service;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotEquals;
 
 import migrations.MigrationList;
 import org.junit.Test;
@@ -29,9 +30,9 @@ public class MigrationServiceTest extends WingsBaseTest {
       if (last.get() == -1) {
         last.set(pair.getKey() - 1);
       }
-      assertTrue("Schema version " + pair.getKey() + " is not sequential", last.get() == pair.getKey() - 1);
+      assertEquals("Schema version " + pair.getKey() + " is not sequential", last.get(), pair.getKey() - 1);
       last.set(pair.getKey());
     });
-    assertFalse("No items in migration list", last.get() == -1);
+    assertNotEquals("No items in migration list", last.get(), -1);
   }
 }
