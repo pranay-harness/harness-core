@@ -28,7 +28,9 @@ if [[ -v "MONGO_URI" ]]; then
     sed -i "s|uri: mongodb://localhost:27017/harness|uri: ${MONGO_URI}|" /opt/harness/config.yml
 fi
 
-sed -i 's|9a3e6eac4dcdbdc41a93ca99100537df|6b67160308cde40bb10fd642c6ba860f|' /opt/harness/config.yml
+if [[ -v "LOGDNA_KEY" ]]; then
+    sed -i "s|9a3e6eac4dcdbdc41a93ca99100537df|${LOGDNA_KEY}|" /opt/harness/config.yml
+fi
 
 if [[ -v "WATCHER_METADATA_URL" ]]; then
     sed -i "s|watcherMetadataUrl: http://wingswatchers.s3-website-us-east-1.amazonaws.com/watcherci.txt|watcherMetadataUrl: ${WATCHER_METADATA_URL}|" /opt/harness/config.yml
