@@ -104,6 +104,7 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
                     .stateType(getStateType())
                     .name(HARNESS_HEARTBEAT_METRIC_NAME)
                     .applicationId(dataCollectionInfo.getApplicationId())
+                    .appId(dataCollectionInfo.getApplicationId())
                     .workflowId(dataCollectionInfo.getWorkflowId())
                     .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
                     .serviceId(dataCollectionInfo.getServiceId())

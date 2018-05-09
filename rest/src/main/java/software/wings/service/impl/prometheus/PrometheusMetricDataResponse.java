@@ -77,6 +77,7 @@ public class PrometheusMetricDataResponse implements MetricCollectionResponse {
           metricDataRecord = NewRelicMetricDataRecord.builder()
                                  .name(transactionName)
                                  .applicationId(appId)
+                                 .appId(appId)
                                  .workflowId(workflowId)
                                  .workflowExecutionId(workflowExecutionId)
                                  .stateExecutionId(stateExecutionId)
