@@ -63,14 +63,6 @@ public class ContainerDeploymentDelegateHelper {
       KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParam);
       encryptionService.decrypt(kubernetesConfig, containerServiceParam.getEncryptionDetails());
 
-      SettingAttribute settingAttribute = containerServiceParam.getSettingAttribute();
-      if (settingAttribute.getValue() instanceof KubernetesConfig
-          || settingAttribute.getValue() instanceof KubernetesClusterConfig) {
-        kubernetesConfig.setCaCert(getEncodedChars(kubernetesConfig.getCaCert()));
-        kubernetesConfig.setClientCert(getEncodedChars(kubernetesConfig.getClientCert()));
-        kubernetesConfig.setClientKey(getEncodedChars(kubernetesConfig.getClientKey()));
-      }
-
       String configFileContent = getConfigFileContent(kubernetesConfig);
       String md5Hash = DigestUtils.md5Hex(configFileContent);
 
@@ -91,7 +83,7 @@ public class ContainerDeploymentDelegateHelper {
     }
   }
 
-  protected char[] getEncodedChars(char[] chars) throws UnsupportedEncodingException {
+  private char[] getEncodedChars(char[] chars) throws UnsupportedEncodingException {
     if (isEmpty(chars) || !(new String(chars).startsWith("-----BEGIN "))) {
       return chars;
     }
@@ -100,7 +92,15 @@ public class ContainerDeploymentDelegateHelper {
     return new String(encode, "UTF-8").toCharArray();
   }
 
-  private String getConfigFileContent(KubernetesConfig config) {
+  private void encodeCharsIfNeeded(KubernetesConfig config) throws UnsupportedEncodingException {
+    config.setCaCert(getEncodedChars(config.getCaCert()));
+    config.setClientCert(getEncodedChars(config.getClientCert()));
+    config.setClientKey(getEncodedChars(config.getClientKey()));
+  }
+
+  private String getConfigFileContent(KubernetesConfig config) throws UnsupportedEncodingException {
+    encodeCharsIfNeeded(config);
+
     String clientCertData =
         isNotEmpty(config.getClientCert()) ? "client-certificate-data: " + new String(config.getClientCert()) : "";
     String clientKeyData =
@@ -116,9 +116,14 @@ public class ContainerDeploymentDelegateHelper {
   }
 
   public String getKubeConfigFileContent(ContainerServiceParams containerServiceParam) {
-    KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParam);
-    encryptionService.decrypt(kubernetesConfig, containerServiceParam.getEncryptionDetails());
-    return getConfigFileContent(kubernetesConfig);
+    try {
+      KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParam);
+      encryptionService.decrypt(kubernetesConfig, containerServiceParam.getEncryptionDetails());
+      return getConfigFileContent(kubernetesConfig);
+    } catch (Exception e) {
+      logger.error("Error occurred in creating config file Content", e);
+      throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", e.getMessage());
+    }
   }
 
   public KubernetesConfig getKubernetesConfig(ContainerServiceParams containerServiceParam) {
