@@ -13,7 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
-import software.wings.beans.PhaseStep;
+import software.wings.beans.GraphNode;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
 import software.wings.dl.PageRequest;
@@ -68,16 +68,25 @@ public class SetRollbackFlagToWorkflows implements Migration {
     CanaryOrchestrationWorkflow coWorkflow = (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
     for (WorkflowPhase workflowPhase : coWorkflow.getWorkflowPhaseIdMap().values()) {
       modified = modified || workflowPhase.isRollback()
-          || workflowPhase.getPhaseSteps().stream().anyMatch(PhaseStep::isRollback);
+          || workflowPhase.getPhaseSteps().stream().anyMatch(
+                 phaseStep -> phaseStep.isRollback() || phaseStep.getSteps().stream().anyMatch(GraphNode::isRollback));
+
       workflowPhase.setRollback(false);
-      workflowPhase.getPhaseSteps().stream().forEach(step -> step.setRollback(false));
+      workflowPhase.getPhaseSteps().stream().forEach(phaseStep -> {
+        phaseStep.setRollback(false);
+        phaseStep.getSteps().forEach(step -> step.setRollback(false));
+      });
     }
 
     for (WorkflowPhase workflowPhase : coWorkflow.getRollbackWorkflowPhaseIdMap().values()) {
       modified = modified || !workflowPhase.isRollback()
-          || workflowPhase.getPhaseSteps().stream().anyMatch(item -> !item.isRollback());
+          || workflowPhase.getPhaseSteps().stream().anyMatch(phaseStep
+                 -> !phaseStep.isRollback() || phaseStep.getSteps().stream().anyMatch(step -> !step.isRollback()));
       workflowPhase.setRollback(true);
-      workflowPhase.getPhaseSteps().stream().forEach(step -> step.setRollback(true));
+      workflowPhase.getPhaseSteps().stream().forEach(phaseStep -> {
+        phaseStep.setRollback(true);
+        phaseStep.getSteps().stream().forEach(step -> step.setRollback(true));
+      });
     }
 
     if (modified) {

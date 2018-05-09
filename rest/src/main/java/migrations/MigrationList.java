@@ -58,7 +58,7 @@ public class MigrationList {
         .add(Pair.of(118, ServiceKeywordsMigration.class))
         .add(Pair.of(119, FixMaxInstancesFieldInContainerSetup.class))
         .add(Pair.of(120, GitSyncToAllAccounts.class))
-        .add(Pair.of(121, SetRollbackFlagToWorkflows.class))
+        .add(Pair.of(121, BaseMigration.class))
         .add(Pair.of(122, AddValidUntilToWaitInstance.class))
         .add(Pair.of(123, NewRelicMetricNameCronRemoval.class))
         .add(Pair.of(124, BaseMigration.class))
@@ -74,6 +74,7 @@ public class MigrationList {
         .add(Pair.of(134, NewRelicMetricDataRecordsMigration.class))
         .add(Pair.of(135, TimeSeriesAnalysisRecordsMigration.class))
         .add(Pair.of(136, TimeSeriesMLScoresMigration.class))
+        .add(Pair.of(137, SetRollbackFlagToWorkflows.class))
         .build();
   }
 }
