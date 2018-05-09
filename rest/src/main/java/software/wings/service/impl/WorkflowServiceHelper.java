@@ -8,6 +8,7 @@ import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
+import static software.wings.exception.WingsException.USER;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -16,6 +17,7 @@ import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.Environment;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.Service;
@@ -67,11 +69,15 @@ public class WorkflowServiceHelper {
   public String getHPAYamlStringWithCustomMetric(
       Integer minAutoscaleInstances, Integer maxAutoscaleInstances, Integer targetCpuUtilizationPercentage) {
     try {
-      HorizontalPodAutoscaler horizontalPodAutoscaler = KubernetesHelper.loadYaml(
+      String hpaYaml =
           yamlForHPAWithCustomMetric.replaceAll(MIN_REPLICAS, String.valueOf(minAutoscaleInstances.intValue()))
               .replaceAll(MAX_REPLICAS, String.valueOf(maxAutoscaleInstances.intValue()))
-              .replaceAll(UTILIZATION, String.valueOf(targetCpuUtilizationPercentage.intValue())));
-
+              .replaceAll(UTILIZATION, String.valueOf(targetCpuUtilizationPercentage.intValue()));
+      HorizontalPodAutoscaler horizontalPodAutoscaler = KubernetesHelper.loadYaml(hpaYaml);
+      if (horizontalPodAutoscaler == null) {
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
+            .addParam("args", "Couldn't parse Horizontal Pod Autoscaler YAML: " + hpaYaml);
+      }
       return KubernetesHelper.toYaml(horizontalPodAutoscaler);
     } catch (IOException e) {
       throw new WingsException("Unable to generate Yaml String for Horizontal pod autoscalar");

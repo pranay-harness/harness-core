@@ -19,6 +19,7 @@ import static software.wings.common.Constants.HARNESS_ENV;
 import static software.wings.common.Constants.HARNESS_REVISION;
 import static software.wings.common.Constants.HARNESS_SERVICE;
 import static software.wings.common.Constants.SECRET_MASK;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.service.impl.KubernetesHelperService.printRouteRuleWeights;
 import static software.wings.service.impl.KubernetesHelperService.toDisplayYaml;
 import static software.wings.service.impl.KubernetesHelperService.toYaml;
@@ -547,6 +548,10 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     if (isNotBlank(setupParams.getConfigMapYaml())) {
       try {
         configMap = KubernetesHelper.loadYaml(setupParams.getConfigMapYaml());
+        if (configMap == null) {
+          throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
+              .addParam("args", "Couldn't parse Config Map YAML: " + setupParams.getConfigMapYaml());
+        }
         ObjectMeta configMapMeta = Optional.ofNullable(configMap.getMetadata()).orElse(new ObjectMeta());
         configMapMeta.setName(configMapName);
         configMapMeta.setNamespace(setupParams.getNamespace());
@@ -557,7 +562,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         configMapLabels.putAll(controllerLabels);
         configMapMeta.setLabels(configMapLabels);
         configMap.setMetadata(configMapMeta);
-      } catch (IOException e) {
+      } catch (Exception e) {
         throw new WingsException("Error while loading configMap yaml", e);
       }
     } else {
@@ -612,12 +617,16 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       String kubernetesServiceName, String containerServiceName, ExecutionLogCallback executionLogCallback) {
     int port = isNotEmpty(service.getSpec().getPorts()) ? service.getSpec().getPorts().get(0).getPort() : 80;
     try {
-      Ingress ingress =
-          KubernetesHelper.loadYaml(setupParams.getIngressYaml()
-                                        .replaceAll(SERVICE_NAME_PLACEHOLDER_REGEX, kubernetesServiceName)
-                                        .replaceAll(SERVICE_PORT_PLACEHOLDER_REGEX, Integer.toString(port))
-                                        .replaceAll(CONFIG_MAP_NAME_PLACEHOLDER_REGEX, containerServiceName)
-                                        .replaceAll(SECRET_MAP_NAME_PLACEHOLDER_REGEX, containerServiceName));
+      String ingressYaml = setupParams.getIngressYaml()
+                               .replaceAll(SERVICE_NAME_PLACEHOLDER_REGEX, kubernetesServiceName)
+                               .replaceAll(SERVICE_PORT_PLACEHOLDER_REGEX, Integer.toString(port))
+                               .replaceAll(CONFIG_MAP_NAME_PLACEHOLDER_REGEX, containerServiceName)
+                               .replaceAll(SECRET_MAP_NAME_PLACEHOLDER_REGEX, containerServiceName);
+      Ingress ingress = KubernetesHelper.loadYaml(ingressYaml);
+      if (ingress == null) {
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
+            .addParam("args", "Couldn't parse Ingress YAML: " + ingressYaml);
+      }
       ingress.getMetadata().setName(kubernetesServiceName);
       Map<String, String> labels = ingress.getMetadata().getLabels();
       if (labels == null) {
@@ -627,7 +636,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       ingress.getMetadata().setLabels(labels);
       executionLogCallback.saveExecutionLog("Setting ingress:\n\n" + toDisplayYaml(ingress));
       return ingress;
-    } catch (IOException e) {
+    } catch (Exception e) {
       executionLogCallback.saveExecutionLog(
           "Error reading Ingress from yaml: " + kubernetesServiceName, LogLevel.ERROR);
     }
@@ -695,6 +704,11 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       HorizontalPodAutoscaler horizontalPodAutoscaler =
           KubernetesHelper.loadYaml(setupParams.getCustomMetricYamlConfig());
 
+      if (horizontalPodAutoscaler == null) {
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
+            .addParam(
+                "args", "Couldn't parse Horizontal Pod Autoscaler YAML: " + setupParams.getCustomMetricYamlConfig());
+      }
       // set kind/name to none
       horizontalPodAutoscaler.getSpec().getScaleTargetRef().setName(NONE);
       horizontalPodAutoscaler.getSpec().getScaleTargetRef().setKind(NONE);
@@ -712,7 +726,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       objectMeta.setNamespace(namespace);
 
       return horizontalPodAutoscaler;
-    } catch (IOException e) {
+    } catch (Exception e) {
       throw new WingsException("Error while loading custom yaml for horizontal pod autoscaler", e);
     }
   }
@@ -823,6 +837,10 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     if (isNotBlank(daemonSetYaml)) {
       try {
         DaemonSet daemonSet = KubernetesHelper.loadYaml(daemonSetYaml);
+        if (daemonSet == null) {
+          throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
+              .addParam("args", "Couldn't parse Daemon Set YAML: " + daemonSetYaml);
+        }
         executionLogCallback.saveExecutionLog("Rolling back DaemonSet " + daemonSetName);
         kubernetesContainerService.createController(kubernetesConfig, encryptedDataDetails, daemonSet);
         executionLogCallback.saveExecutionLog("Rolled back to DaemonSet with image: "
@@ -836,7 +854,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             LogLevel.INFO);
         listDaemonSetContainerInfosWhenReady(encryptedDataDetails, setupParams.getServiceSteadyStateTimeout(),
             executionLogCallback, kubernetesConfig, daemonSetName, originalPods, startTime, true);
-      } catch (IOException e) {
+      } catch (Exception e) {
         executionLogCallback.saveExecutionLog("Error reading DaemonSet from yaml: " + daemonSetName, LogLevel.ERROR);
       }
     } else {
@@ -1120,13 +1138,17 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       Map<String, String> serviceLabels, KubernetesSetupParams setupParams, ExecutionLogCallback executionLogCallback) {
     try {
       Service service = KubernetesHelper.loadYaml(setupParams.getServiceYaml());
+      if (service == null) {
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
+            .addParam("args", "Couldn't parse Service YAML: " + setupParams.getServiceYaml());
+      }
       service.getMetadata().setLabels(serviceLabels);
       service.getMetadata().setName(serviceName);
       service.getMetadata().setNamespace(namespace);
       service.getSpec().setSelector(serviceLabels);
       executionLogCallback.saveExecutionLog("Setting service:\n\n" + toDisplayYaml(service));
       return service;
-    } catch (IOException e) {
+    } catch (Exception e) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, e).addParam("args", e.getMessage());
     }
   }
