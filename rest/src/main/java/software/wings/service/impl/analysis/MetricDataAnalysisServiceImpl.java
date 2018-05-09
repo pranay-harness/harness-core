@@ -101,7 +101,6 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       final String workflowExecutionId, final String workflowId, String serviceId, Integer analysisMinute,
       String taskId, String baseLineExecutionId, TimeSeriesMLAnalysisRecord mlAnalysisResponse) {
     mlAnalysisResponse.setStateType(stateType);
-    mlAnalysisResponse.setApplicationId(appId);
     mlAnalysisResponse.setAppId(appId);
     mlAnalysisResponse.setWorkflowExecutionId(workflowExecutionId);
     mlAnalysisResponse.setStateExecutionId(stateExecutionId);
@@ -109,7 +108,6 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     mlAnalysisResponse.setBaseLineExecutionId(baseLineExecutionId);
 
     TimeSeriesMLScores timeSeriesMLScores = TimeSeriesMLScores.builder()
-                                                .applicationId(appId)
                                                 .appId(appId)
                                                 .stateExecutionId(stateExecutionId)
                                                 .workflowExecutionId(workflowExecutionId)
@@ -465,7 +463,6 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                    .build());
       }
       analysisRecord = NewRelicMetricAnalysisRecord.builder()
-                           .applicationId(timeSeriesMLAnalysisRecord.getAppId())
                            .appId(timeSeriesMLAnalysisRecord.getAppId())
                            .stateType(timeSeriesMLAnalysisRecord.getStateType())
                            .analysisMinute(timeSeriesMLAnalysisRecord.getAnalysisMinute())

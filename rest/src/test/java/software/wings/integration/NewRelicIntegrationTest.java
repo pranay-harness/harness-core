@@ -241,7 +241,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
                                                     .workflowId(workflowId)
                                                     .workflowExecutionId(workflowExecutionId)
                                                     .stateExecutionId(stateExecutionId)
-                                                    .applicationId(applicationId)
+                                                    .appId(applicationId)
                                                     .stateType(StateType.NEW_RELIC)
                                                     .metricAnalyses(new ArrayList<>())
                                                     .build();

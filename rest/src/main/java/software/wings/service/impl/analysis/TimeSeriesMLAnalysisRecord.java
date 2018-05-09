@@ -26,8 +26,6 @@ import java.util.Map;
 public class TimeSeriesMLAnalysisRecord extends Base {
   @NotEmpty @Indexed private StateType stateType;
 
-  @NotEmpty @Indexed private String applicationId;
-
   @NotEmpty @Indexed private String workflowExecutionId;
 
   @NotEmpty @Indexed private String stateExecutionId;

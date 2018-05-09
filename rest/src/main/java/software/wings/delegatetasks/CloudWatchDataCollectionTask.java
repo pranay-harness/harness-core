@@ -113,7 +113,6 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
                 NewRelicMetricDataRecord.builder()
                     .stateType(getStateType())
                     .name(HARNESS_HEARTBEAT_METRIC_NAME)
-                    .applicationId(dataCollectionInfo.getApplicationId())
                     .workflowId(dataCollectionInfo.getWorkflowId())
                     .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
                     .serviceId(dataCollectionInfo.getServiceId())

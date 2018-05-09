@@ -150,7 +150,6 @@ public class MetricAnalysisJob implements Job {
                                                         .stateExecutionId(context.getStateExecutionId())
                                                         .workflowExecutionId(context.getWorkflowExecutionId())
                                                         .workflowId(context.getWorkflowId())
-                                                        .applicationId(context.getAppId())
                                                         .riskLevel(RiskLevel.LOW)
                                                         .metricAnalyses(new ArrayList<>())
                                                         .build();
