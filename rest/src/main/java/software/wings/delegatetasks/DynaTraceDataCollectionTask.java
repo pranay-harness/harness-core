@@ -107,7 +107,6 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
                 NewRelicMetricDataRecord.builder()
                     .stateType(getStateType())
                     .name(HARNESS_HEARTBEAT_METRIC_NAME)
-                    .applicationId(dataCollectionInfo.getApplicationId())
                     .appId(dataCollectionInfo.getApplicationId())
                     .workflowId(dataCollectionInfo.getWorkflowId())
                     .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
@@ -264,7 +263,6 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
               if (metricDataRecord == null) {
                 metricDataRecord = NewRelicMetricDataRecord.builder()
                                        .name(btName)
-                                       .applicationId(dataCollectionInfo.getApplicationId())
                                        .appId(dataCollectionInfo.getApplicationId())
                                        .workflowId(dataCollectionInfo.getWorkflowId())
                                        .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())

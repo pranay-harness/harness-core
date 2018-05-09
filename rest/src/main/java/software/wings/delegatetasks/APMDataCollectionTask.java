@@ -218,7 +218,6 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
                 newRelicMetricDataRecord.setWorkflowId(dataCollectionInfo.getWorkflowId());
                 newRelicMetricDataRecord.setStateType(dataCollectionInfo.getStateType());
                 newRelicMetricDataRecord.setDataCollectionMinute(dataCollectionMinute);
-                newRelicMetricDataRecord.setApplicationId(dataCollectionInfo.getApplicationId());
                 records.put(newRelicMetricDataRecord.getName(), newRelicMetricDataRecord.getTimeStamp(),
                     newRelicMetricDataRecord);
               });
@@ -228,7 +227,6 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
                 NewRelicMetricDataRecord.builder()
                     .stateType(getStateType())
                     .name(HARNESS_HEARTBEAT_METRIC_NAME)
-                    .applicationId(dataCollectionInfo.getApplicationId())
                     .workflowId(dataCollectionInfo.getWorkflowId())
                     .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
                     .serviceId(dataCollectionInfo.getServiceId())

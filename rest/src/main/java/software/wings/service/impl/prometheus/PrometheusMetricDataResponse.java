@@ -76,7 +76,6 @@ public class PrometheusMetricDataResponse implements MetricCollectionResponse {
         if (metricDataRecord == null) {
           metricDataRecord = NewRelicMetricDataRecord.builder()
                                  .name(transactionName)
-                                 .applicationId(appId)
                                  .appId(appId)
                                  .workflowId(workflowId)
                                  .workflowExecutionId(workflowExecutionId)

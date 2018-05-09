@@ -31,8 +31,6 @@ import java.util.Map;
 public class TimeSeriesMLScores extends Base {
   @NotEmpty @Indexed private StateType stateType;
 
-  @NotEmpty @Indexed private String applicationId;
-
   @NotEmpty @Indexed private String workflowId;
 
   @NotEmpty @Indexed private String workflowExecutionId;
@@ -46,11 +44,10 @@ public class TimeSeriesMLScores extends Base {
   @Builder
   public TimeSeriesMLScores(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords, String entityYamlPath, StateType stateType,
-      String applicationId, String workflowId, String workflowExecutionId, String stateExecutionId, int analysisMinute,
+      String workflowId, String workflowExecutionId, String stateExecutionId, int analysisMinute,
       Map<String, TimeSeriesMLTxnScores> scoresMap) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
     this.stateType = stateType;
-    this.applicationId = applicationId;
     this.workflowId = workflowId;
     this.workflowExecutionId = workflowExecutionId;
     this.stateExecutionId = stateExecutionId;
