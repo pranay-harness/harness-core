@@ -1,7 +1,5 @@
 package software.wings.api;
 
-import com.google.common.collect.Maps;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,6 +21,7 @@ import java.util.Map;
 public class KubernetesSteadyStateCheckExecutionData extends StateExecutionData implements NotifyResponseData {
   private String activityId;
   private String commandName;
+  private Map<String, String> labels;
   @Builder.Default private List<InstanceStatusSummary> newInstanceStatusSummaries = new ArrayList<>();
 
   @Override
@@ -36,9 +35,17 @@ public class KubernetesSteadyStateCheckExecutionData extends StateExecutionData 
   }
 
   private Map<String, ExecutionDataValue> getInternalExecutionDetails() {
-    Map<String, ExecutionDataValue> executionDetails = Maps.newLinkedHashMap();
+    Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
     putNotNull(executionDetails, "activityId",
         ExecutionDataValue.builder().value(activityId).displayName("Activity Id").build());
+    putNotNull(executionDetails, "labels",
+        ExecutionDataValue.builder().value((labels != null) ? labels.toString() : null).displayName("Labels").build());
+
     return executionDetails;
+  }
+
+  @Override
+  public KubernetesSteadyStateCheckExecutionSummary getStepExecutionSummary() {
+    return KubernetesSteadyStateCheckExecutionSummary.builder().labels(labels).build();
   }
 }

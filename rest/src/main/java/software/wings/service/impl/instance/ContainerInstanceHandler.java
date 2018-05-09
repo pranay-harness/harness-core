@@ -19,6 +19,7 @@ import software.wings.api.ContainerDeploymentInfoWithNames;
 import software.wings.api.ContainerServiceData;
 import software.wings.api.DeploymentInfo;
 import software.wings.api.HelmSetupExecutionSummary;
+import software.wings.api.KubernetesSteadyStateCheckExecutionSummary;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseStepExecutionData;
 import software.wings.beans.ContainerInfrastructureMapping;
@@ -88,10 +89,9 @@ public class ContainerInstanceHandler extends InstanceHandler {
   }
 
   /**
-   *
    * @param appId
    * @param infraMappingId
-   * @param containerSvcNameInstanceMap  key - containerSvcName     value - Instances
+   * @param containerSvcNameInstanceMap key - containerSvcName     value - Instances
    * @throws HarnessException
    */
   protected void syncInstancesInternal(String appId, String infraMappingId,
@@ -265,56 +265,68 @@ public class ContainerInstanceHandler extends InstanceHandler {
         }
 
         for (StepExecutionSummary stepExecutionSummary : stepExecutionSummaryList) {
-          if (stepExecutionSummary != null && stepExecutionSummary instanceof CommandStepExecutionSummary) {
-            CommandStepExecutionSummary commandStepExecutionSummary =
-                (CommandStepExecutionSummary) stepExecutionSummary;
-            String clusterName = commandStepExecutionSummary.getClusterName();
-            Set<String> containerSvcNameSet = Sets.newHashSet();
+          if (stepExecutionSummary != null) {
+            if (stepExecutionSummary instanceof CommandStepExecutionSummary) {
+              CommandStepExecutionSummary commandStepExecutionSummary =
+                  (CommandStepExecutionSummary) stepExecutionSummary;
+              String clusterName = commandStepExecutionSummary.getClusterName();
+              Set<String> containerSvcNameSet = Sets.newHashSet();
 
-            if (commandStepExecutionSummary.getOldInstanceData() != null) {
-              containerSvcNameSet.addAll(commandStepExecutionSummary.getOldInstanceData()
-                                             .stream()
-                                             .map(ContainerServiceData::getName)
-                                             .collect(toList()));
+              if (commandStepExecutionSummary.getOldInstanceData() != null) {
+                containerSvcNameSet.addAll(commandStepExecutionSummary.getOldInstanceData()
+                                               .stream()
+                                               .map(ContainerServiceData::getName)
+                                               .collect(toList()));
+              }
+
+              if (commandStepExecutionSummary.getNewInstanceData() != null) {
+                List<String> newcontainerSvcNames = commandStepExecutionSummary.getNewInstanceData()
+                                                        .stream()
+                                                        .map(ContainerServiceData::getName)
+                                                        .collect(toList());
+                containerSvcNameSet.addAll(newcontainerSvcNames);
+              }
+
+              if (containerSvcNameSet.isEmpty()) {
+                logger.warn(
+                    "Both old and new container services are empty. Cannot proceed for phase step for state execution instance: {}",
+                    stateExecutionInstanceId);
+                return Optional.empty();
+              }
+
+              ContainerDeploymentInfoWithNames containerDeploymentInfo = ContainerDeploymentInfoWithNames.builder()
+                                                                             .containerSvcNameSet(containerSvcNameSet)
+                                                                             .clusterName(clusterName)
+                                                                             .build();
+
+              return Optional.of(containerDeploymentInfo);
+
+            } else if (stepExecutionSummary instanceof HelmSetupExecutionSummary
+                || stepExecutionSummary instanceof KubernetesSteadyStateCheckExecutionSummary) {
+              if (!(infrastructureMapping instanceof ContainerInfrastructureMapping)) {
+                logger.warn("Inframapping is not container type. cannot proceed for state execution instance: {}",
+                    stateExecutionInstanceId);
+                return Optional.empty();
+              }
+
+              String clusterName = ((ContainerInfrastructureMapping) infrastructureMapping).getClusterName();
+
+              HashMap<String, String> labels = Maps.newHashMap();
+
+              if (stepExecutionSummary instanceof HelmSetupExecutionSummary) {
+                HelmSetupExecutionSummary helmSetupExecutionSummary = (HelmSetupExecutionSummary) stepExecutionSummary;
+                labels.put("release", helmSetupExecutionSummary.getReleaseName());
+              } else {
+                KubernetesSteadyStateCheckExecutionSummary kubernetesSteadyStateCheckExecutionSummary =
+                    (KubernetesSteadyStateCheckExecutionSummary) stepExecutionSummary;
+                labels.putAll(kubernetesSteadyStateCheckExecutionSummary.getLabels());
+              }
+
+              ContainerDeploymentInfoWithLabels containerDeploymentInfo =
+                  ContainerDeploymentInfoWithLabels.builder().labels(labels).clusterName(clusterName).build();
+
+              return Optional.of(containerDeploymentInfo);
             }
-
-            if (commandStepExecutionSummary.getNewInstanceData() != null) {
-              List<String> newcontainerSvcNames = commandStepExecutionSummary.getNewInstanceData()
-                                                      .stream()
-                                                      .map(ContainerServiceData::getName)
-                                                      .collect(toList());
-              containerSvcNameSet.addAll(newcontainerSvcNames);
-            }
-
-            if (containerSvcNameSet.isEmpty()) {
-              logger.warn(
-                  "Both old and new container services are empty. Cannot proceed for phase step for state execution instance: {}",
-                  stateExecutionInstanceId);
-              return Optional.empty();
-            }
-
-            ContainerDeploymentInfoWithNames containerDeploymentInfo = ContainerDeploymentInfoWithNames.builder()
-                                                                           .containerSvcNameSet(containerSvcNameSet)
-                                                                           .clusterName(clusterName)
-                                                                           .build();
-            return Optional.of(containerDeploymentInfo);
-
-          } else if (stepExecutionSummary != null && stepExecutionSummary instanceof HelmSetupExecutionSummary) {
-            if (!(infrastructureMapping instanceof ContainerInfrastructureMapping)) {
-              logger.warn("Inframapping is not container type. cannot proceed for state execution instance: {}",
-                  stateExecutionInstanceId);
-              return Optional.empty();
-            }
-
-            String clusterName = ((ContainerInfrastructureMapping) infrastructureMapping).getClusterName();
-            HelmSetupExecutionSummary helmSetupExecutionSummary = (HelmSetupExecutionSummary) stepExecutionSummary;
-            HashMap<String, String> labels = Maps.newHashMap();
-            labels.put("release", helmSetupExecutionSummary.getReleaseName());
-
-            ContainerDeploymentInfoWithLabels containerDeploymentInfo =
-                ContainerDeploymentInfoWithLabels.builder().labels(labels).clusterName(clusterName).build();
-
-            return Optional.of(containerDeploymentInfo);
           }
         }
       }

@@ -363,3 +363,4 @@ software.wings.exception.InvalidRequestException, 5327
 software.wings.sm.StateExecutionException, 5328
 software.wings.exception.UnauthorizedException, 5329
 software.wings.exception.UnexpectedException, 5330
+software.wings.api.KubernetesSteadyStateCheckExecutionSummary, 5331
