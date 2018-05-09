@@ -113,7 +113,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -149,6 +148,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject @Named("upgradeExecutor") private ScheduledExecutorService upgradeExecutor;
   @Inject @Named("inputExecutor") private ScheduledExecutorService inputExecutor;
   @Inject @Named("taskPollExecutor") private ScheduledExecutorService taskPollExecutor;
+  @Inject @Named("taskEventHandler") private ExecutorService taskEventHandler;
   @Inject private ExecutorService executorService;
   @Inject private SignalService signalService;
   @Inject private MessageService messageService;
@@ -259,7 +259,6 @@ public class DelegateServiceImpl implements DelegateService {
         startHeartbeat();
       } else {
         Client client = ClientFactory.getDefault().newClient();
-        ExecutorService fixedThreadPool = Executors.newFixedThreadPool(5);
 
         URI uri = new URI(delegateConfiguration.getManagerUrl());
         // Stream the request body
@@ -296,7 +295,7 @@ public class DelegateServiceImpl implements DelegateService {
                 new Function<String>() { // Do not change this, wasync doesn't like lambdas
                   @Override
                   public void on(String message) {
-                    handleMessageSubmit(message, fixedThreadPool);
+                    handleMessageSubmit(message);
                   }
                 })
             .on(Event.ERROR,
@@ -392,8 +391,8 @@ public class DelegateServiceImpl implements DelegateService {
     }
   }
 
-  private void handleMessageSubmit(String message, ExecutorService fixedThreadPool) {
-    fixedThreadPool.submit(() -> handleMessage(message));
+  private void handleMessageSubmit(String message) {
+    taskEventHandler.submit(() -> handleMessage(message));
   }
 
   private void handleMessage(String message) {
