@@ -195,6 +195,7 @@ public class WorkflowResourceRestClient {
         for (int i = 0; i < steps.size(); i++) {
           newSteps.add(aGraphNode()
                            .withType(StateType.HTTP.name())
+                           .withRollback(rollback)
                            .withName("Http-" + System.currentTimeMillis() + "-" + i)
                            .withProperties(ImmutableMap.of("url", "http://google.com?h=${host.name}", "method", "GET"))
                            .build());

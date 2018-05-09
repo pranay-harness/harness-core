@@ -1579,8 +1579,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @ValidationGroups(Update.class)
   public WorkflowPhase updateWorkflowPhase(
       @NotEmpty String appId, @NotEmpty String workflowId, @Valid WorkflowPhase workflowPhase) {
-    if (workflowPhase.isRollback() || workflowPhase.getPhaseSteps().stream().anyMatch(PhaseStep::isRollback)) {
-      // This might seem as user error, but since this is controlled from the our UI lets get allerted for it
+    if (workflowPhase.isRollback()
+        || workflowPhase.getPhaseSteps().stream().anyMatch(
+               phaseStep -> phaseStep.isRollback() || phaseStep.getSteps().stream().anyMatch(GraphNode::isRollback))) {
+      // This might seem as user error, but since this is controlled from the our UI lets get alerted for it
       throw new InvalidRequestException("The direct workflow phase should not have rollback flag set!", USER_SRE);
     }
 
@@ -1696,9 +1698,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public WorkflowPhase updateWorkflowPhaseRollback(
       String appId, String workflowId, String phaseId, WorkflowPhase rollbackWorkflowPhase) {
     if (!rollbackWorkflowPhase.isRollback()
-        || rollbackWorkflowPhase.getPhaseSteps().stream().anyMatch(step -> !step.isRollback())) {
-      // This might seem as user error, but since this is controlled from the our UI lets get allerted for it
-      throw new InvalidRequestException("The rolback workflow phase should have rollback flag set!", USER_SRE);
+        || rollbackWorkflowPhase.getPhaseSteps().stream().anyMatch(phaseStep
+               -> !phaseStep.isRollback() || phaseStep.getSteps().stream().anyMatch(step -> !step.isRollback()))) {
+      // This might seem as user error, but since this is controlled from the our UI lets get alerted for it
+      throw new InvalidRequestException("The rollback workflow phase should have rollback flag set!", USER_SRE);
     }
 
     Workflow workflow = readWorkflow(appId, workflowId);
