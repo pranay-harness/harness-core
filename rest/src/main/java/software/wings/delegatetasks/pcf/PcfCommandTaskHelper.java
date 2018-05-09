@@ -6,6 +6,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.filesystem.FileIo;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -14,6 +15,7 @@ import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.InstanceDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.PcfInstanceElement;
 import software.wings.api.pcf.PcfServiceData;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -84,7 +86,7 @@ public class PcfCommandTaskHelper {
 
   public void upsizeListOfInstances(ExecutionLogCallback executionLogCallback,
       PcfDeploymentManager pcfDeploymentManager, List<PcfServiceData> pcfServiceDataUpdated,
-      PcfRequestConfig pcfRequestConfig, List<PcfServiceData> upsizeList, List<String> instanceTokens,
+      PcfRequestConfig pcfRequestConfig, List<PcfServiceData> upsizeList, List<PcfInstanceElement> pcfInstanceElements,
       List<String> routeMaps) throws PivotalClientApiException {
     for (PcfServiceData pcfServiceData : upsizeList) {
       executionLogCallback.saveExecutionLog(new StringBuilder()
@@ -99,7 +101,7 @@ public class PcfCommandTaskHelper {
       pcfRequestConfig.setApplicationName(pcfServiceData.getName());
       pcfRequestConfig.setDesiredCount(pcfServiceData.getDesiredCount());
       upsizeInstance(pcfRequestConfig, pcfDeploymentManager, executionLogCallback, pcfServiceDataUpdated,
-          instanceTokens, routeMaps);
+          pcfInstanceElements, routeMaps);
       pcfServiceDataUpdated.add(pcfServiceData);
     }
   }
@@ -156,13 +158,13 @@ public class PcfCommandTaskHelper {
    * @param pcfServiceDataUpdated
    * @param updateCount
    * @param prefix
-   * @param instanceTokens
+   * @param pcfInstanceElements
    * @throws PivotalClientApiException
    */
   public void downsizePreviousReleases(PcfCommandDeployRequest pcfCommandDeployRequest,
       PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback,
-      List<PcfServiceData> pcfServiceDataUpdated, Integer updateCount, String prefix, List<String> instanceTokens)
-      throws PivotalClientApiException {
+      List<PcfServiceData> pcfServiceDataUpdated, Integer updateCount, String prefix,
+      List<PcfInstanceElement> pcfInstanceElements) throws PivotalClientApiException {
     executionLogCallback.saveExecutionLog("# Downsizing previous application version/s");
 
     List<ApplicationSummary> applicationSummaries =
@@ -175,7 +177,8 @@ public class PcfCommandTaskHelper {
     if (updateCount == 0) {
       // If 0 instances are to be downsized in this stage, then find one of the previous applications, to be downsized
       // and return guid of that application, so verification phase can use that guid.
-      getGuidForFirstAppToBeDownsized(pcfCommandDeployRequest, instanceTokens, applicationSummaries);
+      getGuidForFirstAppToBeDownsized(
+          pcfCommandDeployRequest, pcfInstanceElements, applicationSummaries, pcfRequestConfig);
     } else {
       for (int index = applicationSummaries.size() - 1; index >= 0; index--) {
         if (count <= 0) {
@@ -211,7 +214,15 @@ public class PcfCommandTaskHelper {
             pcfRequestConfig, pcfDeploymentManager, pcfCommandDeployRequest.getRouteMaps());
 
         // Application that is downsized
-        instanceTokens.add(applicationDetailAfterResize.getId() + ":" + -1);
+        if (EmptyPredicate.isNotEmpty(applicationDetailAfterResize.getInstanceDetails())) {
+          applicationDetailAfterResize.getInstanceDetails().stream().forEach(instance
+              -> pcfInstanceElements.add(PcfInstanceElement.builder()
+                                             .applicationId(applicationDetailAfterResize.getId())
+                                             .displayName(applicationDetailAfterResize.getName())
+                                             .instanceIndex(instance.getIndex())
+                                             .isUpsize(false)
+                                             .build()));
+        }
 
         count = instanceCount >= count ? 0 : count - instanceCount;
       }
@@ -221,13 +232,24 @@ public class PcfCommandTaskHelper {
   }
 
   private void getGuidForFirstAppToBeDownsized(PcfCommandDeployRequest pcfCommandDeployRequest,
-      List<String> instanceTokens, List<ApplicationSummary> applicationSummaries) {
+      List<PcfInstanceElement> pcfInstanceElements, List<ApplicationSummary> applicationSummaries,
+      PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
     for (int index = applicationSummaries.size() - 1; index >= 0; index--) {
       ApplicationSummary applicationSummary = applicationSummaries.get(index);
       if (pcfCommandDeployRequest.getNewReleaseName().equals(applicationSummary.getName())) {
         continue;
       } else {
-        instanceTokens.add(applicationSummary.getId() + ":" + -1);
+        pcfRequestConfig.setApplicationName(applicationSummary.getName());
+        ApplicationDetail applicationDetail = pcfDeploymentManager.getApplicationByName(pcfRequestConfig);
+        if (EmptyPredicate.isNotEmpty(applicationDetail.getInstanceDetails())) {
+          applicationDetail.getInstanceDetails().stream().forEach(instanceDetail
+              -> pcfInstanceElements.add(PcfInstanceElement.builder()
+                                             .displayName(applicationDetail.getName())
+                                             .applicationId(applicationDetail.getId())
+                                             .instanceIndex(instanceDetail.getIndex())
+                                             .build()));
+        }
+
         break;
       }
     }
@@ -357,13 +379,13 @@ public class PcfCommandTaskHelper {
    * @param pcfRequestConfig
    * @param details
    * @param stepIncrease
-   * @param instanceTokens
+   * @param pcfInstanceElements
    * @throws PivotalClientApiException
    */
   public void upsizeNewApplication(ExecutionLogCallback executionLogCallback, PcfDeploymentManager pcfDeploymentManager,
       PcfCommandDeployRequest pcfCommandDeployRequest, List<PcfServiceData> pcfServiceDataUpdated,
-      PcfRequestConfig pcfRequestConfig, ApplicationDetail details, Integer stepIncrease, List<String> instanceTokens)
-      throws PivotalClientApiException {
+      PcfRequestConfig pcfRequestConfig, ApplicationDetail details, Integer stepIncrease,
+      List<PcfInstanceElement> pcfInstanceElements) throws PivotalClientApiException {
     executionLogCallback.saveExecutionLog("# Upsizing new application, ");
 
     executionLogCallback.saveExecutionLog(new StringBuilder()
@@ -380,13 +402,13 @@ public class PcfCommandTaskHelper {
     pcfRequestConfig.setDesiredCount(pcfCommandDeployRequest.getUpdateCount());
 
     // perform upsize
-    upsizeInstance(pcfRequestConfig, pcfDeploymentManager, executionLogCallback, pcfServiceDataUpdated, instanceTokens,
-        pcfCommandDeployRequest.getRouteMaps());
+    upsizeInstance(pcfRequestConfig, pcfDeploymentManager, executionLogCallback, pcfServiceDataUpdated,
+        pcfInstanceElements, pcfCommandDeployRequest.getRouteMaps());
   }
 
   private void upsizeInstance(PcfRequestConfig pcfRequestConfig, PcfDeploymentManager pcfDeploymentManager,
       ExecutionLogCallback executionLogCallback, List<PcfServiceData> pcfServiceDataUpdated,
-      List<String> instanceTokens, List<String> routeMaps) throws PivotalClientApiException {
+      List<PcfInstanceElement> pcfInstanceElements, List<String> routeMaps) throws PivotalClientApiException {
     // Get application details before upsize
     ApplicationDetail detailsBeforeUpsize = pcfDeploymentManager.getApplicationByName(pcfRequestConfig);
     StringBuilder sb = new StringBuilder();
@@ -403,8 +425,13 @@ public class PcfCommandTaskHelper {
     executionLogCallback.saveExecutionLog(sb.append("# Application upsized successfully ").toString());
 
     List<InstanceDetail> instances = detailsAfterUpsize.getInstanceDetails().stream().collect(toList());
-    instanceTokens.addAll(
-        instances.stream().map(instance -> detailsAfterUpsize.getId() + ":" + instance.getIndex()).collect(toList()));
+    instances.stream().forEach(instance
+        -> pcfInstanceElements.add(PcfInstanceElement.builder()
+                                       .applicationId(detailsAfterUpsize.getId())
+                                       .displayName(detailsAfterUpsize.getName())
+                                       .instanceIndex(instance.getIndex())
+                                       .isUpsize(true)
+                                       .build()));
 
     // Instance token is ApplicationGuid:InstanceIndex, that can be used to connect to instance from outside workd
     executionLogCallback.saveExecutionLog(

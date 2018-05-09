@@ -10,6 +10,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.PcfInstanceElement;
 import software.wings.api.pcf.PcfServiceData;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.ResizeStrategy;
@@ -40,7 +41,7 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
     executionLogCallback.saveExecutionLog("--------- Starting Rollback deployment");
     List<PcfServiceData> pcfServiceDataUpdated = new ArrayList<>();
     PcfDeployCommandResponse pcfDeployCommandResponse =
-        PcfDeployCommandResponse.builder().instanceTokens(new ArrayList<>()).build();
+        PcfDeployCommandResponse.builder().pcfInstanceElements(new ArrayList<>()).build();
 
     PcfCommandRollbackRequest commandRollbackRequest = (PcfCommandRollbackRequest) pcfCommandRequest;
 
@@ -74,15 +75,15 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
               .filter(pcfServiceData -> pcfServiceData.getDesiredCount() < pcfServiceData.getPreviousCount())
               .collect(toList());
 
-      List<String> instanceTokens = new ArrayList<>();
+      List<PcfInstanceElement> pcfInstanceElements = new ArrayList<>();
       if (ResizeStrategy.DOWNSIZE_OLD_FIRST.equals(commandRollbackRequest.getResizeStrategy())) {
         pcfCommandTaskHelper.downSizeListOfInstances(executionLogCallback, pcfDeploymentManager, pcfServiceDataUpdated,
             pcfRequestConfig, downSizeList, commandRollbackRequest.getRouteMaps());
         pcfCommandTaskHelper.upsizeListOfInstances(executionLogCallback, pcfDeploymentManager, pcfServiceDataUpdated,
-            pcfRequestConfig, upsizeList, instanceTokens, commandRollbackRequest.getRouteMaps());
+            pcfRequestConfig, upsizeList, pcfInstanceElements, commandRollbackRequest.getRouteMaps());
       } else {
         pcfCommandTaskHelper.upsizeListOfInstances(executionLogCallback, pcfDeploymentManager, pcfServiceDataUpdated,
-            pcfRequestConfig, upsizeList, instanceTokens, commandRollbackRequest.getRouteMaps());
+            pcfRequestConfig, upsizeList, pcfInstanceElements, commandRollbackRequest.getRouteMaps());
         pcfCommandTaskHelper.downSizeListOfInstances(executionLogCallback, pcfDeploymentManager, pcfServiceDataUpdated,
             pcfRequestConfig, downSizeList, commandRollbackRequest.getRouteMaps());
       }
@@ -90,7 +91,7 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
       pcfDeployCommandResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
       pcfDeployCommandResponse.setOutput(StringUtils.EMPTY);
       pcfDeployCommandResponse.setInstanceDataUpdated(pcfServiceDataUpdated);
-      pcfDeployCommandResponse.getInstanceTokens().addAll(instanceTokens);
+      pcfDeployCommandResponse.getPcfInstanceElements().addAll(pcfInstanceElements);
       executionLogCallback.saveExecutionLog("\n\n--------- PCF Rollback completed successfully");
     } catch (Exception e) {
       logger.error(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Exception in processing PCF Rollback task [{}]",

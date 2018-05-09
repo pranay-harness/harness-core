@@ -11,6 +11,7 @@ import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.PcfInstanceElement;
 import software.wings.api.pcf.PcfServiceData;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.ResizeStrategy;
@@ -42,7 +43,7 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
 
     List<PcfServiceData> pcfServiceDataUpdated = new ArrayList<>();
     PcfDeployCommandResponse pcfDeployCommandResponse =
-        PcfDeployCommandResponse.builder().instanceTokens(new ArrayList<>()).build();
+        PcfDeployCommandResponse.builder().pcfInstanceElements(new ArrayList<>()).build();
     try {
       executionLogCallback.saveExecutionLog("\n---------- Starting PCF Resize Command\n");
 
@@ -78,25 +79,25 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
 
       String prefix = pcfCommandTaskHelper.getAppPrefix(pcfCommandDeployRequest.getNewReleaseName());
       // downsize previous apps with non zero instances by same count new app was upsized
-      List<String> instanceTokens = new ArrayList<>();
+      List<PcfInstanceElement> pcfInstanceElementsForVerification = new ArrayList<>();
       if (ResizeStrategy.DOWNSIZE_OLD_FIRST.equals(pcfCommandDeployRequest.getResizeStrategy())) {
         pcfCommandTaskHelper.downsizePreviousReleases(pcfCommandDeployRequest, pcfRequestConfig, executionLogCallback,
-            pcfServiceDataUpdated, stepDecrease, prefix, instanceTokens);
+            pcfServiceDataUpdated, stepDecrease, prefix, pcfInstanceElementsForVerification);
 
         pcfCommandTaskHelper.upsizeNewApplication(executionLogCallback, pcfDeploymentManager, pcfCommandDeployRequest,
-            pcfServiceDataUpdated, pcfRequestConfig, details, stepIncrease, instanceTokens);
+            pcfServiceDataUpdated, pcfRequestConfig, details, stepIncrease, pcfInstanceElementsForVerification);
       } else {
         pcfCommandTaskHelper.upsizeNewApplication(executionLogCallback, pcfDeploymentManager, pcfCommandDeployRequest,
-            pcfServiceDataUpdated, pcfRequestConfig, details, stepIncrease, instanceTokens);
+            pcfServiceDataUpdated, pcfRequestConfig, details, stepIncrease, pcfInstanceElementsForVerification);
 
         pcfCommandTaskHelper.downsizePreviousReleases(pcfCommandDeployRequest, pcfRequestConfig, executionLogCallback,
-            pcfServiceDataUpdated, stepDecrease, prefix, instanceTokens);
+            pcfServiceDataUpdated, stepDecrease, prefix, pcfInstanceElementsForVerification);
       }
       // generate response to be sent back to Manager
       pcfDeployCommandResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
       pcfDeployCommandResponse.setOutput(StringUtils.EMPTY);
       pcfDeployCommandResponse.setInstanceDataUpdated(pcfServiceDataUpdated);
-      pcfDeployCommandResponse.getInstanceTokens().addAll(instanceTokens);
+      pcfDeployCommandResponse.getPcfInstanceElements().addAll(pcfInstanceElementsForVerification);
       executionLogCallback.saveExecutionLog("\n\n--------- PCF Resize completed successfully");
     } catch (Exception e) {
       logger.error(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Exception in processing PCF Deploy task [{}]",

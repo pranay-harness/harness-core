@@ -32,6 +32,7 @@ public class PcfInstanceElement implements ContextElement {
   private String applicationId;
   private String instanceIndex;
   private String displayName;
+  private boolean isUpsize;
 
   @Override
   public String getName() {
