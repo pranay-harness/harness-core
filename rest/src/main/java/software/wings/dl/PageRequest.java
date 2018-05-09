@@ -2,6 +2,7 @@ package software.wings.dl;
 
 import static java.util.Arrays.asList;
 import static software.wings.beans.SortOrder.Builder.aSortOrder;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
@@ -24,10 +25,12 @@ import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 
@@ -38,21 +41,12 @@ import javax.ws.rs.core.UriInfo;
  * @author Rishi
  */
 public class PageRequest<T> {
-  /**
-   * The constant UNLIMITED.
-   */
   public static final String UNLIMITED = "UNLIMITED";
-  /**
-   * The constant DEFAULT_UNLIMITED.
-   */
   public static final int DEFAULT_UNLIMITED = 1000;
-  /**
-   * The constant DEFAULT_PAGE_SIZE.
-   */
   public static final int DEFAULT_PAGE_SIZE = 50;
-  /**
-   * The Persistent class.
-   */
+
+  private static Pattern searchField = Pattern.compile("search\\[[0-9]+]\\[field]");
+
   @JsonIgnore Class<T> persistentClass;
   @DefaultValue("0") @QueryParam("offset") private String offset;
   private int start;
@@ -258,22 +252,11 @@ public class PageRequest<T> {
     this.options = options;
   }
 
-  /**
-   * Converts the filter to morphia form.
-   *
-   * @param mappedClass the mapped class
-   * @param mapper      the mapper
-   */
-  public void populateFilters(MappedClass mappedClass, Mapper mapper) {
-    if (uriInfo == null) {
-      return;
-    }
-    MultivaluedMap<String, String> map = uriInfo.getQueryParameters();
-
+  public void populateFilters(MultivaluedMap<String, String> map, MappedClass mappedClass, Mapper mapper) {
     int fieldCount = 0;
     int orderCount = 0;
     for (String key : map.keySet()) {
-      if (key.startsWith("search") && key.endsWith("[field]")) {
+      if (searchField.matcher(key).matches()) {
         fieldCount++;
       } else if (key.startsWith("sort") && key.endsWith("[field]")) {
         orderCount++;
@@ -316,11 +299,23 @@ public class PageRequest<T> {
 
       final SearchFilterBuilder filterBuilder = SearchFilter.builder();
       filterBuilder.fieldName(name);
-      if (map.containsKey(key + "[op]")) {
-        filterBuilder.op(Operator.valueOf(map.getFirst(key + "[op]")));
-      }
-      if (map.containsKey(key + "[value]")) {
-        MappedField mappedField = mappedClass.getMappedField(name);
+      Operator op = map.containsKey(key + "[op]") ? Operator.valueOf(map.getFirst(key + "[op]")) : Operator.EQ;
+      filterBuilder.op(op);
+
+      if (op == Operator.ELEMENT_MATCH) {
+        final String prefix = key + "[value]";
+        final MultivaluedMap<String, String> subMap = new MultivaluedHashMap<>();
+
+        map.entrySet()
+            .stream()
+            .filter(entry -> entry.getKey().startsWith(prefix))
+            .forEach(entry -> subMap.put("search" + entry.getKey().substring(prefix.length()), entry.getValue()));
+
+        final PageRequest pageRequest = aPageRequest().build();
+        pageRequest.populateFilters(subMap, mappedClass, mapper);
+        filterBuilder.fieldValues(new Object[] {pageRequest});
+      } else if (map.containsKey(key + "[value]")) {
+        MappedField mappedField = mappedClass == null ? null : mappedClass.getMappedField(name);
         if (mappedField != null
             && asList(Long.TYPE, Integer.TYPE, Short.TYPE, Byte.TYPE).contains(mappedField.getType())) {
           filterBuilder.fieldValues(new Object[] {Long.parseLong(map.getFirst(key + "[value]"))});

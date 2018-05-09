@@ -1,5 +1,7 @@
 package software.wings.app;
 
+import static org.mongodb.morphia.logging.MorphiaLoggerFactory.registerLogger;
+
 import com.google.common.collect.Maps;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
@@ -16,6 +18,7 @@ import com.mongodb.MongoClientOptions.Builder;
 import com.mongodb.MongoClientURI;
 import com.mongodb.MongoCommandException;
 import io.harness.exception.UnexpectedException;
+import io.harness.logging.MorphiaLoggerFactory;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.annotations.Index;
@@ -33,9 +36,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by peeyushaggarwal on 5/25/16.
- */
 public class DatabaseModule extends AbstractModule {
   private static final Logger logger = LoggerFactory.getLogger(DatabaseModule.class);
   private AdvancedDatastore primaryDatastore;
@@ -49,6 +49,8 @@ public class DatabaseModule extends AbstractModule {
    * @param configuration Dropwizard configuration
    */
   public DatabaseModule(MainConfiguration configuration) {
+    registerLogger(MorphiaLoggerFactory.class);
+
     MongoConfig mongoConfig = configuration.getMongoConnectionFactory();
     Morphia morphia = new Morphia();
     morphia.getMapper().getOptions().setObjectFactory(new NoDefaultConstructorMorphiaObjectFactory());

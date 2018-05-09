@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.github.reinert.jjschema.Attributes;
 import lombok.Builder;
+import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,25 +76,10 @@ public class AwsInstanceFilter {
     this.tags = tags;
   }
 
+  @Data
   @Builder
   public static class Tag {
     private String key;
     private String value;
-
-    public String getKey() {
-      return key;
-    }
-
-    public void setKey(String key) {
-      this.key = key;
-    }
-
-    public String getValue() {
-      return value;
-    }
-
-    public void setValue(String value) {
-      this.value = value;
-    }
   }
 }
