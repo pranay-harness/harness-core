@@ -179,11 +179,17 @@ public class KubernetesContainerTask extends ContainerTask {
       String containerName, String imageNameTag, String secretName, String configMapName, String secretMapName) {
     try {
       String configTemplate = isNotBlank(getAdvancedConfig()) ? getAdvancedConfig() : fetchYamlConfig();
-      return KubernetesHelper.loadYaml(configTemplate.replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX, imageNameTag)
-                                           .replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, containerName)
-                                           .replaceAll(SECRET_NAME_PLACEHOLDER_REGEX, secretName)
-                                           .replaceAll(CONFIG_MAP_NAME_PLACEHOLDER_REGEX, configMapName)
-                                           .replaceAll(SECRET_MAP_NAME_PLACEHOLDER_REGEX, secretMapName));
+      String controllerYaml = configTemplate.replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX, imageNameTag)
+                                  .replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, containerName)
+                                  .replaceAll(SECRET_NAME_PLACEHOLDER_REGEX, secretName)
+                                  .replaceAll(CONFIG_MAP_NAME_PLACEHOLDER_REGEX, configMapName)
+                                  .replaceAll(SECRET_MAP_NAME_PLACEHOLDER_REGEX, secretMapName);
+      HasMetadata controller = KubernetesHelper.loadYaml(controllerYaml);
+      if (controller == null) {
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
+            .addParam("args", "Couldn't parse Controller YAML: " + controllerYaml);
+      }
+      return controller;
     } catch (Exception e) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, e).addParam("args", e.getMessage());
     }
