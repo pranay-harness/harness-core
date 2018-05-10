@@ -5,17 +5,25 @@ kubernetes cluster.
 Edit harness-delegate.yaml to change namespace, set proxy settings, or to
 enter a delegate description.
 
-Install the Harness Delegate by executing:
+Install the Harness Delegate:
 
   kubectl create -f harness-delegate.yaml
 
-Replace if needed with:
+Replace if needed:
 
   kubectl replace -f harness-delegate.yaml
 
-See startup logs with:
+Get pod names:
 
-  kubectl logs <stateful-set-name>-0 -n harness-delegate
+   kubectl get pods -n harness-delegate
+
+See startup logs:
+
+  kubectl logs <pod-name> -n harness-delegate
+
+Run a shell in a pod:
+
+   kubectl exec <pod-name> -n harness-delegate -it -- bash
 
 To use this delegate to deploy in the same cluster without providing credentials
 in Harness the delegate needs to have access to a service account with cluster
@@ -26,8 +34,8 @@ account in the harness-delegate namespace:
     --clusterrole=cluster-admin \
     --serviceaccount=harness-delegate:default
 
-Note: If you're installing more than one Stateful Set then make sure the name
-is unique, keeping the 6 letter account identifier as part of the name. You
+Note: If you're installing more than one Kubernetes delegate then make sure the
+name is unique, keeping the 6 letter account identifier as part of the name. You
 can download again with a new name from the Harness > Setup > Installations
 page, or edit the YAML. If you edit the YAML be sure to change the prefix of
 the Stateful Set name, the 'harness.io/name' labels and selector, and the

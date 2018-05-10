@@ -5,8 +5,16 @@ Edit launch-harness-delegate.sh to set proxy settings or to enter a delegate des
 
 Install the Harness Delegate by executing launch-harness-delegate.sh.
 
-See startup logs with:
+Get container IDs:
 
-   sudo docker logs -f [container_ID]
+   sudo docker container ls
+
+See startup logs:
+
+   sudo docker logs -f <container-id>
+
+Run a shell in a container:
+
+   sudo docker container exec -it <container-id> bash
 
 
