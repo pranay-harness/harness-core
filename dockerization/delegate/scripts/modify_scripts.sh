@@ -93,3 +93,10 @@ then
 else
     sed -i "s|_installHelm_|false|" /opt/harness-delegate/start.sh
 fi
+
+if [[ -v "HELM_DESIRED_VERSION" ]]
+then
+    sed -i "s|_helmDesiredVersion_|${HELM_DESIRED_VERSION}|" /opt/harness-delegate/start.sh
+else
+    sed -i "s|_helmDesiredVersion_|latest|" /opt/harness-delegate/start.sh
+fi
