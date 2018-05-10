@@ -64,12 +64,6 @@ then
   exit 1
 fi
 
-if [ -e kube.config ]
-then
-  mkdir -p ~/.kube
-  mv kube.config ~/.kube/config
-fi
-
 INSTALL_HELM=_installHelm_
 if [[ $INSTALL_HELM == "true" ]]
 then
@@ -88,7 +82,7 @@ deb http://apt.kubernetes.io/ kubernetes-xenial main
 EOF
   apt-get update
   apt-get install -y kubectl
-  kubectl config view
+  kubectl --kubeconfig=kube.config config view
 fi
 
 echo "Checking Watcher latest version..."
