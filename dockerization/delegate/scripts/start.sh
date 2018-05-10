@@ -73,6 +73,9 @@ fi
 INSTALL_HELM=_installHelm_
 if [[ $INSTALL_HELM == "true" ]]
 then
+  echo "Installing emacs..."
+  apt-get install -y emacs
+
   echo "Installing Helm..."
   curl -#k https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get | bash
   helm init --client-only
