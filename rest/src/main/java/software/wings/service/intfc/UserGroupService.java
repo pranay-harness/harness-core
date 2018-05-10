@@ -1,9 +1,12 @@
 package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.beans.User;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+
+import java.util.List;
 
 /**
  * Created by rishi
@@ -73,4 +76,6 @@ public interface UserGroupService {
    */
   UserGroup cloneUserGroup(
       @NotEmpty String accountId, @NotEmpty String uuid, @NotEmpty String newName, @NotEmpty String newDescription);
+
+  List<UserGroup> getUserGroupsByAccountId(String accountId, User user);
 }
