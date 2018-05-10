@@ -109,7 +109,7 @@ public class InstanceSyncJob implements Job {
         InfrastructureMappingType infraMappingType =
             Util.getEnumFromString(InfrastructureMappingType.class, infraMapping.getInfraMappingType());
         try (AcquiredLock lock = persistentLocker.tryToAcquireLock(
-                 InfrastructureMapping.class, infraMappingId, Duration.ofSeconds(120))) {
+                 InfrastructureMapping.class, infraMappingId, Duration.ofSeconds(180))) {
           if (lock == null) {
             return;
           }
@@ -119,8 +119,9 @@ public class InstanceSyncJob implements Job {
             if (instanceHandler == null) {
               return;
             }
+            logger.info("Instance sync started for infraMapping [{}]", infraMappingId);
             instanceHandler.syncInstances(appIdFinal, infraMappingId);
-            logger.info("Instance sync completed for [{}]", infraMappingId);
+            logger.info("Instance sync completed for infraMapping [{}]", infraMappingId);
           } catch (Exception ex) {
             logger.warn("Instance sync failed for infraMappingId [{}]", infraMappingId, ex);
           }
