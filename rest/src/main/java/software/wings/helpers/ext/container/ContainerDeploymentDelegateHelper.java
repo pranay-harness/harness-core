@@ -3,6 +3,7 @@ package software.wings.helpers.ext.container;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.helpers.ext.helm.HelmConstants.KUBE_CONFIG_TEMPLATE;
 
 import com.google.common.cache.CacheBuilder;
@@ -100,6 +101,10 @@ public class ContainerDeploymentDelegateHelper {
 
   private String getConfigFileContent(KubernetesConfig config) throws UnsupportedEncodingException {
     encodeCharsIfNeeded(config);
+
+    if (isBlank(config.getMasterUrl())) {
+      return "";
+    }
 
     String clientCertData =
         isNotEmpty(config.getClientCert()) ? "client-certificate-data: " + new String(config.getClientCert()) : "";
