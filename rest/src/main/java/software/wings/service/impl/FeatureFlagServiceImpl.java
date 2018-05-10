@@ -55,11 +55,7 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
       return false;
     }
 
-    if (isNotEmpty(featureFlag.getAccountIds())) {
-      return featureFlag.getAccountIds().contains(accountId);
-    }
-
-    return false;
+    return isNotEmpty(featureFlag.getAccountIds()) && featureFlag.getAccountIds().contains(accountId);
   }
 
   @Override

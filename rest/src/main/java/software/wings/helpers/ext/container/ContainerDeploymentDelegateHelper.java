@@ -106,7 +106,7 @@ public class ContainerDeploymentDelegateHelper {
     String clientKeyData =
         isNotEmpty(config.getClientKey()) ? "client-key-data: " + new String(config.getClientKey()) : "";
     String password = isNotEmpty(config.getPassword()) ? "password: " + new String(config.getPassword()) : "";
-    String username = isNotEmpty(config.getUsername()) ? "username: " + new String(config.getUsername()) : "";
+    String username = isNotEmpty(config.getUsername()) ? "username: " + config.getUsername() : "";
 
     return KUBE_CONFIG_TEMPLATE.replace("${MASTER_URL}", config.getMasterUrl())
         .replace("${USER_NAME}", username)

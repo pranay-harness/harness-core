@@ -82,6 +82,8 @@ import javax.net.ssl.X509TrustManager;
  */
 @Singleton
 public class KubernetesHelperService {
+  private static final Logger logger = LoggerFactory.getLogger(KubernetesHelperService.class);
+
   @Inject private EncryptionService encryptionService;
 
   public KubernetesClient getKubernetesClient(
@@ -138,6 +140,10 @@ public class KubernetesHelperService {
       System.setProperty(Config.KUBERNETES_AUTH_TRYSERVICEACCOUNT_SYSTEM_PROPERTY, "true");
       config = Config.autoConfigure(null);
       config.setNamespace(namespace);
+      logger.info(
+          "Config from local cluster. Master URL: {}, CA cert file: {}, config oauth token: {}, request oauth token: {}",
+          config.getMasterUrl(), config.getCaCertFile(), config.getOauthToken(),
+          config.getRequestConfig().getOauthToken());
     }
 
     OkHttpClient okHttpClient = createHttpClientWithProxySetting(config);
