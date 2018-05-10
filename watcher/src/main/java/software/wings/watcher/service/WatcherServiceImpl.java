@@ -382,7 +382,7 @@ public class WatcherServiceImpl implements WatcherService {
       try {
         delegateVersionNumber = Integer.parseInt(delegateVersion.substring(delegateVersion.lastIndexOf('.') + 1));
       } catch (NumberFormatException e) {
-        delegateVersionNumber = null;
+        // Leave it null
       }
     }
     return delegateVersionNumber;
@@ -437,9 +437,11 @@ public class WatcherServiceImpl implements WatcherService {
           logger.error("Failed to start new delegate");
           logger.error("Watcher messages:");
           messageService.logAllMessages(WATCHER, watcherProcess);
+          messageService.closeChannel(WATCHER, watcherProcess);
           if (isNotBlank(newDelegateProcess)) {
             logger.error("Delegate messages:");
             messageService.logAllMessages(DELEGATE, newDelegateProcess);
+            messageService.closeChannel(DELEGATE, newDelegateProcess);
           }
           newDelegate.getProcess().destroy();
           newDelegate.getProcess().waitFor();
