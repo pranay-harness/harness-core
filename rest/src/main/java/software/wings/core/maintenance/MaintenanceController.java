@@ -25,15 +25,18 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class MaintenanceController implements Managed {
   private static final Logger logger = LoggerFactory.getLogger(MaintenanceController.class);
 
-  private static boolean forceMaintenanceOff;
+  private static Boolean forceMaintenance;
   private static final AtomicBoolean maintenance = new AtomicBoolean(true);
 
-  public static void forceMaintenanceOff() {
-    forceMaintenanceOff = true;
+  public static void forceMaintenance(Boolean force) {
+    forceMaintenance = force;
   }
 
   public static boolean isMaintenance() {
-    return !forceMaintenanceOff && maintenance.get();
+    if (forceMaintenance != null) {
+      return forceMaintenance;
+    }
+    return maintenance.get();
   }
 
   @Inject private ExecutorService executorService;

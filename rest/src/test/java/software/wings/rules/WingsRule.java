@@ -3,7 +3,7 @@ package software.wings.rules;
 import static java.util.Arrays.asList;
 import static org.mockito.Mockito.mock;
 import static software.wings.app.LoggingInitializer.initializeLogging;
-import static software.wings.core.maintenance.MaintenanceController.forceMaintenanceOff;
+import static software.wings.core.maintenance.MaintenanceController.forceMaintenance;
 import static software.wings.utils.WingsTestConstants.PORTAL_URL;
 import static software.wings.utils.WingsTestConstants.VERIFICATION_PATH;
 
@@ -167,7 +167,7 @@ public class WingsRule implements MethodRule {
       throws Throwable {
     setKryoClassRegistrationForTests();
     initializeLogging();
-    forceMaintenanceOff();
+    forceMaintenance(false);
     MongoClient mongoClient;
     String dbName = "harness";
     if (annotations.stream().anyMatch(RealMongo.class ::isInstance)) {
@@ -176,9 +176,10 @@ public class WingsRule implements MethodRule {
       try {
         MongoClientURI clientUri =
             new MongoClientURI(System.getProperty("mongoUri", "mongodb://localhost:27017/" + dbName));
-        // Protection against running tests on non-local databases such as prod or qa. Comment out this check if you're
-        // sure.
         if (!clientUri.getURI().startsWith("mongodb://localhost:")) {
+          forceMaintenance(true);
+          // Protection against running tests on non-local databases such as prod or qa.
+          // Comment out this throw exception if you're sure.
           throw new WingsException("\n*** WARNING *** : Attempting to run test on non-local Mongo: "
               + clientUri.getURI() + "\n*** Exiting *** : Comment out this check in WingsRule.java "
               + "if you are sure you want to run against a remote Mongo.\n");
