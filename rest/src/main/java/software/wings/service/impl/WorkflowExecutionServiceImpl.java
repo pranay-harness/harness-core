@@ -1104,7 +1104,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       stdParams.getWorkflowElement().setDisplayName(workflowExecution.getDisplayName());
       stdParams.getWorkflowElement().setReleaseNo(workflowExecution.getReleaseNo());
     }
-
+    stdParams.getWorkflowElement().setPipelineDeploymentUuid(workflowExecution.getPipelineExecutionId());
     lastGoodReleaseInfo(stdParams.getWorkflowElement(), workflowExecution);
 
     WingsDeque<ContextElement> elements = new WingsDeque<>();

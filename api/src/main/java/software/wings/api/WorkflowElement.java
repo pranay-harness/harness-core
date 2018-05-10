@@ -21,4 +21,5 @@ public class WorkflowElement {
   private String lastGoodDeploymentUuid;
   private String lastGoodDeploymentDisplayName;
   private String lastGoodReleaseNo;
+  private String pipelineDeploymentUuid;
 }
