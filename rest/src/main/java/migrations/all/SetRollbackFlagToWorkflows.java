@@ -91,7 +91,7 @@ public class SetRollbackFlagToWorkflows implements Migration {
 
     if (modified) {
       try {
-        logger.info("--- Workflow updated: {}", workflow.getName());
+        logger.info("--- Workflow updated: {}, {}", workflow.getUuid(), workflow.getName());
         workflowService.updateWorkflow(workflow);
         Thread.sleep(100);
       } catch (Exception e) {
