@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 
 import migrations.all.AddArtifactCheck;
 import migrations.all.AddIsDefaultToExistingNotificationGroups;
+import migrations.all.AddUsersToAdminUserGroup;
 import migrations.all.AddValidUntilToStateExecutionInstance;
 import migrations.all.AddValidUntilToWaitInstance;
 import migrations.all.AddVerifyToRollbackWorkflows;
@@ -75,6 +76,7 @@ public class MigrationList {
         .add(Pair.of(135, TimeSeriesAnalysisRecordsMigration.class))
         .add(Pair.of(136, TimeSeriesMLScoresMigration.class))
         .add(Pair.of(137, SetRollbackFlagToWorkflows.class))
+        .add(Pair.of(138, AddUsersToAdminUserGroup.class))
         .build();
   }
 }

@@ -254,4 +254,6 @@ public interface UserService {
    * @return
    */
   User verifyJWTToken(@NotEmpty String jwtToken, @NotNull SecretManager.JWT_CATEGORY category);
+
+  boolean isUserAssignedToAccount(User user, String accountId);
 }

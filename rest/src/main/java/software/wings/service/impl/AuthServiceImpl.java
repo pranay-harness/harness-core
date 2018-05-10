@@ -41,14 +41,10 @@ import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.FeatureName;
 import software.wings.beans.Permission;
 import software.wings.beans.Role;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.beans.User;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.GenericDbCache;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageRequest.PageRequestBuilder;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
@@ -246,15 +242,6 @@ public class AuthServiceImpl implements AuthService {
         throw new WingsException(ACCESS_DENIED, USER);
       }
     }
-  }
-
-  private List<UserGroup> getUserGroupsByAccountId(String accountId, User user) {
-    PageRequest<UserGroup> pageRequest = PageRequestBuilder.aPageRequest()
-                                             .addFilter("accountId", Operator.EQ, accountId)
-                                             .addFilter("memberIds", Operator.HAS, user.getUuid())
-                                             .build();
-    PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest);
-    return pageResponse.getResponse();
   }
 
   @Override
@@ -489,7 +476,7 @@ public class AuthServiceImpl implements AuthService {
   }
 
   private UserPermissionInfo getUserPermissionInfoFromDB(String accountId, User user) {
-    List<UserGroup> userGroups = getUserGroupsByAccountId(accountId, user);
+    List<UserGroup> userGroups = userGroupService.getUserGroupsByAccountId(accountId, user);
     return authHandler.getUserPermissionInfo(accountId, userGroups);
   }
 

@@ -187,4 +187,14 @@ public class UserGroupServiceImpl implements UserGroupService {
   private void evictUserPermissionInfoCacheForUserGroup(String accountId, List<String> memberIds) {
     authService.evictAccountUserPermissionInfoCache(accountId, memberIds);
   }
+
+  @Override
+  public List<UserGroup> getUserGroupsByAccountId(String accountId, User user) {
+    PageRequest<UserGroup> pageRequest = aPageRequest()
+                                             .addFilter("accountId", Operator.EQ, accountId)
+                                             .addFilter("memberIds", Operator.HAS, user.getUuid())
+                                             .build();
+    PageResponse<UserGroup> pageResponse = list(accountId, pageRequest);
+    return pageResponse.getResponse();
+  }
 }

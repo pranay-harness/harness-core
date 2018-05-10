@@ -974,4 +974,9 @@ public class UserServiceImpl implements UserService {
           .addParam("message", "Invalid JWTToken received, failed to decode the token");
     }
   }
+
+  @Override
+  public boolean isUserAssignedToAccount(User user, String accountId) {
+    return user.getAccounts().stream().filter(account -> account.getUuid().equals(accountId)).findFirst().isPresent();
+  }
 }
