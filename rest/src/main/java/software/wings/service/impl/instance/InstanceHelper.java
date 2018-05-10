@@ -1,6 +1,10 @@
 package software.wings.service.impl.instance;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static software.wings.beans.InfrastructureMappingType.AWS_AWS_LAMBDA;
+import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
+import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
+import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM;
 import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
 import static software.wings.exception.WingsException.USER_SRE;
 import static software.wings.sm.ExecutionStatus.FAILED;
@@ -129,11 +133,9 @@ public class InstanceHelper {
       InfrastructureMapping infrastructureMapping =
           infraMappingService.get(appId, phaseExecutionData.getInfraMappingId());
 
-      if (InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.getName().equals(
-              infrastructureMapping.getInfraMappingType())
-          || InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM.getName().equals(
-                 infrastructureMapping.getInfraMappingType())
-          || InfrastructureMappingType.AWS_SSH.getName().equals(infrastructureMapping.getInfraMappingType())) {
+      if (PHYSICAL_DATA_CENTER_SSH.getName().equals(infrastructureMapping.getInfraMappingType())
+          || PHYSICAL_DATA_CENTER_WINRM.getName().equals(infrastructureMapping.getInfraMappingType())
+          || AWS_SSH.getName().equals(infrastructureMapping.getInfraMappingType())) {
         List<Instance> instanceList = Lists.newArrayList();
         PhaseStepExecutionSummary phaseStepExecutionSummary =
             getDeployPhaseStep(phaseExecutionData, Constants.DEPLOY_SERVICE);
@@ -172,14 +174,21 @@ public class InstanceHelper {
       } else {
         Optional<InstanceHandler> instanceHandlerOptional = getInstanceHandler(infrastructureMapping);
         if (!instanceHandlerOptional.isPresent()) {
-          String msg = "Instance handler not found for infraMappingType: " + infrastructureMapping.getName();
-          logger.error(msg);
-          throw new WingsException(msg);
+          if (!hasNoInstanceHandler(infrastructureMapping.getInfraMappingType())) {
+            String msg = "Instance handler not found for infraMappingType: " + infrastructureMapping.getName();
+            logger.error(msg);
+            throw new WingsException(msg);
+          } else {
+            logger.debug(
+                "Instance handler not supported for inframappingType: {}", infrastructureMapping.getInfraMappingType());
+            return;
+          }
         }
 
         InstanceHandler instanceHandler = instanceHandlerOptional.get();
         Optional<DeploymentInfo> deploymentInfo = instanceHandler.getDeploymentInfo(
             phaseExecutionData, workflowExecution, infrastructureMapping, stateExecutionInstanceId, artifact);
+
         if (deploymentInfo.isPresent()) {
           DeploymentEvent deploymentEvent = setValuesToDeploymentEvent(stateExecutionInstanceId, workflowExecution,
               phaseExecutionData, infrastructureMapping, artifact, deploymentInfo.get());
@@ -190,6 +199,13 @@ public class InstanceHelper {
       // we deliberately don't throw back the exception since we don't want the workflow to be affected
       logger.error("Error while updating instance change information", ex);
     }
+  }
+
+  private boolean hasNoInstanceHandler(String infraMappingType) {
+    if (AWS_AWS_LAMBDA.getName().equals(infraMappingType)) {
+      return true;
+    }
+    return false;
   }
 
   protected PhaseStepExecutionSummary getDeployPhaseStep(PhaseExecutionData phaseExecutionData, String phaseStepName) {
@@ -419,8 +435,8 @@ public class InstanceHelper {
         HostInstanceKey.builder().hostName(host.getHostName()).infraMappingId(infraMappingId).build();
     builder.hostInstanceKey(hostInstanceKey);
 
-    if (InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.getName().equals(infraMappingType)
-        || InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM.getName().equals(infraMappingType)) {
+    if (PHYSICAL_DATA_CENTER_SSH.getName().equals(infraMappingType)
+        || PHYSICAL_DATA_CENTER_WINRM.getName().equals(infraMappingType)) {
       instanceInfo = PhysicalHostInstanceInfo.builder()
                          .hostPublicDns(host.getPublicDns())
                          .hostId(host.getUuid())
@@ -476,9 +492,8 @@ public class InstanceHelper {
   }
 
   private boolean isSupported(InfrastructureMappingType infrastructureMappingType) {
-    if (InfrastructureMappingType.AWS_AWS_LAMBDA.equals(infrastructureMappingType)
-        || InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.equals(infrastructureMappingType)
-        || InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM.equals(infrastructureMappingType)) {
+    if (AWS_AWS_LAMBDA.equals(infrastructureMappingType) || PHYSICAL_DATA_CENTER_SSH.equals(infrastructureMappingType)
+        || PHYSICAL_DATA_CENTER_WINRM.equals(infrastructureMappingType)) {
       return false;
     }
     return true;

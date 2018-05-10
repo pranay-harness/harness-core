@@ -53,7 +53,7 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
     if (codeDeployDeploymentId == null) {
       logger.warn("Phase step execution summary null for Deploy for workflow:{} Can't create deployment event",
           workflowExecution.getName());
-      return null;
+      return Optional.empty();
     }
     return Optional.of(AwsCodeDeployDeploymentInfo.builder().deploymentId(codeDeployDeploymentId).build());
   }
