@@ -188,13 +188,6 @@ public class DelegateModule extends AbstractModule {
                 .setNameFormat("Verification-Data-Collector-%d")
                 .setPriority(Thread.MIN_PRIORITY)
                 .build()));
-    bind(ExecutorService.class)
-        .annotatedWith(Names.named("taskEventHandler"))
-        .toInstance(Executors.newFixedThreadPool(5,
-            new ThreadFactoryBuilder()
-                .setNameFormat("Task-Event-Handler-%d")
-                .setPriority(Thread.NORM_PRIORITY)
-                .build()));
 
     int cores = Runtime.getRuntime().availableProcessors();
     int corePoolSize = 20 * cores;

@@ -148,7 +148,6 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject @Named("upgradeExecutor") private ScheduledExecutorService upgradeExecutor;
   @Inject @Named("inputExecutor") private ScheduledExecutorService inputExecutor;
   @Inject @Named("taskPollExecutor") private ScheduledExecutorService taskPollExecutor;
-  @Inject @Named("taskEventHandler") private ExecutorService taskEventHandler;
   @Inject private ExecutorService executorService;
   @Inject private SignalService signalService;
   @Inject private MessageService messageService;
@@ -392,7 +391,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void handleMessageSubmit(String message) {
-    taskEventHandler.submit(() -> handleMessage(message));
+    executorService.submit(() -> handleMessage(message));
   }
 
   private void handleMessage(String message) {
