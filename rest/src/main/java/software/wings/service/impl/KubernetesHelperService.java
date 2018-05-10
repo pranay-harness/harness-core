@@ -8,7 +8,6 @@ import static io.harness.network.Http.getOkHttpClientBuilder;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static okhttp3.ConnectionSpec.CLEARTEXT;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.common.Constants.HARNESS_REVISION;
 
@@ -135,18 +134,6 @@ public class KubernetesHelperService {
     }
 
     Config config = configBuilder.build();
-
-    if (isBlank(config.getMasterUrl())) {
-      System.setProperty(Config.KUBERNETES_AUTH_TRYSERVICEACCOUNT_SYSTEM_PROPERTY, "true");
-      config = Config.autoConfigure(null);
-      config.setNamespace(namespace);
-      logger.info(
-          "Config from local cluster. Master URL: {}, CA cert file: {}, config oauth token: {}, request oauth token: {}",
-          config.getMasterUrl(), config.getCaCertFile(), config.getOauthToken(),
-          config.getRequestConfig().getOauthToken());
-    } else {
-      logger.info("Config from kubernetesConfig. Master URL: {}", config.getMasterUrl());
-    }
 
     OkHttpClient okHttpClient = createHttpClientWithProxySetting(config);
     try (DefaultKubernetesClient client = new DefaultKubernetesClient(okHttpClient, config)) {
