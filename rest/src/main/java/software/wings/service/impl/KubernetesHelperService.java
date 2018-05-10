@@ -144,6 +144,8 @@ public class KubernetesHelperService {
           "Config from local cluster. Master URL: {}, CA cert file: {}, config oauth token: {}, request oauth token: {}",
           config.getMasterUrl(), config.getCaCertFile(), config.getOauthToken(),
           config.getRequestConfig().getOauthToken());
+    } else {
+      logger.info("Config from kubernetesConfig. Master URL: {}", config.getMasterUrl());
     }
 
     OkHttpClient okHttpClient = createHttpClientWithProxySetting(config);
