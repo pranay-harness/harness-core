@@ -376,8 +376,24 @@ TASK_TYPES:
       value: GIT
     - name: Container
       value: CONTAINER
-    - name: Amazon Machine Image
+    - name: Amazon Machine Image (AMI)
       value: AMI
+    - name: Helm
+      value: HELM
+    - name: Shell Script
+      value: SCRIPT
+    - name: Dynatrace
+      value: DYNA_TRACE
+    - name: Prometheus
+      value: PROMETHEUS
+    - name: CloudWatch
+      value: CLOUD_WATCH
+    - name: Collaboration Provider
+      value: COLLABORATION_PROVIDER
+    - name: Pivotal Cloud Foundry (PCF)
+      value: PCF
+    - name: APM
+      value: APM
 
 EXECUTION_STATUS:
     - name: Aborted
