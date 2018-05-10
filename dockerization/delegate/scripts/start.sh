@@ -64,6 +64,12 @@ then
   exit 1
 fi
 
+if [ -e kube.config ]
+then
+  mkdir -p ~/.kube
+  mv kube.config ~/.kube/config
+fi
+
 INSTALL_HELM=_installHelm_
 if [[ $INSTALL_HELM == "true" ]]
 then
