@@ -71,6 +71,8 @@ then
   apt-get install -y emacs
 
   echo "Installing Helm..."
+  DESIRED_VERSION=_helmDesiredVersion_
+  export DESIRED_VERSION
   curl -#k https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get | bash
   helm init --client-only
 
@@ -82,7 +84,6 @@ deb http://apt.kubernetes.io/ kubernetes-xenial main
 EOF
   apt-get update
   apt-get install -y kubectl
-  kubectl --kubeconfig=kube.config config view
 fi
 
 echo "Checking Watcher latest version..."
