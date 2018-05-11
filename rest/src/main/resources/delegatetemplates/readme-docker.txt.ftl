@@ -17,4 +17,6 @@ Run a shell in a container:
 
    sudo docker container exec -it <container-id> bash
 
+The editor 'nano' is pre-installed and you can install other tools from the shell
+using 'apt-get'.
 

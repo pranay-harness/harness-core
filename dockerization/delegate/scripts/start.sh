@@ -64,26 +64,27 @@ then
   exit 1
 fi
 
+# Install nano editor
+apt-get install -y nano
+
+#Install kubectl
+echo "Installing kubectl..."
+apt-get update && apt-get install -y apt-transport-https
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+cat <<EOF >/etc/apt/sources.list.d/kubernetes.list
+deb http://apt.kubernetes.io/ kubernetes-xenial main
+EOF
+apt-get update
+apt-get install -y kubectl
+
 INSTALL_HELM=_installHelm_
 if [[ $INSTALL_HELM == "true" ]]
 then
-  echo "Installing emacs..."
-  apt-get install -y emacs
-
   echo "Installing Helm..."
   DESIRED_VERSION=_helmDesiredVersion_
   export DESIRED_VERSION
   curl -#k https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get | bash
   helm init --client-only
-
-  echo "Installing kubectl..."
-  apt-get update && apt-get install -y apt-transport-https
-  curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-  cat <<EOF >/etc/apt/sources.list.d/kubernetes.list
-deb http://apt.kubernetes.io/ kubernetes-xenial main
-EOF
-  apt-get update
-  apt-get install -y kubectl
 fi
 
 echo "Checking Watcher latest version..."
