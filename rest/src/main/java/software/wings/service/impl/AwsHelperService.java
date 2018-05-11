@@ -17,6 +17,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
@@ -56,8 +57,10 @@ import com.amazonaws.services.autoscaling.model.SetDesiredCapacityRequest;
 import com.amazonaws.services.cloudformation.AmazonCloudFormationClient;
 import com.amazonaws.services.cloudformation.model.CreateStackRequest;
 import com.amazonaws.services.cloudformation.model.CreateStackResult;
+import com.amazonaws.services.cloudformation.model.DeleteStackRequest;
 import com.amazonaws.services.cloudformation.model.DescribeStacksRequest;
 import com.amazonaws.services.cloudformation.model.DescribeStacksResult;
+import com.amazonaws.services.cloudformation.model.Stack;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClientBuilder;
 import com.amazonaws.services.cloudwatch.model.Datapoint;
@@ -414,7 +417,8 @@ public class AwsHelperService {
    * @param secretKey the secret key
    * @return the amazon cloud formation client
    */
-  private AmazonCloudFormationClient getAmazonCloudFormationClient(String accessKey, char[] secretKey) {
+  @VisibleForTesting
+  AmazonCloudFormationClient getAmazonCloudFormationClient(String accessKey, char[] secretKey) {
     return new AmazonCloudFormationClient(new BasicAWSCredentials(accessKey, new String(secretKey)));
   }
 
@@ -1800,6 +1804,33 @@ public class AwsHelperService {
       handleAmazonServiceException(amazonServiceException);
     }
     return new DescribeStacksResult();
+  }
+
+  public List<Stack> getAllStacks(String accessKey, char[] secretKey, DescribeStacksRequest describeStacksRequest) {
+    AmazonCloudFormationClient cloudFormationClient = getAmazonCloudFormationClient(accessKey, secretKey);
+    try {
+      List<Stack> stacks = new ArrayList<>();
+      String nextToken = null;
+      do {
+        describeStacksRequest.withNextToken(nextToken);
+        DescribeStacksResult result = cloudFormationClient.describeStacks(describeStacksRequest);
+        nextToken = result.getNextToken();
+        stacks.addAll(result.getStacks());
+      } while (nextToken != null);
+      return stacks;
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return emptyList();
+  }
+
+  public void deleteStack(String accessKey, char[] secretKey, DeleteStackRequest deleteStackRequest) {
+    try {
+      AmazonCloudFormationClient cloudFormationClient = getAmazonCloudFormationClient(accessKey, secretKey);
+      cloudFormationClient.deleteStack(deleteStackRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
   }
 
   public ListFunctionsResult listFunctions(
