@@ -1,8 +1,6 @@
 package software.wings.delegatetasks.validation;
 
 import static io.harness.network.Http.connectableHttpUrl;
-import static java.util.Collections.singletonList;
-import static org.apache.commons.lang3.StringUtils.substringAfter;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -16,7 +14,6 @@ import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.gke.GkeClusterService;
-import software.wings.delegatetasks.validation.DelegateConnectionResult.DelegateConnectionResultBuilder;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -25,40 +22,37 @@ import software.wings.service.impl.ContainerServiceParams;
 import software.wings.settings.SettingValue;
 
 import java.util.List;
-import java.util.Objects;
 
 @Singleton
 public class ContainerValidationHelper {
   @Inject @Transient private transient GkeClusterService gkeClusterService;
   @Inject @Transient private transient AzureHelperService azureHelperService;
 
-  public List<DelegateConnectionResult> validateContainerServiceParams(ContainerServiceParams containerServiceParams) {
-    String criteria = getCriteria(containerServiceParams);
-
-    DelegateConnectionResultBuilder result = DelegateConnectionResult.builder().criteria(criteria);
+  public boolean validateContainerServiceParams(ContainerServiceParams containerServiceParams) {
     SettingValue value = containerServiceParams.getSettingAttribute().getValue();
 
+    boolean validated;
     if (value instanceof AwsConfig) {
-      result.validated(AwsHelperService.isInAwsRegion(substringAfter(criteria, ":")));
+      validated = AwsHelperService.isInAwsRegion(containerServiceParams.getRegion());
+    } else if (value instanceof KubernetesClusterConfig
+        && ((KubernetesClusterConfig) value).isUseKubernetesDelegate()) {
+      validated = ((KubernetesClusterConfig) value).getDelegateName().equals(System.getenv().get("DELEGATE_NAME"));
     } else {
-      boolean validated =
-          value instanceof KubernetesClusterConfig && ((KubernetesClusterConfig) value).isUseKubernetesDelegate()
-          ? Objects.equals(System.getenv().get("DELEGATE_NAME"), ((KubernetesClusterConfig) value).getDelegateName())
-          : connectableHttpUrl(getKubernetesMasterUrl(containerServiceParams));
-      result.validated(validated);
+      validated = connectableHttpUrl(getKubernetesMasterUrl(containerServiceParams));
     }
 
-    return singletonList(result.build());
+    return validated;
   }
 
   public String getCriteria(ContainerServiceParams containerServiceParams) {
     SettingValue value = containerServiceParams.getSettingAttribute().getValue();
     if (value instanceof AwsConfig) {
       return "AWS:" + containerServiceParams.getRegion();
+    } else if (value instanceof KubernetesClusterConfig
+        && ((KubernetesClusterConfig) value).isUseKubernetesDelegate()) {
+      return "delegate-name: " + ((KubernetesClusterConfig) value).getDelegateName();
     } else {
-      return value instanceof KubernetesClusterConfig && ((KubernetesClusterConfig) value).isUseKubernetesDelegate()
-          ? "delegate-name: " + ((KubernetesClusterConfig) value).getDelegateName()
-          : getKubernetesMasterUrl(containerServiceParams);
+      return getKubernetesMasterUrl(containerServiceParams);
     }
   }
 

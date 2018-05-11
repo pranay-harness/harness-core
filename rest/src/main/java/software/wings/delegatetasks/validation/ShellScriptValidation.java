@@ -2,30 +2,39 @@ package software.wings.delegatetasks.validation;
 
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Collections.singletonList;
+import static software.wings.common.Constants.HARNESS_KUBE_CONFIG_PATH;
 import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
 
 import com.google.inject.Inject;
 
 import com.jcraft.jsch.JSchException;
 import org.apache.commons.lang3.StringUtils;
-import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.AzureConfig;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.GcpConfig;
+import software.wings.beans.KubernetesClusterConfig;
+import software.wings.beans.KubernetesConfig;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.core.winrm.executors.WinRmSession;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.delegatetasks.validation.DelegateConnectionResult.DelegateConnectionResultBuilder;
+import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.settings.SettingValue;
 import software.wings.utils.WinRmHelperUtil;
 
 import java.util.List;
 import java.util.function.Consumer;
 
 public class ShellScriptValidation extends AbstractDelegateValidateTask {
-  @Inject @Transient private transient EncryptionService encryptionService;
   private static final Logger logger = LoggerFactory.getLogger(ShellScriptValidation.class);
+
+  @Inject private transient EncryptionService encryptionService;
+  @Inject private transient ContainerValidationHelper containerValidationHelper;
 
   public ShellScriptValidation(
       String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {
@@ -39,11 +48,25 @@ public class ShellScriptValidation extends AbstractDelegateValidateTask {
   }
 
   private DelegateConnectionResult validate(ShellScriptParameters parameters) {
-    DelegateConnectionResultBuilder resultBuilder = DelegateConnectionResult.builder();
-    resultBuilder.criteria(getCriteria().get(0));
+    DelegateConnectionResultBuilder resultBuilder = DelegateConnectionResult.builder().criteria(getCriteria().get(0));
 
+    boolean validated = true;
     if (parameters.isExecuteOnDelegate()) {
-      return resultBuilder.validated(true).build();
+      ContainerServiceParams containerServiceParams = parameters.getContainerServiceParams();
+      if (containerServiceParams != null) {
+        SettingAttribute settingAttribute = containerServiceParams.getSettingAttribute();
+        if (settingAttribute != null) {
+          SettingValue value = settingAttribute.getValue();
+          boolean useKubernetesDelegate =
+              value instanceof KubernetesClusterConfig && ((KubernetesClusterConfig) value).isUseKubernetesDelegate();
+          boolean isKubernetes = value instanceof KubernetesConfig || value instanceof GcpConfig
+              || value instanceof AzureConfig || value instanceof KubernetesClusterConfig;
+          if (useKubernetesDelegate || (isKubernetes && parameters.getScript().contains(HARNESS_KUBE_CONFIG_PATH))) {
+            validated = containerValidationHelper.validateContainerServiceParams(containerServiceParams);
+          }
+        }
+      }
+      return resultBuilder.validated(validated).build();
     }
 
     switch (parameters.getConnectionType()) {
@@ -64,7 +87,7 @@ public class ShellScriptValidation extends AbstractDelegateValidateTask {
       case WINRM:
         try {
           WinRmSessionConfig winrmConfig = parameters.winrmSessionConfig(encryptionService);
-          try (WinRmSession session = new WinRmSession(winrmConfig)) {
+          try (WinRmSession ignore = new WinRmSession(winrmConfig)) {
             resultBuilder.validated(true);
           }
         } catch (Exception e) {
@@ -84,6 +107,27 @@ public class ShellScriptValidation extends AbstractDelegateValidateTask {
   @Override
   public List<String> getCriteria() {
     ShellScriptParameters parameters = (ShellScriptParameters) getParameters()[0];
-    return singletonList(parameters.isExecuteOnDelegate() ? "localhost" : parameters.getHost());
+
+    String criteria;
+    if (parameters.isExecuteOnDelegate()) {
+      criteria = "localhost";
+      ContainerServiceParams containerServiceParams = parameters.getContainerServiceParams();
+      if (containerServiceParams != null) {
+        SettingAttribute settingAttribute = containerServiceParams.getSettingAttribute();
+        if (settingAttribute != null) {
+          SettingValue value = settingAttribute.getValue();
+          boolean useKubernetesDelegate =
+              value instanceof KubernetesClusterConfig && ((KubernetesClusterConfig) value).isUseKubernetesDelegate();
+          boolean isKubernetes = value instanceof KubernetesConfig || value instanceof GcpConfig
+              || value instanceof AzureConfig || value instanceof KubernetesClusterConfig;
+          if (useKubernetesDelegate || (isKubernetes && parameters.getScript().contains(HARNESS_KUBE_CONFIG_PATH))) {
+            criteria = containerValidationHelper.getCriteria(containerServiceParams);
+          }
+        }
+      }
+    } else {
+      criteria = parameters.getHost();
+    }
+    return singletonList(criteria);
   }
 }

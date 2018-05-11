@@ -40,7 +40,6 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Consumer;
 
 /**
@@ -119,7 +118,7 @@ public class CommandValidation extends AbstractDelegateValidateTask {
     SettingValue config = context.getCloudProviderSetting().getValue();
     boolean validated =
         config instanceof KubernetesClusterConfig && ((KubernetesClusterConfig) config).isUseKubernetesDelegate()
-        ? Objects.equals(System.getenv().get("DELEGATE_NAME"), ((KubernetesClusterConfig) config).getDelegateName())
+        ? ((KubernetesClusterConfig) config).getDelegateName().equals(System.getenv().get("DELEGATE_NAME"))
         : connectableHttpUrl(getKubernetesMasterUrl(context));
     return DelegateConnectionResult.builder().criteria(getCriteria(context)).validated(validated).build();
   }

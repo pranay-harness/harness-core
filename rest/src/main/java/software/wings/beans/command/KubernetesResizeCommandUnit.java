@@ -47,7 +47,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -179,7 +178,7 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     } else if (contextData.settingAttribute.getValue() instanceof KubernetesClusterConfig) {
       KubernetesClusterConfig config = (KubernetesClusterConfig) contextData.settingAttribute.getValue();
       String delegateName = System.getenv().get("DELEGATE_NAME");
-      if (config.isUseKubernetesDelegate() && !Objects.equals(delegateName, config.getDelegateName())) {
+      if (config.isUseKubernetesDelegate() && !config.getDelegateName().equals(delegateName)) {
         throw new InvalidRequestException(String.format("Kubernetes delegate name [%s] doesn't match "
                 + "cloud provider delegate name [%s] for kubernetes cluster cloud provider [%s]",
             delegateName, config.getDelegateName(), contextData.settingAttribute.getName()));
