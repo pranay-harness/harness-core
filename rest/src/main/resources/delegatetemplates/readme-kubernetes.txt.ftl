@@ -25,6 +25,9 @@ Run a shell in a pod:
 
    kubectl exec <pod-name> -n harness-delegate -it -- bash
 
+The editor 'nano' is pre-installed and you can install other tools from the shell
+using 'apt-get'.
+
 To use this delegate to deploy in the same cluster without providing credentials
 in Harness the delegate needs to have access to a service account with cluster
 admin credentials. Here's an example of granting this role to the default service
