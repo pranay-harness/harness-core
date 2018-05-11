@@ -24,4 +24,12 @@ public interface JenkinsFactory {
    */
   Jenkins create(
       @Assisted("url") String url, @Assisted("username") String username, @Assisted("password") char[] password);
+
+  /**
+   *
+   * @param url
+   * @param token
+   * @return
+   */
+  Jenkins create(@Assisted("url") String url, @Assisted("token") char[] token);
 }

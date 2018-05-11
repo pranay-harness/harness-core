@@ -107,6 +107,22 @@ public class JenkinsImpl implements Jenkins {
     jenkinsServer = new CustomJenkinsServer(jenkinsHttpClient);
   }
 
+  /**
+   * Instantiates a new jenkins impl.
+   *
+   * @param jenkinsUrl the jenkins url
+   * @param username   the username
+   * @param password   the password
+   * @throws URISyntaxException the URI syntax exception
+   */
+  @AssistedInject
+  public JenkinsImpl(@Assisted(value = "url") String jenkinsUrl, @Assisted(value = "token") char[] token)
+      throws URISyntaxException {
+    jenkinsHttpClient =
+        new CustomJenkinsHttpClient(new URI(jenkinsUrl), new String(token), getUnSafeBuilder(jenkinsUrl));
+    jenkinsServer = new CustomJenkinsServer(jenkinsHttpClient);
+  }
+
   /* (non-Javadoc)
    * @see software.wings.helpers.ext.jenkins.Jenkins#getJob(java.lang.String)
    */

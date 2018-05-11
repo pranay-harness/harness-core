@@ -21,6 +21,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
+import software.wings.common.Constants;
 import software.wings.exception.HarnessException;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.JenkinsConfigVerificationYamlHandler;
 
@@ -33,6 +34,8 @@ public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueCo
   public static final String url = "https://jenkins.wings.software";
 
   private Class yamlClass = JenkinsConfig.VerificationYaml.class;
+
+  protected static final String token = "token";
 
   @Before
   public void setUp() throws HarnessException, IOException {}
@@ -58,12 +61,48 @@ public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueCo
   }
 
   @Test
-  public void testToBeanForNullPassword() throws Exception {
+  public void testToBeanForNullValues() {
     ChangeContext<VerificationYaml> changeContext =
         aChangeContext()
-            .withYaml(VerificationYaml.builder().password(null).build())
+            .withYaml(VerificationYaml.builder().build())
             .withChange(Change.Builder.aFileChange().withAccountId("ACCOUNT_ID").build())
             .build();
+    try {
+      MethodUtils.invokeMethod(yamlHandler, true, "toBean",
+          new Object[] {aSettingAttribute().build(), changeContext, Collections.EMPTY_LIST});
+      fail("Exception expected");
+    } catch (Exception e) {
+      assertTrue(((InvocationTargetException) e).getTargetException() instanceof HarnessException);
+    }
+
+    changeContext = aChangeContext()
+                        .withYaml(VerificationYaml.builder().authMechanism(Constants.USERNAME_PASSWORD_FIELD).build())
+                        .withChange(Change.Builder.aFileChange().withAccountId("ACCOUNT_ID").build())
+                        .build();
+    try {
+      MethodUtils.invokeMethod(yamlHandler, true, "toBean",
+          new Object[] {aSettingAttribute().build(), changeContext, Collections.EMPTY_LIST});
+      fail("Exception expected");
+    } catch (Exception e) {
+      assertTrue(((InvocationTargetException) e).getTargetException() instanceof HarnessException);
+    }
+
+    changeContext = aChangeContext()
+                        .withYaml(VerificationYaml.builder().authMechanism(Constants.TOKEN_FIELD).build())
+                        .withChange(Change.Builder.aFileChange().withAccountId("ACCOUNT_ID").build())
+                        .build();
+    try {
+      MethodUtils.invokeMethod(yamlHandler, true, "toBean",
+          new Object[] {aSettingAttribute().build(), changeContext, Collections.EMPTY_LIST});
+      fail("Exception expected");
+    } catch (Exception e) {
+      assertTrue(((InvocationTargetException) e).getTargetException() instanceof HarnessException);
+    }
+
+    changeContext = aChangeContext()
+                        .withYaml(VerificationYaml.builder().authMechanism("Fake").build())
+                        .withChange(Change.Builder.aFileChange().withAccountId("ACCOUNT_ID").build())
+                        .build();
     try {
       MethodUtils.invokeMethod(yamlHandler, true, "toBean",
           new Object[] {aSettingAttribute().build(), changeContext, Collections.EMPTY_LIST});
@@ -102,6 +141,8 @@ public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueCo
                                                    .username(userName)
                                                    .accountId(ACCOUNT_ID)
                                                    .password(password.toCharArray())
+                                                   .token(token.toCharArray())
+                                                   .authMechanism(Constants.USERNAME_PASSWORD_FIELD)
                                                    .build())
                                     .build());
   }
@@ -110,6 +151,7 @@ public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueCo
     String invalidYamlContent = "url_jenkins: https://jenkins.example.com\n"
         + "username: username\n"
         + "password: amazonkms:C7cBDpxHQzG5rv30tvZDgw\n"
+        + "token: amazonkms:C7cBDpxHQzG5rv30tvZDgw\n"
         + "type: JENKINS";
     return SettingValueYamlConfig.builder()
         .yamlHandler(yamlHandler)

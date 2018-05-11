@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import static software.wings.common.Constants.TOKEN_FIELD;
+import static software.wings.common.Constants.USERNAME_PASSWORD_FIELD;
 import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -26,41 +28,56 @@ import software.wings.yaml.setting.VerificationProviderYaml;
 @JsonTypeName("JENKINS")
 @Data
 @EqualsAndHashCode(callSuper = false)
-@Builder
-@ToString(exclude = "password")
+@ToString(exclude = {"password", "token"})
 public class JenkinsConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Jenkins URL", required = true) @NotEmpty private String jenkinsUrl;
-  @Attributes(title = "Username", required = true) @NotEmpty private String username;
-  @Attributes(title = "Password", required = true) @Encrypted private char[] password;
+  @Attributes(title = "Authentication Mechanism", required = true, enums = {USERNAME_PASSWORD_FIELD, TOKEN_FIELD})
+  @NotEmpty
+  private String authMechanism;
+
+  @Attributes(title = "Username") private String username;
+  @Attributes(title = "Password") @Encrypted private char[] password;
+  @Attributes(title = "Token") @Encrypted private char[] token;
   @SchemaIgnore @NotEmpty private String accountId;
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedToken;
 
   /**
    * Instantiates a new jenkins config.
    */
   public JenkinsConfig() {
     super(SettingVariableTypes.JENKINS.name());
+    authMechanism = USERNAME_PASSWORD_FIELD;
   }
 
-  public JenkinsConfig(
-      String jenkinsUrl, String username, char[] password, String accountId, String encryptedPassword) {
+  @Builder
+  public JenkinsConfig(String jenkinsUrl, String username, char[] password, String accountId, String encryptedPassword,
+      char[] token, String encryptedToken, String authMechanism) {
     super(SettingVariableTypes.JENKINS.name());
     this.jenkinsUrl = jenkinsUrl;
     this.username = username;
     this.password = password;
     this.accountId = accountId;
     this.encryptedPassword = encryptedPassword;
+    this.authMechanism = authMechanism;
+    this.encryptedToken = encryptedToken;
+    this.token = token;
   }
 
   @Data
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
   public static final class Yaml extends ArtifactServerYaml {
+    private String token;
+    private String authMechanism;
+
     @Builder
-    public Yaml(String type, String harnessApiVersion, String url, String username, String password,
-        UsageRestrictions usageRestrictions) {
+    public Yaml(String type, String harnessApiVersion, String url, String username, String password, String token,
+        String authMechanism, UsageRestrictions usageRestrictions) {
       super(type, harnessApiVersion, url, username, password, usageRestrictions);
+      this.token = token;
+      this.authMechanism = authMechanism;
     }
   }
 
@@ -71,14 +88,18 @@ public class JenkinsConfig extends SettingValue implements Encryptable {
     private String url;
     private String username;
     private String password = ENCRYPTED_VALUE_STR;
+    private String token = ENCRYPTED_VALUE_STR;
+    private String authMechanism;
 
     @Builder
     public VerificationYaml(String type, String harnessApiVersion, String url, String username, String password,
-        UsageRestrictions usageRestrictions) {
+        String token, String authMechanism, UsageRestrictions usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
       this.url = url;
       this.username = username;
       this.password = password;
+      this.authMechanism = authMechanism;
+      this.token = token;
     }
   }
 }

@@ -1,6 +1,7 @@
  {
   "password": { "ui:widget": "password" },
   "type": { "ui:widget": "hidden" },
-  "custom:encryptedFields": [ "password" ],
-  "ui:order": [ "type", "jenkinsUrl", "username", "password" ]
+  "custom:encryptedFields": [ "password","token" ],
+   "authMechanism":{"ui:widget": "radio", "ui:options": {"inline": true}},
+  "ui:order": [ "type", "jenkinsUrl", "authMechanism", "username", "password","token" ]
 }

@@ -21,6 +21,7 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.config.NexusConfig;
+import software.wings.common.Constants;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
@@ -50,6 +51,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
                                             .jenkinsUrl(JENKINS_URL)
                                             .username(JENKINS_USERNAME)
                                             .password(JENKINS_PASSWORD)
+                                            .authMechanism(Constants.USERNAME_PASSWORD_FIELD)
                                             .build())
                              .build(),
                       APPLICATION_JSON),
@@ -74,6 +76,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
                                                             .jenkinsUrl("BAD_URL")
                                                             .username(JENKINS_USERNAME)
                                                             .password(JENKINS_PASSWORD)
+                                                            .authMechanism(Constants.USERNAME_PASSWORD_FIELD)
                                                             .build())
                                              .build(),
                                 APPLICATION_JSON));

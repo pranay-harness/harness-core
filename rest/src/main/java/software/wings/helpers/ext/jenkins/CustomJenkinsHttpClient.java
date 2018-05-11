@@ -3,6 +3,8 @@ package software.wings.helpers.ext.jenkins;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.offbytwo.jenkins.client.JenkinsHttpClient;
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.protocol.BasicHttpContext;
@@ -25,5 +27,11 @@ public class CustomJenkinsHttpClient extends JenkinsHttpClient {
       basicHttpContext.setAttribute("preemptive-auth", new BasicScheme());
       setLocalContext(basicHttpContext);
     }
+  }
+
+  public CustomJenkinsHttpClient(URI uri, String token, HttpClientBuilder builder) {
+    super(uri, builder.addInterceptorFirst((HttpRequestInterceptor) (httpRequest, httpContext) -> {
+      httpRequest.addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token);
+    }));
   }
 }

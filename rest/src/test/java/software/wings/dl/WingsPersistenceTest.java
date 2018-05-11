@@ -35,6 +35,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.SortOrder;
 import software.wings.beans.SortOrder.OrderType;
+import software.wings.common.Constants;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManager;
@@ -565,6 +566,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
                                       .jenkinsUrl("https://jenkins.wings.software")
                                       .accountId("kmpySmUISimoRrJL6NL73w")
                                       .username("wingsbuild")
+                                      .authMechanism(Constants.USERNAME_PASSWORD_FIELD)
                                       .password(password.toCharArray())
                                       .build();
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()

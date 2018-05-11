@@ -23,7 +23,7 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.beans.command.JenkinsTaskParams;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.Jenkins;
-import software.wings.helpers.ext.jenkins.JenkinsFactory;
+import software.wings.service.impl.jenkins.JenkinsUtil;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.states.JenkinsState.JenkinsExecutionResponse;
@@ -41,9 +41,9 @@ import java.util.function.Supplier;
 public class JenkinsTask extends AbstractDelegateRunnableTask {
   private static final Logger logger = LoggerFactory.getLogger(JenkinsTask.class);
 
-  @Inject private JenkinsFactory jenkinsFactory;
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateLogService logService;
+  @Inject private JenkinsUtil jenkinsUtil;
 
   public JenkinsTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> postExecute,
       Supplier<Boolean> preExecute) {
@@ -61,8 +61,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
     try {
       JenkinsConfig jenkinsConfig = jenkinsTaskParams.getJenkinsConfig();
       encryptionService.decrypt(jenkinsConfig, jenkinsTaskParams.getEncryptedDataDetails());
-      Jenkins jenkins = jenkinsFactory.create(
-          jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
+      Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
 
       logger.info("In JenkinsTask Triggering Job {}", jenkinsTaskParams.getJobName());
       QueueReference queueItem = jenkins.trigger(jenkinsTaskParams.getJobName(), jenkinsTaskParams.getParameters());
