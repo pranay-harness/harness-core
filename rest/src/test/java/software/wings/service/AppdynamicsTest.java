@@ -94,10 +94,10 @@ public class AppdynamicsTest extends WingsBaseTest {
 
     AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
                                               .accountId(accountId)
-                                              .controllerUrl("https://wingsnfr.saas.appdynamics.com/controller")
-                                              .accountname("wingsnfr")
-                                              .username("wingsnfr")
-                                              .password("cbm411sjesma".toCharArray())
+                                              .controllerUrl("https://harness-test.saas.appdynamics.com/controller")
+                                              .username("raghu@harness.io")
+                                              .accountname("harness-test")
+                                              .password("(idlk2e9idcs@ej".toCharArray())
                                               .build();
     settingAttribute = aSettingAttribute()
                            .withName("AppD")
@@ -111,7 +111,7 @@ public class AppdynamicsTest extends WingsBaseTest {
   @Test
   @Repeat(times = 5, successes = 1)
   public void validateConfig() {
-    ((AppDynamicsConfig) settingAttribute.getValue()).setPassword("cbm411sjesma".toCharArray());
+    ((AppDynamicsConfig) settingAttribute.getValue()).setPassword("(idlk2e9idcs@ej".toCharArray());
     appdynamicsService.validateConfig(settingAttribute);
   }
 
@@ -125,20 +125,12 @@ public class AppdynamicsTest extends WingsBaseTest {
   @Test
   @Repeat(times = 5, successes = 1)
   public void getTiers() throws IOException {
-    NewRelicApplication application = getDemoApp();
-    List<AppdynamicsTier> tiers = appdynamicsService.getTiers(settingAttribute.getUuid(), application.getId());
-    assertFalse(tiers.isEmpty());
-  }
-
-  private NewRelicApplication getDemoApp() throws IOException {
-    List<NewRelicApplication> allApplications = appdynamicsService.getApplications(settingAttribute.getUuid());
-    for (NewRelicApplication application : allApplications) {
-      if (application.getName().equals("appd-integration")) {
-        return application;
-      }
+    List<NewRelicApplication> applications = appdynamicsService.getApplications(settingAttribute.getUuid());
+    assertFalse(applications.isEmpty());
+    for (NewRelicApplication appDApp : applications) {
+      List<AppdynamicsTier> tiers = appdynamicsService.getTiers(settingAttribute.getUuid(), appDApp.getId());
+      assertFalse(tiers.isEmpty());
     }
-
-    throw new IllegalStateException("Could not find application appd-integration");
   }
 
   private KmsConfig getKmsConfig() {
