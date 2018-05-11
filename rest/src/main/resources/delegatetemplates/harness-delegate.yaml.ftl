@@ -35,7 +35,7 @@ spec:
         name: harness-delegate-instance
         resources:
           limits:
-            cpu: 1
+            cpu: "1"
             memory: "6Gi"
         env:
         - name: ACCOUNT_ID
