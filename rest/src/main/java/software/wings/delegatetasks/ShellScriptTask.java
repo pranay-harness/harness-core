@@ -31,7 +31,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class ShellScriptTask extends AbstractDelegateRunnableTask {
-  private static final Logger logger = LoggerFactory.getLogger(CommandTask.class);
+  private static final Logger logger = LoggerFactory.getLogger(ShellScriptTask.class);
 
   @Inject private SshExecutorFactory sshExecutorFactory;
   @Inject private WinRmExecutorFactory winrmExecutorFactory;

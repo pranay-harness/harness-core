@@ -122,7 +122,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -175,7 +174,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       } else if (cloudProviderSetting.getValue() instanceof KubernetesClusterConfig) {
         KubernetesClusterConfig config = (KubernetesClusterConfig) cloudProviderSetting.getValue();
         String delegateName = System.getenv().get("DELEGATE_NAME");
-        if (config.isUseKubernetesDelegate() && !Objects.equals(delegateName, config.getDelegateName())) {
+        if (config.isUseKubernetesDelegate() && !config.getDelegateName().equals(delegateName)) {
           throw new InvalidRequestException(String.format("Kubernetes delegate name [%s] doesn't match "
                   + "cloud provider delegate name [%s] for kubernetes cluster cloud provider [%s]",
               delegateName, config.getDelegateName(), cloudProviderSetting.getName()));

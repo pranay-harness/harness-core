@@ -46,6 +46,7 @@ import software.wings.delegatetasks.validation.DynaTraceValidation;
 import software.wings.delegatetasks.validation.ElkValidation;
 import software.wings.delegatetasks.validation.GcrValidation;
 import software.wings.delegatetasks.validation.GitValidation;
+import software.wings.delegatetasks.validation.HelmCommandValidation;
 import software.wings.delegatetasks.validation.HostValidationValidation;
 import software.wings.delegatetasks.validation.HttpValidation;
 import software.wings.delegatetasks.validation.JenkinsValidation;
@@ -165,7 +166,7 @@ public enum TaskType {
       TaskGroup.DYNA_TRACE, ServiceImplDelegateTask.class, DynaTraceValidation.class),
   DYNA_TRACE_METRIC_DATA_COLLECTION_TASK(
       TaskGroup.DYNA_TRACE, DynaTraceDataCollectionTask.class, DynaTraceValidation.class),
-  HELM_COMMAND_TASK(TaskGroup.HELM, HelmCommandTask.class, AlwaysTrueValidation.class),
+  HELM_COMMAND_TASK(TaskGroup.HELM, HelmCommandTask.class, HelmCommandValidation.class),
   KUBERNETES_STEADY_STATE_CHECK_TASK(
       TaskGroup.CONTAINER, KubernetesSteadyStateCheckTask.class, KubernetesSteadyStateCheckValidation.class),
   PCF_COMMAND_TASK(TaskGroup.PCF, PcfCommandTask.class, AlwaysTrueValidation.class),

@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.container.KubernetesSteadyStateCheckParams;
+import software.wings.service.impl.ContainerServiceParams;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -21,17 +22,23 @@ public class KubernetesSteadyStateCheckValidation extends AbstractDelegateValida
 
   @Override
   public List<DelegateConnectionResult> validate() {
-    KubernetesSteadyStateCheckParams kubernetesSteadyStateCheckParams =
-        (KubernetesSteadyStateCheckParams) getParameters()[0];
-    return containerValidationHelper.validateContainerServiceParams(
-        kubernetesSteadyStateCheckParams.getContainerServiceParams());
+    ContainerServiceParams containerServiceParams =
+        ((KubernetesSteadyStateCheckParams) getParameters()[0]).getContainerServiceParams();
+    return singletonList(
+        DelegateConnectionResult.builder()
+            .criteria(getCriteria(containerServiceParams))
+            .validated(containerValidationHelper.validateContainerServiceParams(containerServiceParams))
+            .build());
   }
 
   @Override
   public List<String> getCriteria() {
     KubernetesSteadyStateCheckParams kubernetesSteadyStateCheckParams =
         (KubernetesSteadyStateCheckParams) getParameters()[0];
-    return singletonList(
-        containerValidationHelper.getCriteria(kubernetesSteadyStateCheckParams.getContainerServiceParams()));
+    return singletonList(getCriteria(kubernetesSteadyStateCheckParams.getContainerServiceParams()));
+  }
+
+  private String getCriteria(ContainerServiceParams containerServiceParams) {
+    return containerValidationHelper.getCriteria(containerServiceParams);
   }
 }

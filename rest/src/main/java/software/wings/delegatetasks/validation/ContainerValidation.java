@@ -25,11 +25,19 @@ public class ContainerValidation extends AbstractDelegateValidateTask {
   @Override
   public List<DelegateConnectionResult> validate() {
     ContainerServiceParams containerServiceParams = (ContainerServiceParams) getParameters()[2];
-    return containerValidationHelper.validateContainerServiceParams(containerServiceParams);
+    return singletonList(
+        DelegateConnectionResult.builder()
+            .criteria(getCriteria(containerServiceParams))
+            .validated(containerValidationHelper.validateContainerServiceParams(containerServiceParams))
+            .build());
   }
 
   @Override
   public List<String> getCriteria() {
-    return singletonList(containerValidationHelper.getCriteria((ContainerServiceParams) getParameters()[2]));
+    return singletonList(getCriteria((ContainerServiceParams) getParameters()[2]));
+  }
+
+  private String getCriteria(ContainerServiceParams containerServiceParams) {
+    return containerValidationHelper.getCriteria(containerServiceParams);
   }
 }
