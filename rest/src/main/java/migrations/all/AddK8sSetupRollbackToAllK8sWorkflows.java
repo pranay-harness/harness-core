@@ -78,7 +78,7 @@ public class AddK8sSetupRollbackToAllK8sWorkflows implements Migration {
                                              .withId(generateUuid())
                                              .withType(KUBERNETES_SETUP_ROLLBACK.name())
                                              .withName(Constants.ROLLBACK_CONTAINERS)
-                                             .addProperty("rollback", true)
+                                             .withRollback(true)
                                              .build())
                                 .withPhaseStepNameForRollback(Constants.SETUP_CONTAINER)
                                 .withStatusForRollback(ExecutionStatus.SUCCESS)
