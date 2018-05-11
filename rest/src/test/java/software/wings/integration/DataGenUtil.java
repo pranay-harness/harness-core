@@ -510,10 +510,10 @@ public class DataGenUtil extends BaseIntegrationTest {
             .withAccountId(accountId)
             .withValue(AppDynamicsConfig.builder()
                            .accountId(accountId)
-                           .controllerUrl("https://wingsnfr.saas.appdynamics.com/controller")
-                           .username("wingsnfr")
-                           .accountname("wingsnfr")
-                           .password("cbm411sjesma".toCharArray())
+                           .controllerUrl("https://harness-test.saas.appdynamics.com/controller")
+                           .username("raghu@harness.io")
+                           .accountname("harness-test")
+                           .password("(idlk2e9idcs@ej".toCharArray())
                            .build())
             .build();
     wingsPersistence.save(appdSettingAttribute);
