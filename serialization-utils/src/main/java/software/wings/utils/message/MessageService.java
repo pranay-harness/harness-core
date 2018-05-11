@@ -37,6 +37,8 @@ public interface MessageService {
 
   void closeChannel(MessengerType type, String id);
 
+  void clearChannel(MessengerType type, String id);
+
   void putData(String name, String key, Object value);
 
   void putAllData(String name, Map<String, Object> dataToWrite);

@@ -315,6 +315,19 @@ public class MessageServiceImpl implements MessageService {
   }
 
   @Override
+  public void clearChannel(MessengerType type, String id) {
+    logger.debug("Clearing channel {} {}", type, id);
+    try {
+      File channel = getMessageChannel(type, id);
+      if (channel.exists()) {
+        FileUtils.write(channel, "", UTF_8);
+      }
+    } catch (Exception e) {
+      logger.error("Error clearing channel {} {}", type, id, e);
+    }
+  }
+
+  @Override
   public void putData(String name, String key, Object value) {
     Map<String, Object> data = new HashMap<>();
     data.put(key, value);
