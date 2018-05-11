@@ -11,8 +11,8 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.JenkinsConfig;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.helpers.ext.jenkins.Jenkins;
-import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.jenkins.JenkinsUtil;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.waitnotify.ListNotifyResponseData;
 import software.wings.waitnotify.NotifyResponseData;
@@ -29,7 +29,7 @@ import java.util.function.Supplier;
 public class JenkinsCollectionTask extends AbstractDelegateRunnableTask {
   private static final Logger logger = LoggerFactory.getLogger(JenkinsCollectionTask.class);
 
-  @Inject private JenkinsFactory jenkinsFactory;
+  @Inject private JenkinsUtil jenkinsUtil;
   @Inject private EncryptionService encryptionService;
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
 
@@ -50,8 +50,7 @@ public class JenkinsCollectionTask extends AbstractDelegateRunnableTask {
 
     try {
       encryptionService.decrypt(jenkinsConfig, encryptionDetails);
-      Jenkins jenkins = jenkinsFactory.create(
-          jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
+      Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
 
       for (String artifactPath : artifactPaths) {
         logger.info("Collecting artifact {} of job {}", artifactPath, jobName);

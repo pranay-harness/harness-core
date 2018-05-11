@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.network.Http.connectableHttpUrl;
 import static io.harness.network.Http.validUrl;
 import static java.util.stream.Collectors.toList;
@@ -22,16 +23,17 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
+import software.wings.common.Constants;
 import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.Jenkins;
-import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.helpers.ext.jenkins.model.JobProperty;
 import software.wings.helpers.ext.jenkins.model.JobWithExtendedDetails;
 import software.wings.helpers.ext.jenkins.model.ParametersDefinitionProperty;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.jenkins.JenkinsUtil;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.ArtifactType;
@@ -61,8 +63,8 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
    */
   private static final Logger logger = LoggerFactory.getLogger(JenkinsBuildServiceImpl.class);
 
-  @Inject private JenkinsFactory jenkinsFactory;
   @Inject private EncryptionService encryptionService;
+  @Inject private JenkinsUtil jenkinsUtil;
 
   @Override
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
@@ -76,7 +78,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
       equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.JENKINS.name());
 
       encryptionService.decrypt(jenkinsConfig, encryptionDetails);
-      Jenkins jenkins = getJenkins(jenkinsConfig);
+      Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
       return jenkins.getBuildsForJob(artifactStreamAttributes.getJobName(), 50);
     } catch (WingsException e) {
       throw e;
@@ -86,17 +88,12 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
     }
   }
 
-  private Jenkins getJenkins(JenkinsConfig jenkinsConfig) {
-    return jenkinsFactory.create(
-        jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
-  }
-
   @Override
   public List<JobDetails> getJobs(
       JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptionDetails, Optional<String> parentJobName) {
     try {
       encryptionService.decrypt(jenkinsConfig, encryptionDetails);
-      Jenkins jenkins = getJenkins(jenkinsConfig);
+      Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
       // Just in case, some one passes null instead of Optional.empty()
       if (parentJobName == null) {
         return jenkins.getJobs(null);
@@ -114,7 +111,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   public List<String> getArtifactPaths(
       String jobName, String groupId, JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptionDetails) {
     encryptionService.decrypt(jenkinsConfig, encryptionDetails);
-    Jenkins jenkins = getJenkins(jenkinsConfig);
+    Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
     try {
       JobWithDetails job = jenkins.getJob(jobName);
       return Lists.newArrayList(job.getLastSuccessfulBuild()
@@ -138,7 +135,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.JENKINS.name());
 
     encryptionService.decrypt(jenkinsConfig, encryptionDetails);
-    Jenkins jenkins = getJenkins(jenkinsConfig);
+    Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
     try {
       return jenkins.getLastSuccessfulBuildForJob(artifactStreamAttributes.getJobName());
     } catch (WingsException e) {
@@ -177,12 +174,23 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
       throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "Jenkins URL must be a valid URL");
     }
 
+    if (Constants.TOKEN_FIELD.equals(jenkinsConfig.getAuthMechanism())) {
+      if (isEmpty(new String(jenkinsConfig.getToken()))) {
+        throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "Token should be not empty");
+      }
+    } else {
+      if (isEmpty(jenkinsConfig.getUsername()) || isEmpty(new String(jenkinsConfig.getPassword()))) {
+        throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
+            .addParam("message", "UserName/Password should be not empty");
+      }
+    }
+
     if (!connectableHttpUrl(jenkinsConfig.getJenkinsUrl())) {
       throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
           .addParam("message", "Could not reach Jenkins Server at : " + jenkinsConfig.getJenkinsUrl());
     }
     encryptionService.decrypt(jenkinsConfig, Collections.emptyList());
-    Jenkins jenkins = getJenkins(jenkinsConfig);
+    Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
 
     return jenkins.isRunning();
   }
@@ -192,7 +200,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
     try {
       logger.info("Retrieving Job with details for Job: {}", jobName);
       encryptionService.decrypt(jenkinsConfig, encryptionDetails);
-      Jenkins jenkins = getJenkins(jenkinsConfig);
+      Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
       JobWithDetails jobWithDetails = jenkins.getJob(jobName);
       List<JobParameter> parameters = new ArrayList<>();
       if (jobWithDetails != null) {

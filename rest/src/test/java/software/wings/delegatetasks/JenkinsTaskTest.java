@@ -2,12 +2,15 @@ package software.wings.delegatetasks;
 
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.joor.Reflect.on;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+
+import com.google.inject.Inject;
 
 import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.BuildResult;
@@ -20,11 +23,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import software.wings.WingsBaseTest;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.JenkinsTaskParams;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
+import software.wings.service.impl.jenkins.JenkinsUtil;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.states.JenkinsState;
@@ -36,7 +41,7 @@ import java.util.Map;
 /**
  * Created by rishi on 12/16/16.
  */
-public class JenkinsTaskTest {
+public class JenkinsTaskTest extends WingsBaseTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Mock private JenkinsFactory jenkinsFactory;
   @Mock private Jenkins jenkins;
@@ -44,6 +49,7 @@ public class JenkinsTaskTest {
   @Mock private BuildWithDetails buildWithDetails;
   @Mock private EncryptionService encryptionService;
   @Mock private DelegateLogService logService;
+  @Inject @InjectMocks JenkinsUtil jenkinsUtil;
 
   private String jenkinsUrl = "http://jenkins";
   private String userName = "user1";
@@ -62,6 +68,7 @@ public class JenkinsTaskTest {
 
   @Before
   public void setUp() throws Exception {
+    on(jenkinsTask).set("jenkinsUtil", jenkinsUtil);
     when(jenkinsFactory.create(anyString(), anyString(), any(char[].class))).thenReturn(jenkins);
     when(jenkins.getBuild(any(QueueReference.class))).thenReturn(build);
     when(build.details()).thenReturn(buildWithDetails);

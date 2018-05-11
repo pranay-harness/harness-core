@@ -43,6 +43,7 @@ import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.helpers.ext.jenkins.model.JobProperty;
 import software.wings.helpers.ext.jenkins.model.JobWithExtendedDetails;
 import software.wings.helpers.ext.jenkins.model.ParametersDefinitionProperty.DefaultParameterValue;
+import software.wings.service.impl.jenkins.JenkinsUtil;
 import software.wings.service.intfc.JenkinsBuildService;
 
 import java.io.IOException;
@@ -63,6 +64,8 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
   @Mock private JenkinsFactory jenkinsFactory;
 
   @Mock private Jenkins jenkins;
+
+  @Inject @InjectMocks JenkinsUtil jenkinsUtil;
 
   @InjectMocks @Inject private JenkinsBuildService jenkinsBuildService;
 

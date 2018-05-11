@@ -1,11 +1,15 @@
 package software.wings.service.impl.yaml.handler.setting.artifactserver;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import com.google.inject.Singleton;
 
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.JenkinsConfig.Yaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
+import software.wings.common.Constants;
 import software.wings.exception.HarnessException;
 
 import java.util.List;
@@ -24,7 +28,9 @@ public class JenkinsConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, Je
         .type(jenkinsConfig.getType())
         .url(jenkinsConfig.getJenkinsUrl())
         .username(jenkinsConfig.getUsername())
-        .password(getEncryptedValue(jenkinsConfig, "password", false))
+        .password(getEncryptedValue(jenkinsConfig, "password", true))
+        .token(jenkinsConfig.getEncryptedToken() != null ? getEncryptedValue(jenkinsConfig, "token", true) : null)
+        .authMechanism(jenkinsConfig.getAuthMechanism())
         .build();
   }
 
@@ -34,12 +40,31 @@ public class JenkinsConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, Je
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
-    char[] decryptedPassword;
+    char[] decryptedPassword = null;
+    char[] decryptedToken = null;
     try {
-      decryptedPassword = secretManager.decryptYamlRef(yaml.getPassword());
+      if (isEmpty(yaml.getAuthMechanism())) {
+        yaml.setAuthMechanism(Constants.USERNAME_PASSWORD_FIELD);
+      }
+
+      switch (yaml.getAuthMechanism()) {
+        case Constants.USERNAME_PASSWORD_FIELD:
+          if (isEmpty(yaml.getPassword())) {
+            throw new HarnessException("Password cannot be empty");
+          }
+          decryptedPassword = isNotEmpty(yaml.getPassword()) ? secretManager.decryptYamlRef(yaml.getPassword()) : null;
+          break;
+        case Constants.TOKEN_FIELD:
+          if (isEmpty(yaml.getToken())) {
+            throw new HarnessException("Token cannot be empty");
+          }
+          decryptedToken = isNotEmpty(yaml.getToken()) ? secretManager.decryptYamlRef(yaml.getToken()) : null;
+          break;
+        default:
+          throw new HarnessException("Invalid auth mechanism :" + yaml.getAuthMechanism());
+      }
     } catch (Exception e) {
-      throw new HarnessException(
-          "Exception while decrypting the password ref:" + yaml.getPassword() + ", " + e.getMessage());
+      throw new HarnessException(e);
     }
 
     JenkinsConfig config = JenkinsConfig.builder()
@@ -47,6 +72,9 @@ public class JenkinsConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, Je
                                .jenkinsUrl(yaml.getUrl())
                                .password(decryptedPassword)
                                .encryptedPassword(yaml.getPassword())
+                               .token(decryptedToken)
+                               .encryptedToken(yaml.getToken())
+                               .authMechanism(yaml.getAuthMechanism())
                                .username(yaml.getUsername())
                                .build();
     return buildSettingAttribute(accountId, changeContext.getChange().getFilePath(), uuid, config);

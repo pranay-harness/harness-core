@@ -22,6 +22,7 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
+import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.generator.AccountGenerator.Accounts;
 import software.wings.service.intfc.SettingsService;
@@ -233,6 +234,7 @@ public class SettingGenerator {
                            .jenkinsUrl("https://jenkins.wings.software")
                            .username("wingsbuild")
                            .password("06b13aea6f5f13ec69577689a899bbaad69eeb2f".toCharArray())
+                           .authMechanism(Constants.USERNAME_PASSWORD_FIELD)
                            .build())
             .build();
     return ensureSettingAttribute(seed, settingAttribute);
