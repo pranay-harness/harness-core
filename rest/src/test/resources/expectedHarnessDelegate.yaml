@@ -66,8 +66,6 @@ spec:
           value: ""
         - name: POLL_FOR_TASKS
           value: "false"
-        - name: INSTALL_HELM
-          value: "false"
         - name: HELM_DESIRED_VERSION
           value: ""
       restartPolicy: Always

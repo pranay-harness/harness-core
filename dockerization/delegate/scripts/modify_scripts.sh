@@ -87,16 +87,9 @@ else
     sed -i "s|_pollForTasks_|false|" /opt/harness-delegate/delegate.sh
 fi
 
-if [[ -v "INSTALL_HELM" ]]
-then
-    sed -i "s|_installHelm_|${INSTALL_HELM}|" /opt/harness-delegate/start.sh
-else
-    sed -i "s|_installHelm_|false|" /opt/harness-delegate/start.sh
-fi
-
 if [[ -v "HELM_DESIRED_VERSION" ]]
 then
-    sed -i "s|_helmDesiredVersion_|${HELM_DESIRED_VERSION}|" /opt/harness-delegate/start.sh
+    sed -i "s|_helmVersion_|${HELM_DESIRED_VERSION}|" /opt/harness-delegate/start.sh
 else
-    sed -i "s|_helmDesiredVersion_|latest|" /opt/harness-delegate/start.sh
+    sed -i "s|_helmVersion_|latest|" /opt/harness-delegate/start.sh
 fi
