@@ -5,13 +5,9 @@ kubernetes cluster.
 Edit harness-delegate.yaml to change namespace, set proxy settings, or to
 enter a delegate description.
 
-Install the Harness Delegate:
+Install or replace the Harness Delegate:
 
-  kubectl create -f harness-delegate.yaml
-
-Replace if needed:
-
-  kubectl replace -f harness-delegate.yaml
+  kubectl apply -f harness-delegate.yaml
 
 Get pod names:
 
