@@ -1,6 +1,7 @@
 package software.wings.utils.message;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.io.filefilter.FileFileFilter.FILE;
@@ -15,7 +16,9 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.io.filefilter.AndFileFilter;
+import org.apache.commons.io.filefilter.NotFileFilter;
 import org.apache.commons.io.filefilter.PrefixFileFilter;
+import org.apache.commons.io.filefilter.SuffixFileFilter;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -401,7 +404,10 @@ public class MessageServiceImpl implements MessageService {
       return null;
     }
     return FileUtils
-        .listFiles(dataDirectory, new AndFileFilter(FILE, new PrefixFileFilter(prefix == null ? "" : prefix)), null)
+        .listFiles(dataDirectory,
+            new AndFileFilter(asList(FILE, new PrefixFileFilter(prefix == null ? "" : prefix),
+                new NotFileFilter(new SuffixFileFilter(".lock")))),
+            null)
         .stream()
         .map(File::getName)
         .collect(toList());
