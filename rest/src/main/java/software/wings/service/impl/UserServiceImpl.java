@@ -92,6 +92,7 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EmailNotificationService;
+import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
@@ -107,8 +108,11 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 import javax.cache.Cache;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -135,6 +139,7 @@ public class UserServiceImpl implements UserService {
   @Inject private AccountService accountService;
   @Inject private AuthService authService;
   @Inject private UserGroupService userGroupService;
+  @Inject private HarnessUserGroupService harnessUserGroupService;
   @Inject private AppService appService;
   @Inject private CacheHelper cacheHelper;
   @Inject private AuthHandler authHandler;
@@ -237,10 +242,15 @@ public class UserServiceImpl implements UserService {
     }
   }
 
-  private User getUserByEmail(String email) {
-    return isNotEmpty(email)
-        ? wingsPersistence.createQuery(User.class).filter("email", email.trim().toLowerCase()).get()
-        : null;
+  @Override
+  public User getUserByEmail(String email) {
+    User user = null;
+    if (isNotEmpty(email)) {
+      user = wingsPersistence.createQuery(User.class).filter("email", email.trim().toLowerCase()).get();
+      loadSupportAccounts(user);
+    }
+
+    return user;
   }
 
   private boolean domainAllowedToRegister(String email) {
@@ -652,7 +662,11 @@ public class UserServiceImpl implements UserService {
    */
   @Override
   public PageResponse<User> list(PageRequest<User> pageRequest) {
-    return wingsPersistence.query(User.class, pageRequest);
+    PageResponse<User> pageResponse = wingsPersistence.query(User.class, pageRequest);
+    if (pageResponse != null) {
+      pageResponse.forEach(user -> loadSupportAccounts(user));
+    }
+    return pageResponse;
   }
 
   /* (non-Javadoc)
@@ -683,6 +697,22 @@ public class UserServiceImpl implements UserService {
         user.getRoles().remove(role);
       }
     }
+
+    PageResponse<UserGroup> pageResponse =
+        userGroupService.list(accountId, aPageRequest().addFilter("memberIds", Operator.HAS, user.getUuid()).build());
+    List<UserGroup> userGroupList = pageResponse.getResponse();
+    userGroupList.stream().forEach(userGroup -> {
+      List<User> members = userGroup.getMembers();
+      if (isNotEmpty(members)) {
+        // Find the user to be removed, then remove from the member list and update the user group.
+        Optional<User> userOptional = members.stream().filter(member -> member.getUuid().equals(userId)).findFirst();
+        if (userOptional.isPresent()) {
+          members.remove(userOptional.get());
+          userGroupService.updateMembers(userGroup);
+        }
+      }
+    });
+
     UpdateOperations<User> updateOp = wingsPersistence.createUpdateOperations(User.class)
                                           .set("roles", user.getRoles())
                                           .set("accounts", user.getAccounts());
@@ -700,7 +730,20 @@ public class UserServiceImpl implements UserService {
     if (user == null) {
       throw new WingsException(USER_DOES_NOT_EXIST);
     }
+
+    loadSupportAccounts(user);
     return user;
+  }
+
+  private void loadSupportAccounts(User user) {
+    if (user == null) {
+      return;
+    }
+
+    Set<String> excludeAccounts = user.getAccounts().stream().map(Account::getUuid).collect(Collectors.toSet());
+    List<Account> accountList =
+        harnessUserGroupService.listAllowedSupportAccountsForUser(user.getUuid(), excludeAccounts);
+    user.setSupportAccounts(accountList);
   }
 
   @Override

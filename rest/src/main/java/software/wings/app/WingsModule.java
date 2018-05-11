@@ -98,6 +98,7 @@ import software.wings.service.impl.FeatureFlagServiceImpl;
 import software.wings.service.impl.FileServiceImpl;
 import software.wings.service.impl.GcpInfrastructureProvider;
 import software.wings.service.impl.GcrBuildServiceImpl;
+import software.wings.service.impl.HarnessUserGroupServiceImpl;
 import software.wings.service.impl.HostServiceImpl;
 import software.wings.service.impl.InfrastructureMappingServiceImpl;
 import software.wings.service.impl.JenkinsBuildServiceImpl;
@@ -200,6 +201,7 @@ import software.wings.service.intfc.ExternalApiRateLimitingService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.GcrBuildService;
+import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvider;
@@ -400,6 +402,8 @@ public class WingsModule extends AbstractModule {
     bind(ApiKeyService.class).to(ApiKeyServiceImpl.class);
     bind(ExternalApiRateLimitingService.class).to(ExternalApiRateLimitingServiceImpl.class);
     bind(PreferenceService.class).to(PreferenceServiceImpl.class);
+    bind(HarnessUserGroupService.class).to(HarnessUserGroupServiceImpl.class);
+
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);
     infrastructureProviderMapBinder.addBinding(SettingVariableTypes.AWS.name()).to(AwsInfrastructureProvider.class);

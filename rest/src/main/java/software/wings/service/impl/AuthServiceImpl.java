@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -13,6 +14,8 @@ import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.exception.WingsException.USER_ADMIN;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -43,12 +46,15 @@ import software.wings.beans.Permission;
 import software.wings.beans.Role;
 import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.beans.User;
+import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.GenericDbCache;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.security.AppPermissionSummary;
+import software.wings.security.GenericEntityFilter;
+import software.wings.security.GenericEntityFilter.FilterType;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
@@ -59,6 +65,7 @@ import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
@@ -70,6 +77,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import javax.cache.Cache;
 import javax.crypto.spec.SecretKeySpec;
@@ -92,12 +100,13 @@ public class AuthServiceImpl implements AuthService {
   private LearningEngineService learningEngineService;
   private FeatureFlagService featureFlagService;
   private AuthHandler authHandler;
+  private HarnessUserGroupService harnessUserGroupService;
 
   @Inject
   public AuthServiceImpl(GenericDbCache dbCache, WingsPersistence wingsPersistence, UserService userService,
       UserGroupService userGroupService, WorkflowService workflowService, EnvironmentService environmentService,
       CacheHelper cacheHelper, MainConfiguration configuration, LearningEngineService learningEngineService,
-      AuthHandler authHandler, FeatureFlagService featureFlagService) {
+      AuthHandler authHandler, FeatureFlagService featureFlagService, HarnessUserGroupService harnessUserGroupService) {
     this.dbCache = dbCache;
     this.wingsPersistence = wingsPersistence;
     this.userService = userService;
@@ -109,6 +118,7 @@ public class AuthServiceImpl implements AuthService {
     this.learningEngineService = learningEngineService;
     this.authHandler = authHandler;
     this.featureFlagService = featureFlagService;
+    this.harnessUserGroupService = harnessUserGroupService;
   }
 
   @Override
@@ -420,7 +430,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     String key = getUserPermissionInfoCacheKey(accountId, user.getUuid());
-    UserPermissionInfo value = null;
+    UserPermissionInfo value;
     try {
       value = cache.get(key);
       if (value == null) {
@@ -461,6 +471,14 @@ public class AuthServiceImpl implements AuthService {
   }
 
   @Override
+  public void evictAccountUserPermissionInfoCache(Set<String> accountIds, List<String> memberIds) {
+    if (isEmpty(accountIds)) {
+      return;
+    }
+    accountIds.stream().forEach(accountId -> evictAccountUserPermissionInfoCache(accountId, memberIds));
+  }
+
+  @Override
   public void evictAccountUserPermissionInfoCache(String accountId, List<String> memberIds) {
     boolean rbacEnabled = featureFlagService.isEnabled(FeatureName.RBAC, accountId);
     if (!rbacEnabled) {
@@ -477,7 +495,32 @@ public class AuthServiceImpl implements AuthService {
 
   private UserPermissionInfo getUserPermissionInfoFromDB(String accountId, User user) {
     List<UserGroup> userGroups = userGroupService.getUserGroupsByAccountId(accountId, user);
+
+    if (isEmpty(userGroups) && !userService.isUserAssignedToAccount(user, accountId)) {
+      // Check if its a harness user
+      Optional<UserGroup> harnessUserGroup = getHarnessUserGroupsByAccountId(accountId, user);
+      if (harnessUserGroup.isPresent()) {
+        userGroups = Lists.newArrayList(harnessUserGroup.get());
+      }
+    }
     return authHandler.getUserPermissionInfo(accountId, userGroups);
+  }
+
+  private Optional<UserGroup> getHarnessUserGroupsByAccountId(String accountId, User user) {
+    Set<Action> actions = harnessUserGroupService.listAllowedUserActionsForAccount(accountId, user.getUuid());
+    if (isEmpty(actions)) {
+      return Optional.empty();
+    }
+
+    AppPermission appPermission = AppPermission.builder()
+                                      .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                      .permissionType(PermissionType.ALL_APP_ENTITIES)
+                                      .actions(actions)
+                                      .build();
+
+    UserGroup userGroup =
+        UserGroup.builder().accountId(accountId).appPermissions(Sets.newHashSet(appPermission)).build();
+    return Optional.of(userGroup);
   }
 
   private boolean authorizeAccessType(String appId, String entityId, PermissionAttribute requiredPermissionAttribute,

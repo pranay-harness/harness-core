@@ -12,24 +12,18 @@ import com.google.inject.Singleton;
 
 import software.wings.app.MainConfiguration;
 import software.wings.beans.User;
-import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.UserService;
 
 @Singleton
 public class PasswordBasedAuthHandler implements AuthHandler {
   private MainConfiguration configuration;
-
   private UserService userService;
 
-  private WingsPersistence wingsPersistence;
-
   @Inject
-  public PasswordBasedAuthHandler(
-      MainConfiguration configuration, UserService userService, WingsPersistence wingsPersistence) {
+  public PasswordBasedAuthHandler(MainConfiguration configuration, UserService userService) {
     this.configuration = configuration;
     this.userService = userService;
-    this.wingsPersistence = wingsPersistence;
   }
 
   @Override
@@ -59,7 +53,7 @@ public class PasswordBasedAuthHandler implements AuthHandler {
     return AuthenticationMechanism.USER_PASSWORD;
   }
 
-  protected User getUser(String userName) {
-    return wingsPersistence.createQuery(User.class).field("email").equal(userName.trim().toLowerCase()).get();
+  protected User getUser(String email) {
+    return userService.getUserByEmail(email);
   }
 }
