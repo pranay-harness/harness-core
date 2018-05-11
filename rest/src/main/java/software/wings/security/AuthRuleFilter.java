@@ -50,6 +50,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WhitelistService;
 
@@ -88,6 +89,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private AppService appService;
   private FeatureFlagService featureFlagService;
   private WhitelistService whitelistService;
+  private HarnessUserGroupService harnessUserGroupService;
 
   /**
    * Instantiates a new Auth rule filter.
@@ -103,7 +105,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   @Inject
   public AuthRuleFilter(AuditService auditService, AuditHelper auditHelper, AuthService authService,
       AuthHandler authHandler, AppService appService, UserService userService, FeatureFlagService featureFlagService,
-      WhitelistService whitelistService) {
+      WhitelistService whitelistService, HarnessUserGroupService harnessUserGroupService) {
     this.auditService = auditService;
     this.auditHelper = auditHelper;
     this.authService = authService;
@@ -112,6 +114,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     this.userService = userService;
     this.featureFlagService = featureFlagService;
     this.whitelistService = whitelistService;
+    this.harnessUserGroupService = harnessUserGroupService;
   }
 
   /* (non-Javadoc)
@@ -123,14 +126,12 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       return; // do nothing
     }
 
-    MultivaluedMap<String, String> pathParameters = requestContext.getUriInfo().getPathParameters();
-    MultivaluedMap<String, String> queryParameters = requestContext.getUriInfo().getQueryParameters();
-
     if (isDelegateRequest(requestContext) || isLearningEngineServiceRequest(requestContext)) {
       return;
     }
 
-    User user = UserThreadLocal.get();
+    MultivaluedMap<String, String> pathParameters = requestContext.getUriInfo().getPathParameters();
+    MultivaluedMap<String, String> queryParameters = requestContext.getUriInfo().getQueryParameters();
 
     String accountId = getRequestParamFromContext("accountId", pathParameters, queryParameters);
     List<String> appIdsFromRequest = getRequestParamsFromContext("appId", pathParameters, queryParameters);
@@ -143,34 +144,44 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       accountId = appService.get(appIdsFromRequest.get(0)).getAccountId();
     }
 
+    String uriPath = requestContext.getUriInfo().getPath();
+    // TODO change this to Annotation based
     if (accountId == null
-        && (requestContext.getUriInfo().getPath().startsWith("users/user")
-               || requestContext.getUriInfo().getPath().startsWith("users/sso/zendesk")
-               || requestContext.getUriInfo().getPath().startsWith("users/account")
-               || requestContext.getUriInfo().getPath().endsWith("/logout")
-               || requestContext.getUriInfo().getPath().startsWith("users/two-factor-auth")
-               || requestContext.getUriInfo().getPath().startsWith("users/disable-two-factor-auth")
-               || requestContext.getUriInfo().getPath().startsWith("users/enable-two-factor-auth"))) {
+        && (uriPath.startsWith("users/user") || uriPath.startsWith("users/sso/zendesk")
+               || uriPath.startsWith("users/account") || uriPath.endsWith("/logout")
+               || uriPath.startsWith("users/two-factor-auth") || uriPath.startsWith("users/disable-two-factor-auth")
+               || uriPath.startsWith("users/enable-two-factor-auth"))) {
       return;
     }
 
     boolean rbacEnabledForAccount = isRbacEnabledForAccount(accountId);
 
+    User user = UserThreadLocal.get();
+
     if (user != null) {
       user.setUseNewRbac(rbacEnabledForAccount);
+    } else {
+      logger.error("No user context in operation: {}", uriPath);
     }
 
+    String httpMethod = requestContext.getMethod();
     List<PermissionAttribute> requiredPermissionAttributes;
     List<String> appIdsOfAccount = getValidAppsFromAccount(accountId, appIdsFromRequest, emptyAppIdsInReq);
-
     if (user != null) {
-      final String accountIdFinal = accountId;
-      if (!user.getAccounts()
-               .stream()
-               .filter(account -> account.getUuid().equals(accountIdFinal))
-               .findFirst()
-               .isPresent()) {
-        throw new InvalidRequestException("User not authorized to access the given account: " + accountIdFinal, USER);
+      if (!userService.isUserAssignedToAccount(user, accountId)) {
+        if (!httpMethod.equals(HttpMethod.GET.name())) {
+          throw new InvalidRequestException(
+              "User not authorized to perform the operation in the account: " + accountId, USER);
+        }
+
+        Set<Action> actions = null;
+        if (rbacEnabledForAccount) {
+          actions = harnessUserGroupService.listAllowedUserActionsForAccount(accountId, user.getUuid());
+        }
+
+        if (isEmpty(actions)) {
+          throw new InvalidRequestException("User not authorized to access the given account: " + accountId, USER);
+        }
       }
     }
 
@@ -207,7 +218,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       requiredPermissionAttributes = getAllRequiredPermissionAttrFromScope(requestContext);
 
       if (isEmpty(requiredPermissionAttributes)) {
-        logger.error("Requested Resource is not authorized: {}", requestContext.getUriInfo().getPath());
+        logger.error("Requested Resource is not authorized: {}", uriPath);
         throw new WingsException(ACCESS_DENIED, USER);
       }
     }
@@ -228,7 +239,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       boolean accountLevelPermissions = isAccountLevelPermissions(requiredPermissionAttributes);
 
       UserRequestContext userRequestContext = buildUserRequestContext(requiredPermissionAttributes, user, accountId,
-          emptyAppIdsInReq, requestContext.getMethod(), appIdsFromRequest, skipAuth, accountLevelPermissions);
+          emptyAppIdsInReq, httpMethod, appIdsFromRequest, skipAuth, accountLevelPermissions);
       user.setUserRequestContext(userRequestContext);
 
       if (!skipAuth) {
@@ -257,10 +268,9 @@ public class AuthRuleFilter implements ContainerRequestFilter {
           // Handle delete and update methods
           String entityId = getEntityIdFromRequest(requiredPermissionAttributes, pathParameters, queryParameters);
           if (requestContext.getRequest().getMethod().equals(HttpMethod.PUT.name())
-              || requestContext.getMethod().equals(HttpMethod.DELETE.name())
-              || requestContext.getMethod().equals(HttpMethod.POST.name())) {
+              || httpMethod.equals(HttpMethod.DELETE.name()) || httpMethod.equals(HttpMethod.POST.name())) {
             authService.authorize(accountId, appIdsFromRequest, entityId, user, requiredPermissionAttributes);
-          } else if (requestContext.getMethod().equals(HttpMethod.GET.name())) {
+          } else if (httpMethod.equals(HttpMethod.GET.name())) {
             // In case of list api, the entityId would be null, we enforce restrictions in WingsMongoPersistence
             if (entityId != null) {
               // get api

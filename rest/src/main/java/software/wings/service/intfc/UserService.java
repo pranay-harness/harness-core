@@ -116,6 +116,8 @@ public interface UserService {
 
   User registerNewUser(User user, Account account);
 
+  User getUserByEmail(String email);
+
   /**
    * Verify registered or allowed.
    *

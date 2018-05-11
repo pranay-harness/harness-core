@@ -7,6 +7,7 @@ import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRequestInfo;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by peeyushaggarwal on 8/18/16.
@@ -79,4 +80,6 @@ public interface AuthService {
   void evictAccountUserPermissionInfoCache(String accountId);
 
   void evictAccountUserPermissionInfoCache(String accountId, List<String> memberIds);
+
+  void evictAccountUserPermissionInfoCache(Set<String> accountIds, List<String> memberIds);
 }

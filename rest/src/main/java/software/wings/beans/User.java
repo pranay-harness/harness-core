@@ -43,6 +43,8 @@ public class User extends Base implements Principal {
 
   @Reference(idOnly = true, ignoreMissing = true) private List<Account> accounts = new ArrayList<>();
 
+  @Transient private List<Account> supportAccounts = new ArrayList<>();
+
   private long lastLogin;
 
   @Transient private char[] password;
@@ -79,6 +81,7 @@ public class User extends Base implements Principal {
     publicUser.setName(getName());
     publicUser.setEmail(getEmail());
     publicUser.setAccounts(getAccounts());
+    publicUser.setSupportAccounts(getSupportAccounts());
     publicUser.setTwoFactorAuthenticationEnabled(isTwoFactorAuthenticationEnabled());
     publicUser.setTwoFactorAuthenticationMechanism(getTwoFactorAuthenticationMechanism());
     // publicUser.setCompanyName(getCompanyName());
@@ -371,6 +374,14 @@ public class User extends Base implements Principal {
     this.userRequestInfo = userRequestInfo;
   }
 
+  public List<Account> getSupportAccounts() {
+    return supportAccounts;
+  }
+
+  public void setSupportAccounts(List<Account> supportAccounts) {
+    this.supportAccounts = supportAccounts;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -479,6 +490,7 @@ public class User extends Base implements Principal {
     private String accountName;
     private List<Role> roles = new ArrayList<>();
     private List<Account> accounts = new ArrayList<>();
+    private List<Account> supportAccounts = new ArrayList<>();
     private long lastLogin;
     private char[] password;
     private String token;
@@ -533,6 +545,11 @@ public class User extends Base implements Principal {
 
     public Builder withAccounts(List<Account> accounts) {
       this.accounts = accounts;
+      return this;
+    }
+
+    public Builder withSupportAccounts(List<Account> supportAccounts) {
+      this.supportAccounts = supportAccounts;
       return this;
     }
 
@@ -620,6 +637,7 @@ public class User extends Base implements Principal {
           .withCompanyName(companyName)
           .withRoles(roles)
           .withAccounts(accounts)
+          .withSupportAccounts(supportAccounts)
           .withLastLogin(lastLogin)
           .withPassword(password)
           .withToken(token)
@@ -647,6 +665,7 @@ public class User extends Base implements Principal {
       user.setAccountName(accountName);
       user.setRoles(roles);
       user.setAccounts(accounts);
+      user.setSupportAccounts(supportAccounts);
       user.setLastLogin(lastLogin);
       user.setPassword(password);
       user.setToken(token);

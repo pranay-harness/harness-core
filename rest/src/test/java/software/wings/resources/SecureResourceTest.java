@@ -83,6 +83,7 @@ import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
@@ -137,13 +138,14 @@ public class SecureResourceTest {
   private static AuthHandler authHandler = mock(AuthHandler.class);
   private static FeatureFlagService featureFlagService = mock(FeatureFlagService.class);
   private static WhitelistService whitelistService = mock(WhitelistService.class);
+  private static HarnessUserGroupService harnessUserGroupService = mock(HarnessUserGroupService.class);
 
   private static AuthService authService =
       new AuthServiceImpl(genericDbCache, wingsPersistence, userService, userGroupService, workflowService, envService,
-          cacheHelper, configuration, learningEngineService, authHandler, featureFlagService);
+          cacheHelper, configuration, learningEngineService, authHandler, featureFlagService, harnessUserGroupService);
 
   private static AuthRuleFilter authRuleFilter = new AuthRuleFilter(auditService, auditHelper, authService, authHandler,
-      appService, userService, featureFlagService, whitelistService);
+      appService, userService, featureFlagService, whitelistService, harnessUserGroupService);
 
   Cache<String, User> cache = Mockito.mock(Cache.class);
 
@@ -276,6 +278,7 @@ public class SecureResourceTest {
                                                                    .withEnvironmentType(EnvironmentType.PROD)
                                                                    .build()))
                         .build());
+    when(userService.isUserAssignedToAccount(user, ACCOUNT_ID)).thenReturn(true);
     UserThreadLocal.set(user);
   }
 
