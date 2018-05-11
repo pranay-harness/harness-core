@@ -16,5 +16,5 @@ sudo docker run -d --restart unless-stopped --hostname=$(hostname -f) \
 -e PROXY_SCHEME= \
 -e NO_PROXY= \
 -e POLL_FOR_TASKS=false \
--e INSTALL_HELM=false \
+-e HELM_DESIRED_VERSION= \
 harness/delegate:latest

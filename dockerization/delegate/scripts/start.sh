@@ -77,15 +77,11 @@ EOF
 apt-get update
 apt-get install -y kubectl
 
-INSTALL_HELM=_installHelm_
-if [[ $INSTALL_HELM == "true" ]]
-then
-  echo "Installing Helm..."
-  DESIRED_VERSION=_helmDesiredVersion_
-  export DESIRED_VERSION
-  curl -#k https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get | bash
-  helm init --client-only
-fi
+DESIRED_VERSION=_helmVersion_
+export DESIRED_VERSION
+echo "Installing Helm $DESIRED_VERSION ..."
+curl -#k https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get | bash
+helm init --client-only
 
 echo "Checking Watcher latest version..."
 WATCHER_STORAGE_URL=_watcherStorageUrl_
