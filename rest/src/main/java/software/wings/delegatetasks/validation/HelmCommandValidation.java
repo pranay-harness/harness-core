@@ -13,9 +13,7 @@ import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.response.HelmCommandResponse;
 import software.wings.service.impl.ContainerServiceParams;
 
-import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 /**
@@ -45,7 +43,7 @@ public class HelmCommandValidation extends AbstractDelegateValidateTask {
       if (helmCommandResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS)) {
         validated = containerValidationHelper.validateContainerServiceParams(params);
       }
-    } catch (InterruptedException | IOException | TimeoutException e) {
+    } catch (Exception e) {
       logger.error("Helm validation failed", e);
     }
 
