@@ -309,7 +309,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
       case CONTAINER_DEPLOY:
       case SELECT_NODE:
-      case PROVISION_NODE:
+      case INFRASTRUCTURE_NODE:
       case VERIFY_SERVICE:
       case WRAP_UP:
       case PRE_DEPLOYMENT:
@@ -401,7 +401,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
           executionResponse.setContextElements(Lists.newArrayList(awsLambdaContextElement));
         } else if ((deploymentType.equals(DeploymentType.SSH.name())
                        || deploymentType.equals(DeploymentType.WINRM.name()))
-            && phaseStepType == PhaseStepType.PROVISION_NODE) {
+            && phaseStepType == PhaseStepType.INFRASTRUCTURE_NODE) {
           ServiceInstanceIdsParam serviceInstanceIdsParam = (ServiceInstanceIdsParam) notifiedElement(
               elementNotifyResponseData, ServiceInstanceIdsParam.class, "Missing ServiceInstanceIdsParam");
 

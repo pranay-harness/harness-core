@@ -186,7 +186,7 @@ public class WorkflowResourceRestClient {
   private void updateWithHttpSteps(Client client, String userToken, String appId, Workflow workflow,
       String workflowPhaseId, WorkflowPhase workflowPhase, boolean rollback) {
     workflowPhase.getPhaseSteps().forEach(phaseStep -> {
-      if (phaseStep.getPhaseStepType() == PhaseStepType.PROVISION_NODE) {
+      if (phaseStep.getPhaseStepType() == PhaseStepType.INFRASTRUCTURE_NODE) {
         return;
       }
       List<GraphNode> steps = phaseStep.getSteps();

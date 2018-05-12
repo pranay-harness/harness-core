@@ -16,8 +16,8 @@ import static software.wings.beans.PhaseStepType.DEPLOY_AWS_LAMBDA;
 import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
 import static software.wings.beans.PhaseStepType.DISABLE_SERVICE;
 import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
+import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
-import static software.wings.beans.PhaseStepType.PROVISION_NODE;
 import static software.wings.beans.PhaseStepType.SELECT_NODE;
 import static software.wings.beans.PhaseStepType.START_SERVICE;
 import static software.wings.beans.PhaseStepType.STOP_SERVICE;
@@ -281,13 +281,13 @@ public enum StateType implements StateTypeDescriptor {
    * AWS Node Select state.
    */
   AWS_NODE_SELECT(AwsNodeSelectState.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_SSH),
-      asList(PROVISION_NODE, SELECT_NODE), ORCHESTRATION_STENCILS),
+      asList(INFRASTRUCTURE_NODE, SELECT_NODE), ORCHESTRATION_STENCILS),
 
   /**
    * AWS Node Provision state.
    */
   AWS_AUTOSCALE_PROVISION(AwsAutoScaleProvisionState.class, CLOUD,
-      Lists.newArrayList(InfrastructureMappingType.AWS_SSH), asList(PROVISION_NODE, SELECT_NODE),
+      Lists.newArrayList(InfrastructureMappingType.AWS_SSH), asList(INFRASTRUCTURE_NODE, SELECT_NODE),
       ORCHESTRATION_STENCILS),
 
   DC_NODE_SELECT(DcNodeSelectState.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH),

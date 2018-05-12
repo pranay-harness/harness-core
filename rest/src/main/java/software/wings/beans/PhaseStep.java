@@ -10,7 +10,7 @@ import static software.wings.beans.GraphLink.Builder.aLink;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
-import static software.wings.beans.PhaseStepType.PROVISION_NODE;
+import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
 import static software.wings.sm.StateType.FORK;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -312,7 +312,7 @@ public class PhaseStep {
     if (steps != null) {
       for (GraphNode step : steps) {
         GraphNode clonedStep = step.cloneIntenal();
-        if (PROVISION_NODE.equals(clonedPhaseStep.getPhaseStepType())
+        if (INFRASTRUCTURE_NODE.equals(clonedPhaseStep.getPhaseStepType())
             && (clonedStep.getType().equals(StateType.DC_NODE_SELECT.name())
                    || clonedStep.getType().equals(StateType.AWS_NODE_SELECT.name()))) {
           Map<String, Object> properties = new HashMap<>(clonedStep.getProperties());

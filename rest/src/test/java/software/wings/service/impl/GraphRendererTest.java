@@ -139,14 +139,14 @@ public class GraphRendererTest extends WingsBaseTest {
     assertThat(repeatChildElements.get(1).getNext().getName()).isEqualTo(host2.getDisplayName());
   }
 
-  private GraphNode getProvisionNode() {
-    final StateExecutionInstance provision = aStateExecutionInstance()
-                                                 .withDisplayName(Constants.PROVISION_NODE_NAME)
-                                                 .withUuid("provision")
-                                                 .withStateType(PHASE_STEP.name())
-                                                 .withContextTransition(true)
-                                                 .withStatus(SUCCESS)
-                                                 .build();
+  private GraphNode getInfrastructureNode() {
+    final StateExecutionInstance infrastructure = aStateExecutionInstance()
+                                                      .withDisplayName(Constants.INFRASTRUCTURE_NODE_NAME)
+                                                      .withUuid("infrastructure")
+                                                      .withStateType(PHASE_STEP.name())
+                                                      .withContextTransition(true)
+                                                      .withStatus(SUCCESS)
+                                                      .build();
 
     final StateExecutionInstance element = aStateExecutionInstance()
                                                .withDisplayName("first")
@@ -154,10 +154,10 @@ public class GraphRendererTest extends WingsBaseTest {
                                                .withStateType(COMMAND.name())
                                                .withContextTransition(true)
                                                .withStatus(SUCCESS)
-                                               .withParentInstanceId(provision.getUuid())
+                                               .withParentInstanceId(infrastructure.getUuid())
                                                .build();
 
-    List<StateExecutionInstance> stateExecutionInstances = asList(provision, element);
+    List<StateExecutionInstance> stateExecutionInstances = asList(infrastructure, element);
     Map<String, StateExecutionInstance> stateExecutionInstanceMap =
         stateExecutionInstances.stream().collect(toMap(StateExecutionInstance::getUuid, identity()));
 
@@ -165,42 +165,42 @@ public class GraphRendererTest extends WingsBaseTest {
   }
 
   @Test
-  public void testIsProvisionNode() {
-    assertThat(GraphRenderer.isProvisionNode(getProvisionNode())).isTrue();
+  public void testIsInfrastructureNode() {
+    assertThat(GraphRenderer.isInfrastructureNode(getInfrastructureNode())).isTrue();
   }
 
   @Test
-  public void testAdjustProvisionNode() {
-    GraphRenderer.adjustProvisionNode((GraphNode) null);
-    GraphRenderer.adjustProvisionNode((GraphGroup) null);
+  public void testAdjustInfrastructureNode() {
+    GraphRenderer.adjustInfrastructureNode((GraphNode) null);
+    GraphRenderer.adjustInfrastructureNode((GraphGroup) null);
 
     {
       GraphNode node = aGraphNode().build();
-      GraphRenderer.adjustProvisionNode(node);
+      GraphRenderer.adjustInfrastructureNode(node);
     }
 
     {
-      GraphNode provisionNode = getProvisionNode();
-      final GraphNode element = provisionNode.getGroup().getElements().get(0);
+      GraphNode infrastructureNode = getInfrastructureNode();
+      final GraphNode element = infrastructureNode.getGroup().getElements().get(0);
 
       GraphNode node = aGraphNode().build();
-      node.setNext(provisionNode);
+      node.setNext(infrastructureNode);
 
-      GraphRenderer.adjustProvisionNode(node);
+      GraphRenderer.adjustInfrastructureNode(node);
       assertThat(node.getNext()).isEqualTo(element);
     }
 
     {
-      GraphNode provisionNode = getProvisionNode();
+      GraphNode infrastructureNode = getInfrastructureNode();
       GraphNode next = aGraphNode().withName("next").build();
-      provisionNode.setNext(next);
+      infrastructureNode.setNext(next);
 
-      final GraphNode element = provisionNode.getGroup().getElements().get(0);
+      final GraphNode element = infrastructureNode.getGroup().getElements().get(0);
 
       final GraphGroup group = new GraphGroup();
-      group.setElements(asList(provisionNode));
+      group.setElements(asList(infrastructureNode));
 
-      GraphRenderer.adjustProvisionNode(group);
+      GraphRenderer.adjustInfrastructureNode(group);
       assertThat(group.getElements().get(0)).isEqualTo(element);
       assertThat(element.getNext()).isEqualTo(next);
     }

@@ -5,7 +5,8 @@ package software.wings.beans;
  */
 public enum PhaseStepType {
   SELECT_NODE,
-  PROVISION_NODE,
+  INFRASTRUCTURE_NODE,
+  @Deprecated PROVISION_NODE,
   DISABLE_SERVICE,
   DEPLOY_SERVICE,
   ENABLE_SERVICE,
@@ -14,7 +15,7 @@ public enum PhaseStepType {
   PRE_DEPLOYMENT,
   POST_DEPLOYMENT,
   STOP_SERVICE,
-  DE_PROVISION_NODE,
+  @Deprecated DE_PROVISION_NODE,
   CLUSTER_SETUP,
   CONTAINER_SETUP,
   CONTAINER_DEPLOY,

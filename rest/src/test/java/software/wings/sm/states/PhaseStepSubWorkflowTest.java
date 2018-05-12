@@ -160,7 +160,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
                                                         .build();
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
-    phaseStepSubWorkflow.setPhaseStepType(PhaseStepType.PROVISION_NODE);
+    phaseStepSubWorkflow.setPhaseStepType(PhaseStepType.INFRASTRUCTURE_NODE);
     Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
     notifyResponse.put("key", anElementNotifyResponseData().addContextElement(serviceInstanceIdsParam).build());
     Reflect.on(phaseStepSubWorkflow).set("workflowExecutionService", workflowExecutionService);
