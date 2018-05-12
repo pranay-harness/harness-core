@@ -22,14 +22,18 @@ public class PrometheusDelegateServiceImpl implements PrometheusDelegateService 
 
   @Override
   public boolean validateConfig(PrometheusConfig prometheusConfig) throws IOException {
-    final Call<PrometheusMetricDataResponse> request =
-        getRestClient(prometheusConfig).fetchMetricData("api/v1/query?query=up");
-    final Response<PrometheusMetricDataResponse> response = request.execute();
-    if (response.isSuccessful()) {
-      return true;
-    } else {
-      logger.error("Request not successful. Reason: {}", response);
-      throw new WingsException(response.errorBody().string());
+    try {
+      final Call<PrometheusMetricDataResponse> request =
+          getRestClient(prometheusConfig).fetchMetricData("api/v1/query?query=up");
+      final Response<PrometheusMetricDataResponse> response = request.execute();
+      if (response.isSuccessful()) {
+        return true;
+      } else {
+        logger.error("Request not successful. Reason: {}", response);
+        throw new WingsException(response.errorBody().string());
+      }
+    } catch (Exception e) {
+      throw new WingsException("Could not validate prometheus server. " + e.getMessage(), e);
     }
   }
 
