@@ -41,13 +41,12 @@ import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
 import static software.wings.beans.PhaseStepType.DEPLOY_AWSCODEDEPLOY;
 import static software.wings.beans.PhaseStepType.DEPLOY_AWS_LAMBDA;
 import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
-import static software.wings.beans.PhaseStepType.DE_PROVISION_NODE;
 import static software.wings.beans.PhaseStepType.DISABLE_SERVICE;
 import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
+import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
 import static software.wings.beans.PhaseStepType.PCF_RESIZE;
 import static software.wings.beans.PhaseStepType.PCF_SETUP;
 import static software.wings.beans.PhaseStepType.PREPARE_STEPS;
-import static software.wings.beans.PhaseStepType.PROVISION_NODE;
 import static software.wings.beans.PhaseStepType.STOP_SERVICE;
 import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
 import static software.wings.beans.PhaseStepType.WRAP_UP;
@@ -1174,7 +1173,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       return;
     }
     for (PhaseStep phaseStep : phaseSteps) {
-      if (phaseStep.getPhaseStepType().equals(PROVISION_NODE)) {
+      if (phaseStep.getPhaseStepType().equals(INFRASTRUCTURE_NODE)) {
         List<GraphNode> steps = phaseStep.getSteps();
         if (steps != null) {
           for (GraphNode step : steps) {
@@ -2257,10 +2256,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
-    workflowPhase.addPhaseStep(aPhaseStep(PROVISION_NODE, Constants.PROVISION_NODE_NAME)
+    workflowPhase.addPhaseStep(aPhaseStep(INFRASTRUCTURE_NODE, Constants.INFRASTRUCTURE_NODE_NAME)
                                    .addStep(aGraphNode()
                                                 .withType(stateType.name())
-                                                .withName("Select Nodes")
+                                                .withName(Constants.SELECT_NODE_NAME)
                                                 .addProperty("specificHosts", false)
                                                 .addProperty("instanceCount", 1)
                                                 .addProperty("excludeSelectedHostsFromFuturePhases", true)
@@ -2550,71 +2549,51 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                  .build());
     }
 
-    WorkflowPhase rollbackWorkflowPhase =
-        aWorkflowPhase()
-            .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
-            .withRollback(true)
-            .withServiceId(workflowPhase.getServiceId())
-            .withComputeProviderId(workflowPhase.getComputeProviderId())
-            .withInfraMappingName(workflowPhase.getInfraMappingName())
-            .withPhaseNameForRollback(workflowPhase.getName())
-            .withDeploymentType(workflowPhase.getDeploymentType())
-            .withInfraMappingId(workflowPhase.getInfraMappingId())
-            .addPhaseStep(aPhaseStep(DISABLE_SERVICE, Constants.DISABLE_SERVICE)
-                              .addAllSteps(disableServiceSteps)
-                              .withPhaseStepNameForRollback(Constants.ENABLE_SERVICE)
-                              .withStatusForRollback(ExecutionStatus.SUCCESS)
-                              .withRollback(true)
-                              .build())
-            .addPhaseStep(aPhaseStep(STOP_SERVICE, Constants.STOP_SERVICE)
-                              .addAllSteps(commandNodes(commandMap, CommandType.STOP, true))
-                              .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
-                              .withStatusForRollback(ExecutionStatus.SUCCESS)
-                              .withRollback(true)
-                              .build())
-            .addPhaseStep(aPhaseStep(DEPLOY_SERVICE, Constants.DEPLOY_SERVICE)
-                              .addAllSteps(commandNodes(commandMap, CommandType.INSTALL, true))
-                              .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
-                              .withStatusForRollback(ExecutionStatus.SUCCESS)
-                              .withRollback(true)
-                              .build())
-            .addPhaseStep(aPhaseStep(ENABLE_SERVICE, Constants.ENABLE_SERVICE)
-                              .addAllSteps(enableServiceSteps)
-                              .withPhaseStepNameForRollback(Constants.DISABLE_SERVICE)
-                              .withStatusForRollback(ExecutionStatus.SUCCESS)
-                              .withRollback(true)
-                              .build())
-            // When we rolling back the verification steps the same criterie to run if deployment is needed should be
-            // used
-            .addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
-                              .addAllSteps(commandNodes(commandMap, CommandType.VERIFY, true))
-                              .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
-                              .withStatusForRollback(ExecutionStatus.SUCCESS)
-                              .withRollback(true)
-                              .build())
-            .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).withRollback(true).build())
-            .build();
+    return aWorkflowPhase()
+        .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
+        .withRollback(true)
+        .withServiceId(workflowPhase.getServiceId())
+        .withComputeProviderId(workflowPhase.getComputeProviderId())
+        .withInfraMappingName(workflowPhase.getInfraMappingName())
+        .withPhaseNameForRollback(workflowPhase.getName())
+        .withDeploymentType(workflowPhase.getDeploymentType())
+        .withInfraMappingId(workflowPhase.getInfraMappingId())
+        .addPhaseStep(aPhaseStep(DISABLE_SERVICE, Constants.DISABLE_SERVICE)
+                          .addAllSteps(disableServiceSteps)
+                          .withPhaseStepNameForRollback(Constants.ENABLE_SERVICE)
+                          .withStatusForRollback(ExecutionStatus.SUCCESS)
+                          .withRollback(true)
+                          .build())
+        .addPhaseStep(aPhaseStep(STOP_SERVICE, Constants.STOP_SERVICE)
+                          .addAllSteps(commandNodes(commandMap, CommandType.STOP, true))
+                          .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
+                          .withStatusForRollback(ExecutionStatus.SUCCESS)
+                          .withRollback(true)
+                          .build())
+        .addPhaseStep(aPhaseStep(DEPLOY_SERVICE, Constants.DEPLOY_SERVICE)
+                          .addAllSteps(commandNodes(commandMap, CommandType.INSTALL, true))
+                          .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
+                          .withStatusForRollback(ExecutionStatus.SUCCESS)
+                          .withRollback(true)
+                          .build())
+        .addPhaseStep(aPhaseStep(ENABLE_SERVICE, Constants.ENABLE_SERVICE)
+                          .addAllSteps(enableServiceSteps)
+                          .withPhaseStepNameForRollback(Constants.DISABLE_SERVICE)
+                          .withStatusForRollback(ExecutionStatus.SUCCESS)
+                          .withRollback(true)
+                          .build())
+        // When we rolling back the verification steps the same criterie to run if deployment is needed should be
+        // used
+        .addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+                          .addAllSteps(commandNodes(commandMap, CommandType.VERIFY, true))
+                          .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
+                          .withStatusForRollback(ExecutionStatus.SUCCESS)
+                          .withRollback(true)
+                          .build())
+        .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).withRollback(true).build())
+        .build();
 
-    // get provision NODE
-    Optional<PhaseStep> provisionPhaseStep =
-        workflowPhase.getPhaseSteps().stream().filter(ps -> ps.getPhaseStepType() == PROVISION_NODE).findFirst();
-    if (provisionPhaseStep.isPresent() && provisionPhaseStep.get().getSteps() != null) {
-      Optional<GraphNode> awsProvisionNode =
-          provisionPhaseStep.get()
-              .getSteps()
-              .stream()
-              .filter(n
-                  -> n.getType() != null && n.getType().equals(AWS_NODE_SELECT.name()) && n.getProperties() != null
-                      && n.getProperties().get("provisionNode") != null
-                      && n.getProperties().get("provisionNode").equals(true))
-              .findFirst();
-
-      awsProvisionNode.ifPresent(node
-          -> rollbackWorkflowPhase.getPhaseSteps().add(
-              aPhaseStep(DE_PROVISION_NODE, Constants.DE_PROVISION_NODE).build()));
-    }
-
-    return rollbackWorkflowPhase;
+    // Rolling back with deprovisioning is incorect, rolling back should provision to the previous state
   }
 
   private WorkflowPhase generateRollbackWorkflowPhaseForKubernetes(

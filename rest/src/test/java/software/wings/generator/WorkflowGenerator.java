@@ -1,7 +1,7 @@
 package software.wings.generator;
 
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
-import static software.wings.common.Constants.PROVISION_NODE_NAME;
+import static software.wings.common.Constants.INFRASTRUCTURE_NODE_NAME;
 import static software.wings.common.Constants.SELECT_NODE_NAME;
 
 import com.google.inject.Inject;
@@ -88,20 +88,21 @@ public class WorkflowGenerator {
   public Workflow postProcess(Workflow workflow, PostProcessInfo params) {
     if (params.getSelectNodeCount() != null) {
       if (workflow.getOrchestrationWorkflow() instanceof BasicOrchestrationWorkflow) {
-        final GraphNode selectNodes = ((BasicOrchestrationWorkflow) workflow.getOrchestrationWorkflow())
-                                          .getGraph()
-                                          .getSubworkflows()
-                                          .entrySet()
-                                          .stream()
-                                          .filter(entry -> PROVISION_NODE_NAME.equals(entry.getValue().getGraphName()))
-                                          .findFirst()
-                                          .get()
-                                          .getValue()
-                                          .getNodes()
-                                          .stream()
-                                          .filter(entry -> SELECT_NODE_NAME.equals(entry.getName()))
-                                          .findFirst()
-                                          .get();
+        final GraphNode selectNodes =
+            ((BasicOrchestrationWorkflow) workflow.getOrchestrationWorkflow())
+                .getGraph()
+                .getSubworkflows()
+                .entrySet()
+                .stream()
+                .filter(entry -> INFRASTRUCTURE_NODE_NAME.equals(entry.getValue().getGraphName()))
+                .findFirst()
+                .get()
+                .getValue()
+                .getNodes()
+                .stream()
+                .filter(entry -> SELECT_NODE_NAME.equals(entry.getName()))
+                .findFirst()
+                .get();
 
         selectNodes.getProperties().put("instanceCount", params.getSelectNodeCount());
       }

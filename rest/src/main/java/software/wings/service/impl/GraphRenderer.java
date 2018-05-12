@@ -410,7 +410,7 @@ public class GraphRenderer {
     GraphNode node = session.generateHierarchyNode();
 
     // special treatment to avoid unnecessary hierarchy
-    adjustProvisionNode(node);
+    adjustInfrastructureNode(node);
 
     return node;
   }
@@ -566,45 +566,46 @@ public class GraphRenderer {
     return instanceCount + " instances";
   }
 
-  static boolean isProvisionNode(GraphNode node) {
+  static boolean isInfrastructureNode(GraphNode node) {
     return node != null && PHASE_STEP.name().equals(node.getType())
-        && node.getName().equals(Constants.PROVISION_NODE_NAME) && node.getGroup() != null
-        && isNotEmpty(node.getGroup().getElements());
+        && (node.getName().equals(Constants.INFRASTRUCTURE_NODE_NAME)
+               || node.getName().equals(Constants.PROVISION_NODE_NAME))
+        && node.getGroup() != null && isNotEmpty(node.getGroup().getElements());
   }
 
-  static void adjustProvisionNode(GraphNode node) {
+  static void adjustInfrastructureNode(GraphNode node) {
     if (node == null) {
       return;
     }
 
-    adjustProvisionNode(node.getGroup());
+    adjustInfrastructureNode(node.getGroup());
 
     if (node.getNext() == null) {
       return;
     }
 
     GraphNode next = node.getNext();
-    if (isProvisionNode(next)) {
+    if (isInfrastructureNode(next)) {
       GraphNode nextToNext = next.getNext();
       GraphNode provisionStep = next.getGroup().getElements().get(0);
       node.setNext(provisionStep);
       provisionStep.setNext(nextToNext);
     }
-    adjustProvisionNode(node.getNext());
+    adjustInfrastructureNode(node.getNext());
   }
 
-  static void adjustProvisionNode(GraphGroup group) {
+  static void adjustInfrastructureNode(GraphGroup group) {
     if (group == null || isEmpty(group.getElements())) {
       return;
     }
 
     GraphNode first = group.getElements().get(0);
-    if (isProvisionNode(first)) {
+    if (isInfrastructureNode(first)) {
       GraphNode nextToNext = first.getNext();
       GraphNode provisionStep = first.getGroup().getElements().get(0);
       provisionStep.setNext(nextToNext);
       group.getElements().set(0, provisionStep);
     }
-    group.getElements().forEach(GraphRenderer::adjustProvisionNode);
+    group.getElements().forEach(GraphRenderer::adjustInfrastructureNode);
   }
 }

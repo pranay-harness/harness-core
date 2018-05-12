@@ -35,9 +35,9 @@ import static software.wings.beans.MultiServiceOrchestrationWorkflow.MultiServic
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
+import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
-import static software.wings.beans.PhaseStepType.PROVISION_NODE;
 import static software.wings.beans.PhaseStepType.SELECT_NODE;
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.TemplateExpression.Builder.aTemplateExpression;
@@ -2127,7 +2127,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     for (WorkflowPhase phase : orchestrationWorkflow3.getWorkflowPhases()) {
       for (PhaseStep phaseStep : phase.getPhaseSteps()) {
-        if (SELECT_NODE == phaseStep.getPhaseStepType() || PROVISION_NODE == phaseStep.getPhaseStepType()) {
+        if (SELECT_NODE == phaseStep.getPhaseStepType() || INFRASTRUCTURE_NODE == phaseStep.getPhaseStepType()) {
           for (GraphNode node : phaseStep.getSteps()) {
             if (StateType.AWS_NODE_SELECT.name().equals(node.getType())
                 || StateType.DC_NODE_SELECT.name().equals(node.getType())) {

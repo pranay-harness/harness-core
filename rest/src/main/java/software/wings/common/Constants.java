@@ -334,10 +334,16 @@ public interface Constants {
    * The constant WRAP_UP.
    */
   String WRAP_UP = "Wrap Up";
+
+  /**
+   * The constant INFRASTRUCTURE_NODE_NAME.
+   */
+  String INFRASTRUCTURE_NODE_NAME = "Prepare Infra";
+
   /**
    * The constant PROVISION_NODE_NAME.
    */
-  String PROVISION_NODE_NAME = "Provision Nodes";
+  @Deprecated String PROVISION_NODE_NAME = "Provision Nodes";
 
   /**
    * The constant SELECT_NODE_NAME.

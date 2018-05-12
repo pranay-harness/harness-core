@@ -5,7 +5,7 @@ import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static software.wings.api.InfraNodeRequest.InfraNodeRequestBuilder.anInfraNodeRequest;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
-import static software.wings.beans.PhaseStepType.PROVISION_NODE;
+import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
 import static software.wings.sm.StateType.AWS_NODE_SELECT;
 import static software.wings.sm.StateType.DC_NODE_SELECT;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
@@ -129,7 +129,7 @@ public class CanaryWorkflowStandardParams extends WorkflowStandardParams {
       }
 
       case SSH: {
-        State infraState = getInfraState(rootStateMachine, phaseStateMachine, PROVISION_NODE,
+        State infraState = getInfraState(rootStateMachine, phaseStateMachine, INFRASTRUCTURE_NODE,
             ROLLING_NODE_SELECT.name(), DC_NODE_SELECT.name(), AWS_NODE_SELECT.name());
         if (infraState != null) {
           if (infraState instanceof DcNodeSelectState) {
