@@ -250,8 +250,9 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
       int i = 0;
       for (WorkflowPhase workflowPhase : workflowPhases) {
+        ++i;
         if (isBlank(workflowPhase.getName()) || phaseNamePattern.matcher(workflowPhase.getName()).matches()) {
-          workflowPhase.setName(PHASE_NAME_PREFIX + ++i);
+          workflowPhase.setName(PHASE_NAME_PREFIX + i);
         }
         workflowPhaseIds.add(workflowPhase.getUuid());
         workflowPhaseIdMap.put(workflowPhase.getUuid(), workflowPhase);

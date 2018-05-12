@@ -1722,21 +1722,30 @@ public class WorkflowServiceTest extends WingsBaseTest {
         aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
 
-    Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
-    assertThat(workflow2).isNotNull();
+    Workflow workflow1Refresh = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+    assertThat(workflow1Refresh).isNotNull();
 
     List<WorkflowPhase> workflowPhases2 =
-        ((CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow()).getWorkflowPhases();
+        ((CanaryOrchestrationWorkflow) workflow1Refresh.getOrchestrationWorkflow()).getWorkflowPhases();
     workflowPhase2 = workflowPhases2.get(workflowPhases2.size() - 1);
-    workflowPhase2.setName("phase2-changed");
+    workflowPhase2.setName("abcd");
 
-    workflowService.updateWorkflowPhase(workflow2.getAppId(), workflow2.getUuid(), workflowPhase2);
+    workflowService.updateWorkflowPhase(workflow1Refresh.getAppId(), workflow1Refresh.getUuid(), workflowPhase2);
+
+    Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+    List<WorkflowPhase> workflowPhases =
+        ((CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow()).getWorkflowPhases();
+    WorkflowPhase workflowPhases2Changed = workflowPhases.get(workflowPhases.size() - 1);
+    assertThat(workflowPhases2Changed).isEqualToComparingOnlyGivenFields(workflowPhase2, "uuid", "name");
+
+    WorkflowPhase workflowPhase3 =
+        aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+    workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase3);
 
     Workflow workflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
-    List<WorkflowPhase> workflowPhases3 =
-        ((CanaryOrchestrationWorkflow) workflow3.getOrchestrationWorkflow()).getWorkflowPhases();
-    WorkflowPhase workflowPhase3 = workflowPhases3.get(workflowPhases3.size() - 1);
-    assertThat(workflowPhase3).isEqualToComparingOnlyGivenFields(workflowPhase2, "uuid", "name");
+    workflowPhases = ((CanaryOrchestrationWorkflow) workflow3.getOrchestrationWorkflow()).getWorkflowPhases();
+    WorkflowPhase workflowPhases3Refreshed = workflowPhases.get(workflowPhases.size() - 1);
+    assertThat(workflowPhases3Refreshed).isNotNull().hasFieldOrPropertyWithValue("name", "Phase 3");
   }
 
   @Test(expected = WingsException.class)
