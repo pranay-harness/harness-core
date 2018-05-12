@@ -25,12 +25,15 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.WorkflowService;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class RenameProvisionNodeToInfrastructureNodeWorkflows implements Migration {
   private static final Logger logger = LoggerFactory.getLogger(RenameProvisionNodeToInfrastructureNodeWorkflows.class);
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowService workflowService;
+
+  AtomicInteger count = new AtomicInteger(0);
 
   @Override
   public void migrate() {
@@ -84,7 +87,7 @@ public class RenameProvisionNodeToInfrastructureNodeWorkflows implements Migrati
 
     if (updated) {
       try {
-        logger.info("--- Workflow updated: {}", workflow.getName());
+        logger.info("--- {} Workflow updated: {}", count.incrementAndGet(), workflow.getName());
         workflowService.updateWorkflow(workflow);
         Thread.sleep(100);
       } catch (Exception e) {

@@ -22,6 +22,7 @@ import migrations.all.LogFeedbackRecordsMigration;
 import migrations.all.NewRelicMetricAnalysisRecordsMigration;
 import migrations.all.NewRelicMetricDataRecordsMigration;
 import migrations.all.NewRelicMetricNameCronRemoval;
+import migrations.all.RenameProvisionNodeToInfrastructureNodeWorkflows;
 import migrations.all.ServiceKeywordsMigration;
 import migrations.all.ServiceVariableReferentialIntegrity;
 import migrations.all.SetDaemonSetInWorkflowPhase;
@@ -77,6 +78,7 @@ public class MigrationList {
         .add(Pair.of(136, TimeSeriesMLScoresMigration.class))
         .add(Pair.of(137, SetRollbackFlagToWorkflows.class))
         .add(Pair.of(138, AddUsersToAdminUserGroup.class))
+        .add(Pair.of(139, RenameProvisionNodeToInfrastructureNodeWorkflows.class))
         .build();
   }
 }
