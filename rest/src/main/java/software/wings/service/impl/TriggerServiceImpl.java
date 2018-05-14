@@ -783,8 +783,7 @@ public class TriggerServiceImpl implements TriggerService {
 
   @Override
   public Trigger getTriggerByWebhookToken(String token) {
-    return wingsPersistence.executeGetOneQuery(
-        wingsPersistence.createQuery(Trigger.class).filter("webHookToken", token));
+    return wingsPersistence.createQuery(Trigger.class).filter("webHookToken", token).get();
   }
 
   @Override

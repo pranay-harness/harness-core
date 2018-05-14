@@ -14,13 +14,11 @@ public class SSOSettingServiceImpl implements SSOSettingService {
 
   @Override
   public SamlSettings getSamlSettingsByIdpUrl(String idpUrl) {
-    return wingsPersistence.executeGetOneQuery(
-        wingsPersistence.createQuery(SamlSettings.class).field("url").equal(idpUrl));
+    return wingsPersistence.createQuery(SamlSettings.class).field("url").equal(idpUrl).get();
   }
 
   public SamlSettings getSamlSettingsByAccountId(String accountId) {
-    return wingsPersistence.executeGetOneQuery(
-        wingsPersistence.createQuery(SamlSettings.class).field("accountId").equal(accountId));
+    return wingsPersistence.createQuery(SamlSettings.class).field("accountId").equal(accountId).get();
   }
 
   @Override
@@ -48,7 +46,6 @@ public class SSOSettingServiceImpl implements SSOSettingService {
 
   @Override
   public SamlSettings getSamlSettingsByOrigin(String origin) {
-    return wingsPersistence.executeGetOneQuery(
-        wingsPersistence.createQuery(SamlSettings.class).field("origin").equal(origin));
+    return wingsPersistence.createQuery(SamlSettings.class).field("origin").equal(origin).get();
   }
 }

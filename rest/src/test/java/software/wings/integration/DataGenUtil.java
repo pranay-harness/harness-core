@@ -317,7 +317,7 @@ public class DataGenUtil extends BaseIntegrationTest {
 
     License license = licenseGenerator.ensurePredefined(seed, Licenses.TRIAL);
 
-    Account account = wingsPersistence.executeGetOneQuery(wingsPersistence.createQuery(Account.class));
+    Account account = wingsPersistence.createQuery(Account.class).get();
     boolean oldAccountExists = false;
     if (account == null) {
       account = Account.Builder.anAccount().build();

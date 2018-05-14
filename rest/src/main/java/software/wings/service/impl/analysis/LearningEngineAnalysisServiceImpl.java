@@ -65,7 +65,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     if (analysisTask.getCluster_level() == null) {
       analysisTask.setCluster_level(getDefaultClusterLevel().getLevel());
     }
-    Query<LearningEngineAnalysisTask> query =
+    LearningEngineAnalysisTask learningEngineAnalysisTask =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
             .filter("workflow_execution_id", analysisTask.getWorkflow_execution_id())
             .filter("state_execution_id", analysisTask.getState_execution_id())
@@ -78,8 +78,8 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
             .filter("ml_analysis_type", analysisTask.getMl_analysis_type())
             // TODO can control_nodes be empty ???
             .filter("control_nodes", analysisTask.getControl_nodes())
-            .order("-createdAt");
-    LearningEngineAnalysisTask learningEngineAnalysisTask = wingsPersistence.executeGetOneQuery(query);
+            .order("-createdAt")
+            .get();
 
     if (learningEngineAnalysisTask == null) {
       wingsPersistence.save(analysisTask);
@@ -261,9 +261,10 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
   @Override
   public String getServiceSecretKey(ServiceType serviceType) {
     Preconditions.checkNotNull(serviceType);
-    Query<ServiceSecretKey> query =
-        wingsPersistence.createQuery(ServiceSecretKey.class).filter("serviceType", serviceType);
-    return wingsPersistence.executeGetOneQuery(query).getServiceSecret();
+    return wingsPersistence.createQuery(ServiceSecretKey.class)
+        .filter("serviceType", serviceType)
+        .get()
+        .getServiceSecret();
   }
 
   @Override

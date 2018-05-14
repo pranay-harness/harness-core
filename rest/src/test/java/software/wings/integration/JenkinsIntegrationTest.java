@@ -41,10 +41,10 @@ public class JenkinsIntegrationTest extends BaseIntegrationTest {
             .build();
     wingsPersistence.saveAndGet(SettingAttribute.class, jenkinsSettingAttribute);
 
-    JenkinsConfig jenkinsConfig =
-        (JenkinsConfig) wingsPersistence
-            .executeGetOneQuery(wingsPersistence.createQuery(SettingAttribute.class).filter("name", "Harness Jenkins"))
-            .getValue();
+    JenkinsConfig jenkinsConfig = (JenkinsConfig) wingsPersistence.createQuery(SettingAttribute.class)
+                                      .filter("name", "Harness Jenkins")
+                                      .get()
+                                      .getValue();
     assertEquals("http://ec2-34-207-79-21.compute-1.amazonaws.com:8080/", jenkinsConfig.getJenkinsUrl());
   }
 
