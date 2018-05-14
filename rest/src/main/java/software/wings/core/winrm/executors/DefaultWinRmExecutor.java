@@ -70,7 +70,7 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
                                            .build();
 
       int exitCode = session.executeCommandString(psWrappedCommand(command), outputWriter, errorWriter);
-      commandExecutionStatus = (exitCode == 0) ? SUCCESS : FAILURE;
+      commandExecutionStatus = (exitCode == 0 && !errorWriter.didWriteGetCalled()) ? SUCCESS : FAILURE;
       saveExecutionLog(format("Command completed with ExitCode (%d)", exitCode), INFO, commandExecutionStatus);
     } catch (Exception e) {
       commandExecutionStatus = FAILURE;

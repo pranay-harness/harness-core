@@ -800,4 +800,6 @@ public interface Constants {
   String PCF_OLD_APP_NAME = "pcfOldAppName";
   String USERNAME_PASSWORD_FIELD = "UserName/Password";
   String TOKEN_FIELD = "Token";
+
+  String WINDOWS_DEFAULT_COMMAND_PATH = "%USERPROFILE%";
 }

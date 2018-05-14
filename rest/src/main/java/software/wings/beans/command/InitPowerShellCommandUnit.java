@@ -44,9 +44,7 @@ public class InitPowerShellCommandUnit extends AbstractCommandUnit {
     for (Map.Entry<String, String> entry : context.getServiceVariables().entrySet()) {
       envVariables.put(entry.getKey(), escapifyString(entry.getValue()));
     }
-    envVariables.put("WINGS_STAGING_PATH", context.getStagingPath());
-    envVariables.put("WINGS_RUNTIME_PATH", context.getRuntimePath());
-    envVariables.put("WINGS_BACKUP_PATH", context.getBackupPath());
+
     if (isNotEmpty(context.getArtifactFiles())) {
       String name = context.getArtifactFiles().get(0).getName();
       if (isNotEmpty(name)) {
