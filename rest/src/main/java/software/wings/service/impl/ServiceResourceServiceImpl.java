@@ -300,9 +300,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                                            .findFirst()
                                            .orElse(null);
     ServiceCommand clonedServiceCommand = oldServiceCommand.cloneInternal();
-    if (clonedServiceCommand.getCommand().getGraph() != null) {
-      clonedServiceCommand.getCommand().getGraph().setGraphName(command.getName());
-    }
+    clonedServiceCommand.setName(command.getName());
     return addCommand(appId, serviceId, clonedServiceCommand, true);
   }
 
