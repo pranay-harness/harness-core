@@ -365,3 +365,13 @@ software.wings.sm.StateExecutionException, 5328
 software.wings.exception.UnauthorizedException, 5329
 software.wings.exception.UnexpectedException, 5330
 software.wings.api.KubernetesSteadyStateCheckExecutionSummary, 5331
+software.wings.helpers.ext.cloudformation.request.CloudFormationCommandRequest, 5332
+software.wings.helpers.ext.cloudformation.request.CloudFormationCommandRequest$CloudFormationCommandType, 5333
+software.wings.helpers.ext.cloudformation.request.CloudFormationCreateStackRequest, 5334
+software.wings.helpers.ext.cloudformation.request.CloudFormationDeleteStackRequest, 5335
+software.wings.helpers.ext.cloudformation.request.CloudFormationListStacksRequest, 5336
+software.wings.helpers.ext.cloudformation.response.CloudFormationCommandExecutionResponse, 5337
+software.wings.helpers.ext.cloudformation.response.CloudFormationCommandResponse, 5338
+software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse, 5339
+software.wings.helpers.ext.cloudformation.response.CloudFormationListStacksResponse, 5340
+software.wings.helpers.ext.cloudformation.response.StackSummaryInfo, 5341

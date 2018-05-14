@@ -394,6 +394,8 @@ TASK_TYPES:
       value: PCF
     - name: APM
       value: APM
+    - name: Cloud Formation
+      value: CLOUD_FORMATION
 
 EXECUTION_STATUS:
     - name: Aborted
