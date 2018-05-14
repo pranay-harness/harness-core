@@ -375,3 +375,5 @@ software.wings.helpers.ext.cloudformation.response.CloudFormationCommandResponse
 software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse, 5339
 software.wings.helpers.ext.cloudformation.response.CloudFormationListStacksResponse, 5340
 software.wings.helpers.ext.cloudformation.response.StackSummaryInfo, 5341
+software.wings.beans.delegation.TerraformProvisionParameters, 5342
+software.wings.api.TerraformExecutionData, 5343

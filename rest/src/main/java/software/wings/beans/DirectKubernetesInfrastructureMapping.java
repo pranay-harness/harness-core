@@ -21,6 +21,7 @@ import software.wings.utils.Util;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -61,6 +62,9 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
   public DirectKubernetesInfrastructureMapping() {
     super(InfrastructureMappingType.DIRECT_KUBERNETES.name());
   }
+
+  @Override
+  public void applyProvisionerVariables(Map<String, Object> map) {}
 
   @SchemaIgnore
   @Override

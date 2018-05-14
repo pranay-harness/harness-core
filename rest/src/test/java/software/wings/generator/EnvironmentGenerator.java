@@ -13,6 +13,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.dl.WingsPersistence;
 import software.wings.generator.ApplicationGenerator.Applications;
+import software.wings.generator.OwnerManager.Owners;
 import software.wings.service.intfc.EnvironmentService;
 
 @Singleton
@@ -26,10 +27,10 @@ public class EnvironmentGenerator {
     GENERIC_TEST,
   }
 
-  public Environment ensurePredefined(Randomizer.Seed seed, Environments predefined) {
+  public Environment ensurePredefined(Randomizer.Seed seed, Owners owners, Environments predefined) {
     switch (predefined) {
       case GENERIC_TEST:
-        return ensureGenericTest(seed);
+        return ensureGenericTest(seed, owners);
       default:
         unhandled(predefined);
     }
@@ -37,9 +38,9 @@ public class EnvironmentGenerator {
     return null;
   }
 
-  private Environment ensureGenericTest(Randomizer.Seed seed) {
-    final Application application = applicationGenerator.ensurePredefined(seed, Applications.GENERIC_TEST);
-    return ensureEnvironment(seed,
+  private Environment ensureGenericTest(Randomizer.Seed seed, Owners owners) {
+    final Application application = applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST);
+    return ensureEnvironment(seed, owners,
         anEnvironment()
             .withAppId(application.getUuid())
             .withName("Test Environment")
@@ -47,12 +48,10 @@ public class EnvironmentGenerator {
             .build());
   }
 
-  public Environment ensureRandom(Randomizer.Seed seed) {
+  public Environment ensureRandom(Randomizer.Seed seed, Owners owners) {
     EnhancedRandom random = Randomizer.instance(seed);
-
     Environments predefined = random.nextObject(Environments.class);
-
-    return ensurePredefined(seed, predefined);
+    return ensurePredefined(seed, owners, predefined);
   }
 
   public Environment exists(Environment environment) {
@@ -62,7 +61,7 @@ public class EnvironmentGenerator {
         .get();
   }
 
-  public Environment ensureEnvironment(Randomizer.Seed seed, Environment environment) {
+  public Environment ensureEnvironment(Randomizer.Seed seed, Owners owners, Environment environment) {
     EnhancedRandom random = Randomizer.instance(seed);
 
     Environment.Builder builder = anEnvironment();
@@ -70,7 +69,10 @@ public class EnvironmentGenerator {
     if (environment != null && environment.getAppId() != null) {
       builder.withAppId(environment.getAppId());
     } else {
-      final Application application = applicationGenerator.ensureRandom(seed);
+      Application application = owners.obtainApplication();
+      if (application == null) {
+        application = applicationGenerator.ensureRandom(seed, owners);
+      }
       builder.withAppId(application.getUuid());
     }
 

@@ -79,12 +79,12 @@ public class AccountServiceImpl implements AccountService {
     account.setAccountKey(generateSecretKey());
     //    licenseManager.setLicense(account);
     wingsPersistence.save(account);
-    createDefaultAccountEntites(account);
+    createDefaultAccountEntities(account);
     AlertCheckJob.add(jobScheduler, account);
     return account;
   }
 
-  private void createDefaultAccountEntites(Account account) {
+  private void createDefaultAccountEntities(Account account) {
     settingsService.createDefaultAccountSettings(account.getUuid());
     createDefaultRoles(account)
         .stream()

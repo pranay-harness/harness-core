@@ -542,6 +542,8 @@ public class AuthServiceImpl implements AuthService {
     if (Action.CREATE == requiredAction) {
       if (requiredPermissionType == PermissionType.SERVICE) {
         return appPermissionSummary.isCanCreateService();
+      } else if (requiredPermissionType == PermissionType.PROVISIONER) {
+        return appPermissionSummary.isCanCreateProvisioner();
       } else if (requiredPermissionType == PermissionType.ENV) {
         return appPermissionSummary.isCanCreateEnvironment();
       } else if (requiredPermissionType == PermissionType.WORKFLOW) {
@@ -559,6 +561,8 @@ public class AuthServiceImpl implements AuthService {
 
     if (requiredPermissionType == PermissionType.SERVICE) {
       actionEntityIdMap = appPermissionSummary.getServicePermissions();
+    } else if (requiredPermissionType == PermissionType.PROVISIONER) {
+      actionEntityIdMap = appPermissionSummary.getProvisionerPermissions();
     } else if (requiredPermissionType == PermissionType.ENV) {
       actionEntityIdMap = appPermissionSummary.getEnvPermissions();
     } else if (requiredPermissionType == PermissionType.WORKFLOW) {

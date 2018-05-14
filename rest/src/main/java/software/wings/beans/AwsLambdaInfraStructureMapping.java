@@ -14,6 +14,7 @@ import software.wings.utils.Util;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -27,6 +28,9 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
   public AwsLambdaInfraStructureMapping() {
     super(InfrastructureMappingType.AWS_AWS_LAMBDA.name());
   }
+
+  @Override
+  public void applyProvisionerVariables(Map<String, Object> map) {}
 
   @Attributes(title = "Region", required = true)
   @NotEmpty

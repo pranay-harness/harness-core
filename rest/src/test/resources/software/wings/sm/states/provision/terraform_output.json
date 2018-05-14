@@ -1,0 +1,28 @@
+{
+  "region": {
+    "sensitive": false,
+    "type": "string",
+    "value": "us-east-1"
+  },
+  "security_group": {
+    "sensitive": false,
+    "type": "list",
+    "value": [
+      "terraform-20180412230644525100000002"
+    ]
+  },
+  "service_a_tags": {
+    "sensitive": false,
+    "type": "map",
+    "value": {
+      "Service": "ServiceA"
+    }
+  },
+  "service_b_tags": {
+    "sensitive": false,
+    "type": "map",
+    "value": {
+      "Service": "ServiceB"
+    }
+  }
+}

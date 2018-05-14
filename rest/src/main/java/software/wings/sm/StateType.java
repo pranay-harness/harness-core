@@ -17,6 +17,7 @@ import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
 import static software.wings.beans.PhaseStepType.DISABLE_SERVICE;
 import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
 import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
+import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.SELECT_NODE;
 import static software.wings.beans.PhaseStepType.START_SERVICE;
@@ -32,6 +33,7 @@ import static software.wings.stencils.StencilCategory.CONTROLS;
 import static software.wings.stencils.StencilCategory.ENVIRONMENTS;
 import static software.wings.stencils.StencilCategory.FLOW_CONTROLS;
 import static software.wings.stencils.StencilCategory.OTHERS;
+import static software.wings.stencils.StencilCategory.PROVISIONERS;
 import static software.wings.stencils.StencilCategory.VERIFICATIONS;
 
 import com.google.common.base.Charsets;
@@ -106,6 +108,8 @@ import software.wings.sm.states.pcf.PcfDeployState;
 import software.wings.sm.states.pcf.PcfRollbackState;
 import software.wings.sm.states.pcf.PcfSetupState;
 import software.wings.sm.states.pcf.UnmapRouteState;
+import software.wings.sm.states.provision.ApplyTerraformProvisionState;
+import software.wings.sm.states.provision.DestroyTerraformProvisionState;
 import software.wings.stencils.OverridingStencil;
 import software.wings.stencils.StencilCategory;
 import software.wings.utils.JsonUtils;
@@ -262,7 +266,7 @@ public enum StateType implements StateTypeDescriptor {
   JENKINS(JenkinsState.class, OTHERS, asList(), ORCHESTRATION_STENCILS, COMMON),
 
   /**
-   * Bamboo state type.
+   * Bamboo state type
    */
   BAMBOO(BambooState.class, OTHERS, asList(), ORCHESTRATION_STENCILS, COMMON),
 
@@ -383,7 +387,16 @@ public enum StateType implements StateTypeDescriptor {
   PCF_MAP_ROUTE(MapRouteState.class, FLOW_CONTROLS, Constants.PCF_MAP_ROUTE,
       Lists.newArrayList(InfrastructureMappingType.PCF_PCF), asList(PhaseStepType.PCF_RESIZE), ORCHESTRATION_STENCILS),
   PCF_UNMAP_ROUTE(UnmapRouteState.class, FLOW_CONTROLS, Constants.PCF_UNMAP_ROUT,
-      Lists.newArrayList(InfrastructureMappingType.PCF_PCF), asList(PhaseStepType.PCF_RESIZE), ORCHESTRATION_STENCILS);
+      Lists.newArrayList(InfrastructureMappingType.PCF_PCF), asList(PhaseStepType.PCF_RESIZE), ORCHESTRATION_STENCILS),
+
+  TERRAFORM_PROVISION(ApplyTerraformProvisionState.class, PROVISIONERS, asList(InfrastructureMappingType.AWS_SSH),
+      asList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS),
+
+  //  TERRAFORM_ADJUST(AdjustTerraformProvisionState.class, PROVISIONERS, asList(InfrastructureMappingType.AWS_SSH),
+  //      asList(INFRASTRUCTURE_NODE), ORCHESTRATION_STENCILS),
+
+  TERRAFORM_DESTROY(DestroyTerraformProvisionState.class, PROVISIONERS, asList(InfrastructureMappingType.AWS_SSH),
+      asList(POST_DEPLOYMENT), ORCHESTRATION_STENCILS);
 
   private static final String stencilsPath = "/templates/stencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";

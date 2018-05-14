@@ -35,10 +35,12 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Service;
+import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.Workflow;
 import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.AppPermission;
@@ -55,6 +57,7 @@ import software.wings.security.UserPermissionInfo;
 import software.wings.security.WorkflowFilter;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
@@ -67,6 +70,7 @@ import java.util.Map;
 public class AuthHandlerTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private ServiceResourceService serviceResourceService;
+  @Mock private InfrastructureProvisionerService infrastructureProvisionerService;
   @Mock private EnvironmentService environmentService;
   @Mock private WorkflowService workflowService;
   @Mock private PipelineService pipelineService;
@@ -80,6 +84,9 @@ public class AuthHandlerTest extends WingsBaseTest {
   private List<String> appIds = asList(APP_ID, "appId1", "appId2", "appId3");
   private Service service1 = Service.builder().uuid(generateUuid()).appId(APP_ID).build();
   private Service service2 = Service.builder().uuid(generateUuid()).appId(APP_ID).build();
+
+  private InfrastructureProvisioner infrastructureProvisioner =
+      TerraformInfrastructureProvisioner.builder().appId(APP_ID).build();
 
   private Environment dev =
       anEnvironment().withUuid(generateUuid()).withAppId(APP_ID).withEnvironmentType(EnvironmentType.NON_PROD).build();
@@ -185,7 +192,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldfetchPermissionsForAccountAdministrator() {
+  public void shouldFetchPermissionsForAccountAdministrator() {
     setupForAllApp();
     List<UserGroup> userGroups = asList(UserGroup.builder()
                                             .accountId(ACCOUNT_ID)
@@ -207,8 +214,13 @@ public class AuthHandlerTest extends WingsBaseTest {
 
   private void setupForAllApp() {
     when(appService.getAppIdsByAccountId(ACCOUNT_ID)).thenReturn(appIds);
+
     PageResponse<Service> svcResponse = aPageResponse().withResponse(asList(service1, service2)).build();
     when(serviceResourceService.list(any(PageRequest.class), eq(false), eq(false))).thenReturn(svcResponse);
+
+    PageResponse<InfrastructureProvisioner> infrastructureProvisionersResponse =
+        aPageResponse().withResponse(asList(infrastructureProvisioner)).build();
+    when(infrastructureProvisionerService.list(any(PageRequest.class))).thenReturn(infrastructureProvisionersResponse);
 
     PageResponse<Environment> envResponse = aPageResponse().withResponse(asList(dev, qa, prod, dr)).build();
     when(environmentService.list(any(PageRequest.class), eq(false))).thenReturn(envResponse);
@@ -267,7 +279,13 @@ public class AuthHandlerTest extends WingsBaseTest {
     assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getServicePermissions().get(service1.getUuid()))
         .isNotNull()
         .contains(Action.UPDATE, Action.READ, Action.DELETE);
-    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getServicePermissions().get(service2.getUuid()))
+
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getProvisionerPermissions())
+        .isNotNull()
+        .containsOnlyKeys(infrastructureProvisioner.getUuid());
+
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getProvisionerPermissions().get(
+                   infrastructureProvisioner.getUuid()))
         .isNotNull()
         .contains(Action.UPDATE, Action.READ, Action.DELETE);
 
@@ -332,7 +350,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldfetchPermissionsForAppAdministrator() {
+  public void shouldFetchPermissionsForAppAdministrator() {
     setupForAllApp();
     List<UserGroup> userGroups =
         asList(UserGroup.builder().accountId(ACCOUNT_ID).appPermissions(new HashSet(asList(allAppPermission))).build());
@@ -345,7 +363,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldfetchPermissionsForProdSupport() {
+  public void shouldFetchPermissionsForProdSupport() {
     setupForAllApp();
     EnvFilter envFilter = new EnvFilter();
     envFilter.setFilterTypes(Sets.newHashSet(PROD));
@@ -441,7 +459,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldfetchPermissionsForOneEnvOnly() {
+  public void shouldFetchPermissionsForOneEnvOnly() {
     setupForAllApp();
     EnvFilter envFilter = new EnvFilter();
     envFilter.setFilterTypes(Sets.newHashSet(EnvFilter.FilterType.SELECTED));
@@ -528,7 +546,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldfetchPermissionsForMultiplePermissionsInUserGroup() {
+  public void shouldFetchPermissionsForMultiplePermissionsInUserGroup() {
     setupForAllApp();
     EnvFilter envFilter = new EnvFilter();
     envFilter.setFilterTypes(Sets.newHashSet(EnvFilter.FilterType.SELECTED));

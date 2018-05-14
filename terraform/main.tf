@@ -17,8 +17,11 @@ variable "workflow-collapse_nodes" {
   default = false
 }
 
+variable "workflow-terraform" {
+  default = false
+}
 
-provider "aws" {
+provider "aws" "aws_cloud" {
     version = "~> 1.0"
 
     access_key = "${var.access_key}"
@@ -44,10 +47,18 @@ module "workflow-collapse_nodes" {
   workflow-collapse_nodes = "${var.workflow-collapse_nodes}"
 }
 
+module "workflow-terraform" {
+  source  = "workflow-terraform"
+
+  workflow-terraform = "${var.workflow-terraform}"
+}
+
+
 locals {
   generic-instances = "${distinct(concat(module.workflow-generic.generic_instances,
                                          module.workflow-barrier.generic_instances,
-                                         module.workflow-collapse_nodes.generic_instances))}"
+                                         module.workflow-collapse_nodes.generic_instances,
+                                         module.workflow-terraform.generic_instances))}"
 }
 
 module "shared" {
@@ -59,4 +70,12 @@ module "shared" {
   region = "${var.region}"
 
   generic-instances = "${length(local.generic-instances)}"
+}
+
+output "security_group" {
+    value = "${module.shared.security_group}"
+}
+
+output "region" {
+    value = "${var.region}"
 }

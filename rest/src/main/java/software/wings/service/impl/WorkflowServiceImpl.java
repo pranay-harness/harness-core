@@ -132,6 +132,7 @@ import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.PhaseStep;
+import software.wings.beans.PhaseStep.PhaseStepBuilder;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.PhysicalInfrastructureMappingBase;
 import software.wings.beans.Pipeline;
@@ -313,7 +314,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (filterForWorkflow) {
       workflow = readWorkflow(appId, workflowId);
       if (workflow == null) {
-        throw new InvalidRequestException("Workflow does not exist", USER);
+        throw new InvalidRequestException(format("Workflow %s does not exist", workflowId), USER);
       }
       String envId = workflow.getEnvId();
       entityMap.put(EntityType.ENVIRONMENT.name(), envId);
@@ -2256,15 +2257,18 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
-    workflowPhase.addPhaseStep(aPhaseStep(INFRASTRUCTURE_NODE, Constants.INFRASTRUCTURE_NODE_NAME)
-                                   .addStep(aGraphNode()
-                                                .withType(stateType.name())
-                                                .withName(Constants.SELECT_NODE_NAME)
-                                                .addProperty("specificHosts", false)
-                                                .addProperty("instanceCount", 1)
-                                                .addProperty("excludeSelectedHostsFromFuturePhases", true)
-                                                .build())
-                                   .build());
+    final PhaseStepBuilder infrastructurePhaseStepBuilder =
+        aPhaseStep(INFRASTRUCTURE_NODE, Constants.INFRASTRUCTURE_NODE_NAME);
+
+    infrastructurePhaseStepBuilder.addStep(aGraphNode()
+                                               .withType(stateType.name())
+                                               .withName(Constants.SELECT_NODE_NAME)
+                                               .addProperty("specificHosts", false)
+                                               .addProperty("instanceCount", 1)
+                                               .addProperty("excludeSelectedHostsFromFuturePhases", true)
+                                               .build());
+
+    workflowPhase.addPhaseStep(infrastructurePhaseStepBuilder.build());
 
     List<GraphNode> disableServiceSteps = commandNodes(commandMap, CommandType.DISABLE);
     List<GraphNode> enableServiceSteps = commandNodes(commandMap, CommandType.ENABLE);
@@ -2592,8 +2596,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                           .build())
         .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).withRollback(true).build())
         .build();
-
-    // Rolling back with deprovisioning is incorect, rolling back should provision to the previous state
   }
 
   private WorkflowPhase generateRollbackWorkflowPhaseForKubernetes(

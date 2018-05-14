@@ -115,6 +115,10 @@ public class PermissionAttribute {
      */
     SERVICE(APP),
     /**
+     * Provisioner resource.
+     */
+    PROVISIONER(APP),
+    /**
      * Config resource.
      */
     CONFIGURATION(APP),
@@ -294,6 +298,10 @@ public class PermissionAttribute {
      * Deployment permission permissionType
      */
     DEPLOYMENT,
+    /**
+     * Provisioner permission permissionType
+     */
+    PROVISIONER,
     /**
      * Account permission type.
      */

@@ -344,6 +344,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
               String fieldName = null;
               if (permissionType == PermissionType.SERVICE) {
                 fieldName = "serviceId";
+              } else if (permissionType == PermissionType.PROVISIONER) {
+                fieldName = "infraProvisionerId";
               } else if (permissionType == PermissionType.ENV) {
                 fieldName = "envId";
               } else if (permissionType == PermissionType.WORKFLOW) {

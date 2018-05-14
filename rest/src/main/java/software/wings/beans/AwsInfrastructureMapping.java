@@ -3,6 +3,7 @@ package software.wings.beans;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 
@@ -17,9 +18,10 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.app.MainConfiguration;
+import software.wings.beans.AwsInstanceFilter.Tag.TagBuilder;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.DefaultValue;
@@ -30,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 
 /**
@@ -47,7 +50,6 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
 
   @EnumData(enumDataProvider = HostConnectionAttributesDataProvider.class)
   @Attributes(title = "Connection Type", required = true)
-  @NotEmpty
   private String hostConnectionAttrs;
   @Attributes(title = "Load Balancer") private String loadBalancerId;
   @Transient @SchemaIgnore private String loadBalancerName;
@@ -73,6 +75,49 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
    */
   public AwsInfrastructureMapping() {
     super(InfrastructureMappingType.AWS_SSH.name());
+  }
+
+  @Override
+  public void applyProvisionerVariables(Map<String, Object> map) {
+    AwsInstanceFilter awsInstanceFilter = getAwsInstanceFilter();
+    if (awsInstanceFilter == null) {
+      awsInstanceFilter = AwsInstanceFilter.builder().build();
+      setAwsInstanceFilter(awsInstanceFilter);
+    }
+
+    try {
+      for (Entry<String, Object> entry : map.entrySet()) {
+        switch (entry.getKey()) {
+          case "region":
+            setRegion((String) entry.getValue());
+            break;
+          case "vpcs":
+            awsInstanceFilter.setVpcIds((List<String>) entry.getValue());
+            break;
+          case "subnets":
+            awsInstanceFilter.setSubnetIds((List<String>) entry.getValue());
+            break;
+          case "securityGroups":
+            awsInstanceFilter.setSecurityGroupIds((List<String>) entry.getValue());
+            break;
+          case "tags":
+            final Map<String, Object> value = (Map<String, Object>) entry.getValue();
+            awsInstanceFilter.setTags(
+                value.entrySet()
+                    .stream()
+                    .map(item -> new TagBuilder().key(item.getKey()).value((String) item.getValue()).build())
+                    .collect(toList()));
+            break;
+          default:
+            throw new InvalidRequestException(
+                format("Unsupported infrastructure mapping provisioner variable %s", entry.getKey()));
+        }
+      }
+    } catch (WingsException exception) {
+      throw exception;
+    } catch (RuntimeException exception) {
+      throw new InvalidRequestException("Unable to set the provisioner variables to the mapping", exception);
+    }
   }
 
   /**
@@ -133,18 +178,20 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
    * Validate.
    */
   public void validate() {
-    if (provisionInstances) {
-      if (isEmpty(autoScalingGroupName)) {
-        throw new WingsException(INVALID_ARGUMENT)
-            .addParam("args", "Auto Scaling group must not be empty when provision instances is true.");
-      }
-      if (setDesiredCapacity && desiredCapacity <= 0) {
-        throw new WingsException(INVALID_ARGUMENT).addParam("args", "Desired count must be greater than zero.");
-      }
-    } else {
-      if (awsInstanceFilter == null) {
-        throw new WingsException(INVALID_ARGUMENT)
-            .addParam("args", "Instance filter must not be null when provision instances is false.");
+    if (getProvisionerId() == null) {
+      if (provisionInstances) {
+        if (isEmpty(autoScalingGroupName)) {
+          throw new WingsException(INVALID_ARGUMENT)
+              .addParam("args", "Auto Scaling group must not be empty when provision instances is true.");
+        }
+        if (setDesiredCapacity && desiredCapacity <= 0) {
+          throw new WingsException(INVALID_ARGUMENT).addParam("args", "Desired count must be greater than zero.");
+        }
+      } else {
+        if (awsInstanceFilter == null) {
+          throw new WingsException(INVALID_ARGUMENT)
+              .addParam("args", "Instance filter must not be null when provision instances is false.");
+        }
       }
     }
   }
@@ -211,9 +258,22 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
   @SchemaIgnore
   @Override
   public String getDefaultName() {
-    return Util.normalize(format("%s%s (AWS_SSH) %s", isNotEmpty(customName) ? (customName + " - ") : "",
-        Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
-        this.getRegion()));
+    List<String> parts = new ArrayList();
+    if (isNotEmpty(customName)) {
+      parts.add(customName);
+    }
+
+    if (isNotEmpty(getComputeProviderName())) {
+      parts.add(getComputeProviderName().toLowerCase());
+    }
+
+    parts.add(getInfraMappingType());
+
+    if (isNotEmpty(getRegion())) {
+      parts.add(getRegion());
+    }
+
+    return Util.normalize(String.join(" - ", parts));
   }
 
   /**
@@ -508,6 +568,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     private int desiredCapacity;
     private String computeProviderName;
     private String name;
+    private String provisionerId;
     // auto populate name
     private boolean autoPopulate = true;
 
@@ -857,6 +918,11 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
       return this;
     }
 
+    public Builder withProvisionerId(String provisionerId) {
+      this.provisionerId = provisionerId;
+      return this;
+    }
+
     /**
      * With auto populate builder.
      *
@@ -905,6 +971,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
           .withDesiredCapacity(desiredCapacity)
           .withComputeProviderName(computeProviderName)
           .withName(name)
+          .withProvisionerId(provisionerId)
           .withAutoPopulate(autoPopulate)
           .withHostNameConvention(hostNameConvention);
     }
@@ -945,6 +1012,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
       awsInfrastructureMapping.setDesiredCapacity(desiredCapacity);
       awsInfrastructureMapping.setComputeProviderName(computeProviderName);
       awsInfrastructureMapping.setName(name);
+      awsInfrastructureMapping.setProvisionerId(provisionerId);
       awsInfrastructureMapping.setAutoPopulate(autoPopulate);
       awsInfrastructureMapping.setAccountId(accountId);
       awsInfrastructureMapping.setHostNameConvention(hostNameConvention);

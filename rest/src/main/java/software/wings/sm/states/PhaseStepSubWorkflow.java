@@ -404,7 +404,6 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
             && phaseStepType == PhaseStepType.INFRASTRUCTURE_NODE) {
           ServiceInstanceIdsParam serviceInstanceIdsParam = (ServiceInstanceIdsParam) notifiedElement(
               elementNotifyResponseData, ServiceInstanceIdsParam.class, "Missing ServiceInstanceIdsParam");
-
           executionResponse.setContextElements(Lists.newArrayList(serviceInstanceIdsParam));
         } else if (phaseStepType == PhaseStepType.CLUSTER_SETUP) {
           ClusterElement clusterElement = (ClusterElement) notifiedElement(

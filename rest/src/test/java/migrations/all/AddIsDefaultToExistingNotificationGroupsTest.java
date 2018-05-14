@@ -8,6 +8,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import com.google.inject.Inject;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -30,6 +31,7 @@ public class AddIsDefaultToExistingNotificationGroupsTest extends WingsBaseTest 
   }
 
   @Test
+  @Ignore
   public void shouldMigrate() {
     doNothing().when(yamlChangeSetHelper).notificationGroupYamlChangeAsync(any(), any());
     doNothing().when(yamlChangeSetHelper).notificationGroupYamlChangeSet(any(), any());

@@ -26,8 +26,8 @@ import javax.ws.rs.core.MultivaluedMap;
 @Singleton
 public class AuthResponseFilter implements ContainerResponseFilter {
   private static final Logger logger = LoggerFactory.getLogger(AuthResponseFilter.class);
-  private static final List<String> authAwareResources =
-      asList("/api/apps", "/api/services", "/api/environments", "/api/workflows", "/api/pipelines");
+  private static final List<String> authAwareResources = asList("/api/apps", "/api/services",
+      "/api/infrastructure-provisioners", "/api/environments", "/api/workflows", "/api/pipelines");
 
   @Inject private AuthService authService;
   @Inject private AppService appService;

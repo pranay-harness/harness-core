@@ -84,7 +84,7 @@ public class SettingGenerator {
 
     final SettingAttribute settingAttribute =
         aSettingAttribute()
-            .withCategory(Category.CONNECTOR)
+            .withCategory(Category.SETTING)
             .withAccountId(account.getUuid())
             .withAppId(GLOBAL_APP_ID)
             .withEnvId(GLOBAL_ENV_ID)

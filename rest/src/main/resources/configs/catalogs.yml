@@ -396,6 +396,8 @@ TASK_TYPES:
       value: APM
     - name: Cloud Formation
       value: CLOUD_FORMATION
+    - name: Terrafrom
+      value: TERRAFORM
 
 EXECUTION_STATUS:
     - name: Aborted

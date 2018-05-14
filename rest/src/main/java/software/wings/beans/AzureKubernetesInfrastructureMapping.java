@@ -10,6 +10,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.utils.Util;
 
+import java.util.Map;
 import java.util.Optional;
 
 @JsonTypeName("AZURE_KUBERNETES")
@@ -23,6 +24,9 @@ public class AzureKubernetesInfrastructureMapping extends ContainerInfrastructur
   public AzureKubernetesInfrastructureMapping() {
     super(InfrastructureMappingType.AZURE_KUBERNETES.name());
   }
+
+  @Override
+  public void applyProvisionerVariables(Map<String, Object> map) {}
 
   @SchemaIgnore
   @Override
