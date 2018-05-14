@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import software.wings.api.CanaryWorkflowStandardParams;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
+import software.wings.api.PcfInstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.ServiceElement;
@@ -204,7 +205,7 @@ public abstract class AbstractAnalysisState extends State {
     InfrastructureMapping infrastructureMapping = infraMappingService.get(context.getAppId(), infraMappingId);
 
     if (infrastructureMapping instanceof PcfInfrastructureMapping) {
-      return getPcfApplicationIds(context, true);
+      return getPcfHostNames(context, true);
     }
 
     Set<String> phaseHosts = getHostsDeployedSoFar(context, serviceId);
@@ -381,7 +382,7 @@ public abstract class AbstractAnalysisState extends State {
 
     InfrastructureMapping infrastructureMapping = infraMappingService.get(context.getAppId(), infraMappingId);
     if (infrastructureMapping instanceof PcfInfrastructureMapping) {
-      return getPcfApplicationIds(context, false);
+      return getPcfHostNames(context, false);
     }
 
     CanaryWorkflowStandardParams canaryWorkflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
@@ -401,7 +402,7 @@ public abstract class AbstractAnalysisState extends State {
     return rv;
   }
 
-  private Set<String> getPcfApplicationIds(ExecutionContext context, boolean includePrevious) {
+  private Set<String> getPcfHostNames(ExecutionContext context, boolean includePrevious) {
     StateExecutionInstance stateExecutionInstance = ((ExecutionContextImpl) context).getStateExecutionInstance();
     WingsDeque<ContextElement> contextElements = stateExecutionInstance.getContextElements();
     Set<String> rv = new HashSet<>();
@@ -413,13 +414,22 @@ public abstract class AbstractAnalysisState extends State {
       if (contextElement instanceof InstanceElementListParam) {
         InstanceElementListParam instances = (InstanceElementListParam) contextElement;
         instances.getPcfInstanceElements().forEach(pcfInstanceElement -> {
-          if (includePrevious || !pcfInstanceElement.getInstanceIndex().equals("-1")) {
-            rv.add(pcfInstanceElement.getApplicationId());
+          String pcfHostName = getPcfHostName(pcfInstanceElement, includePrevious);
+          if (isNotEmpty(pcfHostName)) {
+            rv.add(pcfHostName);
           }
         });
       }
     });
     return rv;
+  }
+
+  protected String getPcfHostName(PcfInstanceElement pcfInstanceElement, boolean includePrevious) {
+    if (includePrevious) {
+      return pcfInstanceElement.getApplicationId();
+    }
+
+    return null;
   }
 
   protected String getPhaseServiceId(ExecutionContext context) {
