@@ -3,8 +3,8 @@ package software.wings.beans.delegation;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 
 import lombok.Builder;
-import lombok.Getter;
 import lombok.Setter;
+import lombok.Value;
 import software.wings.api.ScriptType;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.core.local.executors.ShellExecutorConfig;
@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 @Builder
-@Getter
+@Value
 public class ShellScriptParameters {
   public static final String CommandUnit = "Execute";
 

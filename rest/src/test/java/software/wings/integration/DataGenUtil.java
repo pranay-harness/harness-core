@@ -10,9 +10,11 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
+import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
@@ -30,6 +32,8 @@ import static software.wings.integration.SeedData.containerNames;
 import static software.wings.integration.SeedData.envNames;
 import static software.wings.integration.SeedData.seedNames;
 import static software.wings.sm.StateType.ENV_STATE;
+import static software.wings.sm.StateType.TERRAFORM_DESTROY;
+import static software.wings.sm.StateType.TERRAFORM_PROVISION;
 import static software.wings.utils.ArtifactType.WAR;
 
 import com.google.common.collect.ImmutableMap;
@@ -66,6 +70,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.License;
 import software.wings.beans.NewRelicConfig;
@@ -97,6 +102,9 @@ import software.wings.generator.ArtifactStreamGenerator.ArtifactStreams;
 import software.wings.generator.EnvironmentGenerator;
 import software.wings.generator.EnvironmentGenerator.Environments;
 import software.wings.generator.InfrastructureMappingGenerator;
+import software.wings.generator.InfrastructureMappingGenerator.InfrastructureMappings;
+import software.wings.generator.InfrastructureProvisionerGenerator;
+import software.wings.generator.InfrastructureProvisionerGenerator.InfrastructureProvisioners;
 import software.wings.generator.LicenseGenerator;
 import software.wings.generator.LicenseGenerator.Licenses;
 import software.wings.generator.OwnerManager;
@@ -187,6 +195,7 @@ public class DataGenUtil extends BaseIntegrationTest {
   @Inject private ArtifactStreamGenerator artifactStreamGenerator;
   @Inject private EnvironmentGenerator environmentGenerator;
   @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
+  @Inject private InfrastructureProvisionerGenerator infrastructureProvisionerGenerator;
   @Inject private LicenseGenerator licenseGenerator;
   @Inject private PipelineGenerator pipelineGenerator;
   @Inject private ServiceGenerator serviceGenerator;
@@ -248,7 +257,7 @@ public class DataGenUtil extends BaseIntegrationTest {
     learningEngineService.initializeServiceSecretKeys();
 
     createTestApplication(account);
-    createSeedEntries();
+    // createSeedEntries();
   }
 
   private void createSeedEntries() {
@@ -592,7 +601,7 @@ public class DataGenUtil extends BaseIntegrationTest {
 
     final Owners owners = ownerManager.create();
 
-    Environment environment = environmentGenerator.ensurePredefined(seed, Environments.GENERIC_TEST);
+    Environment environment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);
     owners.add(environment);
 
     Service service = serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST);
@@ -726,6 +735,41 @@ public class DataGenUtil extends BaseIntegrationTest {
                                            "envId", workflow2.getEnvId(), "workflowId", workflow2.getUuid()))
                                        .build()))
                         .build()))
+            .build());
+
+    final Owners terraformOwners = ownerManager.create();
+    terraformOwners.add(environment);
+    terraformOwners.add(service);
+    final InfrastructureProvisioner infrastructureProvisioner = infrastructureProvisionerGenerator.ensurePredefined(
+        seed, terraformOwners, InfrastructureProvisioners.TERRAFORM_TEST);
+
+    final InfrastructureMapping terraformInfrastructureProvisioner = infrastructureMappingGenerator.ensurePredefined(
+        seed, terraformOwners, InfrastructureMappings.TERRAFORM_AWS_SSH_TEST);
+
+    Workflow workflow5 = workflowGenerator.ensureWorkflow(seed, terraformOwners,
+        aWorkflow()
+            .withName("Terraform provision")
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .withInfraMappingId(infrastructureMapping.getUuid())
+            .withOrchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .withPreDeploymentSteps(
+                        aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT)
+                            .addStep(aGraphNode()
+                                         .withType(TERRAFORM_PROVISION.name())
+                                         .withName("Provision infra")
+                                         .addProperty("provisionerId", infrastructureProvisioner.getUuid())
+                                         .build())
+                            .build())
+                    .withPostDeploymentSteps(
+                        aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT)
+                            .addStep(aGraphNode()
+                                         .withType(TERRAFORM_DESTROY.name())
+                                         .withName("Deprovision infra")
+                                         .addProperty("provisionerId", infrastructureProvisioner.getUuid())
+                                         .build())
+                            .build())
+                    .build())
             .build());
   }
 

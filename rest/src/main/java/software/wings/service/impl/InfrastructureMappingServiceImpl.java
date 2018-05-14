@@ -553,7 +553,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     } else if (infrastructureMapping instanceof AwsInfrastructureMapping) {
       AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMapping;
       awsInfrastructureMapping.validate();
-      keyValuePairs.put("region", awsInfrastructureMapping.getRegion());
+      if (awsInfrastructureMapping.getRegion() != null) {
+        keyValuePairs.put("region", awsInfrastructureMapping.getRegion());
+      } else {
+        fieldsToRemove.add("region");
+      }
       if (isNotEmpty(awsInfrastructureMapping.getLoadBalancerId())) {
         keyValuePairs.put("loadBalancerId", awsInfrastructureMapping.getLoadBalancerId());
       } else {
@@ -582,7 +586,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       AwsLambdaInfraStructureMapping lambdaInfraStructureMapping =
           (AwsLambdaInfraStructureMapping) infrastructureMapping;
       validateAwsLambdaInfrastructureMapping(lambdaInfraStructureMapping);
-      keyValuePairs.put("region", lambdaInfraStructureMapping.getRegion());
+      if (lambdaInfraStructureMapping.getRegion() != null) {
+        keyValuePairs.put("region", lambdaInfraStructureMapping.getRegion());
+      } else {
+        fieldsToRemove.add("region");
+      }
       if (lambdaInfraStructureMapping.getVpcId() != null) {
         keyValuePairs.put("vpcId", lambdaInfraStructureMapping.getVpcId());
         keyValuePairs.put("subnetIds", lambdaInfraStructureMapping.getSubnetIds());
@@ -603,7 +611,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     } else if (infrastructureMapping instanceof CodeDeployInfrastructureMapping) {
       CodeDeployInfrastructureMapping codeDeployInfrastructureMapping =
           (CodeDeployInfrastructureMapping) infrastructureMapping;
-      keyValuePairs.put("region", codeDeployInfrastructureMapping.getRegion());
+      if (codeDeployInfrastructureMapping.getRegion() != null) {
+        keyValuePairs.put("region", codeDeployInfrastructureMapping.getRegion());
+      } else {
+        fieldsToRemove.add("region");
+      }
       keyValuePairs.put("applicationName", codeDeployInfrastructureMapping.getApplicationName());
       keyValuePairs.put("deploymentGroup", codeDeployInfrastructureMapping.getDeploymentGroup());
       keyValuePairs.put("deploymentConfig", codeDeployInfrastructureMapping.getDeploymentConfig());
@@ -614,7 +626,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       }
     } else if (infrastructureMapping instanceof AwsAmiInfrastructureMapping) {
       AwsAmiInfrastructureMapping awsAmiInfrastructureMapping = (AwsAmiInfrastructureMapping) infrastructureMapping;
-      keyValuePairs.put("region", awsAmiInfrastructureMapping.getRegion());
+      if (awsAmiInfrastructureMapping.getRegion() != null) {
+        keyValuePairs.put("region", awsAmiInfrastructureMapping.getRegion());
+      } else {
+        fieldsToRemove.add("region");
+      }
       keyValuePairs.put("autoScalingGroupName", awsAmiInfrastructureMapping.getAutoScalingGroupName());
       if (awsAmiInfrastructureMapping.getClassicLoadBalancers() != null) {
         keyValuePairs.put("classicLoadBalancers", awsAmiInfrastructureMapping.getClassicLoadBalancers());
@@ -748,6 +764,18 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
+  public void pruneByInfrastructureProvisioner(String appId, String infrastructureProvisionerId) {
+    List<Key<InfrastructureMapping>> keys =
+        wingsPersistence.createQuery(InfrastructureMapping.class)
+            .filter(InfrastructureMapping.APP_ID_KEY, appId)
+            .filter(InfrastructureMapping.PROVISIONER_ID_KEY, infrastructureProvisionerId)
+            .asKeyList();
+    for (Key<InfrastructureMapping> key : keys) {
+      prune(appId, (String) key.getId());
+    }
+  }
+
+  @Override
   public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String infraMappingId) {
     List<OwnedByInfrastructureMapping> services = ServiceClassLocator.descendingServices(
         this, InfrastructureMappingServiceImpl.class, OwnedByInfrastructureMapping.class);
@@ -755,11 +783,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         services, descending -> descending.pruneByInfrastructureMapping(appId, infraMappingId));
   }
 
-  private void ensureSafeToDelete(@NotEmpty String appId, @NotEmpty String infraMappingId) {
+  @Override
+  public void ensureSafeToDelete(@NotEmpty String appId, @NotEmpty String infraMappingId) {
     List<Workflow> workflows =
         workflowService
             .listWorkflows(aPageRequest().withLimit(UNLIMITED).addFilter("appId", Operator.EQ, appId).build())
-
             .getResponse();
 
     List<String> referencingWorkflowNames =

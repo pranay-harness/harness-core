@@ -10,6 +10,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.utils.Util;
 
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -27,6 +28,9 @@ public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureM
   public GcpKubernetesInfrastructureMapping() {
     super(InfrastructureMappingType.GCP_KUBERNETES.name());
   }
+
+  @Override
+  public void applyProvisionerVariables(Map<String, Object> map) {}
 
   @SchemaIgnore
   @Override

@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import software.wings.utils.Util;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @JsonTypeName("PCF_PCF")
@@ -30,6 +31,9 @@ public class PcfInfrastructureMapping extends InfrastructureMapping {
   public PcfInfrastructureMapping() {
     super(InfrastructureMappingType.PCF_PCF.name());
   }
+
+  @Override
+  public void applyProvisionerVariables(Map<String, Object> map) {}
 
   @Builder
   public PcfInfrastructureMapping(String entityYamlPath, String appId, String accountId, String type, String uuid,

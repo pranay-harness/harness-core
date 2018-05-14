@@ -14,6 +14,7 @@ import software.wings.stencils.EnumData;
 import software.wings.utils.Util;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -34,6 +35,9 @@ public class AwsAmiInfrastructureMapping extends InfrastructureMapping {
   public AwsAmiInfrastructureMapping() {
     super(InfrastructureMappingType.AWS_AMI.name());
   }
+
+  @Override
+  public void applyProvisionerVariables(Map<String, Object> map) {}
 
   @SchemaIgnore
   @Override

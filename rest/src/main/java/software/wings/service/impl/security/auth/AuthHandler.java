@@ -20,6 +20,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.APPLICA
 import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.security.PermissionAttribute.PermissionType.PIPELINE;
+import static software.wings.security.PermissionAttribute.PermissionType.PROVISIONER;
 import static software.wings.security.PermissionAttribute.PermissionType.SERVICE;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.WORKFLOW;
@@ -40,6 +41,7 @@ import software.wings.beans.Account;
 import software.wings.beans.Base;
 import software.wings.beans.Environment;
 import software.wings.beans.HttpMethod;
+import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Pipeline;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
@@ -75,6 +77,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.UserGroupService;
@@ -102,6 +105,7 @@ public class AuthHandler {
   @Inject private PipelineService pipelineService;
   @Inject private AppService appService;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject private EnvironmentService environmentService;
   @Inject private WorkflowService workflowService;
   @Inject private FeatureFlagService featureFlagService;
@@ -159,7 +163,7 @@ public class AuthHandler {
 
         Set<String> appIds = getAppIdsByFilter(allAppIds, appPermission.getAppFilter());
         if (appPermission.getPermissionType() == ALL_APP_ENTITIES) {
-          asList(SERVICE, ENV, WORKFLOW, PIPELINE, DEPLOYMENT).forEach(permissionType1 -> {
+          asList(SERVICE, PROVISIONER, ENV, WORKFLOW, PIPELINE, DEPLOYMENT).forEach(permissionType1 -> {
             // ignoring entity filter in case of ALL_APP_ENTITIES
             attachPermission(appPermissionMap, permissionTypeAppIdEntityMap, appIds, permissionType1, null,
                 appPermission.getActions());
@@ -225,6 +229,27 @@ public class AuthHandler {
             Map<String, Set<Action>> permissionMap =
                 setActionsForEntity(finalAppPermissionSummaryForUI.getServicePermissions(), entityId, entityActions);
             finalAppPermissionSummaryForUI.setServicePermissions(permissionMap);
+          });
+
+          break;
+        }
+        case PROVISIONER: {
+          if (actions.contains(Action.CREATE)) {
+            appPermissionSummaryForUI.setCanCreateProvisioner(true);
+          }
+          if (isEmpty(entityActions)) {
+            break;
+          }
+          if (entityFilter != null) {
+            logger.info("entityFilter");
+          }
+          Set<String> entityIds = getProvisionerIdsByFilter(
+              permissionTypeAppIdEntityMap.get(permissionType).get(appId), (GenericEntityFilter) entityFilter);
+          AppPermissionSummaryForUI finalAppPermissionSummaryForUI = appPermissionSummaryForUI;
+          entityIds.forEach(entityId -> {
+            Map<String, Set<Action>> permissionMap = setActionsForEntity(
+                finalAppPermissionSummaryForUI.getProvisionerPermissions(), entityId, entityActions);
+            finalAppPermissionSummaryForUI.setProvisionerPermissions(permissionMap);
           });
 
           break;
@@ -318,6 +343,11 @@ public class AuthHandler {
               permissionType, getAppIdServiceMap(permissionTypeAppIdSetMap.get(permissionType)));
           break;
         }
+        case PROVISIONER: {
+          permissionTypeAppIdEntityMap.put(
+              permissionType, getAppIdProvisionerMap(permissionTypeAppIdSetMap.get(permissionType)));
+          break;
+        }
         case ENV: {
           permissionTypeAppIdEntityMap.put(
               permissionType, getAppIdEnvMap(permissionTypeAppIdSetMap.get(permissionType)));
@@ -347,6 +377,17 @@ public class AuthHandler {
         aPageRequest().addFilter("appId", Operator.IN, appIds.toArray()).addFieldsIncluded("_id", "appId").build();
     PageResponse<Service> pageResponse = serviceResourceService.list(pageRequest, false, false);
     List<Service> list = pageResponse.getResponse();
+    return list.stream().collect(Collectors.groupingBy(Base::getAppId));
+  }
+
+  private Map<String, List<Base>> getAppIdProvisionerMap(Set<String> appIds) {
+    if (isEmpty(appIds)) {
+      return new HashMap<>();
+    }
+    PageRequest<InfrastructureProvisioner> pageRequest =
+        aPageRequest().addFilter("appId", Operator.IN, appIds.toArray()).addFieldsIncluded("_id", "appId").build();
+    PageResponse<InfrastructureProvisioner> pageResponse = infrastructureProvisionerService.list(pageRequest);
+    List<InfrastructureProvisioner> list = pageResponse.getResponse();
     return list.stream().collect(Collectors.groupingBy(Base::getAppId));
   }
 
@@ -406,7 +447,7 @@ public class AuthHandler {
       List<UserGroup> userGroups, HashSet<String> allAppIds) {
     Map<PermissionType, Set<String>> permissionTypeAppIdSetMap = new HashMap<>();
     // initialize
-    asList(SERVICE, ENV, WORKFLOW, PIPELINE, DEPLOYMENT)
+    asList(SERVICE, PROVISIONER, ENV, WORKFLOW, PIPELINE, DEPLOYMENT)
         .forEach(permissionType -> permissionTypeAppIdSetMap.put(permissionType, new HashSet<>()));
 
     userGroups.stream().forEach(userGroup -> {
@@ -422,7 +463,7 @@ public class AuthHandler {
         }
         PermissionType permissionType = appPermission.getPermissionType();
         if (permissionType == PermissionType.ALL_APP_ENTITIES) {
-          asList(SERVICE, ENV, WORKFLOW, PIPELINE, DEPLOYMENT).forEach(permissionType1 -> {
+          asList(SERVICE, PROVISIONER, ENV, WORKFLOW, PIPELINE, DEPLOYMENT).forEach(permissionType1 -> {
             permissionTypeAppIdSetMap.get(permissionType1).addAll(appIdSet);
           });
         } else {
@@ -582,6 +623,8 @@ public class AuthHandler {
         Map<Action, Set<String>> entityPermissions = null;
         if (permissionType == SERVICE) {
           entityPermissions = appPermissionSummary.getServicePermissions();
+        } else if (permissionType == PROVISIONER) {
+          entityPermissions = appPermissionSummary.getProvisionerPermissions();
         } else if (permissionType == ENV) {
           entityPermissions = appPermissionSummary.getEnvPermissions();
         } else if (permissionType == WORKFLOW) {
@@ -636,6 +679,8 @@ public class AuthHandler {
               String className;
               if (permissionType == SERVICE) {
                 className = Service.class.getName();
+              } else if (permissionType == PROVISIONER) {
+                className = InfrastructureProvisioner.class.getName();
               } else if (permissionType == ENV) {
                 className = Environment.class.getName();
               } else if (permissionType == WORKFLOW) {
@@ -677,6 +722,29 @@ public class AuthHandler {
           .collect(Collectors.toSet());
     } else {
       String msg = "Unknown service filter type: " + serviceFilter.getFilterType();
+      logger.error(msg);
+      throw new WingsException(msg);
+    }
+  }
+
+  private Set<String> getProvisionerIdsByFilter(List<Base> provisioners, GenericEntityFilter provisionerFilter) {
+    if (isEmpty(provisioners)) {
+      return new HashSet<>();
+    }
+    if (provisionerFilter == null) {
+      provisionerFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
+    }
+
+    if (FilterType.ALL.equals(provisionerFilter.getFilterType())) {
+      return provisioners.stream().map(Base::getUuid).collect(Collectors.toSet());
+    } else if (SELECTED.equals(provisionerFilter.getFilterType())) {
+      GenericEntityFilter finalServiceFilter = provisionerFilter;
+      return provisioners.stream()
+          .filter(service -> finalServiceFilter.getIds().contains(service.getUuid()))
+          .map(Base::getUuid)
+          .collect(Collectors.toSet());
+    } else {
+      String msg = "Unknown service filter type: " + provisionerFilter.getFilterType();
       logger.error(msg);
       throw new WingsException(msg);
     }
@@ -882,10 +950,12 @@ public class AuthHandler {
     AppPermissionSummaryBuilder toAppPermissionSummaryBuilder =
         AppPermissionSummary.builder()
             .canCreateService(fromSummary.isCanCreateService())
+            .canCreateProvisioner(fromSummary.isCanCreateProvisioner())
             .canCreateEnvironment(fromSummary.isCanCreateEnvironment())
             .canCreateWorkflow(fromSummary.isCanCreateWorkflow())
             .canCreatePipeline(fromSummary.isCanCreatePipeline())
             .servicePermissions(convertToInternal(fromSummary.getServicePermissions()))
+            .provisionerPermissions(convertToInternal(fromSummary.getProvisionerPermissions()))
             .envPermissions(convertToInternal(fromSummary.getEnvPermissions()))
             .workflowPermissions(convertToInternal(fromSummary.getWorkflowPermissions()))
             .pipelinePermissions(convertToInternal(fromSummary.getPipelinePermissions()))
@@ -986,6 +1056,15 @@ public class AuthHandler {
                                       .permissionType(PermissionType.SERVICE)
                                       .build();
     appPermissions.add(svcPermission);
+
+    AppPermission provisionerPermission =
+        AppPermission.builder()
+            .actions(actions)
+            .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+            .entityFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+            .permissionType(PermissionType.PROVISIONER)
+            .build();
+    appPermissions.add(provisionerPermission);
 
     AppPermission envPermission = AppPermission.builder()
                                       .actions(actions)

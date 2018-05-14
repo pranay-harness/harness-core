@@ -13,6 +13,7 @@ import software.wings.stencils.EnumData;
 import software.wings.utils.Util;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @JsonTypeName("PHYSICAL_DATA_CENTER_SSH")
@@ -25,6 +26,9 @@ public class PhysicalInfrastructureMapping extends PhysicalInfrastructureMapping
   public PhysicalInfrastructureMapping() {
     super(InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH);
   }
+
+  @Override
+  public void applyProvisionerVariables(Map<String, Object> map) {}
 
   @SchemaIgnore
   @Override

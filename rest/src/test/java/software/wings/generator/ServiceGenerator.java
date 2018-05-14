@@ -20,6 +20,7 @@ import software.wings.utils.ArtifactType;
 
 @Singleton
 public class ServiceGenerator {
+  @Inject private OwnerManager ownerManager;
   @Inject ApplicationGenerator applicationGenerator;
 
   @Inject ServiceResourceService serviceResourceService;
@@ -42,8 +43,8 @@ public class ServiceGenerator {
 
   private Service ensureGenericTest(Randomizer.Seed seed, Owners owners) {
     Application application = owners.obtainApplication();
-    if (application != null) {
-      application = applicationGenerator.ensurePredefined(seed, Applications.GENERIC_TEST);
+    if (application == null) {
+      application = applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST);
       owners.add(application);
     }
     return ensureService(seed, owners, builder().name("Test Service").artifactType(ArtifactType.WAR).build());
@@ -67,12 +68,20 @@ public class ServiceGenerator {
   public Service ensureService(Randomizer.Seed seed, Owners owners, Service service) {
     EnhancedRandom random = Randomizer.instance(seed);
 
+    if (owners == null) {
+      owners = ownerManager.create();
+    }
+
     ServiceBuilder builder = Service.builder();
 
     if (service != null && service.getAppId() != null) {
       builder.appId(service.getAppId());
     } else {
-      final Application application = owners.obtainApplication();
+      Application application = owners.obtainApplication();
+      if (application == null) {
+        application = applicationGenerator.ensureRandom(seed, owners);
+        owners.add(application);
+      }
       builder.appId(application.getUuid());
     }
 

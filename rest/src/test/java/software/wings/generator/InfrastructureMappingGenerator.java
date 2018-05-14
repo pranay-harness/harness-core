@@ -20,11 +20,13 @@ import software.wings.beans.AwsInstanceFilter.Tag;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
+import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.dl.WingsPersistence;
 import software.wings.generator.EnvironmentGenerator.Environments;
+import software.wings.generator.InfrastructureProvisionerGenerator.InfrastructureProvisioners;
 import software.wings.generator.OwnerManager.Owners;
 import software.wings.generator.ServiceGenerator.Services;
 import software.wings.service.intfc.AppService;
@@ -41,6 +43,7 @@ public class InfrastructureMappingGenerator {
   @Inject private EnvironmentGenerator environmentGenerator;
   @Inject private ServiceGenerator serviceGenerator;
   @Inject private SettingGenerator settingGenerator;
+  @Inject private InfrastructureProvisionerGenerator infrastructureProvisionerGenerator;
 
   @Inject private AppService appService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
@@ -51,6 +54,7 @@ public class InfrastructureMappingGenerator {
 
   public enum InfrastructureMappings {
     AWS_SSH_TEST,
+    TERRAFORM_AWS_SSH_TEST,
   }
 
   public InfrastructureMapping ensurePredefined(
@@ -58,6 +62,8 @@ public class InfrastructureMappingGenerator {
     switch (predefined) {
       case AWS_SSH_TEST:
         return ensureAwsSshTest(seed, owners);
+      case TERRAFORM_AWS_SSH_TEST:
+        return ensureTerraformAwsSshTest(seed, owners);
       default:
         unhandled(predefined);
     }
@@ -68,7 +74,7 @@ public class InfrastructureMappingGenerator {
   private InfrastructureMapping ensureAwsSshTest(Randomizer.Seed seed, Owners owners) {
     Environment environment = owners.obtainEnvironment();
     if (environment == null) {
-      environment = environmentGenerator.ensurePredefined(seed, Environments.GENERIC_TEST);
+      environment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);
       owners.add(environment);
     }
 
@@ -99,6 +105,44 @@ public class InfrastructureMappingGenerator {
             .build());
   }
 
+  private InfrastructureMapping ensureTerraformAwsSshTest(Randomizer.Seed seed, Owners owners) {
+    InfrastructureProvisioner infrastructureProvisioner = owners.obtainInfrastructureProvisioner();
+    if (infrastructureProvisioner == null) {
+      infrastructureProvisioner =
+          infrastructureProvisionerGenerator.ensurePredefined(seed, owners, InfrastructureProvisioners.TERRAFORM_TEST);
+      owners.add(infrastructureProvisioner);
+    }
+
+    Environment environment = owners.obtainEnvironment();
+    if (environment == null) {
+      environment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);
+      owners.add(environment);
+    }
+
+    Service service = owners.obtainService();
+    if (service == null) {
+      service = serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST);
+      owners.add(service);
+    }
+
+    final SettingAttribute awsTestSettingAttribute = settingGenerator.ensurePredefined(seed, AWS_TEST_CLOUD_PROVIDER);
+    final SettingAttribute devKeySettingAttribute = settingGenerator.ensurePredefined(seed, DEV_TEST_CONNECTOR);
+
+    return ensureInfrastructureMapping(seed, owners,
+        anAwsInfrastructureMapping()
+            .withName("Aws non prod - ssh terraform provisioner test")
+            .withProvisionerId(infrastructureProvisioner.getUuid())
+            .withAutoPopulate(false)
+            .withInfraMappingType(AWS_SSH.name())
+            .withDeploymentType(DeploymentType.SSH.name())
+            .withComputeProviderType(SettingVariableTypes.AWS.name())
+            .withComputeProviderSettingId(awsTestSettingAttribute.getUuid())
+            .withHostConnectionAttrs(devKeySettingAttribute.getUuid())
+            .withUsePublicDns(true)
+            .withAwsInstanceFilter(AwsInstanceFilter.builder().build())
+            .build());
+  }
+
   public InfrastructureMapping ensureRandom(Randomizer.Seed seed) {
     EnhancedRandom random = Randomizer.instance(seed);
 
@@ -111,6 +155,12 @@ public class InfrastructureMappingGenerator {
     if (owners.obtainApplication() == null && infrastructureMapping.getAppId() != null) {
       Application application = appService.get(infrastructureMapping.getAppId());
       owners.add(application);
+    }
+
+    if (owners.obtainInfrastructureProvisioner() == null && infrastructureMapping.getProvisionerId() != null) {
+      InfrastructureProvisioner infrastructureProvisioner =
+          wingsPersistence.get(InfrastructureProvisioner.class, infrastructureMapping.getProvisionerId());
+      owners.add(infrastructureProvisioner);
     }
 
     if (owners.obtainEnvironment() == null && infrastructureMapping.getEnvId() != null) {
@@ -168,7 +218,7 @@ public class InfrastructureMappingGenerator {
         } else {
           Environment environment = owners.obtainEnvironment();
           if (environment == null) {
-            environment = environmentGenerator.ensureRandom(seed);
+            environment = environmentGenerator.ensureRandom(seed, owners);
             owners.add(environment);
           }
           builder.withEnvId(environment.getUuid());
@@ -251,7 +301,14 @@ public class InfrastructureMappingGenerator {
         if (infrastructureMapping != null && infrastructureMapping.getHostConnectionAttrs() != null) {
           builder.withHostConnectionAttrs(infrastructureMapping.getHostConnectionAttrs());
         } else {
-          throw new UnsupportedOperationException();
+          final SettingAttribute devKeySettingAttribute = settingGenerator.ensurePredefined(seed, DEV_TEST_CONNECTOR);
+          builder.withHostConnectionAttrs(devKeySettingAttribute.getUuid());
+        }
+
+        if (infrastructureMapping != null && infrastructureMapping.getProvisionerId() != null) {
+          builder.withProvisionerId(infrastructureMapping.getProvisionerId());
+        } else {
+          // throw new UnsupportedOperationException();
         }
 
         newInfrastructureMapping = builder.build();

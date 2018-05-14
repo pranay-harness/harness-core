@@ -14,6 +14,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ownership.OwnedByEnvironment;
+import software.wings.service.intfc.ownership.OwnedByInfrastructureProvisioner;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
@@ -27,7 +28,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by anubhaw on 1/10/17.
  */
-public interface InfrastructureMappingService extends OwnedByEnvironment {
+public interface InfrastructureMappingService extends OwnedByEnvironment, OwnedByInfrastructureProvisioner {
   PageResponse<InfrastructureMapping> list(PageRequest<InfrastructureMapping> pageRequest);
 
   PageResponse<InfrastructureMapping> list(
@@ -38,6 +39,8 @@ public interface InfrastructureMappingService extends OwnedByEnvironment {
   InfrastructureMapping get(String appId, String infraMappingId);
 
   @ValidationGroups(Update.class) InfrastructureMapping update(@Valid InfrastructureMapping infrastructureMapping);
+
+  void ensureSafeToDelete(@NotEmpty String appId, @NotEmpty String infraMappingId);
 
   void delete(String appId, String infraMappingId);
 

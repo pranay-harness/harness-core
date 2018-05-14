@@ -17,4 +17,9 @@ public class InvalidRequestException extends WingsException {
     super(INVALID_REQUEST, reportTargets);
     super.addParam("message", message);
   }
+
+  public InvalidRequestException(String message, Throwable cause, ReportTarget[] reportTargets) {
+    super(INVALID_REQUEST, reportTargets, cause);
+    super.addParam("message", message);
+  }
 }

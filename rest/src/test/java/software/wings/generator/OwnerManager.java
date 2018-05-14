@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.service.intfc.AccountService;
@@ -75,6 +76,14 @@ public class OwnerManager {
         }
       }
 
+      if (application == null) {
+        final InfrastructureProvisioner infrastructureProvisioner = obtainInfrastructureProvisioner();
+        if (infrastructureProvisioner != null) {
+          application = manager.applicationService.get(infrastructureProvisioner.getAppId());
+          add(application);
+        }
+      }
+
       return application;
     }
 
@@ -107,6 +116,15 @@ public class OwnerManager {
         }
       }
       return serviceTemplate;
+    }
+
+    public InfrastructureProvisioner obtainInfrastructureProvisioner() {
+      InfrastructureProvisioner infrastructureProvisioner = objects.stream()
+                                                                .filter(obj -> obj instanceof InfrastructureProvisioner)
+                                                                .findFirst()
+                                                                .map(obj -> (InfrastructureProvisioner) obj)
+                                                                .orElse(null);
+      return infrastructureProvisioner;
     }
   }
 }

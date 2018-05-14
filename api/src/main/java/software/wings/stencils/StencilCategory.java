@@ -74,7 +74,11 @@ public enum StencilCategory {
   /**
    * Collections stencil category.
    */
-  COLLECTIONS;
+  COLLECTIONS,
+  /**
+   * Provisioners stencil category.
+   */
+  PROVISIONERS(0);
 
   private String displayName;
 

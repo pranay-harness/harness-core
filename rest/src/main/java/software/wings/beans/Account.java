@@ -23,6 +23,8 @@ import javax.validation.constraints.NotNull;
  */
 @Entity(value = "accounts", noClassnameStored = true)
 public class Account extends Base {
+  public static final String ACCOUNT_NAME_KEY = "accountName";
+
   @Indexed @NotNull private String companyName;
 
   @Indexed(options = @IndexOptions(unique = true)) @NotNull private String accountName;

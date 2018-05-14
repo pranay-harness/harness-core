@@ -346,14 +346,20 @@ public interface Constants {
   @Deprecated String PROVISION_NODE_NAME = "Provision Nodes";
 
   /**
+   * The constant PROVISION_NODE_NAME.
+   */
+  String PROVISION_WITH_TERRAFORM_NAME = "Terraform";
+
+  /**
+   * The constant PROVISION_NODE_NAME.
+   */
+  String DE_PROVISION_NODE_NAME = "Deprovision";
+
+  /**
    * The constant SELECT_NODE_NAME.
    */
   String SELECT_NODE_NAME = "Select Nodes";
 
-  /**
-   * The constant DE_PROVISION_NODE.
-   */
-  String DE_PROVISION_NODE = "De-Provision Nodes";
   /**
    * The constant STEP_VALIDATION_MESSAGE.
    */

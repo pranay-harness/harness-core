@@ -16,6 +16,7 @@ import software.wings.stencils.EnumData;
 import software.wings.utils.Util;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -50,6 +51,9 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
   public EcsInfrastructureMapping() {
     super(InfrastructureMappingType.AWS_ECS.name());
   }
+
+  @Override
+  public void applyProvisionerVariables(Map<String, Object> map) {}
 
   @SchemaIgnore
   @Override

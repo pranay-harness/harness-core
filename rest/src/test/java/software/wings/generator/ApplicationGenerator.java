@@ -12,6 +12,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Application.Builder;
 import software.wings.dl.WingsPersistence;
 import software.wings.generator.AccountGenerator.Accounts;
+import software.wings.generator.OwnerManager.Owners;
 import software.wings.service.intfc.AppService;
 
 @Singleton
@@ -25,10 +26,10 @@ public class ApplicationGenerator {
     GENERIC_TEST,
   }
 
-  public Application ensurePredefined(Randomizer.Seed seed, Applications predefined) {
+  public Application ensurePredefined(Randomizer.Seed seed, Owners owners, Applications predefined) {
     switch (predefined) {
       case GENERIC_TEST:
-        return ensureGenericTest(seed);
+        return ensureGenericTest(seed, owners);
       default:
         unhandled(predefined);
     }
@@ -36,18 +37,16 @@ public class ApplicationGenerator {
     return null;
   }
 
-  private Application ensureGenericTest(Randomizer.Seed seed) {
+  private Application ensureGenericTest(Randomizer.Seed seed, Owners owners) {
     Account account = accountGenerator.ensurePredefined(seed, Accounts.GENERIC_TEST);
     return ensureApplication(
-        seed, anApplication().withAccountId(account.getUuid()).withName("Test Application").build());
+        seed, owners, anApplication().withAccountId(account.getUuid()).withName("Test Application").build());
   }
 
-  public Application ensureRandom(Randomizer.Seed seed) {
+  public Application ensureRandom(Randomizer.Seed seed, Owners owners) {
     EnhancedRandom random = Randomizer.instance(seed);
-
     Applications predefined = random.nextObject(Applications.class);
-
-    return ensurePredefined(seed, predefined);
+    return ensurePredefined(seed, owners, predefined);
   }
 
   public Application exists(Application application) {
@@ -57,7 +56,7 @@ public class ApplicationGenerator {
         .get();
   }
 
-  public Application ensureApplication(Randomizer.Seed seed, Application application) {
+  public Application ensureApplication(Randomizer.Seed seed, Owners owners, Application application) {
     EnhancedRandom random = Randomizer.instance(seed);
 
     final Builder builder = anApplication();
@@ -65,7 +64,11 @@ public class ApplicationGenerator {
     if (application != null && application.getAccountId() != null) {
       builder.withAccountId(application.getAccountId());
     } else {
-      Account account = accountGenerator.randomAccount();
+      Account account = owners.obtainAccount();
+      if (account == null) {
+        account = accountGenerator.randomAccount();
+        owners.add(account);
+      }
       builder.withAccountId(account.getUuid());
     }
 

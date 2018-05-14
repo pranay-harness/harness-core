@@ -87,7 +87,15 @@ public class WingsException extends WingsApiException {
   }
 
   public WingsException(ErrorCode errorCode, String message, ReportTarget[] reportTargets) {
-    this(errorCode, message, (Throwable) null);
+    this(errorCode, message, reportTargets, (Throwable) null);
+  }
+
+  public WingsException(ErrorCode errorCode, ReportTarget[] reportTargets, Throwable cause) {
+    this(errorCode, null, reportTargets, cause);
+  }
+
+  public WingsException(ErrorCode errorCode, String message, ReportTarget[] reportTargets, Throwable cause) {
+    this(errorCode, message, cause);
     this.reportTargets = reportTargets;
   }
 
@@ -101,7 +109,7 @@ public class WingsException extends WingsApiException {
   }
 
   public WingsException(ErrorCode errorCode, Throwable cause) {
-    this(errorCode, null, cause);
+    this(errorCode, (String) null, cause);
   }
 
   public WingsException(ErrorCode errorCode, String message, Throwable cause) {

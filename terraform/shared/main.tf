@@ -36,3 +36,7 @@ resource "aws_instance" "test" {
 
     count = "${var.generic-instances}"
 }
+
+output "security_group" {
+    value = "${aws_security_group.dev_test.name}"
+}

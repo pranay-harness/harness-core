@@ -17,27 +17,32 @@ import java.util.Set;
 @NoArgsConstructor
 public class AppPermissionSummary {
   private boolean canCreateService;
+  private boolean canCreateProvisioner;
   private boolean canCreateEnvironment;
   private boolean canCreateWorkflow;
   private boolean canCreatePipeline;
 
   // Key - entityId, Value - set of actions
   private Map<Action, Set<String>> servicePermissions;
+  private Map<Action, Set<String>> provisionerPermissions;
   private Map<Action, Set<String>> envPermissions;
   private Map<Action, Set<String>> workflowPermissions;
   private Map<Action, Set<String>> deploymentPermissions;
   private Map<Action, Set<String>> pipelinePermissions;
 
   @Builder
-  public AppPermissionSummary(boolean canCreateService, boolean canCreateEnvironment, boolean canCreateWorkflow,
-      boolean canCreatePipeline, Map<Action, Set<String>> servicePermissions, Map<Action, Set<String>> envPermissions,
+  public AppPermissionSummary(boolean canCreateService, boolean canCreateProvisioner, boolean canCreateEnvironment,
+      boolean canCreateWorkflow, boolean canCreatePipeline, Map<Action, Set<String>> servicePermissions,
+      Map<Action, Set<String>> provisionerPermissions, Map<Action, Set<String>> envPermissions,
       Map<Action, Set<String>> workflowPermissions, Map<Action, Set<String>> deploymentPermissions,
       Map<Action, Set<String>> pipelinePermissions) {
     this.canCreateService = canCreateService;
+    this.canCreateProvisioner = canCreateProvisioner;
     this.canCreateEnvironment = canCreateEnvironment;
     this.canCreateWorkflow = canCreateWorkflow;
     this.canCreatePipeline = canCreatePipeline;
     this.servicePermissions = servicePermissions;
+    this.provisionerPermissions = provisionerPermissions;
     this.envPermissions = envPermissions;
     this.workflowPermissions = workflowPermissions;
     this.deploymentPermissions = deploymentPermissions;

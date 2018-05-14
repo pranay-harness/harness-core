@@ -24,6 +24,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.service.intfc.AppService;
@@ -41,6 +42,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 
 /**
  * Created by anubhaw on 1/10/17.
@@ -50,9 +52,10 @@ import java.util.stream.Stream;
 @Indexes(@Index(fields = { @Field("appId")
                            , @Field("envId"), @Field("name") }, options = @IndexOptions(unique = true)))
 public abstract class InfrastructureMapping extends Base {
-  public static final String SERVICE_ID_KEY = "serviceId";
   public static final String ENV_ID_KEY = "envId";
   public static final String NAME_KEY = "name";
+  public static final String PROVISIONER_ID_KEY = "provisionerId";
+  public static final String SERVICE_ID_KEY = "serviceId";
 
   @SchemaIgnore @NotEmpty private String computeProviderSettingId;
   @SchemaIgnore @NotEmpty private String envId;
@@ -71,6 +74,8 @@ public abstract class InfrastructureMapping extends Base {
   @SchemaIgnore private boolean autoPopulate = true;
 
   @SchemaIgnore @NotEmpty private String accountId;
+
+  @Nullable @Indexed private String provisionerId;
 
   /**
    * Instantiates a new Infrastructure mapping.
@@ -103,6 +108,8 @@ public abstract class InfrastructureMapping extends Base {
     this.autoPopulate = autoPopulateName;
     this.accountId = accountId;
   }
+
+  public abstract void applyProvisionerVariables(Map<String, Object> map);
 
   @SchemaIgnore
   public String getAccountId() {
@@ -261,35 +268,28 @@ public abstract class InfrastructureMapping extends Base {
     this.name = name;
   }
 
-  /**
-   * Gets deployment type.
-   *
-   * @return the deployment type
-   */
   public String getDeploymentType() {
     return deploymentType;
   }
 
-  /**
-   * Sets deployment type.
-   *
-   * @param deploymentType the deployment type
-   */
   public void setDeploymentType(String deploymentType) {
     this.deploymentType = deploymentType;
   }
 
-  /**
-   * Gets infra mapping type.
-   *
-   * @return the infra mapping type
-   */
   public String getInfraMappingType() {
     return infraMappingType;
   }
 
   public void setInfraMappingType(String infraMappingType) {
     this.infraMappingType = infraMappingType;
+  }
+
+  public String getProvisionerId() {
+    return provisionerId;
+  }
+
+  public void setProvisionerId(String provisionerId) {
+    this.provisionerId = provisionerId;
   }
 
   @JsonInclude(Include.NON_EMPTY) public abstract String getHostConnectionAttrs();
@@ -303,6 +303,7 @@ public abstract class InfrastructureMapping extends Base {
         .add("computeProviderType", computeProviderType)
         .add("infraMappingType", infraMappingType)
         .add("deploymentType", deploymentType)
+        .add("provisionerId", provisionerId)
         .toString();
   }
 
@@ -310,7 +311,7 @@ public abstract class InfrastructureMapping extends Base {
   public int hashCode() {
     return 31 * super.hashCode()
         + Objects.hash(computeProviderSettingId, envId, serviceTemplateId, computeProviderType, infraMappingType,
-              deploymentType);
+              deploymentType, provisionerId);
   }
 
   @Override
@@ -329,7 +330,8 @@ public abstract class InfrastructureMapping extends Base {
         && Objects.equals(this.envId, other.envId) && Objects.equals(this.serviceTemplateId, other.serviceTemplateId)
         && Objects.equals(this.computeProviderType, other.computeProviderType)
         && Objects.equals(this.infraMappingType, other.infraMappingType)
-        && Objects.equals(this.deploymentType, other.deploymentType);
+        && Objects.equals(this.deploymentType, other.deploymentType)
+        && Objects.equals(this.provisionerId, other.provisionerId);
   }
 
   @Singleton

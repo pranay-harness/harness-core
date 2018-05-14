@@ -1,0 +1,275 @@
+package software.wings.sm.states.provision;
+
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.Base.GLOBAL_ENV_ID;
+import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.Environment.EnvironmentType.ALL;
+import static software.wings.beans.OrchestrationWorkflowType.BUILD;
+import static software.wings.beans.TaskType.TERRAFORM_PROVISION_TASK;
+import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static software.wings.service.intfc.FileService.FileBucket.TERRAFORM_STATE;
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+import static software.wings.sm.ExecutionStatus.SUCCESS;
+
+import com.google.common.collect.Maps;
+import com.google.inject.Inject;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.reinert.jjschema.Attributes;
+import lombok.Getter;
+import lombok.Setter;
+import org.apache.commons.io.IOUtils;
+import org.mongodb.morphia.annotations.Transient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import software.wings.api.ScriptStateExecutionData;
+import software.wings.api.TerraformExecutionData;
+import software.wings.beans.Activity;
+import software.wings.beans.Activity.ActivityBuilder;
+import software.wings.beans.Application;
+import software.wings.beans.DelegateTask;
+import software.wings.beans.Environment;
+import software.wings.beans.ErrorCode;
+import software.wings.beans.GitConfig;
+import software.wings.beans.InfrastructureProvisioner;
+import software.wings.beans.NameValuePair;
+import software.wings.beans.PhaseStep;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.TerraformInfrastructureProvisioner;
+import software.wings.beans.command.Command;
+import software.wings.beans.command.CommandType;
+import software.wings.beans.delegation.TerraformProvisionParameters;
+import software.wings.exception.WingsException;
+import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FileService;
+import software.wings.service.intfc.FileService.FileBucket;
+import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.InfrastructureProvisionerService;
+import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.SecretManager;
+import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionContextImpl;
+import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionStatus;
+import software.wings.sm.State;
+import software.wings.stencils.DefaultValue;
+import software.wings.utils.Validator;
+import software.wings.waitnotify.NotifyResponseData;
+
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+public abstract class TerraformProvisionState extends State {
+  private static final Logger logger = LoggerFactory.getLogger(TerraformProvisionState.class);
+
+  @Inject @Transient private transient ActivityService activityService;
+  @Inject @Transient private transient InfrastructureProvisionerService infrastructureProvisionerService;
+  @Inject @Transient private transient DelegateService delegateService;
+  @Inject @Transient private transient SettingsService settingsService;
+  @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
+  @Inject @Transient private transient SecretManager secretManager;
+  @Inject @Transient private transient FileService fileService;
+
+  @Attributes(title = "Provisioner") @Getter @Setter String provisionerId;
+
+  @Attributes(title = "Variables") @Getter @Setter private List<NameValuePair> variables;
+
+  /**
+   * Instantiates a new state.
+   *
+   * @param name      the name
+   * @param stateType the state type
+   */
+  public TerraformProvisionState(String name, String stateType) {
+    super(name, stateType);
+  }
+
+  protected abstract String commandUnit();
+
+  @Attributes(title = "Timeout (ms)")
+  @DefaultValue("" + DEFAULT_ASYNC_CALL_TIMEOUT)
+  @Override
+  public Integer getTimeoutMillis() {
+    return super.getTimeoutMillis();
+  }
+
+  @Override
+  public ExecutionResponse execute(ExecutionContext context) {
+    String activityId = createActivity(context);
+    return executeInternal(context, activityId);
+  }
+
+  @Override
+  public void handleAbortEvent(ExecutionContext context) {
+    // nothing to do
+  }
+
+  protected static Map<String, Object> parseOutputs(String all) {
+    Map<String, Object> outputs = new LinkedHashMap<>();
+    if (isBlank(all)) {
+      return outputs;
+    }
+
+    try {
+      TypeReference<HashMap<String, Object>> typeRef = new TypeReference<HashMap<String, Object>>() {};
+      Map<String, Object> json = new ObjectMapper().readValue(IOUtils.toInputStream(all), typeRef);
+
+      json.forEach((key, object) -> outputs.put(key, ((Map<String, Object>) object).get("value")));
+
+    } catch (IOException exception) {
+      logger.error("", exception);
+    }
+
+    return outputs;
+  }
+
+  @Override
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+    String activityId = response.keySet().iterator().next();
+    TerraformExecutionData terraformExecutionData = (TerraformExecutionData) response.get(activityId);
+    terraformExecutionData.setActivityId(activityId);
+
+    if (terraformExecutionData.getExecutionStatus() == SUCCESS && terraformExecutionData.getOutputs() != null) {
+      fileService.updateParentEntityIdAndVersion(PhaseStep.class, terraformExecutionData.getEntityId(), null,
+          terraformExecutionData.getStateFileId(), FileBucket.TERRAFORM_STATE);
+      Map<String, Object> outputs = parseOutputs(terraformExecutionData.getOutputs());
+      infrastructureProvisionerService.regenerateInfrastructureMappings(provisionerId, context, outputs);
+    }
+
+    updateActivityStatus(activityId, context.getAppId(), terraformExecutionData.getExecutionStatus());
+
+    // subsequent execution
+    return anExecutionResponse()
+        .withStateExecutionData(terraformExecutionData)
+        .withExecutionStatus(terraformExecutionData.getExecutionStatus())
+        .withErrorMessage(terraformExecutionData.getErrorMessage())
+        .build();
+  }
+
+  protected void updateActivityStatus(String activityId, String appId, ExecutionStatus status) {
+    activityService.updateStatus(activityId, appId, status);
+  }
+
+  private Map<String, String> getVariables(
+      TerraformInfrastructureProvisioner terraformProvisioner, ExecutionContext context) {
+    Map<String, String> result = new HashMap<>();
+
+    if (isNotEmpty(terraformProvisioner.getVariables())) {
+      for (NameValuePair entry : terraformProvisioner.getVariables()) {
+        result.put(entry.getName(), context.renderExpression(entry.getValue()));
+      }
+    }
+
+    if (isNotEmpty(variables)) {
+      for (NameValuePair entry : variables) {
+        result.put(entry.getName(), context.renderExpression(entry.getValue()));
+      }
+    }
+
+    return result;
+  }
+
+  private ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
+    final InfrastructureProvisioner infrastructureProvisioner =
+        infrastructureProvisionerService.get(context.getAppId(), provisionerId);
+
+    if (infrastructureProvisioner == null
+        || (!(infrastructureProvisioner instanceof TerraformInfrastructureProvisioner))) {
+      throw new WingsException(ErrorCode.INVALID_REQUEST);
+    }
+
+    TerraformInfrastructureProvisioner terraformProvisioner =
+        (TerraformInfrastructureProvisioner) infrastructureProvisioner;
+
+    SettingAttribute gitSettingAttribute = settingsService.get(terraformProvisioner.getSourceRepoSettingId());
+    Validator.notNullCheck("gitSettingAttribute", gitSettingAttribute);
+    if (!(gitSettingAttribute.getValue() instanceof GitConfig)) {
+      throw new WingsException(ErrorCode.INVALID_REQUEST);
+    }
+
+    GitConfig gitConfig = (GitConfig) gitSettingAttribute.getValue();
+
+    ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
+
+    final String entityId = terraformProvisioner.getUuid() + "-" + executionContext.getEnv().getUuid();
+
+    final String fileId = fileService.getLatestFileId(entityId, TERRAFORM_STATE);
+
+    DelegateTask delegateTask =
+        aDelegateTask()
+            .withTaskType(TERRAFORM_PROVISION_TASK)
+            .withAccountId(executionContext.getApp().getAccountId())
+            .withWaitId(activityId)
+            .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
+            .withParameters(new Object[] {
+                TerraformProvisionParameters.builder()
+                    .accountId(executionContext.getApp().getAccountId())
+                    .appId(executionContext.getAppId())
+                    .entityId(entityId)
+                    .commandUnitName(commandUnit())
+                    .currentStateFileId(fileId)
+                    .activityId(activityId)
+                    .sourceRepo(gitConfig)
+                    .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null))
+                    .scriptPath(terraformProvisioner.getPath())
+                    .variables(getVariables(terraformProvisioner, context))
+                    .build()})
+            .build();
+
+    if (getTimeoutMillis() != null) {
+      delegateTask.setTimeout(getTimeoutMillis());
+    }
+    String delegateTaskId = delegateService.queueTask(delegateTask);
+
+    return anExecutionResponse()
+        .withAsync(true)
+        .withCorrelationIds(Collections.singletonList(activityId))
+        .withDelegateTaskId(delegateTaskId)
+        .withStateExecutionData(ScriptStateExecutionData.builder().activityId(activityId).build())
+        .build();
+  }
+
+  private String createActivity(ExecutionContext executionContext) {
+    Application app = ((ExecutionContextImpl) executionContext).getApp();
+    Environment env = ((ExecutionContextImpl) executionContext).getEnv();
+
+    ActivityBuilder activityBuilder =
+        Activity.builder()
+            .applicationName(app.getName())
+            .commandName(getName())
+            .type(Activity.Type.Verification)
+            .workflowType(executionContext.getWorkflowType())
+            .workflowExecutionName(executionContext.getWorkflowExecutionName())
+            .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
+            .stateExecutionInstanceName(executionContext.getStateExecutionInstanceName())
+            .commandType(getStateType())
+            .workflowExecutionId(executionContext.getWorkflowExecutionId())
+            .workflowId(executionContext.getWorkflowId())
+            .commandUnits(
+                asList(Command.Builder.aCommand().withName(commandUnit()).withCommandType(CommandType.OTHER).build()))
+            .serviceVariables(Maps.newHashMap())
+            .status(ExecutionStatus.RUNNING);
+
+    if (executionContext.getOrchestrationWorkflowType() != null
+        && executionContext.getOrchestrationWorkflowType().equals(BUILD)) {
+      activityBuilder.environmentId(GLOBAL_ENV_ID).environmentName(GLOBAL_ENV_ID).environmentType(ALL);
+    } else {
+      activityBuilder.environmentId(env.getUuid())
+          .environmentName(env.getName())
+          .environmentType(env.getEnvironmentType());
+    }
+
+    Activity activity = activityBuilder.build();
+    activity.setAppId(app.getUuid());
+    return activityService.save(activity).getUuid();
+  }
+}

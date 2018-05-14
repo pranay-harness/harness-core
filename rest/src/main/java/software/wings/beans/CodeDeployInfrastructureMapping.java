@@ -13,6 +13,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.stencils.EnumData;
 import software.wings.utils.Util;
 
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -35,6 +36,9 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
   public CodeDeployInfrastructureMapping() {
     super(InfrastructureMappingType.AWS_AWS_CODEDEPLOY.name());
   }
+
+  @Override
+  public void applyProvisionerVariables(Map<String, Object> map) {}
 
   @Data
   @EqualsAndHashCode(callSuper = true)

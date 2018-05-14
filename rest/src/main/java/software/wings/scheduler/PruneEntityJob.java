@@ -22,6 +22,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
@@ -35,6 +36,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
@@ -57,10 +59,11 @@ public class PruneEntityJob implements Job {
 
   @Inject private ActivityService activityService;
   @Inject private AppService appService;
-  @Inject private EnvironmentService environmentService;
   @Inject private ArtifactStreamService artifactStreamService;
+  @Inject private EnvironmentService environmentService;
   @Inject private HostService hostService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject private PipelineService pipelineService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private WorkflowService workflowService;
@@ -145,6 +148,8 @@ public class PruneEntityJob implements Job {
         serviceResourceService.pruneDescendingEntities(appId, entityId);
       } else if (className.equals(Workflow.class.getCanonicalName())) {
         workflowService.pruneDescendingEntities(appId, entityId);
+      } else if (className.equals(InfrastructureProvisioner.class.getCanonicalName())) {
+        infrastructureProvisionerService.pruneDescendingEntities(appId, entityId);
       } else {
         logger.error("Unsupported class [{}] was scheduled for pruning.", className);
       }
