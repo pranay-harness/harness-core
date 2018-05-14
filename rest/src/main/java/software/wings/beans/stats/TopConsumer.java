@@ -2,13 +2,18 @@ package software.wings.beans.stats;
 
 import com.google.common.base.MoreObjects;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Id;
 
 import java.util.Objects;
 
-/**
- * Created by anubhaw on 8/16/16.
- */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class TopConsumer {
   @Id private String appId;
   private String appName;
@@ -170,132 +175,5 @@ public class TopConsumer {
         && Objects.equals(this.failedActivityCount, other.failedActivityCount)
         && Objects.equals(this.totalCount, other.totalCount) && Objects.equals(this.serviceId, this.serviceId)
         && Objects.equals(this.serviceName, this.serviceName);
-  }
-
-  /**
-   * The type Builder.
-   */
-  public static final class Builder {
-    private String appId;
-    private String appName;
-    private String serviceId;
-    private String serviceName;
-    private int successfulActivityCount;
-    private int failedActivityCount;
-    private int totalCount;
-
-    private Builder() {}
-
-    /**
-     * A top consumer builder.
-     *
-     * @return the builder
-     */
-    public static Builder aTopConsumer() {
-      return new Builder();
-    }
-
-    /**
-     * With app id builder.
-     *
-     * @param appId the app id
-     * @return the builder
-     */
-    public Builder withAppId(String appId) {
-      this.appId = appId;
-      return this;
-    }
-
-    /**
-     * With app name builder.
-     *
-     * @param appName the app name
-     * @return the builder
-     */
-    public Builder withAppName(String appName) {
-      this.appName = appName;
-      return this;
-    }
-
-    /**
-     * With service id builder
-     */
-    public Builder withServiceId(String serviceId) {
-      this.serviceId = serviceId;
-      return this;
-    }
-
-    /**
-     * With service name builder
-     */
-    public Builder withServiceName(String serviceName) {
-      this.serviceName = serviceName;
-      return this;
-    }
-    /**
-     * With successful activity count builder.
-     *
-     * @param successfulActivityCount the successful activity count
-     * @return the builder
-     */
-    public Builder withSuccessfulActivityCount(int successfulActivityCount) {
-      this.successfulActivityCount = successfulActivityCount;
-      return this;
-    }
-
-    /**
-     * With failed activity count builder.
-     *
-     * @param failedActivityCount the failed activity count
-     * @return the builder
-     */
-    public Builder withFailedActivityCount(int failedActivityCount) {
-      this.failedActivityCount = failedActivityCount;
-      return this;
-    }
-
-    /**
-     * With total count builder.
-     *
-     * @param totalCount the total count
-     * @return the builder
-     */
-    public Builder withTotalCount(int totalCount) {
-      this.totalCount = totalCount;
-      return this;
-    }
-
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
-    public Builder but() {
-      return aTopConsumer()
-          .withAppId(appId)
-          .withAppName(appName)
-          .withServiceId(serviceId)
-          .withServiceName(serviceName)
-          .withSuccessfulActivityCount(successfulActivityCount)
-          .withFailedActivityCount(failedActivityCount)
-          .withTotalCount(totalCount);
-    }
-
-    /**
-     * Build top consumer.
-     *
-     * @return the top consumer
-     */
-    public TopConsumer build() {
-      TopConsumer topConsumer = new TopConsumer();
-      topConsumer.setAppId(appId);
-      topConsumer.setAppName(appName);
-      topConsumer.setServiceId(serviceId);
-      topConsumer.setServiceName(serviceName);
-      topConsumer.setSuccessfulActivityCount(successfulActivityCount);
-      topConsumer.setFailedActivityCount(failedActivityCount);
-      topConsumer.setTotalCount(totalCount);
-      return topConsumer;
-    }
   }
 }

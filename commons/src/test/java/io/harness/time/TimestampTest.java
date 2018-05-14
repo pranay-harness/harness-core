@@ -8,7 +8,6 @@ public class TimestampTest {
   @Test
   public void testCurrentMinuteBoundary() {
     final long currentMinuteBoundary = Timestamp.currentMinuteBoundary();
-    final long currentTimeMillis = System.currentTimeMillis();
     assertThat(currentMinuteBoundary).isBetween(currentMinuteBoundary, currentMinuteBoundary + 60 * 1000);
   }
 

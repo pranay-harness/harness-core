@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import org.mongodb.morphia.query.MorphiaIterator;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.BuildExecutionSummary;
 import software.wings.beans.CountsByStatuses;
@@ -285,4 +286,9 @@ public interface WorkflowExecutionService {
 
   WorkflowExecutionBaseline getBaselineDetails(
       String appId, String workflowExecutionId, String stateExecutionId, String currentExecId);
+
+  List<WorkflowExecution> calculateWorkflowExecutions(List<String> appIds, long fromDateEpochMilli);
+
+  MorphiaIterator<WorkflowExecution, WorkflowExecution> obtainWorkflowExecutionIterator(
+      List<String> appIds, long epochMilli);
 }

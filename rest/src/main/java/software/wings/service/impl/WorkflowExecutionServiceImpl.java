@@ -22,6 +22,8 @@ import static software.wings.api.ApprovalStateExecutionData.Builder.anApprovalSt
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.ApprovalDetails.Action.APPROVE;
 import static software.wings.beans.ApprovalDetails.Action.REJECT;
+import static software.wings.beans.Base.APP_ID_KEY;
+import static software.wings.beans.Base.CREATED_AT_KEY;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.EntityType.DEPLOYMENT;
@@ -33,8 +35,11 @@ import static software.wings.beans.PipelineStageExecution.Builder.aPipelineStage
 import static software.wings.beans.ReadPref.CRITICAL;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.GE;
+import static software.wings.beans.WorkflowExecution.PIPELINE_EXECUTION_ID_KEY;
+import static software.wings.beans.WorkflowExecution.WORKFLOW_TYPE_ID_KEY;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.PIPELINE;
+import static software.wings.beans.WorkflowType.SIMPLE;
 import static software.wings.dl.HQuery.excludeValidate;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
@@ -2313,5 +2318,32 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     return pageResponse.getResponse().get(0);
+  }
+
+  @Override
+  public List<WorkflowExecution> calculateWorkflowExecutions(List<String> appIds, long fromDateEpochMilli) {
+    List<WorkflowExecution> workflowExecutions = new ArrayList<>();
+    MorphiaIterator<WorkflowExecution, WorkflowExecution> iterator =
+        obtainWorkflowExecutionIterator(appIds, fromDateEpochMilli);
+    try (DBCursor ignored = iterator.getCursor()) {
+      while (iterator.hasNext()) {
+        workflowExecutions.add(iterator.next());
+      }
+    }
+    return workflowExecutions;
+  }
+
+  public MorphiaIterator<WorkflowExecution, WorkflowExecution> obtainWorkflowExecutionIterator(
+      List<String> appIds, long epochMilli) {
+    return wingsPersistence.createQuery(WorkflowExecution.class)
+        .field(CREATED_AT_KEY)
+        .greaterThanOrEq(epochMilli)
+        .field(WORKFLOW_TYPE_ID_KEY)
+        .in(asList(ORCHESTRATION, SIMPLE, PIPELINE))
+        .field(PIPELINE_EXECUTION_ID_KEY)
+        .doesNotExist()
+        .field(APP_ID_KEY)
+        .in(appIds)
+        .fetch();
   }
 }

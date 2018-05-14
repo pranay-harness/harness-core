@@ -1,8 +1,11 @@
 package software.wings.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.time.EpochUtil.PST_ZONE_ID;
+import static io.harness.time.EpochUtil.calculateEpochMilliOfStartOfDayForXDaysInPastFromNow;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -10,13 +13,18 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
+import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
+import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
+import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.StateMachine.StateMachineBuilder.aStateMachine;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.DEFAULT_VERSION;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -27,13 +35,16 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import com.mongodb.DBCursor;
 import com.mongodb.WriteResult;
+import org.assertj.core.api.Assertions;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.FieldEnd;
+import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
@@ -52,13 +63,15 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.rules.Listeners;
-import software.wings.service.impl.GraphRenderer;
 import software.wings.service.intfc.ServiceResourceService;
-import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateMachineExecutionSimulator;
 import software.wings.waitnotify.NotifyEventListener;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * The Class workflowExecutionServiceTest.
@@ -72,10 +85,10 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   @Mock private WingsPersistence wingsPersistence;
   @Mock private WorkflowService workflowService;
 
-  @Mock private StateExecutionService stateExecutionServiceMock;
   @Mock private ServiceResourceService serviceResourceServiceMock;
   @Mock private StateMachineExecutionSimulator stateMachineExecutionSimulator;
-  @Mock private GraphRenderer graphRenderer;
+  @Mock private MorphiaIterator<WorkflowExecution, WorkflowExecution> executionIterator;
+  @Mock private DBCursor dbCursor;
 
   private Workflow workflow =
       aWorkflow()
@@ -101,6 +114,11 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   @Before
   public void setUp() {
     when(wingsPersistence.createQuery(eq(WorkflowExecution.class))).thenReturn(query);
+    when(query.field(any())).thenReturn(end);
+    when(end.in(any())).thenReturn(query);
+    when(end.greaterThanOrEq(any())).thenReturn(query);
+    when(end.hasAnyOf(any())).thenReturn(query);
+    when(end.doesNotExist()).thenReturn(query);
     when(query.filter(any(), any())).thenReturn(query);
 
     when(wingsPersistence.createUpdateOperations(WorkflowExecution.class)).thenReturn(updateOperations);
@@ -181,7 +199,6 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   public void shouldThrowWorkflowNull() {
     try {
       ExecutionArgs executionArgs = new ExecutionArgs();
-
       RequiredExecutionArgs required = workflowExecutionService.getRequiredExecutionArgs(APP_ID, ENV_ID, executionArgs);
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
@@ -285,5 +302,39 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
       assertThat(exception).hasMessage(INVALID_REQUEST.name());
       assertThat(exception.getParams()).containsEntry("message", "serviceInstances are empty for a simple execution");
     }
+  }
+
+  @Test
+  public void shouldTestWorkflowExecutionIterator() {
+    when(query.fetch()).thenReturn(executionIterator);
+    long fromDateEpochMilli = calculateEpochMilliOfStartOfDayForXDaysInPastFromNow(30, PST_ZONE_ID);
+    MorphiaIterator<WorkflowExecution, WorkflowExecution> executionIterator =
+        workflowExecutionService.obtainWorkflowExecutionIterator(Arrays.asList(APP_ID), fromDateEpochMilli);
+    assertNotNull(executionIterator);
+  }
+
+  @Test
+  public void shouldTestGetWorkflowExecutionsByIterator() {
+    when(query.fetch()).thenReturn(executionIterator);
+    when(executionIterator.getCursor()).thenReturn(dbCursor);
+    WorkflowExecution workflowExecution1 =
+        aWorkflowExecution().withAppId(APP_ID).withAppName(APP_NAME).withEnvType(PROD).withStatus(SUCCESS).build();
+
+    WorkflowExecution workflowExecution2 = aWorkflowExecution()
+                                               .withAppId(APP_ID)
+                                               .withAppName(APP_NAME)
+                                               .withEnvType(NON_PROD)
+                                               .withStatus(ExecutionStatus.FAILED)
+                                               .build();
+
+    when(executionIterator.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
+
+    when(executionIterator.next()).thenReturn(workflowExecution1).thenReturn(workflowExecution2);
+
+    long fromDateEpochMilli = calculateEpochMilliOfStartOfDayForXDaysInPastFromNow(30, PST_ZONE_ID);
+    List<WorkflowExecution> workflowExecutions =
+        workflowExecutionService.calculateWorkflowExecutions(Arrays.asList(APP_ID), fromDateEpochMilli);
+    assertNotNull(workflowExecutions);
+    Assertions.assertThat(workflowExecutions).hasSize(2);
   }
 }

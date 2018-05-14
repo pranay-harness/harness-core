@@ -9,7 +9,6 @@ public class Timestamp {
   /**
    * Returns the current minute boundary in milliseconds
    *
-   * @param timestampMs
    * @return
    */
   public static long currentMinuteBoundary() {
