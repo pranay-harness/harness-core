@@ -13,6 +13,7 @@ import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import software.wings.api.MetricDataAnalysisResponse;
+import software.wings.api.PcfInstanceElement;
 import software.wings.delegatetasks.SplunkDataCollectionTask;
 import software.wings.metrics.RiskLevel;
 import software.wings.scheduler.QuartzScheduler;
@@ -292,6 +293,15 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     } catch (UnsupportedEncodingException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  @Override
+  protected String getPcfHostName(PcfInstanceElement pcfInstanceElement, boolean includePrevious) {
+    if ((includePrevious && !pcfInstanceElement.isUpsize()) || (!includePrevious && pcfInstanceElement.isUpsize())) {
+      return pcfInstanceElement.getDisplayName() + ":" + pcfInstanceElement.getInstanceIndex();
+    }
+
+    return null;
   }
 
   public abstract AnalysisTolerance getAnalysisTolerance();

@@ -11,20 +11,20 @@ import javax.ws.rs.client.WebTarget;
  */
 public class AppDynamicsToDoListLoadGenTest extends BaseIntegrationTest {
   //  private final String baseUrl = "http://rsingh-test-1026806332.us-east-1.elb.amazonaws.com";
-  private final String baseUrl = "http://35.192.236.231";
+  private final String baseUrl = "https://appd.cfapps.io";
   //  private final String baseUrl = "http://localhost:8080";
   @Test
   @Ignore
   public void generateLoadTest() throws InterruptedException {
     while (true) {
       try {
-        WebTarget btTarget = client.target(baseUrl + "/todolist/exception");
+        WebTarget btTarget = client.target(baseUrl + "/exception");
         getRequestBuilder(btTarget).get();
-        btTarget = client.target(baseUrl + "/todolist/register?name=cahksdc&password=abc&password2=abc");
+        btTarget = client.target(baseUrl + "/register?name=cahksdc&password=abc&password2=abc");
         logger.info(getRequestBuilder(btTarget).post(null).toString());
-        btTarget = client.target(baseUrl + "/todolist/login.jsp");
+        btTarget = client.target(baseUrl + "/login.jsp");
         logger.info("" + getRequestBuilder(btTarget).get().getStatus());
-        btTarget = client.target(baseUrl + "/todolist/inside/load?priority=1&task=task1");
+        btTarget = client.target(baseUrl + "/inside/load?priority=1&task=task1");
         logger.info("" + getRequestBuilder(btTarget).get().getStatus());
       } catch (Exception exception) {
         logger.info("", exception);
