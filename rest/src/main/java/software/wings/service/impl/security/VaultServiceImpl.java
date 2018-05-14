@@ -13,7 +13,7 @@ import com.google.inject.Inject;
 
 import com.mongodb.DBCursor;
 import com.mongodb.DuplicateKeyException;
-import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Base;
@@ -71,16 +71,8 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
   @Override
   public VaultConfig getSecretConfig(String accountId) {
-    VaultConfig vaultConfig = null;
-    final MorphiaIterator<VaultConfig, VaultConfig> query = wingsPersistence.createQuery(VaultConfig.class)
-                                                                .filter("accountId", accountId)
-                                                                .filter("isDefault", true)
-                                                                .fetch(new FindOptions().limit(1));
-    try (DBCursor cursor = query.getCursor()) {
-      if (query.hasNext()) {
-        vaultConfig = query.next();
-      }
-    }
+    VaultConfig vaultConfig =
+        wingsPersistence.createQuery(VaultConfig.class).filter("accountId", accountId).filter("isDefault", true).get();
 
     if (vaultConfig != null) {
       EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, vaultConfig.getAuthToken());
@@ -96,16 +88,8 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
   @Override
   public VaultConfig getVaultConfig(String accountId, String entityId) {
-    VaultConfig vaultConfig = null;
-    final MorphiaIterator<VaultConfig, VaultConfig> query = wingsPersistence.createQuery(VaultConfig.class)
-                                                                .filter("accountId", accountId)
-                                                                .filter("_id", entityId)
-                                                                .fetch(new FindOptions().limit(1));
-    try (DBCursor cursor = query.getCursor()) {
-      if (query.hasNext()) {
-        vaultConfig = query.next();
-      }
-    }
+    VaultConfig vaultConfig =
+        wingsPersistence.createQuery(VaultConfig.class).filter("accountId", accountId).filter("_id", entityId).get();
 
     if (vaultConfig != null) {
       EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, vaultConfig.getAuthToken());
@@ -191,18 +175,16 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
   @Override
   public boolean deleteVaultConfig(String accountId, String vaultConfigId) {
-    final MorphiaIterator<EncryptedData, EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
-                                                                    .filter("accountId", accountId)
-                                                                    .filter("kmsId", vaultConfigId)
-                                                                    .filter("encryptionType", EncryptionType.VAULT)
-                                                                    .fetch(new FindOptions().limit(1));
+    final long count = wingsPersistence.createQuery(EncryptedData.class)
+                           .filter("accountId", accountId)
+                           .filter("kmsId", vaultConfigId)
+                           .filter("encryptionType", EncryptionType.VAULT)
+                           .count(new CountOptions().limit(1));
 
-    try (DBCursor cursor = query.getCursor()) {
-      if (query.hasNext()) {
-        String message = "Can not delete the vault configuration since there are secrets encrypted with this. "
-            + "Please transition your secrets to a new kms and then try again";
-        throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR).addParam("reason", message);
-      }
+    if (count > 0) {
+      String message = "Can not delete the vault configuration since there are secrets encrypted with this. "
+          + "Please transition your secrets to a new kms and then try again";
+      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR).addParam("reason", message);
     }
 
     VaultConfig vaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);

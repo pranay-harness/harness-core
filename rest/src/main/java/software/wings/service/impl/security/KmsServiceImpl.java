@@ -13,7 +13,7 @@ import com.google.common.io.Files;
 import com.google.inject.Inject;
 
 import com.mongodb.DBCursor;
-import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Base;
@@ -81,29 +81,12 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
   @Override
   public KmsConfig getSecretConfig(String accountId) {
-    KmsConfig kmsConfig = null;
-    final MorphiaIterator<KmsConfig, KmsConfig> query1 = wingsPersistence.createQuery(KmsConfig.class)
-                                                             .filter("accountId", accountId)
-                                                             .filter("isDefault", true)
-                                                             .fetch(new FindOptions().limit(1));
-
-    try (DBCursor cursor = query1.getCursor()) {
-      if (query1.hasNext()) {
-        kmsConfig = query1.next();
-      }
-    }
+    KmsConfig kmsConfig =
+        wingsPersistence.createQuery(KmsConfig.class).filter("accountId", accountId).filter("isDefault", true).get();
 
     if (kmsConfig == null) {
       logger.info("No kms setup for account {}. Using harness's kms", accountId);
-      final MorphiaIterator<KmsConfig, KmsConfig> query2 = wingsPersistence.createQuery(KmsConfig.class)
-                                                               .filter("accountId", Base.GLOBAL_ACCOUNT_ID)
-                                                               .fetch(new FindOptions().limit(1));
-
-      try (DBCursor cursor = query2.getCursor()) {
-        if (query2.hasNext()) {
-          kmsConfig = query2.next();
-        }
-      }
+      kmsConfig = wingsPersistence.createQuery(KmsConfig.class).filter("accountId", Base.GLOBAL_ACCOUNT_ID).get();
     }
 
     if (kmsConfig != null) {
@@ -226,18 +209,16 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
   @Override
   public boolean deleteKmsConfig(String accountId, String kmsConfigId) {
-    final MorphiaIterator<EncryptedData, EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
-                                                                    .filter("accountId", accountId)
-                                                                    .filter("kmsId", kmsConfigId)
-                                                                    .filter("encryptionType", EncryptionType.KMS)
-                                                                    .fetch(new FindOptions().limit(1));
+    final long count = wingsPersistence.createQuery(EncryptedData.class)
+                           .filter("accountId", accountId)
+                           .filter("kmsId", kmsConfigId)
+                           .filter("encryptionType", EncryptionType.KMS)
+                           .count(new CountOptions().limit(1));
 
-    try (DBCursor cursor = query.getCursor()) {
-      if (query.hasNext()) {
-        String message = "Can not delete the kms configuration since there are secrets encrypted with this. "
-            + "Please transition your secrets to a new kms and then try again";
-        throw new WingsException(ErrorCode.KMS_OPERATION_ERROR).addParam("reason", message);
-      }
+    if (count > 0) {
+      String message = "Can not delete the kms configuration since there are secrets encrypted with this. "
+          + "Please transition your secrets to a new kms and then try again";
+      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR).addParam("reason", message);
     }
 
     wingsPersistence.delete(KmsConfig.class, kmsConfigId);
@@ -358,17 +339,11 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
   @Override
   public KmsConfig getKmsConfig(String accountId, String entityId) {
-    KmsConfig kmsConfig = null;
-    final MorphiaIterator<KmsConfig, KmsConfig> query = wingsPersistence.createQuery(KmsConfig.class)
-                                                            .field("accountId")
-                                                            .in(Lists.newArrayList(accountId, Base.GLOBAL_ACCOUNT_ID))
-                                                            .filter("_id", entityId)
-                                                            .fetch(new FindOptions().limit(1));
-    try (DBCursor cursor = query.getCursor()) {
-      if (query.hasNext()) {
-        kmsConfig = query.next();
-      }
-    }
+    KmsConfig kmsConfig = wingsPersistence.createQuery(KmsConfig.class)
+                              .field("accountId")
+                              .in(Lists.newArrayList(accountId, Base.GLOBAL_ACCOUNT_ID))
+                              .filter("_id", entityId)
+                              .get();
 
     if (kmsConfig != null) {
       kmsConfig.setAccessKey(new String(decryptKey(kmsConfig.getAccessKey().toCharArray())));
