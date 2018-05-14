@@ -1,5 +1,7 @@
 package software.wings.api;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -47,7 +49,7 @@ public class JenkinsExecutionData extends StateExecutionData implements NotifyRe
     putNotNull(
         executionDetails, "jobName", ExecutionDataValue.builder().displayName("Job Name").value(jobName).build());
 
-    if (jobParameters != null) {
+    if (isNotEmpty(jobParameters)) {
       putNotNull(executionDetails, "jobParameters",
           ExecutionDataValue.builder().displayName("Job Parameters").value(removeNullValues(jobParameters)).build());
     }
@@ -69,9 +71,9 @@ public class JenkinsExecutionData extends StateExecutionData implements NotifyRe
         ExecutionDataValue.builder().displayName("Description").value(description).build());
     putNotNull(
         executionDetails, "build", ExecutionDataValue.builder().displayName("Build Url").value(buildUrl).build());
-    if (metadata != null) {
+    if (isNotEmpty(metadata)) {
       putNotNull(executionDetails, "metadata",
-          ExecutionDataValue.builder().displayName("Meta-Data").value(removeNullValues(jobParameters)).build());
+          ExecutionDataValue.builder().displayName("Meta-Data").value(removeNullValues(metadata)).build());
     }
     putNotNull(executionDetails, "activityId",
         ExecutionDataValue.builder().displayName("Activity Id").value(activityId).build());

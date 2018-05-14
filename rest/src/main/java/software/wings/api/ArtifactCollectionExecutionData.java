@@ -1,5 +1,7 @@
 package software.wings.api;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -52,7 +54,8 @@ public class ArtifactCollectionExecutionData extends StateExecutionData implemen
         executionDetails, "buildNo", ExecutionDataValue.builder().displayName("Build / Tag").value(buildNo).build());
     putNotNull(
         executionDetails, "revision", ExecutionDataValue.builder().displayName("Revision").value(revision).build());
-    if (metadata != null) {
+
+    if (isNotEmpty(metadata)) {
       putNotNull(executionDetails, "metadata",
           ExecutionDataValue.builder().displayName("Meta-Data").value(removeNullValues(metadata)).build());
     }
