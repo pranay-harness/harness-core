@@ -130,7 +130,7 @@ public class CommandExecutionContext {
     return text;
   }
 
-  public WinRmSessionConfig winrmSessionConfig(String commandUnitName) {
+  public WinRmSessionConfig winrmSessionConfig(String commandUnitName, String commandPath) {
     return WinRmSessionConfig.builder()
         .accountId(accountId)
         .appId(appId)
@@ -144,7 +144,7 @@ public class CommandExecutionContext {
         .port(winrmConnectionAttributes.getPort())
         .useSSL(winrmConnectionAttributes.isUseSSL())
         .skipCertChecks(winrmConnectionAttributes.isSkipCertChecks())
-        .workingDirectory(runtimePath)
+        .workingDirectory(commandPath)
         .environment(envVariables == null ? Collections.emptyMap() : envVariables)
         .build();
   }

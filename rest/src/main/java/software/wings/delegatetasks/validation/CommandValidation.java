@@ -3,6 +3,7 @@ package software.wings.delegatetasks.validation;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.network.Http.connectableHttpUrl;
 import static java.util.Collections.singletonList;
+import static software.wings.common.Constants.WINDOWS_DEFAULT_COMMAND_PATH;
 import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
 import static software.wings.utils.SshHelperUtil.getSshSessionConfig;
 import static software.wings.utils.WinRmHelperUtil.HandleWinRmClientException;
@@ -104,7 +105,7 @@ public class CommandValidation extends AbstractDelegateValidateTask {
 
   private DelegateConnectionResult validateHostWinRm(CommandExecutionContext context) {
     DelegateConnectionResultBuilder resultBuilder = DelegateConnectionResult.builder().criteria(getCriteria(context));
-    WinRmSessionConfig config = context.winrmSessionConfig("HOST_CONNECTION_TEST");
+    WinRmSessionConfig config = context.winrmSessionConfig("HOST_CONNECTION_TEST", WINDOWS_DEFAULT_COMMAND_PATH);
     try (WinRmSession session = new WinRmSession(config)) {
       resultBuilder.validated(true);
     } catch (Exception e) {

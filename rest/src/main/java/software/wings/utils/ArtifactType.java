@@ -812,84 +812,47 @@ public enum ArtifactType {
 
     @Override
     public List<Command> getDefaultCommands() {
-      return asList(getStopCommand(), getInstallCommand(), getStartCommand());
-    }
-
-    /**
-     * Gets start command graph.
-     *
-     * @return the start command graph
-     */
-    private Command getStartCommand() {
-      return aCommand()
-          .withCommandType(CommandType.START)
-          .withGraph(aGraph()
-                         .withGraphName("Start")
-                         .addNodes(aGraphNode()
-                                       .withOrigin(true)
-                                       .withId(UUIDGenerator.graphIdGenerator("node"))
-                                       .withType(EXEC.name())
-                                       .withName("Start Service")
-                                       .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
-                                       .addProperty("scriptType", "POWERSHELL")
-                                       .addProperty("commandString", "Write-Host \"Starting Service\"")
-                                       .build(),
-                             aGraphNode()
-                                 .withId(UUIDGenerator.graphIdGenerator("node"))
-                                 .withType(PROCESS_CHECK_RUNNING.name())
-                                 .withName("Service Running")
-                                 .addProperty("scriptType", "POWERSHELL")
-                                 .addProperty("commandString", "Write-Host \"All Running\"")
-                                 .build())
-                         .buildPipeline())
-          .build();
+      return asList(getInstallCommand());
     }
 
     private Command getInstallCommand() {
       return aCommand()
           .withCommandType(CommandType.INSTALL)
-          .withGraph(aGraph()
-                         .withGraphName("Install")
-                         .addNodes(aGraphNode()
-                                       .withOrigin(true)
-                                       .withId(UUIDGenerator.graphIdGenerator("node"))
-                                       .withType(EXEC.name())
-                                       .withName("Install Service")
-                                       .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
-                                       .addProperty("scriptType", "POWERSHELL")
-                                       .addProperty("commandString", "Write-Host \"Installing Service\"")
-                                       .build())
-                         .buildPipeline())
-          .build();
-    }
-
-    /**
-     * Gets stop command graph.
-     *
-     * @return the stop command graph
-     */
-    private Command getStopCommand() {
-      return aCommand()
-          .withCommandType(CommandType.STOP)
-          .withGraph(aGraph()
-                         .withGraphName("Stop")
-                         .addNodes(aGraphNode()
-                                       .withOrigin(true)
-                                       .withId(UUIDGenerator.graphIdGenerator("node"))
-                                       .withType(EXEC.name())
-                                       .withName("Stop Service")
-                                       .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
-                                       .addProperty("scriptType", "POWERSHELL")
-                                       .addProperty("commandString", "Write-Host \"Stopping Service\"")
-                                       .build(),
-                             aGraphNode()
-                                 .withId(UUIDGenerator.graphIdGenerator("node"))
-                                 .withName("Service Stopped")
-                                 .withType(PROCESS_CHECK_STOPPED.name())
-                                 .addProperty("scriptType", "POWERSHELL")
-                                 .addProperty("commandString", "Write-Host \"All Stopped\"")
-                                 .build())
-                         .buildPipeline())
+          .withGraph(
+              aGraph()
+                  .withGraphName("Install")
+                  .addNodes(
+                      aGraphNode()
+                          .withOrigin(true)
+                          .withId(UUIDGenerator.graphIdGenerator("node"))
+                          .withType(EXEC.name())
+                          .withName("Install Service")
+                          .addProperty("commandPath", "%USERPROFILE%")
+                          .addProperty("scriptType", "POWERSHELL")
+                          .addProperty("commandString",
+                              "Import-Module WebAdministration\n"
+                                  + "\n"
+                                  + "$siteName=\"Default Web Site\"\n"
+                                  + "$appName=\"TestApp\"\n"
+                                  + "$releaseId=\"${workflow.ReleaseNo}\"\n"
+                                  + "$artifactFilename = $env:TEMP + \"\\\" + \"release-\" + $releaseId + \".zip\"\n"
+                                  + "$appPhysicalDirectory=$env:SYSTEMDRIVE + \"\\Artifacts\\Site\\\" + $siteName + \"\\App\\\" + $appName + \"\\release-\" + $releaseId\n"
+                                  + "\n"
+                                  + "Write-Host \"Starting Deployment [id:\" $releaseId \"]\"\n"
+                                  + "\n"
+                                  + "Write-Host \"Downloading artifact file - URL: ${artifact.url} to File: \" $artifactFilename\n"
+                                  + "Invoke-WebRequest -Uri \"${artifact.url}\" -OutFile $artifactFilename\n"
+                                  + "\n"
+                                  + "Write-Host \"Extracting package to \" $appPhysicalDirectory\n"
+                                  + "Expand-Archive -Path $artifactFilename -DestinationPath $appPhysicalDirectory -Force\n"
+                                  + "\n"
+                                  + "Write-Host \"Creating Application..\"\n"
+                                  + "$VirtualAppPath = 'IIS:\\Sites\\' + $siteName + '\\' + $appName\n"
+                                  + "New-Item -Path $VirtualAppPath -Type Application -PhysicalPath (Get-ChildItem $appPhysicalDirectory)[0].FullName -Force\n"
+                                  + "\n"
+                                  + "Write-Host \"Done.\"")
+                          .build())
+                  .buildPipeline())
           .build();
     }
   },
