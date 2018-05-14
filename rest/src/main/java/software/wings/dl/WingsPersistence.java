@@ -74,15 +74,6 @@ public interface WingsPersistence {
   <T extends Base> T get(Class<T> cls, String id, ReadPref readPref);
 
   /**
-   * Find one by query t.
-   *
-   * @param <T>   the type parameter
-   * @param query the query
-   * @return the t
-   */
-  <T extends Base> T executeGetOneQuery(Query<T> query);
-
-  /**
    * Find and modify t.
    *
    * @param <T>                  the type parameter

@@ -123,11 +123,6 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   }
 
   @Override
-  public <T extends Base> T executeGetOneQuery(Query<T> query) {
-    return query.get();
-  }
-
-  @Override
   public <T extends Base> T get(Class<T> cls, PageRequest<T> req) {
     req.setLimit("1");
     PageResponse<T> res = query(cls, req);

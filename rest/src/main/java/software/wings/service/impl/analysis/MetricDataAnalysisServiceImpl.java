@@ -355,14 +355,12 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       int analysisMinute, String transactionName, String metricName) {
     /* Ignore analysisMinutue. Leaving it as a parameter since UI sends it.
        Fetch the latest */
-    Query<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecordQuery =
+    TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
         wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
             .filter("stateExecutionId", stateExecutionId)
             .filter("workflowExecutionId", workflowExecutionId)
-            .order("-analysisMinute");
-
-    TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
-        wingsPersistence.executeGetOneQuery(timeSeriesMLAnalysisRecordQuery);
+            .order("-analysisMinute")
+            .get();
     if (timeSeriesMLAnalysisRecord == null) {
       return null;
     }
@@ -430,13 +428,11 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   public NewRelicMetricAnalysisRecord getMetricsAnalysis(String stateExecutionId, String workflowExecutionId) {
     NewRelicMetricAnalysisRecord analysisRecord;
 
-    Query<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecordQuery =
+    TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
         wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
             .filter("stateExecutionId", stateExecutionId)
-            .filter("workflowExecutionId", workflowExecutionId);
-
-    TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
-        wingsPersistence.executeGetOneQuery(timeSeriesMLAnalysisRecordQuery);
+            .filter("workflowExecutionId", workflowExecutionId)
+            .get();
     if (timeSeriesMLAnalysisRecord != null && timeSeriesMLAnalysisRecord.getTransactions() != null) {
       List<NewRelicMetricAnalysis> metricAnalysisList = new ArrayList<>();
       for (TimeSeriesMLTxnSummary txnSummary : timeSeriesMLAnalysisRecord.getTransactions().values()) {
@@ -474,12 +470,10 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                            .build();
 
     } else {
-      Query<NewRelicMetricAnalysisRecord> metricAnalysisRecordQuery =
-          wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class)
-              .filter("stateExecutionId", stateExecutionId)
-              .filter("workflowExecutionId", workflowExecutionId);
-
-      analysisRecord = wingsPersistence.executeGetOneQuery(metricAnalysisRecordQuery);
+      analysisRecord = wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class)
+                           .filter("stateExecutionId", stateExecutionId)
+                           .filter("workflowExecutionId", workflowExecutionId)
+                           .get();
     }
 
     if (analysisRecord == null) {

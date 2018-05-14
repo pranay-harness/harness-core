@@ -192,8 +192,7 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public Account getByName(String companyName) {
-    return wingsPersistence.executeGetOneQuery(
-        wingsPersistence.createQuery(Account.class).filter("companyName", companyName));
+    return wingsPersistence.createQuery(Account.class).filter("companyName", companyName).get();
   }
 
   @Override
