@@ -3,9 +3,6 @@ package software.wings.service.impl.security;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
-import com.mongodb.DBCursor;
-import org.mongodb.morphia.query.FindOptions;
-import org.mongodb.morphia.query.MorphiaIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
@@ -33,44 +30,29 @@ public abstract class AbstractSecretServiceImpl {
     Encryptable rv = null;
     switch (variableType) {
       case SERVICE_VARIABLE:
-        final MorphiaIterator<ServiceVariable, ServiceVariable> serviceVaribaleQuery =
-            wingsPersistence.createQuery(ServiceVariable.class)
-                .filter("accountId", accountId)
-                .filter("appId", appId)
-                .filter("name", entityName)
-                .fetch(new FindOptions().limit(1));
-        try (DBCursor cursor = serviceVaribaleQuery.getCursor()) {
-          if (serviceVaribaleQuery.hasNext()) {
-            ServiceVariable serviceVariable = serviceVaribaleQuery.next();
-            rv = serviceVariable;
-          }
-        }
+        rv = wingsPersistence.createQuery(ServiceVariable.class)
+                 .filter("accountId", accountId)
+                 .filter("appId", appId)
+                 .filter("name", entityName)
+                 .get();
         break;
 
       case CONFIG_FILE:
-        final MorphiaIterator<ConfigFile, ConfigFile> configFileQuery = wingsPersistence.createQuery(ConfigFile.class)
-                                                                            .filter("accountId", accountId)
-                                                                            .filter("appId", appId)
-                                                                            .filter("name", entityName)
-                                                                            .fetch(new FindOptions().limit(1));
-        try (DBCursor cursor = configFileQuery.getCursor()) {
-          if (configFileQuery.hasNext()) {
-            rv = configFileQuery.next();
-          }
-        }
+        rv = wingsPersistence.createQuery(ConfigFile.class)
+                 .filter("accountId", accountId)
+                 .filter("appId", appId)
+                 .filter("name", entityName)
+                 .get();
         break;
 
       default:
-        final MorphiaIterator<SettingAttribute, SettingAttribute> settingAttributeQuery =
-            wingsPersistence.createQuery(SettingAttribute.class)
-                .filter("accountId", accountId)
-                .filter("name", entityName)
-                .filter("value.type", variableType)
-                .fetch(new FindOptions().limit(1));
-        try (DBCursor cursor = settingAttributeQuery.getCursor()) {
-          if (settingAttributeQuery.hasNext()) {
-            rv = (Encryptable) settingAttributeQuery.next().getValue();
-          }
+        SettingAttribute settingAttribute = wingsPersistence.createQuery(SettingAttribute.class)
+                                                .filter("accountId", accountId)
+                                                .filter("name", entityName)
+                                                .filter("value.type", variableType)
+                                                .get();
+        if (settingAttribute != null) {
+          rv = (Encryptable) settingAttribute.getValue();
         }
         break;
     }

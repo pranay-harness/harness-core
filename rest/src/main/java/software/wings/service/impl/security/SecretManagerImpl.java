@@ -874,21 +874,16 @@ public class SecretManagerImpl implements SecretManager {
     final List<String> secretIds = new ArrayList<>();
     switch (variableType) {
       case SERVICE_VARIABLE:
-        final MorphiaIterator<ServiceVariable, ServiceVariable> serviceVariableQuery =
-            wingsPersistence.createQuery(ServiceVariable.class)
-                .filter("_id", entityId)
-                .fetch(new FindOptions().limit(1));
+        ServiceVariable serviceVariable =
+            wingsPersistence.createQuery(ServiceVariable.class).filter("_id", entityId).get();
 
-        try (DBCursor cursor = serviceVariableQuery.getCursor()) {
-          if (serviceVariableQuery.hasNext()) {
-            ServiceVariable serviceVariable = serviceVariableQuery.next();
-            List<Field> encryptedFields = getEncryptedFields(serviceVariable.getClass());
+        if (serviceVariable != null) {
+          List<Field> encryptedFields = getEncryptedFields(serviceVariable.getClass());
 
-            for (Field field : encryptedFields) {
-              Field encryptedRefField = getEncryptedRefField(field, serviceVariable);
-              encryptedRefField.setAccessible(true);
-              secretIds.add((String) encryptedRefField.get(serviceVariable));
-            }
+          for (Field field : encryptedFields) {
+            Field encryptedRefField = getEncryptedRefField(field, serviceVariable);
+            encryptedRefField.setAccessible(true);
+            secretIds.add((String) encryptedRefField.get(serviceVariable));
           }
         }
         break;
@@ -899,22 +894,16 @@ public class SecretManagerImpl implements SecretManager {
         break;
 
       default:
-        final MorphiaIterator<SettingAttribute, SettingAttribute> settingAttributeQuery =
-            wingsPersistence.createQuery(SettingAttribute.class)
-                .filter("_id", entityId)
-                .fetch(new FindOptions().limit(1));
+        SettingAttribute settingAttribute =
+            wingsPersistence.createQuery(SettingAttribute.class).filter("_id", entityId).get();
 
-        try (DBCursor cursor = settingAttributeQuery.getCursor()) {
-          if (settingAttributeQuery.hasNext()) {
-            SettingAttribute settingAttribute = settingAttributeQuery.next();
+        if (settingAttribute != null) {
+          List<Field> encryptedFields = getEncryptedFields(settingAttribute.getValue().getClass());
 
-            List<Field> encryptedFields = getEncryptedFields(settingAttribute.getValue().getClass());
-
-            for (Field field : encryptedFields) {
-              Field encryptedRefField = getEncryptedRefField(field, (Encryptable) settingAttribute.getValue());
-              encryptedRefField.setAccessible(true);
-              secretIds.add((String) encryptedRefField.get(settingAttribute.getValue()));
-            }
+          for (Field field : encryptedFields) {
+            Field encryptedRefField = getEncryptedRefField(field, (Encryptable) settingAttribute.getValue());
+            encryptedRefField.setAccessible(true);
+            secretIds.add((String) encryptedRefField.get(settingAttribute.getValue()));
           }
         }
     }
@@ -929,76 +918,57 @@ public class SecretManagerImpl implements SecretManager {
         return kmsService.getSecretConfig(accountId);
 
       case SERVICE_VARIABLE:
-        final MorphiaIterator<ServiceVariable, ServiceVariable> serviceVariableQuery =
-            wingsPersistence.createQuery(ServiceVariable.class)
-                .filter("_id", parentId)
-                .fetch(new FindOptions().limit(1));
+        ServiceVariable serviceVariable =
+            wingsPersistence.createQuery(ServiceVariable.class).filter("_id", parentId).get();
 
-        try (DBCursor cursor = serviceVariableQuery.getCursor()) {
-          if (serviceVariableQuery.hasNext()) {
-            ServiceVariable serviceVariable = serviceVariableQuery.next();
-            serviceVariable.setValue(SECRET_MASK.toCharArray());
-            if (serviceVariable.getEntityType() == EntityType.SERVICE_TEMPLATE) {
-              ServiceTemplate serviceTemplate =
-                  wingsPersistence.get(ServiceTemplate.class, serviceVariable.getEntityId());
-              Preconditions.checkNotNull(serviceTemplate, "can't find service template " + serviceVariable);
-              serviceVariable.setServiceId(serviceTemplate.getServiceId());
-            }
-            serviceVariable.setEncryptionType(encryptionType);
-            serviceVariable.setEncryptedBy(encryptedBy);
-            return serviceVariable;
-          }
+        if (serviceVariable == null) {
+          return null;
         }
-        return null;
+        serviceVariable.setValue(SECRET_MASK.toCharArray());
+        if (serviceVariable.getEntityType() == EntityType.SERVICE_TEMPLATE) {
+          ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, serviceVariable.getEntityId());
+          Preconditions.checkNotNull(serviceTemplate, "can't find service template " + serviceVariable);
+          serviceVariable.setServiceId(serviceTemplate.getServiceId());
+        }
+        serviceVariable.setEncryptionType(encryptionType);
+        serviceVariable.setEncryptedBy(encryptedBy);
+        return serviceVariable;
 
       case CONFIG_FILE:
-        final MorphiaIterator<ConfigFile, ConfigFile> configFileQuery =
-            wingsPersistence.createQuery(ConfigFile.class).filter("_id", parentId).fetch(new FindOptions().limit(1));
-
-        try (DBCursor cursor = configFileQuery.getCursor()) {
-          if (configFileQuery.hasNext()) {
-            ConfigFile configFile = configFileQuery.next();
-            if (configFile.getEntityType() == EntityType.SERVICE_TEMPLATE) {
-              ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, configFile.getEntityId());
-              Preconditions.checkNotNull(serviceTemplate, "can't find service template " + configFile);
-              configFile.setServiceId(serviceTemplate.getServiceId());
-            }
-            configFile.setEncryptionType(encryptionType);
-            configFile.setEncryptedBy(encryptedBy);
-            return configFile;
-          }
+        ConfigFile configFile = wingsPersistence.createQuery(ConfigFile.class).filter("_id", parentId).get();
+        if (configFile == null) {
+          return null;
         }
-        return null;
+
+        if (configFile.getEntityType() == EntityType.SERVICE_TEMPLATE) {
+          ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, configFile.getEntityId());
+          Preconditions.checkNotNull(serviceTemplate, "can't find service template " + configFile);
+          configFile.setServiceId(serviceTemplate.getServiceId());
+        }
+        configFile.setEncryptionType(encryptionType);
+        configFile.setEncryptedBy(encryptedBy);
+        return configFile;
 
       case VAULT:
-        final MorphiaIterator<VaultConfig, VaultConfig> vaultConfigIterator =
-            wingsPersistence.createQuery(VaultConfig.class).filter("_id", parentId).fetch(new FindOptions().limit(1));
-
-        try (DBCursor cursor = vaultConfigIterator.getCursor()) {
-          if (vaultConfigIterator.hasNext()) {
-            VaultConfig vaultConfig = vaultConfigIterator.next();
-            vaultConfig.setEncryptionType(encryptionType);
-            vaultConfig.setEncryptedBy(encryptedBy);
-            return vaultConfig;
-          }
+        VaultConfig vaultConfig = wingsPersistence.createQuery(VaultConfig.class).filter("_id", parentId).get();
+        if (vaultConfig == null) {
+          return null;
         }
-        return null;
+
+        vaultConfig.setEncryptionType(encryptionType);
+        vaultConfig.setEncryptedBy(encryptedBy);
+        return vaultConfig;
 
       default:
-        final MorphiaIterator<SettingAttribute, SettingAttribute> settingAttributeQuery =
-            wingsPersistence.createQuery(SettingAttribute.class)
-                .filter("_id", parentId)
-                .fetch(new FindOptions().limit(1));
-
-        try (DBCursor cursor = settingAttributeQuery.getCursor()) {
-          if (settingAttributeQuery.hasNext()) {
-            SettingAttribute settingAttribute = settingAttributeQuery.next();
-            settingAttribute.setEncryptionType(encryptionType);
-            settingAttribute.setEncryptedBy(encryptedBy);
-            return settingAttribute;
-          }
+        SettingAttribute settingAttribute =
+            wingsPersistence.createQuery(SettingAttribute.class).filter("_id", parentId).get();
+        if (settingAttribute == null) {
+          return null;
         }
-        return null;
+
+        settingAttribute.setEncryptionType(encryptionType);
+        settingAttribute.setEncryptedBy(encryptedBy);
+        return settingAttribute;
     }
   }
 
