@@ -234,6 +234,14 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
               appId = ((ServiceLevelYamlNode) dn).getAppId();
               yaml = yamlResourceService.getContainerTask(accountId, appId, entityId).getResource().getYaml();
               break;
+            case "PcfServiceSpecification":
+              appId = ((ServiceLevelYamlNode) dn).getAppId();
+              yaml = yamlResourceService.getPcfServiceSpecification(accountId, appId, entityId).getResource().getYaml();
+              break;
+            case "HelmChartSpecification":
+              appId = ((ServiceLevelYamlNode) dn).getAppId();
+              yaml = yamlResourceService.getHelmChartSpecification(accountId, appId, entityId).getResource().getYaml();
+              break;
             case "LambdaSpecification":
               appId = ((ServiceLevelYamlNode) dn).getAppId();
               yaml = yamlResourceService.getLambdaSpec(accountId, appId, entityId).getResource().getYaml();
