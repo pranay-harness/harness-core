@@ -52,6 +52,8 @@ spec:
           value: ${delegateStorageUrl}
         - name: DELEGATE_CHECK_LOCATION
           value: ${delegateCheckLocation}
+        - name: DEPLOY_MODE
+          value: ${deployMode}
         - name: DELEGATE_NAME
           value: ${delegateName}
         - name: DESCRIPTION

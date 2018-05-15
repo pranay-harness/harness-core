@@ -52,6 +52,8 @@ spec:
           value: http://localhost:8888
         - name: DELEGATE_CHECK_LOCATION
           value: delegateci.txt
+        - name: DEPLOY_MODE
+          value: AWS
         - name: DELEGATE_NAME
           value: harness-delegate
         - name: DESCRIPTION
