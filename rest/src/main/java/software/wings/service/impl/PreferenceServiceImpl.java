@@ -58,6 +58,7 @@ public class PreferenceServiceImpl implements PreferenceService {
 
       UpdateOperations<Preference> updateOperations = wingsPersistence.createUpdateOperations(Preference.class);
       // Set fields to update
+      setUnset(updateOperations, "name", deployPref.getName());
       setUnset(updateOperations, "appIds", deployPref.getAppIds());
       setUnset(updateOperations, "pipelineIds", deployPref.getPipelineIds());
       setUnset(updateOperations, "workflowIds", deployPref.getWorkflowIds());
