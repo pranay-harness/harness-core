@@ -52,6 +52,8 @@ public interface EnvironmentService extends OwnedByApplication {
 
   Environment getEnvironmentByName(String appId, String environmentName);
 
+  Environment getEnvironmentByName(String appId, String environmentName, boolean withServiceTemplates);
+
   /**
    * Exist boolean.
    *

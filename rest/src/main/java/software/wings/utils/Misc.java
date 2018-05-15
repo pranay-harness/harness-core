@@ -16,6 +16,7 @@ import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.common.Constants;
+import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 
@@ -168,6 +169,15 @@ public class Misc {
           .stream()
           .map(ConstraintViolation::getMessage)
           .collect(joining(". "));
+    } else if (t instanceof HarnessException) {
+      HarnessException he = (HarnessException) t;
+      Throwable cause = he.getCause();
+      if (cause instanceof WingsException) {
+        WingsException we = (WingsException) cause;
+        return we.getResponseMessageList(REST_API).stream().map(ResponseMessage::getMessage).collect(joining(". "));
+      } else {
+        return t.getClass().getSimpleName() + (t.getMessage() == null ? "" : ": " + t.getMessage());
+      }
     } else {
       return t.getClass().getSimpleName() + (t.getMessage() == null ? "" : ": " + t.getMessage());
     }

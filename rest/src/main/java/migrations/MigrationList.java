@@ -79,6 +79,7 @@ public class MigrationList {
         .add(Pair.of(137, SetRollbackFlagToWorkflows.class))
         .add(Pair.of(138, AddUsersToAdminUserGroup.class))
         .add(Pair.of(139, RenameProvisionNodeToInfrastructureNodeWorkflows.class))
+        .add(Pair.of(140, GitSyncToAllAccounts.class))
         .build();
   }
 }

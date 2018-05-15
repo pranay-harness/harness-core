@@ -1,7 +1,10 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static java.util.stream.Collectors.toList;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static software.wings.beans.EntityType.ENVIRONMENT;
+import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
+import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.PipelineStage.Yaml;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.Validator.notNullCheck;
@@ -11,27 +14,33 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import software.wings.beans.EntityType;
+import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.NameValuePair;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
-import software.wings.beans.PipelineStage.PipelineStageElement.PipelineStageElementBuilder;
+import software.wings.beans.Service;
+import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.beans.yaml.YamlType;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
-import software.wings.service.impl.yaml.handler.NameValuePairYamlHandler;
-import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.service.YamlHelper;
+import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @author rktummala on 11/2/17
@@ -40,9 +49,11 @@ import java.util.Map;
 public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStage> {
   @Inject YamlHelper yamlHelper;
   @Inject WorkflowService workflowService;
-  @Inject YamlHandlerFactory yamlHandlerFactory;
+  @Inject EnvironmentService environmentService;
+  @Inject ServiceResourceService serviceResourceService;
+  @Inject InfrastructureMappingService infrastructureMappingService;
 
-  private PipelineStage toBean(ChangeContext<Yaml> context) throws HarnessException {
+  private PipelineStage toBean(ChangeContext<Yaml> context) {
     Yaml yaml = context.getYaml();
     Change change = context.getChange();
 
@@ -53,17 +64,6 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
     stage.setName(yaml.getName());
     stage.setParallel(yaml.isParallel());
 
-    Map<String, Object> properties = Maps.newHashMap();
-    Map<String, String> workflowVariables = Maps.newHashMap();
-
-    if (!yaml.getType().equals(StateType.APPROVAL.name())) {
-      Workflow workflow = workflowService.readWorkflowByName(appId, yaml.getWorkflowName());
-      notNullCheck("Invalid workflow with the given name:" + yaml.getWorkflowName(), workflow, USER);
-
-      properties.put("envId", workflow.getEnvId());
-      properties.put("workflowId", workflow.getUuid());
-    }
-
     String stageElementId = null;
     Pipeline previous = yamlHelper.getPipeline(change.getAccountId(), change.getFilePath());
     if (previous != null) {
@@ -73,17 +73,62 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
       }
     }
 
-    if (yaml.getWorkflowVariables() != null) {
-      yaml.getWorkflowVariables().stream().forEach(
-          variable -> workflowVariables.put(variable.getName(), variable.getValue()));
+    Map<String, Object> properties = Maps.newHashMap();
+    Map<String, String> workflowVariables = Maps.newHashMap();
+    Workflow workflow;
+    if (!yaml.getType().equals(StateType.APPROVAL.name())) {
+      workflow = workflowService.readWorkflowByName(appId, yaml.getWorkflowName());
+      notNullCheck("Invalid workflow with the given name:" + yaml.getWorkflowName(), workflow, USER);
+
+      properties.put("envId", workflow.getEnvId());
+      properties.put("workflowId", workflow.getUuid());
+
+      if (isNotEmpty(yaml.getWorkflowVariables())) {
+        final String[] envId = {workflow.getEnvId()};
+        yaml.getWorkflowVariables().stream().forEach((PipelineStage.WorkflowVariable variable) -> {
+          String entityType = variable.getEntityType();
+          String variableName = variable.getName();
+          String variableValue = variable.getValue();
+          if (entityType != null) {
+            if (ENVIRONMENT.name().equals(entityType)) {
+              Environment environment = environmentService.getEnvironmentByName(appId, variableValue, false);
+              if (environment != null) {
+                envId[0] = environment.getUuid();
+                workflowVariables.put(variableName, envId[0]);
+              } else {
+                notNullCheck("Environment [" + variableValue + "] does not exist", environment, USER);
+              }
+            } else if (SERVICE.name().equals(entityType)) {
+              Service service = serviceResourceService.getServiceByName(appId, variableValue, false);
+              if (service != null) {
+                workflowVariables.put(variableName, service.getUuid());
+              } else {
+                notNullCheck("Service [" + variableValue + "] does not exist", service, USER);
+              }
+            } else if (INFRASTRUCTURE_MAPPING.name().equals(entityType)) {
+              InfrastructureMapping infrastructureMapping =
+                  infrastructureMappingService.getInfraMappingByName(appId, envId[0], variableValue);
+              if (infrastructureMapping != null) {
+                workflowVariables.put(variableName, infrastructureMapping.getUuid());
+              } else {
+                notNullCheck("Service Infrastructure [" + variableValue + "] does not exist for the environment",
+                    infrastructureMapping, USER);
+              }
+            } else {
+              // TODO: Other entity variables verification states
+              workflowVariables.put(variableName, variableValue);
+            }
+          } else {
+            // Non entity variables
+            workflowVariables.put(variableName, variableValue);
+          }
+        });
+      }
     }
 
-    PipelineStageElementBuilder builder = PipelineStageElement.builder();
-    if (stageElementId != null) {
-      builder.uuid(stageElementId);
-    }
-
-    PipelineStageElement pipelineStageElement = builder.name(yaml.getName())
+    PipelineStageElement pipelineStageElement = PipelineStageElement.builder()
+                                                    .uuid(stageElementId)
+                                                    .name(yaml.getName())
                                                     .type(yaml.getType())
                                                     .properties(properties)
                                                     .workflowVariables(workflowVariables)
@@ -105,7 +150,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
     notNullCheck("Pipeline stage element is null", stageElement, USER);
 
     String workflowName = null;
-    List<NameValuePair.Yaml> nameValuePairYamlList = null;
+    List<PipelineStage.WorkflowVariable> pipelineStageVariables = new ArrayList<>();
     if (!StateType.APPROVAL.name().equals(stageElement.getType())) {
       Map<String, Object> properties = stageElement.getProperties();
       notNullCheck("Pipeline stage element is null", properties, USER);
@@ -121,17 +166,46 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
       Map<String, String> workflowVariables = stageElement.getWorkflowVariables();
       notNullCheck("Pipeline stage element is null", workflowVariables, USER);
 
-      // properties
-      NameValuePairYamlHandler nameValuePairYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.NAME_VALUE_PAIR);
-
-      nameValuePairYamlList = workflowVariables.entrySet()
-                                  .stream()
-                                  .map(entry -> {
-                                    NameValuePair nameValuePair =
-                                        NameValuePair.builder().name(entry.getKey()).value(entry.getValue()).build();
-                                    return nameValuePairYamlHandler.toYaml(nameValuePair, appId);
-                                  })
-                                  .collect(toList());
+      List<Variable> userVariables = workflow.getOrchestrationWorkflow().getUserVariables();
+      if (isEmpty(userVariables)) {
+        userVariables = new ArrayList<>();
+      }
+      Map<String, Variable> nameVariableMap =
+          userVariables.stream().collect(Collectors.toMap(Variable::getName, Function.identity()));
+      for (Map.Entry<String, String> entry : workflowVariables.entrySet()) {
+        Variable variable = nameVariableMap.get(entry.getKey());
+        if (variable != null) {
+          EntityType entityType = variable.getEntityType();
+          PipelineStage.WorkflowVariable workflowVariable =
+              PipelineStage.WorkflowVariable.builder()
+                  .name(entry.getKey())
+                  .entityType(entityType != null ? entityType.name() : null)
+                  .build();
+          String entryValue = entry.getValue();
+          if (ENVIRONMENT.equals(entityType)) {
+            Environment environment = environmentService.get(appId, entryValue, false);
+            if (environment != null) {
+              workflowVariable.setValue(environment.getName());
+              pipelineStageVariables.add(workflowVariable);
+            }
+          } else if (SERVICE.equals(entityType)) {
+            Service service = serviceResourceService.get(appId, entryValue, false);
+            if (service != null) {
+              workflowVariable.setValue(service.getName());
+              pipelineStageVariables.add(workflowVariable);
+            }
+          } else if (INFRASTRUCTURE_MAPPING.equals(entityType)) {
+            InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, entryValue);
+            if (infrastructureMapping != null) {
+              workflowVariable.setValue(infrastructureMapping.getName());
+              pipelineStageVariables.add(workflowVariable);
+            }
+          } else {
+            workflowVariable.setValue(entryValue);
+            pipelineStageVariables.add(workflowVariable);
+          }
+        }
+      }
     }
 
     return Yaml.builder()
@@ -139,7 +213,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
         .parallel(bean.isParallel())
         .type(stageElement.getType())
         .workflowName(workflowName)
-        .workflowVariables(nameValuePairYamlList)
+        .workflowVariables(pipelineStageVariables)
         .build();
   }
 

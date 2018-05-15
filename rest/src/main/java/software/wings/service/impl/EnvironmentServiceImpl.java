@@ -166,10 +166,17 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   @Override
   public Environment getEnvironmentByName(String appId, String environmentName) {
+    return getEnvironmentByName(appId, environmentName, true);
+  }
+
+  @Override
+  public Environment getEnvironmentByName(String appId, String environmentName, boolean withServiceTemplates) {
     Environment environment =
         wingsPersistence.createQuery(Environment.class).filter("appId", appId).filter("name", environmentName).get();
     if (environment != null) {
-      addServiceTemplates(environment);
+      if (withServiceTemplates) {
+        addServiceTemplates(environment);
+      }
     }
     return environment;
   }

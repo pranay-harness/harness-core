@@ -50,16 +50,29 @@ public class PipelineStage {
     private String name;
     private boolean parallel;
     private String workflowName;
-    private List<NameValuePair.Yaml> workflowVariables = Lists.newArrayList();
+    private List<WorkflowVariable> workflowVariables = Lists.newArrayList();
 
     @Builder
     public Yaml(
-        String type, String name, boolean parallel, String workflowName, List<NameValuePair.Yaml> workflowVariables) {
+        String type, String name, boolean parallel, String workflowName, List<WorkflowVariable> workflowVariables) {
       super(type);
       this.name = name;
       this.parallel = parallel;
       this.workflowName = workflowName;
       this.workflowVariables = workflowVariables;
+    }
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
+  public static class WorkflowVariable extends NameValuePair.AbstractYaml {
+    String entityType;
+
+    @Builder
+    public WorkflowVariable(String entityType, String name, String value, String valueType) {
+      super(name, value, valueType);
+      this.entityType = entityType;
     }
   }
 }
