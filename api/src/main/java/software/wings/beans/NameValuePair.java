@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import io.harness.data.validator.Trimmed;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -16,6 +17,8 @@ import javax.validation.constraints.NotNull;
  */
 @Data
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class NameValuePair {
   @NotEmpty @Trimmed private String name;
   /*
