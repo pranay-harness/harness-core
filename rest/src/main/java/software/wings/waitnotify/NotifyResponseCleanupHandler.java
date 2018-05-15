@@ -44,6 +44,10 @@ public final class NotifyResponseCleanupHandler implements Runnable {
       return;
     }
 
+    execute();
+  }
+
+  public void execute() {
     try {
       PageResponse<NotifyResponse> notifyPageResponses = wingsPersistence.query(NotifyResponse.class,
           aPageRequest().addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS).addFieldsIncluded(ID_KEY).build(),

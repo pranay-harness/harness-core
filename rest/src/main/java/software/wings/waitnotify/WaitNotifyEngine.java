@@ -1,6 +1,7 @@
 package software.wings.waitnotify;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
@@ -89,12 +90,12 @@ public class WaitNotifyEngine {
   }
 
   // If we get duplicate key exception this means that this correlation id was already handled. In rare cases
-  // the delegate might get confused and send the response twice. Ignore two DuplicateKeyException per hour.
+  // the delegate might get confused and send the response twice. Ignore few DuplicateKeyException per hour.
   // If more are observed that's alarming.
   static RateLimiter duplicateKeyExceptionRateLimiter = RateLimiter.create(8.0 / Duration.ofHours(1).getSeconds());
 
   private <T extends NotifyResponseData> String notify(String correlationId, T response, boolean error) {
-    Preconditions.checkArgument(isNotEmpty(correlationId), "correlationId is null or empty");
+    Preconditions.checkArgument(isNotBlank(correlationId), "correlationId is null or empty");
 
     log().debug("notify request received for the correlationId : {}", correlationId);
 

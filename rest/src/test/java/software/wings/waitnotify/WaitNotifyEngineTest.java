@@ -8,9 +8,11 @@ import static software.wings.waitnotify.StringNotifyResponseData.Builder.aString
 
 import com.google.inject.Inject;
 
+import io.harness.threading.Concurrent;
 import org.junit.Before;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
+import software.wings.core.maintenance.MaintenanceController;
 import software.wings.core.queue.Queue;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
@@ -32,6 +34,10 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
 
   @Inject private Queue<NotifyEvent> notifyEventQueue;
+
+  @Inject private Notifier notifier;
+  @Inject private NotifyEventListener notifyEventListener;
+  @Inject private NotifyResponseCleanupHandler notifyResponseCleanupHandler;
 
   /**
    * Setup response map.
@@ -71,6 +77,41 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
     assertThat(responseMap).hasSize(1).isEqualTo(of("123", data));
     assertThat(callCount.get()).isEqualTo(1);
   } // realmongo
+
+  @Test
+  public void stressWaitForCorrelationId() {
+    MaintenanceController.forceMaintenance(true);
+
+    try {
+      String waitInstanceId = waitNotifyEngine.waitForAll(new TestNotifyCallback(), "123");
+
+      assertThat(wingsPersistence.get(WaitInstance.class, waitInstanceId)).isNotNull();
+
+      assertThat(wingsPersistence.createQuery(WaitQueue.class, excludeAuthority).asList())
+          .hasSize(1)
+          .extracting(WaitQueue::getWaitInstanceId, WaitQueue::getCorrelationId)
+          .containsExactly(tuple(waitInstanceId, "123"));
+
+      NotifyResponseData data = aStringNotifyResponseData().withData("response-123").build();
+      String id = waitNotifyEngine.notify("123", data);
+
+      Concurrent.test(10, i -> { notifier.execute(); });
+
+      assertThat(wingsPersistence.get(NotifyResponse.class, id))
+          .isNotNull()
+          .extracting(NotifyResponse::getResponse)
+          .containsExactly(data);
+
+      Concurrent.test(10, i -> { notifyEventListener.execute(); });
+
+      assertThat(notifyEventQueue.count()).isEqualTo(0);
+
+      assertThat(responseMap).hasSize(1).isEqualTo(of("123", data));
+      assertThat(callCount.get()).isEqualTo(1);
+    } finally {
+      MaintenanceController.forceMaintenance(false);
+    }
+  }
 
   /**
    * Should wait for correlation ids.
