@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static com.google.common.collect.Sets.symmetricDifference;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
@@ -64,7 +65,7 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
 
   @Override
   public List<Account> listAllowedSupportAccountsForUser(String userId, Set<String> excludeAccountIds) {
-    Query<HarnessUserGroup> query = wingsPersistence.createQuery(HarnessUserGroup.class);
+    Query<HarnessUserGroup> query = wingsPersistence.createQuery(HarnessUserGroup.class, excludeAuthority);
     query.filter("memberIds", userId);
     List<HarnessUserGroup> harnessUserGroups = query.asList();
 
