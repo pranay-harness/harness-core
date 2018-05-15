@@ -50,7 +50,10 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
    */
   @Override
   protected void onMessage(NotifyEvent message) {
-    logger.trace("Processing message {}", message);
+    if (logger.isTraceEnabled()) {
+      logger.trace("Processing message {}", message);
+    }
+
     String waitInstanceId = message.getWaitInstanceId();
 
     WaitInstance waitInstance = wingsPersistence.get(WaitInstance.class, waitInstanceId, ReadPref.CRITICAL);
@@ -81,6 +84,10 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
     final List<String> finalCorrelationIdsForLambda = correlationIds;
 
     if (isNotEmpty(correlationIds)) {
+      if (correlationIds.size() * waitQueuesResponse.size() > 100) {
+        logger.error("Correlation/WaitQueue O(N*M) algorithm needs to be optimized");
+      }
+
       List<String> missingCorrelationIds = waitQueuesResponse.stream()
                                                .map(WaitQueue::getCorrelationId)
                                                .filter(s -> !finalCorrelationIdsForLambda.contains(s))
@@ -91,9 +98,6 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
         return;
       }
     }
-
-    Map<String, NotifyResponse> notifyResponseMap = new HashMap<>();
-    Map<String, NotifyResponseData> responseMap = new HashMap<>();
 
     PageRequest<NotifyResponse> notifyResponseReq =
         aPageRequest()
@@ -118,6 +122,9 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
           missingCorrelationIds, waitInstanceId);
       return;
     }
+
+    Map<String, NotifyResponseData> responseMap = new HashMap<>();
+    Map<String, NotifyResponse> notifyResponseMap = new HashMap<>();
 
     notifyResponses.forEach(notifyResponse -> {
       responseMap.put(notifyResponse.getUuid(), notifyResponse.getResponse());

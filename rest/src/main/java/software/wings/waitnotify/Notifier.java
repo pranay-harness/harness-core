@@ -45,17 +45,20 @@ public class Notifier implements Runnable {
     if (isMaintenance()) {
       return;
     }
+    execute();
+  }
+
+  public void execute() {
+    PageResponse<NotifyResponse> notifyPageResponses = wingsPersistence.query(
+        NotifyResponse.class, aPageRequest().withLimit(UNLIMITED).addFieldsIncluded(ID_KEY).build(), excludeAuthority);
+
+    if (isEmpty(notifyPageResponses)) {
+      logger.debug("There are no NotifyResponse entries to process");
+      return;
+    }
 
     try (AcquiredLock lock =
              persistentLocker.acquireLock(Notifier.class, Notifier.class.getName(), Duration.ofMinutes(1))) {
-      PageResponse<NotifyResponse> notifyPageResponses = wingsPersistence.query(NotifyResponse.class,
-          aPageRequest().withLimit(UNLIMITED).addFieldsIncluded(ID_KEY).build(), excludeAuthority);
-
-      if (isEmpty(notifyPageResponses)) {
-        logger.debug("There are no NotifyResponse entries to process");
-        return;
-      }
-
       List<String> correlationIds = notifyPageResponses.stream().map(NotifyResponse::getUuid).collect(toList());
 
       // Get wait queue entries

@@ -45,43 +45,57 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
     logger.debug("Setting thread name to {}", threadName);
     Thread.currentThread().setName(threadName);
 
-    boolean run = !runOnce;
     do {
-      T message = null;
-      try {
-        while (isMaintenance()) {
-          sleep(Duration.ofSeconds(1));
-        }
-        logger.trace("Waiting for message");
-        message = queue.get();
-        logger.trace("got message {}", message);
-      } catch (Exception exception) {
-        if (exception.getCause() != null && exception.getCause() instanceof InterruptedException) {
-          logger.info("Thread interrupted, shutting down for queue {}", queue.name());
-          run = false;
-        } else {
-          logger.error("Exception happened while fetching message from queue {}", queue.name(), exception);
-        }
+      while (isMaintenance()) {
+        sleep(Duration.ofSeconds(1));
       }
 
-      if (message != null) {
-        long timerInterval = queue.resetDurationMillis() - 500;
-        logger.debug("Started timer thread for message {} every {} ms", message, timerInterval);
-        final T finalizedMessage = message;
-        ScheduledFuture<?> future = timer.scheduleAtFixedRate(
-            () -> queue.updateResetDuration(finalizedMessage), timerInterval, timerInterval, TimeUnit.MILLISECONDS);
-        try {
-          onMessage(message);
-          queue.ack(message);
-        } catch (WingsException exception) {
-          exception.logProcessedMessages(MANAGER, logger);
-        } catch (Exception exception) {
-          onException(exception, message);
-        } finally {
-          future.cancel(true);
-        }
+      if (!execute()) {
+        break;
       }
-    } while (run && !shouldStop.get());
+
+    } while (!runOnce && !shouldStop.get());
+  }
+
+  public boolean execute() {
+    T message = null;
+    try {
+      logger.trace("Waiting for message");
+      message = queue.get();
+    } catch (Exception exception) {
+      if (exception.getCause() instanceof InterruptedException) {
+        logger.info("Thread interrupted, shutting down for queue {}", queue.name());
+        return false;
+      }
+      logger.error("Exception happened while fetching message from queue {}", queue.name(), exception);
+    }
+
+    if (message == null) {
+      return true;
+    }
+
+    if (logger.isTraceEnabled()) {
+      logger.trace("got message {}", message);
+    }
+
+    long timerInterval = queue.resetDurationMillis() - 500;
+    if (logger.isDebugEnabled()) {
+      logger.debug("Started timer thread for message {} every {} ms", message, timerInterval);
+    }
+    final T finalizedMessage = message;
+    ScheduledFuture<?> future = timer.scheduleAtFixedRate(
+        () -> queue.updateResetDuration(finalizedMessage), timerInterval, timerInterval, TimeUnit.MILLISECONDS);
+    try {
+      onMessage(message);
+      queue.ack(message);
+    } catch (WingsException exception) {
+      exception.logProcessedMessages(MANAGER, logger);
+    } catch (Exception exception) {
+      onException(exception, message);
+    } finally {
+      future.cancel(true);
+    }
+    return true;
   }
 
   /**
