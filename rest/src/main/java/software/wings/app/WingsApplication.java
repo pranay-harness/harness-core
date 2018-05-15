@@ -151,7 +151,7 @@ public class WingsApplication extends Application<MainConfiguration> {
                                             .buildValidatorFactory();
 
     CacheModule cacheModule = new CacheModule(configuration);
-    StreamModule streamModule = new StreamModule(environment, cacheModule.getHazelcastInstance());
+    StreamModule streamModule = new StreamModule(environment);
     Injector injector = Guice.createInjector(MetricsInstrumentationModule.builder()
                                                  .withMetricRegistry(metricRegistry)
                                                  .withMatcher(not(new AbstractMatcher<TypeLiteral<?>>() {
@@ -307,6 +307,8 @@ public class WingsApplication extends Application<MainConfiguration> {
         .scheduleWithFixedDelay(injector.getInstance(NotifyResponseCleanupHandler.class), 0L, 30L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("delegateTaskNotifier")))
         .scheduleWithFixedDelay(injector.getInstance(DelegateQueueTask.class), 0L, 5L, TimeUnit.SECONDS);
+    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("delegateTaskEventNotifier")))
+        .scheduleWithFixedDelay(injector.getInstance(DelegateTaskEventBroadcaster.class), 0L, 1L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("gitChangeSet")))
         .scheduleWithFixedDelay(injector.getInstance(GitChangeSetRunnable.class), 0L, 2L, TimeUnit.SECONDS);
   }

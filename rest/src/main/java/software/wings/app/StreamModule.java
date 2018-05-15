@@ -2,7 +2,6 @@ package software.wings.app;
 
 import com.google.inject.AbstractModule;
 
-import com.hazelcast.core.HazelcastInstance;
 import io.dropwizard.setup.Environment;
 import org.atmosphere.cpr.ApplicationConfig;
 import org.atmosphere.cpr.AtmosphereServlet;
@@ -10,7 +9,6 @@ import org.atmosphere.cpr.BroadcasterFactory;
 import org.atmosphere.cpr.DefaultMetaBroadcaster;
 import org.atmosphere.cpr.MetaBroadcaster;
 import software.wings.service.impl.EventEmitter;
-import software.wings.utils.HazelcastBroadcaster;
 
 import javax.servlet.ServletRegistration.Dynamic;
 
@@ -26,7 +24,7 @@ public class StreamModule extends AbstractModule {
    *
    * @param environment the environment
    */
-  public StreamModule(Environment environment, HazelcastInstance hazelcastInstance) {
+  public StreamModule(Environment environment) {
     atmosphereServlet = new AtmosphereServlet();
 
     atmosphereServlet.framework()
@@ -34,9 +32,6 @@ public class StreamModule extends AbstractModule {
         .addInitParameter(ApplicationConfig.WEBSOCKET_SUPPORT, "true")
         .addInitParameter(ApplicationConfig.ANNOTATION_PACKAGE, UiStreamHandler.class.getPackage().getName());
 
-    atmosphereServlet.framework().setDefaultBroadcasterClassName(HazelcastBroadcaster.class.getName());
-
-    HazelcastBroadcaster.HAZELCAST_INSTANCE = hazelcastInstance;
     Dynamic dynamic = environment.servlets().addServlet("StreamServlet", atmosphereServlet);
     dynamic.setAsyncSupported(true);
     dynamic.setLoadOnStartup(0);
