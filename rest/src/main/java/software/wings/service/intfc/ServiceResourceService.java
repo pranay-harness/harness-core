@@ -114,6 +114,8 @@ public interface ServiceResourceService extends OwnedByApplication {
    */
   Service getServiceByName(String appId, String serviceName);
 
+  Service getServiceByName(String appId, String serviceName, boolean withDetails);
+
   /**
    * Exist boolean.
    *

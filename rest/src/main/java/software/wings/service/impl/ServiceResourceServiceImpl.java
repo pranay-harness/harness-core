@@ -436,10 +436,17 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public Service getServiceByName(String appId, String serviceName) {
+    return getServiceByName(appId, serviceName, true);
+  }
+
+  @Override
+  public Service getServiceByName(String appId, String serviceName, boolean withDetails) {
     Service service =
         wingsPersistence.createQuery(Service.class).filter("appId", appId).filter("name", serviceName).get();
     if (service != null) {
-      setServiceDetails(service, appId);
+      if (withDetails) {
+        setServiceDetails(service, appId);
+      }
     }
     return service;
   }
