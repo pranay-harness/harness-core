@@ -115,10 +115,6 @@ public class PermissionAttribute {
      */
     SERVICE(APP),
     /**
-     * Provisioner resource.
-     */
-    PROVISIONER(APP),
-    /**
      * Config resource.
      */
     CONFIGURATION(APP),
@@ -188,7 +184,9 @@ public class PermissionAttribute {
 
     SSO(ACCOUNT),
 
-    API_KEY(ACCOUNT);
+    API_KEY(ACCOUNT),
+
+    PROVISIONER(APP);
 
     private ImmutableMap<Action, PermissionType> actionPermissionScopeMap;
 
@@ -299,10 +297,6 @@ public class PermissionAttribute {
      */
     DEPLOYMENT,
     /**
-     * Provisioner permission permissionType
-     */
-    PROVISIONER,
-    /**
      * Account permission type.
      */
     APPLICATION_CREATE_DELETE,
@@ -313,6 +307,10 @@ public class PermissionAttribute {
     /**
      * Account permission type.
      */
-    ACCOUNT_MANAGEMENT
+    ACCOUNT_MANAGEMENT,
+    /**
+     * Provisioner permission permissionType
+     */
+    PROVISIONER,
   }
 }
