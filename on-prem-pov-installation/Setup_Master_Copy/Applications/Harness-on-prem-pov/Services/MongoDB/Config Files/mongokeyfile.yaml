@@ -1,0 +1,9 @@
+harnessApiVersion: '1.0'
+type: CONFIG_FILE
+checksum: a0b3b3487185036aaf9d2c596cfde218
+checksumType: MD5
+description: mongokeyfile
+encrypted: false
+fileName: mongokeyfile
+targetFilePath: mongokeyfile
+targetToAllEnv: true

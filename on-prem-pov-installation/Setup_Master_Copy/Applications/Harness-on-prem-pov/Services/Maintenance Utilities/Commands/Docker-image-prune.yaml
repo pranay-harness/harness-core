@@ -1,0 +1,37 @@
+harnessApiVersion: '1.0'
+type: OTHER
+commandUnitType: COMMAND
+commandUnits:
+- command: |2-
+
+      # Execute as root and pass environment variables
+      # su -p -
+
+      # Execute as root via user credentials (with root privileges)
+      # sudo -E su -p -
+
+      # The following variables are absolute paths defined as:
+      # ${HOME}/${appName}/${serviceName}/${serviceTemplateName}/[runtime|backup|staging]
+
+      mkdir -p "$WINGS_RUNTIME_PATH"
+      mkdir -p "$WINGS_BACKUP_PATH"
+      mkdir -p "$WINGS_STAGING_PATH"
+  commandUnitType: SETUP_ENV
+  deploymentType: SSH
+  name: Setup Env-1
+  scriptType: BASH
+- command: |
+    echo "Cleaning up all unused docker images to reclaim space"
+    sudo docker image prune -f
+  commandUnitType: EXEC
+  deploymentType: SSH
+  name: Cleanup docker images
+  scriptType: BASH
+  workingDirectory: ${WINGS_RUNTIME_PATH}
+- command: sudo docker logout
+  commandUnitType: EXEC
+  deploymentType: SSH
+  name: Docker logout
+  scriptType: BASH
+  workingDirectory: ${WINGS_RUNTIME_PATH}
+targetToAllEnv: true

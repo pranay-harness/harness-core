@@ -2,6 +2,7 @@ harnessApiVersion: '1.0'
 type: CONFIG_FILE
 checksum: 37ad123c2ef399eee8079578c8d1f87e
 checksumType: MD5
+description: add_first_user
 encrypted: false
 fileName: add_first_user.js
 targetFilePath: add_first_user.js
