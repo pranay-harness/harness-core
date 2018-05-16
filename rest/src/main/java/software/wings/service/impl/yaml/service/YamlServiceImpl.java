@@ -84,6 +84,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -166,24 +169,33 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   }
 
   @Override
-  public RestResponse processYamlFilesAsZip(String accountId, InputStream fileInputStream, String yamlPath)
-      throws IOException {
+  public RestResponse processYamlFilesAsZip(String accountId, InputStream fileInputStream, String yamlPath) {
     try {
-      List changeList = getChangesForZipFile(accountId, fileInputStream, yamlPath);
+      Future<RestResponse> future = Executors.newSingleThreadExecutor().submit(() -> {
+        try {
+          List changeList = getChangesForZipFile(accountId, fileInputStream, yamlPath);
 
-      List<ChangeContext> changeSets = processChangeSet(changeList);
-      Map<String, Object> metaDataMap = Maps.newHashMap();
-      metaDataMap.put("yamlFilesProcessed", changeSets.size());
-      return RestResponse.Builder.aRestResponse().withMetaData(metaDataMap).build();
-    } catch (YamlProcessingException ex) {
-      logger.warn("Unable to process zip upload for account {}. ", accountId, ex);
-      // gitToHarness is false, as this is not initiated from git
-      yamlGitService.processFailedChanges(accountId, ex.getFailedChangeErrorMsgMap(), false);
+          List<ChangeContext> changeSets = processChangeSet(changeList);
+          Map<String, Object> metaDataMap = Maps.newHashMap();
+          metaDataMap.put("yamlFilesProcessed", changeSets.size());
+          return Builder.aRestResponse().withMetaData(metaDataMap).build();
+        } catch (YamlProcessingException ex) {
+          logger.warn("Unable to process zip upload for account {}. ", accountId, ex);
+          // gitToHarness is false, as this is not initiated from git
+          yamlGitService.processFailedChanges(accountId, ex.getFailedChangeErrorMsgMap(), false);
+        }
+        return Builder.aRestResponse()
+            .withResponseMessages(asList(
+                new ResponseMessage[] {ResponseMessage.aResponseMessage().code(ErrorCode.DEFAULT_ERROR_CODE).build()}))
+            .build();
+      });
+      return future.get(30, TimeUnit.SECONDS);
+    } catch (Exception e) {
+      return Builder.aRestResponse()
+          .withResponseMessages(asList(
+              new ResponseMessage[] {ResponseMessage.aResponseMessage().code(ErrorCode.DEFAULT_ERROR_CODE).build()}))
+          .build();
     }
-    return Builder.aRestResponse()
-        .withResponseMessages(asList(
-            new ResponseMessage[] {ResponseMessage.aResponseMessage().code(ErrorCode.DEFAULT_ERROR_CODE).build()}))
-        .build();
   }
 
   protected List<GitFileChange> getChangesForZipFile(String accountId, InputStream fileInputStream, String yamlPath)
