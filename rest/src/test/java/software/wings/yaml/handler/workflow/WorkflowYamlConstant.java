@@ -48,6 +48,7 @@ public class WorkflowYamlConstant {
       + "    stepsInParallel: false\n"
       + "  provisionNodes: false\n"
       + "  serviceName: SERVICE_NAME\n"
+      + "  statefulSet: false\n"
       + "rollbackPhases:\n"
       + "- type: KUBERNETES\n"
       + "  computeProviderName: exploration\n"
@@ -69,6 +70,7 @@ public class WorkflowYamlConstant {
       + "    stepsInParallel: false\n"
       + "  provisionNodes: false\n"
       + "  serviceName: SERVICE_NAME\n"
+      + "  statefulSet: false\n"
       + "templatized: false";
 
   public static final String BASIC_VALID_YAML_CONTENT_WITH_MULTILINE_USER_INPUT = "harnessApiVersion: '1.0'\n"
@@ -138,6 +140,7 @@ public class WorkflowYamlConstant {
       + "    stepsInParallel: false\n"
       + "  provisionNodes: false\n"
       + "  serviceName: SERVICE_NAME\n"
+      + "  statefulSet: false\n"
       + "preDeploymentSteps:\n"
       + "- type: ARTIFACT_CHECK\n"
       + "  name: Artifact Check\n"
@@ -184,6 +187,7 @@ public class WorkflowYamlConstant {
       + "    stepsInParallel: false\n"
       + "  provisionNodes: false\n"
       + "  serviceName: SERVICE_NAME\n"
+      + "  statefulSet: false\n"
       + "templatized: false";
 
   public static final String BASIC_VALID_YAML_CONTENT_TEMPLATIZED = "harnessApiVersion: '1.0'\n"
@@ -228,6 +232,7 @@ public class WorkflowYamlConstant {
       + "    stepsInParallel: false\n"
       + "  provisionNodes: false\n"
       + "  serviceName: SERVICE_NAME\n"
+      + "  statefulSet: false\n"
       + "  templateExpressions:\n"
       + "  - expression: ${Service}\n"
       + "    fieldName: serviceId\n"
@@ -274,6 +279,7 @@ public class WorkflowYamlConstant {
       + "    stepsInParallel: false\n"
       + "  provisionNodes: false\n"
       + "  serviceName: SERVICE_NAME\n"
+      + "  statefulSet: false\n"
       + "  templateExpressions:\n"
       + "  - expression: ${Service}\n"
       + "    fieldName: serviceId\n"
@@ -363,6 +369,7 @@ public class WorkflowYamlConstant {
       + "    stepsInParallel: false\n"
       + "  provisionNodes: false\n"
       + "  serviceName: SERVICE_NAME\n"
+      + "  statefulSet: false\n"
       + "templatized: false";
 
   public static final String BUILD_VALID_YAML_FILE_PATH = "Setup/Applications/APP_NAME/Workflows/build.yaml";
@@ -447,6 +454,7 @@ public class WorkflowYamlConstant {
       + "    stepsInParallel: false\n"
       + "  provisionNodes: false\n"
       + "  serviceName: SERVICE_NAME\n"
+      + "  statefulSet: false\n"
       + "- type: KUBERNETES\n"
       + "  computeProviderName: COMPUTE_PROVIDER_ID\n"
       + "  daemonSet: false\n"
@@ -477,6 +485,7 @@ public class WorkflowYamlConstant {
       + "    stepsInParallel: false\n"
       + "  provisionNodes: false\n"
       + "  serviceName: SERVICE_NAME\n"
+      + "  statefulSet: false\n"
       + "rollbackPhases:\n"
       + "- type: KUBERNETES\n"
       + "  computeProviderName: COMPUTE_PROVIDER_ID\n"
@@ -498,6 +507,7 @@ public class WorkflowYamlConstant {
       + "    stepsInParallel: false\n"
       + "  provisionNodes: false\n"
       + "  serviceName: SERVICE_NAME\n"
+      + "  statefulSet: false\n"
       + "- type: KUBERNETES\n"
       + "  computeProviderName: COMPUTE_PROVIDER_ID\n"
       + "  daemonSet: false\n"
@@ -518,6 +528,7 @@ public class WorkflowYamlConstant {
       + "    stepsInParallel: false\n"
       + "  provisionNodes: false\n"
       + "  serviceName: SERVICE_NAME\n"
+      + "  statefulSet: false\n"
       + "templatized: false";
 
   public static final String CANARY_VALID_YAML_FILE_PATH = "Setup/Applications/APP_NAME/Workflows/canary.yaml";
@@ -572,6 +583,7 @@ public class WorkflowYamlConstant {
       + "    stepsInParallel: false\n"
       + "  provisionNodes: false\n"
       + "  serviceName: SERVICE_NAME\n"
+      + "  statefulSet: false\n"
       + "- type: KUBERNETES\n"
       + "  computeProviderName: COMPUTE_PROVIDER_ID\n"
       + "  daemonSet: false\n"
@@ -602,6 +614,7 @@ public class WorkflowYamlConstant {
       + "    stepsInParallel: false\n"
       + "  provisionNodes: false\n"
       + "  serviceName: SERVICE_NAME\n"
+      + "  statefulSet: false\n"
       + "rollbackPhases:\n"
       + "- type: KUBERNETES\n"
       + "  computeProviderName: COMPUTE_PROVIDER_ID\n"
@@ -623,6 +636,7 @@ public class WorkflowYamlConstant {
       + "    stepsInParallel: false\n"
       + "  provisionNodes: false\n"
       + "  serviceName: SERVICE_NAME\n"
+      + "  statefulSet: false\n"
       + "- type: KUBERNETES\n"
       + "  computeProviderName: COMPUTE_PROVIDER_ID\n"
       + "  daemonSet: false\n"
@@ -643,6 +657,7 @@ public class WorkflowYamlConstant {
       + "    stepsInParallel: false\n"
       + "  provisionNodes: false\n"
       + "  serviceName: SERVICE_NAME\n"
+      + "  statefulSet: false\n"
       + "templatized: false";
   public static final String MULTI_SERVICE_VALID_YAML_FILE_PATH =
       "Setup/Applications/APP_NAME/Workflows/multiService.yaml";

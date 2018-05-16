@@ -259,7 +259,7 @@ public abstract class ContainerServiceSetup extends State {
       ContainerSetupCommandUnitExecutionData setupExecutionData =
           (ContainerSetupCommandUnitExecutionData) executionResult.getCommandExecutionData();
       if (setupExecutionData != null) {
-        executionData.setPreviousDaemonSetYaml(setupExecutionData.getPreviousDaemonSetYaml());
+        executionData.setPreviousYamlConfig(setupExecutionData.getPreviousYamlConfig());
         executionData.setPreviousActiveAutoscalers(setupExecutionData.getPreviousActiveAutoscalers());
       }
     }

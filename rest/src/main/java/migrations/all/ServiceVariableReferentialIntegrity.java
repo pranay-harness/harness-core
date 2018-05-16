@@ -3,6 +3,7 @@ package migrations.all;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.ID_KEY;
+import static software.wings.dl.HQuery.excludeAuthority;
 
 import com.google.inject.Inject;
 
@@ -32,7 +33,7 @@ public class ServiceVariableReferentialIntegrity implements Migration {
     UpdateOperations<ServiceVariable> updateOperations =
         wingsPersistence.createUpdateOperations(ServiceVariable.class).unset("parentServiceVariableId");
 
-    List<Account> accounts = wingsPersistence.createQuery(Account.class).asList();
+    List<Account> accounts = wingsPersistence.createQuery(Account.class, excludeAuthority).asList();
     logger.info("Checking {} accounts", accounts.size());
     for (Account account : accounts) {
       List<Application> apps =

@@ -123,9 +123,10 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public HasMetadata createController(
+  public HasMetadata createOrReplaceController(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, HasMetadata definition) {
-    logger.info("Creating {} {}", definition.getKind(), definition.getMetadata().getName());
+    String name = definition.getMetadata().getName();
+    logger.info("Creating {} {}", definition.getKind(), name);
 
     // TODO - Use definition.getKind()
     HasMetadata controller = null;
@@ -138,7 +139,12 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     } else if (definition instanceof ReplicaSet) {
       controller = replicaOperations(kubernetesConfig, encryptedDataDetails).createOrReplace((ReplicaSet) definition);
     } else if (definition instanceof StatefulSet) {
-      controller = statefulOperations(kubernetesConfig, encryptedDataDetails).createOrReplace((StatefulSet) definition);
+      HasMetadata existing = getController(kubernetesConfig, encryptedDataDetails, name);
+      if (existing != null && existing.getKind().equals("StatefulSet")) {
+        statefulOperations(kubernetesConfig, encryptedDataDetails).withName(name).patch((StatefulSet) definition);
+      } else {
+        controller = statefulOperations(kubernetesConfig, encryptedDataDetails).create((StatefulSet) definition);
+      }
     } else if (definition instanceof DaemonSet) {
       controller = daemonOperations(kubernetesConfig, encryptedDataDetails).createOrReplace((DaemonSet) definition);
     }
@@ -219,7 +225,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public HorizontalPodAutoscaler createAutoscaler(KubernetesConfig kubernetesConfig,
+  public HorizontalPodAutoscaler createOrReplaceAutoscaler(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, HorizontalPodAutoscaler definition) {
     String api = kubernetesHelperService.trimVersion(definition.getApiVersion());
 
@@ -256,7 +262,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     if (autoscaler != null) {
       autoscaler.getSpec().setScaleTargetRef(
           new CrossVersionObjectReferenceBuilder().withKind("none").withName("none").build());
-      createAutoscaler(kubernetesConfig, encryptedDataDetails, autoscaler);
+      createOrReplaceAutoscaler(kubernetesConfig, encryptedDataDetails, autoscaler);
     }
   }
 
@@ -269,7 +275,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       if (controller != null) {
         autoscaler.getSpec().getScaleTargetRef().setKind(controller.getKind());
         autoscaler.getSpec().getScaleTargetRef().setName(name);
-        createAutoscaler(kubernetesConfig, encryptedDataDetails, autoscaler);
+        createOrReplaceAutoscaler(kubernetesConfig, encryptedDataDetails, autoscaler);
       }
     }
   }
@@ -317,11 +323,11 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Override
   public List<ContainerInfo> getContainerInfosWhenReady(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int previousCount,
-      int serviceSteadyStateTimeout, List<Pod> originalPods, boolean isDaemonSet,
+      int serviceSteadyStateTimeout, List<Pod> originalPods, boolean isNotVersioned,
       ExecutionLogCallback executionLogCallback, boolean wait, long startTime) {
     List<Pod> pods = wait
         ? waitForPodsToBeRunning(kubernetesConfig, encryptedDataDetails, controllerName, previousCount,
-              serviceSteadyStateTimeout, originalPods, isDaemonSet, startTime, executionLogCallback)
+              serviceSteadyStateTimeout, originalPods, isNotVersioned, startTime, executionLogCallback)
         : originalPods;
     int desiredCount = getControllerPodCount(getController(kubernetesConfig, encryptedDataDetails, controllerName));
     List<ContainerInfo> containerInfos = new ArrayList<>();
@@ -348,7 +354,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
       }
 
-      if (isDaemonSet || desiredCount > previousCount) {
+      if (isNotVersioned || desiredCount > previousCount) {
         if (!isRunning(pod)) {
           hasErrors = true;
           String msg = format("Pod %s failed to start", podName);
@@ -504,7 +510,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     return null;
   }
 
-  private PodTemplateSpec getPodTemplateSpec(HasMetadata controller) {
+  public PodTemplateSpec getPodTemplateSpec(HasMetadata controller) {
     PodTemplateSpec podTemplateSpec = null;
     if (controller instanceof ReplicationController) {
       podTemplateSpec = ((ReplicationController) controller).getSpec().getTemplate();
@@ -893,7 +899,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   private List<Pod> waitForPodsToBeRunning(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int previousCount,
-      int serviceSteadyStateTimeout, List<Pod> originalPods, boolean isDaemonSet, long startTime,
+      int serviceSteadyStateTimeout, List<Pod> originalPods, boolean isNotVersioned, long startTime,
       ExecutionLogCallback executionLogCallback) {
     HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, controllerName);
     PodTemplateSpec podTemplateSpec = getPodTemplateSpec(controller);
@@ -953,7 +959,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
             }
           }
 
-          if (isDaemonSet || desiredCount > previousCount) {
+          if (isNotVersioned || desiredCount > previousCount) {
             int running = (int) pods.stream().filter(this ::isRunning).count();
             if (running != desiredCount) {
               executionLogCallback.saveExecutionLog(

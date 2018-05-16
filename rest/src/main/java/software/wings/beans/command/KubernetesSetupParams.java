@@ -27,9 +27,12 @@ public class KubernetesSetupParams extends ContainerSetupParams {
   private String serviceYaml;
   private String namespace;
   private String controllerNamePrefix;
-  private String previousDaemonSetYaml;
+  private KubernetesYamlConfig previousYamlConfig;
   private List<String> previousActiveAutoscalers;
   private boolean rollback;
+  private boolean useFixedInstances;
+  private int maxInstances;
+  private int fixedInstances;
   private int serviceSteadyStateTimeout;
   private boolean useAutoscaler;
   private int minAutoscaleInstances;
@@ -66,9 +69,12 @@ public class KubernetesSetupParams extends ContainerSetupParams {
     private String serviceYaml;
     private String namespace;
     private String controllerNamePrefix;
-    private String previousDaemonSetYaml;
+    private KubernetesYamlConfig previousYamlConfig;
     private List<String> previousActiveAutoscalers;
     private boolean rollback;
+    private boolean useFixedInstances;
+    private int maxInstances;
+    private int fixedInstances;
     private int serviceSteadyStateTimeout;
     private boolean useAutoscaler;
     private int minAutoscaleInstances;
@@ -190,8 +196,8 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       return this;
     }
 
-    public KubernetesSetupParamsBuilder withPreviousDaemonSetYaml(String previousDaemonSetYaml) {
-      this.previousDaemonSetYaml = previousDaemonSetYaml;
+    public KubernetesSetupParamsBuilder withPreviousYamlConfig(KubernetesYamlConfig previousYamlConfig) {
+      this.previousYamlConfig = previousYamlConfig;
       return this;
     }
 
@@ -202,6 +208,21 @@ public class KubernetesSetupParams extends ContainerSetupParams {
 
     public KubernetesSetupParamsBuilder withRollback(boolean rollback) {
       this.rollback = rollback;
+      return this;
+    }
+
+    public KubernetesSetupParamsBuilder withUseFixedInstances(boolean useFixedInstances) {
+      this.useFixedInstances = useFixedInstances;
+      return this;
+    }
+
+    public KubernetesSetupParamsBuilder withMaxInstances(int maxInstances) {
+      this.maxInstances = maxInstances;
+      return this;
+    }
+
+    public KubernetesSetupParamsBuilder withFixedInstances(int fixedInstances) {
+      this.fixedInstances = fixedInstances;
       return this;
     }
 
@@ -297,9 +318,12 @@ public class KubernetesSetupParams extends ContainerSetupParams {
           .withServiceYaml(serviceYaml)
           .withNamespace(namespace)
           .withControllerNamePrefix(controllerNamePrefix)
-          .withPreviousDaemonSetYaml(previousDaemonSetYaml)
+          .withPreviousYamlConfig(previousYamlConfig)
           .withPreviousActiveAutoscalers(previousActiveAutoscalers)
           .withRollback(rollback)
+          .withUseFixedInstances(useFixedInstances)
+          .withMaxInstances(maxInstances)
+          .withFixedInstances(fixedInstances)
           .withServiceSteadyStateTimeout(serviceSteadyStateTimeout)
           .withUseAutoscaler(useAutoscaler)
           .withMinAutoscaleInstances(minAutoscaleInstances)
@@ -338,9 +362,12 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       kubernetesSetupParams.setServiceYaml(serviceYaml);
       kubernetesSetupParams.setNamespace(namespace);
       kubernetesSetupParams.setControllerNamePrefix(controllerNamePrefix);
-      kubernetesSetupParams.setPreviousDaemonSetYaml(previousDaemonSetYaml);
+      kubernetesSetupParams.setPreviousYamlConfig(previousYamlConfig);
       kubernetesSetupParams.setPreviousActiveAutoscalers(previousActiveAutoscalers);
       kubernetesSetupParams.setRollback(rollback);
+      kubernetesSetupParams.setUseFixedInstances(useFixedInstances);
+      kubernetesSetupParams.setMaxInstances(maxInstances);
+      kubernetesSetupParams.setFixedInstances(fixedInstances);
       kubernetesSetupParams.setServiceSteadyStateTimeout(serviceSteadyStateTimeout);
       kubernetesSetupParams.setUseAutoscaler(useAutoscaler);
       kubernetesSetupParams.setMinAutoscaleInstances(minAutoscaleInstances);

@@ -15,7 +15,7 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
   private String downsizeInstanceCount;
   private InstanceUnitType instanceUnitType = InstanceUnitType.PERCENTAGE;
   private InstanceUnitType downsizeInstanceUnitType = InstanceUnitType.PERCENTAGE;
-  private String commandName;
+  private String commandName = "Resize Service Cluster";
 
   public EcsServiceDeploy(String name) {
     super(name, StateType.ECS_SERVICE_DEPLOY.name());

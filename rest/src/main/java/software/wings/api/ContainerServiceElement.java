@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.ResizeStrategy;
+import software.wings.beans.command.KubernetesYamlConfig;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -38,7 +39,7 @@ public class ContainerServiceElement implements ContextElement {
   private int targetCpuUtilizationPercentage;
   private String customMetricYamlConfig;
   private boolean useIstioRouteRule;
-  private String previousDaemonSetYaml;
+  private KubernetesYamlConfig previousYamlConfig;
   private List<String> previousActiveAutoscalers;
   private List<String[]> activeServiceCounts;
   private List<String[]> trafficWeights;

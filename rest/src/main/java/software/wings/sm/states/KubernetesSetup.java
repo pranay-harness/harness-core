@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
@@ -44,7 +45,6 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
 import software.wings.utils.KubernetesConvention;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -171,6 +171,9 @@ public class KubernetesSetup extends ContainerServiceSetup {
       serviceYamlEvaluated = context.renderExpression(serviceYaml);
     }
 
+    int maxInstances = computeMaxInstances(context);
+    int fixedInstances = computeFixedInstances(context, maxInstances);
+
     return aKubernetesSetupParams()
         .withAppName(app.getName())
         .withEnvName(env.getName())
@@ -192,6 +195,9 @@ public class KubernetesSetup extends ContainerServiceSetup {
         .withTargetPort(targetPort)
         .withPortName(portName)
         .withControllerNamePrefix(controllerNamePrefix)
+        .withUseFixedInstances(FIXED_INSTANCES.equals(getDesiredInstanceCount()))
+        .withFixedInstances(fixedInstances)
+        .withMaxInstances(maxInstances)
         .withServiceSteadyStateTimeout(serviceSteadyStateTimeout)
         .withUseAutoscaler(useAutoscaler)
         .withMinAutoscaleInstances(minAutoscaleInstances)
@@ -224,19 +230,8 @@ public class KubernetesSetup extends ContainerServiceSetup {
       CommandExecutionResult executionResult, ExecutionStatus status, ImageDetails imageDetails) {
     CommandStateExecutionData executionData = (CommandStateExecutionData) context.getStateExecutionData();
     KubernetesSetupParams setupParams = (KubernetesSetupParams) executionData.getContainerSetupParams();
-    Integer maxVal = null;
-    if (isNotBlank(getMaxInstances())) {
-      try {
-        maxVal = Integer.valueOf(context.renderExpression(getMaxInstances()));
-      } catch (NumberFormatException e) {
-        logger.error("Invalid number format for max instances: {}", context.renderExpression(getMaxInstances()), e);
-      }
-    }
-    int evaluatedMaxInstances = maxVal != null ? maxVal : DEFAULT_MAX;
-    int maxInstances = evaluatedMaxInstances == 0 ? DEFAULT_MAX : evaluatedMaxInstances;
-    int evaluatedFixedInstances =
-        isNotBlank(getFixedInstances()) ? Integer.valueOf(context.renderExpression(getFixedInstances())) : maxInstances;
-    int fixedInstances = evaluatedFixedInstances == 0 ? maxInstances : evaluatedFixedInstances;
+    int maxInstances = computeMaxInstances(context);
+    int fixedInstances = computeFixedInstances(context, maxInstances);
     ResizeStrategy resizeStrategy = getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy();
     int serviceSteadyStateTimeout =
         getServiceSteadyStateTimeout() > 0 ? getServiceSteadyStateTimeout() : DEFAULT_STEADY_STATE_TIMEOUT;
@@ -260,12 +255,12 @@ public class KubernetesSetup extends ContainerServiceSetup {
           (ContainerSetupCommandUnitExecutionData) executionResult.getCommandExecutionData();
       if (setupExecutionData != null) {
         containerServiceElementBuilder.name(setupExecutionData.getContainerServiceName())
-            .previousDaemonSetYaml(setupExecutionData.getPreviousDaemonSetYaml())
+            .previousYamlConfig(setupExecutionData.getPreviousYamlConfig())
             .previousActiveAutoscalers(setupExecutionData.getPreviousActiveAutoscalers())
             .activeServiceCounts(setupExecutionData.getActiveServiceCounts())
             .trafficWeights(setupExecutionData.getTrafficWeights());
         int totalActiveServiceCount = Optional.ofNullable(setupExecutionData.getActiveServiceCounts())
-                                          .orElse(new ArrayList<>())
+                                          .orElse(emptyList())
                                           .stream()
                                           .mapToInt(item -> Integer.valueOf(item[1]))
                                           .sum();
@@ -288,6 +283,25 @@ public class KubernetesSetup extends ContainerServiceSetup {
     }
 
     return containerServiceElementBuilder.build();
+  }
+
+  private int computeFixedInstances(ExecutionContext context, int maxInstances) {
+    int evaluatedFixedInstances =
+        isNotBlank(getFixedInstances()) ? Integer.valueOf(context.renderExpression(getFixedInstances())) : maxInstances;
+    return evaluatedFixedInstances == 0 ? maxInstances : evaluatedFixedInstances;
+  }
+
+  private int computeMaxInstances(ExecutionContext context) {
+    Integer maxVal = null;
+    if (isNotBlank(getMaxInstances())) {
+      try {
+        maxVal = Integer.valueOf(context.renderExpression(getMaxInstances()));
+      } catch (NumberFormatException e) {
+        logger.error("Invalid number format for max instances: {}", context.renderExpression(getMaxInstances()), e);
+      }
+    }
+    int evaluatedMaxInstances = maxVal != null ? maxVal : DEFAULT_MAX;
+    return evaluatedMaxInstances == 0 ? DEFAULT_MAX : evaluatedMaxInstances;
   }
 
   @Override

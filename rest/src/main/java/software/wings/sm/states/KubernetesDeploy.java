@@ -20,7 +20,7 @@ public class KubernetesDeploy extends ContainerServiceDeploy {
   private String trafficPercent;
   private InstanceUnitType instanceUnitType = InstanceUnitType.PERCENTAGE;
   private InstanceUnitType downsizeInstanceUnitType = InstanceUnitType.PERCENTAGE;
-  private String commandName;
+  private String commandName = "Resize Replication Controller";
 
   public KubernetesDeploy(String name) {
     super(name, KUBERNETES_DEPLOY.name());

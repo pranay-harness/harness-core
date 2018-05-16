@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.command.KubernetesSetupParams.KubernetesSetupParamsBuilder.aKubernetesSetupParams;
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.sm.StateType.KUBERNETES_SETUP_ROLLBACK;
@@ -55,6 +56,9 @@ public class KubernetesSetupRollback extends ContainerServiceSetup {
       resourceGroup = ((AzureKubernetesInfrastructureMapping) infrastructureMapping).getResourceGroup();
     }
 
+    String namespace =
+        isNotBlank(infrastructureMapping.getNamespace()) ? infrastructureMapping.getNamespace() : "default";
+
     int serviceSteadyStateTimeout =
         getServiceSteadyStateTimeout() > 0 ? getServiceSteadyStateTimeout() : DEFAULT_STEADY_STATE_TIMEOUT;
     return aKubernetesSetupParams()
@@ -63,10 +67,11 @@ public class KubernetesSetupRollback extends ContainerServiceSetup {
         .withServiceName(serviceName)
         .withClusterName(clusterName)
         .withImageDetails(imageDetails)
+        .withNamespace(namespace)
         .withContainerTask(containerTask)
         .withControllerNamePrefix(rollbackElement.getControllerNamePrefix())
         .withInfraMappingId(infrastructureMapping.getUuid())
-        .withPreviousDaemonSetYaml(rollbackElement.getPreviousDaemonSetYaml())
+        .withPreviousYamlConfig(rollbackElement.getPreviousYamlConfig())
         .withPreviousActiveAutoscalers(rollbackElement.getPreviousActiveAutoscalers())
         .withServiceSteadyStateTimeout(serviceSteadyStateTimeout)
         .withRollback(true)

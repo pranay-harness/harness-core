@@ -15,7 +15,7 @@ metadata:
   name: ${delegateName}-${kubernetesAccountLabel}
   namespace: harness-delegate
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       harness.io/app: harness-delegate

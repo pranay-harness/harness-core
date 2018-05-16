@@ -2,6 +2,7 @@ package software.wings.api;
 
 import lombok.Builder;
 import lombok.Data;
+import software.wings.beans.command.KubernetesYamlConfig;
 import software.wings.common.Constants;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
@@ -19,7 +20,7 @@ public class ContainerRollbackRequestElement implements ContextElement {
   private List<ContainerServiceData> newInstanceData;
   private List<ContainerServiceData> oldInstanceData;
   private String controllerNamePrefix;
-  private String previousDaemonSetYaml;
+  private KubernetesYamlConfig previousYamlConfig;
   private List<String> previousActiveAutoscalers;
 
   @Override

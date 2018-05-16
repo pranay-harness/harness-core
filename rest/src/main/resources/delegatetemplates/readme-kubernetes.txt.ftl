@@ -15,7 +15,7 @@ Get pod names:
 
 See startup logs:
 
-  kubectl logs <pod-name> -n harness-delegate
+   kubectl logs <pod-name> -n harness-delegate -f
 
 Run a shell in a pod:
 

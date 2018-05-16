@@ -99,6 +99,7 @@ import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ContainerSetupCommandUnitExecutionData.ContainerSetupCommandUnitExecutionDataBuilder;
+import software.wings.beans.command.KubernetesYamlConfig.KubernetesYamlConfigBuilder;
 import software.wings.beans.container.ContainerDefinition;
 import software.wings.beans.container.ImageDetails;
 import software.wings.beans.container.KubernetesContainerTask;
@@ -125,6 +126,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
 /**
@@ -208,21 +210,23 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
       boolean isStatefulSet = kubernetesContainerTask.checkStatefulSet();
       boolean isDaemonSet = kubernetesContainerTask.checkDaemonSet();
+      boolean isNotVersioned = isDaemonSet || isStatefulSet;
 
       String lastCtrlName =
           lastController(kubernetesConfig, encryptedDataDetails, setupParams.getControllerNamePrefix(), isStatefulSet);
       int revision = getRevisionFromControllerName(lastCtrlName, isStatefulSet).orElse(-1) + 1;
 
-      String containerServiceName = isDaemonSet
-          ? setupParams.getControllerNamePrefix()
+      String containerServiceName = isNotVersioned
+          ? isStatefulSet ? KubernetesConvention.getKubernetesServiceName(setupParams.getControllerNamePrefix())
+                          : setupParams.getControllerNamePrefix()
           : KubernetesConvention.getControllerName(setupParams.getControllerNamePrefix(), revision, isStatefulSet);
 
       if (setupParams.isRollback()) {
         executionLogCallback.saveExecutionLog("Rolling back setup");
-        if (isDaemonSet) {
-          performDaemonSetRollback(encryptedDataDetails, executionLogCallback, setupParams, kubernetesConfig);
-        }
-        if (isNotEmpty(setupParams.getPreviousActiveAutoscalers())) {
+        if (isNotVersioned) {
+          performYamlRollback(
+              encryptedDataDetails, executionLogCallback, setupParams, kubernetesConfig, containerServiceName);
+        } else if (isNotEmpty(setupParams.getPreviousActiveAutoscalers())) {
           performAutoscalerRollback(encryptedDataDetails, executionLogCallback, setupParams, kubernetesConfig);
         }
         executionLogCallback.saveExecutionLog("Rollback complete");
@@ -239,16 +243,26 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           registrySecretName, setupParams.getNamespace(), setupParams.getImageDetails(), executionLogCallback);
       kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, encryptedDataDetails, registrySecret);
 
-      String previousDaemonSetYaml = null;
-      List<Pod> originalDaemonSetPods = null;
+      KubernetesYamlConfigBuilder yamlConfigBuilder = KubernetesYamlConfig.builder();
+      List<Pod> originalPods = null;
       List<String> previousActiveAutoscalers = null;
       Map<String, Integer> activeServiceCounts = new HashMap<>();
       Map<String, Integer> trafficWeights = new HashMap<>();
 
-      if (isDaemonSet) {
-        previousDaemonSetYaml = getDaemonSetYaml(kubernetesConfig, encryptedDataDetails, containerServiceName);
-        originalDaemonSetPods =
+      if (isNotVersioned) {
+        yamlConfigBuilder.controllerYaml(
+            getControllerYaml(kubernetesConfig, encryptedDataDetails, containerServiceName));
+        originalPods =
             kubernetesContainerService.getRunningPods(kubernetesConfig, encryptedDataDetails, containerServiceName);
+        yamlConfigBuilder.configMapYaml(getConfigMapYaml(kubernetesConfig, encryptedDataDetails, containerServiceName));
+        yamlConfigBuilder.secretMapYaml(getSecretMapYaml(kubernetesConfig, encryptedDataDetails, containerServiceName));
+        yamlConfigBuilder.autoscalerYaml(
+            getAutoscalerYaml(kubernetesConfig, encryptedDataDetails, containerServiceName));
+        HorizontalPodAutoscaler hpa = kubernetesContainerService.getAutoscaler(kubernetesConfig, encryptedDataDetails,
+            containerServiceName, ContainerApiVersions.KUBERNETES_V1.getVersionName());
+        if (hpa != null && !"none".equals(hpa.getSpec().getScaleTargetRef().getName())) {
+          disableAutoscaler(kubernetesConfig, encryptedDataDetails, containerServiceName, executionLogCallback);
+        }
       } else {
         previousActiveAutoscalers = getActiveAutoscalers(
             kubernetesConfig, encryptedDataDetails, containerServiceName, executionLogCallback, isStatefulSet);
@@ -257,9 +271,10 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         trafficWeights = kubernetesContainerService.getTrafficWeights(
             kubernetesConfig, encryptedDataDetails, containerServiceName, isStatefulSet);
       }
+      KubernetesYamlConfig yamlConfig = yamlConfigBuilder.build();
 
       commandExecutionDataBuilder.containerServiceName(containerServiceName)
-          .previousDaemonSetYaml(previousDaemonSetYaml)
+          .previousYamlConfig(yamlConfig)
           .previousActiveAutoscalers(previousActiveAutoscalers)
           .activeServiceCounts(integerMapToListOfStringArray(activeServiceCounts))
           .trafficWeights(integerMapToListOfStringArray(trafficWeights));
@@ -271,10 +286,11 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
               .put(HARNESS_ENV, KubernetesConvention.getLabelValue(setupParams.getEnvName()))
               .build();
 
-      Map<String, String> controllerLabels = ImmutableMap.<String, String>builder()
-                                                 .putAll(serviceLabels)
-                                                 .put(HARNESS_REVISION, isDaemonSet ? "ds" : Integer.toString(revision))
-                                                 .build();
+      Map<String, String> controllerLabels =
+          ImmutableMap.<String, String>builder()
+              .putAll(serviceLabels)
+              .put(HARNESS_REVISION, isNotVersioned ? "none" : Integer.toString(revision))
+              .build();
 
       // Setup config map
       ConfigMap configMap = prepareConfigMap(kubernetesConfig, encryptedDataDetails, setupParams, containerServiceName,
@@ -284,13 +300,12 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       Secret secretMap = prepareSecretMap(kubernetesConfig, encryptedDataDetails, setupParams, containerServiceName,
           controllerLabels, safeDisplayServiceVariables, serviceVariables, executionLogCallback);
 
-      long daemonSetStartTime = clock.millis();
+      long replaceControllerStartTime = clock.millis();
 
       // Setup controller
-      kubernetesContainerService.createController(kubernetesConfig, encryptedDataDetails,
+      kubernetesContainerService.createOrReplaceController(kubernetesConfig, encryptedDataDetails,
           createKubernetesControllerDefinition(kubernetesContainerTask, containerServiceName, controllerLabels,
-              setupParams.getNamespace(), setupParams.getImageDetails(), registrySecretName, configMap, secretMap,
-              executionLogCallback));
+              setupParams, registrySecretName, configMap, secretMap, originalPods, executionLogCallback));
 
       String serviceClusterIP = null;
       String serviceLoadBalancerEndpoint = null;
@@ -402,10 +417,25 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             routeRule, getPrefixFromControllerName(containerServiceName, isStatefulSet), executionLogCallback);
       }
 
-      if (isDaemonSet) {
-        listDaemonSetContainerInfosWhenReady(encryptedDataDetails, setupParams.getServiceSteadyStateTimeout(),
-            executionLogCallback, kubernetesConfig, containerServiceName, originalDaemonSetPods, daemonSetStartTime,
+      if (isNotVersioned) {
+        listContainerInfosWhenReady(encryptedDataDetails, setupParams.getServiceSteadyStateTimeout(),
+            executionLogCallback, kubernetesConfig, containerServiceName, originalPods, replaceControllerStartTime,
             false);
+        if (isStatefulSet) {
+          if (hpa != null) {
+            executionLogCallback.saveExecutionLog("Enabling autoscaler " + containerServiceName, LogLevel.INFO);
+            kubernetesContainerService.enableAutoscaler(kubernetesConfig, encryptedDataDetails, containerServiceName,
+                ContainerApiVersions.KUBERNETES_V1.getVersionName());
+          }
+
+          // TODO(brett) To transition to unversioned stateful sets we need to delete the versioned one.
+          // Remove this code after 6/1/18
+          if (revision > 0) {
+            executionLogCallback.saveExecutionLog(
+                "Transitioned to non-versioned StatefulSet. Removing obsolete versioned controllers.");
+            cleanup(kubernetesConfig, encryptedDataDetails, lastCtrlName, executionLogCallback, true);
+          }
+        }
       } else {
         executionLogCallback.saveExecutionLog("Cleaning up old versions");
         cleanup(kubernetesConfig, encryptedDataDetails, containerServiceName, executionLogCallback, isStatefulSet);
@@ -433,7 +463,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         executionLogCallback.saveExecutionLog(
             format("Autoscaler %s - disabled until 100%% deployed", hpaName), LogLevel.INFO);
 
-        hpa = kubernetesContainerService.createAutoscaler(kubernetesConfig, encryptedDataDetails, autoscalerDefinition);
+        hpa = kubernetesContainerService.createOrReplaceAutoscaler(
+            kubernetesConfig, encryptedDataDetails, autoscalerDefinition);
       }
     }
     return hpa;
@@ -598,15 +629,57 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     return configMap;
   }
 
-  private String getDaemonSetYaml(
+  private String getControllerYaml(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName) {
-    HasMetadata daemonSet =
+    HasMetadata controller =
         kubernetesContainerService.getController(kubernetesConfig, encryptedDataDetails, containerServiceName);
-    if (daemonSet != null) {
+    if (controller != null) {
       try {
-        return toYaml(daemonSet);
+        return toYaml(controller);
       } catch (IOException e) {
-        logger.error("Error converting DaemonSet to yaml: {}", containerServiceName);
+        logger.error("Error converting controller to yaml: {}", containerServiceName);
+      }
+    }
+    return null;
+  }
+
+  private String getConfigMapYaml(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName) {
+    ConfigMap configMap =
+        kubernetesContainerService.getConfigMap(kubernetesConfig, encryptedDataDetails, containerServiceName);
+    if (configMap != null) {
+      try {
+        return toYaml(configMap);
+      } catch (IOException e) {
+        logger.error("Error converting configMap to yaml: {}", containerServiceName);
+      }
+    }
+    return null;
+  }
+
+  private String getSecretMapYaml(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName) {
+    Secret secretMap =
+        kubernetesContainerService.getSecret(kubernetesConfig, encryptedDataDetails, containerServiceName);
+    if (secretMap != null) {
+      try {
+        return toYaml(secretMap);
+      } catch (IOException e) {
+        logger.error("Error converting secretMap to yaml: {}", containerServiceName);
+      }
+    }
+    return null;
+  }
+
+  private String getAutoscalerYaml(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName) {
+    HorizontalPodAutoscaler hpa = kubernetesContainerService.getAutoscaler(kubernetesConfig, encryptedDataDetails,
+        containerServiceName, ContainerApiVersions.KUBERNETES_V1.getVersionName());
+    if (hpa != null) {
+      try {
+        return toYaml(hpa);
+      } catch (IOException e) {
+        logger.error("Error converting horizontal pod autoscaler to yaml: {}", containerServiceName);
       }
     }
     return null;
@@ -783,7 +856,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     return routeRule;
   }
 
-  private void listDaemonSetContainerInfosWhenReady(List<EncryptedDataDetail> encryptedDataDetails,
+  private void listContainerInfosWhenReady(List<EncryptedDataDetail> encryptedDataDetails,
       int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback, KubernetesConfig kubernetesConfig,
       String containerServiceName, List<Pod> originalPods, long startTime, boolean isRollback) {
     Optional<Integer> controllerPodCount =
@@ -814,10 +887,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       }
       executionLogCallback.saveExecutionLog(
           format("Completed operation with errors\n%s\n", DASH_STRING), LogLevel.ERROR);
-      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE)
-          .addParam("message", "DaemonSet pods failed to reach desired count");
+      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE).addParam("message", "Pods failed to reach desired count");
     }
-    executionLogCallback.saveExecutionLog("\nDaemonSet Container IDs:");
+    executionLogCallback.saveExecutionLog("\nContainer IDs:");
     containerInfos.forEach(
         info -> executionLogCallback.saveExecutionLog("  " + info.getHostName() + " - " + info.getContainerId()));
     executionLogCallback.saveExecutionLog("");
@@ -826,45 +898,138 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
   }
 
-  private void performDaemonSetRollback(List<EncryptedDataDetail> encryptedDataDetails,
-      ExecutionLogCallback executionLogCallback, KubernetesSetupParams setupParams, KubernetesConfig kubernetesConfig) {
-    String daemonSetName = setupParams.getControllerNamePrefix();
-    String daemonSetYaml = setupParams.getPreviousDaemonSetYaml();
+  private void performYamlRollback(List<EncryptedDataDetail> encryptedDataDetails,
+      ExecutionLogCallback executionLogCallback, KubernetesSetupParams setupParams, KubernetesConfig kubernetesConfig,
+      String controllerName) {
+    String controllerYaml = null;
+    String configMapYaml = null;
+    String secretMapYaml = null;
+    String autoscalerYaml = null;
+
+    if (setupParams.getPreviousYamlConfig() != null) {
+      controllerYaml = setupParams.getPreviousYamlConfig().getControllerYaml();
+      configMapYaml = setupParams.getPreviousYamlConfig().getConfigMapYaml();
+      secretMapYaml = setupParams.getPreviousYamlConfig().getSecretMapYaml();
+      autoscalerYaml = setupParams.getPreviousYamlConfig().getAutoscalerYaml();
+    }
+
+    if (isNotBlank(configMapYaml)) {
+      executionLogCallback.saveExecutionLog("Rolling back configMap: " + controllerName);
+      ConfigMap configMap;
+      try {
+        configMap = KubernetesHelper.loadYaml(configMapYaml);
+      } catch (Exception e) {
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
+            .addParam("args", "Couldn't parse configMap YAML: " + configMapYaml);
+      }
+      executionLogCallback.saveExecutionLog("Setting configMap:\n\n" + toDisplayYaml(configMap));
+      kubernetesContainerService.createOrReplaceConfigMap(kubernetesConfig, encryptedDataDetails, configMap);
+    } else {
+      ConfigMap configMap =
+          kubernetesContainerService.getConfigMap(kubernetesConfig, encryptedDataDetails, controllerName);
+      if (configMap != null) {
+        executionLogCallback.saveExecutionLog(
+            "ConfigMap " + controllerName + " did not exist previously. Deleting on rollback");
+        try {
+          kubernetesContainerService.deleteConfigMap(kubernetesConfig, encryptedDataDetails, controllerName);
+        } catch (Exception e) {
+          executionLogCallback.saveExecutionLog("Error deleting configMap: " + controllerName, LogLevel.ERROR);
+          Misc.logAllMessages(e, executionLogCallback);
+        }
+      }
+    }
+
+    if (isNotBlank(secretMapYaml)) {
+      executionLogCallback.saveExecutionLog("Rolling back secretMap: " + controllerName);
+      Secret secretMap;
+      try {
+        secretMap = KubernetesHelper.loadYaml(secretMapYaml);
+      } catch (Exception e) {
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
+            .addParam("args", "Couldn't parse secretMap YAML: " + controllerName);
+      }
+      executionLogCallback.saveExecutionLog("Setting secretMap:\n\n"
+          + toDisplayYaml(new SecretBuilder()
+                              .withMetadata(secretMap.getMetadata())
+                              .withStringData(secretMap.getData().entrySet().stream().collect(
+                                  toMap(Entry::getKey, entry -> SECRET_MASK)))
+                              .build()));
+      kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, encryptedDataDetails, secretMap);
+    } else {
+      Secret secretMap = kubernetesContainerService.getSecret(kubernetesConfig, encryptedDataDetails, controllerName);
+      if (secretMap != null) {
+        executionLogCallback.saveExecutionLog(
+            "SecretMap " + controllerName + " did not exist previously. Deleting on rollback");
+        try {
+          kubernetesContainerService.deleteSecret(kubernetesConfig, encryptedDataDetails, controllerName);
+        } catch (Exception e) {
+          executionLogCallback.saveExecutionLog("Error deleting secretMap: " + controllerName, LogLevel.ERROR);
+          Misc.logAllMessages(e, executionLogCallback);
+        }
+      }
+    }
+
     long startTime = clock.millis();
     List<Pod> originalPods =
-        kubernetesContainerService.getRunningPods(kubernetesConfig, encryptedDataDetails, daemonSetName);
-    if (isNotBlank(daemonSetYaml)) {
+        kubernetesContainerService.getRunningPods(kubernetesConfig, encryptedDataDetails, controllerName);
+    if (isNotBlank(controllerYaml)) {
+      HasMetadata controller;
       try {
-        DaemonSet daemonSet = KubernetesHelper.loadYaml(daemonSetYaml);
-        if (daemonSet == null) {
-          throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
-              .addParam("args", "Couldn't parse Daemon Set YAML: " + daemonSetYaml);
-        }
-        executionLogCallback.saveExecutionLog("Rolling back DaemonSet " + daemonSetName);
-        kubernetesContainerService.createController(kubernetesConfig, encryptedDataDetails, daemonSet);
-        executionLogCallback.saveExecutionLog("Rolled back to DaemonSet with image: "
-                + daemonSet.getSpec()
-                      .getTemplate()
-                      .getSpec()
-                      .getContainers()
-                      .stream()
-                      .map(Container::getImage)
-                      .collect(toList()),
-            LogLevel.INFO);
-        listDaemonSetContainerInfosWhenReady(encryptedDataDetails, setupParams.getServiceSteadyStateTimeout(),
-            executionLogCallback, kubernetesConfig, daemonSetName, originalPods, startTime, true);
+        controller = KubernetesHelper.loadYaml(controllerYaml);
       } catch (Exception e) {
-        executionLogCallback.saveExecutionLog("Error reading DaemonSet from yaml: " + daemonSetName, LogLevel.ERROR);
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
+            .addParam("args", "Couldn't parse controller YAML: " + controllerYaml);
       }
+      executionLogCallback.saveExecutionLog("Rolling back controller " + controllerName);
+      executionLogCallback.saveExecutionLog("Setting controller:\n\n" + toDisplayYaml(controller));
+      kubernetesContainerService.createOrReplaceController(kubernetesConfig, encryptedDataDetails, controller);
+      PodTemplateSpec podTemplateSpec = kubernetesContainerService.getPodTemplateSpec(controller);
+      executionLogCallback.saveExecutionLog("Rolled back to controller with image: "
+              + podTemplateSpec.getSpec().getContainers().stream().map(Container::getImage).collect(toList()),
+          LogLevel.INFO);
+      listContainerInfosWhenReady(encryptedDataDetails, setupParams.getServiceSteadyStateTimeout(),
+          executionLogCallback, kubernetesConfig, controllerName, originalPods, startTime, true);
     } else {
       executionLogCallback.saveExecutionLog(
-          "DaemonSet " + daemonSetName + " did not exist previously. Deleting on rollback");
-      HasMetadata daemonSet =
-          kubernetesContainerService.getController(kubernetesConfig, encryptedDataDetails, daemonSetName);
-      Map<String, String> labels = daemonSet.getMetadata().getLabels();
-      kubernetesContainerService.deleteController(kubernetesConfig, encryptedDataDetails, daemonSetName);
-      kubernetesContainerService.waitForPodsToStop(kubernetesConfig, encryptedDataDetails, labels,
-          setupParams.getServiceSteadyStateTimeout(), originalPods, startTime, executionLogCallback);
+          "Controller " + controllerName + " did not exist previously. Deleting on rollback");
+      try {
+        HasMetadata controller =
+            kubernetesContainerService.getController(kubernetesConfig, encryptedDataDetails, controllerName);
+        Map<String, String> labels = controller.getMetadata().getLabels();
+        kubernetesContainerService.deleteController(kubernetesConfig, encryptedDataDetails, controllerName);
+        kubernetesContainerService.waitForPodsToStop(kubernetesConfig, encryptedDataDetails, labels,
+            setupParams.getServiceSteadyStateTimeout(), originalPods, startTime, executionLogCallback);
+      } catch (Exception e) {
+        executionLogCallback.saveExecutionLog("Error deleting controller: " + controllerName, LogLevel.ERROR);
+        Misc.logAllMessages(e, executionLogCallback);
+      }
+    }
+
+    if (isNotBlank(autoscalerYaml)) {
+      executionLogCallback.saveExecutionLog("Rolling back horizontal pod autoscaler " + controllerName);
+      HorizontalPodAutoscaler hpa;
+      try {
+        hpa = KubernetesHelper.loadYaml(autoscalerYaml);
+      } catch (Exception e) {
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
+            .addParam("args", "Couldn't parse horizontal pod autoscaler YAML: " + autoscalerYaml);
+      }
+      executionLogCallback.saveExecutionLog("Setting horizontal pod autoscaler:\n\n" + toDisplayYaml(hpa));
+      kubernetesContainerService.createOrReplaceAutoscaler(kubernetesConfig, encryptedDataDetails, hpa);
+    } else {
+      HorizontalPodAutoscaler hpa = kubernetesContainerService.getAutoscaler(
+          kubernetesConfig, encryptedDataDetails, controllerName, ContainerApiVersions.KUBERNETES_V1.getVersionName());
+      if (hpa != null) {
+        executionLogCallback.saveExecutionLog(
+            "Horizontal pod autoscaler " + controllerName + " did not exist previously. Deleting on rollback");
+        try {
+          kubernetesContainerService.deleteAutoscaler(kubernetesConfig, encryptedDataDetails, controllerName);
+        } catch (Exception e) {
+          executionLogCallback.saveExecutionLog(
+              "Error deleting horizontal pod autoscaler: " + controllerName, LogLevel.ERROR);
+          Misc.logAllMessages(e, executionLogCallback);
+        }
+      }
     }
   }
 
@@ -961,26 +1126,27 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       String controllerNamePrefix, boolean isStatefulSet) {
     String versionSeparator = isStatefulSet ? DASH : DOT;
 
-    final HasMetadata[] lastReplicationController = {null};
+    final AtomicReference<HasMetadata> lastController = new AtomicReference<>();
     final AtomicInteger lastRevision = new AtomicInteger();
     kubernetesContainerService.listControllers(kubernetesConfig, encryptedDataDetails)
         .stream()
         .filter(ctrl -> ctrl.getMetadata().getName().startsWith(controllerNamePrefix + versionSeparator))
         .forEach(ctrl -> {
           Optional<Integer> revision = getRevisionFromControllerName(ctrl.getMetadata().getName(), isStatefulSet);
-          if (revision.isPresent() && (lastReplicationController[0] == null || revision.get() > lastRevision.get())) {
-            lastReplicationController[0] = ctrl;
+          if (revision.isPresent() && (lastController.get() == null || revision.get() > lastRevision.get())) {
+            lastController.set(ctrl);
             lastRevision.set(revision.get());
           }
         });
-    return lastReplicationController[0] != null ? lastReplicationController[0].getMetadata().getName() : null;
+    return lastController.get() != null ? lastController.get().getMetadata().getName() : null;
   }
 
   private HasMetadata createKubernetesControllerDefinition(KubernetesContainerTask kubernetesContainerTask,
-      String controllerName, Map<String, String> controllerLabels, String namespace, ImageDetails imageDetails,
-      String registrySecretName, ConfigMap configMap, Secret secretMap, ExecutionLogCallback executionLogCallback) {
-    String containerName = KubernetesConvention.getContainerName(imageDetails.getName());
-    String imageNameTag = imageDetails.getName() + ":" + imageDetails.getTag();
+      String controllerName, Map<String, String> controllerLabels, KubernetesSetupParams setupParams,
+      String registrySecretName, ConfigMap configMap, Secret secretMap, List<Pod> originalPods,
+      ExecutionLogCallback executionLogCallback) {
+    String containerName = KubernetesConvention.getContainerName(setupParams.getImageDetails().getName());
+    String imageNameTag = setupParams.getImageDetails().getName() + ":" + setupParams.getImageDetails().getTag();
 
     String configMapName = configMap != null ? configMap.getMetadata().getName() : "no-config-map";
     String secretMapName = secretMap != null ? secretMap.getMetadata().getName() : "no-secret-map";
@@ -989,17 +1155,19 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         containerName, imageNameTag, registrySecretName, configMapName, secretMapName);
 
     KubernetesHelper.setName(controller, controllerName);
-    KubernetesHelper.setNamespace(controller, namespace);
+    KubernetesHelper.setNamespace(controller, setupParams.getNamespace());
     KubernetesHelper.getOrCreateLabels(controller).putAll(controllerLabels);
 
-    configureTypeSpecificSpecs(controllerLabels, controller, configMap, secretMap, executionLogCallback);
+    configureTypeSpecificSpecs(
+        controllerLabels, controller, configMap, secretMap, setupParams, originalPods, executionLogCallback);
 
     executionLogCallback.saveExecutionLog("Creating controller:\n\n" + toDisplayYaml(controller));
     return controller;
   }
 
   private void configureTypeSpecificSpecs(Map<String, String> controllerLabels, HasMetadata kubernetesObj,
-      ConfigMap configMap, Secret secretMap, ExecutionLogCallback executionLogCallback) {
+      ConfigMap configMap, Secret secretMap, KubernetesSetupParams setupParams, List<Pod> originalPods,
+      ExecutionLogCallback executionLogCallback) {
     PodTemplateSpec podTemplateSpec = null;
     if (kubernetesObj instanceof ReplicationController) {
       ReplicationControllerSpec rcSpec = ((ReplicationController) kubernetesObj).getSpec();
@@ -1023,7 +1191,12 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     } else if (kubernetesObj instanceof StatefulSet) {
       StatefulSetSpec stateSetSpec = ((StatefulSet) kubernetesObj).getSpec();
       stateSetSpec.setSelector(new LabelSelectorBuilder().withMatchLabels(controllerLabels).build());
-      stateSetSpec.setReplicas(0);
+      int maxInstances = setupParams.getMaxInstances();
+      int totalActiveServiceCount = Optional.ofNullable(originalPods).orElse(emptyList()).size();
+      if (totalActiveServiceCount > 0) {
+        maxInstances = totalActiveServiceCount;
+      }
+      stateSetSpec.setReplicas(setupParams.isUseFixedInstances() ? setupParams.getFixedInstances() : maxInstances);
       podTemplateSpec = stateSetSpec.getTemplate();
     }
 
@@ -1152,21 +1325,23 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
   }
 
+  // TODO(brett) Stateful Sets are no longer versioned. Remove statefulSet param after 6/1/18
   private void cleanup(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
       String containerServiceName, ExecutionLogCallback executionLogCallback, boolean isStatefulSet) {
     Optional<Integer> revision = getRevisionFromControllerName(containerServiceName, isStatefulSet);
-    if (revision.isPresent() && revision.get() >= KEEP_N_REVISIONS) {
-      int minRevisionToKeep = revision.get() - KEEP_N_REVISIONS + 1;
+    if (revision.isPresent() && (revision.get() >= KEEP_N_REVISIONS || isStatefulSet)) {
+      int minRevisionToKeep = isStatefulSet ? revision.get() + 1 : revision.get() - KEEP_N_REVISIONS + 1;
       String controllerNamePrefix = getPrefixFromControllerName(containerServiceName, isStatefulSet);
       kubernetesContainerService.listControllers(kubernetesConfig, encryptedDataDetails)
           .stream()
           .filter(ctrl -> ctrl.getMetadata().getName().startsWith(controllerNamePrefix))
-          .filter(ctrl -> kubernetesContainerService.getControllerPodCount(ctrl) == 0)
+          .filter(ctrl -> isStatefulSet || kubernetesContainerService.getControllerPodCount(ctrl) == 0)
           .forEach(ctrl -> {
             String controllerName = ctrl.getMetadata().getName();
             Optional<Integer> ctrlRevision = getRevisionFromControllerName(controllerName, isStatefulSet);
             if (ctrlRevision.isPresent() && ctrlRevision.get() < minRevisionToKeep) {
               logger.info("Deleting old version: " + controllerName);
+              executionLogCallback.saveExecutionLog("Deleting old version: " + controllerName);
               try {
                 kubernetesContainerService.deleteController(kubernetesConfig, encryptedDataDetails, controllerName);
                 kubernetesContainerService.deleteAutoscaler(kubernetesConfig, encryptedDataDetails, controllerName);

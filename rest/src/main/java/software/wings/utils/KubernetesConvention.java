@@ -28,28 +28,32 @@ public class KubernetesConvention {
   private static final String CONTAINER_SUFFIX = "-hs";
   private static Pattern wildCharPattern = Pattern.compile("[_+*/\\\\ &@$|\"':]");
 
+  // TODO(brett) Stateful Sets are no longer versioned. Remove statefulSet param after 6/1/18
   public static String getControllerName(String prefix, int revision, boolean isStatefulSet) {
     return normalize(prefix) + (isStatefulSet ? DASH : DOT) + revision;
   }
 
+  // TODO(brett) Stateful Sets are no longer versioned. Remove statefulSet param after 6/1/18
   public static String getControllerNamePrefix(
       String appName, String serviceName, String envName, boolean isStatefulSet) {
     String separator = isStatefulSet ? DASH : DOT;
     return normalize(appName + separator + serviceName + separator + envName);
   }
 
+  // TODO(brett) Stateful Sets are no longer versioned. Remove statefulSet param after 6/1/18
   public static String getPrefixFromControllerName(String controllerName, boolean isStatefulSet) {
     String versionSeparator = isStatefulSet ? DASH : DOT;
     return controllerName.substring(0, controllerName.lastIndexOf(versionSeparator) + versionSeparator.length());
   }
 
+  // TODO(brett) Stateful Sets are no longer versioned. Remove statefulSet param after 6/1/18
   public static String getServiceNameFromControllerName(String controllerName, boolean isStatefulSet) {
     String versionSeparator = isStatefulSet ? DASH : DOT;
     return noDot(controllerName.substring(0, controllerName.lastIndexOf(versionSeparator)));
   }
 
-  public static String getKubernetesServiceName(String rcNamePrefix) {
-    return noDot(normalize(rcNamePrefix));
+  public static String getKubernetesServiceName(String controllerNamePrefix) {
+    return noDot(normalize(controllerNamePrefix));
   }
 
   public static String getKubernetesRegistrySecretName(ImageDetails imageDetails) {
@@ -66,6 +70,7 @@ public class KubernetesConvention {
     return SECRET_PREFIX + name + SECRET_SUFFIX;
   }
 
+  // TODO(brett) Stateful Sets are no longer versioned. Remove statefulSet param after 6/1/18
   public static Optional<Integer> getRevisionFromControllerName(String name, boolean isStatefulSet) {
     String versionSeparator = isStatefulSet ? DASH : DOT;
     if (name != null) {
