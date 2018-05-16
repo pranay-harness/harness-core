@@ -52,4 +52,10 @@ public class CacheHelper {
     return getCache(
         WHITELIST_CACHE, String.class, WhitelistConfig.class, AccessedExpiryPolicy.factoryOf(Duration.ONE_HOUR));
   }
+
+  public void resetAllCaches() {
+    getUserCache().clear();
+    getUserPermissionInfoCache().clear();
+    getWhitelistConfigCache().clear();
+  }
 }

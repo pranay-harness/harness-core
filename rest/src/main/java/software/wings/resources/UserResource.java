@@ -5,17 +5,21 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.exception.WingsException.ReportTarget.REST_API;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.eraro.Level;
 import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Account;
 import software.wings.beans.AccountRole;
 import software.wings.beans.ApplicationRole;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.ResponseMessage;
 import software.wings.beans.RestResponse;
+import software.wings.beans.RestResponse.Builder;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
@@ -39,7 +43,9 @@ import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.UserService;
+import software.wings.utils.CacheHelper;
 
 import java.net.URISyntaxException;
 import java.util.List;
@@ -80,21 +86,30 @@ public class UserResource {
   private AccountService accountService;
   private AuthenticationManager authenticationManager;
   private TwoFactorAuthenticationManager twoFactorAuthenticationManager;
+  private CacheHelper cacheHelper;
+  private HarnessUserGroupService harnessUserGroupService;
 
   /**
    * Instantiates a new User resource.
-   *
-   * @param userService    the user service
-   * @param accountService the account service
+   * @param userService
+   * @param authService
+   * @param accountService
+   * @param authenticationManager
+   * @param twoFactorAuthenticationManager
+   * @param cacheHelper
+   * @param harnessUserGroupService
    */
   @Inject
   public UserResource(UserService userService, AuthService authService, AccountService accountService,
-      AuthenticationManager authenticationManager, TwoFactorAuthenticationManager twoFactorAuthenticationManager) {
+      AuthenticationManager authenticationManager, TwoFactorAuthenticationManager twoFactorAuthenticationManager,
+      CacheHelper cacheHelper, HarnessUserGroupService harnessUserGroupService) {
     this.userService = userService;
     this.authService = authService;
     this.accountService = accountService;
     this.authenticationManager = authenticationManager;
     this.twoFactorAuthenticationManager = twoFactorAuthenticationManager;
+    this.cacheHelper = cacheHelper;
+    this.harnessUserGroupService = harnessUserGroupService;
   }
 
   /**
@@ -184,6 +199,36 @@ public class UserResource {
     }
     user.setUuid(userId);
     return new RestResponse<>(userService.update(user));
+  }
+
+  /**
+   * Reset all caches.
+   *
+   * @return the rest response
+   */
+  @PUT
+  @Path("reset-cache")
+  @Scope(value = ResourceType.USER, scope = PermissionType.LOGGED_IN)
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  public RestResponse resetCache() {
+    User authUser = UserThreadLocal.get();
+    if (harnessUserGroupService.isHarnessSupportUser(authUser.getUuid())) {
+      cacheHelper.resetAllCaches();
+    } else {
+      return Builder.aRestResponse()
+          .withResponseMessages(Lists.newArrayList(ResponseMessage.aResponseMessage()
+                                                       .message("User not allowed to perform the reset-cache operation")
+                                                       .level(Level.ERROR)
+                                                       .build()))
+          .build();
+    }
+
+    return Builder.aRestResponse()
+        .withResponseMessages(Lists.newArrayList(
+            ResponseMessage.aResponseMessage().message("Cache reset successful").level(Level.INFO).build()))
+        .build();
   }
 
   /**
@@ -600,7 +645,7 @@ public class UserResource {
   /**
    * Delete invite rest response.
    *
-   * @param inviteId  the invite id
+   * @param userId  the user id
    * @param accountId the account id
    * @return the rest response
    */
