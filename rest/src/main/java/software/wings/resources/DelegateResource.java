@@ -113,7 +113,7 @@ public class DelegateResource {
   @Timed
   @ExceptionMetered
   public RestResponse<String> get(@QueryParam("accountId") @NotEmpty String accountId) {
-    return new RestResponse<>(delegateService.getLatestDelegateVersion());
+    return new RestResponse<>(delegateService.getLatestDelegateVersion(accountId));
   }
 
   @DelegateAuth

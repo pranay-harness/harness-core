@@ -36,7 +36,7 @@ public interface DelegateService {
   DelegateScripts checkForUpgrade(String accountId, String delegateId, String version, String managerHost)
       throws IOException, TemplateException;
 
-  String getLatestDelegateVersion();
+  String getLatestDelegateVersion(String accountId);
 
   File downloadScripts(String managerHost, String accountId) throws IOException, TemplateException;
   File downloadDocker(String managerHost, String accountId) throws IOException, TemplateException;

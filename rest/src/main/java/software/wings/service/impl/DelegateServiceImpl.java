@@ -44,6 +44,9 @@ import static software.wings.exception.WingsException.USER_ADMIN;
 import static software.wings.utils.KubernetesConvention.getAccountIdentifier;
 
 import com.google.common.base.Joiner;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
@@ -113,6 +116,7 @@ import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
@@ -127,6 +131,7 @@ public class DelegateServiceImpl implements DelegateService {
   private static final Logger logger = LoggerFactory.getLogger(DelegateServiceImpl.class);
 
   private static final Configuration cfg = new Configuration(VERSION_2_3_23);
+  public static final int DELEGATE_METADATA_HTTP_CALL_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(10);
 
   static {
     cfg.setTemplateLoader(new ClassTemplateLoader(DelegateServiceImpl.class, "/delegatetemplates"));
@@ -147,6 +152,15 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private TimeLimiter timeLimiter;
   @Inject private Clock clock;
 
+  private LoadingCache<String, String> delegateVersionCache =
+      CacheBuilder.newBuilder()
+          .maximumSize(10000)
+          .expireAfterWrite(1, TimeUnit.MINUTES)
+          .build(new CacheLoader<String, String>() {
+            public String load(String accountId) {
+              return fetchAccountDelegateMetadataFromS3(accountId);
+            }
+          });
   @Override
   public PageResponse<Delegate> list(PageRequest<Delegate> pageRequest) {
     return wingsPersistence.query(Delegate.class, pageRequest);
@@ -250,14 +264,12 @@ public class DelegateServiceImpl implements DelegateService {
 
     ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(accountId, version, managerHost);
 
-    DelegateScripts delegateScripts = new DelegateScripts();
-    delegateScripts.setDelegateId(delegateId);
-    delegateScripts.setVersion(version);
-    delegateScripts.setDoUpgrade(false);
+    DelegateScripts delegateScripts =
+        DelegateScripts.builder().delegateId(delegateId).version(version).doUpgrade(false).build();
     if (isNotEmpty(scriptParams)) {
       logger.info("Upgrading delegate to version: {}", scriptParams.get("upgradeVersion"));
       delegateScripts.setDoUpgrade(true);
-      delegateScripts.setVersion((String) scriptParams.get("upgradeVersion"));
+      delegateScripts.setVersion(scriptParams.get("upgradeVersion"));
 
       try (StringWriter stringWriter = new StringWriter()) {
         cfg.getTemplate("start.sh.ftl").process(scriptParams, stringWriter);
@@ -276,20 +288,31 @@ public class DelegateServiceImpl implements DelegateService {
     return delegateScripts;
   }
 
-  public String getLatestDelegateVersion() {
+  public String getLatestDelegateVersion(String accountId) {
+    String delegateMatadata = null;
     try {
-      String delegateMetadataUrl = mainConfiguration.getDelegateMetadataUrl().trim();
-      String delegateMatadata = Request.Get(delegateMetadataUrl)
-                                    .connectTimeout(10000)
-                                    .socketTimeout(10000)
-                                    .execute()
-                                    .returnContent()
-                                    .asString()
-                                    .trim();
-      return substringBefore(delegateMatadata, " ").trim();
-    } catch (IOException e) {
-      return null;
+      delegateMatadata = delegateVersionCache.get(accountId);
+    } catch (ExecutionException e) {
+      logger.error("Execution exception", e);
     }
+    return substringBefore(delegateMatadata, " ").trim();
+  }
+
+  private String fetchAccountDelegateMetadataFromS3(String acccountId) {
+    // TODO:: Specific restriction for account can be handled here.
+    String delegateMetadataUrl = mainConfiguration.getDelegateMetadataUrl().trim();
+    try {
+      return Request.Get(delegateMetadataUrl)
+          .connectTimeout(DELEGATE_METADATA_HTTP_CALL_TIMEOUT)
+          .socketTimeout(DELEGATE_METADATA_HTTP_CALL_TIMEOUT)
+          .execute()
+          .returnContent()
+          .asString()
+          .trim();
+    } catch (IOException e) {
+      logger.warn("Exception in fetching delegate version", e);
+    }
+    return null;
   }
 
   private ImmutableMap<String, String> getJarAndScriptRunTimeParamMap(
@@ -305,42 +328,36 @@ public class DelegateServiceImpl implements DelegateService {
     String delegateStorageUrl = null;
     String delegateCheckLocation = null;
     boolean jarFileExists = false;
+    boolean versionChanged = false;
 
     try {
       String delegateMetadataUrl = mainConfiguration.getDelegateMetadataUrl().trim();
       logger.info("Delegate metaData URL is " + delegateMetadataUrl);
-      String delegateMatadata = Request.Get(delegateMetadataUrl)
-                                    .connectTimeout(10000)
-                                    .socketTimeout(10000)
-                                    .execute()
-                                    .returnContent()
-                                    .asString()
-                                    .trim();
+      String delegateMatadata = delegateVersionCache.get(accountId);
       logger.info("Delegate meta data: [{}]", delegateMatadata);
       latestVersion = substringBefore(delegateMatadata, " ").trim();
-      jarRelativePath = substringAfter(delegateMatadata, " ").trim();
+      versionChanged = !(Version.valueOf(version).equals(Version.valueOf(latestVersion)));
 
-      delegateStorageUrl = delegateMetadataUrl.substring(0, delegateMetadataUrl.lastIndexOf('/'));
-      delegateCheckLocation = delegateMetadataUrl.substring(delegateMetadataUrl.lastIndexOf('/') + 1);
-      delegateJarDownloadUrl = delegateStorageUrl + "/" + jarRelativePath;
-      jarFileExists = Request.Head(delegateJarDownloadUrl)
-                          .connectTimeout(10000)
-                          .socketTimeout(10000)
-                          .execute()
-                          .handleResponse(response -> response.getStatusLine().getStatusCode() == 200);
-    } catch (IOException e) {
+      if (versionChanged) {
+        jarRelativePath = substringAfter(delegateMatadata, " ").trim();
+
+        delegateStorageUrl = delegateMetadataUrl.substring(0, delegateMetadataUrl.lastIndexOf('/'));
+        delegateCheckLocation = delegateMetadataUrl.substring(delegateMetadataUrl.lastIndexOf('/') + 1);
+        delegateJarDownloadUrl = delegateStorageUrl + "/" + jarRelativePath;
+        jarFileExists = Request.Head(delegateJarDownloadUrl)
+                            .connectTimeout(10000)
+                            .socketTimeout(10000)
+                            .execute()
+                            .handleResponse(response -> response.getStatusLine().getStatusCode() == 200);
+      }
+    } catch (IOException | ExecutionException e) {
       logger.warn("Unable to fetch delegate version information", e);
       logger.warn("CurrentVersion: [{}], LatestVersion=[{}], delegateJarDownloadUrl=[{}]", version, latestVersion,
           delegateJarDownloadUrl);
     }
 
     logger.info("Found delegate latest version: [{}] url: [{}]", latestVersion, delegateJarDownloadUrl);
-    boolean doUpgrade = false;
-    if (jarFileExists) {
-      doUpgrade = !(Version.valueOf(version).equals(Version.valueOf(latestVersion)));
-    }
-
-    if (doUpgrade) {
+    if (versionChanged && jarFileExists) {
       String watcherMetadataUrl = mainConfiguration.getWatcherMetadataUrl().trim();
       String watcherStorageUrl = watcherMetadataUrl.substring(0, watcherMetadataUrl.lastIndexOf('/'));
       String watcherCheckLocation = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf('/') + 1);
