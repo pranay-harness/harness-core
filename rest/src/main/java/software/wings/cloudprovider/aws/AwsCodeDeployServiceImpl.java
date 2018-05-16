@@ -232,7 +232,7 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
           sleep(ofSeconds(10));
         }
         return true;
-      }, 10L, TimeUnit.MINUTES, true);
+      }, 10L, TimeUnit.MINUTES);
     } catch (UncheckedTimeoutException e) {
       throw new WingsException(INIT_TIMEOUT).addParam("message", "Timed out waiting for deployment to complete");
     } catch (WingsException e) {

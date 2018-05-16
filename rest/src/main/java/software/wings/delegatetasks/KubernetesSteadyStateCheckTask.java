@@ -52,7 +52,7 @@ public class KubernetesSteadyStateCheckTask extends AbstractDelegateRunnableTask
       timeLimiter.callWithTimeout(
           ()
               -> containerInfos.addAll(doSteadyStateCheck(kubernetesSteadyStateCheckParams, executionLogCallback)),
-          kubernetesSteadyStateCheckParams.getTimeoutMillis(), TimeUnit.MILLISECONDS, true);
+          kubernetesSteadyStateCheckParams.getTimeoutMillis(), TimeUnit.MILLISECONDS);
 
       executionLogCallback.saveExecutionLog(
           "Command finished with status " + ExecutionStatus.SUCCESS, LogLevel.INFO, CommandExecutionStatus.SUCCESS);

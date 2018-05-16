@@ -171,7 +171,7 @@ public class JenkinsImpl implements Jenkins {
           logger.info("Retrieving job {} success", jobname);
           return singletonList(jobWithDetails).get(0);
         }
-      }, 120L, TimeUnit.SECONDS, true);
+      }, 120L, TimeUnit.SECONDS);
     } catch (Exception e) {
       throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", e.getMessage());
     }
@@ -207,7 +207,7 @@ public class JenkinsImpl implements Jenkins {
           }
           sleep(ofMillis(100L));
         }
-      }, 120L, TimeUnit.SECONDS, true);
+      }, 120L, TimeUnit.SECONDS);
     } catch (Exception e) {
       throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", e.getMessage());
     }

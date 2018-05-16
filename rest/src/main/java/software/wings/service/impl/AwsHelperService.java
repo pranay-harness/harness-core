@@ -1356,7 +1356,7 @@ public class AwsHelperService {
           }
           sleep(ofSeconds(AUTOSCALING_REQUEST_STATUS_CHECK_INTERVAL));
         }
-      }, autoScalingSteadyStateTimeout, TimeUnit.MINUTES, true);
+      }, autoScalingSteadyStateTimeout, TimeUnit.MINUTES);
     } catch (UncheckedTimeoutException e) {
       executionLogCallback.saveExecutionLog(
           "Request timeout. AutoScaling group couldn't reach steady state", CommandExecutionStatus.FAILURE);
@@ -1632,7 +1632,7 @@ public class AwsHelperService {
               completedActivities, callback, false);
           sleep(ofSeconds(AUTOSCALING_REQUEST_STATUS_CHECK_INTERVAL));
         }
-      }, 1L, TimeUnit.MINUTES, true);
+      }, 1L, TimeUnit.MINUTES);
     } catch (UncheckedTimeoutException e) {
       throw new WingsException(INIT_TIMEOUT)
           .addParam("message", "Timed out waiting for autoscaling group to be deleted");

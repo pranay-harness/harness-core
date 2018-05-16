@@ -830,7 +830,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
           sleep(ofSeconds(10));
         }
         return true;
-      }, 10L, TimeUnit.MINUTES, true);
+      }, 10L, TimeUnit.MINUTES);
     } catch (UncheckedTimeoutException e) {
       throw new WingsException(INIT_TIMEOUT)
           .addParam("message", "Timed out waiting for instances to register with cluster");
@@ -849,7 +849,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
           sleep(ofSeconds(10));
         }
         return true;
-      }, 10L, TimeUnit.MINUTES, true);
+      }, 10L, TimeUnit.MINUTES);
     } catch (UncheckedTimeoutException e) {
       throw new WingsException(INIT_TIMEOUT).addParam("message", "Timed out waiting for instances to be ready");
     } catch (WingsException e) {
@@ -916,7 +916,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
           sleep(ofSeconds(10));
         }
         return true;
-      }, 10L, TimeUnit.MINUTES, true);
+      }, 10L, TimeUnit.MINUTES);
     } catch (UncheckedTimeoutException e) {
       throw new WingsException(INIT_TIMEOUT).addParam("message", "Timed out waiting for tasks to be in running state");
     } catch (WingsException e) {
@@ -1203,7 +1203,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
           }
           sleep(ofSeconds(10));
         }
-      }, serviceSteadyStateTimeout, TimeUnit.MINUTES, true);
+      }, serviceSteadyStateTimeout, TimeUnit.MINUTES);
     } catch (UncheckedTimeoutException e) {
       String msg = "Timed out waiting for service to reach steady state";
       executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
@@ -1242,7 +1242,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
           }
           sleep(ofSeconds(1));
         }
-      }, 60L, TimeUnit.SECONDS, true);
+      }, 60L, TimeUnit.SECONDS);
     } catch (UncheckedTimeoutException e) {
       logger.warn("Service update failed {}", service[0]);
       executionLogCallback.saveExecutionLog(

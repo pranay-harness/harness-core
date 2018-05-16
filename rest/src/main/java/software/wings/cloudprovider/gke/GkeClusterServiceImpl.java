@@ -176,7 +176,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
           }
           sleep(ofSeconds(gcpHelperService.getSleepIntervalSecs()));
         }
-      }, gcpHelperService.getTimeoutMins(), TimeUnit.MINUTES, true);
+      }, gcpHelperService.getTimeoutMins(), TimeUnit.MINUTES);
     } catch (UncheckedTimeoutException e) {
       logger.error("Timed out checking operation status");
       return "UNKNOWN";

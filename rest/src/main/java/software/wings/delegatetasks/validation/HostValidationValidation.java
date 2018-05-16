@@ -71,7 +71,7 @@ public class HostValidationValidation extends AbstractDelegateValidateTask {
           results.add(resultBuilder.duration(clock.millis() - startTime).build());
         }
         return true;
-      }, 30L, TimeUnit.SECONDS, true);
+      }, 30L, TimeUnit.SECONDS);
     } catch (Exception e) {
       // Do nothing
     }

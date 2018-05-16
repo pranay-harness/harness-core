@@ -109,7 +109,7 @@ public class NexusServiceImpl implements NexusService {
                 .addParam("message", "Not supported for Nexus 3.x version");
           }
         }
-      }, 20L, TimeUnit.SECONDS, true);
+      }, 20L, TimeUnit.SECONDS);
     } catch (UncheckedTimeoutException e) {
       logger.warn("Nexus server request did not succeed within 20 secs");
       throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
@@ -135,7 +135,7 @@ public class NexusServiceImpl implements NexusService {
                                              -> isNexusTwo
               ? nexusTwoService.getGroupIdPaths(nexusConfig, encryptionDetails, repoId)
               : nexusThreeService.getDockerImages(nexusConfig, encryptionDetails, repoId),
-          20L, TimeUnit.SECONDS, true);
+          20L, TimeUnit.SECONDS);
     } catch (UncheckedTimeoutException e) {
       logger.warn("Nexus server request did not succeed within 20 secs");
       throw new WingsException(INVALID_ARTIFACT_SERVER, USER)

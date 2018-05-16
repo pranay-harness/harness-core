@@ -67,7 +67,7 @@ public class HostValidationServiceImpl implements HostValidationService {
           hostValidationResponses.add(response);
         });
         return true;
-      }, 1, TimeUnit.MINUTES, true);
+      }, 1, TimeUnit.MINUTES);
     } catch (UncheckedTimeoutException ex) {
       logger.warn("Host validation timed out", ex);
       // populate timeout error for rest of the hosts
