@@ -826,8 +826,35 @@ public enum ArtifactType {
                           .withOrigin(true)
                           .withId(UUIDGenerator.graphIdGenerator("node"))
                           .withType(EXEC.name())
+                          .withName("Download Artifacts")
+                          .addProperty("scriptType", "POWERSHELL")
+                          .addProperty("commandString",
+                              "$releaseId=\"${workflow.ReleaseNo}\"\n"
+                                  + "$artifactFilename = $env:TEMP + \"\\\" + \"release-\" + $releaseId + \".zip\"\n"
+                                  + "Write-Host \"Starting Deployment [id:\" $releaseId \"]\"\n"
+                                  + "Write-Host \"Downloading artifact file - URL: ${artifact.url} to File: \" $artifactFilename\n"
+                                  + "Invoke-WebRequest -Uri \"${artifact.url}\" -OutFile $artifactFilename")
+                          .build(),
+                      aGraphNode()
+                          .withOrigin(true)
+                          .withId(UUIDGenerator.graphIdGenerator("node"))
+                          .withType(EXEC.name())
+                          .withName("Expand Artifacts")
+                          .addProperty("scriptType", "POWERSHELL")
+                          .addProperty("commandString",
+                              "$siteName=\"Default Web Site\"\n"
+                                  + "$appName=\"TestApp\"\n"
+                                  + "$releaseId=\"${workflow.ReleaseNo}\"\n"
+                                  + "$artifactFilename = $env:TEMP + \"\\\" + \"release-\" + $releaseId + \".zip\"\n"
+                                  + "$appPhysicalDirectory=$env:SYSTEMDRIVE + \"\\Artifacts\\Site\\\" + $siteName + \"\\App\\\" + $appName + \"\\release-\" + $releaseId\n"
+                                  + "Write-Host \"Extracting package to \" $appPhysicalDirectory\n"
+                                  + "Expand-Archive -Path $artifactFilename -DestinationPath $appPhysicalDirectory -Force")
+                          .build(),
+                      aGraphNode()
+                          .withOrigin(true)
+                          .withId(UUIDGenerator.graphIdGenerator("node"))
+                          .withType(EXEC.name())
                           .withName("Install Service")
-                          .addProperty("commandPath", "%USERPROFILE%")
                           .addProperty("scriptType", "POWERSHELL")
                           .addProperty("commandString",
                               "Import-Module WebAdministration\n"
@@ -837,14 +864,6 @@ public enum ArtifactType {
                                   + "$releaseId=\"${workflow.ReleaseNo}\"\n"
                                   + "$artifactFilename = $env:TEMP + \"\\\" + \"release-\" + $releaseId + \".zip\"\n"
                                   + "$appPhysicalDirectory=$env:SYSTEMDRIVE + \"\\Artifacts\\Site\\\" + $siteName + \"\\App\\\" + $appName + \"\\release-\" + $releaseId\n"
-                                  + "\n"
-                                  + "Write-Host \"Starting Deployment [id:\" $releaseId \"]\"\n"
-                                  + "\n"
-                                  + "Write-Host \"Downloading artifact file - URL: ${artifact.url} to File: \" $artifactFilename\n"
-                                  + "Invoke-WebRequest -Uri \"${artifact.url}\" -OutFile $artifactFilename\n"
-                                  + "\n"
-                                  + "Write-Host \"Extracting package to \" $appPhysicalDirectory\n"
-                                  + "Expand-Archive -Path $artifactFilename -DestinationPath $appPhysicalDirectory -Force\n"
                                   + "\n"
                                   + "Write-Host \"Creating Application..\"\n"
                                   + "$VirtualAppPath = 'IIS:\\Sites\\' + $siteName + '\\' + $appName\n"

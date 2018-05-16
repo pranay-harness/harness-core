@@ -15,6 +15,7 @@ import static software.wings.beans.command.CommandExecutionContext.Builder.aComm
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static software.wings.common.Constants.WINDOWS_RUNTIME_PATH;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.COMMAND;
 
@@ -292,6 +293,7 @@ public class CommandState extends State {
       String backupPath = getEvaluatedSettingValue(context, accountId, appId, envId, BACKUP_PATH);
       String runtimePath = getEvaluatedSettingValue(context, accountId, appId, envId, RUNTIME_PATH);
       String stagingPath = getEvaluatedSettingValue(context, accountId, appId, envId, STAGING_PATH);
+      String windowsRuntimePath = getEvaluatedSettingValue(context, accountId, appId, envId, WINDOWS_RUNTIME_PATH);
 
       CommandExecutionContext.Builder commandExecutionContextBuilder =
           aCommandExecutionContext()
@@ -301,6 +303,7 @@ public class CommandState extends State {
               .withBackupPath(backupPath)
               .withRuntimePath(runtimePath)
               .withStagingPath(stagingPath)
+              .withWindowsRuntimePath(windowsRuntimePath)
               .withExecutionCredential(workflowStandardParams.getExecutionCredential())
               .withServiceVariables(serviceVariables)
               .withSafeDisplayServiceVariables(safeDisplayServiceVariables)
@@ -568,6 +571,11 @@ public class CommandState extends State {
   private String getEvaluatedSettingValue(
       ExecutionContext context, String accountId, String appId, String envId, String variable) {
     SettingAttribute settingAttribute = settingsService.getByName(accountId, appId, envId, variable);
+
+    if (settingAttribute == null) {
+      return "";
+    }
+
     StringValue stringValue = (StringValue) settingAttribute.getValue();
     String settingValue = stringValue.getValue();
     try {
