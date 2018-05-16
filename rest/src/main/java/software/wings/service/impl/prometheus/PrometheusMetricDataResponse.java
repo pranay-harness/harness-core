@@ -23,12 +23,14 @@ public class PrometheusMetricDataResponse implements MetricCollectionResponse {
   private PrometheusMetricData data;
 
   @Data
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public static class PrometheusMetricData {
     private String resultType;
     private List<PrometheusMetricDataResult> result;
   }
 
   @Data
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public static class PrometheusMetricDataResult {
     private PrometheusMetric metric;
     private List<Object> value;
@@ -36,6 +38,7 @@ public class PrometheusMetricDataResponse implements MetricCollectionResponse {
   }
 
   @Data
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public static class PrometheusMetric {
     private String __name__;
     private String instance;
