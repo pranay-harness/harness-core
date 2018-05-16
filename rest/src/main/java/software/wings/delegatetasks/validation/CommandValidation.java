@@ -218,7 +218,20 @@ public class CommandValidation extends AbstractDelegateValidateTask {
     DeploymentType deploymentType = DeploymentType.valueOf(context.getDeploymentType());
     switch (deploymentType) {
       case KUBERNETES:
-        KubernetesSetupParams setupParams = (KubernetesSetupParams) context.getContainerSetupParams();
+        String clusterName = null;
+        String subscriptionId = null;
+        String resourceGroup = null;
+        if (context.getContainerSetupParams() != null) {
+          KubernetesSetupParams setupParams = (KubernetesSetupParams) context.getContainerSetupParams();
+          clusterName = setupParams.getClusterName();
+          subscriptionId = setupParams.getSubscriptionId();
+          resourceGroup = setupParams.getResourceGroup();
+        } else if (context.getContainerResizeParams() != null) {
+          KubernetesResizeParams resizeParams = (KubernetesResizeParams) context.getContainerResizeParams();
+          clusterName = resizeParams.getClusterName();
+          subscriptionId = resizeParams.getSubscriptionId();
+          resourceGroup = resizeParams.getResourceGroup();
+        }
         SettingAttribute settingAttribute = context.getCloudProviderSetting();
         SettingValue value = settingAttribute.getValue();
         if (value instanceof KubernetesClusterConfig) {
@@ -230,11 +243,9 @@ public class CommandValidation extends AbstractDelegateValidateTask {
         } else if (value instanceof KubernetesConfig) {
           return ((KubernetesConfig) value).getMasterUrl();
         } else if (value instanceof GcpConfig) {
-          return "GCP:" + setupParams.getClusterName();
+          return "GCP:" + settingAttribute.getUuid() + ":" + clusterName;
         } else if (value instanceof AzureConfig) {
-          String subscriptionId = setupParams.getSubscriptionId();
-          String resourceGroup = setupParams.getResourceGroup();
-          return "Azure:" + subscriptionId + resourceGroup + setupParams.getClusterName();
+          return "Azure:" + subscriptionId + ":" + resourceGroup + ":" + clusterName;
         } else {
           throw new WingsException(ErrorCode.INVALID_ARGUMENT)
               .addParam("args", "Unknown kubernetes cloud provider setting value: " + value.getType());
