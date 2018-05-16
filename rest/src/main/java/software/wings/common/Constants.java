@@ -734,6 +734,7 @@ public interface Constants {
    */
   String HARNESS_REVISION = "harness-revision";
 
+  String ALWAYS_TRUE = "ALWAYS_TRUE";
   /**
    * The constant DEFAULT_AWS_HOST_NAME_CONVENTION.
    */
