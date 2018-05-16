@@ -13,7 +13,6 @@ import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
 
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.TimeLimiter;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -54,6 +53,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Created by anubhaw on 6/22/17.
@@ -233,7 +233,7 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
         }
         return true;
       }, 10L, TimeUnit.MINUTES);
-    } catch (UncheckedTimeoutException e) {
+    } catch (TimeoutException e) {
       throw new WingsException(INIT_TIMEOUT).addParam("message", "Timed out waiting for deployment to complete");
     } catch (WingsException e) {
       throw e;

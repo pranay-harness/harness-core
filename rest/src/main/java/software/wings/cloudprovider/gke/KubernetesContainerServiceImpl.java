@@ -17,7 +17,6 @@ import static software.wings.utils.KubernetesConvention.getServiceNameFromContro
 
 import com.google.common.base.Joiner;
 import com.google.common.util.concurrent.TimeLimiter;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -98,6 +97,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -886,7 +886,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           sleep(ofSeconds(5));
         }
       }, serviceSteadyStateTimeout, TimeUnit.MINUTES);
-    } catch (UncheckedTimeoutException e) {
+    } catch (TimeoutException e) {
       String msg = "Timed out waiting for pods to stop";
       logger.error(msg, e);
       executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
@@ -986,7 +986,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           return pods;
         }
       }, serviceSteadyStateTimeout, TimeUnit.MINUTES);
-    } catch (UncheckedTimeoutException e) {
+    } catch (TimeoutException e) {
       String msg = "Timed out waiting for pods to be ready";
       logger.error(msg, e);
       executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);

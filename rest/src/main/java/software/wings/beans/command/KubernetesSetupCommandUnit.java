@@ -36,7 +36,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.TimeLimiter;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -125,6 +124,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
@@ -1099,7 +1099,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             sleep(ofSeconds(1));
           }
         }, 5L, TimeUnit.MINUTES);
-      } catch (UncheckedTimeoutException e) {
+      } catch (TimeoutException e) {
         executionLogCallback.saveExecutionLog(
             format("Timed out waiting for service [%s] load balancer to be ready", serviceName), LogLevel.ERROR);
       } catch (Exception e) {

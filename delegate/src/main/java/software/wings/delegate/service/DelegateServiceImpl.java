@@ -44,7 +44,6 @@ import static software.wings.utils.message.MessengerType.WATCHER;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.TimeLimiter;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
@@ -116,6 +115,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -549,7 +549,7 @@ public class DelegateServiceImpl implements DelegateService {
           } else {
             logger.info("Delegate up to date");
           }
-        } catch (UncheckedTimeoutException tex) {
+        } catch (TimeoutException tex) {
           logger.warn("Timed out checking for upgrade");
         } catch (Exception e) {
           upgradePending.set(false);
@@ -579,7 +579,7 @@ public class DelegateServiceImpl implements DelegateService {
           }
         }
       }
-    } catch (UncheckedTimeoutException tex) {
+    } catch (TimeoutException tex) {
       logger.warn("Timed out fetching delegate task events");
     } catch (Exception e) {
       logger.error("Exception while decoding task", e);
@@ -733,7 +733,7 @@ public class DelegateServiceImpl implements DelegateService {
                         .build())),
             15L, TimeUnit.SECONDS);
         lastHeartbeatSentAt.set(clock.millis());
-      } catch (UncheckedTimeoutException ex) {
+      } catch (TimeoutException ex) {
         logger.warn("Timed out sending heartbeat");
       } catch (Exception e) {
         logger.error("Error sending heartbeat", e);
@@ -752,7 +752,7 @@ public class DelegateServiceImpl implements DelegateService {
         lastHeartbeatSentAt.set(clock.millis());
         lastHeartbeatReceivedAt.set(clock.millis());
       }
-    } catch (UncheckedTimeoutException ex) {
+    } catch (TimeoutException ex) {
       logger.warn("Timed out sending heartbeat");
     } catch (Exception e) {
       logger.error("Error sending heartbeat", e);
@@ -922,7 +922,7 @@ public class DelegateServiceImpl implements DelegateService {
                                                           .execute(),
             30L, TimeUnit.SECONDS);
         logger.info("Task {} response sent to manager", delegateTask.getUuid());
-      } catch (UncheckedTimeoutException ex) {
+      } catch (TimeoutException ex) {
         logger.warn("Timed out sending response to manager");
       } catch (Exception e) {
         logger.error("Unable to send response to manager", e);
