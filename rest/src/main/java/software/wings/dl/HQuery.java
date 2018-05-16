@@ -40,7 +40,7 @@ public class HQuery<T> extends QueryImpl<T> {
 
   private Set<QueryChecks> queryChecks = allChecks;
 
-  private static Set<String> requiredFilterArgs = Sets.newHashSet("accountId", "accounts", "appId");
+  private static Set<String> requiredFilterArgs = Sets.newHashSet("accountId", "accounts", "appId", "accountIds");
 
   public void setQueryChecks(Set<QueryChecks> queryChecks) {
     this.queryChecks = queryChecks;
