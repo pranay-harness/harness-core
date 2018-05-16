@@ -36,7 +36,7 @@ public class ElasticLoadBalancerConfigYamlHandlerTest extends BaseSettingValueCo
 
   private String invalidYamlContent = "region_invalid: eu-central-1\n"
       + "loadBalancerName: jk\n"
-      + "accessKey: AKIAIVRKRUMJ3LAVBMSQ\n"
+      + "accessKey: AKIAIKL7FYYF2TIYHCLQ\n"
       + "secretKey: safeharness:j6I-dh8xSSurpME_loAslQ\n"
       + "harnessApiVersion: '1.0'\n"
       + "type: ELB";

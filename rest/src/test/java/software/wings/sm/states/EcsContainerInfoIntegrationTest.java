@@ -91,8 +91,8 @@ public class EcsContainerInfoIntegrationTest extends WingsBaseTest {
   @Test
   public void testGetLastExecutionNodesECS() throws NoSuchAlgorithmException, KeyManagementException {
     AwsConfig awsConfig = AwsConfig.builder()
-                              .accessKey("AKIAIVRKRUMJ3LAVBMSQ")
-                              .secretKey("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".toCharArray())
+                              .accessKey("AKIAIKL7FYYF2TIYHCLQ")
+                              .secretKey("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".toCharArray())
                               .accountId(accountId)
                               .build();
     SettingAttribute settingAttribute =

@@ -549,8 +549,8 @@ public class DataGenUtil extends BaseIntegrationTest {
             .withEnvId(GLOBAL_ENV_ID)
             .withAccountId(accountId)
             .withValue(AwsConfig.builder()
-                           .accessKey("AKIAIVRKRUMJ3LAVBMSQ")
-                           .secretKey("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".toCharArray())
+                           .accessKey("AKIAIKL7FYYF2TIYHCLQ")
+                           .secretKey("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".toCharArray())
                            .accountId(accountId)
                            .build())
             .build();
@@ -927,8 +927,8 @@ public class DataGenUtil extends BaseIntegrationTest {
             .isDefault(true)
             .accountId(accountId)
             .name("Account_kms")
-            .accessKey("AKIAIVRKRUMJ3LAVBMSQ")
-            .secretKey("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")
+            .accessKey("AKIAIKL7FYYF2TIYHCLQ")
+            .secretKey("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")
             .kmsArn("arn:aws:kms:us-east-1:830767422336:key/6b64906a-b7ab-4f69-8159-e20fef1f204d")
             .build());
   }

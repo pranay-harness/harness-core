@@ -278,8 +278,8 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
                                .withAccountId(accountId)
                                .withValue(AwsConfig.builder()
                                               .accountId(accountId)
-                                              .accessKey("AKIAIVRKRUMJ3LAVBMSQ")
-                                              .secretKey("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".toCharArray())
+                                              .accessKey("AKIAIKL7FYYF2TIYHCLQ")
+                                              .secretKey("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".toCharArray())
                                               .build())
                                .build();
         artifactStream = new EcrArtifactStream();
@@ -473,8 +473,8 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
     kmsConfig.setName("myKms");
     kmsConfig.setDefault(true);
     kmsConfig.setKmsArn("arn:aws:kms:us-east-1:830767422336:key/6b64906a-b7ab-4f69-8159-e20fef1f204d");
-    kmsConfig.setAccessKey("AKIAJLEKM45P4PO5QUFQ");
-    kmsConfig.setSecretKey("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");
+    kmsConfig.setAccessKey("AKIAIKL7FYYF2TIYHCLQ");
+    kmsConfig.setSecretKey("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");
     return kmsConfig;
   }
 }
