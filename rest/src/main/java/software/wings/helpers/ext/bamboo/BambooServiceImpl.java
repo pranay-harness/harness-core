@@ -175,7 +175,7 @@ public class BambooServiceImpl implements BambooService {
         }
         logger.info("Retrieving plan keys for bamboo server {} success", bambooConfig);
         return planNameMap;
-      }, 20L, TimeUnit.SECONDS, true);
+      }, 20L, TimeUnit.SECONDS);
     } catch (UncheckedTimeoutException e) {
       logger.warn("Bamboo server request did not succeed within 20 secs");
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
@@ -239,7 +239,7 @@ public class BambooServiceImpl implements BambooService {
               .addParam("message",
                   "Error in fetching builds from bamboo server. Reason:" + ExceptionUtils.getRootCauseMessage(e));
         }
-      }, 20L, TimeUnit.SECONDS, true);
+      }, 20L, TimeUnit.SECONDS);
     } catch (UncheckedTimeoutException e) {
       logger.warn("Bamboo server request did not succeed within 20 secs");
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
@@ -267,7 +267,7 @@ public class BambooServiceImpl implements BambooService {
                   .collect(toList())));
         }
         return artifactPaths;
-      }, 20L, TimeUnit.SECONDS, true);
+      }, 20L, TimeUnit.SECONDS);
     } catch (UncheckedTimeoutException e) {
       logger.warn("Bamboo server request did not succeed within 20 secs");
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)

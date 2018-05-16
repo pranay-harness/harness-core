@@ -508,7 +508,7 @@ public class SecretManagerImpl implements SecretManager {
         .stream()
         .map(key -> key.getId().toString())
         .forEach(accountId -> {
-          vaildateKmsConfigs(accountId);
+          validateKmsConfigs(accountId);
           validateVaultConfigs(accountId);
         });
   }
@@ -995,7 +995,7 @@ public class SecretManagerImpl implements SecretManager {
     }
   }
 
-  private void vaildateKmsConfigs(String accountId) {
+  private void validateKmsConfigs(String accountId) {
     Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId, false);
     for (KmsConfig kmsConfig : kmsConfigs) {
       KmsSetupAlert kmsSetupAlert =
@@ -1007,7 +1007,7 @@ public class SecretManagerImpl implements SecretManager {
         timeLimiter.callWithTimeout(
             ()
                 -> kmsService.encrypt(UUID.randomUUID().toString().toCharArray(), accountId, kmsConfig),
-            15L, TimeUnit.SECONDS, true);
+            15L, TimeUnit.SECONDS);
         alertService.closeAlert(accountId, Base.GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
       } catch (UncheckedTimeoutException ex) {
         logger.warn("Timed out validating kms for account {} and kmsId {}", accountId, kmsConfig.getUuid());
@@ -1024,14 +1024,14 @@ public class SecretManagerImpl implements SecretManager {
       KmsSetupAlert kmsSetupAlert =
           KmsSetupAlert.builder()
               .kmsId(vaultConfig.getUuid())
-              .message(vaultConfig.getName()
-                  + "(Hashicorp Vault) is not able to encrypt/decrypt. Please check your setup and ensure that token is not expired")
+              .message(vaultConfig.getName() + "(HashiCorp Vault) is not able to encrypt/decrypt. "
+                  + "Please check your setup and ensure that token is not expired")
               .build();
       try {
         timeLimiter.callWithTimeout(()
                                         -> vaultService.encrypt(VAULT_VAILDATION_URL, VAULT_VAILDATION_URL, accountId,
                                             SettingVariableTypes.VAULT, vaultConfig, null),
-            15L, TimeUnit.SECONDS, true);
+            15L, TimeUnit.SECONDS);
         alertService.closeAlert(accountId, Base.GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
       } catch (UncheckedTimeoutException ex) {
         logger.warn("Timed out validating vault for account {} and kmsId {}", accountId, vaultConfig.getUuid());

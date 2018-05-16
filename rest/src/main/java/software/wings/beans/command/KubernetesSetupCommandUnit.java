@@ -933,7 +933,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             }
             sleep(ofSeconds(1));
           }
-        }, 5L, TimeUnit.MINUTES, true);
+        }, 5L, TimeUnit.MINUTES);
       } catch (UncheckedTimeoutException e) {
         executionLogCallback.saveExecutionLog(
             format("Timed out waiting for service [%s] load balancer to be ready", serviceName), LogLevel.ERROR);

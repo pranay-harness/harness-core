@@ -72,7 +72,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       timeLimiter.callWithTimeout(
           ()
               -> containerInfos.addAll(fetchContainerInfo(commandRequest, executionLogCallback)),
-          commandRequest.getTimeoutInMillis(), TimeUnit.MILLISECONDS, true);
+          commandRequest.getTimeoutInMillis(), TimeUnit.MILLISECONDS);
       commandResponse.setContainerInfoList(containerInfos);
       return commandResponse;
     } catch (UncheckedTimeoutException e) {
@@ -107,7 +107,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       timeLimiter.callWithTimeout(
           ()
               -> containerInfos.addAll(fetchContainerInfo(commandRequest, executionLogCallback)),
-          commandRequest.getTimeoutInMillis(), TimeUnit.MILLISECONDS, true);
+          commandRequest.getTimeoutInMillis(), TimeUnit.MILLISECONDS);
       commandResponse.setContainerInfoList(containerInfos);
       return commandResponse;
     } catch (UncheckedTimeoutException e) {

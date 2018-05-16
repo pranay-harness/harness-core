@@ -496,7 +496,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
           quietSleep(ofMillis(10)); // avoid busy wait
         }
         return new ArrayList<>(groupIds);
-      }, 20L, TimeUnit.SECONDS, true);
+      }, 20L, TimeUnit.SECONDS);
     } catch (UncheckedTimeoutException e) {
       logger.warn("Failed to fetch all groupIds within 20 secs. Returning all groupIds collected so far", e);
     } catch (Exception e) {

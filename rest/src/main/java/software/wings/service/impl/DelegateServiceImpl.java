@@ -649,7 +649,7 @@ public class DelegateServiceImpl implements DelegateService {
           }
         }
         return true;
-      }, task.getTimeout(), TimeUnit.MILLISECONDS, true);
+      }, task.getTimeout(), TimeUnit.MILLISECONDS);
     } catch (UncheckedTimeoutException e) {
       logger.info("Timed out waiting for sync task {}", delegateTask.getUuid());
     } catch (Exception e) {
@@ -1058,7 +1058,7 @@ public class DelegateServiceImpl implements DelegateService {
           }
           sleep(ofSeconds(2L));
         }
-      }, 10L, TimeUnit.MINUTES, true);
+      }, 10L, TimeUnit.MINUTES);
     } catch (Exception ex) {
       logger.warn("Failed to delete delegate tasks older than {} hours within 10 minutes.", hours, ex);
     }

@@ -879,7 +879,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           }
           sleep(ofSeconds(5));
         }
-      }, serviceSteadyStateTimeout, TimeUnit.MINUTES, true);
+      }, serviceSteadyStateTimeout, TimeUnit.MINUTES);
     } catch (UncheckedTimeoutException e) {
       String msg = "Timed out waiting for pods to stop";
       logger.error(msg, e);
@@ -979,7 +979,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           }
           return pods;
         }
-      }, serviceSteadyStateTimeout, TimeUnit.MINUTES, true);
+      }, serviceSteadyStateTimeout, TimeUnit.MINUTES);
     } catch (UncheckedTimeoutException e) {
       String msg = "Timed out waiting for pods to be ready";
       logger.error(msg, e);

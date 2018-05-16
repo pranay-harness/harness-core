@@ -198,7 +198,7 @@ public class AuditServiceImpl implements AuditService {
           }
           sleep(ofSeconds(2L));
         }
-      }, 10L, TimeUnit.MINUTES, true);
+      }, 10L, TimeUnit.MINUTES);
     } catch (Exception ex) {
       logger.warn("Failed to delete audit records older than last {} days within 10 minutes.", days, ex);
     }
