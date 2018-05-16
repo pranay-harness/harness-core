@@ -4,6 +4,7 @@ import static io.harness.govern.Switch.unhandled;
 import static io.harness.network.Http.getOkHttpClientBuilder;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
@@ -163,9 +164,11 @@ public class GcrServiceImpl implements GcrService {
     switch (code) {
       case 404:
       case 400:
-        return false;
+      case 403:
+        throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
+            .addParam("message", "User not authorized to access GCR Storage");
       case 401:
-        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
+        throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
             .addParam("message", "Invalid Google Container Registry credentials");
       default:
         unhandled(code);
