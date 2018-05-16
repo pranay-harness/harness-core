@@ -1,0 +1,10 @@
+harnessApiVersion: '1.0'
+type: PHYSICAL_DATA_CENTER_SSH
+computeProviderName: on-prem-datacenter
+computeProviderType: PHYSICAL_DATA_CENTER
+connection: onprem-key
+deploymentType: SSH
+hostNames:
+- <HOST1_PLACEHOLDER>
+infraMappingType: PHYSICAL_DATA_CENTER_SSH
+serviceName: MongoDB

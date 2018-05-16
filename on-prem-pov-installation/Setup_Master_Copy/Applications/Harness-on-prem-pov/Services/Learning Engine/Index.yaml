@@ -1,0 +1,22 @@
+harnessApiVersion: '1.0'
+type: SERVICE
+artifactType: OTHER
+configVariables:
+- name: learning_env
+  value: QA
+  valueType: TEXT
+- name: https_port
+  value: '10800'
+  valueType: TEXT
+- name: server_url
+  value: https://qa-api.harness.io
+  valueType: TEXT
+- name: service_secret
+  value: <LEARNING_ENGINE_SECRET_KEY_PLACEHOLDER>
+  valueType: ENCRYPTED_TEXT
+- name: docker_login_username
+  value: harnesshub
+  valueType: TEXT
+- name: docker_login_password
+  value: <DOCKER_LOGIN_PASSWORD_PLACEHOLDER>
+  valueType: ENCRYPTED_TEXT
