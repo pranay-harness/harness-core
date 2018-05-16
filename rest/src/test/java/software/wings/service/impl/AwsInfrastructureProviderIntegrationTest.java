@@ -44,8 +44,8 @@ public class AwsInfrastructureProviderIntegrationTest extends BaseIntegrationTes
   /**
    * These properties are for the AWS Setup against which these tests are running
    */
-  private static final String accessKey = "AKIAJLEKM45P4PO5QUFQ";
-  private static final String secretKey = "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";
+  private static final String accessKey = "AKIAIKL7FYYF2TIYHCLQ";
+  private static final String secretKey = "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";
   private static final String region = "us-east-1";
   private static final String vpcID = "vpc-551e322d";
   private static final String securityGroupID = "sg-7d1c7909";

@@ -18,7 +18,7 @@ import software.wings.service.intfc.InfrastructureProvisionerService;
 import java.util.List;
 
 @Integration
-public class InfrastructureProvisionerServiceTest extends BaseIntegrationTest {
+public class InfrastructureProvisionerServiceIntegrationTest extends BaseIntegrationTest {
   @Inject @InjectMocks private InfrastructureProvisionerService infrastructureProvisionerService;
 
   @Inject InfrastructureProvisionerGenerator infrastructureProvisionerGenerator;

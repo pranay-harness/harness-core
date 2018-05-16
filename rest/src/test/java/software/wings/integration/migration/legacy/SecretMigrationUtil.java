@@ -7,6 +7,7 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
+import static software.wings.utils.WingsIntegrationTestConstants.defaultAccountId;
 import static software.wings.utils.WingsReflectionUtils.getEncryptedFields;
 
 import com.google.common.base.Preconditions;
@@ -28,6 +29,7 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.EntityType;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.KmsConfig;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
@@ -85,6 +87,28 @@ public class SecretMigrationUtil extends WingsBaseTest {
     setInternalState(secretManager, "kmsService", kmsService);
     setInternalState(secretManager, "vaultService", vaultService);
     setInternalState(wingsPersistence, "secretManager", secretManager);
+  }
+
+  @Test
+  public void migrateKeys() throws Exception {
+    KmsConfig kmsConfig = wingsPersistence.createQuery(KmsConfig.class).filter("accountId", defaultAccountId).get();
+
+    EncryptedData accessKeyData = wingsPersistence.get(EncryptedData.class, kmsConfig.getAccessKey());
+    String newAccessKey = "AKIAIKL7FYYF2TIYHCLQ";
+    SimpleEncryption simpleEncryption = new SimpleEncryption(accessKeyData.getEncryptionKey());
+    char[] newEncrypteAccessKey = simpleEncryption.encryptChars(newAccessKey.toCharArray());
+    accessKeyData.setEncryptedValue(newEncrypteAccessKey);
+
+    wingsPersistence.save(accessKeyData);
+
+    EncryptedData secretKeyData = wingsPersistence.get(EncryptedData.class, kmsConfig.getSecretKey());
+    String newSecretKey = "2RUhYzrJrPZB/aXD4abP4zNVVHvM9Sj4awB5kTPQ";
+    simpleEncryption = new SimpleEncryption(secretKeyData.getEncryptionKey());
+    char[] newEncrypteSecretKey = simpleEncryption.encryptChars(newSecretKey.toCharArray());
+    secretKeyData.setEncryptedValue(newEncrypteSecretKey);
+
+    wingsPersistence.save(secretKeyData);
+    System.out.println(kmsService.getSecretConfig("dcksd"));
   }
 
   @Test
