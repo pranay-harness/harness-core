@@ -510,7 +510,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetLatestVersion() {
-    assertThat(delegateService.getLatestDelegateVersion()).isEqualTo("9.9.9");
+    assertThat(delegateService.getLatestDelegateVersion(ACCOUNT_ID)).isEqualTo("9.9.9");
   }
 
   @Test
