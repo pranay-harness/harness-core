@@ -17,6 +17,7 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.beans.command.CommandUnitDetails;
 import software.wings.beans.command.ContainerSetupParams;
 import software.wings.beans.command.KubernetesSetupParams;
+import software.wings.beans.command.KubernetesYamlConfig;
 import software.wings.service.intfc.ActivityService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionStatus;
@@ -52,7 +53,7 @@ public class CommandStateExecutionData extends StateExecutionData {
   private CountsByStatuses countsByStatuses;
   private List<ContainerServiceData> newInstanceData;
   private List<ContainerServiceData> oldInstanceData;
-  private String previousDaemonSetYaml;
+  private KubernetesYamlConfig previousYamlConfig;
   private List<String> previousActiveAutoscalers;
   private boolean downsize;
   private String clusterName;
@@ -135,14 +136,14 @@ public class CommandStateExecutionData extends StateExecutionData {
     if (isNotEmpty(oldInstanceData)) {
       commandStepExecutionSummary.setOldInstanceData(oldInstanceData);
     }
-    if (containerSetupParams != null && containerSetupParams instanceof KubernetesSetupParams) {
+    if (containerSetupParams instanceof KubernetesSetupParams) {
       KubernetesSetupParams kubernetesSetupParams = (KubernetesSetupParams) containerSetupParams;
       commandStepExecutionSummary.setControllerNamePrefix(kubernetesSetupParams.getControllerNamePrefix());
       if (previousActiveAutoscalers != null) {
         commandStepExecutionSummary.setPreviousActiveAutoscalers(previousActiveAutoscalers);
       }
-      if (previousDaemonSetYaml != null) {
-        commandStepExecutionSummary.setPreviousDaemonSetYaml(previousDaemonSetYaml);
+      if (previousYamlConfig != null) {
+        commandStepExecutionSummary.setPreviousYamlConfig(previousYamlConfig);
       }
     }
     commandStepExecutionSummary.setClusterName(clusterName);

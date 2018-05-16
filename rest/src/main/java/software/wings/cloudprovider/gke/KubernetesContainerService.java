@@ -6,6 +6,7 @@ import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.NodeList;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.extensions.Ingress;
@@ -26,7 +27,7 @@ import java.util.Optional;
 public interface KubernetesContainerService {
   List<Namespace> listNamespaces(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails);
 
-  HasMetadata createController(
+  HasMetadata createOrReplaceController(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, HasMetadata definition);
 
   HasMetadata getController(
@@ -40,7 +41,7 @@ public interface KubernetesContainerService {
 
   void deleteController(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
 
-  HorizontalPodAutoscaler createAutoscaler(KubernetesConfig kubernetesConfig,
+  HorizontalPodAutoscaler createOrReplaceAutoscaler(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, HorizontalPodAutoscaler definition);
 
   HorizontalPodAutoscaler getAutoscaler(KubernetesConfig kubernetesConfig,
@@ -63,7 +64,7 @@ public interface KubernetesContainerService {
 
   List<ContainerInfo> getContainerInfosWhenReady(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int previousCount,
-      int serviceSteadyStateTimeout, List<Pod> originalPods, boolean isDaemonSet,
+      int serviceSteadyStateTimeout, List<Pod> originalPods, boolean isNotVersioned,
       ExecutionLogCallback executionLogCallback, boolean wait, long startTime);
 
   Optional<Integer> getControllerPodCount(
@@ -71,9 +72,13 @@ public interface KubernetesContainerService {
 
   Integer getControllerPodCount(HasMetadata controller);
 
+  PodTemplateSpec getPodTemplateSpec(HasMetadata controller);
+
+  // TODO(brett) Stateful Sets are no longer versioned. Remove statefulSet param after 6/1/18
   LinkedHashMap<String, Integer> getActiveServiceCounts(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, boolean isStatefulSet);
 
+  // TODO(brett) Stateful Sets are no longer versioned. Remove statefulSet param after 6/1/18
   Map<String, String> getActiveServiceImages(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, boolean isStatefulSet,
       String imagePrefix);
@@ -116,6 +121,7 @@ public interface KubernetesContainerService {
   int getTrafficPercent(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
       String controllerName, boolean isStatefulSet);
 
+  // TODO(brett) Stateful Sets are no longer versioned. Remove statefulSet param after 6/1/18
   Map<String, Integer> getTrafficWeights(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, boolean isStatefulSet);
 

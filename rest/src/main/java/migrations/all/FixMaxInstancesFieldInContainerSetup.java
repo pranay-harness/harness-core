@@ -2,6 +2,7 @@ package migrations.all;
 
 import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 
@@ -35,7 +36,8 @@ public class FixMaxInstancesFieldInContainerSetup implements Migration {
   @Override
   public void migrate() {
     logger.info("Retrieving applications");
-    MorphiaIterator<Application, Application> iterator = wingsPersistence.createQuery(Application.class).fetch();
+    MorphiaIterator<Application, Application> iterator =
+        wingsPersistence.createQuery(Application.class, excludeAuthority).fetch();
 
     try (DBCursor cursor = iterator.getCursor()) {
       while (iterator.hasNext()) {

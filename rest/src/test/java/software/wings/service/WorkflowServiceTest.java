@@ -1056,8 +1056,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
                    .get())
         .isNotNull()
         .hasFieldOrPropertyWithValue("valid", false)
-        .hasFieldOrPropertyWithValue(
-            "validationMessage", format(STEP_VALIDATION_MESSAGE, asList("commandName, instanceCount")));
+        .hasFieldOrPropertyWithValue("validationMessage", format(STEP_VALIDATION_MESSAGE, asList("instanceCount")));
     assertThat(orchestrationWorkflow.getWorkflowPhases()
                    .get(0)
                    .getPhaseSteps()
@@ -1066,8 +1065,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
                    .get(0)
                    .getInValidFieldMessages())
         .isNotNull()
-        .hasSize(2)
-        .containsKeys("commandName", "instanceCount");
+        .hasSize(1)
+        .containsKeys("instanceCount");
   }
 
   @Test

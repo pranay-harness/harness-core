@@ -43,14 +43,13 @@ import java.util.List;
  */
 @Singleton
 public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml, WorkflowPhase> {
-  @Inject YamlHelper yamlHelper;
-  @Inject ServiceResourceService serviceResourceService;
-  @Inject SettingsService settingsService;
-  @Inject InfrastructureMappingService infraMappingService;
-  @Inject YamlHandlerFactory yamlHandlerFactory;
+  @Inject private YamlHelper yamlHelper;
+  @Inject private ServiceResourceService serviceResourceService;
+  @Inject private SettingsService settingsService;
+  @Inject private InfrastructureMappingService infraMappingService;
+  @Inject private YamlHandlerFactory yamlHandlerFactory;
 
-  private WorkflowPhase toBean(ChangeContext<Yaml> context, List<ChangeContext> changeSetContext)
-      throws HarnessException {
+  private WorkflowPhase toBean(ChangeContext<Yaml> context, List<ChangeContext> changeSetContext) {
     Yaml yaml = context.getYaml();
     Change change = context.getChange();
     String accountId = change.getAccountId();
@@ -131,6 +130,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
         .withRollback(isRollback)
         .withTemplateExpressions(templateExpressions)
         .withDaemonSet(yaml.isDaemonSet())
+        .withStatefulSet(yaml.isStatefulSet())
         .build();
     return phase.build();
   }
@@ -200,6 +200,8 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
         .provisionNodes(bean.isProvisionNodes())
         .templateExpressions(templateExprYamlList)
         .type(deploymentType)
+        .daemonSet(bean.isDaemonSet())
+        .statefulSet(bean.isStatefulSet())
         .build();
   }
 

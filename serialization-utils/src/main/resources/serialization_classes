@@ -377,3 +377,4 @@ software.wings.helpers.ext.cloudformation.response.CloudFormationListStacksRespo
 software.wings.helpers.ext.cloudformation.response.StackSummaryInfo, 5341
 software.wings.beans.delegation.TerraformProvisionParameters, 5342
 software.wings.api.TerraformExecutionData, 5343
+software.wings.beans.command.KubernetesYamlConfig, 5344

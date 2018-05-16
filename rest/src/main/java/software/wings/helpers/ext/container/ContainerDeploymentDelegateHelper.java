@@ -172,12 +172,15 @@ public class ContainerDeploymentDelegateHelper {
     if (controllers.size() > 0) {
       containerInfoList =
           controllers.stream()
-              .flatMap(controller
-                  -> kubernetesContainerService
-                         .getContainerInfosWhenReady(kubernetesConfig, containerServiceParams.getEncryptionDetails(),
-                             controller.getMetadata().getName(), 0, (int) TimeUnit.MINUTES.toMinutes(30),
-                             new ArrayList<>(), controller.getKind().equals("DaemonSet"), executionLogCallback, true, 0)
-                         .stream())
+              .flatMap(controller -> {
+                boolean isNotVersioned =
+                    controller.getKind().equals("DaemonSet") || controller.getKind().equals("StatefulSet");
+                return kubernetesContainerService
+                    .getContainerInfosWhenReady(kubernetesConfig, containerServiceParams.getEncryptionDetails(),
+                        controller.getMetadata().getName(), 0, (int) TimeUnit.MINUTES.toMinutes(30), new ArrayList<>(),
+                        isNotVersioned, executionLogCallback, true, 0)
+                    .stream();
+              })
               .collect(Collectors.toList());
     }
     return containerInfoList;

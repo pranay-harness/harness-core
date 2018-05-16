@@ -164,7 +164,7 @@ public class KubernetesYamlIntegrationTest {
 
     String rcDefinition = yaml.replace("${DOCKER_IMAGE_NAME}", "gcr.io/exploration-161417/todolist:latest");
     try {
-      kubernetesService.createController(
+      kubernetesService.createOrReplaceController(
           config, Collections.emptyList(), KubernetesHelper.loadYaml(rcDefinition, ReplicationController.class));
     } catch (IOException e) {
       logger.error("", e);
@@ -242,7 +242,7 @@ public class KubernetesYamlIntegrationTest {
         + "      volumes: []\n";
     rcDefinition = yaml.replace("${DOCKER_IMAGE_NAME}", "gcr.io/exploration-161417/todolist:latest");
     try {
-      kubernetesService.createController(
+      kubernetesService.createOrReplaceController(
           config, Collections.emptyList(), KubernetesHelper.loadYaml(rcDefinition, ReplicationController.class));
     } catch (IOException e) {
       logger.error("", e);

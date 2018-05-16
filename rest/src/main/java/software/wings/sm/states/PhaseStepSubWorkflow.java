@@ -222,7 +222,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
         CommandStepExecutionSummary commandStepExecutionSummary = (CommandStepExecutionSummary) first.get();
         return singletonList(ContainerRollbackRequestElement.builder()
                                  .controllerNamePrefix(commandStepExecutionSummary.getControllerNamePrefix())
-                                 .previousDaemonSetYaml(commandStepExecutionSummary.getPreviousDaemonSetYaml())
+                                 .previousYamlConfig(commandStepExecutionSummary.getPreviousYamlConfig())
                                  .previousActiveAutoscalers(commandStepExecutionSummary.getPreviousActiveAutoscalers())
                                  .build());
       }

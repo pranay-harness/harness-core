@@ -169,7 +169,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
 
     when(gkeClusterService.getCluster(any(SettingAttribute.class), eq(emptyList()), anyString(), anyString()))
         .thenReturn(kubernetesConfig);
-    when(kubernetesContainerService.createController(
+    when(kubernetesContainerService.createOrReplaceController(
              eq(kubernetesConfig), eq(emptyList()), any(ReplicationController.class)))
         .thenReturn(replicationController);
     when(kubernetesContainerService.listControllers(kubernetesConfig, emptyList())).thenReturn(null);
@@ -197,7 +197,8 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
     CommandExecutionStatus status = kubernetesSetupCommandUnit.execute(context);
     assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
     verify(gkeClusterService).getCluster(any(SettingAttribute.class), eq(emptyList()), anyString(), anyString());
-    verify(kubernetesContainerService).createController(eq(kubernetesConfig), any(), any(ReplicationController.class));
+    verify(kubernetesContainerService)
+        .createOrReplaceController(eq(kubernetesConfig), any(), any(ReplicationController.class));
   }
 
   @Test

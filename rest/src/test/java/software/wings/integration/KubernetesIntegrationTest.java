@@ -103,7 +103,7 @@ public class KubernetesIntegrationTest {
 
     //    kubernetesService.cleanup(config);
 
-    kubernetesService.createController(config, Collections.emptyList(),
+    kubernetesService.createOrReplaceController(config, Collections.emptyList(),
         new ReplicationControllerBuilder()
             .withApiVersion("v1")
             .withNewMetadata()
@@ -156,7 +156,7 @@ public class KubernetesIntegrationTest {
             .endSpec()
             .build());
 
-    kubernetesService.createController(config, Collections.emptyList(),
+    kubernetesService.createOrReplaceController(config, Collections.emptyList(),
         new ReplicationControllerBuilder()
             .withApiVersion("v1")
             .withNewMetadata()
