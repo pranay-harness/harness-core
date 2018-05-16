@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.validation;
 
 import static io.harness.network.Http.connectableHttpUrl;
+import static software.wings.common.Constants.ALWAYS_TRUE;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -33,7 +34,8 @@ public class ContainerValidationHelper {
 
     boolean validated;
     if (value instanceof AwsConfig) {
-      validated = AwsHelperService.isInAwsRegion(containerServiceParams.getRegion());
+      String region = containerServiceParams.getRegion();
+      validated = region == null || AwsHelperService.isInAwsRegion(region);
     } else if (value instanceof KubernetesClusterConfig
         && ((KubernetesClusterConfig) value).isUseKubernetesDelegate()) {
       validated = ((KubernetesClusterConfig) value).getDelegateName().equals(System.getenv().get("DELEGATE_NAME"));
@@ -47,12 +49,25 @@ public class ContainerValidationHelper {
   public String getCriteria(ContainerServiceParams containerServiceParams) {
     SettingValue value = containerServiceParams.getSettingAttribute().getValue();
     if (value instanceof AwsConfig) {
-      return "AWS:" + containerServiceParams.getRegion();
-    } else if (value instanceof KubernetesClusterConfig
-        && ((KubernetesClusterConfig) value).isUseKubernetesDelegate()) {
-      return "delegate-name: " + ((KubernetesClusterConfig) value).getDelegateName();
+      String region = containerServiceParams.getRegion();
+      return region == null ? ALWAYS_TRUE : "AWS:" + region;
+    } else if (value instanceof KubernetesClusterConfig) {
+      KubernetesClusterConfig kubernetesClusterConfig = (KubernetesClusterConfig) value;
+      if (kubernetesClusterConfig.isUseKubernetesDelegate()) {
+        return "delegate-name: " + kubernetesClusterConfig.getDelegateName();
+      }
+      return kubernetesClusterConfig.getMasterUrl();
+    } else if (value instanceof KubernetesConfig) {
+      return ((KubernetesConfig) value).getMasterUrl();
+    } else if (value instanceof GcpConfig) {
+      return "GCP:" + containerServiceParams.getClusterName();
+    } else if (value instanceof AzureConfig) {
+      String subscriptionId = containerServiceParams.getSubscriptionId();
+      String resourceGroup = containerServiceParams.getResourceGroup();
+      return "Azure:" + subscriptionId + resourceGroup + containerServiceParams.getClusterName();
     } else {
-      return getKubernetesMasterUrl(containerServiceParams);
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+          .addParam("args", "Unknown kubernetes cloud provider setting value: " + value.getType());
     }
   }
 

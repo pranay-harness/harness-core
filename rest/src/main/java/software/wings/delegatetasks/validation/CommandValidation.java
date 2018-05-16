@@ -30,6 +30,7 @@ import software.wings.beans.command.EcsSetupParams;
 import software.wings.beans.command.KubernetesResizeParams;
 import software.wings.beans.command.KubernetesSetupParams;
 import software.wings.cloudprovider.gke.GkeClusterService;
+import software.wings.common.Constants;
 import software.wings.core.winrm.executors.WinRmSession;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.delegatetasks.validation.DelegateConnectionResult.DelegateConnectionResultBuilder;
@@ -47,7 +48,6 @@ import java.util.function.Consumer;
  * Created by brett on 11/5/17
  */
 public class CommandValidation extends AbstractDelegateValidateTask {
-  private static final String ALWAYS_TRUE = "ALWAYS_TRUE";
   @Transient private static final Logger logger = LoggerFactory.getLogger(CommandValidation.class);
 
   @Inject private transient EncryptionService encryptionService;
@@ -149,7 +149,7 @@ public class CommandValidation extends AbstractDelegateValidateTask {
   }
 
   private DelegateConnectionResult validateAlwaysTrue() {
-    return DelegateConnectionResult.builder().criteria(ALWAYS_TRUE).validated(true).build();
+    return DelegateConnectionResult.builder().criteria(Constants.ALWAYS_TRUE).validated(true).build();
   }
 
   private void decryptCredentials(CommandExecutionContext context) {
@@ -218,10 +218,27 @@ public class CommandValidation extends AbstractDelegateValidateTask {
     DeploymentType deploymentType = DeploymentType.valueOf(context.getDeploymentType());
     switch (deploymentType) {
       case KUBERNETES:
-        SettingValue config = context.getCloudProviderSetting().getValue();
-        return config instanceof KubernetesClusterConfig && ((KubernetesClusterConfig) config).isUseKubernetesDelegate()
-            ? "delegate-name: " + ((KubernetesClusterConfig) config).getDelegateName()
-            : getKubernetesMasterUrl(context);
+        KubernetesSetupParams setupParams = (KubernetesSetupParams) context.getContainerSetupParams();
+        SettingAttribute settingAttribute = context.getCloudProviderSetting();
+        SettingValue value = settingAttribute.getValue();
+        if (value instanceof KubernetesClusterConfig) {
+          KubernetesClusterConfig kubernetesClusterConfig = (KubernetesClusterConfig) value;
+          if (kubernetesClusterConfig.isUseKubernetesDelegate()) {
+            return "delegate-name: " + kubernetesClusterConfig.getDelegateName();
+          }
+          return kubernetesClusterConfig.getMasterUrl();
+        } else if (value instanceof KubernetesConfig) {
+          return ((KubernetesConfig) value).getMasterUrl();
+        } else if (value instanceof GcpConfig) {
+          return "GCP:" + setupParams.getClusterName();
+        } else if (value instanceof AzureConfig) {
+          String subscriptionId = setupParams.getSubscriptionId();
+          String resourceGroup = setupParams.getResourceGroup();
+          return "Azure:" + subscriptionId + resourceGroup + setupParams.getClusterName();
+        } else {
+          throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+              .addParam("args", "Unknown kubernetes cloud provider setting value: " + value.getType());
+        }
       case ECS:
         if (context.getContainerSetupParams() != null) {
           region = ((EcsSetupParams) context.getContainerSetupParams()).getRegion();
@@ -239,7 +256,7 @@ public class CommandValidation extends AbstractDelegateValidateTask {
         return context.getHost().getPublicDns();
       case AMI:
       case AWS_LAMBDA:
-        return ALWAYS_TRUE;
+        return Constants.ALWAYS_TRUE;
       default:
         unhandled(deploymentType);
         throw new WingsException(ErrorCode.INVALID_ARGUMENT)
@@ -248,6 +265,6 @@ public class CommandValidation extends AbstractDelegateValidateTask {
   }
 
   private String getAwsRegionCriteria(String region) {
-    return region == null ? ALWAYS_TRUE : "AWS: " + region;
+    return region == null ? Constants.ALWAYS_TRUE : "AWS: " + region;
   }
 }
