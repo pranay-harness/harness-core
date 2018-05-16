@@ -632,7 +632,7 @@ public class DelegateServiceImpl implements DelegateService {
     task.setAsync(false);
     DelegateTask delegateTask = wingsPersistence.saveAndGet(DelegateTask.class, task);
 
-    //    broadcasterFactory.lookup("/stream/delegate/" + delegateTask.getAccountId(), true).broadcast(delegateTask);
+    broadcasterFactory.lookup("/stream/delegate/" + delegateTask.getAccountId(), true).broadcast(delegateTask);
     logger.info("Executing sync task: uuid: {}, accountId: {}, type: {}", delegateTask.getUuid(),
         delegateTask.getAccountId(), delegateTask.getTaskType());
 
