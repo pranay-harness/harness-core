@@ -25,7 +25,6 @@ import com.google.api.services.container.model.UpdateClusterRequest;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.TimeLimiter;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -46,6 +45,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import javax.annotation.Nullable;
 
 /**
@@ -177,7 +177,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
           sleep(ofSeconds(gcpHelperService.getSleepIntervalSecs()));
         }
       }, gcpHelperService.getTimeoutMins(), TimeUnit.MINUTES);
-    } catch (UncheckedTimeoutException e) {
+    } catch (TimeoutException e) {
       logger.error("Timed out checking operation status");
       return "UNKNOWN";
     } catch (Exception e) {

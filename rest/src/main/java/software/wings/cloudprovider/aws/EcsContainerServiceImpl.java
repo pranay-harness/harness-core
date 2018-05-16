@@ -14,7 +14,6 @@ import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
 
 import com.google.common.io.CharStreams;
 import com.google.common.util.concurrent.TimeLimiter;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -83,6 +82,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Created by anubhaw on 12/28/16.
@@ -831,7 +831,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
         }
         return true;
       }, 10L, TimeUnit.MINUTES);
-    } catch (UncheckedTimeoutException e) {
+    } catch (TimeoutException e) {
       throw new WingsException(INIT_TIMEOUT)
           .addParam("message", "Timed out waiting for instances to register with cluster");
     } catch (WingsException e) {
@@ -850,7 +850,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
         }
         return true;
       }, 10L, TimeUnit.MINUTES);
-    } catch (UncheckedTimeoutException e) {
+    } catch (TimeoutException e) {
       throw new WingsException(INIT_TIMEOUT).addParam("message", "Timed out waiting for instances to be ready");
     } catch (WingsException e) {
       throw e;
@@ -917,7 +917,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
         }
         return true;
       }, 10L, TimeUnit.MINUTES);
-    } catch (UncheckedTimeoutException e) {
+    } catch (TimeoutException e) {
       throw new WingsException(INIT_TIMEOUT).addParam("message", "Timed out waiting for tasks to be in running state");
     } catch (WingsException e) {
       throw e;
@@ -1204,7 +1204,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
           sleep(ofSeconds(10));
         }
       }, serviceSteadyStateTimeout, TimeUnit.MINUTES);
-    } catch (UncheckedTimeoutException e) {
+    } catch (TimeoutException e) {
       String msg = "Timed out waiting for service to reach steady state";
       executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
       throw new WingsException(INIT_TIMEOUT).addParam("message", msg);
@@ -1243,7 +1243,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
           sleep(ofSeconds(1));
         }
       }, 60L, TimeUnit.SECONDS);
-    } catch (UncheckedTimeoutException e) {
+    } catch (TimeoutException e) {
       logger.warn("Service update failed {}", service[0]);
       executionLogCallback.saveExecutionLog(
           format("Timed out waiting for service desired count to match. expected: [%s], found [%s]", desiredCount,

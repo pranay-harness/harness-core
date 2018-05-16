@@ -1,7 +1,6 @@
 package software.wings.delegatetasks;
 
 import com.google.common.util.concurrent.TimeLimiter;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 
 import org.slf4j.Logger;
@@ -23,6 +22,7 @@ import software.wings.waitnotify.NotifyResponseData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -61,7 +61,7 @@ public class KubernetesSteadyStateCheckTask extends AbstractDelegateRunnableTask
           .executionStatus(ExecutionStatus.SUCCESS)
           .containerInfoList(containerInfos)
           .build();
-    } catch (UncheckedTimeoutException e) {
+    } catch (TimeoutException e) {
       String msg = "Timed out waiting for controller to reach steady state";
       logger.error(msg, e);
       executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR, CommandExecutionStatus.FAILURE);

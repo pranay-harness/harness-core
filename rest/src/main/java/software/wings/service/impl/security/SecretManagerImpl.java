@@ -20,7 +20,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.TimeLimiter;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 
 import com.mongodb.DBCursor;
@@ -89,6 +88,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Created by rsingh on 10/30/17.
@@ -1009,7 +1009,7 @@ public class SecretManagerImpl implements SecretManager {
                 -> kmsService.encrypt(UUID.randomUUID().toString().toCharArray(), accountId, kmsConfig),
             15L, TimeUnit.SECONDS);
         alertService.closeAlert(accountId, Base.GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
-      } catch (UncheckedTimeoutException ex) {
+      } catch (TimeoutException ex) {
         logger.warn("Timed out validating kms for account {} and kmsId {}", accountId, kmsConfig.getUuid());
       } catch (Exception e) {
         logger.error("Could not validate kms for account {} and kmsId {}", accountId, kmsConfig.getUuid(), e);
@@ -1033,7 +1033,7 @@ public class SecretManagerImpl implements SecretManager {
                                             SettingVariableTypes.VAULT, vaultConfig, null),
             15L, TimeUnit.SECONDS);
         alertService.closeAlert(accountId, Base.GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
-      } catch (UncheckedTimeoutException ex) {
+      } catch (TimeoutException ex) {
         logger.warn("Timed out validating vault for account {} and kmsId {}", accountId, vaultConfig.getUuid());
       } catch (Exception e) {
         logger.error("Could not validate vault for account {} and kmsId {}", accountId, vaultConfig.getUuid(), e);

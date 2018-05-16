@@ -11,7 +11,6 @@ import static software.wings.common.Constants.WINDOWS_HOME_DIR;
 import static software.wings.exception.WingsException.ReportTarget.REST_API;
 
 import com.google.common.util.concurrent.TimeLimiter;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
@@ -84,7 +83,7 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
       long timeoutMs = context.getTimeout() == null ? TimeUnit.MINUTES.toMillis(10) : context.getTimeout().longValue();
       commandExecutionStatus = timeLimiter.callWithTimeout(
           () -> commandUnit.execute(shellCommandExecutionContext), timeoutMs, TimeUnit.MILLISECONDS);
-    } catch (InterruptedException | TimeoutException | UncheckedTimeoutException e) {
+    } catch (InterruptedException | TimeoutException e) {
       logService.save(context.getAccountId(),
           aLog()
               .withAppId(context.getAppId())

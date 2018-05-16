@@ -46,7 +46,6 @@ import static software.wings.utils.KubernetesConvention.getAccountIdentifier;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.TimeLimiter;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -115,6 +114,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -650,7 +650,7 @@ public class DelegateServiceImpl implements DelegateService {
         }
         return true;
       }, task.getTimeout(), TimeUnit.MILLISECONDS);
-    } catch (UncheckedTimeoutException e) {
+    } catch (TimeoutException e) {
       logger.info("Timed out waiting for sync task {}", delegateTask.getUuid());
     } catch (Exception e) {
       logger.error("Exception", e);

@@ -10,7 +10,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.util.concurrent.TimeLimiter;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
@@ -34,6 +33,7 @@ import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
@@ -167,7 +167,7 @@ public class MessageServiceImpl implements MessageService {
           Thread.sleep(100L);
         }
       }, timeout, TimeUnit.MILLISECONDS);
-    } catch (UncheckedTimeoutException e) {
+    } catch (TimeoutException e) {
       logger.debug("Timed out reading message from channel {} {}", sourceType, sourceProcessId);
     } catch (Exception e) {
       logger.error("Error reading message from channel {} {}", sourceType, sourceProcessId, e);
@@ -239,8 +239,10 @@ public class MessageServiceImpl implements MessageService {
         }
         return message;
       }, timeout, TimeUnit.MILLISECONDS);
-    } catch (UncheckedTimeoutException e) {
-      logger.debug("Timed out waiting for message {} from channel {} {}", messageName, sourceType, sourceProcessId);
+    } catch (TimeoutException e) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Timed out waiting for message {} from channel {} {}", messageName, sourceType, sourceProcessId);
+      }
     } catch (Exception e) {
       logger.error(
           "Error while waiting for message {} from channel {} {}", messageName, sourceType, sourceProcessId, e);
@@ -275,14 +277,16 @@ public class MessageServiceImpl implements MessageService {
                 }
               }
             }, minWaitTime, TimeUnit.MILLISECONDS);
-          } catch (UncheckedTimeoutException e) {
+          } catch (TimeoutException e) {
             // Do nothing
           }
         }
         return messages;
       }, timeout, TimeUnit.MILLISECONDS);
-    } catch (UncheckedTimeoutException e) {
-      logger.debug("Timed out waiting for message {} from channel {} {}", messageName, sourceType, sourceProcessId);
+    } catch (TimeoutException e) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Timed out waiting for message {} from channel {} {}", messageName, sourceType, sourceProcessId);
+      }
     } catch (Exception e) {
       logger.error(
           "Error while waiting for message {} from channel {} {}", messageName, sourceType, sourceProcessId, e);
