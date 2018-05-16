@@ -12,6 +12,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static software.wings.beans.container.Label.Builder.aLabel;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACCOUNT_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_NAME;
@@ -30,7 +31,6 @@ import static software.wings.service.impl.instance.InstanceSyncTestConstants.SER
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_NAME;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.US_EAST;
 
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
@@ -53,6 +53,7 @@ import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.Service;
+import software.wings.beans.container.Label;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.beans.infrastructure.instance.info.EcsContainerInfo;
@@ -74,9 +75,9 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.security.SecretManager;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public class ContainerInstanceHandlerTest extends WingsBaseTest {
@@ -475,11 +476,11 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
         .when(containerSync)
         .getInstances(any(), anyList());
 
-    Map<String, String> labelMap = Maps.newHashMap();
-    labelMap.put("release", "version1");
+    List<Label> labels = new ArrayList<>();
+    labels.add(aLabel().withName("release").withValue("version").build());
     containerInstanceHandler.handleNewDeployment(ContainerDeploymentInfoWithLabels.builder()
                                                      .clusterName(KUBE_CLUSTER)
-                                                     .labels(labelMap)
+                                                     .labels(labels)
                                                      .accountId(ACCOUNT_ID)
                                                      .infraMappingId(INFRA_MAPPING_ID)
                                                      .workflowExecutionId("workfloeExecution_1")

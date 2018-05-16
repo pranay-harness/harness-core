@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import software.wings.beans.container.Label;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionData;
 import software.wings.waitnotify.NotifyResponseData;
@@ -21,7 +22,7 @@ import java.util.Map;
 public class KubernetesSteadyStateCheckExecutionData extends StateExecutionData implements NotifyResponseData {
   private String activityId;
   private String commandName;
-  private Map<String, String> labels;
+  private List<Label> labels;
   @Builder.Default private List<InstanceStatusSummary> newInstanceStatusSummaries = new ArrayList<>();
 
   @Override
