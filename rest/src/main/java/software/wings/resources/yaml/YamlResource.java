@@ -808,7 +808,7 @@ public class YamlResource {
   @Consumes(MULTIPART_FORM_DATA)
   @Timed
   @ExceptionMetered
-  public RestResponse<String> saveArtifact(@QueryParam("accountId") @NotEmpty String accountId,
+  public RestResponse<String> processYamlFilesAsZip(@QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("yamlPath") @Optional String yamlPath, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) throws IOException, YamlProcessingException {
     logger.debug("accountId: {}, fileDetail: {}, yamlPath: {}", accountId, fileDetail, yamlPath);
