@@ -60,5 +60,12 @@ public interface HarnessUserGroupService {
    */
   HarnessUserGroup updateMembers(@NotEmpty String uuid, Set<String> memberIds);
 
+  /**
+   * Check if user is part of harness support.
+   * @param userId
+   * @return
+   */
+  boolean isHarnessSupportUser(String userId);
+
   boolean delete(@NotEmpty String uuid);
 }

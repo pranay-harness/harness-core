@@ -23,7 +23,9 @@ import software.wings.security.authentication.AuthenticationManager;
 import software.wings.security.authentication.TwoFactorAuthenticationManager;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.UserService;
+import software.wings.utils.CacheHelper;
 import software.wings.utils.ResourceTestRule;
 
 import java.io.IOException;
@@ -35,6 +37,8 @@ import javax.ws.rs.core.GenericType;
  */
 public class UserResourceTest {
   public static final UserService USER_SERVICE = mock(UserService.class);
+  public static final HarnessUserGroupService HARNESS_USER_GROUP_SERVICE = mock(HarnessUserGroupService.class);
+  public static final CacheHelper CACHE_HELPER = mock(CacheHelper.class);
   public static final AuthService AUTH_SERVICE = mock(AuthService.class);
   public static final AccountService ACCOUNT_SERVICE = mock(AccountService.class);
   public static final AuthenticationManager AUTHENTICATION_MANAGER = mock(AuthenticationManager.class);
@@ -47,8 +51,8 @@ public class UserResourceTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .addResource(new UserResource(
-              USER_SERVICE, AUTH_SERVICE, ACCOUNT_SERVICE, AUTHENTICATION_MANAGER, TWO_FACTOR_AUTHENTICATION_MANAGER))
+          .addResource(new UserResource(USER_SERVICE, AUTH_SERVICE, ACCOUNT_SERVICE, AUTHENTICATION_MANAGER,
+              TWO_FACTOR_AUTHENTICATION_MANAGER, CACHE_HELPER, HARNESS_USER_GROUP_SERVICE))
           .addProvider(WingsExceptionMapper.class)
           .addProvider(MultiPartFeature.class)
           .build();

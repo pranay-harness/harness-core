@@ -12,6 +12,7 @@ import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Account;
@@ -159,6 +160,14 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
 
     authService.evictAccountUserPermissionInfoCache(accountsAffected, Lists.newArrayList(membersAffected));
     return updatedUserGroup;
+  }
+
+  @Override
+  public boolean isHarnessSupportUser(String userId) {
+    Query<HarnessUserGroup> query = wingsPersistence.createQuery(HarnessUserGroup.class, excludeAuthority);
+    query.filter("memberIds", userId);
+    Key<HarnessUserGroup> userGroupKey = query.getKey();
+    return userGroupKey != null;
   }
 
   @Override
