@@ -56,9 +56,6 @@ public class ExecutorModule extends AbstractModule {
         .annotatedWith(Names.named("delegateTaskNotifier"))
         .toInstance(new ManagedScheduledExecutorService("DelegateTaskNotifier"));
     bind(ScheduledExecutorService.class)
-        .annotatedWith(Names.named("delegateTaskEventNotifier"))
-        .toInstance(new ManagedScheduledExecutorService("delegateTaskEventNotifier"));
-    bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("gitChangeSet"))
         .toInstance(new ManagedScheduledExecutorService("GitChangeSet"));
   }

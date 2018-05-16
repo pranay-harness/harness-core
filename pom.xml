@@ -149,6 +149,18 @@
             </dependency>
 
             <dependency>
+                <groupId>org.atmosphere</groupId>
+                <artifactId>atmosphere-hazelcast</artifactId>
+                <version>${extensions-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.hazelcast</groupId>
+                        <artifactId>hazelcast</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
                 <groupId>org.eclipse.jetty.websocket</groupId>
                 <artifactId>websocket-server</artifactId>
                 <version>9.3.9.v20160517</version>

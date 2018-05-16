@@ -123,6 +123,11 @@
         </dependency>
 
         <dependency>
+            <groupId>org.atmosphere</groupId>
+            <artifactId>atmosphere-hazelcast</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.eclipse.jetty.websocket</groupId>
             <artifactId>websocket-server</artifactId>
         </dependency>
