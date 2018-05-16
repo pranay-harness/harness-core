@@ -36,6 +36,7 @@ public class CommandExecutionContext {
   private String runtimePath;
   private String stagingPath;
   private String backupPath;
+  private String windowsRuntimePath;
   private String serviceTemplateId;
   private ExecutionCredential executionCredential;
   private AppContainer appContainer;
@@ -76,6 +77,7 @@ public class CommandExecutionContext {
     this.runtimePath = other.runtimePath;
     this.stagingPath = other.stagingPath;
     this.backupPath = other.backupPath;
+    this.windowsRuntimePath = other.windowsRuntimePath;
     this.serviceTemplateId = other.serviceTemplateId;
     this.executionCredential = other.executionCredential;
     this.appContainer = other.appContainer;
@@ -159,6 +161,7 @@ public class CommandExecutionContext {
     private String runtimePath;
     private String stagingPath;
     private String backupPath;
+    private String windowsRuntimePath;
     private String serviceTemplateId;
     private ExecutionCredential executionCredential;
     private AppContainer appContainer;
@@ -226,6 +229,11 @@ public class CommandExecutionContext {
 
     public Builder withBackupPath(String backupPath) {
       this.backupPath = backupPath;
+      return this;
+    }
+
+    public Builder withWindowsRuntimePath(String windowsRuntimePath) {
+      this.windowsRuntimePath = windowsRuntimePath;
       return this;
     }
 
@@ -360,6 +368,7 @@ public class CommandExecutionContext {
           .withRuntimePath(runtimePath)
           .withStagingPath(stagingPath)
           .withBackupPath(backupPath)
+          .withWindowsRuntimePath(windowsRuntimePath)
           .withServiceTemplateId(serviceTemplateId)
           .withExecutionCredential(executionCredential)
           .withAppContainer(appContainer)
@@ -397,6 +406,7 @@ public class CommandExecutionContext {
       commandExecutionContext.setRuntimePath(runtimePath);
       commandExecutionContext.setStagingPath(stagingPath);
       commandExecutionContext.setBackupPath(backupPath);
+      commandExecutionContext.setWindowsRuntimePath(windowsRuntimePath);
       commandExecutionContext.setServiceTemplateId(serviceTemplateId);
       commandExecutionContext.setExecutionCredential(executionCredential);
       commandExecutionContext.setAppContainer(appContainer);

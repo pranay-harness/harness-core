@@ -657,7 +657,10 @@ public interface Constants {
    * The constant DEFAULT_STAGING_PATH.
    */
   String DEFAULT_STAGING_PATH = "$HOME/${app.name}/${service.name}/${env.name}/staging/${timestampId}";
-
+  /**
+   * The constant DEFAULT_WINDOWS_RUNTIME_PATH.
+   */
+  String DEFAULT_WINDOWS_RUNTIME_PATH = "%USERPROFILE%/${app.name}/${service.name}/${env.name}/runtime";
   /**
    * The constant RUNTIME_PATH.
    */
@@ -670,6 +673,10 @@ public interface Constants {
    * The constant STAGING_PATH.
    */
   String STAGING_PATH = "STAGING_PATH";
+  /**
+   * The constant WINDOWS_RUNTIME_PATH.
+   */
+  String WINDOWS_RUNTIME_PATH = "WINDOWS_RUNTIME_PATH";
 
   /**
    * The constant ACTIVITY_ID.
@@ -807,5 +814,5 @@ public interface Constants {
   String USERNAME_PASSWORD_FIELD = "UserName/Password";
   String TOKEN_FIELD = "Token";
 
-  String WINDOWS_DEFAULT_COMMAND_PATH = "%USERPROFILE%";
+  String WINDOWS_HOME_DIR = "%USERPROFILE%";
 }

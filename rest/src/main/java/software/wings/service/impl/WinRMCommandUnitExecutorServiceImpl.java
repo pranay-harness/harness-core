@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.lang.String.format;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.ERROR;
@@ -8,7 +7,7 @@ import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
-import static software.wings.common.Constants.WINDOWS_DEFAULT_COMMAND_PATH;
+import static software.wings.common.Constants.WINDOWS_HOME_DIR;
 import static software.wings.exception.WingsException.ReportTarget.REST_API;
 
 import com.google.common.util.concurrent.TimeLimiter;
@@ -24,7 +23,7 @@ import software.wings.beans.ResponseMessage;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandUnit;
-import software.wings.beans.command.ExecCommandUnit;
+import software.wings.beans.command.InitPowerShellCommandUnit;
 import software.wings.beans.command.ShellCommandExecutionContext;
 import software.wings.beans.infrastructure.Host;
 import software.wings.core.winrm.executors.WinRmExecutor;
@@ -71,11 +70,7 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
     CommandExecutionStatus commandExecutionStatus = FAILURE;
 
     String commandPath =
-        (commandUnit instanceof ExecCommandUnit) ? ((ExecCommandUnit) commandUnit).getCommandPath() : "";
-
-    if (isEmpty(commandPath)) {
-      commandPath = WINDOWS_DEFAULT_COMMAND_PATH;
-    }
+        (commandUnit instanceof InitPowerShellCommandUnit) ? WINDOWS_HOME_DIR : context.getWindowsRuntimePath();
 
     WinRmSessionConfig winRmSessionConfig = context.winrmSessionConfig(commandUnit.getName(), commandPath);
     WinRmExecutor winRmExecutor = winRmExecutorFactory.getExecutor(winRmSessionConfig);

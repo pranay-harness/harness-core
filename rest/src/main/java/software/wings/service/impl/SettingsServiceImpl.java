@@ -21,8 +21,10 @@ import static software.wings.common.Constants.BACKUP_PATH;
 import static software.wings.common.Constants.DEFAULT_BACKUP_PATH;
 import static software.wings.common.Constants.DEFAULT_RUNTIME_PATH;
 import static software.wings.common.Constants.DEFAULT_STAGING_PATH;
+import static software.wings.common.Constants.DEFAULT_WINDOWS_RUNTIME_PATH;
 import static software.wings.common.Constants.RUNTIME_PATH;
 import static software.wings.common.Constants.STAGING_PATH;
+import static software.wings.common.Constants.WINDOWS_RUNTIME_PATH;
 import static software.wings.dl.HQuery.excludeValidate;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
@@ -552,6 +554,13 @@ public class SettingsServiceImpl implements SettingsService {
    */
   @Override
   public void createDefaultApplicationSettings(String appId, String accountId) {
+    wingsPersistence.save(aSettingAttribute()
+                              .withAppId(appId)
+                              .withAccountId(accountId)
+                              .withEnvId(GLOBAL_ENV_ID)
+                              .withName(WINDOWS_RUNTIME_PATH)
+                              .withValue(aStringValue().withValue(DEFAULT_WINDOWS_RUNTIME_PATH).build())
+                              .build());
     wingsPersistence.save(aSettingAttribute()
                               .withAppId(appId)
                               .withAccountId(accountId)

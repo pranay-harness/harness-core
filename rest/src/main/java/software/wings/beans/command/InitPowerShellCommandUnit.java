@@ -36,6 +36,21 @@ public class InitPowerShellCommandUnit extends AbstractCommandUnit {
     setName(INIT_POWERSHELL_UNIT_NAME);
   }
 
+  private String getInitCommand(String runtimePath) {
+    String script = "$RUNTIME_PATH=[System.Environment]::ExpandEnvironmentVariables(\"%s\")\n"
+        + "if(!(Test-Path \"$RUNTIME_PATH\"))\n"
+        + "{\n"
+        + "    New-Item -ItemType Directory -Path \"$RUNTIME_PATH\"\n"
+        + "    Write-Host \"$RUNTIME_PATH Folder Created Successfully.\"\n"
+        + "}\n"
+        + "else\n"
+        + "{\n"
+        + "    Write-Host \"${RUNTIME_PATH} Folder already exists.\"\n"
+        + "}";
+
+    return String.format(script, runtimePath);
+  }
+
   @Override
   public CommandExecutionStatus execute(CommandExecutionContext context) {
     activityId = context.getActivityId();
@@ -63,11 +78,9 @@ public class InitPowerShellCommandUnit extends AbstractCommandUnit {
     }
 
     createPreparedCommands(command);
-
-    CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.SUCCESS;
-
     context.addEnvVariables(envVariables);
-    return commandExecutionStatus;
+    return ((ShellCommandExecutionContext) context)
+        .executeCommandString(getInitCommand(context.getWindowsRuntimePath()));
   }
 
   private void createPreparedCommands(Command command) {
