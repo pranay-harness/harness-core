@@ -1445,7 +1445,13 @@ public class StateMachineExecutor {
      */
     @Override
     public void run() {
-      stateMachineExecutor.startExecution(context);
+      try {
+        stateMachineExecutor.startExecution(context);
+      } catch (WingsException exception) {
+        exception.logProcessedMessages(MANAGER, logger);
+      } catch (Exception exception) {
+        logger.error("Unhandled exception", exception);
+      }
     }
   }
 

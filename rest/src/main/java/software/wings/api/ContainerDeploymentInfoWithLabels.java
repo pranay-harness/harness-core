@@ -4,8 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import software.wings.beans.container.Label;
 
-import java.util.Map;
+import java.util.List;
 
 /**
  * This holds deploymentInfo of helm based deployments.
@@ -16,14 +17,14 @@ import java.util.Map;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class ContainerDeploymentInfoWithLabels extends BaseContainerDeploymentInfo {
-  private Map<String, String> labels;
+  private List<Label> labels;
 
   @Builder
   public ContainerDeploymentInfoWithLabels(String appId, String accountId, String infraMappingId, String workflowId,
       String workflowExecutionId, String workflowExecutionName, String pipelineExecutionId,
       String pipelineExecutionName, String stateExecutionInstanceId, String artifactStreamId, String artifactId,
       String artifactName, String artifactSourceName, String artifactBuildNum, String deployedById,
-      String deployedByName, long deployedAt, String clusterName, Map<String, String> labels) {
+      String deployedByName, long deployedAt, String clusterName, List<Label> labels) {
     super(appId, accountId, infraMappingId, workflowId, workflowExecutionId, workflowExecutionName, pipelineExecutionId,
         pipelineExecutionName, stateExecutionInstanceId, artifactStreamId, artifactId, artifactName, artifactSourceName,
         artifactBuildNum, deployedById, deployedByName, deployedAt, clusterName);

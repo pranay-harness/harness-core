@@ -3,6 +3,7 @@ package software.wings.service.impl.instance;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.container.Label.Builder.aLabel;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Maps;
@@ -26,6 +27,7 @@ import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.container.Label;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.Instance.InstanceBuilder;
 import software.wings.beans.infrastructure.instance.InstanceType;
@@ -50,8 +52,8 @@ import software.wings.sm.StateType;
 import software.wings.sm.StepExecutionSummary;
 import software.wings.utils.Validator;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -218,8 +220,9 @@ public class ContainerInstanceHandler extends InstanceHandler {
 
       ContainerInfrastructureMapping containerInfraMapping =
           getContainerInfraMapping(deploymentInfo.getAppId(), deploymentInfo.getInfraMappingId());
-      Set<String> controllerNames =
-          containerSync.getControllerNames(containerInfraMapping, containerDeploymentInfo.getLabels());
+      Set<String> controllerNames = containerSync.getControllerNames(containerInfraMapping,
+          containerDeploymentInfo.getLabels().stream().collect(
+              Collectors.toMap(label -> label.getName(), label -> label.getValue())));
       controllerNames.stream().forEach(containerSvcName -> containerSvcNameInstanceMap.put(containerSvcName, null));
 
     } else if (deploymentInfo instanceof ContainerDeploymentInfoWithNames) {
@@ -311,15 +314,15 @@ public class ContainerInstanceHandler extends InstanceHandler {
 
               String clusterName = ((ContainerInfrastructureMapping) infrastructureMapping).getClusterName();
 
-              HashMap<String, String> labels = Maps.newHashMap();
+              List<Label> labels = new ArrayList();
 
               if (stepExecutionSummary instanceof HelmSetupExecutionSummary) {
                 HelmSetupExecutionSummary helmSetupExecutionSummary = (HelmSetupExecutionSummary) stepExecutionSummary;
-                labels.put("release", helmSetupExecutionSummary.getReleaseName());
+                labels.add(aLabel().withName("release").withValue(helmSetupExecutionSummary.getReleaseName()).build());
               } else {
                 KubernetesSteadyStateCheckExecutionSummary kubernetesSteadyStateCheckExecutionSummary =
                     (KubernetesSteadyStateCheckExecutionSummary) stepExecutionSummary;
-                labels.putAll(kubernetesSteadyStateCheckExecutionSummary.getLabels());
+                labels.addAll(kubernetesSteadyStateCheckExecutionSummary.getLabels());
               }
 
               ContainerDeploymentInfoWithLabels containerDeploymentInfo =

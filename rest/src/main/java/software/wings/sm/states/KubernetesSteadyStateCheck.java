@@ -193,8 +193,10 @@ public class KubernetesSteadyStateCheck extends State {
       throw new InvalidRequestException("Labels cannot be empty.");
     }
 
-    Map<String, String> renderedLabels = labels.stream().collect(
-        Collectors.toMap(label -> label.getName(), label -> context.renderExpression(label.getValue())));
+    labels.stream().forEach(label -> label.setValue(context.renderExpression(label.getValue())));
+
+    Map<String, String> labelMap =
+        labels.stream().collect(Collectors.toMap(label -> label.getName(), label -> label.getValue()));
 
     Activity activity = createActivity(context);
     KubernetesSteadyStateCheckParams kubernetesSteadyStateCheckParams =
@@ -205,7 +207,7 @@ public class KubernetesSteadyStateCheck extends State {
             .commandName(KUBERNETES_STEADY_STATE_CHECK_COMMAND_NAME)
             .containerServiceParams(
                 containerDeploymentManagerHelper.getContainerServiceParams(containerInfraMapping, ""))
-            .labels(renderedLabels)
+            .labels(labelMap)
             .timeoutMillis(getTimeoutMillis() != null ? getTimeoutMillis() : DEFAULT_ASYNC_CALL_TIMEOUT)
             .build();
     DelegateTask delegateTask =
@@ -225,7 +227,7 @@ public class KubernetesSteadyStateCheck extends State {
         .withCorrelationIds(Arrays.asList(activity.getUuid()))
         .withStateExecutionData(KubernetesSteadyStateCheckExecutionData.builder()
                                     .activityId(activity.getUuid())
-                                    .labels(renderedLabels)
+                                    .labels(labels)
                                     .commandName(KUBERNETES_STEADY_STATE_CHECK_COMMAND_NAME)
                                     .build())
         .withDelegateTaskId(delegateTaskId)

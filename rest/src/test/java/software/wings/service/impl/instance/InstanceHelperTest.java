@@ -46,6 +46,7 @@ import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.container.Label;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.beans.infrastructure.instance.info.Ec2InstanceInfo;
@@ -65,7 +66,6 @@ import software.wings.sm.WorkflowStandardParams;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public class InstanceHelperTest extends WingsBaseTest {
@@ -455,9 +455,10 @@ public class InstanceHelperTest extends WingsBaseTest {
     DeploymentInfo deploymentInfo = event.getDeploymentInfo();
     assertTrue(deploymentInfo instanceof ContainerDeploymentInfoWithLabels);
     assertDeploymentInfoObject(deploymentInfo);
-    Map<String, String> labels = ((ContainerDeploymentInfoWithLabels) event.getDeploymentInfo()).getLabels();
+    List<Label> labels = ((ContainerDeploymentInfoWithLabels) event.getDeploymentInfo()).getLabels();
     assertEquals(1, labels.size());
-    assertEquals(labels.get("release"), "version1");
+    assertEquals("release", labels.get(0).getName());
+    assertEquals("version1", labels.get(0).getValue());
   }
 
   @Test
