@@ -1,5 +1,7 @@
 package software.wings.exception;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.Level.ERROR;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.stream.Collectors.joining;
@@ -20,6 +22,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.Stream;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -64,6 +68,8 @@ public class WingsException extends WingsApiException {
   private ResponseMessage responseMessage;
 
   private Map<String, Object> params = new HashMap<>();
+
+  private Map<Class, Object> contextObjects = new HashMap<>();
 
   public WingsException(String message) {
     this(ErrorCode.UNKNOWN_ERROR, message);
@@ -138,6 +144,11 @@ public class WingsException extends WingsApiException {
     this.responseMessage = responseMessage;
   }
 
+  public <T> WingsException addContext(Class<?> clz, T object) {
+    contextObjects.put(clz, object);
+    return this;
+  }
+
   public List<ResponseMessage> getResponseMessageList(ReportTarget reportTarget) {
     List<ResponseMessage> list = new ArrayList<>();
     for (Throwable ex = this; ex != null; ex = ex.getCause()) {
@@ -181,6 +192,57 @@ public class WingsException extends WingsApiException {
     }
   }
 
+  protected String calculateContextObjectsMessage() {
+    // TODO: use string buffer
+
+    Map<String, Object> context = new TreeMap<>();
+    Throwable t = this;
+    while (t != null) {
+      if (t instanceof WingsException) {
+        ((WingsException) t)
+            .getContextObjects()
+            .entrySet()
+            .stream()
+            .forEach(entry -> context.put(entry.getKey().getCanonicalName(), entry.getValue()));
+      }
+      t = t.getCause();
+    }
+
+    if (isEmpty(context)) {
+      return null;
+    }
+
+    return "Context objects: "
+        + context.entrySet()
+              .stream()
+              .map(entry -> entry.getKey() + ": " + entry.getValue())
+              .collect(joining("\n                 "));
+  }
+
+  protected String calculateResponseMessage(List<ResponseMessage> responseMessages) {
+    // TODO: use string buffer
+    return "Response message: "
+        + responseMessages.stream().map(ResponseMessage::getMessage).collect(joining("\n                  "));
+  }
+
+  protected String calculateErrorMessage(List<ResponseMessage> responseMessages) {
+    return Stream
+        .of(calculateResponseMessage(responseMessages), calculateContextObjectsMessage(),
+            "Exception occurred: " + getMessage())
+        .filter(s -> isNotEmpty(s))
+        .collect(joining("\n"));
+  }
+
+  protected String calculateInfoMessage(List<ResponseMessage> responseMessages) {
+    return calculateResponseMessage(responseMessages);
+  }
+
+  protected String calculateDebugMessage() {
+    return Stream.of(calculateContextObjectsMessage(), "Exception occurred: " + getMessage())
+        .filter(s -> isNotEmpty(s))
+        .collect(joining("\n"));
+  }
+
   public void logProcessedMessages(ExecutionContext context, Logger logger) {
     ReportTarget target = LOG_SYSTEM;
 
@@ -196,16 +258,12 @@ public class WingsException extends WingsApiException {
     }
 
     final List<ResponseMessage> responseMessages = getResponseMessageList(target);
-
-    String msg = "Exception occurred: " + getMessage();
-    String messages = responseMessages.stream().map(ResponseMessage::getMessage).collect(joining(". "));
-    if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getLevel() == ERROR)) {
-      logger.error(messages);
-      logger.error(msg, this);
+    if (getResponseMessageList(target).stream().anyMatch(responseMessage -> responseMessage.getLevel() == ERROR)) {
+      logger.error(calculateErrorMessage(responseMessages), this);
     } else {
-      logger.info(messages);
+      logger.info(calculateInfoMessage(responseMessages));
       if (logger.isDebugEnabled()) {
-        logger.debug(msg, this);
+        logger.debug(calculateDebugMessage(), this);
       }
     }
   }

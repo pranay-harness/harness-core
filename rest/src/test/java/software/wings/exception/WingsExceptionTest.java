@@ -2,11 +2,15 @@ package software.wings.exception;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
+import static software.wings.exception.WingsException.ReportTarget.LOG_SYSTEM;
 import static software.wings.exception.WingsException.ReportTarget.REST_API;
 
 import io.harness.CategoryTest;
 import org.junit.Test;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.ResponseMessage;
+
+import java.util.List;
 
 public class WingsExceptionTest extends CategoryTest {
   @Test
@@ -38,5 +42,37 @@ public class WingsExceptionTest extends CategoryTest {
 
     assertThat(exception.getReportTargets()).doesNotContain(REST_API);
     assertThat(((WingsException) exception.getCause().getCause()).getReportTargets()).doesNotContain(REST_API);
+  }
+
+  @Test
+  public void testCalculateErrorMessage() {
+    WingsException exception = new WingsException(DEFAULT_ERROR_CODE);
+
+    exception.addContext(String.class, "test");
+    exception.addContext(Integer.class, 0);
+
+    final List<ResponseMessage> responseMessages = exception.getResponseMessageList(LOG_SYSTEM);
+    assertThat(exception.calculateErrorMessage(responseMessages))
+        .isEqualTo("Response message: An error has occurred. Please contact the Harness support team.\n"
+            + "Context objects: java.lang.Integer: 0\n"
+            + "                 java.lang.String: test\n"
+            + "Exception occurred: DEFAULT_ERROR_CODE");
+  }
+
+  @Test
+  public void testCalculateErrorMessageForChain() {
+    WingsException innerException = new WingsException(DEFAULT_ERROR_CODE);
+    innerException.addContext(String.class, "test");
+
+    WingsException outerException = new WingsException(DEFAULT_ERROR_CODE, innerException);
+    outerException.addContext(Integer.class, 0);
+
+    final List<ResponseMessage> responseMessages = outerException.getResponseMessageList(LOG_SYSTEM);
+    assertThat(outerException.calculateErrorMessage(responseMessages))
+        .isEqualTo("Response message: An error has occurred. Please contact the Harness support team.\n"
+            + "                  An error has occurred. Please contact the Harness support team.\n"
+            + "Context objects: java.lang.Integer: 0\n"
+            + "                 java.lang.String: test\n"
+            + "Exception occurred: DEFAULT_ERROR_CODE");
   }
 }
