@@ -20,6 +20,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.app.MainConfiguration;
+import software.wings.beans.AwsInstanceFilter.AwsInstanceFilterBuilder;
 import software.wings.beans.AwsInstanceFilter.Tag.TagBuilder;
 import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
@@ -79,11 +80,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
 
   @Override
   public void applyProvisionerVariables(Map<String, Object> map) {
-    AwsInstanceFilter awsInstanceFilter = getAwsInstanceFilter();
-    if (awsInstanceFilter == null) {
-      awsInstanceFilter = AwsInstanceFilter.builder().build();
-      setAwsInstanceFilter(awsInstanceFilter);
-    }
+    AwsInstanceFilterBuilder builder = null;
 
     try {
       for (Entry<String, Object> entry : map.entrySet()) {
@@ -92,21 +89,32 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
             setRegion((String) entry.getValue());
             break;
           case "vpcs":
-            awsInstanceFilter.setVpcIds((List<String>) entry.getValue());
+            if (builder == null) {
+              builder = AwsInstanceFilter.builder();
+            }
+            builder.vpcIds((List<String>) entry.getValue());
             break;
           case "subnets":
-            awsInstanceFilter.setSubnetIds((List<String>) entry.getValue());
+            if (builder == null) {
+              builder = AwsInstanceFilter.builder();
+            }
+            builder.subnetIds((List<String>) entry.getValue());
             break;
           case "securityGroups":
-            awsInstanceFilter.setSecurityGroupIds((List<String>) entry.getValue());
+            if (builder == null) {
+              builder = AwsInstanceFilter.builder();
+            }
+            builder.securityGroupIds((List<String>) entry.getValue());
             break;
           case "tags":
+            if (builder == null) {
+              builder = AwsInstanceFilter.builder();
+            }
             final Map<String, Object> value = (Map<String, Object>) entry.getValue();
-            awsInstanceFilter.setTags(
-                value.entrySet()
-                    .stream()
-                    .map(item -> new TagBuilder().key(item.getKey()).value((String) item.getValue()).build())
-                    .collect(toList()));
+            builder.tags(value.entrySet()
+                             .stream()
+                             .map(item -> new TagBuilder().key(item.getKey()).value((String) item.getValue()).build())
+                             .collect(toList()));
             break;
           default:
             throw new InvalidRequestException(
@@ -117,6 +125,13 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
       throw exception;
     } catch (RuntimeException exception) {
       throw new InvalidRequestException("Unable to set the provisioner variables to the mapping", exception);
+    }
+
+    if (getRegion() == null) {
+      throw new InvalidRequestException("Region is required");
+    }
+    if (builder != null) {
+      setAwsInstanceFilter(builder.build());
     }
   }
 
