@@ -17,6 +17,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.ELB;
 import static software.wings.settings.SettingValue.SettingVariableTypes.ELK;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCR;
+import static software.wings.settings.SettingValue.SettingVariableTypes.GIT;
 import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.settings.SettingValue.SettingVariableTypes.JENKINS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.KUBERNETES_CLUSTER;
@@ -89,7 +90,7 @@ public class SettingAttribute extends Base {
     CLOUD_PROVIDER(Lists.newArrayList(PHYSICAL_DATA_CENTER, AWS, AZURE, GCP, KUBERNETES_CLUSTER, PCF)),
 
     CONNECTOR(Lists.newArrayList(SMTP, JENKINS, BAMBOO, SPLUNK, ELK, LOGZ, SUMO, APP_DYNAMICS, NEW_RELIC, DYNA_TRACE,
-        DATA_DOG, APM_VERIFICATION, PROMETHEUS, ELB, SLACK, DOCKER, ECR, GCR, NEXUS, ARTIFACTORY, AMAZON_S3)),
+        DATA_DOG, APM_VERIFICATION, PROMETHEUS, ELB, SLACK, DOCKER, ECR, GCR, NEXUS, ARTIFACTORY, AMAZON_S3, GIT)),
 
     SETTING(Lists.newArrayList(HOST_CONNECTION_ATTRIBUTES, BASTION_HOST_CONNECTION_ATTRIBUTES, STRING));
 
