@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.validation;
 
 import static io.harness.network.Http.connectableHttpUrl;
-import static software.wings.common.Constants.ALWAYS_TRUE;
+import static software.wings.common.Constants.ALWAYS_TRUE_CRITERIA;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -50,7 +50,7 @@ public class ContainerValidationHelper {
     SettingValue value = containerServiceParams.getSettingAttribute().getValue();
     if (value instanceof AwsConfig) {
       String region = containerServiceParams.getRegion();
-      return region == null ? ALWAYS_TRUE : "AWS:" + region;
+      return region == null ? ALWAYS_TRUE_CRITERIA : "AWS:" + region;
     } else if (value instanceof KubernetesClusterConfig) {
       KubernetesClusterConfig kubernetesClusterConfig = (KubernetesClusterConfig) value;
       if (kubernetesClusterConfig.isUseKubernetesDelegate()) {
