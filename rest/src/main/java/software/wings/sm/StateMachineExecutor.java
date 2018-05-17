@@ -56,6 +56,7 @@ import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
+import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ErrorStrategy;
 import software.wings.beans.WorkflowExecution;
@@ -1448,6 +1449,10 @@ public class StateMachineExecutor {
       try {
         stateMachineExecutor.startExecution(context);
       } catch (WingsException exception) {
+        exception.addContext(Application.class, context.getAppId());
+        exception.addContext(Environment.class, context.getEnv().getUuid());
+        exception.addContext(WorkflowExecution.class, context.getWorkflowExecutionId());
+        exception.addContext(StateExecutionInstance.class, context.getStateExecutionInstance().getUuid());
         exception.logProcessedMessages(MANAGER, logger);
       } catch (Exception exception) {
         logger.error("Unhandled exception", exception);

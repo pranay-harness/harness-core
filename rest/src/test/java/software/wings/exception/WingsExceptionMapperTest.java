@@ -5,6 +5,7 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
 import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SOURCE;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
@@ -32,24 +33,22 @@ public class WingsExceptionMapperTest extends CategoryTest {
     final Response response = mapper.toResponse(exception);
 
     InOrder inOrder = inOrder(mockLogger);
-    inOrder.verify(mockLogger).error("Exception occurred: DEFAULT_ERROR_CODE", exception);
+    inOrder.verify(mockLogger)
+        .error("Response message: An error has occurred. Please contact the Harness support team.\n"
+                + "Exception occurred: DEFAULT_ERROR_CODE",
+            exception);
   }
 
   @Test
   public void missingParameter() {
-    final WingsException exception = new WingsException(INVALID_ARTIFACT_SOURCE);
+    final WingsException exception = new WingsException(INVALID_ARTIFACT_SOURCE, USER);
     final WingsExceptionMapper mapper = new WingsExceptionMapper();
 
     Logger mockLogger = mock(Logger.class);
-    Whitebox.setInternalState(mapper, "logger", mockLogger);
     Whitebox.setInternalState(ResponseCodeCache.getInstance(), "logger", mockLogger);
 
     final Response response = mapper.toResponse(exception);
-
-    InOrder inOrder = inOrder(mockLogger);
-    inOrder.verify(mockLogger)
-        .error("Insufficient parameter from [] in message \"Invalid Artifact Source:${name}.${reason}\"");
-    inOrder.verify(mockLogger).error("Exception occurred: INVALID_ARTIFACT_SOURCE", exception);
+    verify(mockLogger).error("Insufficient parameter from [] in message \"Invalid Artifact Source:${name}.${reason}\"");
   }
 
   @Test
@@ -66,8 +65,10 @@ public class WingsExceptionMapperTest extends CategoryTest {
     final Response response = mapper.toResponse(exception);
 
     InOrder inOrder = inOrder(mockLogger);
-    inOrder.verify(mockLogger).error("The provided response message \"Override message\" will be overridden!");
-    inOrder.verify(mockLogger).error("Exception occurred: Override message", exception);
+    inOrder.verify(mockLogger)
+        .error("Response message: An error has occurred. Please contact the Harness support team.\n"
+                + "Exception occurred: Override message",
+            exception);
   }
 
   @Test
