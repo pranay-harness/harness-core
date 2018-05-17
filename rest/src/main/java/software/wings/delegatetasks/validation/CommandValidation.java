@@ -3,6 +3,7 @@ package software.wings.delegatetasks.validation;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.network.Http.connectableHttpUrl;
 import static java.util.Collections.singletonList;
+import static software.wings.common.Constants.ALWAYS_TRUE_CRITERIA;
 import static software.wings.common.Constants.WINDOWS_HOME_DIR;
 import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
 import static software.wings.utils.SshHelperUtil.getSshSessionConfig;
@@ -30,7 +31,6 @@ import software.wings.beans.command.EcsSetupParams;
 import software.wings.beans.command.KubernetesResizeParams;
 import software.wings.beans.command.KubernetesSetupParams;
 import software.wings.cloudprovider.gke.GkeClusterService;
-import software.wings.common.Constants;
 import software.wings.core.winrm.executors.WinRmSession;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.delegatetasks.validation.DelegateConnectionResult.DelegateConnectionResultBuilder;
@@ -149,7 +149,7 @@ public class CommandValidation extends AbstractDelegateValidateTask {
   }
 
   private DelegateConnectionResult validateAlwaysTrue() {
-    return DelegateConnectionResult.builder().criteria(Constants.ALWAYS_TRUE).validated(true).build();
+    return DelegateConnectionResult.builder().criteria(ALWAYS_TRUE_CRITERIA).validated(true).build();
   }
 
   private void decryptCredentials(CommandExecutionContext context) {
@@ -267,7 +267,7 @@ public class CommandValidation extends AbstractDelegateValidateTask {
         return context.getHost().getPublicDns();
       case AMI:
       case AWS_LAMBDA:
-        return Constants.ALWAYS_TRUE;
+        return ALWAYS_TRUE_CRITERIA;
       default:
         unhandled(deploymentType);
         throw new WingsException(ErrorCode.INVALID_ARGUMENT)
@@ -276,6 +276,6 @@ public class CommandValidation extends AbstractDelegateValidateTask {
   }
 
   private String getAwsRegionCriteria(String region) {
-    return region == null ? Constants.ALWAYS_TRUE : "AWS: " + region;
+    return region == null ? ALWAYS_TRUE_CRITERIA : "AWS: " + region;
   }
 }
