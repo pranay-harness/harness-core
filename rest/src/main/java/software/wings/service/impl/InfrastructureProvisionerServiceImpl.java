@@ -87,7 +87,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   }
 
   @Override
-  public PageResponse<InfrastructureProvisioner> listForTask(@NotEmpty String appId,
+  public PageResponse<InfrastructureProvisioner> listByBlueprintDetails(@NotEmpty String appId,
       String infrastructureProvisionerType, String serviceId, DeploymentType deploymentType,
       CloudProviderType cloudProviderType) {
     PageRequestBuilder requestBuilder = aPageRequest();
@@ -218,7 +218,15 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       if (property.getValue() == null) {
         continue;
       }
-      final Object evaluated = evaluator.evaluate(property.getValue(), contextMap);
+      Object evaluated = null;
+      try {
+        evaluated = evaluator.evaluate(property.getValue(), contextMap);
+      } catch (Exception exception) {
+        throw new InvalidRequestException(
+            String.format("The infrastructure provisioner mapping value %s was not resolved from the provided outputs",
+                property.getName()),
+            exception, USER);
+      }
       if (evaluated == null) {
         throw new InvalidRequestException(
             String.format("The infrastructure provisioner mapping value %s was not resolved from the provided outputs",

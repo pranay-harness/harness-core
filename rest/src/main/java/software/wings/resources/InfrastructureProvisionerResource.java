@@ -80,7 +80,7 @@ public class InfrastructureProvisionerResource {
       @QueryParam("type") String infrastructureProvisionerType, @QueryParam("serviceId") String serviceId,
       @QueryParam("deploymentType") DeploymentType deploymentType,
       @QueryParam("cloudProviderType") CloudProviderType cloudProviderType) {
-    return new RestResponse<>(infrastructureProvisionerService.listForTask(
+    return new RestResponse<>(infrastructureProvisionerService.listByBlueprintDetails(
         appId, infrastructureProvisionerType, serviceId, deploymentType, cloudProviderType));
   }
 

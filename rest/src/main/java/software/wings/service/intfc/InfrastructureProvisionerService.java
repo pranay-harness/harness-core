@@ -19,8 +19,9 @@ import javax.validation.Valid;
 public interface InfrastructureProvisionerService extends OwnedByApplication {
   PageResponse<InfrastructureProvisioner> list(PageRequest<InfrastructureProvisioner> pageRequest);
 
-  PageResponse<InfrastructureProvisioner> listForTask(@NotEmpty String appId, String infrastructureProvisionerType,
-      String serviceId, DeploymentType deploymentType, CloudProviderType cloudProviderType);
+  PageResponse<InfrastructureProvisioner> listByBlueprintDetails(@NotEmpty String appId,
+      String infrastructureProvisionerType, String serviceId, DeploymentType deploymentType,
+      CloudProviderType cloudProviderType);
 
   PageResponse<InfrastructureProvisionerDetails> listDetails(PageRequest<InfrastructureProvisioner> pageRequest);
 

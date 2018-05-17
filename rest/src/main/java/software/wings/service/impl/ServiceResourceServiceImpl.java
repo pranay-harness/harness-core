@@ -13,6 +13,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.atteo.evo.inflector.English.plural;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
@@ -59,6 +60,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.GraphNode;
+import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.LambdaSpecification.FunctionSpecification;
 import software.wings.beans.OrchestrationWorkflow;
@@ -102,6 +104,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EntityVersionService;
+import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -159,6 +162,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private NotificationService notificationService;
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private ServiceVariableService serviceVariableService;
+  @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject private SetupService setupService;
   @Inject private TriggerService triggerService;
   @Inject private WorkflowService workflowService;
@@ -530,11 +534,25 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     if (isNotEmpty(serviceWorkflows)) {
       String workflowNames = serviceWorkflows.stream().map(Workflow::getName).collect(joining(","));
-      String message =
-          format("Service [%s] couldn't be deleted. Remove Service reference from the following workflows ["
-                  + workflowNames + "]",
-              service.getName());
-      throw new InvalidRequestException(message, USER);
+      throw new InvalidRequestException(
+          format("Service [%s] couldn't be deleted. Remove Service reference from the following "
+                  + plural("workflow", serviceWorkflows.size()) + " [" + workflowNames + "]",
+              service.getName()),
+          USER);
+    }
+
+    List<InfrastructureProvisioner> provisioners = infrastructureProvisionerService.listByBlueprintDetails(
+        service.getAppId(), null, service.getUuid(), null, null);
+
+    if (isNotEmpty(provisioners)) {
+      String infrastructureProvisionerNames =
+          provisioners.stream().map(InfrastructureProvisioner::getName).collect(joining(","));
+      throw new InvalidRequestException(
+          format("Service [%s] couldn't be deleted. Remove Service reference from the following "
+                  + plural("infrastructure provisioner", provisioners.size()) + " [" + infrastructureProvisionerNames
+                  + "] ",
+              service.getName()),
+          USER);
     }
   }
 
