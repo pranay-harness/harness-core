@@ -30,6 +30,7 @@ import static software.wings.sm.ExecutionStatus.SUCCESS;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -91,7 +92,9 @@ public class StatisticsServiceImpl implements StatisticsService {
   @Inject private NotificationService notificationService;
   @Inject private ActivityService activityService;
   @Inject private WorkflowExecutionService workflowExecutionService;
-  @Inject private EpochUtil EpochUtil;
+
+  private static final Set<ExecutionStatus> failedExecutionStatuses =
+      Sets.newHashSet(ExecutionStatus.ABORTED, ExecutionStatus.FAILED, ExecutionStatus.ERROR);
 
   @Override
   public WingsStatistics getTopConsumerServices(String accountId, List<String> appIds) {
@@ -165,7 +168,7 @@ public class StatisticsServiceImpl implements StatisticsService {
       int instanceCount = wflExecutions.stream()
                               .filter(wex -> wex.getServiceExecutionSummaries() != null)
                               .flatMap(wex -> wex.getServiceExecutionSummaries().stream())
-                              .map(elementExecutionSummary -> elementExecutionSummary.getInstancesCount())
+                              .map(ElementExecutionSummary::getInstancesCount)
                               .mapToInt(i -> i)
                               .sum();
       int artifactCount =
@@ -386,14 +389,15 @@ public class StatisticsServiceImpl implements StatisticsService {
       if (wflExecutions != null) {
         totalCount = wflExecutions.size();
         failureCount = (int) wflExecutions.stream()
-                           .filter(workflowExecution -> workflowExecution.getStatus().equals(FAILED))
+                           .map(WorkflowExecution::getStatus)
+                           .filter(failedExecutionStatuses::contains)
                            .count();
         for (WorkflowExecution workflowExecution : wflExecutions) {
           if ((workflowExecution.getWorkflowType() == ORCHESTRATION || workflowExecution.getWorkflowType() == SIMPLE)
               && workflowExecution.getServiceExecutionSummaries() != null) {
             instanceCount += workflowExecution.getServiceExecutionSummaries()
                                  .stream()
-                                 .map(elementExecutionSummary -> elementExecutionSummary.getInstancesCount())
+                                 .map(ElementExecutionSummary::getInstancesCount)
                                  .mapToInt(i -> i)
                                  .sum();
           } else if (workflowExecution.getWorkflowType() == PIPELINE && workflowExecution.getPipelineExecution() != null
@@ -408,7 +412,7 @@ public class StatisticsServiceImpl implements StatisticsService {
                       .stream()
                       .filter(workflowExecution1 -> workflowExecution1.getServiceExecutionSummaries() != null)
                       .flatMap(workflowExecution1 -> workflowExecution1.getServiceExecutionSummaries().stream())
-                      .map(elementExecutionSummary -> elementExecutionSummary.getInstancesCount())
+                      .map(ElementExecutionSummary::getInstancesCount)
                       .mapToInt(i -> i)
                       .sum();
             }
@@ -551,11 +555,8 @@ public class StatisticsServiceImpl implements StatisticsService {
               String serviceId = serviceElement.getUuid();
               serviceAppIdMap.put(serviceId, workflowExecution.getAppId());
               serviceIdNames.put(serviceId, serviceElement.getName());
-              Map<String, ExecutionStatus> instancestatusMap = serviceInstanceStatusMap.get(serviceId);
-              if (instancestatusMap == null) {
-                instancestatusMap = new HashMap<>();
-                serviceInstanceStatusMap.put(serviceId, instancestatusMap);
-              }
+              Map<String, ExecutionStatus> instancestatusMap =
+                  serviceInstanceStatusMap.computeIfAbsent(serviceId, k -> new HashMap<>());
               instancestatusMap.put(
                   instanceStatusSummary.getInstanceElement().getUuid(), instanceStatusSummary.getStatus());
             }
@@ -595,7 +596,7 @@ public class StatisticsServiceImpl implements StatisticsService {
 
   private TopConsumer getTopConsumerFromActivityStatusAggregation(ActivityStatusAggregation activityStatusAggregation) {
     TopConsumer topConsumer = TopConsumer.builder().appId(activityStatusAggregation.getAppId()).build();
-    activityStatusAggregation.getStatus().stream().forEach(statusCount -> {
+    activityStatusAggregation.getStatus().forEach(statusCount -> {
       if (statusCount.getStatus().equals(SUCCESS)) {
         topConsumer.setSuccessfulActivityCount(statusCount.getCount());
       } else {
