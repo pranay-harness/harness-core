@@ -55,14 +55,14 @@ public class InfrastructureProvisionerGenerator {
   }
 
   private InfrastructureProvisioner ensureTerraformTest(Randomizer.Seed seed, Owners owners) {
-    final Service fireStation = serviceGenerator.ensureService(
-        seed, owners, builder().name("Fire Station").artifactType(ArtifactType.WAR).build());
+    final Service archive =
+        serviceGenerator.ensureService(seed, owners, builder().name("Archive").artifactType(ArtifactType.WAR).build());
 
-    final Service police =
-        serviceGenerator.ensureService(seed, owners, builder().name("Police").artifactType(ArtifactType.WAR).build());
+    final Service factory =
+        serviceGenerator.ensureService(seed, owners, builder().name("Factory").artifactType(ArtifactType.WAR).build());
 
-    final Service housing =
-        serviceGenerator.ensureService(seed, owners, builder().name("Housing").artifactType(ArtifactType.WAR).build());
+    final Service warehouse = serviceGenerator.ensureService(
+        seed, owners, builder().name("Warehouse").artifactType(ArtifactType.WAR).build());
 
     final SettingAttribute gitSourceSettingAttribute =
         settingGenerator.ensurePredefined(seed, Settings.TERRAFORM_TEST_GIT_REPO);
@@ -83,28 +83,28 @@ public class InfrastructureProvisionerGenerator {
                     .build()))
             .mappingBlueprints(asList(
                 InfrastructureMappingBlueprint.builder()
-                    .serviceId(fireStation.getUuid())
+                    .serviceId(archive.getUuid())
                     .deploymentType(SSH)
                     .cloudProviderType(AWS)
                     .properties(asList(NameValuePair.builder().name("region").value("${terraform.region}").build(),
                         NameValuePair.builder().name("securityGroups").value("${terraform.security_group}").build(),
-                        NameValuePair.builder().name("tags").value("${terraform.firestation_tags}").build()))
+                        NameValuePair.builder().name("tags").value("${terraform.archive_tags}").build()))
                     .build(),
                 InfrastructureMappingBlueprint.builder()
-                    .serviceId(police.getUuid())
+                    .serviceId(factory.getUuid())
                     .deploymentType(SSH)
                     .cloudProviderType(AWS)
                     .properties(asList(NameValuePair.builder().name("region").value("${terraform.region}").build(),
                         NameValuePair.builder().name("securityGroups").value("${terraform.security_group}").build(),
-                        NameValuePair.builder().name("tags").value("${terraform.policy_tags}").build()))
+                        NameValuePair.builder().name("tags").value("${terraform.factory_tags}").build()))
                     .build(),
                 InfrastructureMappingBlueprint.builder()
-                    .serviceId(housing.getUuid())
+                    .serviceId(warehouse.getUuid())
                     .deploymentType(SSH)
                     .cloudProviderType(AWS)
                     .properties(asList(NameValuePair.builder().name("region").value("${terraform.region}").build(),
                         NameValuePair.builder().name("securityGroups").value("${terraform.security_group}").build(),
-                        NameValuePair.builder().name("tags").value("${terraform.housing_tags}").build()))
+                        NameValuePair.builder().name("tags").value("${terraform.warehouse_tags}").build()))
                     .build()))
             .build();
 

@@ -29,13 +29,13 @@ public class InfrastructureProvisionerServiceIntegrationTest extends BaseIntegra
     final InfrastructureProvisioner infrastructureProvisioner = infrastructureProvisionerGenerator.ensureRandom(seed);
     final InfrastructureMappingBlueprint mappingBlueprint = infrastructureProvisioner.getMappingBlueprints().get(0);
 
-    List<InfrastructureProvisioner> provisioners = infrastructureProvisionerService.listForTask(
+    List<InfrastructureProvisioner> provisioners = infrastructureProvisionerService.listByBlueprintDetails(
         infrastructureProvisioner.getAppId(), infrastructureProvisioner.getInfrastructureProvisionerType(),
         mappingBlueprint.getServiceId(), mappingBlueprint.getDeploymentType(), mappingBlueprint.getCloudProviderType());
 
     assertThat(provisioners.size()).isEqualTo(1);
 
-    provisioners = infrastructureProvisionerService.listForTask(infrastructureProvisioner.getAppId(),
+    provisioners = infrastructureProvisionerService.listByBlueprintDetails(infrastructureProvisioner.getAppId(),
         infrastructureProvisioner.getInfrastructureProvisionerType(), generateUuid(),
         mappingBlueprint.getDeploymentType(), mappingBlueprint.getCloudProviderType());
 

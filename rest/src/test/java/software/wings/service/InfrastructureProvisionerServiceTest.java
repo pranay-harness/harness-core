@@ -205,7 +205,7 @@ public class InfrastructureProvisionerServiceTest extends WingsBaseTest {
         .isInstanceOf(InvalidRequestException.class);
 
     outputs.put("security_group", asList("dummy-securityGroups"));
-    outputs.put("firestation_tags", ImmutableMap.<String, Object>of("a", "b"));
+    outputs.put("archive_tags", ImmutableMap.<String, Object>of("a", "b"));
     infrastructureProvisionerService.regenerateInfrastructureMappings(
         infrastructureProvisioner.getUuid(), context, outputs);
 
