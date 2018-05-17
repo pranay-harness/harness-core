@@ -215,6 +215,9 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       Map<String, Object> contextMap, InfrastructureMapping infrastructureMapping, List<NameValuePair> properties) {
     final Map<String, Object> stringMap = new HashMap<>();
     for (NameValuePair property : properties) {
+      if (property.getValue() == null) {
+        continue;
+      }
       final Object evaluated = evaluator.evaluate(property.getValue(), contextMap);
       if (evaluated == null) {
         throw new InvalidRequestException(
