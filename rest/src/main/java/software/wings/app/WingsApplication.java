@@ -4,6 +4,7 @@ import static com.google.common.collect.ImmutableMap.of;
 import static com.google.inject.matcher.Matchers.not;
 import static java.time.Duration.ofSeconds;
 import static software.wings.app.LoggingInitializer.initializeLogging;
+import static software.wings.common.Constants.STARTUP_MAINTENANCE;
 import static software.wings.common.Constants.USER_CACHE;
 
 import com.google.inject.AbstractModule;
@@ -32,6 +33,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import org.apache.commons.io.FileUtils;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
@@ -77,6 +79,8 @@ import software.wings.waitnotify.Notifier;
 import software.wings.waitnotify.NotifyResponseCleanupHandler;
 import software.wings.yaml.gitSync.GitChangeSetRunnable;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -143,6 +147,13 @@ public class WingsApplication extends Application<MainConfiguration> {
   @Override
   public void run(final MainConfiguration configuration, Environment environment) {
     logger.info("Starting app ...");
+    File startupMaintenance = new File(STARTUP_MAINTENANCE);
+    try {
+      logger.info("Entering startup maintenance mode");
+      FileUtils.touch(startupMaintenance);
+    } catch (IOException e) {
+      logger.error("Error creating {} file", STARTUP_MAINTENANCE, e);
+    }
     DatabaseModule databaseModule = new DatabaseModule(configuration);
 
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()
@@ -242,6 +253,14 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     runMigrations(injector);
 
+    if (startupMaintenance.exists()) {
+      try {
+        logger.info("Leaving startup maintenance mode");
+        FileUtils.forceDelete(startupMaintenance);
+      } catch (IOException e) {
+        logger.error("Error deleting {} file", STARTUP_MAINTENANCE, e);
+      }
+    }
     logger.info("Starting app done");
   }
 
