@@ -15,10 +15,7 @@ import static software.wings.utils.message.MessengerType.WATCHER;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.util.concurrent.SimpleTimeLimiter;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
-import io.harness.threading.ThreadPool;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,9 +28,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 public class MessageServiceTest {
   private final MessengerType MESSENGER_TYPE = DELEGATE;
@@ -59,13 +53,7 @@ public class MessageServiceTest {
 
     Clock clock = mock(Clock.class);
     when(clock.millis()).thenReturn(100L);
-
-    final ThreadFactory threadFactory =
-        new ThreadFactoryBuilder().setNameFormat("test-%d").setPriority(Thread.MIN_PRIORITY).build();
-    final ThreadPoolExecutor threadPoolExecutor = ThreadPool.create(5, 5, 0, TimeUnit.MILLISECONDS, threadFactory);
-
-    messageService =
-        new MessageServiceImpl(SimpleTimeLimiter.create(threadPoolExecutor), clock, MESSENGER_TYPE, processId);
+    messageService = new MessageServiceImpl(clock, MESSENGER_TYPE, processId);
 
     messageFile = new File("msg/io/delegate/" + processId);
     otherMessageFile = new File("msg/io/watcher/" + otherProcessId);

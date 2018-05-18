@@ -9,6 +9,7 @@ import static software.wings.utils.ArtifactType.DOCKER;
 import static software.wings.utils.ArtifactType.WAR;
 
 import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -33,7 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import javax.xml.stream.XMLStreamException;
 
 /**
@@ -109,8 +109,8 @@ public class NexusServiceImpl implements NexusService {
                 .addParam("message", "Not supported for Nexus 3.x version");
           }
         }
-      }, 20L, TimeUnit.SECONDS);
-    } catch (TimeoutException e) {
+      }, 20L, TimeUnit.SECONDS, true);
+    } catch (UncheckedTimeoutException e) {
       logger.warn("Nexus server request did not succeed within 20 secs");
       throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
           .addParam("message", "Nexus server took too long to respond");
@@ -135,8 +135,8 @@ public class NexusServiceImpl implements NexusService {
                                              -> isNexusTwo
               ? nexusTwoService.getGroupIdPaths(nexusConfig, encryptionDetails, repoId)
               : nexusThreeService.getDockerImages(nexusConfig, encryptionDetails, repoId),
-          20L, TimeUnit.SECONDS);
-    } catch (TimeoutException e) {
+          20L, TimeUnit.SECONDS, true);
+    } catch (UncheckedTimeoutException e) {
       logger.warn("Nexus server request did not succeed within 20 secs");
       throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
           .addParam("message", "Nexus server took too long to respond");

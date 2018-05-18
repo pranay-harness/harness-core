@@ -119,14 +119,7 @@
             <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
-                <version>25.0-jre</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.google.guava</groupId>
-                <artifactId>guava-testlib</artifactId>
-                <version>25.0-jre</version>
-                <scope>test</scope>
+                <version>21.0</version>
             </dependency>
 
             <dependency>
@@ -931,6 +924,13 @@
                 <groupId>com.openpojo</groupId>
                 <artifactId>openpojo</artifactId>
                 <version>0.8.3</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava-testlib</artifactId>
+                <version>18.0</version>
                 <scope>test</scope>
             </dependency>
 

@@ -1,4 +1,4 @@
-package io.harness.threading;
+package software.wings.common.thread;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

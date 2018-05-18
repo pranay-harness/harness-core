@@ -1,4 +1,4 @@
-package io.harness.threading;
+package software.wings.common.thread;
 
 import static io.harness.threading.Morpheus.quietSleep;
 

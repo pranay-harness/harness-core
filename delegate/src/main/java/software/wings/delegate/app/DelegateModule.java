@@ -10,7 +10,6 @@ import com.google.inject.name.Names;
 
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
-import io.harness.threading.ThreadPool;
 import software.wings.api.DeploymentType;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.AwsClusterServiceImpl;
@@ -22,6 +21,7 @@ import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.GkeClusterServiceImpl;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.cloudprovider.gke.KubernetesContainerServiceImpl;
+import software.wings.common.thread.ThreadPool;
 import software.wings.core.ssh.executors.SshExecutorFactory;
 import software.wings.delegate.service.DelegateConfigServiceImpl;
 import software.wings.delegate.service.DelegateFileManagerImpl;
@@ -142,8 +142,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -194,18 +192,12 @@ public class DelegateModule extends AbstractModule {
     int cores = Runtime.getRuntime().availableProcessors();
     int corePoolSize = 20 * cores;
     int maxPoolSize = Math.max(corePoolSize, 500);
-
-    final ThreadFactory threadFactory =
-        new ThreadFactoryBuilder().setNameFormat("delegate-task-%d").setPriority(Thread.MIN_PRIORITY).build();
-    final ThreadPoolExecutor threadPoolExecutor =
-        ThreadPool.create(corePoolSize, maxPoolSize, 0, TimeUnit.MILLISECONDS, threadFactory);
-    bind(ExecutorService.class).toInstance(threadPoolExecutor);
+    bind(ExecutorService.class)
+        .toInstance(ThreadPool.create(corePoolSize, maxPoolSize, 0, TimeUnit.MILLISECONDS,
+            new ThreadFactoryBuilder().setNameFormat("delegate-task-%d").setPriority(Thread.MIN_PRIORITY).build()));
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
     bind(DelegateFileManager.class).to(DelegateFileManagerImpl.class).asEagerSingleton();
-
-    final SimpleTimeLimiter simpleTimeLimiter = SimpleTimeLimiter.create(threadPoolExecutor);
-
-    bind(TimeLimiter.class).toInstance(simpleTimeLimiter);
+    bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
     bind(ServiceCommandExecutorService.class).to(ServiceCommandExecutorServiceImpl.class);
     bind(SshExecutorFactory.class);
     bind(DelegateLogService.class).to(DelegateLogServiceImpl.class);
@@ -259,10 +251,9 @@ public class DelegateModule extends AbstractModule {
     bind(HelmClient.class).to(HelmClientImpl.class);
     bind(HelmDeployService.class).to(HelmDeployServiceImpl.class);
     bind(ContainerDeploymentDelegateHelper.class);
-
     bind(MessageService.class)
-        .toInstance(new MessageServiceImpl(
-            simpleTimeLimiter, Clock.systemUTC(), MessengerType.DELEGATE, DelegateApplication.getProcessId()));
+        .toInstance(
+            new MessageServiceImpl(Clock.systemUTC(), MessengerType.DELEGATE, DelegateApplication.getProcessId()));
     bind(PcfClient.class).to(PcfClientImpl.class);
     bind(PcfDeploymentManager.class).to(PcfDeploymentManagerImpl.class);
 

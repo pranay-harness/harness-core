@@ -1,9 +1,7 @@
 package software.wings.app;
 
-import static io.harness.threading.ThreadPool.create;
+import static software.wings.common.thread.ThreadPool.create;
 
-import com.google.common.util.concurrent.SimpleTimeLimiter;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 
@@ -60,6 +58,5 @@ public class ExecutorModule extends AbstractModule {
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("gitChangeSet"))
         .toInstance(new ManagedScheduledExecutorService("GitChangeSet"));
-    bind(TimeLimiter.class).toInstance(SimpleTimeLimiter.create(executorService));
   }
 }

@@ -9,7 +9,6 @@ import static software.wings.waitnotify.StringNotifyResponseData.Builder.aString
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
-import io.harness.threading.ThreadPool;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +16,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionStrategy;
 import software.wings.common.InstanceExpressionProcessor;
+import software.wings.common.thread.ThreadPool;
 import software.wings.exception.WingsException;
 import software.wings.rules.Listeners;
 import software.wings.service.StaticMap;

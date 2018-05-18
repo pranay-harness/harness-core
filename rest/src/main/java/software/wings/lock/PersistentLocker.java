@@ -73,7 +73,7 @@ public class PersistentLocker implements Locker {
             sleep(ofMillis(100));
           }
         }
-      }, waitTimeout.toMillis(), TimeUnit.MILLISECONDS);
+      }, waitTimeout.toMillis(), TimeUnit.MILLISECONDS, true);
     } catch (Exception e) {
       throw new WingsException(GENERAL_ERROR, NOBODY)
           .addParam("message", format("Failed to acquire distributed lock for %s within %s", name, waitTimeout));
