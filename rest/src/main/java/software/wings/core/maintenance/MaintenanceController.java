@@ -2,6 +2,8 @@ package software.wings.core.maintenance;
 
 import static io.harness.threading.Morpheus.sleep;
 import static java.util.Collections.synchronizedSet;
+import static software.wings.common.Constants.MAINTENANCE;
+import static software.wings.common.Constants.STARTUP_MAINTENANCE;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -52,10 +54,10 @@ public class MaintenanceController implements Managed {
    * @see io.dropwizard.lifecycle.Managed#start()
    */
   @Override
-  public void start() throws Exception {
+  public void start() {
     executorService.submit(() -> {
       while (running.get()) {
-        boolean isMaintenance = new File(Constants.MAINTENANCE).exists();
+        boolean isMaintenance = new File(MAINTENANCE).exists() || new File(STARTUP_MAINTENANCE).exists();
         if (maintenance.getAndSet(isMaintenance) != isMaintenance) {
           logger.info("{} maintenance mode", isMaintenance ? "Entering" : "Leaving");
           synchronized (maintenanceListeners) {
@@ -72,7 +74,7 @@ public class MaintenanceController implements Managed {
    * @see io.dropwizard.lifecycle.Managed#stop()
    */
   @Override
-  public void stop() throws Exception {
+  public void stop() {
     running.set(false);
   }
 }
