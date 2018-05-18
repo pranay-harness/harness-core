@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.helm;
 
 import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -71,10 +72,10 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       timeLimiter.callWithTimeout(
           ()
               -> containerInfos.addAll(fetchContainerInfo(commandRequest, executionLogCallback)),
-          commandRequest.getTimeoutInMillis(), TimeUnit.MILLISECONDS);
+          commandRequest.getTimeoutInMillis(), TimeUnit.MILLISECONDS, true);
       commandResponse.setContainerInfoList(containerInfos);
       return commandResponse;
-    } catch (TimeoutException e) {
+    } catch (UncheckedTimeoutException e) {
       String msg = "Timed out waiting for controller to reach in steady state";
       logger.error(msg, e);
       executionLogCallback.saveExecutionLog(
@@ -106,10 +107,10 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       timeLimiter.callWithTimeout(
           ()
               -> containerInfos.addAll(fetchContainerInfo(commandRequest, executionLogCallback)),
-          commandRequest.getTimeoutInMillis(), TimeUnit.MILLISECONDS);
+          commandRequest.getTimeoutInMillis(), TimeUnit.MILLISECONDS, true);
       commandResponse.setContainerInfoList(containerInfos);
       return commandResponse;
-    } catch (TimeoutException e) {
+    } catch (UncheckedTimeoutException e) {
       String msg = "Timed out waiting for controller to reach in steady state";
       logger.error(msg, e);
       executionLogCallback.saveExecutionLog(

@@ -5,6 +5,7 @@ import static software.wings.utils.SshHelperUtil.getSshSessionConfig;
 import static software.wings.utils.SshHelperUtil.normalizeError;
 
 import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -27,7 +28,6 @@ import software.wings.sm.ExecutionStatus;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 @Singleton
 public class HostValidationServiceImpl implements HostValidationService {
@@ -67,8 +67,8 @@ public class HostValidationServiceImpl implements HostValidationService {
           hostValidationResponses.add(response);
         });
         return true;
-      }, 1, TimeUnit.MINUTES);
-    } catch (TimeoutException ex) {
+      }, 1, TimeUnit.MINUTES, true);
+    } catch (UncheckedTimeoutException ex) {
       logger.warn("Host validation timed out", ex);
       // populate timeout error for rest of the hosts
       for (int idx = hostValidationResponses.size(); idx < hostNames.size(); idx++) {

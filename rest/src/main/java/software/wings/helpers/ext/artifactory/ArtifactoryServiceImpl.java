@@ -27,6 +27,7 @@ import static software.wings.exception.WingsException.USER;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -76,7 +77,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.regex.Pattern;
 
 /**
@@ -496,8 +496,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
           quietSleep(ofMillis(10)); // avoid busy wait
         }
         return new ArrayList<>(groupIds);
-      }, 20L, TimeUnit.SECONDS);
-    } catch (TimeoutException e) {
+      }, 20L, TimeUnit.SECONDS, true);
+    } catch (UncheckedTimeoutException e) {
       logger.warn("Failed to fetch all groupIds within 20 secs. Returning all groupIds collected so far", e);
     } catch (Exception e) {
       logger.warn("Error fetching all groupIds. Returning all groupIds collected so far", e);

@@ -47,18 +47,13 @@ public class WatcherModule extends AbstractModule {
     int cores = Runtime.getRuntime().availableProcessors();
     int corePoolSize = 2 * cores;
     int maximumPoolSize = Math.max(corePoolSize, 200);
-    final ThreadPoolExecutor threadPoolExecutor =
-        new ThreadPoolExecutor(corePoolSize, maximumPoolSize, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(),
-            new ThreadFactoryBuilder().setNameFormat("watcher-task-%d").build());
-    bind(ExecutorService.class).toInstance(threadPoolExecutor);
-
-    final SimpleTimeLimiter simpleTimeLimiter = SimpleTimeLimiter.create(threadPoolExecutor);
-    final Clock clock = Clock.systemUTC();
-
+    bind(ExecutorService.class)
+        .toInstance(new ThreadPoolExecutor(corePoolSize, maximumPoolSize, 0L, TimeUnit.MILLISECONDS,
+            new LinkedBlockingQueue<>(), new ThreadFactoryBuilder().setNameFormat("watcher-task-%d").build()));
     bind(MessageService.class)
         .toInstance(
-            new MessageServiceImpl(simpleTimeLimiter, clock, MessengerType.WATCHER, WatcherApplication.getProcessId()));
-    bind(TimeLimiter.class).toInstance(simpleTimeLimiter);
-    bind(Clock.class).toInstance(clock);
+            new MessageServiceImpl(Clock.systemUTC(), MessengerType.WATCHER, WatcherApplication.getProcessId()));
+    bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
+    bind(Clock.class).toInstance(Clock.systemUTC());
   }
 }

@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.external.comm.handlers;
 
+import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -33,7 +34,7 @@ public class EmailHandler implements CollaborationHandler {
   @Inject private EmailUtil emailHelperUtil;
   private static Logger logger = LoggerFactory.getLogger(EmailHandler.class);
   @Inject @Transient private transient EncryptionService encryptionService;
-  @Inject private TimeLimiter timeLimiter;
+  private static final TimeLimiter timeLimiter = new SimpleTimeLimiter();
 
   @Override
   public CollaborationProviderResponse handle(CollaborationProviderRequest request) {
@@ -88,7 +89,7 @@ public class EmailHandler implements CollaborationHandler {
         }
 
         return result;
-      }, 5000, TimeUnit.MILLISECONDS);
+      }, 5000, TimeUnit.MILLISECONDS, true);
     } catch (Exception e) {
       logger.warn("Failed to validate email delegate communication", e);
     }

@@ -23,6 +23,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -235,7 +236,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 /**
@@ -1356,8 +1356,8 @@ public class AwsHelperService {
           }
           sleep(ofSeconds(AUTOSCALING_REQUEST_STATUS_CHECK_INTERVAL));
         }
-      }, autoScalingSteadyStateTimeout, TimeUnit.MINUTES);
-    } catch (TimeoutException e) {
+      }, autoScalingSteadyStateTimeout, TimeUnit.MINUTES, true);
+    } catch (UncheckedTimeoutException e) {
       executionLogCallback.saveExecutionLog(
           "Request timeout. AutoScaling group couldn't reach steady state", CommandExecutionStatus.FAILURE);
       throw new WingsException(INIT_TIMEOUT)
@@ -1632,8 +1632,8 @@ public class AwsHelperService {
               completedActivities, callback, false);
           sleep(ofSeconds(AUTOSCALING_REQUEST_STATUS_CHECK_INTERVAL));
         }
-      }, 1L, TimeUnit.MINUTES);
-    } catch (TimeoutException e) {
+      }, 1L, TimeUnit.MINUTES, true);
+    } catch (UncheckedTimeoutException e) {
       throw new WingsException(INIT_TIMEOUT)
           .addParam("message", "Timed out waiting for autoscaling group to be deleted");
     } catch (WingsException e) {

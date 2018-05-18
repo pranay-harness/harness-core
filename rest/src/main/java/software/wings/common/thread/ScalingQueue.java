@@ -1,4 +1,4 @@
-package io.harness.threading;
+package software.wings.common.thread;
 
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;

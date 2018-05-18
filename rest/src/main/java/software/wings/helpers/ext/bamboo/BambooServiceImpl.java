@@ -7,6 +7,7 @@ import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDeta
 
 import com.google.common.base.Joiner;
 import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -43,7 +44,6 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.regex.Pattern;
 
 /**
@@ -175,8 +175,8 @@ public class BambooServiceImpl implements BambooService {
         }
         logger.info("Retrieving plan keys for bamboo server {} success", bambooConfig);
         return planNameMap;
-      }, 20L, TimeUnit.SECONDS);
-    } catch (TimeoutException e) {
+      }, 20L, TimeUnit.SECONDS, true);
+    } catch (UncheckedTimeoutException e) {
       logger.warn("Bamboo server request did not succeed within 20 secs");
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
           .addParam("message", "Bamboo server took too long to respond");
@@ -239,8 +239,8 @@ public class BambooServiceImpl implements BambooService {
               .addParam("message",
                   "Error in fetching builds from bamboo server. Reason:" + ExceptionUtils.getRootCauseMessage(e));
         }
-      }, 20L, TimeUnit.SECONDS);
-    } catch (TimeoutException e) {
+      }, 20L, TimeUnit.SECONDS, true);
+    } catch (UncheckedTimeoutException e) {
       logger.warn("Bamboo server request did not succeed within 20 secs");
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
           .addParam("message", "Bamboo server took too long to respond");
@@ -267,8 +267,8 @@ public class BambooServiceImpl implements BambooService {
                   .collect(toList())));
         }
         return artifactPaths;
-      }, 20L, TimeUnit.SECONDS);
-    } catch (TimeoutException e) {
+      }, 20L, TimeUnit.SECONDS, true);
+    } catch (UncheckedTimeoutException e) {
       logger.warn("Bamboo server request did not succeed within 20 secs");
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
           .addParam("message", "Bamboo server took too long to respond");

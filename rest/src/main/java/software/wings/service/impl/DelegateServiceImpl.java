@@ -49,6 +49,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -118,7 +119,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -666,8 +666,8 @@ public class DelegateServiceImpl implements DelegateService {
           }
         }
         return true;
-      }, task.getTimeout(), TimeUnit.MILLISECONDS);
-    } catch (TimeoutException e) {
+      }, task.getTimeout(), TimeUnit.MILLISECONDS, true);
+    } catch (UncheckedTimeoutException e) {
       logger.info("Timed out waiting for sync task {}", delegateTask.getUuid());
     } catch (Exception e) {
       logger.error("Exception", e);
@@ -1075,7 +1075,7 @@ public class DelegateServiceImpl implements DelegateService {
           }
           sleep(ofSeconds(2L));
         }
-      }, 10L, TimeUnit.MINUTES);
+      }, 10L, TimeUnit.MINUTES, true);
     } catch (Exception ex) {
       logger.warn("Failed to delete delegate tasks older than {} hours within 10 minutes.", hours, ex);
     }

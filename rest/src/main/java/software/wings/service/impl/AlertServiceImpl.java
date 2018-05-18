@@ -247,7 +247,7 @@ public class AlertServiceImpl implements AlertService {
           }
           sleep(ofSeconds(2L));
         }
-      }, 10L, TimeUnit.MINUTES);
+      }, 10L, TimeUnit.MINUTES, true);
     } catch (Exception ex) {
       logger.warn("Failed to delete alerts older than {} days within 10 minutes.", days, ex);
     }

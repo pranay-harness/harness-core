@@ -9,7 +9,9 @@ import static org.apache.commons.io.filefilter.FileFileFilter.FILE;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
@@ -33,7 +35,6 @@ import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
@@ -57,12 +58,11 @@ public class MessageServiceImpl implements MessageService {
   private final MessengerType messengerType;
   private final String processId;
 
-  private final TimeLimiter timeLimiter;
+  private final TimeLimiter timeLimiter = new SimpleTimeLimiter();
   private final Map<File, Long> messageTimestamps = new HashMap<>();
   private final Map<File, BlockingQueue<Message>> messageQueues = new HashMap<>();
 
-  public MessageServiceImpl(TimeLimiter timeLimiter, Clock clock, MessengerType messengerType, String processId) {
-    this.timeLimiter = timeLimiter;
+  public MessageServiceImpl(Clock clock, MessengerType messengerType, String processId) {
     this.clock = clock;
     this.messengerType = messengerType;
     this.processId = processId;
@@ -166,8 +166,8 @@ public class MessageServiceImpl implements MessageService {
           reader.close();
           Thread.sleep(100L);
         }
-      }, timeout, TimeUnit.MILLISECONDS);
-    } catch (TimeoutException e) {
+      }, timeout, TimeUnit.MILLISECONDS, true);
+    } catch (UncheckedTimeoutException e) {
       logger.debug("Timed out reading message from channel {} {}", sourceType, sourceProcessId);
     } catch (Exception e) {
       logger.error("Error reading message from channel {} {}", sourceType, sourceProcessId, e);
@@ -238,11 +238,9 @@ public class MessageServiceImpl implements MessageService {
           }
         }
         return message;
-      }, timeout, TimeUnit.MILLISECONDS);
-    } catch (TimeoutException e) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("Timed out waiting for message {} from channel {} {}", messageName, sourceType, sourceProcessId);
-      }
+      }, timeout, TimeUnit.MILLISECONDS, true);
+    } catch (UncheckedTimeoutException e) {
+      logger.debug("Timed out waiting for message {} from channel {} {}", messageName, sourceType, sourceProcessId);
     } catch (Exception e) {
       logger.error(
           "Error while waiting for message {} from channel {} {}", messageName, sourceType, sourceProcessId, e);
@@ -276,17 +274,15 @@ public class MessageServiceImpl implements MessageService {
                   Thread.currentThread().interrupt();
                 }
               }
-            }, minWaitTime, TimeUnit.MILLISECONDS);
-          } catch (TimeoutException e) {
+            }, minWaitTime, TimeUnit.MILLISECONDS, true);
+          } catch (UncheckedTimeoutException e) {
             // Do nothing
           }
         }
         return messages;
-      }, timeout, TimeUnit.MILLISECONDS);
-    } catch (TimeoutException e) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("Timed out waiting for message {} from channel {} {}", messageName, sourceType, sourceProcessId);
-      }
+      }, timeout, TimeUnit.MILLISECONDS, true);
+    } catch (UncheckedTimeoutException e) {
+      logger.debug("Timed out waiting for message {} from channel {} {}", messageName, sourceType, sourceProcessId);
     } catch (Exception e) {
       logger.error(
           "Error while waiting for message {} from channel {} {}", messageName, sourceType, sourceProcessId, e);
