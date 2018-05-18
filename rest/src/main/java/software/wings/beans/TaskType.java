@@ -60,6 +60,7 @@ import software.wings.delegatetasks.validation.PrometheusValidation;
 import software.wings.delegatetasks.validation.ShellScriptValidation;
 import software.wings.delegatetasks.validation.SplunkValidation;
 import software.wings.delegatetasks.validation.SumoValidation;
+import software.wings.delegatetasks.validation.TerraformValidation;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
@@ -182,7 +183,7 @@ public enum TaskType {
       TaskGroup.CLOUD_WATCH, CloudWatchDataCollectionTask.class, AlwaysTrueValidation.class),
   APM_METRIC_DATA_COLLECTION_TASK(TaskGroup.APM, APMDataCollectionTask.class, APMValidation.class),
   CLOUD_FORMATION_TASK(TaskGroup.CLOUD_FORMATION, CloudFormationCommandTask.class, AlwaysTrueValidation.class),
-  TERRAFORM_PROVISION_TASK(TaskGroup.TERRAFORM, TerraformProvisionTask.class, AlwaysTrueValidation.class);
+  TERRAFORM_PROVISION_TASK(TaskGroup.TERRAFORM, TerraformProvisionTask.class, TerraformValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;

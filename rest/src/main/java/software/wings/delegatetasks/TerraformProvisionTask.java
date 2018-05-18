@@ -45,9 +45,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
-/**
- * Created by anubhaw on 10/26/17.
- */
 public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   private static final Logger logger = LoggerFactory.getLogger(TerraformProvisionTask.class);
   private static final String TERRAFORM_STATE_FILE_NAME = "terraform.tfstate";
