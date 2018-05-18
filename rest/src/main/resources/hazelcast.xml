@@ -79,17 +79,6 @@
                     </properties>
                 </discovery-strategy>
 
-                <discovery-strategy enabled="false" class="com.hazelcast.kubernetes.HazelcastKubernetesDiscoveryStrategy">
-
-                    <properties>
-                        <!-- configure discovery service API lookup -->
-                        <property name="service-name">harness-manager</property>
-                        <property name="service-label-name">harness-service</property>
-                        <property name="service-label-value">manager-docker</property>
-                        <property name="namespace">harness</property>
-                    </properties>
-                </discovery-strategy>
-
             </discovery-strategies>
         </join>
         <interfaces enabled="false">
