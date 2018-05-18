@@ -660,7 +660,7 @@ public interface Constants {
   /**
    * The constant DEFAULT_WINDOWS_RUNTIME_PATH.
    */
-  String DEFAULT_WINDOWS_RUNTIME_PATH = "%USERPROFILE%/${app.name}/${service.name}/${env.name}/runtime";
+  String DEFAULT_WINDOWS_RUNTIME_PATH = "%USERPROFILE%\\${app.name}\\${service.name}\\${env.name}\\runtime";
   /**
    * The constant RUNTIME_PATH.
    */

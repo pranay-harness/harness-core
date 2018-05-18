@@ -39,7 +39,11 @@ import java.util.Map;
 public class CatalogServiceImpl implements CatalogService {
   private static final Logger logger = LoggerFactory.getLogger(CatalogServiceImpl.class);
   private Map<String, List<CatalogItem>> catalogs;
-  private static final CatalogItem iisCatalogItem = aCatalogItem().withName("IIS Website").withValue("IIS").build();
+  private static final CatalogItem iisSiteCatalogItem = aCatalogItem().withName("IIS Website").withValue("IIS").build();
+  private static final CatalogItem iisAppCatalogItem =
+      aCatalogItem().withName("IIS Application").withValue("IIS_APP").build();
+  private static final CatalogItem iisVirtualDirectoryCatalogItem =
+      aCatalogItem().withName("IIS Virtual Directory").withValue("IIS_VirtualDirectory").build();
 
   /**
    * Instantiates a new catalog service impl.
@@ -54,7 +58,9 @@ public class CatalogServiceImpl implements CatalogService {
       catalogs = yamlUtils.read(yaml, new TypeReference<Map<String, List<CatalogItem>>>() {});
 
       if (featureFlagService.isEnabled(WINRM_SUPPORT, GLOBAL_ACCOUNT_ID)) {
-        catalogs.get("ARTIFACT_TYPE").add(iisCatalogItem);
+        catalogs.get("ARTIFACT_TYPE").add(iisSiteCatalogItem);
+        catalogs.get("ARTIFACT_TYPE").add(iisAppCatalogItem);
+        catalogs.get("ARTIFACT_TYPE").add(iisVirtualDirectoryCatalogItem);
       }
 
       for (List<CatalogItem> catalogItems : catalogs.values()) {

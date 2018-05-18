@@ -1507,7 +1507,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       infraTypes.put(AWS_LAMBDA, asList(SettingVariableTypes.AWS));
     } else if (artifactType == ArtifactType.AMI) {
       infraTypes.put(AMI, asList(SettingVariableTypes.AWS));
-    } else if (artifactType == ArtifactType.IIS) {
+    } else if (artifactType == ArtifactType.IIS || artifactType == ArtifactType.IIS_APP
+        || artifactType == ArtifactType.IIS_VirtualDirectory) {
       infraTypes.put(WINRM, asList(SettingVariableTypes.PHYSICAL_DATA_CENTER));
     } else if (artifactType == ArtifactType.PCF) {
       String accountId = appService.getAccountIdByAppId(appId);
