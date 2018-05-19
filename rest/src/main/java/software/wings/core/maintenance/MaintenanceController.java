@@ -3,7 +3,6 @@ package software.wings.core.maintenance;
 import static io.harness.threading.Morpheus.sleep;
 import static java.util.Collections.synchronizedSet;
 import static software.wings.common.Constants.MAINTENANCE;
-import static software.wings.common.Constants.STARTUP_MAINTENANCE;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -29,8 +28,12 @@ public class MaintenanceController implements Managed {
   private static Boolean forceMaintenance;
   private static final AtomicBoolean maintenance = new AtomicBoolean(true);
 
-  public static void forceMaintenance(Boolean force) {
+  public static void forceMaintenance(boolean force) {
     forceMaintenance = force;
+  }
+
+  public static void unforceMaintenance() {
+    forceMaintenance = null;
   }
 
   public static boolean isMaintenance() {
@@ -56,7 +59,7 @@ public class MaintenanceController implements Managed {
   public void start() {
     executorService.submit(() -> {
       while (running.get()) {
-        boolean isMaintenance = new File(MAINTENANCE).exists() || new File(STARTUP_MAINTENANCE).exists();
+        boolean isMaintenance = new File(MAINTENANCE).exists();
         if (maintenance.getAndSet(isMaintenance) != isMaintenance) {
           logger.info("{} maintenance mode", isMaintenance ? "Entering" : "Leaving");
           synchronized (maintenanceListeners) {
