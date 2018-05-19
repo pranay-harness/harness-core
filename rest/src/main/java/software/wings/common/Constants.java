@@ -441,7 +441,6 @@ public interface Constants {
    * The constant MAINTENANCE.
    */
   String MAINTENANCE = "maintenance";
-  String STARTUP_MAINTENANCE = "startup-maintenance";
 
   /**
    * The constant DELEGATE_DIR.
