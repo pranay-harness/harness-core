@@ -859,6 +859,23 @@ public enum ArtifactType {
     }
   },
 
+  /**
+   * Other artifact type.
+   */
+  OTHER {
+    private static final long serialVersionUID = 2932493038229748527L;
+
+    @Override
+    public boolean isInternal() {
+      return false;
+    }
+
+    @Override
+    public List<Command> getDefaultCommands() {
+      return emptyList();
+    }
+  },
+
   IIS_APP {
     private static final long serialVersionUID = 2932493038229748527L;
 
@@ -950,23 +967,6 @@ public enum ArtifactType {
                                  .build())
                          .buildPipeline())
           .build();
-    }
-  },
-
-  /**
-   * Other artifact type.
-   */
-  OTHER {
-    private static final long serialVersionUID = 2932493038229748527L;
-
-    @Override
-    public boolean isInternal() {
-      return false;
-    }
-
-    @Override
-    public List<Command> getDefaultCommands() {
-      return emptyList();
     }
   };
 

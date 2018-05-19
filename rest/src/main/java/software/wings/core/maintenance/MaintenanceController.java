@@ -11,7 +11,6 @@ import com.google.inject.Singleton;
 import io.dropwizard.lifecycle.Managed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.common.Constants;
 
 import java.io.File;
 import java.time.Duration;
