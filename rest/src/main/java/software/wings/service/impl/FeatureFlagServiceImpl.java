@@ -11,6 +11,7 @@ import static software.wings.dl.HQuery.excludeAuthority;
 
 import com.google.api.client.repackaged.com.google.common.base.Splitter;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,12 +22,16 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FeatureFlagService;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import javax.validation.constraints.NotNull;
 
+@Singleton
 public class FeatureFlagServiceImpl implements FeatureFlagService {
   private static final Logger logger = LoggerFactory.getLogger(FeatureFlagServiceImpl.class);
 
@@ -34,14 +39,29 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
   @Inject private Clock clock;
   @Inject private MainConfiguration mainConfiguration;
 
+  long lastEpoch;
+  Map<FeatureName, FeatureFlag> cache = new HashMap<>();
+
   @Override
   public boolean isEnabled(@NotNull FeatureName featureName, String accountId) {
-    FeatureFlag featureFlag =
-        wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", featureName.name()).get();
+    FeatureFlag featureFlag = null;
+
+    synchronized (cache) {
+      // if the last access to cache was in different epoch reset it. This will allow for potentially outdated
+      // objects to be replaced, and the potential change will be in a relatively same time on all managers.
+      long epoch = System.currentTimeMillis() / Duration.ofMinutes(5).toMillis();
+      if (lastEpoch != epoch) {
+        lastEpoch = epoch;
+        cache.clear();
+      }
+
+      featureFlag = cache.computeIfAbsent(featureName,
+          key -> wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", key).get());
+    }
 
     if (featureFlag == null) {
       // we don't want to throw an exception - we just want to log the error
-      logger.info("FeatureFlag {} not found.", featureName.name());
+      logger.error("FeatureFlag {} not found.", featureName);
       return false;
     }
 
