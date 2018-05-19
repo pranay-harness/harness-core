@@ -15,6 +15,7 @@ import software.wings.api.AwsAutoScalingGroupDeploymentInfo;
 import software.wings.api.ContainerServiceData;
 import software.wings.api.DeploymentInfo;
 import software.wings.api.PhaseExecutionData;
+import software.wings.api.PhaseStepExecutionData;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.InfrastructureMapping;
@@ -22,7 +23,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.instance.Instance;
-import software.wings.common.Constants;
 import software.wings.exception.HarnessException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.sm.PhaseStepExecutionSummary;
@@ -94,12 +94,12 @@ public class AwsAmiInstanceHandler extends AwsInstanceHandler {
   /**
    * Returns the auto scaling group names
    */
-  private List<String> getASGFromAMIDeployment(
-      PhaseExecutionData phaseExecutionData, WorkflowExecution workflowExecution) throws HarnessException {
+  private List<String> getASGFromAMIDeployment(PhaseExecutionData phaseExecutionData,
+      PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution) throws HarnessException {
     List<String> autoScalingGroupNames = Lists.newArrayList();
 
-    PhaseStepExecutionSummary phaseStepExecutionSummary =
-        instanceHelper.getDeployPhaseStep(phaseExecutionData, Constants.DEPLOY_SERVICE);
+    PhaseStepExecutionSummary phaseStepExecutionSummary = phaseStepExecutionData.getPhaseStepExecutionSummary();
+
     if (phaseStepExecutionSummary != null) {
       Optional<StepExecutionSummary> stepExecutionSummaryOptional =
           phaseStepExecutionSummary.getStepExecutionSummaryList()
@@ -149,9 +149,11 @@ public class AwsAmiInstanceHandler extends AwsInstanceHandler {
 
   @Override
   public Optional<DeploymentInfo> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
-      WorkflowExecution workflowExecution, InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId,
-      Artifact artifact) throws HarnessException {
-    List<String> autoScalingGroupNames = getASGFromAMIDeployment(phaseExecutionData, workflowExecution);
+      PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,
+      InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact)
+      throws HarnessException {
+    List<String> autoScalingGroupNames =
+        getASGFromAMIDeployment(phaseExecutionData, phaseStepExecutionData, workflowExecution);
     return Optional.of(
         AwsAutoScalingGroupDeploymentInfo.builder().autoScalingGroupNameList(autoScalingGroupNames).build());
   }

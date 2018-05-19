@@ -4,7 +4,6 @@ import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
@@ -13,7 +12,6 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder.aPhaseExecutionData;
 
 import com.google.inject.Inject;
 
@@ -34,6 +32,9 @@ import software.wings.api.ContainerDeploymentInfoWithNames;
 import software.wings.api.DeploymentEvent;
 import software.wings.api.DeploymentInfo;
 import software.wings.api.DeploymentType;
+import software.wings.api.PhaseExecutionData;
+import software.wings.api.PhaseStepExecutionData;
+import software.wings.api.PhaseStepExecutionData.PhaseStepExecutionDataBuilder;
 import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.CodeDeployInfrastructureMapping.CodeDeployInfrastructureMappingBuilder;
@@ -60,12 +61,13 @@ import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.sm.ExecutionContext;
-import software.wings.sm.PhaseExecutionSummary;
-import software.wings.sm.StateExecutionData;
+import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.WorkflowStandardParams;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public class InstanceHelperTest extends WingsBaseTest {
@@ -88,7 +90,8 @@ public class InstanceHelperTest extends WingsBaseTest {
   @InjectMocks @Inject private ContainerInstanceHandler containerInstanceHandler;
   @InjectMocks @Inject private InstanceHelper instanceHelper;
   private WorkflowExecution workflowExecution;
-  private StateExecutionData stateExecutionData;
+  private PhaseExecutionData phaseExecutionData;
+  private PhaseStepExecutionData phaseStepExecutionData;
   private long endsAtTime;
   private String PRIVATE_DNS_1 = "ip-171-31-14-5.us-west-2.compute.internal";
   private String PRIVATE_DNS_2 = "ip-172-31-14-5.us-west-2.compute.internal";
@@ -160,9 +163,9 @@ public class InstanceHelperTest extends WingsBaseTest {
   @Test
   public void testExtractInstanceOrContainerInfoBaseOnType_PDS() {
     endsAtTime = System.currentTimeMillis();
-    stateExecutionData = instaceHelperTestHelper.initExecutionSummary(
+    phaseExecutionData = instaceHelperTestHelper.initExecutionSummary(
         InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH, Constants.DEPLOY_SERVICE, endsAtTime, "");
-
+    phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionData);
     doReturn(PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping()
                  .withUuid(INFRA_MAP_ID)
                  .withInfraMappingType("PHYSICAL_DATA_CENTER_SSH")
@@ -175,8 +178,8 @@ public class InstanceHelperTest extends WingsBaseTest {
         .when(hostService)
         .get(anyString(), anyString(), anyString());
 
-    instanceHelper.extractInstanceOrContainerInfoBaseOnType(
-        STATE_EXECUTION_INSTANCE_ID, stateExecutionData, workflowStandardParams, APP_ID, workflowExecution);
+    instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
+        phaseStepExecutionData, workflowStandardParams, APP_ID, workflowExecution);
 
     // Capture the argument of the doSomething function
     ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
@@ -201,9 +204,9 @@ public class InstanceHelperTest extends WingsBaseTest {
   public void testExtractInstanceOrContainerInfoBaseOnType_For_AWS_SSH_AmiInfraMapping() {
     endsAtTime = System.currentTimeMillis();
     endsAtTime = System.currentTimeMillis();
-    stateExecutionData = instaceHelperTestHelper.initExecutionSummary(
+    phaseExecutionData = instaceHelperTestHelper.initExecutionSummary(
         InfrastructureMappingType.AWS_SSH, Constants.DEPLOY_SERVICE, endsAtTime, DeploymentType.SSH.name());
-
+    phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionData);
     doReturn(AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping()
                  .withUuid(INFRA_MAP_ID)
                  .withInfraMappingType(InfrastructureMappingType.AWS_SSH.getName())
@@ -212,8 +215,8 @@ public class InstanceHelperTest extends WingsBaseTest {
         .when(infraMappingService)
         .get(anyString(), anyString());
 
-    instanceHelper.extractInstanceOrContainerInfoBaseOnType(
-        STATE_EXECUTION_INSTANCE_ID, stateExecutionData, workflowStandardParams, APP_ID, workflowExecution);
+    instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
+        phaseStepExecutionData, workflowStandardParams, APP_ID, workflowExecution);
 
     // Capture the argument of the doSomething function
     ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
@@ -237,8 +240,9 @@ public class InstanceHelperTest extends WingsBaseTest {
   @Test
   public void testExtractInstanceOrContainerInfoBaseOnType_For_AWS_SSH_CodeDeployInfraMapping() {
     endsAtTime = System.currentTimeMillis();
-    stateExecutionData = instaceHelperTestHelper.initExecutionSummary(
+    phaseExecutionData = instaceHelperTestHelper.initExecutionSummary(
         InfrastructureMappingType.AWS_SSH, Constants.DEPLOY_SERVICE, endsAtTime, DeploymentType.SSH.name());
+    phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionData);
     doReturn(CodeDeployInfrastructureMappingBuilder.aCodeDeployInfrastructureMapping()
                  .withUuid(INFRA_MAP_ID)
                  .withInfraMappingType(InfrastructureMappingType.AWS_SSH.getName())
@@ -247,8 +251,8 @@ public class InstanceHelperTest extends WingsBaseTest {
         .when(infraMappingService)
         .get(anyString(), anyString());
 
-    instanceHelper.extractInstanceOrContainerInfoBaseOnType(
-        STATE_EXECUTION_INSTANCE_ID, stateExecutionData, workflowStandardParams, "app_1", workflowExecution);
+    instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
+        phaseStepExecutionData, workflowStandardParams, "app_1", workflowExecution);
 
     // Capture the argument of the doSomething function
     ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
@@ -272,8 +276,9 @@ public class InstanceHelperTest extends WingsBaseTest {
   @Test
   public void testExtractInstanceOrContainerInfoBaseOnType_For_AMI() {
     endsAtTime = System.currentTimeMillis();
-    stateExecutionData = instaceHelperTestHelper.initExecutionSummary(
+    phaseExecutionData = instaceHelperTestHelper.initExecutionSummary(
         InfrastructureMappingType.AWS_AMI, Constants.DEPLOY_SERVICE, endsAtTime, DeploymentType.AMI.name());
+    phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionData);
     doReturn(AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping()
                  .withUuid(INFRA_MAP_ID)
                  .withInfraMappingType(InfrastructureMappingType.AWS_AMI.getName())
@@ -282,8 +287,8 @@ public class InstanceHelperTest extends WingsBaseTest {
         .when(infraMappingService)
         .get(anyString(), anyString());
 
-    instanceHelper.extractInstanceOrContainerInfoBaseOnType(
-        STATE_EXECUTION_INSTANCE_ID, stateExecutionData, workflowStandardParams, "app_1", workflowExecution);
+    instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
+        phaseStepExecutionData, workflowStandardParams, "app_1", workflowExecution);
 
     // Capture the argument of the doSomething function
     ArgumentCaptor<DeploymentEvent> captor = ArgumentCaptor.forClass(DeploymentEvent.class);
@@ -305,11 +310,24 @@ public class InstanceHelperTest extends WingsBaseTest {
         asList("asgNew", "asgOld"), ((AwsAutoScalingGroupDeploymentInfo) deploymentInfo).getAutoScalingGroupNameList());
   }
 
+  private PhaseStepExecutionData getPhaseStepExecutionData(PhaseExecutionData phaseExecutionData) {
+    Collection<PhaseStepExecutionSummary> phaseStepExecutionSummaries =
+        phaseExecutionData.getPhaseExecutionSummary().getPhaseStepExecutionSummaryMap().values();
+    Optional<PhaseStepExecutionSummary> phaseStepExecutionSummary = phaseStepExecutionSummaries.stream().findFirst();
+    PhaseStepExecutionDataBuilder phaseStepExecutionDataBuilder =
+        PhaseStepExecutionDataBuilder.aPhaseStepExecutionData();
+    phaseStepExecutionDataBuilder.withElementStatusSummary(phaseExecutionData.getElementStatusSummary());
+    phaseStepExecutionDataBuilder.withPhaseStepExecutionSummary(phaseStepExecutionSummary.get());
+    phaseStepExecutionDataBuilder.withEndTs(phaseExecutionData.getEndTs());
+    return phaseStepExecutionDataBuilder.build();
+  }
+
   @Test
   public void testExtractInstanceOrContainerInfoBaseOnType_For_CodeDeploy() {
     endsAtTime = System.currentTimeMillis();
-    stateExecutionData = instaceHelperTestHelper.initExecutionSummary(InfrastructureMappingType.AWS_AWS_CODEDEPLOY,
+    phaseExecutionData = instaceHelperTestHelper.initExecutionSummary(InfrastructureMappingType.AWS_AWS_CODEDEPLOY,
         Constants.DEPLOY_SERVICE, endsAtTime, DeploymentType.AWS_CODEDEPLOY.getDisplayName());
+    phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionData);
     doReturn(CodeDeployInfrastructureMappingBuilder.aCodeDeployInfrastructureMapping()
                  .withUuid(INFRA_MAP_ID)
                  .withInfraMappingType(InfrastructureMappingType.AWS_AWS_CODEDEPLOY.getName())
@@ -318,8 +336,8 @@ public class InstanceHelperTest extends WingsBaseTest {
         .when(infraMappingService)
         .get(anyString(), anyString());
 
-    instanceHelper.extractInstanceOrContainerInfoBaseOnType(
-        STATE_EXECUTION_INSTANCE_ID, stateExecutionData, workflowStandardParams, "app_1", workflowExecution);
+    instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
+        phaseStepExecutionData, workflowStandardParams, "app_1", workflowExecution);
 
     // Capture the argument of the doSomething function
     ArgumentCaptor<DeploymentEvent> captor = ArgumentCaptor.forClass(DeploymentEvent.class);
@@ -344,8 +362,9 @@ public class InstanceHelperTest extends WingsBaseTest {
   @Test
   public void testExtractInstanceOrContainerInfoBaseOnType_For_ECS() {
     endsAtTime = System.currentTimeMillis();
-    stateExecutionData = instaceHelperTestHelper.initExecutionSummary(InfrastructureMappingType.AWS_ECS,
+    phaseExecutionData = instaceHelperTestHelper.initExecutionSummary(InfrastructureMappingType.AWS_ECS,
         Constants.DEPLOY_CONTAINERS, endsAtTime, DeploymentType.ECS.getDisplayName());
+    phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionData);
     doReturn(EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping()
                  .withUuid(INFRA_MAP_ID)
                  .withInfraMappingType(InfrastructureMappingType.AWS_ECS.getName())
@@ -354,8 +373,8 @@ public class InstanceHelperTest extends WingsBaseTest {
         .when(infraMappingService)
         .get(anyString(), anyString());
 
-    instanceHelper.extractInstanceOrContainerInfoBaseOnType(
-        STATE_EXECUTION_INSTANCE_ID, stateExecutionData, workflowStandardParams, APP_ID, workflowExecution);
+    instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
+        phaseStepExecutionData, workflowStandardParams, APP_ID, workflowExecution);
 
     // Capture the argument of the doSomething function
     ArgumentCaptor<DeploymentEvent> captor = ArgumentCaptor.forClass(DeploymentEvent.class);
@@ -384,9 +403,10 @@ public class InstanceHelperTest extends WingsBaseTest {
   @Test
   public void testExtractInstanceOrContainerInfoBaseOnType_For_Kubernetes() {
     endsAtTime = System.currentTimeMillis();
-    stateExecutionData =
+    phaseExecutionData =
         instaceHelperTestHelper.initKubernetesExecutionSummary(InfrastructureMappingType.GCP_KUBERNETES,
             Constants.DEPLOY_CONTAINERS, endsAtTime, DeploymentType.KUBERNETES.getDisplayName(), false);
+    phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionData);
     doReturn(GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping()
                  .withUuid(INFRA_MAP_ID)
                  .withInfraMappingType(InfrastructureMappingType.GCP_KUBERNETES.getName())
@@ -395,8 +415,8 @@ public class InstanceHelperTest extends WingsBaseTest {
         .when(infraMappingService)
         .get(anyString(), anyString());
 
-    instanceHelper.extractInstanceOrContainerInfoBaseOnType(
-        STATE_EXECUTION_INSTANCE_ID, stateExecutionData, workflowStandardParams, APP_ID, workflowExecution);
+    instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
+        phaseStepExecutionData, workflowStandardParams, APP_ID, workflowExecution);
 
     // Capture the argument of the doSomething function
     ArgumentCaptor<DeploymentEvent> captor = ArgumentCaptor.forClass(DeploymentEvent.class);
@@ -425,9 +445,10 @@ public class InstanceHelperTest extends WingsBaseTest {
   @Test
   public void testExtractInstanceOrContainerInfoBaseOnType_For_Helm_Kubernetes() {
     endsAtTime = System.currentTimeMillis();
-    stateExecutionData =
+    phaseExecutionData =
         instaceHelperTestHelper.initKubernetesExecutionSummary(InfrastructureMappingType.GCP_KUBERNETES,
             Constants.DEPLOY_CONTAINERS, endsAtTime, DeploymentType.KUBERNETES.getDisplayName(), true);
+    phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionData);
     doReturn(GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping()
                  .withUuid(INFRA_MAP_ID)
                  .withInfraMappingType(InfrastructureMappingType.GCP_KUBERNETES.getName())
@@ -436,8 +457,8 @@ public class InstanceHelperTest extends WingsBaseTest {
         .when(infraMappingService)
         .get(anyString(), anyString());
 
-    instanceHelper.extractInstanceOrContainerInfoBaseOnType(
-        STATE_EXECUTION_INSTANCE_ID, stateExecutionData, workflowStandardParams, APP_ID, workflowExecution);
+    instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
+        phaseStepExecutionData, workflowStandardParams, APP_ID, workflowExecution);
 
     // Capture the argument of the doSomething function
     ArgumentCaptor<DeploymentEvent> captor = ArgumentCaptor.forClass(DeploymentEvent.class);
@@ -509,20 +530,6 @@ public class InstanceHelperTest extends WingsBaseTest {
     privateDnsName = null;
     name = (String) MethodUtils.invokeMethod(instanceHelper, true, "getPrivateDnsName", new Object[] {privateDnsName});
     assertEquals(StringUtils.EMPTY, name);
-  }
-
-  @Test
-  public void testGetDeployPhaseStep_NPE() throws Exception {
-    assertNull(MethodUtils.invokeMethod(instanceHelper, true, "getDeployPhaseStep", new Object[] {null, "stepName"}));
-    assertNull(MethodUtils.invokeMethod(instanceHelper, true, "getDeployPhaseStep",
-        new Object[] {aPhaseExecutionData().withPhaseExecutionSummary(null).build(), "stepName"}));
-
-    PhaseExecutionSummary phaseExecutionSummary = new PhaseExecutionSummary();
-    phaseExecutionSummary.setPhaseStepExecutionSummaryMap(null);
-    assertNull(MethodUtils.invokeMethod(instanceHelper, true, "getDeployPhaseStep",
-        new Object[] {aPhaseExecutionData().withPhaseExecutionSummary(phaseExecutionSummary).build(), "stepName"}));
-    assertNull(MethodUtils.invokeMethod(instanceHelper, true, "getDeployPhaseStep",
-        new Object[] {aPhaseExecutionData().withPhaseExecutionSummary(null).build(), "stepName"}));
   }
 
   private void assertDeploymentInfoObject(DeploymentInfo deploymentInfo) {

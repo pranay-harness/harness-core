@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentInfo;
 import software.wings.api.PhaseExecutionData;
+import software.wings.api.PhaseStepExecutionData;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
@@ -58,8 +59,9 @@ public abstract class InstanceHandler {
   public abstract void syncInstances(String appId, String infraMappingId) throws HarnessException;
   public abstract void handleNewDeployment(DeploymentInfo deploymentInfo) throws HarnessException;
   public abstract Optional<DeploymentInfo> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
-      WorkflowExecution workflowExecution, InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId,
-      Artifact artifact) throws HarnessException;
+      PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,
+      InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact)
+      throws HarnessException;
 
   protected List<Instance> getInstances(String appId, String infraMappingId) {
     PageRequest<Instance> pageRequest = new PageRequest<>();

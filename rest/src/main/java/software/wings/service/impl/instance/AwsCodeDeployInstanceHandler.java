@@ -12,6 +12,7 @@ import software.wings.api.AwsCodeDeployDeploymentInfo;
 import software.wings.api.CommandStepExecutionSummary;
 import software.wings.api.DeploymentInfo;
 import software.wings.api.PhaseExecutionData;
+import software.wings.api.PhaseStepExecutionData;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.CodeDeployInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
@@ -24,7 +25,6 @@ import software.wings.beans.infrastructure.instance.info.CodeDeployInstanceInfo;
 import software.wings.beans.infrastructure.instance.info.Ec2InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.cloudprovider.aws.AwsCodeDeployService;
-import software.wings.common.Constants;
 import software.wings.exception.HarnessException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -46,9 +46,11 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
 
   @Override
   public Optional<DeploymentInfo> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
-      WorkflowExecution workflowExecution, InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId,
-      Artifact artifact) throws HarnessException {
-    String codeDeployDeploymentId = getCodeDeployDeploymentId(phaseExecutionData, workflowExecution);
+      PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,
+      InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact)
+      throws HarnessException {
+    String codeDeployDeploymentId =
+        getCodeDeployDeploymentId(phaseExecutionData, phaseStepExecutionData, workflowExecution);
 
     if (codeDeployDeploymentId == null) {
       logger.warn("Phase step execution summary null for Deploy for workflow:{} Can't create deployment event",
@@ -58,10 +60,10 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
     return Optional.of(AwsCodeDeployDeploymentInfo.builder().deploymentId(codeDeployDeploymentId).build());
   }
 
-  private String getCodeDeployDeploymentId(PhaseExecutionData phaseExecutionData, WorkflowExecution workflowExecution)
-      throws HarnessException {
-    PhaseStepExecutionSummary phaseStepExecutionSummary =
-        instanceHelper.getDeployPhaseStep(phaseExecutionData, Constants.DEPLOY_SERVICE);
+  private String getCodeDeployDeploymentId(PhaseExecutionData phaseExecutionData,
+      PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution) throws HarnessException {
+    PhaseStepExecutionSummary phaseStepExecutionSummary = phaseStepExecutionData.getPhaseStepExecutionSummary();
+
     if (phaseStepExecutionSummary != null) {
       Optional<StepExecutionSummary> stepExecutionSummaryOptional =
           phaseStepExecutionSummary.getStepExecutionSummaryList()
