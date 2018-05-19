@@ -314,7 +314,9 @@ public class TriggerServiceImpl implements TriggerService {
       String appId, String webHookToken, Map<String, String> serviceBuildNumbers, Map<String, String> parameters) {
     List<Artifact> artifacts = new ArrayList<>();
     Trigger trigger = getTrigger(appId, webHookToken);
-    logger.info("Triggering  the execution for the Trigger {} by webhook", trigger.getName());
+    logger.info(
+        "Triggering  the execution for the Trigger {} by webhook with Service Build Numbers {}  and parameters {}",
+        trigger.getName(), String.valueOf(serviceBuildNumbers), String.valueOf(parameters));
     addArtifactsFromVersionsOfWebHook(trigger, serviceBuildNumbers, artifacts);
     addArtifactsFromSelections(appId, trigger, artifacts);
     return triggerExecution(artifacts, trigger, parameters);
@@ -708,11 +710,20 @@ public class TriggerServiceImpl implements TriggerService {
     if (ORCHESTRATION.equals(trigger.getWorkflowType())) {
       logger.info("Triggering  workflow execution of appId {} with with workflow id {}", trigger.getAppId(),
           trigger.getWorkflowId());
-      Workflow workflow = wingsPersistence.get(Workflow.class, trigger.getAppId(), trigger.getWorkflowId());
+      Workflow workflow = workflowService.readWorkflow(trigger.getAppId(), trigger.getWorkflowId());
       Validator.notNullCheck("Workflow was deleted", workflow, ADMIN_SRE);
+      String envId = workflow.getEnvId();
       Map<String, String> workflowVariables = executionArgs.getWorkflowVariables();
       Map<String, String> triggerWorkflowVariables = trigger.getWorkflowVariables();
       if (triggerWorkflowVariables != null) {
+        String templatizedEnvName =
+            WorkflowServiceHelper.getTemplatizedEnvVariableName(workflow.getOrchestrationWorkflow());
+        if (templatizedEnvName != null) {
+          envId = triggerWorkflowVariables.get(templatizedEnvName);
+          if (envId == null) {
+            logger.warn("Environment templatized name  {} not present in the trigger variables", templatizedEnvName);
+          }
+        }
         if (workflowVariables != null) {
           for (String s : triggerWorkflowVariables.keySet()) {
             if (!workflowVariables.containsKey(s)) {
@@ -724,8 +735,7 @@ public class TriggerServiceImpl implements TriggerService {
         }
       }
       executionArgs.setWorkflowVariables(workflowVariables);
-      workflowExecution =
-          workflowExecutionService.triggerEnvExecution(trigger.getAppId(), workflow.getEnvId(), executionArgs);
+      workflowExecution = workflowExecutionService.triggerEnvExecution(trigger.getAppId(), envId, executionArgs);
       logger.info("Trigger workflow execution of appId {} with workflow id {} triggered", trigger.getAppId(),
           trigger.getWorkflowId());
 

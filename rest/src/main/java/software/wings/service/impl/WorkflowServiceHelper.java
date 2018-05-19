@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtil.trimList;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
@@ -216,5 +217,20 @@ public class WorkflowServiceHelper {
         orchestrationWorkflow.addToUserVariables(asList(envExpression.get()));
       }
     }
+  }
+
+  public static String getTemplatizedEnvVariableName(OrchestrationWorkflow orchestrationWorkflow) {
+    if (orchestrationWorkflow == null) {
+      return null;
+    }
+    List<Variable> userVariables = orchestrationWorkflow.getUserVariables();
+    if (isNotEmpty(userVariables)) {
+      return userVariables.stream()
+          .filter((Variable variable) -> ENVIRONMENT.equals(variable.getEntityType()))
+          .map(Variable::getName)
+          .findFirst()
+          .orElse(null);
+    }
+    return null;
   }
 }
