@@ -425,7 +425,7 @@ public abstract class AbstractAnalysisState extends State {
   }
 
   protected String getPcfHostName(PcfInstanceElement pcfInstanceElement, boolean includePrevious) {
-    if (includePrevious) {
+    if (includePrevious || pcfInstanceElement.isUpsize()) {
       return pcfInstanceElement.getApplicationId();
     }
 
