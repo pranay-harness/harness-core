@@ -67,6 +67,7 @@ import software.wings.scheduler.ArchivalManager;
 import software.wings.scheduler.BarrierBackupJob;
 import software.wings.scheduler.PersistentLockCleanupJob;
 import software.wings.scheduler.QuartzScheduler;
+import software.wings.scheduler.WorkflowExecutionMonitorJob;
 import software.wings.scheduler.ZombieHunterJob;
 import software.wings.security.AuthResponseFilter;
 import software.wings.security.AuthRuleFilter;
@@ -342,6 +343,7 @@ public class WingsApplication extends Application<MainConfiguration> {
       // If we do not get the lock, that's not critical - that's most likely because other managers took it
       // and they will initialize the jobs.
       if (acquiredLock != null) {
+        WorkflowExecutionMonitorJob.add(jobScheduler);
         BarrierBackupJob.addJob(jobScheduler);
         PersistentLockCleanupJob.add(jobScheduler);
         ZombieHunterJob.scheduleJobs(jobScheduler);
