@@ -16,6 +16,7 @@ import software.wings.annotation.Encryptable;
 import software.wings.api.AwsAutoScalingGroupDeploymentInfo;
 import software.wings.api.DeploymentInfo;
 import software.wings.api.PhaseExecutionData;
+import software.wings.api.PhaseStepExecutionData;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
@@ -102,8 +103,9 @@ public class AwsInstanceHandler extends InstanceHandler {
 
   @Override
   public Optional<DeploymentInfo> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
-      WorkflowExecution workflowExecution, InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId,
-      Artifact artifact) throws HarnessException {
+      PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,
+      InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact)
+      throws HarnessException {
     // All the new deployments are either handled at ASGInstanceHandler(for Aws ssh with asg) or InstanceHelper (for Aws
     // ssh with or without filter)
     throw new HarnessException("Deployments should be handled at InstanceHelper for aws ssh type except for with ASG.");

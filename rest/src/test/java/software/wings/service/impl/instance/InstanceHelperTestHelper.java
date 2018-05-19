@@ -266,7 +266,7 @@ public class InstanceHelperTestHelper {
   public void assertInstances(List instances, InstanceType instanceType, InfrastructureMappingType mappingType,
       HostInstanceKey hostInstanceKey1, HostInstanceKey hostInstanceKey2, InstanceInfo instanceInfo1,
       InstanceInfo instanceInfo2, long endsAtTime) {
-    assertThat(instances).isNotNull().hasSize(2).containsExactly(
+    assertThat(instances).isNotNull().hasSize(2).containsExactlyInAnyOrder(
         Instance.builder()
             .instanceType(instanceType)
             .hostInstanceKey(hostInstanceKey1)

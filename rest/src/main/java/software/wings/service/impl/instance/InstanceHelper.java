@@ -8,9 +8,11 @@ import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTE
 import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
 import static software.wings.exception.WingsException.USER_SRE;
 import static software.wings.sm.ExecutionStatus.FAILED;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.Reservation;
@@ -22,6 +24,7 @@ import software.wings.api.DeploymentEvent;
 import software.wings.api.DeploymentInfo;
 import software.wings.api.HostElement;
 import software.wings.api.PhaseExecutionData;
+import software.wings.api.PhaseStepExecutionData;
 import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
@@ -30,6 +33,7 @@ import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
+import software.wings.beans.PhaseStepType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
@@ -41,7 +45,6 @@ import software.wings.beans.infrastructure.instance.info.Ec2InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.PhysicalHostInstanceInfo;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
-import software.wings.common.Constants;
 import software.wings.core.queue.Queue;
 import software.wings.exception.WingsException;
 import software.wings.lock.AcquiredLock;
@@ -52,14 +55,20 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.sm.ContextElementType;
+import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionEvent;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateExecutionData;
+import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.PhaseStepSubWorkflow;
 import software.wings.utils.Util;
 import software.wings.utils.Validator;
 
@@ -74,6 +83,7 @@ import java.util.Optional;
  *
  * @author rktummala on 09/11/17
  */
+@Singleton
 public class InstanceHelper {
   private static final Logger logger = LoggerFactory.getLogger(InstanceHelper.class);
 
@@ -89,25 +99,28 @@ public class InstanceHelper {
   @Inject private InstanceService instanceService;
   @Inject private PersistentLocker persistentLocker;
   @Inject private InstanceHandlerFactory instanceHandlerFactory;
+  @Inject private WorkflowExecutionService workflowExecutionService;
 
   /**
    * The phaseExecutionData is used to process the instance information that is used by the service and infra
    * dashboards. The instance processing happens asynchronously.
    */
-  public void extractInstanceOrContainerInfoBaseOnType(String stateExecutionInstanceId,
-      StateExecutionData stateExecutionData, WorkflowStandardParams workflowStandardParams, String appId,
-      WorkflowExecution workflowExecution) {
+  public void extractInstanceOrDeploymentInfoBaseOnType(String stateExecutionInstanceId,
+      PhaseExecutionData phaseExecutionData, PhaseStepExecutionData phaseStepExecutionData,
+      WorkflowStandardParams workflowStandardParams, String appId, WorkflowExecution workflowExecution) {
     try {
-      if (!(stateExecutionData instanceof PhaseExecutionData)) {
-        logger.error("stateExecutionData for instance {} is not of type PhaseExecutionData, but {}",
-            stateExecutionInstanceId,
-            stateExecutionData == null ? "null" : stateExecutionData.getClass().getCanonicalName());
+      if (phaseExecutionData == null) {
+        logger.error("phaseExecutionData is null for state execution {}", stateExecutionInstanceId);
         return;
       }
 
-      PhaseExecutionData phaseExecutionData = (PhaseExecutionData) stateExecutionData;
-      Validator.notNullCheck("PhaseExecutionData", phaseExecutionData);
-      Validator.notNullCheck("ElementStatusSummary", phaseExecutionData.getElementStatusSummary());
+      if (phaseStepExecutionData == null) {
+        logger.error("phaseStepExecutionData is null for state execution {}", stateExecutionInstanceId);
+        return;
+      }
+
+      Validator.notNullCheck("ElementStatusSummary is null for state execution " + stateExecutionInstanceId,
+          phaseStepExecutionData.getElementStatusSummary());
 
       if (workflowStandardParams == null) {
         logger.warn("workflowStandardParams can't be null, skipping instance processing");
@@ -137,8 +150,7 @@ public class InstanceHelper {
           || PHYSICAL_DATA_CENTER_WINRM.getName().equals(infrastructureMapping.getInfraMappingType())
           || AWS_SSH.getName().equals(infrastructureMapping.getInfraMappingType())) {
         List<Instance> instanceList = Lists.newArrayList();
-        PhaseStepExecutionSummary phaseStepExecutionSummary =
-            getDeployPhaseStep(phaseExecutionData, Constants.DEPLOY_SERVICE);
+        PhaseStepExecutionSummary phaseStepExecutionSummary = phaseStepExecutionData.getPhaseStepExecutionSummary();
 
         if (phaseStepExecutionSummary == null) {
           logger.warn(
@@ -153,7 +165,7 @@ public class InstanceHelper {
           return;
         }
 
-        for (ElementExecutionSummary summary : phaseExecutionData.getElementStatusSummary()) {
+        for (ElementExecutionSummary summary : phaseStepExecutionData.getElementStatusSummary()) {
           List<InstanceStatusSummary> instanceStatusSummaries = summary.getInstanceStatusSummaries();
           if (isEmpty(instanceStatusSummaries)) {
             logger.info("No instances to process");
@@ -162,8 +174,8 @@ public class InstanceHelper {
 
           for (InstanceStatusSummary instanceStatusSummary : instanceStatusSummaries) {
             if (shouldCaptureInstance(instanceStatusSummary.getStatus())) {
-              Instance instance = buildInstanceUsingHostInfo(
-                  workflowExecution, artifact, instanceStatusSummary, phaseExecutionData, infrastructureMapping);
+              Instance instance = buildInstanceUsingHostInfo(workflowExecution, artifact, instanceStatusSummary,
+                  phaseExecutionData, phaseStepExecutionData, infrastructureMapping);
               if (instance != null) {
                 instanceList.add(instance);
               }
@@ -186,12 +198,12 @@ public class InstanceHelper {
         }
 
         InstanceHandler instanceHandler = instanceHandlerOptional.get();
-        Optional<DeploymentInfo> deploymentInfo = instanceHandler.getDeploymentInfo(
-            phaseExecutionData, workflowExecution, infrastructureMapping, stateExecutionInstanceId, artifact);
+        Optional<DeploymentInfo> deploymentInfo = instanceHandler.getDeploymentInfo(phaseExecutionData,
+            phaseStepExecutionData, workflowExecution, infrastructureMapping, stateExecutionInstanceId, artifact);
 
         if (deploymentInfo.isPresent()) {
           DeploymentEvent deploymentEvent = setValuesToDeploymentEvent(stateExecutionInstanceId, workflowExecution,
-              phaseExecutionData, infrastructureMapping, artifact, deploymentInfo.get());
+              phaseExecutionData, phaseStepExecutionData, infrastructureMapping, artifact, deploymentInfo.get());
           deploymentEventQueue.send(deploymentEvent);
         }
       }
@@ -208,20 +220,10 @@ public class InstanceHelper {
     return false;
   }
 
-  protected PhaseStepExecutionSummary getDeployPhaseStep(PhaseExecutionData phaseExecutionData, String phaseStepName) {
-    if (phaseExecutionData == null || phaseExecutionData.getPhaseExecutionSummary() == null
-        || phaseExecutionData.getPhaseExecutionSummary().getPhaseStepExecutionSummaryMap() == null) {
-      logger.warn("Not able to get PhaseStepExecutionSummary for phaseStepName: {}, as phaseExecutionData= {}",
-          phaseStepName, phaseExecutionData);
-      return null;
-    }
-
-    return phaseExecutionData.getPhaseExecutionSummary().getPhaseStepExecutionSummaryMap().get(phaseStepName);
-  }
-
   private DeploymentEvent setValuesToDeploymentEvent(String stateExecutionInstanceId,
       WorkflowExecution workflowExecution, PhaseExecutionData phaseExecutionData,
-      InfrastructureMapping infrastructureMapping, Artifact artifact, DeploymentInfo deploymentInfo) {
+      PhaseStepExecutionData phaseStepExecutionData, InfrastructureMapping infrastructureMapping, Artifact artifact,
+      DeploymentInfo deploymentInfo) {
     PipelineSummary pipelineSummary = workflowExecution.getPipelineSummary();
     Application application = appService.get(workflowExecution.getAppId());
     Validator.notNullCheck("Application", application);
@@ -259,7 +261,7 @@ public class InstanceHelper {
     deploymentInfo.setDeployedById(triggeredBy.getUuid());
     deploymentInfo.setDeployedByName(triggeredBy.getName());
     deploymentInfo.setDeployedAt(
-        phaseExecutionData.getEndTs() == null ? System.currentTimeMillis() : phaseExecutionData.getEndTs());
+        phaseStepExecutionData.getEndTs() == null ? System.currentTimeMillis() : phaseStepExecutionData.getEndTs());
 
     return DeploymentEvent.builder().deploymentInfo(deploymentInfo).build();
   }
@@ -291,12 +293,12 @@ public class InstanceHelper {
 
   public Instance buildInstanceUsingHostInfo(WorkflowExecution workflowExecution, Artifact artifact,
       InstanceStatusSummary instanceStatusSummary, PhaseExecutionData phaseExecutionData,
-      InfrastructureMapping infraMapping) {
+      PhaseStepExecutionData phaseStepExecutionData, InfrastructureMapping infraMapping) {
     HostElement host = instanceStatusSummary.getInstanceElement().getHost();
     Validator.notNullCheck("Host is null for workflow execution:" + workflowExecution.getWorkflowId(), host);
 
-    InstanceBuilder builder =
-        buildInstanceBase(workflowExecution, artifact, phaseExecutionData, infraMapping.getInfraMappingType());
+    InstanceBuilder builder = buildInstanceBase(
+        workflowExecution, artifact, phaseExecutionData, phaseStepExecutionData, infraMapping.getInfraMappingType());
     String hostUuid = host.getUuid();
 
     String region = null;
@@ -382,30 +384,32 @@ public class InstanceHelper {
   }
 
   public InstanceBuilder buildInstanceBase(WorkflowExecution workflowExecution, Artifact artifact,
-      PhaseExecutionData phaseExecutionData, String infraMappingType) {
+      PhaseExecutionData phaseExecutionData, PhaseStepExecutionData phaseStepExecutionData, String infraMappingType) {
     PipelineSummary pipelineSummary = workflowExecution.getPipelineSummary();
     Application application = appService.get(workflowExecution.getAppId());
     Validator.notNullCheck("Application", application);
     EmbeddedUser triggeredBy = workflowExecution.getTriggeredBy();
     Validator.notNullCheck("triggeredBy", triggeredBy);
 
-    InstanceBuilder builder = Instance.builder()
-                                  .accountId(application.getAccountId())
-                                  .appId(workflowExecution.getAppId())
-                                  .appName(workflowExecution.getAppName())
-                                  .envName(workflowExecution.getEnvName())
-                                  .envId(workflowExecution.getEnvId())
-                                  .envType(workflowExecution.getEnvType())
-                                  .computeProviderId(phaseExecutionData.getComputeProviderId())
-                                  .computeProviderName(phaseExecutionData.getComputeProviderName())
-                                  .infraMappingId(phaseExecutionData.getInfraMappingId())
-                                  .infraMappingType(infraMappingType)
-                                  .lastDeployedAt(phaseExecutionData.getEndTs())
-                                  .lastDeployedById(triggeredBy.getUuid())
-                                  .lastDeployedByName(triggeredBy.getName())
-                                  .serviceId(phaseExecutionData.getServiceId())
-                                  .serviceName(phaseExecutionData.getServiceName())
-                                  .lastWorkflowExecutionId(workflowExecution.getUuid());
+    InstanceBuilder builder =
+        Instance.builder()
+            .accountId(application.getAccountId())
+            .appId(workflowExecution.getAppId())
+            .appName(workflowExecution.getAppName())
+            .envName(workflowExecution.getEnvName())
+            .envId(workflowExecution.getEnvId())
+            .envType(workflowExecution.getEnvType())
+            .computeProviderId(phaseExecutionData.getComputeProviderId())
+            .computeProviderName(phaseExecutionData.getComputeProviderName())
+            .infraMappingId(phaseExecutionData.getInfraMappingId())
+            .infraMappingType(infraMappingType)
+            .lastDeployedAt(phaseStepExecutionData.getEndTs() != null ? phaseStepExecutionData.getEndTs()
+                                                                      : System.currentTimeMillis())
+            .lastDeployedById(triggeredBy.getUuid())
+            .lastDeployedByName(triggeredBy.getName())
+            .serviceId(phaseExecutionData.getServiceId())
+            .serviceName(phaseExecutionData.getServiceName())
+            .lastWorkflowExecutionId(workflowExecution.getUuid());
     if (artifact != null) {
       builder.lastArtifactId(artifact.getUuid())
           .lastArtifactName(artifact.getDisplayName())
@@ -497,5 +501,54 @@ public class InstanceHelper {
       return false;
     }
     return true;
+  }
+
+  public boolean isDeployPhaseStep(PhaseStepType phaseStepType) {
+    switch (phaseStepType) {
+        //      case PROVISION_NODE:
+        //      case DE_PROVISION_NODE:
+      case DEPLOY_SERVICE:
+      case CONTAINER_DEPLOY:
+      case PCF_RESIZE:
+      case DEPLOY_AWSCODEDEPLOY:
+      case DEPLOY_AWS_LAMBDA:
+      case AMI_DEPLOY_AUTOSCALING_GROUP:
+      case HELM_DEPLOY:
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  public void extractInstance(PhaseStepSubWorkflow phaseStepSubWorkflow, ExecutionEvent executionEvent,
+      WorkflowExecution workflowExecution, ExecutionContext context, StateExecutionInstance stateExecutionInstance) {
+    if (isDeployPhaseStep(phaseStepSubWorkflow.getPhaseStepType())
+        && executionEvent.getExecutionStatus().isFinalStatus()) {
+      WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+      notNullCheck("params are null for workflow " + workflowExecution.getUuid(), workflowStandardParams);
+
+      PhaseStepExecutionData phaseStepExecutionData =
+          (PhaseStepExecutionData) stateExecutionInstance.getStateExecutionData();
+      notNullCheck(
+          "phase step execution data is null for phase step " + phaseStepSubWorkflow.getId(), phaseStepExecutionData);
+
+      StateExecutionInstance phaseStateExecutionInstance = workflowExecutionService.getStateExecutionData(
+          workflowExecution.getAppId(), stateExecutionInstance.getParentInstanceId());
+
+      if (phaseStateExecutionInstance != null) {
+        StateExecutionData stateExecutionData = phaseStateExecutionInstance.getStateExecutionData();
+        notNullCheck("state execution data is null for " + phaseStepSubWorkflow.getParentId(), stateExecutionData);
+
+        if (stateExecutionData instanceof PhaseExecutionData) {
+          extractInstanceOrDeploymentInfoBaseOnType(context.getStateExecutionInstanceId(),
+              (PhaseExecutionData) stateExecutionData, phaseStepExecutionData, workflowStandardParams,
+              context.getAppId(), workflowExecution);
+        } else {
+          logger.error("Fetched execution data is not of type phase for phase step {}", phaseStepSubWorkflow.getId());
+        }
+      } else {
+        logger.error("Could not locate phase for phase step {}", phaseStepSubWorkflow.getId());
+      }
+    }
   }
 }

@@ -44,7 +44,6 @@ import software.wings.service.impl.instance.sync.request.ContainerFilter;
 import software.wings.service.impl.instance.sync.request.ContainerSyncRequest;
 import software.wings.service.impl.instance.sync.response.ContainerSyncResponse;
 import software.wings.sm.ExecutionContext;
-import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
@@ -242,95 +241,88 @@ public class ContainerInstanceHandler extends InstanceHandler {
 
   @Override
   public Optional<DeploymentInfo> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
-      WorkflowExecution workflowExecution, InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId,
-      Artifact artifact) throws HarnessException {
-    PhaseExecutionSummary phaseExecutionSummary = phaseExecutionData.getPhaseExecutionSummary();
-    if (phaseExecutionSummary != null) {
-      Map<String, PhaseStepExecutionSummary> phaseStepExecutionSummaryMap =
-          phaseExecutionSummary.getPhaseStepExecutionSummaryMap();
-      if (phaseStepExecutionSummaryMap != null) {
-        PhaseStepExecutionSummary phaseStepExecutionSummary =
-            phaseStepExecutionSummaryMap.get(Constants.DEPLOY_CONTAINERS);
-        if (phaseStepExecutionSummary == null) {
-          if (logger.isDebugEnabled()) {
-            logger.debug("PhaseStepExecutionSummary is null for stateExecutionInstanceId: " + stateExecutionInstanceId);
+      PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,
+      InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact)
+      throws HarnessException {
+    PhaseStepExecutionSummary phaseStepExecutionSummary = phaseStepExecutionData.getPhaseStepExecutionSummary();
+
+    if (phaseStepExecutionSummary == null) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("PhaseStepExecutionSummary is null for stateExecutionInstanceId: " + stateExecutionInstanceId);
+      }
+      return Optional.empty();
+    }
+    List<StepExecutionSummary> stepExecutionSummaryList = phaseStepExecutionSummary.getStepExecutionSummaryList();
+    // This was observed when the "deploy containers" step was executed in rollback and no commands were
+    // executed since setup failed.
+    if (stepExecutionSummaryList == null) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("StepExecutionSummaryList is null for stateExecutionInstanceId: " + stateExecutionInstanceId);
+      }
+      return Optional.empty();
+    }
+
+    for (StepExecutionSummary stepExecutionSummary : stepExecutionSummaryList) {
+      if (stepExecutionSummary != null) {
+        if (stepExecutionSummary instanceof CommandStepExecutionSummary) {
+          CommandStepExecutionSummary commandStepExecutionSummary = (CommandStepExecutionSummary) stepExecutionSummary;
+          String clusterName = commandStepExecutionSummary.getClusterName();
+          Set<String> containerSvcNameSet = Sets.newHashSet();
+
+          if (commandStepExecutionSummary.getOldInstanceData() != null) {
+            containerSvcNameSet.addAll(commandStepExecutionSummary.getOldInstanceData()
+                                           .stream()
+                                           .map(ContainerServiceData::getName)
+                                           .collect(toList()));
           }
-          return Optional.empty();
-        }
-        List<StepExecutionSummary> stepExecutionSummaryList = phaseStepExecutionSummary.getStepExecutionSummaryList();
-        // This was observed when the "deploy containers" step was executed in rollback and no commands were
-        // executed since setup failed.
-        if (stepExecutionSummaryList == null) {
-          if (logger.isDebugEnabled()) {
-            logger.debug("StepExecutionSummaryList is null for stateExecutionInstanceId: " + stateExecutionInstanceId);
+
+          if (commandStepExecutionSummary.getNewInstanceData() != null) {
+            List<String> newcontainerSvcNames = commandStepExecutionSummary.getNewInstanceData()
+                                                    .stream()
+                                                    .map(ContainerServiceData::getName)
+                                                    .collect(toList());
+            containerSvcNameSet.addAll(newcontainerSvcNames);
           }
-          return Optional.empty();
-        }
 
-        for (StepExecutionSummary stepExecutionSummary : stepExecutionSummaryList) {
-          if (stepExecutionSummary != null) {
-            if (stepExecutionSummary instanceof CommandStepExecutionSummary) {
-              CommandStepExecutionSummary commandStepExecutionSummary =
-                  (CommandStepExecutionSummary) stepExecutionSummary;
-              String clusterName = commandStepExecutionSummary.getClusterName();
-              Set<String> containerSvcNameSet = Sets.newHashSet();
-
-              if (commandStepExecutionSummary.getOldInstanceData() != null) {
-                containerSvcNameSet.addAll(commandStepExecutionSummary.getOldInstanceData()
-                                               .stream()
-                                               .map(ContainerServiceData::getName)
-                                               .collect(toList()));
-              }
-
-              if (commandStepExecutionSummary.getNewInstanceData() != null) {
-                List<String> newcontainerSvcNames = commandStepExecutionSummary.getNewInstanceData()
-                                                        .stream()
-                                                        .map(ContainerServiceData::getName)
-                                                        .collect(toList());
-                containerSvcNameSet.addAll(newcontainerSvcNames);
-              }
-
-              if (containerSvcNameSet.isEmpty()) {
-                logger.warn(
-                    "Both old and new container services are empty. Cannot proceed for phase step for state execution instance: {}",
-                    stateExecutionInstanceId);
-                return Optional.empty();
-              }
-
-              ContainerDeploymentInfoWithNames containerDeploymentInfo = ContainerDeploymentInfoWithNames.builder()
-                                                                             .containerSvcNameSet(containerSvcNameSet)
-                                                                             .clusterName(clusterName)
-                                                                             .build();
-
-              return Optional.of(containerDeploymentInfo);
-
-            } else if (stepExecutionSummary instanceof HelmSetupExecutionSummary
-                || stepExecutionSummary instanceof KubernetesSteadyStateCheckExecutionSummary) {
-              if (!(infrastructureMapping instanceof ContainerInfrastructureMapping)) {
-                logger.warn("Inframapping is not container type. cannot proceed for state execution instance: {}",
-                    stateExecutionInstanceId);
-                return Optional.empty();
-              }
-
-              String clusterName = ((ContainerInfrastructureMapping) infrastructureMapping).getClusterName();
-
-              List<Label> labels = new ArrayList();
-
-              if (stepExecutionSummary instanceof HelmSetupExecutionSummary) {
-                HelmSetupExecutionSummary helmSetupExecutionSummary = (HelmSetupExecutionSummary) stepExecutionSummary;
-                labels.add(aLabel().withName("release").withValue(helmSetupExecutionSummary.getReleaseName()).build());
-              } else {
-                KubernetesSteadyStateCheckExecutionSummary kubernetesSteadyStateCheckExecutionSummary =
-                    (KubernetesSteadyStateCheckExecutionSummary) stepExecutionSummary;
-                labels.addAll(kubernetesSteadyStateCheckExecutionSummary.getLabels());
-              }
-
-              ContainerDeploymentInfoWithLabels containerDeploymentInfo =
-                  ContainerDeploymentInfoWithLabels.builder().labels(labels).clusterName(clusterName).build();
-
-              return Optional.of(containerDeploymentInfo);
-            }
+          if (containerSvcNameSet.isEmpty()) {
+            logger.warn(
+                "Both old and new container services are empty. Cannot proceed for phase step for state execution instance: {}",
+                stateExecutionInstanceId);
+            return Optional.empty();
           }
+
+          ContainerDeploymentInfoWithNames containerDeploymentInfo = ContainerDeploymentInfoWithNames.builder()
+                                                                         .containerSvcNameSet(containerSvcNameSet)
+                                                                         .clusterName(clusterName)
+                                                                         .build();
+
+          return Optional.of(containerDeploymentInfo);
+
+        } else if (stepExecutionSummary instanceof HelmSetupExecutionSummary
+            || stepExecutionSummary instanceof KubernetesSteadyStateCheckExecutionSummary) {
+          if (!(infrastructureMapping instanceof ContainerInfrastructureMapping)) {
+            logger.warn("Inframapping is not container type. cannot proceed for state execution instance: {}",
+                stateExecutionInstanceId);
+            return Optional.empty();
+          }
+
+          String clusterName = ((ContainerInfrastructureMapping) infrastructureMapping).getClusterName();
+
+          List<Label> labels = new ArrayList();
+
+          if (stepExecutionSummary instanceof HelmSetupExecutionSummary) {
+            HelmSetupExecutionSummary helmSetupExecutionSummary = (HelmSetupExecutionSummary) stepExecutionSummary;
+            labels.add(aLabel().withName("release").withValue(helmSetupExecutionSummary.getReleaseName()).build());
+          } else {
+            KubernetesSteadyStateCheckExecutionSummary kubernetesSteadyStateCheckExecutionSummary =
+                (KubernetesSteadyStateCheckExecutionSummary) stepExecutionSummary;
+            labels.addAll(kubernetesSteadyStateCheckExecutionSummary.getLabels());
+          }
+
+          ContainerDeploymentInfoWithLabels containerDeploymentInfo =
+              ContainerDeploymentInfoWithLabels.builder().labels(labels).clusterName(clusterName).build();
+
+          return Optional.of(containerDeploymentInfo);
         }
       }
     }

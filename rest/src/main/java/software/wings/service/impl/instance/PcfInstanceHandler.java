@@ -14,6 +14,7 @@ import com.google.inject.Singleton;
 import software.wings.api.DeploymentInfo;
 import software.wings.api.PcfDeploymentInfo;
 import software.wings.api.PhaseExecutionData;
+import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.pcf.PcfDeployExecutionSummary;
 import software.wings.api.pcf.PcfServiceData;
 import software.wings.beans.InfrastructureMapping;
@@ -27,13 +28,11 @@ import software.wings.beans.infrastructure.instance.Instance.InstanceBuilder;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.PcfInstanceInfo;
 import software.wings.beans.infrastructure.instance.key.PcfInstanceKey;
-import software.wings.common.Constants;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.pcf.PcfAppNotFoundException;
 import software.wings.service.impl.PcfHelperService;
 import software.wings.service.intfc.InfrastructureMappingService;
-import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StepExecutionSummary;
 import software.wings.utils.Validator;
@@ -222,65 +221,57 @@ public class PcfInstanceHandler extends InstanceHandler {
 
   @Override
   public Optional<DeploymentInfo> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
-      WorkflowExecution workflowExecution, InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId,
-      Artifact artifact) throws HarnessException {
-    PhaseExecutionSummary phaseExecutionSummary = phaseExecutionData.getPhaseExecutionSummary();
-    if (phaseExecutionSummary != null) {
-      Map<String, PhaseStepExecutionSummary> phaseStepExecutionSummaryMap =
-          phaseExecutionSummary.getPhaseStepExecutionSummaryMap();
-      if (phaseStepExecutionSummaryMap != null) {
-        PhaseStepExecutionSummary phaseStepExecutionSummary = phaseStepExecutionSummaryMap.get(Constants.DEPLOY);
-        if (phaseStepExecutionSummary == null) {
-          if (logger.isDebugEnabled()) {
-            logger.debug("PhaseStepExecutionSummary is null for stateExecutionInstanceId: " + stateExecutionInstanceId);
-          }
-          return Optional.empty();
-        }
-        List<StepExecutionSummary> stepExecutionSummaryList = phaseStepExecutionSummary.getStepExecutionSummaryList();
-        // This was observed when the "deploy containers" step was executed in rollback and no commands were
-        // executed since setup failed.
-        if (stepExecutionSummaryList == null) {
-          if (logger.isDebugEnabled()) {
-            logger.debug("StepExecutionSummaryList is null for stateExecutionInstanceId: " + stateExecutionInstanceId);
-          }
-          return Optional.empty();
-        }
-
-        for (StepExecutionSummary stepExecutionSummary : stepExecutionSummaryList) {
-          if (stepExecutionSummary != null && stepExecutionSummary instanceof PcfDeployExecutionSummary) {
-            PcfDeployExecutionSummary pcfDeployExecutionSummary = (PcfDeployExecutionSummary) stepExecutionSummary;
-
-            Set<String> pcfSvcNameSet = Sets.newHashSet();
-
-            if (pcfDeployExecutionSummary.getInstaceData() != null) {
-              pcfSvcNameSet.addAll(
-                  pcfDeployExecutionSummary.getInstaceData().stream().map(PcfServiceData::getName).collect(toList()));
-            }
-
-            if (pcfSvcNameSet.isEmpty()) {
-              logger.warn(
-                  "Both old and new app resize details are empty. Cannot proceed for phase step for state execution instance: {}",
-                  stateExecutionInstanceId);
-              return Optional.empty();
-            }
-
-            Validator.notNullCheck(
-                "pcfSvcNameSet is null for workflow execution: " + workflowExecution.getUuid(), pcfSvcNameSet);
-
-            if (pcfSvcNameSet.isEmpty()) {
-              String msg = "No pcf service names processed by the event for workflow execution {}";
-              logger.error(msg, workflowExecution.getUuid());
-              throw new WingsException(msg);
-            }
-
-            PcfDeploymentInfo pcfDeploymentInfo =
-                PcfDeploymentInfo.builder().pcfApplicationNameSet(pcfSvcNameSet).build();
-            return Optional.of(pcfDeploymentInfo);
-          }
-        }
+      PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,
+      InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact)
+      throws HarnessException {
+    PhaseStepExecutionSummary phaseStepExecutionSummary = phaseStepExecutionData.getPhaseStepExecutionSummary();
+    if (phaseStepExecutionSummary == null) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("PhaseStepExecutionSummary is null for stateExecutionInstanceId: " + stateExecutionInstanceId);
       }
+      return Optional.empty();
+    }
+    List<StepExecutionSummary> stepExecutionSummaryList = phaseStepExecutionSummary.getStepExecutionSummaryList();
+    // This was observed when the "deploy containers" step was executed in rollback and no commands were
+    // executed since setup failed.
+    if (stepExecutionSummaryList == null) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("StepExecutionSummaryList is null for stateExecutionInstanceId: " + stateExecutionInstanceId);
+      }
+      return Optional.empty();
     }
 
+    for (StepExecutionSummary stepExecutionSummary : stepExecutionSummaryList) {
+      if (stepExecutionSummary != null && stepExecutionSummary instanceof PcfDeployExecutionSummary) {
+        PcfDeployExecutionSummary pcfDeployExecutionSummary = (PcfDeployExecutionSummary) stepExecutionSummary;
+
+        Set<String> pcfSvcNameSet = Sets.newHashSet();
+
+        if (pcfDeployExecutionSummary.getInstaceData() != null) {
+          pcfSvcNameSet.addAll(
+              pcfDeployExecutionSummary.getInstaceData().stream().map(PcfServiceData::getName).collect(toList()));
+        }
+
+        if (pcfSvcNameSet.isEmpty()) {
+          logger.warn(
+              "Both old and new app resize details are empty. Cannot proceed for phase step for state execution instance: {}",
+              stateExecutionInstanceId);
+          return Optional.empty();
+        }
+
+        Validator.notNullCheck(
+            "pcfSvcNameSet is null for workflow execution: " + workflowExecution.getUuid(), pcfSvcNameSet);
+
+        if (pcfSvcNameSet.isEmpty()) {
+          String msg = "No pcf service names processed by the event for workflow execution {}";
+          logger.error(msg, workflowExecution.getUuid());
+          throw new WingsException(msg);
+        }
+
+        PcfDeploymentInfo pcfDeploymentInfo = PcfDeploymentInfo.builder().pcfApplicationNameSet(pcfSvcNameSet).build();
+        return Optional.of(pcfDeploymentInfo);
+      }
+    }
     return Optional.empty();
   }
 }
