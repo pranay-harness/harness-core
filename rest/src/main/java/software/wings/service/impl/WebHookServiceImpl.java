@@ -68,6 +68,7 @@ public class WebHookServiceImpl implements WebHookService {
   @Override
   public WebHookResponse execute(String token, WebHookRequest webHookRequest) {
     try {
+      logger.info("Received the webhookRequest {}  ", String.valueOf(webHookRequest));
       String appId = webHookRequest.getApplication();
       Application app = appService.get(appId);
       if (app == null) {
@@ -100,8 +101,11 @@ public class WebHookServiceImpl implements WebHookService {
         Map<String, String> serviceBuildNumbers = new HashMap<>();
         if (webHookRequest.getArtifacts() != null) {
           for (Map<String, String> artifact : webHookRequest.getArtifacts()) {
-            if (artifact.get("service") != null) {
-              serviceBuildNumbers.put(artifact.get("service"), artifact.get("buildNumber"));
+            String serviceName = artifact.get("service");
+            String buildNumber = artifact.get("buildNumber");
+            logger.info("Service name {} and Build Number {}", serviceName, buildNumber);
+            if (serviceName != null) {
+              serviceBuildNumbers.put(serviceName, buildNumber);
             }
           }
         }

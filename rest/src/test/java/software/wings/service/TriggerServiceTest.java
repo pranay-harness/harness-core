@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
+import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
@@ -65,6 +66,7 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Service;
+import software.wings.beans.Variable;
 import software.wings.beans.WebHookToken;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
@@ -829,6 +831,8 @@ public class TriggerServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldTriggerTemplateWorkflowExecution() {
+    workflow.getOrchestrationWorkflow().getUserVariables().add(
+        aVariable().withName("Environment").withValue(ENV_ID).withEntityType(ENVIRONMENT).build());
     Artifact artifact = anArtifact()
                             .withAppId(APP_ID)
                             .withUuid(ARTIFACT_ID)
@@ -869,7 +873,6 @@ public class TriggerServiceTest extends WingsBaseTest {
                         .withResponse(singletonList(
                             aWorkflowExecution().withAppId(APP_ID).withExecutionArgs(executionArgs).build()))
                         .build());
-    when(wingsPersistence.get(Workflow.class, APP_ID, WORKFLOW_ID)).thenReturn(workflow);
 
     triggerService.triggerExecutionPostArtifactCollectionAsync(artifact);
     verify(workflowExecutionService).triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class));
@@ -878,7 +881,7 @@ public class TriggerServiceTest extends WingsBaseTest {
         .fetchLastCollectedArtifactForArtifactStream(APP_ID, ARTIFACT_STREAM_ID, jenkinsArtifactStream.getSourceName());
     verify(workflowExecutionService)
         .listExecutions(any(PageRequest.class), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean());
-    verify(wingsPersistence).get(Workflow.class, APP_ID, WORKFLOW_ID);
+    verify(workflowService).readWorkflow(APP_ID, WORKFLOW_ID);
   }
 
   @Test
@@ -1439,6 +1442,8 @@ public class TriggerServiceTest extends WingsBaseTest {
   }
 
   private Workflow buildWorkflow() {
+    List<Variable> userVariables = new ArrayList<>();
+    userVariables.add(aVariable().withName("MyVar").withValue("MyVal").build());
     return aWorkflow()
         .withEnvId(ENV_ID)
         .withName(WORKFLOW_NAME)
@@ -1447,7 +1452,7 @@ public class TriggerServiceTest extends WingsBaseTest {
         .withInfraMappingId(INFRA_MAPPING_ID)
         .withOrchestrationWorkflow(
             aBasicOrchestrationWorkflow()
-                .withUserVariables(asList(aVariable().withName("MyVar").withValue("MyVal").build()))
+                .withUserVariables(userVariables)
                 .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                 .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
                 .build())
