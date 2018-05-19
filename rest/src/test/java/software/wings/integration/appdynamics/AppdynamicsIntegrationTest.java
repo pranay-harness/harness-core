@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 
 import io.harness.rule.RepeatRule.Repeat;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.RestResponse;
@@ -99,6 +100,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Repeat(times = 5, successes = 1)
+  @Ignore
   public void testGetAllTierBTMetrics() throws Exception {
     SettingAttribute appdSettingAttribute = settingsService.get(appdynamicsSettingId);
     AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) appdSettingAttribute.getValue();
