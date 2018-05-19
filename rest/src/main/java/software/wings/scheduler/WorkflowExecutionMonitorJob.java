@@ -33,6 +33,7 @@ import software.wings.sm.ExecutionInterruptManager;
 import software.wings.sm.StateExecutionInstance;
 
 import java.time.Duration;
+import java.util.concurrent.ExecutorService;
 
 public class WorkflowExecutionMonitorJob implements Job {
   private static final Logger logger = LoggerFactory.getLogger(WorkflowExecutionMonitorJob.class);
@@ -43,6 +44,7 @@ public class WorkflowExecutionMonitorJob implements Job {
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutionInterruptManager executionInterruptManager;
+  @Inject private ExecutorService executorService;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
@@ -62,6 +64,10 @@ public class WorkflowExecutionMonitorJob implements Job {
 
   @Override
   public void execute(JobExecutionContext jobExecutionContext) {
+    executorService.submit(() -> asyncExecute());
+  }
+
+  public void asyncExecute() {
     final MorphiaIterator<WorkflowExecution, WorkflowExecution> workflowExecutions =
         wingsPersistence.createQuery(WorkflowExecution.class, excludeAuthority)
             .field(WorkflowExecution.STATUS_KEY)
