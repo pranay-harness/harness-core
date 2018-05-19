@@ -163,7 +163,7 @@ public class AppServiceTest extends WingsBaseTest {
     verify(notificationService).sendNotificationAsync(any(Notification.class));
     ArgumentCaptor<JobDetail> jobDetailArgumentCaptor = ArgumentCaptor.forClass(JobDetail.class);
     ArgumentCaptor<Trigger> triggerArgumentCaptor = ArgumentCaptor.forClass(Trigger.class);
-    verify(jobScheduler, Mockito.times(2))
+    verify(jobScheduler, Mockito.times(1))
         .scheduleJob(jobDetailArgumentCaptor.capture(), triggerArgumentCaptor.capture());
 
     assertThat(jobDetailArgumentCaptor.getValue()).isNotNull();

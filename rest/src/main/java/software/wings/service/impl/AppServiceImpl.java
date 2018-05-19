@@ -48,7 +48,6 @@ import software.wings.exception.WingsException;
 import software.wings.scheduler.InstanceSyncJob;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
-import software.wings.scheduler.StateMachineExecutionCleanupJob;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
@@ -140,7 +139,6 @@ public class AppServiceImpl implements AppService {
             .withNotificationTemplateVariables(
                 ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName()))
             .build());
-    StateMachineExecutionCleanupJob.add(jobScheduler, application.getUuid());
     InstanceSyncJob.add(jobScheduler, application.getUuid());
 
     yamlChangeSetHelper.applicationYamlChangeAsync(application, ChangeType.ADD);
