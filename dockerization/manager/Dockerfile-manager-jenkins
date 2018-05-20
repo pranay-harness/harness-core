@@ -15,4 +15,4 @@ RUN chmod +x /opt/harness/*.sh
 
 WORKDIR /opt/harness
 
-CMD ./run.sh
+CMD [ "./run.sh" ]
