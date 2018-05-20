@@ -36,6 +36,7 @@ import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseStepExecutionData;
+import software.wings.api.ScriptStateExecutionSummary;
 import software.wings.api.ServiceInstanceArtifactParam;
 import software.wings.api.ServiceInstanceIdsParam;
 import software.wings.api.pcf.PcfDeployExecutionSummary;
@@ -65,6 +66,7 @@ import software.wings.sm.StepExecutionSummary;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -174,6 +176,21 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
                                                    .filter(s -> s instanceof CommandStepExecutionSummary)
                                                    .findFirst();
         if (!first.isPresent()) {
+          //
+          // Deploy Container Step can use ShellScript to deploy, we have to let rollback steps go through for that.
+          //
+          Optional<StepExecutionSummary> firstScriptStateExecutionSummary =
+              phaseStepExecutionSummary.getStepExecutionSummaryList()
+                  .stream()
+                  .filter(s -> s instanceof ScriptStateExecutionSummary)
+                  .findFirst();
+          if (firstScriptStateExecutionSummary.isPresent()) {
+            return singletonList(ContainerRollbackRequestElement.builder()
+                                     .oldInstanceData(Collections.EMPTY_LIST)
+                                     .newInstanceData(Collections.EMPTY_LIST)
+                                     .build());
+          }
+
           return null;
         }
         CommandStepExecutionSummary commandStepExecutionSummary = (CommandStepExecutionSummary) first.get();
