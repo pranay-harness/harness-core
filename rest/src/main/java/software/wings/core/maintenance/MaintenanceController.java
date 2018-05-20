@@ -29,17 +29,16 @@ public class MaintenanceController implements Managed {
   private static final AtomicBoolean maintenance = new AtomicBoolean(true);
 
   public static void forceMaintenance(boolean force) {
+    logger.info("Setting forced maintenance {}", force);
     forceMaintenance = force;
   }
 
   public static void unforceMaintenance() {
+    logger.info("Unsetting forced maintenance");
     forceMaintenance = null;
   }
 
   public static boolean isMaintenance() {
-    if (forceMaintenance != null) {
-      return forceMaintenance;
-    }
     return maintenance.get();
   }
 
@@ -59,7 +58,7 @@ public class MaintenanceController implements Managed {
   public void start() {
     executorService.submit(() -> {
       while (running.get()) {
-        boolean isMaintenance = new File(MAINTENANCE).exists();
+        boolean isMaintenance = forceMaintenance != null ? forceMaintenance : new File(MAINTENANCE).exists();
         if (maintenance.getAndSet(isMaintenance) != isMaintenance) {
           logger.info("{} maintenance mode", isMaintenance ? "Entering" : "Leaving");
           synchronized (maintenanceListeners) {
