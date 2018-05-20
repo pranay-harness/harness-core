@@ -38,7 +38,7 @@ import javax.ws.rs.core.MediaType;
 @PublicApi
 public class HealthResource {
   private static final Logger logger = LoggerFactory.getLogger(HealthResource.class);
-  @Inject MainConfiguration mainConfiguration;
+  @Inject private MainConfiguration mainConfiguration;
 
   @GET
   @Timed
