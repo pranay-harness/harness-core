@@ -77,6 +77,7 @@ public class SubWorkflowState extends State {
     childStateExecutionInstance.setStateType(null);
     childStateExecutionInstance.setNotifyId(stateExecutionInstance.getUuid());
     childStateExecutionInstance.setPrevInstanceId(null);
+    childStateExecutionInstance.setDelegateTaskId(null);
     childStateExecutionInstance.setContextTransition(true);
     childStateExecutionInstance.setStatus(ExecutionStatus.NEW);
     childStateExecutionInstance.setContextElement(null);
