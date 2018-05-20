@@ -61,6 +61,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("globalWhitelistConfig") private GlobalWhitelistConfig globalWhitelistConfig;
   @JsonProperty(defaultValue = "AWS") private DeployMode deployMode = DeployMode.AWS;
   @JsonProperty("featuresEnabled") private String featureNames;
+  @JsonProperty("maintenanceKey") private String maintenanceKey;
   private int applicationPort;
   private boolean sslEnabled;
 

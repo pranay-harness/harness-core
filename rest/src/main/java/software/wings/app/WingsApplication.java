@@ -77,7 +77,6 @@ import software.wings.utils.JsonSubtypeResolver;
 import software.wings.waitnotify.Notifier;
 import software.wings.waitnotify.NotifyResponseCleanupHandler;
 import software.wings.yaml.gitSync.GitChangeSetRunnable;
-import sun.misc.Signal;
 
 import java.util.EnumSet;
 import java.util.Set;
@@ -108,17 +107,6 @@ public class WingsApplication extends Application<MainConfiguration> {
    * @throws Exception the exception
    */
   public static void main(String[] args) throws Exception {
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-      logger.info("Shutdown hook, entering maintenance...");
-      MaintenanceController.forceMaintenance(true);
-    }));
-    Signal.handle(new Signal("TERM"), signal -> {
-      if (signal.toString().trim().equals("SIGTERM")) {
-        logger.info("SIGTERM, entering maintenance...");
-        MaintenanceController.forceMaintenance(true);
-      }
-    });
-
     new WingsApplication().run(args);
   }
 
