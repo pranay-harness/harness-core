@@ -82,8 +82,6 @@ portal:
 
 featuresEnabled:
 
-maintenanceKey:
-
 awsRegionIdToName:
   us-east-1: US East (N. Virginia)
   us-east-2: US East (Ohio)
