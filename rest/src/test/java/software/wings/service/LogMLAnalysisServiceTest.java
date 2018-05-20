@@ -121,6 +121,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Ignore("Unit tests should not depend on external resources")
   public void testValidateSplunkConfig() throws Exception {
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(splunkDelegateService);
     setInternalState(analysisService, "delegateProxyFactory", delegateProxyFactory);
