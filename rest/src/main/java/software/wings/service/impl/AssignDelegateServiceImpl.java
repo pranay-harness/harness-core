@@ -136,15 +136,17 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
 
       for (String criteria : TaskType.valueOf(task.getTaskType()).getCriteria(task, injector)) {
         if (isNotBlank(criteria)) {
-          DelegateConnectionResult result = wingsPersistence.createQuery(DelegateConnectionResult.class)
-                                                .filter("accountId", task.getAccountId())
-                                                .field("delegateId")
-                                                .in(connectedEligibleDelegates)
-                                                .filter("criteria", criteria)
-                                                .get();
-          if (result != null && result.isValidated()) {
-            delegateIds.add(result.getDelegateId());
-          }
+          delegateIds.addAll(wingsPersistence.createQuery(DelegateConnectionResult.class)
+                                 .filter("accountId", task.getAccountId())
+                                 .filter("criteria", criteria)
+                                 .filter("validated", true)
+                                 .field("delegateId")
+                                 .in(connectedEligibleDelegates)
+                                 .project("delegateId", true)
+                                 .asList()
+                                 .stream()
+                                 .map(DelegateConnectionResult::getDelegateId)
+                                 .collect(toList()));
         }
       }
     } catch (Exception e) {
