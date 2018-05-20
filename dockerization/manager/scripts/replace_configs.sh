@@ -73,7 +73,3 @@ fi
 if [[ -v "FEATURES" ]]; then
     sed -i "s|featuresEnabled:|featuresEnabled: ${FEATURES}|" /opt/harness/config.yml
 fi
-
-if [[ -v "MAINTENANCE_KEY" ]]; then
-    sed -i "s|maintenanceKey:|maintenanceKey: ${MAINTENANCE_KEY}|" /opt/harness/config.yml
-fi
