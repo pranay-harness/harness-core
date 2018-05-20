@@ -39,7 +39,7 @@ public class MaintenanceController implements Managed {
   }
 
   public static boolean isMaintenance() {
-    return maintenance.get();
+    return forceMaintenance != null ? forceMaintenance : maintenance.get();
   }
 
   @Inject private ExecutorService executorService;
