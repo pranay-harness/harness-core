@@ -29,6 +29,11 @@ public class ScriptStateExecutionData extends StateExecutionData implements Noti
     return executionDetails;
   }
 
+  @Override
+  public ScriptStateExecutionSummary getStepExecutionSummary() {
+    return ScriptStateExecutionSummary.builder().build();
+  }
+
   private void setExecutionData(Map<String, ExecutionDataValue> executionDetails) {
     putNotNull(executionDetails, "activityId",
         ExecutionDataValue.builder().displayName("Activity Id").value(activityId).build());
