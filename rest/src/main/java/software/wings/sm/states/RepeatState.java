@@ -224,7 +224,7 @@ public class RepeatState extends State {
     childStateExecutionInstance.setStateName(repeatTransitionStateName);
     childStateExecutionInstance.setNotifyId(notifyId);
     childStateExecutionInstance.setPrevInstanceId(null);
-
+    childStateExecutionInstance.setDelegateTaskId(null);
     childStateExecutionInstance.getContextElements().push(repeatElement);
     childStateExecutionInstance.setContextElement(repeatElement);
     childStateExecutionInstance.setContextTransition(true);

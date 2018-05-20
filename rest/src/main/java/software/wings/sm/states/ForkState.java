@@ -71,6 +71,7 @@ public class ForkState extends State {
       childStateExecutionInstance.setStateName(state);
       childStateExecutionInstance.setNotifyId(element.getUuid());
       childStateExecutionInstance.setPrevInstanceId(null);
+      childStateExecutionInstance.setDelegateTaskId(null);
       childStateExecutionInstance.setContextTransition(true);
       childStateExecutionInstance.setStatus(ExecutionStatus.NEW);
       childStateExecutionInstance.setStartTs(null);

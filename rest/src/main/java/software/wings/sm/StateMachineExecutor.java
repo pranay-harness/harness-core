@@ -889,6 +889,7 @@ public class StateMachineExecutor {
     cloned.setDisplayName(nextState.getName());
     cloned.setStateName(nextState.getName());
     cloned.setPrevInstanceId(stateExecutionInstance.getUuid());
+    cloned.setDelegateTaskId(null);
     cloned.setContextTransition(false);
     cloned.setStatus(NEW);
     cloned.setStartTs(null);
