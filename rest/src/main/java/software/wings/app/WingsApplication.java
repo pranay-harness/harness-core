@@ -107,6 +107,11 @@ public class WingsApplication extends Application<MainConfiguration> {
    * @throws Exception the exception
    */
   public static void main(String[] args) throws Exception {
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      logger.info("Shutdown hook, entering maintenance...");
+      MaintenanceController.forceMaintenance(true);
+    }));
+
     new WingsApplication().run(args);
   }
 
