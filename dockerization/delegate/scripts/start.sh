@@ -64,9 +64,6 @@ then
   exit 1
 fi
 
-# Install nano editor
-apt-get install -y nano
-
 #Install kubectl
 echo "Installing kubectl..."
 apt-get update && apt-get install -y apt-transport-https
