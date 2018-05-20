@@ -470,6 +470,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       fieldsToRemove.add("name");
     }
 
+    if (isNotEmpty(infrastructureMapping.getProvisionerId())) {
+      keyValuePairs.put(InfrastructureMapping.PROVISIONER_ID_KEY, infrastructureMapping.getProvisionerId());
+    } else {
+      fieldsToRemove.add(InfrastructureMapping.PROVISIONER_ID_KEY);
+    }
+
     if (infrastructureMapping instanceof EcsInfrastructureMapping) {
       EcsInfrastructureMapping ecsInfrastructureMapping = (EcsInfrastructureMapping) infrastructureMapping;
       validateEcsInfraMapping(ecsInfrastructureMapping, computeProviderSetting);

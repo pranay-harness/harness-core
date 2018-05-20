@@ -400,6 +400,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     keyValuePairs.put("name", "Name4");
 
     Set<String> fieldsToRemove = new HashSet<>();
+    fieldsToRemove.add("provisionerId");
     verify(wingsPersistence)
         .updateFields(PhysicalInfrastructureMapping.class, INFRA_MAPPING_ID, keyValuePairs, fieldsToRemove);
     verify(wingsPersistence, times(2)).get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
