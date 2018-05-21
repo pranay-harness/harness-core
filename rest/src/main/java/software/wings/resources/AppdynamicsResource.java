@@ -17,6 +17,7 @@ import software.wings.service.intfc.appdynamics.AppdynamicsService;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -52,9 +53,20 @@ public class AppdynamicsResource {
   @Path("/tiers")
   @Timed
   @ExceptionMetered
-  public RestResponse<List<AppdynamicsTier>> getAllTiers(@QueryParam("accountId") String accountId,
+  public RestResponse<Set<AppdynamicsTier>> getAllTiers(@QueryParam("accountId") String accountId,
       @QueryParam("settingId") final String settingId, @QueryParam("appdynamicsAppId") long appdynamicsAppId)
       throws IOException {
     return new RestResponse<>(appdynamicsService.getTiers(settingId, appdynamicsAppId));
+  }
+
+  @GET
+  @Path("/dependent-tiers")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Set<AppdynamicsTier>> getDependentTiers(@QueryParam("accountId") String accountId,
+      @QueryParam("settingId") final String settingId, @QueryParam("appdynamicsAppId") long appdynamicsAppId,
+      @QueryParam("tierId") long tierId, @QueryParam("tierName") String tierName) throws IOException {
+    return new RestResponse<>(appdynamicsService.getDependentTiers(
+        settingId, appdynamicsAppId, AppdynamicsTier.builder().id(tierId).name(tierName).build()));
   }
 }

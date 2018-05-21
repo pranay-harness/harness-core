@@ -6,6 +6,7 @@ import software.wings.service.impl.newrelic.NewRelicApplication;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -14,7 +15,10 @@ import javax.validation.constraints.NotNull;
 public interface AppdynamicsService {
   List<NewRelicApplication> getApplications(@NotNull String settingId) throws IOException;
 
-  List<AppdynamicsTier> getTiers(String settingId, long appdynamicsAppId) throws IOException;
+  Set<AppdynamicsTier> getTiers(String settingId, long appdynamicsAppId) throws IOException;
+
+  Set<AppdynamicsTier> getDependentTiers(String settingId, long appdynamicsAppId, AppdynamicsTier tier)
+      throws IOException;
 
   boolean validateConfig(@NotNull SettingAttribute settingAttribute);
 }

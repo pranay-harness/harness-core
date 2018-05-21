@@ -3,6 +3,7 @@ package software.wings.delegatetasks;
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Table.Cell;
 import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
@@ -16,10 +17,12 @@ import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
+import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricDataValue;
+import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.appdynamics.AppdynamicsTimeSeries;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.analysis.ClusterLevel;
@@ -45,7 +48,8 @@ import java.util.regex.Pattern;
  */
 public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectionTask {
   private static final Logger logger = LoggerFactory.getLogger(AppdynamicsDataCollectionTask.class);
-  private static final int DURATION_TO_ASK_MINUTES = 5;
+  public static final int DURATION_TO_ASK_MINUTES = 5;
+  public static final int PREDECTIVE_HISTORY_MINUTES = 120;
   private AppdynamicsDataCollectionInfo dataCollectionInfo;
 
   @Inject private AppdynamicsDelegateService appdynamicsDelegateService;
@@ -108,10 +112,23 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
       final List<AppdynamicsMetricData> metricsData = new ArrayList<>();
       List<Callable<List<AppdynamicsMetricData>>> callables = new ArrayList<>();
       for (AppdynamicsMetric appdynamicsMetric : tierMetrics) {
-        for (String hostName : dataCollectionInfo.getHosts()) {
-          callables.add(()
-                            -> appdynamicsDelegateService.getTierBTMetricData(appDynamicsConfig, appId, tierId,
-                                appdynamicsMetric.getName(), hostName, DURATION_TO_ASK_MINUTES, encryptionDetails));
+        switch (dataCollectionInfo.getTimeSeriesMlAnalysisType()) {
+          case COMPARATIVE:
+            for (String hostName : dataCollectionInfo.getHosts()) {
+              callables.add(()
+                                -> appdynamicsDelegateService.getTierBTMetricData(appDynamicsConfig, appId, tierId,
+                                    appdynamicsMetric.getName(), hostName, DURATION_TO_ASK_MINUTES, encryptionDetails));
+            }
+            break;
+          case PREDICTIVE:
+            callables.add(()
+                              -> appdynamicsDelegateService.getTierBTMetricData(appDynamicsConfig, appId, tierId,
+                                  appdynamicsMetric.getName(), null,
+                                  PREDECTIVE_HISTORY_MINUTES + DURATION_TO_ASK_MINUTES, encryptionDetails));
+            break;
+
+          default:
+            throw new IllegalStateException("Invalid type " + dataCollectionInfo.getTimeSeriesMlAnalysisType());
         }
       }
       List<Optional<List<AppdynamicsMetricData>>> results = executeParrallel(callables);
@@ -150,20 +167,28 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
        */
       for (AppdynamicsMetricData metricData : metricsData) {
         String[] appdynamicsPathPieces = metricData.getMetricPath().split(Pattern.quote("|"));
-        String nodeName = appdynamicsPathPieces[5];
-        if (!dataCollectionInfo.getHosts().contains(nodeName)) {
+        String tierName = parseAppdynamicsInternalName(appdynamicsPathPieces, 2);
+        String nodeName = dataCollectionInfo.getTimeSeriesMlAnalysisType().equals(TimeSeriesMlAnalysisType.PREDICTIVE)
+            ? tierName
+            : appdynamicsPathPieces[5];
+        if (dataCollectionInfo.getTimeSeriesMlAnalysisType().equals(TimeSeriesMlAnalysisType.COMPARATIVE)
+            && !dataCollectionInfo.getHosts().contains(nodeName)) {
           logger.info("skipping: {}", nodeName);
           continue;
         }
         String btName = parseAppdynamicsInternalName(appdynamicsPathPieces, 3);
-        String metricName = parseAppdynamicsInternalName(appdynamicsPathPieces, 6);
+        String metricName =
+            dataCollectionInfo.getTimeSeriesMlAnalysisType().equals(TimeSeriesMlAnalysisType.COMPARATIVE)
+            ? parseAppdynamicsInternalName(appdynamicsPathPieces, 6)
+            : parseAppdynamicsInternalName(appdynamicsPathPieces, 4);
 
         for (AppdynamicsMetricDataValue metricDataValue : metricData.getMetricValues()) {
-          Map<String, NewRelicMetricDataRecord> hostVsRecordMap =
-              records.get(btName, metricDataValue.getStartTimeInMillis());
+          long metricTimeStamp = metricDataValue.getStartTimeInMillis();
+
+          Map<String, NewRelicMetricDataRecord> hostVsRecordMap = records.get(btName, metricTimeStamp);
           if (hostVsRecordMap == null) {
             hostVsRecordMap = new HashMap<>();
-            records.put(btName, metricDataValue.getStartTimeInMillis(), hostVsRecordMap);
+            records.put(btName, metricTimeStamp, hostVsRecordMap);
           }
 
           NewRelicMetricDataRecord hostRecord = hostVsRecordMap.get(nodeName);
@@ -175,9 +200,10 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
                              .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
                              .serviceId(dataCollectionInfo.getServiceId())
                              .stateExecutionId(dataCollectionInfo.getStateExecutionId())
-                             .dataCollectionMinute(dataCollectionMinute)
-                             .timeStamp(metricDataValue.getStartTimeInMillis())
+                             .dataCollectionMinute(getCollectionMinute(metricTimeStamp))
+                             .timeStamp(metricTimeStamp)
                              .host(nodeName)
+                             .groupName(tierName)
                              .stateType(getStateType())
                              .values(new HashMap<>())
                              .build();
@@ -190,12 +216,26 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
       return records;
     }
 
+    private int getCollectionMinute(long metricTimeStamp) {
+      int collectionDuration =
+          dataCollectionInfo.getTimeSeriesMlAnalysisType().equals(TimeSeriesMlAnalysisType.COMPARATIVE)
+          ? DURATION_TO_ASK_MINUTES
+          : PREDECTIVE_HISTORY_MINUTES + DURATION_TO_ASK_MINUTES;
+
+      return (int) (TimeUnit.MILLISECONDS.toMinutes(metricTimeStamp - dataCollectionInfo.getStartTime())
+          + collectionDuration);
+    }
+
     @Override
     public void run() {
       try {
         int retry = 0;
         while (!completed.get() && retry < RETRIES) {
           try {
+            AppdynamicsTier appdynamicsTier = appdynamicsDelegateService.getAppdynamicsTier(
+                dataCollectionInfo.getAppDynamicsConfig(), dataCollectionInfo.getAppId(),
+                dataCollectionInfo.getTierId(), dataCollectionInfo.getEncryptedDataDetails());
+            Preconditions.checkNotNull("No trier found for {}", dataCollectionInfo);
             List<AppdynamicsMetricData> metricsData = getMetricsData();
             logger.info("Got {} metrics from appdynamics", metricsData.size());
             TreeBasedTable<String, Long, Map<String, NewRelicMetricDataRecord>> records = TreeBasedTable.create();
@@ -212,9 +252,13 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
                         .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
                         .serviceId(dataCollectionInfo.getServiceId())
                         .stateExecutionId(dataCollectionInfo.getStateExecutionId())
-                        .dataCollectionMinute(dataCollectionMinute)
+                        .dataCollectionMinute(
+                            dataCollectionInfo.getTimeSeriesMlAnalysisType().equals(TimeSeriesMlAnalysisType.PREDICTIVE)
+                                ? dataCollectionMinute + PREDECTIVE_HISTORY_MINUTES + DURATION_TO_ASK_MINUTES
+                                : dataCollectionMinute)
                         .timeStamp(collectionStartTime)
                         .level(ClusterLevel.H0)
+                        .groupName(appdynamicsTier.getName())
                         .build());
 
             records.putAll(processMetricData(metricsData));

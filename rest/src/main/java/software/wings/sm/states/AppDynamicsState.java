@@ -5,19 +5,22 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.time.Timestamp;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.api.PhaseElement;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.TemplateExpression;
-import software.wings.common.Constants;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
@@ -25,8 +28,12 @@ import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
+import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
+import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.appdynamics.AppDynamicsSettingProvider;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
+import software.wings.service.impl.appdynamics.AppdynamicsTier;
+import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
@@ -34,7 +41,13 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -45,6 +58,8 @@ import java.util.concurrent.TimeUnit;
 public class AppDynamicsState extends AbstractMetricAnalysisState {
   @Transient @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(AppDynamicsState.class);
 
+  @Transient @Inject protected AppdynamicsService appdynamicsService;
+
   @EnumData(enumDataProvider = AppDynamicsSettingProvider.class)
   @Attributes(required = true, title = "AppDynamics Server")
   private String analysisServerConfigId;
@@ -52,6 +67,8 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
   @Attributes(required = true, title = "Application Name") private String applicationId;
 
   @Attributes(required = true, title = "Tier Name") private String tierId;
+
+  private List<AppdynamicsTier> dependentTiersToAnalyze;
 
   /**
    * Create a new Http State with given name.
@@ -152,7 +169,71 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
     }
     AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
 
+    List<AppdynamicsTier> dependentTiers = new ArrayList<>();
+    Map<String, TimeSeriesMlAnalysisGroupInfo> metricGroups = new HashMap<>();
+    AppdynamicsTier analyzedTier = AppdynamicsTier.builder().build();
+    try {
+      Set<AppdynamicsTier> tiers = appdynamicsService.getTiers(finalServerConfigId, Long.parseLong(finalApplicationId));
+      final long tierId = Long.parseLong(finalTierId);
+      tiers.forEach(tier -> {
+        if (tier.getId() == tierId) {
+          metricGroups.put(tier.getName(),
+              TimeSeriesMlAnalysisGroupInfo.builder()
+                  .groupName(tier.getName())
+                  .mlAnalysisType(TimeSeriesMlAnalysisType.COMPARATIVE)
+                  .build());
+          analyzedTier.setName(tier.getName());
+          analyzedTier.setId(tierId);
+        }
+      });
+      Preconditions.checkState(!isEmpty(analyzedTier.getName()), "failed for " + analyzedTier);
+
+      if (!isEmpty(dependentTiersToAnalyze)) {
+        dependentTiers = Lists.newArrayList(appdynamicsService.getDependentTiers(
+            finalServerConfigId, Long.parseLong(finalApplicationId), analyzedTier));
+
+        for (Iterator<AppdynamicsTier> iterator = dependentTiers.iterator(); iterator.hasNext();) {
+          AppdynamicsTier tier = iterator.next();
+          if (!dependentTiersToAnalyze.contains(tier)) {
+            iterator.remove();
+          }
+        }
+      }
+    } catch (IOException e) {
+      throw new WingsException(
+          "Error executing appdynamics state with id : " + context.getStateExecutionInstanceId(), e);
+    }
+
     final long dataCollectionStartTimeStamp = Timestamp.currentMinuteBoundary();
+    List<DelegateTask> delegateTasks = new ArrayList<>();
+    String[] waitIds = new String[dependentTiers.size() + 1];
+    waitIds[0] = createDelegateTask(context, hosts, envId, finalApplicationId, Long.parseLong(finalTierId),
+        appDynamicsConfig, dataCollectionStartTimeStamp, TimeSeriesMlAnalysisType.COMPARATIVE, delegateTasks);
+
+    for (int i = 0; i < dependentTiers.size(); i++) {
+      waitIds[i + 1] =
+          createDelegateTask(context, Collections.emptySet(), envId, finalApplicationId, dependentTiers.get(i).getId(),
+              appDynamicsConfig, dataCollectionStartTimeStamp, TimeSeriesMlAnalysisType.PREDICTIVE, delegateTasks);
+      metricGroups.put(dependentTiers.get(i).getName(),
+          TimeSeriesMlAnalysisGroupInfo.builder()
+              .groupName(dependentTiers.get(i).getName())
+              .dependencyPath(dependentTiers.get(i).getDependencyPath())
+              .mlAnalysisType(TimeSeriesMlAnalysisType.PREDICTIVE)
+              .build());
+    }
+    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId, true), waitIds);
+    metricAnalysisService.saveMetricGroups(
+        context.getAppId(), StateType.APP_DYNAMICS, context.getStateExecutionInstanceId(), metricGroups);
+    List<String> delegateTaskIds = new ArrayList<>();
+    for (DelegateTask task : delegateTasks) {
+      delegateTaskIds.add(delegateService.queueTask(task));
+    }
+    return StringUtils.join(delegateTaskIds, ",");
+  }
+
+  private String createDelegateTask(ExecutionContext context, Set<String> hosts, String envId,
+      String finalApplicationId, long finalTierId, AppDynamicsConfig appDynamicsConfig,
+      long dataCollectionStartTimeStamp, TimeSeriesMlAnalysisType mlAnalysisType, List<DelegateTask> delegateTasks) {
     final AppdynamicsDataCollectionInfo dataCollectionInfo =
         AppdynamicsDataCollectionInfo.builder()
             .appDynamicsConfig(appDynamicsConfig)
@@ -164,28 +245,25 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
             .startTime(dataCollectionStartTimeStamp)
             .collectionTime(Integer.parseInt(timeDuration))
             .appId(Long.parseLong(finalApplicationId))
-            .tierId(Long.parseLong(finalTierId))
+            .tierId(finalTierId)
             .dataCollectionMinute(0)
             .encryptedDataDetails(secretManager.getEncryptionDetails(
                 appDynamicsConfig, context.getAppId(), context.getWorkflowExecutionId()))
             .hosts(hosts)
+            .timeSeriesMlAnalysisType(mlAnalysisType)
             .build();
 
     String waitId = generateUuid();
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-    String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
-    DelegateTask delegateTask = aDelegateTask()
-                                    .withTaskType(TaskType.APPDYNAMICS_COLLECT_METRIC_DATA)
-                                    .withAccountId(appService.get(context.getAppId()).getAccountId())
-                                    .withAppId(context.getAppId())
-                                    .withWaitId(waitId)
-                                    .withParameters(new Object[] {dataCollectionInfo})
-                                    .withEnvId(envId)
-                                    .withInfrastructureMappingId(infrastructureMappingId)
-                                    .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 5))
-                                    .build();
-    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId, false), waitId);
-    return delegateService.queueTask(delegateTask);
+    delegateTasks.add(aDelegateTask()
+                          .withTaskType(TaskType.APPDYNAMICS_COLLECT_METRIC_DATA)
+                          .withAccountId(appService.get(context.getAppId()).getAccountId())
+                          .withAppId(context.getAppId())
+                          .withWaitId(waitId)
+                          .withParameters(new Object[] {dataCollectionInfo})
+                          .withEnvId(envId)
+                          .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 5))
+                          .build());
+    return waitId;
   }
 
   @Override
@@ -202,6 +280,14 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
   @Override
   public void setAnalysisServerConfigId(String analysisServerConfigId) {
     this.analysisServerConfigId = analysisServerConfigId;
+  }
+
+  public List<AppdynamicsTier> getDependentTiersToAnalyze() {
+    return dependentTiersToAnalyze;
+  }
+
+  public void setDependentTiersToAnalyze(List<AppdynamicsTier> dependentTiersToAnalyze) {
+    this.dependentTiersToAnalyze = dependentTiersToAnalyze;
   }
 
   @Override

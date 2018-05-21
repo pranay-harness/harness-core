@@ -1,5 +1,7 @@
 package software.wings.service.impl.newrelic;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.google.inject.Inject;
 
 import lombok.AllArgsConstructor;
@@ -12,6 +14,7 @@ import software.wings.beans.CountsByStatuses;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.sm.StateExecutionData;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -26,6 +29,7 @@ import java.util.Set;
 public class MetricAnalysisExecutionData extends StateExecutionData {
   @Inject private MetricDataAnalysisService metricDataAnalysisService;
 
+  private String appId;
   private String correlationId;
   private String workflowExecutionId;
   private String stateExecutionInstanceId;
@@ -51,10 +55,10 @@ public class MetricAnalysisExecutionData extends StateExecutionData {
         executionDetails, "errorMsg", ExecutionDataValue.builder().displayName("Message").value(getErrorMsg()).build());
     final int total = timeDuration;
     putNotNull(executionDetails, "total", ExecutionDataValue.builder().displayName("Total").value(total).build());
-    final NewRelicMetricAnalysisRecord analysisRecord =
-        metricDataAnalysisService.getMetricsAnalysis(stateExecutionInstanceId, workflowExecutionId);
+    final List<NewRelicMetricAnalysisRecord> analysisRecords =
+        metricDataAnalysisService.getMetricsAnalysis(appId, stateExecutionInstanceId, workflowExecutionId);
 
-    int elapsedMinutes = analysisRecord == null ? 0 : analysisRecord.getAnalysisMinute();
+    int elapsedMinutes = isEmpty(analysisRecords) ? 0 : analysisRecords.get(0).getAnalysisMinute();
     final CountsByStatuses breakdown = new CountsByStatuses();
     switch (getStatus()) {
       case FAILED:

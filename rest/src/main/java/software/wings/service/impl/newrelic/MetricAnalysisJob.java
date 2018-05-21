@@ -2,7 +2,10 @@ package software.wings.service.impl.newrelic;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static software.wings.delegatetasks.AppdynamicsDataCollectionTask.DURATION_TO_ASK_MINUTES;
+import static software.wings.delegatetasks.AppdynamicsDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import org.quartz.DisallowConcurrentExecution;
@@ -22,6 +25,8 @@ import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.MLAnalysisType;
+import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
+import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
@@ -64,7 +69,6 @@ public class MetricAnalysisJob implements Job {
   @Override
   public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
     try {
-      long timestamp = jobExecutionContext.getMergedJobDataMap().getLong("timestamp");
       String params = jobExecutionContext.getMergedJobDataMap().getString("jobParams");
       String delegateTaskId = jobExecutionContext.getMergedJobDataMap().getString("delegateTaskId");
 
@@ -84,9 +88,7 @@ public class MetricAnalysisJob implements Job {
   }
 
   public static class MetricAnalysisGenerator implements Runnable {
-    //    public static final int PYTHON_JOB_RETRIES = 3;
-    public static final int ANALYSIS_DURATION = 30;
-    protected static final String TS_ML_SHELL_FILE_NAME = "run_time_series_ml.sh";
+    public static final int COMPARATIVE_ANALYSIS_DURATION = 30;
     private static final int APM_BUFFER_MINUTES = 2;
     private final AnalysisContext context;
     private final JobExecutionContext jobExecutionContext;
@@ -127,30 +129,37 @@ public class MetricAnalysisJob implements Job {
       return stateValuesToThresholds;
     }
 
-    private NewRelicMetricAnalysisRecord analyzeLocal(int analysisMinute) {
+    private NewRelicMetricAnalysisRecord analyzeLocal(int analysisMinute, String groupName) {
       logger.info("running " + context.getStateType().name() + " for minute {}", analysisMinute);
-      int analysisStartMin = analysisMinute > ANALYSIS_DURATION ? analysisMinute - ANALYSIS_DURATION : 0;
+      int analysisStartMin =
+          analysisMinute > COMPARATIVE_ANALYSIS_DURATION ? analysisMinute - COMPARATIVE_ANALYSIS_DURATION : 0;
+      final String lastSuccessfulWorkflowExecutionIdWithData =
+          analysisService.getLastSuccessfulWorkflowExecutionIdWithData(
+              context.getStateType(), context.getAppId(), context.getWorkflowId(), context.getServiceId());
       final List<NewRelicMetricDataRecord> controlRecords =
           context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS
           ? analysisService.getPreviousSuccessfulRecords(context.getStateType(), context.getAppId(),
-                context.getWorkflowId(), context.getServiceId(), analysisMinute, analysisStartMin)
+                context.getWorkflowId(), lastSuccessfulWorkflowExecutionIdWithData, context.getServiceId(), groupName,
+                analysisMinute, analysisStartMin)
           : analysisService.getRecords(context.getStateType(), context.getAppId(), context.getWorkflowExecutionId(),
-                context.getStateExecutionId(), context.getWorkflowId(), context.getServiceId(),
+                context.getStateExecutionId(), context.getWorkflowId(), context.getServiceId(), groupName,
                 context.getControlNodes(), analysisMinute, analysisStartMin);
 
       final List<NewRelicMetricDataRecord> testRecords = analysisService.getRecords(context.getStateType(),
           context.getAppId(), context.getWorkflowExecutionId(), context.getStateExecutionId(), context.getWorkflowId(),
-          context.getServiceId(), context.getTestNodes(), analysisMinute, analysisStartMin);
+          context.getServiceId(), groupName, context.getTestNodes(), analysisMinute, analysisStartMin);
 
       Map<String, List<NewRelicMetricDataRecord>> controlRecordsByMetric = splitMetricsByName(controlRecords);
       Map<String, List<NewRelicMetricDataRecord>> testRecordsByMetric = splitMetricsByName(testRecords);
 
       NewRelicMetricAnalysisRecord analysisRecord = NewRelicMetricAnalysisRecord.builder()
+                                                        .appId(context.getAppId())
                                                         .stateType(context.getStateType())
                                                         .stateExecutionId(context.getStateExecutionId())
                                                         .workflowExecutionId(context.getWorkflowExecutionId())
                                                         .workflowId(context.getWorkflowId())
                                                         .riskLevel(RiskLevel.LOW)
+                                                        .groupName(groupName)
                                                         .metricAnalyses(new ArrayList<>())
                                                         .build();
 
@@ -210,7 +219,8 @@ public class MetricAnalysisJob implements Job {
       return analysisRecord;
     }
 
-    private boolean timeSeriesML(int analysisMinute) throws InterruptedException, TimeoutException, IOException {
+    private boolean timeSeriesML(int analysisMinute, String groupName, TimeSeriesMlAnalysisType mlAnalysisType)
+        throws InterruptedException, TimeoutException, IOException {
       if (learningEngineService.hasAnalysisTimedOut(
               context.getAppId(), context.getWorkflowExecutionId(), context.getStateExecutionId())) {
         learningEngineService.markStatus(
@@ -218,14 +228,15 @@ public class MetricAnalysisJob implements Job {
         throw new WingsException("Error running time series analysis. Finished all retries. stateExecutionId: "
             + context.getStateExecutionId());
       }
-      int analysisStartMin = analysisMinute > ANALYSIS_DURATION ? analysisMinute - ANALYSIS_DURATION : 0;
+      int analysisStartMin = getAnalysisStartMinute(analysisMinute, mlAnalysisType);
 
-      String testInputUrl = "/api/" + MetricDataAnalysisService.RESOURCE_URL + "/get-metrics?accountId="
-          + context.getAccountId() + "&appId=" + context.getAppId() + "&stateType=" + context.getStateType()
-          + "&workflowExecutionId=" + context.getWorkflowExecutionId() + "&compareCurrent=true";
+      String testInputUrl = "/api/" + MetricDataAnalysisService.RESOURCE_URL
+          + "/get-metrics?accountId=" + context.getAccountId() + "&appId=" + context.getAppId()
+          + "&stateType=" + context.getStateType() + "&workflowExecutionId=" + context.getWorkflowExecutionId()
+          + "&groupName=" + groupName + "&compareCurrent=true";
       String controlInputUrl = "/api/" + MetricDataAnalysisService.RESOURCE_URL
           + "/get-metrics?accountId=" + context.getAccountId() + "&appId=" + context.getAppId()
-          + "&stateType=" + context.getStateType() + "&compareCurrent=";
+          + "&stateType=" + context.getStateType() + "&groupName=" + groupName + "&compareCurrent=";
       if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
         controlInputUrl = controlInputUrl + true + "&workflowExecutionId=" + context.getWorkflowExecutionId();
       } else {
@@ -238,7 +249,8 @@ public class MetricAnalysisJob implements Job {
           + "/save-analysis?accountId=" + context.getAccountId() + "&stateType=" + context.getStateType()
           + "&applicationId=" + context.getAppId() + "&workflowExecutionId=" + context.getWorkflowExecutionId()
           + "&stateExecutionId=" + context.getStateExecutionId() + "&analysisMinute=" + analysisMinute
-          + "&taskId=" + uuid + "&serviceId=" + context.getServiceId() + "&workflowId=" + context.getWorkflowId();
+          + "&taskId=" + uuid + "&serviceId=" + context.getServiceId() + "&workflowId=" + context.getWorkflowId()
+          + "&groupName=" + groupName;
 
       if (!isEmpty(context.getPrevWorkflowExecutionId())) {
         logAnalysisSaveUrl += "&baseLineExecutionId=" + context.getPrevWorkflowExecutionId();
@@ -246,7 +258,6 @@ public class MetricAnalysisJob implements Job {
 
       LearningEngineAnalysisTask learningEngineAnalysisTask =
           LearningEngineAnalysisTask.builder()
-              .ml_shell_file_name(TS_ML_SHELL_FILE_NAME)
               .workflow_id(context.getWorkflowId())
               .workflow_execution_id(context.getWorkflowExecutionId())
               .state_execution_id(context.getStateExecutionId())
@@ -266,15 +277,31 @@ public class MetricAnalysisJob implements Job {
                   + "/get-metric-template?accountId=" + context.getAccountId() + "&stateType=" + context.getStateType()
                   + "&stateExecutionId=" + context.getStateExecutionId())
               .control_nodes(controlNodes)
-              .test_nodes(testNodes)
+              .test_nodes(
+                  mlAnalysisType.equals(TimeSeriesMlAnalysisType.PREDICTIVE) ? Sets.newHashSet(groupName) : testNodes)
+              .analysis_start_time(
+                  mlAnalysisType.equals(TimeSeriesMlAnalysisType.PREDICTIVE) ? PREDECTIVE_HISTORY_MINUTES : 0)
               .stateType(context.getStateType())
               .ml_analysis_type(MLAnalysisType.TIME_SERIES)
+              .group_name(groupName)
+              .time_series_ml_analysis_type(mlAnalysisType)
               .build();
       learningEngineAnalysisTask.setAppId(context.getAppId());
       learningEngineAnalysisTask.setUuid(uuid);
 
       logger.info("Queueing for analysis {}", learningEngineAnalysisTask);
       return learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
+    }
+
+    private int getAnalysisStartMinute(int analysisMinute, TimeSeriesMlAnalysisType mlAnalysisType) {
+      switch (mlAnalysisType) {
+        case COMPARATIVE:
+          return analysisMinute > COMPARATIVE_ANALYSIS_DURATION ? analysisMinute - COMPARATIVE_ANALYSIS_DURATION : 0;
+        case PREDICTIVE:
+          return analysisMinute > PREDECTIVE_HISTORY_MINUTES * 2 ? analysisMinute - PREDECTIVE_HISTORY_MINUTES * 2 : 0;
+        default:
+          throw new IllegalArgumentException("Invalid type " + mlAnalysisType);
+      }
     }
 
     @Override
@@ -295,84 +322,105 @@ public class MetricAnalysisJob implements Job {
           return;
         }
 
-        final NewRelicMetricDataRecord heartBeatRecord =
-            analysisService.getLastHeartBeat(context.getStateType(), context.getAppId(), context.getStateExecutionId(),
-                context.getWorkflowExecutionId(), context.getServiceId());
+        Map<String, TimeSeriesMlAnalysisGroupInfo> metricGroups =
+            analysisService.getMetricGroups(context.getAppId(), context.getStateExecutionId());
 
-        if (heartBeatRecord != null && heartBeatRecord.getDataCollectionMinute() >= analysisDuration) {
-          logger.info(
-              "time series analysis finished after running for {} minutes", heartBeatRecord.getDataCollectionMinute());
-          completeCron = true;
-          return;
-        }
+        for (Entry<String, TimeSeriesMlAnalysisGroupInfo> entry : metricGroups.entrySet()) {
+          TimeSeriesMlAnalysisGroupInfo timeSeriesMlAnalysisGroupInfo = entry.getValue();
+          String groupName = timeSeriesMlAnalysisGroupInfo.getGroupName();
+          TimeSeriesMlAnalysisType timeSeriesMlAnalysisType = timeSeriesMlAnalysisGroupInfo.getMlAnalysisType();
+          final NewRelicMetricDataRecord heartBeatRecord =
+              analysisService.getLastHeartBeat(context.getStateType(), context.getAppId(),
+                  context.getStateExecutionId(), context.getWorkflowExecutionId(), context.getServiceId(), groupName);
 
-        final NewRelicMetricDataRecord analysisDataRecord =
-            analysisService.getAnalysisMinute(context.getStateType(), context.getAppId(), context.getStateExecutionId(),
-                context.getWorkflowExecutionId(), context.getServiceId());
-        if (analysisDataRecord == null) {
-          logger.info("Skipping time series analysis. No new data.");
-          return;
-        }
-        int analysisMinute = analysisDataRecord.getDataCollectionMinute();
-
-        logger.info("running analysis for " + context.getStateExecutionId() + " for minute" + analysisMinute);
-
-        boolean runTimeSeriesML = true;
-
-        boolean taskQueued = false;
-        if (runTimeSeriesML) {
-          switch (context.getComparisonStrategy()) {
-            case COMPARE_WITH_PREVIOUS:
-              if (isEmpty(context.getPrevWorkflowExecutionId())) {
-                runTimeSeriesML = false;
-                break;
-              }
-              int minControlMinute =
-                  analysisService.getMinControlMinuteWithData(context.getStateType(), context.getAppId(),
-                      context.getServiceId(), context.getWorkflowId(), context.getPrevWorkflowExecutionId());
-
-              if (analysisMinute < minControlMinute) {
-                logger.info("Baseline control minute starts at " + minControlMinute
-                    + ". But current analysis minute is  " + analysisMinute
-                    + "Will run local analysis instead of ML for minute " + analysisMinute);
-                runTimeSeriesML = false;
-                break;
-              }
-
-              int maxControlMinute =
-                  analysisService.getMaxControlMinuteWithData(context.getStateType(), context.getAppId(),
-                      context.getServiceId(), context.getWorkflowId(), context.getPrevWorkflowExecutionId());
-
-              if (analysisMinute > maxControlMinute) {
-                logger.warn("Not enough control data. analysis minute = " + analysisMinute
-                    + " , max control minute = " + maxControlMinute);
-                // Do nothing. Don't run any analysis.
-                taskQueued = true;
-                analysisService.bumpCollectionMinuteToProcess(context.getStateType(), context.getAppId(),
-                    context.getStateExecutionId(), context.getWorkflowExecutionId(), context.getServiceId(),
-                    analysisMinute);
-                break;
-              }
-              taskQueued = timeSeriesML(analysisMinute);
-              break;
-              // Note that control flows through to COMPARE_WITH_CURRENT where the ml analysis is run.
-            case COMPARE_WITH_CURRENT:
-              logger.info("running time series ml analysis for minute " + analysisMinute);
-              taskQueued = timeSeriesML(analysisMinute);
-              break;
-            default:
-              throw new IllegalStateException("Invalid type " + context.getComparisonStrategy());
+          if (heartBeatRecord != null) {
+            completeCron = timeSeriesMlAnalysisType.equals(TimeSeriesMlAnalysisType.PREDICTIVE)
+                ? heartBeatRecord.getDataCollectionMinute()
+                    >= PREDECTIVE_HISTORY_MINUTES + DURATION_TO_ASK_MINUTES + analysisDuration
+                : heartBeatRecord.getDataCollectionMinute() >= analysisDuration;
+            if (completeCron) {
+              logger.info("time series analysis finished after running for {} minutes",
+                  heartBeatRecord.getDataCollectionMinute());
+              return;
+            }
           }
-        }
 
-        if (!runTimeSeriesML) {
-          logger.info("running local time series analysis for {}", context.getStateExecutionId());
-          NewRelicMetricAnalysisRecord analysisRecord = analyzeLocal(analysisMinute);
-          analysisService.saveAnalysisRecords(analysisRecord);
-          analysisService.bumpCollectionMinuteToProcess(context.getStateType(), context.getAppId(),
-              context.getStateExecutionId(), context.getWorkflowExecutionId(), context.getServiceId(), analysisMinute);
-        } else if (!taskQueued) {
-          return;
+          final NewRelicMetricDataRecord analysisDataRecord =
+              analysisService.getAnalysisMinute(context.getStateType(), context.getAppId(),
+                  context.getStateExecutionId(), context.getWorkflowExecutionId(), context.getServiceId(), groupName);
+          if (analysisDataRecord == null) {
+            logger.info("Skipping time series analysis. No new data.");
+            continue;
+          }
+          int analysisMinute = analysisDataRecord.getDataCollectionMinute();
+
+          logger.info("running analysis for " + context.getStateExecutionId() + " for minute" + analysisMinute);
+
+          boolean runTimeSeriesML = true;
+
+          boolean taskQueued = false;
+          if (runTimeSeriesML) {
+            switch (context.getComparisonStrategy()) {
+              case COMPARE_WITH_PREVIOUS:
+                if (timeSeriesMlAnalysisType != TimeSeriesMlAnalysisType.PREDICTIVE
+                    && isEmpty(context.getPrevWorkflowExecutionId())) {
+                  runTimeSeriesML = false;
+                  break;
+                }
+
+                if (timeSeriesMlAnalysisType.equals(TimeSeriesMlAnalysisType.PREDICTIVE)) {
+                  taskQueued = timeSeriesML(analysisMinute, groupName, timeSeriesMlAnalysisType);
+                  break;
+                }
+
+                int minControlMinute = analysisService.getMinControlMinuteWithData(context.getStateType(),
+                    context.getAppId(), context.getServiceId(), context.getWorkflowId(),
+                    context.getPrevWorkflowExecutionId(), groupName);
+
+                if (analysisMinute < minControlMinute) {
+                  logger.info("Baseline control minute starts at " + minControlMinute
+                      + ". But current analysis minute is  " + analysisMinute
+                      + "Will run local analysis instead of ML for minute " + analysisMinute);
+                  runTimeSeriesML = false;
+                  break;
+                }
+
+                int maxControlMinute = analysisService.getMaxControlMinuteWithData(context.getStateType(),
+                    context.getAppId(), context.getServiceId(), context.getWorkflowId(),
+                    context.getPrevWorkflowExecutionId(), groupName);
+
+                if (analysisMinute > maxControlMinute) {
+                  logger.warn("Not enough control data. analysis minute = " + analysisMinute
+                      + " , max control minute = " + maxControlMinute);
+                  // Do nothing. Don't run any analysis.
+                  taskQueued = true;
+                  analysisService.bumpCollectionMinuteToProcess(context.getStateType(), context.getAppId(),
+                      context.getStateExecutionId(), context.getWorkflowExecutionId(), context.getServiceId(),
+                      groupName, analysisMinute);
+                  break;
+                }
+                taskQueued = timeSeriesML(analysisMinute, groupName, timeSeriesMlAnalysisType);
+                break;
+                // Note that control flows through to COMPARE_WITH_CURRENT where the ml analysis is run.
+              case COMPARE_WITH_CURRENT:
+                logger.info("running time series ml analysis for minute " + analysisMinute);
+                taskQueued = timeSeriesML(analysisMinute, groupName, timeSeriesMlAnalysisType);
+                break;
+              default:
+                throw new IllegalStateException("Invalid type " + context.getComparisonStrategy());
+            }
+          }
+
+          if (!runTimeSeriesML) {
+            logger.info("running local time series analysis for {}", context.getStateExecutionId());
+            NewRelicMetricAnalysisRecord analysisRecord = analyzeLocal(analysisMinute, groupName);
+            analysisService.saveAnalysisRecords(analysisRecord);
+            analysisService.bumpCollectionMinuteToProcess(context.getStateType(), context.getAppId(),
+                context.getStateExecutionId(), context.getWorkflowExecutionId(), context.getServiceId(), groupName,
+                analysisMinute);
+          } else if (!taskQueued) {
+            continue;
+          }
         }
       } catch (Exception ex) {
         completeCron = true;
@@ -423,6 +471,7 @@ public class MetricAnalysisJob implements Job {
         final ExecutionStatus status = error ? ExecutionStatus.ERROR : ExecutionStatus.SUCCESS;
         final MetricAnalysisExecutionData executionData =
             MetricAnalysisExecutionData.builder()
+                .appId(context.getAppId())
                 .workflowExecutionId(context.getWorkflowExecutionId())
                 .stateExecutionInstanceId(context.getStateExecutionId())
                 .serverConfigId(context.getAnalysisServerConfigId())

@@ -28,8 +28,6 @@ import java.util.Set;
 public class LogMLAnalysisGenerator implements Runnable {
   @SchemaIgnore @Transient private static final Logger logger = LoggerFactory.getLogger(LogMLAnalysisGenerator.class);
 
-  protected static final String LOG_ML_SHELL_FILE_NAME = "run_splunkml.sh";
-
   private final AnalysisContext context;
   private final String accountId;
   private final String applicationId;
@@ -131,7 +129,6 @@ public class LogMLAnalysisGenerator implements Runnable {
 
         LearningEngineExperimentalAnalysisTaskBuilder experimentalAnalysisTaskBuilder =
             LearningEngineExperimentalAnalysisTask.builder()
-                .ml_shell_file_name(LOG_ML_SHELL_FILE_NAME)
                 .query(Lists.newArrayList(query.split(" ")))
                 .workflow_id(context.getWorkflowId())
                 .workflow_execution_id(context.getWorkflowExecutionId())
@@ -168,7 +165,6 @@ public class LogMLAnalysisGenerator implements Runnable {
 
       LearningEngineAnalysisTaskBuilder analysisTaskBuilder =
           LearningEngineAnalysisTask.builder()
-              .ml_shell_file_name(LOG_ML_SHELL_FILE_NAME)
               .query(Lists.newArrayList(query.split(" ")))
               .workflow_id(context.getWorkflowId())
               .workflow_execution_id(context.getWorkflowExecutionId())

@@ -64,11 +64,11 @@ public class TimeSeriesResource {
   @ExceptionMetered
   public RestResponse<List<NewRelicMetricDataRecord>> getMetricData(@QueryParam("accountId") String accountId,
       @QueryParam("appId") String appId, @QueryParam("stateType") StateType stateType,
-      @QueryParam("workflowExecutionId") String workFlowExecutionId,
+      @QueryParam("workflowExecutionId") String workFlowExecutionId, @QueryParam("groupName") final String groupName,
       @QueryParam("compareCurrent") boolean compareCurrent, TSRequest request) throws IOException {
     if (compareCurrent) {
       return new RestResponse<>(metricDataAnalysisService.getRecords(stateType, appId, request.getWorkflowExecutionId(),
-          request.getStateExecutionId(), request.getWorkflowId(), request.getServiceId(), request.getNodes(),
+          request.getStateExecutionId(), request.getWorkflowId(), request.getServiceId(), groupName, request.getNodes(),
           request.getAnalysisMinute(), request.getAnalysisStartMinute()));
     } else {
       if (workFlowExecutionId == null || workFlowExecutionId.equals("-1")) {
@@ -76,7 +76,7 @@ public class TimeSeriesResource {
       }
 
       return new RestResponse<>(metricDataAnalysisService.getPreviousSuccessfulRecords(stateType, appId,
-          request.getWorkflowId(), workFlowExecutionId, request.getServiceId(), request.getAnalysisMinute(),
+          request.getWorkflowId(), workFlowExecutionId, request.getServiceId(), groupName, request.getAnalysisMinute(),
           request.getAnalysisStartMinute()));
     }
   }
@@ -88,8 +88,21 @@ public class TimeSeriesResource {
   public RestResponse<NewRelicMetricAnalysisRecord> getMetricsAnalysis(
       @QueryParam("stateExecutionId") final String stateExecutionId,
       @QueryParam("workflowExecutionId") final String workflowExecutionId,
-      @QueryParam("accountId") final String accountId) throws IOException {
-    return new RestResponse<>(metricDataAnalysisService.getMetricsAnalysis(stateExecutionId, workflowExecutionId));
+      @QueryParam("accountId") final String accountId, @QueryParam("appId") final String appId) throws IOException {
+    return new RestResponse<>(
+        metricDataAnalysisService.getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId).get(0));
+  }
+
+  @GET
+  @Path("/generate-metrics-appdynamics")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<NewRelicMetricAnalysisRecord>> getMetricsAnalysisAppdynamics(
+      @QueryParam("stateExecutionId") final String stateExecutionId,
+      @QueryParam("workflowExecutionId") final String workflowExecutionId,
+      @QueryParam("accountId") final String accountId, @QueryParam("appId") final String appId) throws IOException {
+    return new RestResponse<>(
+        metricDataAnalysisService.getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId));
   }
 
   @Produces({"application/json", "application/v1+json"})
@@ -103,12 +116,12 @@ public class TimeSeriesResource {
       @QueryParam("stateExecutionId") String stateExecutionId,
       @QueryParam("workflowExecutionId") final String workflowExecutionId,
       @QueryParam("workflowId") final String workflowId, @QueryParam("serviceId") final String serviceId,
-      @QueryParam("analysisMinute") Integer analysisMinute, @QueryParam("taskId") String taskId,
-      @QueryParam("baseLineExecutionId") String baseLineExecutionId, TimeSeriesMLAnalysisRecord mlAnalysisResponse)
-      throws IOException {
+      @QueryParam("groupName") final String groupName, @QueryParam("analysisMinute") Integer analysisMinute,
+      @QueryParam("taskId") String taskId, @QueryParam("baseLineExecutionId") String baseLineExecutionId,
+      TimeSeriesMLAnalysisRecord mlAnalysisResponse) throws IOException {
     return new RestResponse<>(metricDataAnalysisService.saveAnalysisRecordsML(stateType, accountId, applicationId,
-        stateExecutionId, workflowExecutionId, workflowId, serviceId, analysisMinute, taskId, baseLineExecutionId,
-        mlAnalysisResponse));
+        stateExecutionId, workflowExecutionId, workflowId, serviceId, groupName, analysisMinute, taskId,
+        baseLineExecutionId, mlAnalysisResponse));
   }
 
   @Produces({"application/json", "application/v1+json"})

@@ -78,6 +78,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
             .filter("ml_analysis_type", analysisTask.getMl_analysis_type())
             // TODO can control_nodes be empty ???
             .filter("control_nodes", analysisTask.getControl_nodes())
+            .filter("group_name", analysisTask.getGroup_name())
             .order("-createdAt")
             .get();
 

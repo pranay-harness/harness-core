@@ -37,6 +37,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -120,6 +121,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
 
     final MetricAnalysisExecutionData executionData =
         MetricAnalysisExecutionData.builder()
+            .appId(context.getAppId())
             .workflowExecutionId(context.getWorkflowExecutionId())
             .stateExecutionInstanceId(context.getStateExecutionInstanceId())
             .serverConfigId(getAnalysisServerConfigId())
@@ -205,18 +207,20 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           .build();
     }
 
-    NewRelicMetricAnalysisRecord metricsAnalysis = metricAnalysisService.getMetricsAnalysis(
-        context.getStateExecutionInstanceId(), context.getWorkflowExecutionId());
-    if (metricsAnalysis == null) {
+    List<NewRelicMetricAnalysisRecord> metricAnalysisRecords = metricAnalysisService.getMetricsAnalysis(
+        context.getAppId(), context.getStateExecutionInstanceId(), context.getWorkflowExecutionId());
+    if (isEmpty(metricAnalysisRecords)) {
       continuousVerificationService.setMetaDataExecutionStatus(
           context.getStateExecutionInstanceId(), ExecutionStatus.SUCCESS);
       return generateAnalysisResponse(
           context, ExecutionStatus.SUCCESS, "No data found for comparison. Skipping analysis.");
     }
-    if (metricsAnalysis.getRiskLevel() == RiskLevel.HIGH) {
-      executionStatus = ExecutionStatus.FAILED;
-    }
 
+    for (NewRelicMetricAnalysisRecord metricAnalysisRecord : metricAnalysisRecords) {
+      if (metricAnalysisRecord.getRiskLevel() == RiskLevel.HIGH) {
+        executionStatus = ExecutionStatus.FAILED;
+      }
+    }
     executionResponse.getStateExecutionData().setStatus(executionStatus);
     getLogger().info("State done with status {}, id: {}", executionStatus, context.getStateExecutionInstanceId());
     continuousVerificationService.setMetaDataExecutionStatus(context.getStateExecutionInstanceId(), executionStatus);
@@ -244,6 +248,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     executionData.setStatus(status);
     NewRelicMetricAnalysisRecord metricAnalysisRecord = NewRelicMetricAnalysisRecord.builder()
                                                             .message(message)
+                                                            .appId(context.getAppId())
                                                             .stateType(StateType.valueOf(getStateType()))
                                                             .stateExecutionId(context.getStateExecutionInstanceId())
                                                             .workflowExecutionId(context.getWorkflowExecutionId())

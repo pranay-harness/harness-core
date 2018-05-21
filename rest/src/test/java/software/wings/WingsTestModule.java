@@ -2,7 +2,9 @@ package software.wings;
 
 import static org.mockito.Mockito.mock;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
+import com.google.inject.name.Names;
 
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
@@ -37,6 +39,9 @@ import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
 import software.wings.service.intfc.sumo.SumoDelegateService;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 public class WingsTestModule extends AbstractModule {
   @Override
   protected void configure() {
@@ -59,5 +64,13 @@ public class WingsTestModule extends AbstractModule {
     bind(PcfClient.class).to(PcfClientImpl.class);
     DelegateLogService mockDelegateLogService = mock(DelegateLogService.class);
     bind(DelegateLogService.class).toInstance(mockDelegateLogService);
+
+    bind(ExecutorService.class)
+        .annotatedWith(Names.named("verificationDataCollector"))
+        .toInstance(Executors.newFixedThreadPool(10,
+            new ThreadFactoryBuilder()
+                .setNameFormat("Verification-Data-Collector-%d")
+                .setPriority(Thread.MIN_PRIORITY)
+                .build()));
   }
 }

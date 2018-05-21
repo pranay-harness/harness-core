@@ -1,9 +1,10 @@
 import json
 
 import sys
+import requests
+import time
 
 from core.util.lelogging import get_log
-from sources.HarnessLoader import HarnessLoader
 from datetime import datetime, timedelta
 
 logger = get_log(__name__)
@@ -14,18 +15,32 @@ class NewRelicSource(object):
         self.appId = appId
         self.url = 'https://api.newrelic.com'
 
+    def get_request(self, url, headers, max_retries=1):
+        sleep_time = 1
+        while max_retries > 0:
+            r = requests.get(url, headers=headers, verify=False, timeout=30)
+            if r.status_code != 500 and r.status_code != 503:
+                return json.loads(r.text), r.status_code
+            else:
+                max_retries = max_retries - 1
+                if max_retries > 0:
+                    time.sleep(sleep_time)
+                    sleep_time = sleep_time * 2
+
+        raise Exception(str(max_retries) + ' is tried, but unable to get request from ' + url)
+
     def get_node_instances(self):
         url = self.url + '/v2/applications/' + str(self.appId) + '/instances.json'
         headers = {"Accept": "application/json", "Content-Type": "application/json",
                    "X-Api-Key": '5ed76b50ebcfda54b77cd1daaabe635bd7f2e13dc6c5b11'}
-        data, ret_code = HarnessLoader.get_request(url, headers)
+        data, ret_code = data, ret_code = self.get_request(url, headers)
         return data['application_instances']
 
     def get_metric_info(self):
         url = self.url + '/v2/applications/' + str(self.appId) + '/metrics.json?name = WebTransaction/'
         headers = {"Accept": "application/json", "Content-Type": "application/json",
                    "X-Api-Key": '5ed76b50ebcfda54b77cd1daaabe635bd7f2e13dc6c5b11'}
-        data, ret_code = HarnessLoader.get_request(url, headers)
+        data, ret_code = self.get_request(url, headers)
         return data['metrics']
 
     def get_metric_data(self, control_hosts, test_hosts, from_time, to_time):
@@ -72,19 +87,20 @@ class NewRelicSource(object):
                         url = self.url + '/v2/applications/' + str(self.appId) + '/instances/' + str(node['id']) \
                               + '/metrics/data.json?' + metric_string + \
                               "&from=" + str(from_time) + "&to=" + str(to_time)
-                        data, ret_code = HarnessLoader.get_request(url, headers)
+                        data, ret_code = self.get_request(url, headers)
                         for metric in data['metric_data']['metrics']:
                             for index, timeslice in enumerate(metric['timeslices']):
                                 if 'average_response_time' in timeslice['values']:
                                     result.append(
                                         dict(name=metric['name'], host=node['host'], dataCollectionMinute=index,
-                                             throughput=timeslice['values']['requests_per_minute']
+                                             values= dict(throughput=timeslice['values']['requests_per_minute']
                                              if 'requests_per_minute' in timeslice['values'] else -1,
                                              averageResponseTime=timeslice['values']['average_response_time'],
                                              apdexScore=-1,
+                                             tag='default',
                                              error=-1,
                                              callCount=timeslice['values']['call_count'],
-                                             requestsPerMinute=timeslice['values']['requests_per_minute']))
+                                             requestsPerMinute=timeslice['values']['requests_per_minute'])))
                     count = 0
                     metric_string = ''
         return result

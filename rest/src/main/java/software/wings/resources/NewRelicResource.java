@@ -10,7 +10,6 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.newrelic.NewRelicApplication;
-import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.MetricDataAnalysisService;
@@ -104,16 +103,5 @@ public class NewRelicResource {
       throws IOException {
     return new RestResponse<>(metricDataAnalysisService.saveMetricData(
         accountId, applicationId, stateExecutionId, delegateTaskId, metricData));
-  }
-
-  @GET
-  @Path("/generate-metrics")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<NewRelicMetricAnalysisRecord> getMetricsAnalysis(
-      @QueryParam("stateExecutionId") final String stateExecutionId,
-      @QueryParam("workflowExecutionId") final String workflowExecutionId,
-      @QueryParam("accountId") final String accountId) throws IOException {
-    return new RestResponse<>(metricDataAnalysisService.getMetricsAnalysis(stateExecutionId, workflowExecutionId));
   }
 }

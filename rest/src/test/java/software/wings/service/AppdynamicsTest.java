@@ -42,6 +42,7 @@ import software.wings.service.intfc.security.SecretManager;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -128,9 +129,16 @@ public class AppdynamicsTest extends WingsBaseTest {
     List<NewRelicApplication> applications = appdynamicsService.getApplications(settingAttribute.getUuid());
     assertFalse(applications.isEmpty());
     for (NewRelicApplication appDApp : applications) {
-      List<AppdynamicsTier> tiers = appdynamicsService.getTiers(settingAttribute.getUuid(), appDApp.getId());
+      Set<AppdynamicsTier> tiers = appdynamicsService.getTiers(settingAttribute.getUuid(), appDApp.getId());
       assertFalse(tiers.isEmpty());
     }
+  }
+
+  @Test
+  public void xyzn() throws Exception {
+    Set<AppdynamicsTier> dependentTiers = appdynamicsService.getDependentTiers(
+        settingAttribute.getUuid(), 6719, AppdynamicsTier.builder().id(135482).name("tier1").build());
+    System.out.println(dependentTiers);
   }
 
   private KmsConfig getKmsConfig() {

@@ -21,4 +21,6 @@ public class TimeSeriesMLHostSummary {
   private String nn;
   private int risk;
   private double score;
+  private TimeSeriesMlAnalysisType timeSeriesMlAnalysisType;
+  private List<Integer> anomalies;
 }

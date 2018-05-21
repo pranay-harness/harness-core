@@ -12,7 +12,9 @@ from core.distance.SAXHMMDistance import SAXHMMDistanceFinder
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--analysis_minute", type=int, required=True)
+parser.add_argument("--time_series_ml_analysis_type", type=str, required=True)
 parser.add_argument("--analysis_start_min", type=int, required=True)
+parser.add_argument("--analysis_start_time", type=int)
 parser.add_argument("--tolerance", type=int, required=True)
 parser.add_argument("--smooth_window", type=int, required=True)
 parser.add_argument("--min_rpm", type=int, required=True)
@@ -21,7 +23,7 @@ parser.add_argument("--parallelProcesses", type=int, required=True)
 parser.add_argument('--max_nodes_threshold', nargs='?', const=19, type=int, default=19)
 
 options = parser.parse_args(['--analysis_minute', '29', '--analysis_start_min', 0, '--tolerance', '1', '--smooth_window', '3', '--min_rpm', '10',
-                             '--comparison_unit_window', '1', '--parallelProcesses', '1', '--max_nodes_threshold', '19'])
+                             '--comparison_unit_window', '1', '--parallelProcesses', '1', '--max_nodes_threshold', '19', '--time_series_ml_analysis_type', 'COMPARATIVE'])
 
 metric_template = FileLoader.load_data('resources/ts/metric_template.json')
 
@@ -48,7 +50,7 @@ def test_max_threshold_node():
     test_options = parser.parse_args(
         ['--analysis_minute', '29', '--analysis_start_min', 0, '--tolerance', '1', '--smooth_window', '3',
          '--min_rpm', '10',
-         '--comparison_unit_window', '1', '--parallelProcesses', '1'])
+         '--comparison_unit_window', '1', '--parallelProcesses', '1', '--time_series_ml_analysis_type', 'COMPARATIVE'])
     control = FileLoader.load_data('resources/ts/nr_control_live.json')
     test = FileLoader.load_data('resources/ts/nr_test_live.json')
     with patch("TimeSeriesML.TSAnomlyDetector.fast_analysis_metric") as mock_update_in:
@@ -90,25 +92,66 @@ def run_analysis(options_var, ctrl_file, test_file, out_file):
                 assert host_data['nn'] == out_metric_data[host_name]['nn']
 
 
+def run_prediction_analysis(options_var, test_file, out_file):
+    test = FileLoader.load_data(test_file)
+    out = FileLoader.load_data(out_file)['transactions']
+    out_mod = {}
+    for o in out.values():
+        out_mod[o['txn_name']] = {'metrics': {}}
+        for m in o['metrics'].values():
+            out_mod[o['txn_name']]['metrics'][m['metric_name']] = m
+
+    out = out_mod
+
+    anomaly_detector = TSAnomlyDetector(options_var, metric_template, {}, test)
+    result = anomaly_detector.analyze()
+    for txn_id, txn_data in result['transactions'].items():
+        assert txn_data['txn_name'] in out
+        assert txn_data['txn_tag'] == 'default'
+        for metrics_id, metric_data in txn_data['metrics'].items():
+            print(txn_data['txn_name'])
+            assert metric_data['metric_name'] in out[txn_data['txn_name']]['metrics']
+            assert metric_data['max_risk'] == out[txn_data['txn_name']]['metrics'][metric_data['metric_name']][
+                'max_risk']
+            out_metric_data = out[txn_data['txn_name']]['metrics'][metric_data['metric_name']]['results']
+            for host_name, host_data in metric_data['results'].items():
+                assert out_metric_data[host_name] is not None
+                assert compare(host_data['score'], out_metric_data[host_name]['score'])
+                assert compare(host_data['risk'], out_metric_data[host_name]['risk'])
+                assert host_data['anomalies'] == out_metric_data[host_name]['anomalies']
+
+
 def test_run_2():
     run_analysis(options, 'resources/ts/nr_control_live.json', 'resources/ts/nr_test_live.json', 'resources/ts/nr_out_live.json')
+
 
 def test_run_3():
     options_var = parser.parse_args(
         ['--analysis_minute', '2', '--analysis_start_min', 0, '--tolerance', '1', '--smooth_window', '3', '--min_rpm',
          '10',
-         '--comparison_unit_window', '1', '--parallelProcesses', '1', '--max_nodes_threshold', '19'])
+         '--comparison_unit_window', '1', '--parallelProcesses', '1', '--max_nodes_threshold', '19', '--time_series_ml_analysis_type', 'COMPARATIVE'])
     run_analysis(options_var, 'resources/ts/nr_control_live_3.json', 'resources/ts/nr_test_live_3.json', 'resources/ts/nr_out_live_3.json')
+
 
 def test_run_4():
     options_var = parser.parse_args(
         ['--analysis_minute', '2', '--analysis_start_min', 0, '--tolerance', '1', '--smooth_window', '3', '--min_rpm',
          '10',
-         '--comparison_unit_window', '1', '--parallelProcesses', '1', '--max_nodes_threshold', '19'])
+         '--comparison_unit_window', '1', '--parallelProcesses', '1', '--max_nodes_threshold', '19', '--time_series_ml_analysis_type', 'COMPARATIVE'])
     run_analysis(options_var, 'resources/ts/nr_control_live_4.json', 'resources/ts/nr_test_live_4.json', 'resources/ts/nr_out_live_4.json')
 
+
+def test_run_5():
+    options_var = parser.parse_args(
+        ['--analysis_minute', '120', '--analysis_start_min', 0, '--tolerance', '1', '--smooth_window', '3', '--min_rpm',
+         '10',
+         '--comparison_unit_window', '1', '--parallelProcesses', '1', '--max_nodes_threshold', '19', '--time_series_ml_analysis_type', 'PREDICTIVE', '--analysis_start_time', '60'])
+    run_prediction_analysis(options_var, 'resources/ts/nr_test_live_prediction.json', 'resources/ts/nr_out_live_prediction.json')
+
+
 def main(args):
-    test_run_4()
+    #test_run_4()
+    test_run_5()
     #test_max_threshold_node()
 
 

@@ -2,10 +2,12 @@ package software.wings.service.impl.appdynamics;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 
 import java.util.List;
 import java.util.Set;
@@ -31,4 +33,5 @@ public class AppdynamicsDataCollectionInfo {
   private int dataCollectionMinute;
   private Set<String> hosts;
   private List<EncryptedDataDetail> encryptedDataDetails;
+  @Default private TimeSeriesMlAnalysisType timeSeriesMlAnalysisType = TimeSeriesMlAnalysisType.COMPARATIVE;
 }

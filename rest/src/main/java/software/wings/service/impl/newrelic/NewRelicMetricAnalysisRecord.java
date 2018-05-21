@@ -21,6 +21,7 @@ import software.wings.beans.EmbeddedUser;
 import software.wings.beans.SortOrder;
 import software.wings.exception.WingsException;
 import software.wings.metrics.RiskLevel;
+import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.sm.StateType;
 
 import java.util.List;
@@ -37,7 +38,7 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
-public class NewRelicMetricAnalysisRecord extends Base {
+public class NewRelicMetricAnalysisRecord extends Base implements Comparable<NewRelicMetricAnalysisRecord> {
   @NotEmpty @Indexed private StateType stateType;
 
   @NotEmpty private String message;
@@ -60,12 +61,17 @@ public class NewRelicMetricAnalysisRecord extends Base {
 
   @Default @Indexed private String groupName = DEAULT_GROUP_NAME;
 
+  private String dependencyPath;
+
+  private TimeSeriesMlAnalysisType mlAnalysisType;
+
   @Builder
   public NewRelicMetricAnalysisRecord(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords, String entityYamlPath, StateType stateType,
       String message, RiskLevel riskLevel, String workflowId, String workflowExecutionId, String stateExecutionId,
+      String groupName, String dependencyPath, TimeSeriesMlAnalysisType mlAnalysisType,
       List<NewRelicMetricAnalysis> metricAnalyses, int analysisMinute, boolean showTimeSeries,
-      String baseLineExecutionId, String groupName) {
+      String baseLineExecutionId) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
     this.stateType = stateType;
     this.message = message;
@@ -73,6 +79,9 @@ public class NewRelicMetricAnalysisRecord extends Base {
     this.workflowId = workflowId;
     this.workflowExecutionId = workflowExecutionId;
     this.stateExecutionId = stateExecutionId;
+    this.groupName = groupName;
+    this.dependencyPath = dependencyPath;
+    this.mlAnalysisType = mlAnalysisType;
     this.metricAnalyses = metricAnalyses;
     this.analysisMinute = analysisMinute;
     this.showTimeSeries = showTimeSeries;
@@ -82,6 +91,16 @@ public class NewRelicMetricAnalysisRecord extends Base {
 
   public void addNewRelicMetricAnalysis(NewRelicMetricAnalysis analysis) {
     metricAnalyses.add(analysis);
+  }
+
+  @Override
+  public int compareTo(NewRelicMetricAnalysisRecord o) {
+    int analysisTypeComparison = this.mlAnalysisType.compareTo(o.mlAnalysisType);
+    if (analysisTypeComparison != 0) {
+      return analysisTypeComparison;
+    }
+
+    return this.groupName.compareTo(o.groupName);
   }
 
   @Data
