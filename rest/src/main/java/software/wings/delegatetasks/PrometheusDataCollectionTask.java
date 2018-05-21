@@ -2,6 +2,7 @@ package software.wings.delegatetasks;
 
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.states.AbstractAnalysisState.END_TIME_PLACE_HOLDER;
 import static software.wings.sm.states.AbstractAnalysisState.HOST_NAME_PLACE_HOLDER;
 import static software.wings.sm.states.AbstractAnalysisState.START_TIME_PLACE_HOLDER;
@@ -110,6 +111,7 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
                     .stateExecutionId(dataCollectionInfo.getStateExecutionId())
                     .dataCollectionMinute(dataCollectionMinute)
                     .timeStamp(collectionStartTime)
+                    .groupName(DEFAULT_GROUP_NAME)
                     .level(ClusterLevel.H0)
                     .build());
 

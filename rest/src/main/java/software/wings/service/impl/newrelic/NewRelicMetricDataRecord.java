@@ -41,7 +41,7 @@ import java.util.Map;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class NewRelicMetricDataRecord extends Base {
-  @Transient public static String DEAULT_GROUP_NAME = "default";
+  @Transient public static String DEFAULT_GROUP_NAME = "default";
 
   @NotEmpty @Indexed private StateType stateType;
 
@@ -65,7 +65,7 @@ public class NewRelicMetricDataRecord extends Base {
 
   private String tag;
 
-  @Default @Indexed private String groupName = DEAULT_GROUP_NAME;
+  @Default @Indexed private String groupName = DEFAULT_GROUP_NAME;
 
   // generic values
   @Default private Map<String, Double> values = new HashMap<>();

@@ -1,6 +1,6 @@
 package software.wings.service.impl.analysis;
 
-import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEAULT_GROUP_NAME;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import lombok.Builder.Default;
 import lombok.Data;
@@ -38,7 +38,7 @@ public class TimeSeriesMLAnalysisRecord extends Base {
 
   private String baseLineExecutionId;
 
-  @Default @Indexed private String groupName = DEAULT_GROUP_NAME;
+  @Default @Indexed private String groupName = DEFAULT_GROUP_NAME;
 
   private Map<String, TimeSeriesMLTxnSummary> transactions;
 }

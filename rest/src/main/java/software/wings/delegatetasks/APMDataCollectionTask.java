@@ -3,6 +3,7 @@ package software.wings.delegatetasks;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -234,6 +235,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
                     .dataCollectionMinute(dataCollectionMinute)
                     .timeStamp(collectionStartTime)
                     .level(ClusterLevel.H0)
+                    .groupName(DEFAULT_GROUP_NAME)
                     .build());
 
             List<NewRelicMetricDataRecord> allMetricRecords = getAllMetricRecords(records);

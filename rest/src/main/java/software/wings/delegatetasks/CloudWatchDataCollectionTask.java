@@ -2,6 +2,7 @@ package software.wings.delegatetasks;
 
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.states.DynatraceState.CONTROL_HOST_NAME;
 import static software.wings.sm.states.DynatraceState.TEST_HOST_NAME;
 
@@ -294,6 +295,7 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
                 .timeStamp(datapoint.getTimestamp().getTime())
                 .dataCollectionMinute(dataCollectionMinute)
                 .host(host)
+                .groupName(DEFAULT_GROUP_NAME)
                 .build();
         newRelicMetricDataRecord.getValues().put(cloudWatchMetric.getMetricName(), datapoint.getAverage());
 
