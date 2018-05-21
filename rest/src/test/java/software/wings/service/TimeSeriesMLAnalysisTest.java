@@ -21,6 +21,8 @@ import software.wings.resources.NewRelicResource;
 import software.wings.resources.TimeSeriesResource;
 import software.wings.service.impl.analysis.TSRequest;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
+import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
+import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
@@ -35,9 +37,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -52,6 +56,7 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
   private String workflowId;
   private String workflowExecutionId;
   private String serviceId;
+  private String groupName;
   private String delegateTaskId;
 
   @Inject private NewRelicResource newRelicResource;
@@ -68,6 +73,7 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
     workflowId = UUID.randomUUID().toString();
     workflowExecutionId = UUID.randomUUID().toString();
     serviceId = UUID.randomUUID().toString();
+    groupName = "groupName-";
     delegateTaskId = UUID.randomUUID().toString();
     MockitoAnnotations.initMocks(this);
   }
@@ -77,47 +83,140 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
     InputStream is = getClass().getClassLoader().getResourceAsStream("verification/TimeSeriesNRAnalysisRecords.json");
     String jsonTxt = IOUtils.toString(is, Charset.defaultCharset());
     TimeSeriesMLAnalysisRecord record = JsonUtils.asObject(jsonTxt, TimeSeriesMLAnalysisRecord.class);
-    timeSeriesResource.saveMLAnalysisRecords(accountId, appId, StateType.NEW_RELIC, stateExecutionId,
-        workflowExecutionId, workflowId, serviceId, 0, null, null, record);
-    NewRelicMetricAnalysisRecord analysisRecord =
-        timeSeriesResource.getMetricsAnalysis(stateExecutionId, workflowExecutionId, accountId).getResource();
-    assertEquals(1, analysisRecord.getMetricAnalyses().size());
-    assertEquals("WebTransaction/Servlet/Register", analysisRecord.getMetricAnalyses().get(0).getMetricName());
-    assertEquals(1, analysisRecord.getMetricAnalyses().get(0).getMetricValues().size());
-    assertEquals("requestsPerMinute", analysisRecord.getMetricAnalyses().get(0).getMetricValues().get(0).getName());
+    int numOfGrpups = 1;
+    for (int i = 0; i < numOfGrpups; i++) {
+      timeSeriesResource.saveMLAnalysisRecords(accountId, appId, StateType.NEW_RELIC, stateExecutionId,
+          workflowExecutionId, workflowId, serviceId, groupName + i, 0, null, null, record);
+    }
+    List<NewRelicMetricAnalysisRecord> analysisRecords =
+        timeSeriesResource.getMetricsAnalysisAppdynamics(stateExecutionId, workflowExecutionId, accountId, appId)
+            .getResource();
+    assertEquals(numOfGrpups, analysisRecords.size());
+    for (int i = 0; i < numOfGrpups; i++) {
+      assertEquals(1, analysisRecords.get(i).getMetricAnalyses().size());
+      assertEquals(
+          "WebTransaction/Servlet/Register", analysisRecords.get(i).getMetricAnalyses().get(0).getMetricName());
+      assertEquals(1, analysisRecords.get(0).getMetricAnalyses().get(i).getMetricValues().size());
+      assertEquals(
+          "requestsPerMinute", analysisRecords.get(i).getMetricAnalyses().get(0).getMetricValues().get(0).getName());
+      assertEquals(groupName + i, analysisRecords.get(0).getGroupName());
+    }
   }
 
   @Test
   public void testSaveAnalysis() throws IOException {
-    NewRelicMetricAnalysisValue metricAnalysisValue = NewRelicMetricAnalysisValue.builder()
-                                                          .name("requestsPerMinute")
-                                                          .riskLevel(RiskLevel.HIGH)
-                                                          .controlValue(100)
-                                                          .testValue(2000)
+    int numOfGrpups = 5;
+    for (int i = 0; i < numOfGrpups; i++) {
+      NewRelicMetricAnalysisValue metricAnalysisValue = NewRelicMetricAnalysisValue.builder()
+                                                            .name("requestsPerMinute")
+                                                            .riskLevel(RiskLevel.HIGH)
+                                                            .controlValue(100)
+                                                            .testValue(2000)
+                                                            .build();
+      NewRelicMetricAnalysis newRelicMetricAnalysis = NewRelicMetricAnalysis.builder()
+                                                          .metricName("index.jsp")
+                                                          .metricValues(Collections.singletonList(metricAnalysisValue))
+                                                          .riskLevel(RiskLevel.MEDIUM)
                                                           .build();
-    NewRelicMetricAnalysis newRelicMetricAnalysis = NewRelicMetricAnalysis.builder()
-                                                        .metricName("index.jsp")
-                                                        .metricValues(Collections.singletonList(metricAnalysisValue))
-                                                        .riskLevel(RiskLevel.MEDIUM)
-                                                        .build();
-    NewRelicMetricAnalysisRecord newRelicMetricAnalysisRecord =
+      NewRelicMetricAnalysisRecord newRelicMetricAnalysisRecord =
+          NewRelicMetricAnalysisRecord.builder()
+              .analysisMinute(0)
+              .metricAnalyses(Collections.singletonList(newRelicMetricAnalysis))
+              .appId(appId)
+              .stateExecutionId(stateExecutionId)
+              .workflowExecutionId(workflowExecutionId)
+              .message("1 high risk anomaly")
+              .stateType(StateType.NEW_RELIC)
+              .groupName(groupName + i)
+              .build();
+
+      metricDataAnalysisService.saveAnalysisRecords(newRelicMetricAnalysisRecord);
+    }
+    List<NewRelicMetricAnalysisRecord> analysisRecords =
+        timeSeriesResource.getMetricsAnalysisAppdynamics(stateExecutionId, workflowExecutionId, accountId, appId)
+            .getResource();
+    assertEquals(numOfGrpups, analysisRecords.size());
+    for (int i = 0; i < numOfGrpups; i++) {
+      assertEquals(1, analysisRecords.get(i).getMetricAnalyses().size());
+      assertEquals("index.jsp", analysisRecords.get(i).getMetricAnalyses().get(0).getMetricName());
+      assertEquals(1, analysisRecords.get(i).getMetricAnalyses().get(0).getMetricValues().size());
+      assertEquals(
+          "requestsPerMinute", analysisRecords.get(i).getMetricAnalyses().get(0).getMetricValues().get(0).getName());
+      assertEquals(groupName + i, analysisRecords.get(i).getGroupName());
+    }
+  }
+
+  @Test
+  public void testAnalysisSorting() throws IOException {
+    Map<String, TimeSeriesMlAnalysisGroupInfo> groups = new HashMap<>();
+    groups.put("b_group",
+        TimeSeriesMlAnalysisGroupInfo.builder()
+            .groupName("b_group")
+            .mlAnalysisType(TimeSeriesMlAnalysisType.PREDICTIVE)
+            .build());
+
+    groups.put("fs_group",
+        TimeSeriesMlAnalysisGroupInfo.builder()
+            .groupName("fs_group")
+            .mlAnalysisType(TimeSeriesMlAnalysisType.COMPARATIVE)
+            .build());
+
+    groups.put("a_group",
+        TimeSeriesMlAnalysisGroupInfo.builder()
+            .groupName("a_group")
+            .mlAnalysisType(TimeSeriesMlAnalysisType.PREDICTIVE)
+            .build());
+
+    metricDataAnalysisService.saveMetricGroups(appId, StateType.NEW_RELIC, stateExecutionId, groups);
+    NewRelicMetricAnalysisRecord newRelicMetricAnalysisRecord1 =
         NewRelicMetricAnalysisRecord.builder()
             .analysisMinute(0)
-            .metricAnalyses(Collections.singletonList(newRelicMetricAnalysis))
             .appId(appId)
             .stateExecutionId(stateExecutionId)
             .workflowExecutionId(workflowExecutionId)
-            .message("1 high risk anomaly")
+            .message("No data available")
+            .riskLevel(RiskLevel.NA)
             .stateType(StateType.NEW_RELIC)
+            .groupName("b_group")
+            .mlAnalysisType(TimeSeriesMlAnalysisType.PREDICTIVE)
             .build();
+    metricDataAnalysisService.saveAnalysisRecords(newRelicMetricAnalysisRecord1);
 
-    metricDataAnalysisService.saveAnalysisRecords(newRelicMetricAnalysisRecord);
-    NewRelicMetricAnalysisRecord analysisRecord =
-        timeSeriesResource.getMetricsAnalysis(stateExecutionId, workflowExecutionId, accountId).getResource();
-    assertEquals(1, analysisRecord.getMetricAnalyses().size());
-    assertEquals("index.jsp", analysisRecord.getMetricAnalyses().get(0).getMetricName());
-    assertEquals(1, analysisRecord.getMetricAnalyses().get(0).getMetricValues().size());
-    assertEquals("requestsPerMinute", analysisRecord.getMetricAnalyses().get(0).getMetricValues().get(0).getName());
+    NewRelicMetricAnalysisRecord newRelicMetricAnalysisRecord2 =
+        NewRelicMetricAnalysisRecord.builder()
+            .analysisMinute(0)
+            .appId(appId)
+            .stateExecutionId(stateExecutionId)
+            .workflowExecutionId(workflowExecutionId)
+            .message("No data available")
+            .riskLevel(RiskLevel.NA)
+            .stateType(StateType.NEW_RELIC)
+            .groupName("fs_group")
+            .mlAnalysisType(TimeSeriesMlAnalysisType.COMPARATIVE)
+            .build();
+    metricDataAnalysisService.saveAnalysisRecords(newRelicMetricAnalysisRecord2);
+
+    NewRelicMetricAnalysisRecord newRelicMetricAnalysisRecord3 =
+        NewRelicMetricAnalysisRecord.builder()
+            .analysisMinute(0)
+            .appId(appId)
+            .stateExecutionId(stateExecutionId)
+            .workflowExecutionId(workflowExecutionId)
+            .message("No data available")
+            .riskLevel(RiskLevel.NA)
+            .stateType(StateType.NEW_RELIC)
+            .groupName("a_group")
+            .mlAnalysisType(TimeSeriesMlAnalysisType.PREDICTIVE)
+            .build();
+    metricDataAnalysisService.saveAnalysisRecords(newRelicMetricAnalysisRecord3);
+
+    List<NewRelicMetricAnalysisRecord> analysisRecords =
+        timeSeriesResource.getMetricsAnalysisAppdynamics(stateExecutionId, workflowExecutionId, accountId, appId)
+            .getResource();
+
+    assertEquals(newRelicMetricAnalysisRecord2, analysisRecords.get(0));
+    assertEquals(newRelicMetricAnalysisRecord3, analysisRecords.get(1));
+    assertEquals(newRelicMetricAnalysisRecord1, analysisRecords.get(2));
   }
 
   @Test
@@ -193,8 +292,12 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
             .build();
 
     metricDataAnalysisService.saveAnalysisRecords(newRelicMetricAnalysisRecord);
-    NewRelicMetricAnalysisRecord analysisRecord =
-        timeSeriesResource.getMetricsAnalysis(stateExecutionId, workflowExecutionId, accountId).getResource();
+    List<NewRelicMetricAnalysisRecord> analysisRecords =
+        timeSeriesResource.getMetricsAnalysisAppdynamics(stateExecutionId, workflowExecutionId, accountId, appId)
+            .getResource();
+    assertEquals(1, analysisRecords.size());
+
+    NewRelicMetricAnalysisRecord analysisRecord = analysisRecords.get(0);
     assertEquals(3, analysisRecord.getMetricAnalyses().size());
     assertEquals("account", analysisRecord.getMetricAnalyses().get(0).getMetricName());
     assertEquals("login", analysisRecord.getMetricAnalyses().get(1).getMetricName());
@@ -274,8 +377,12 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
             .build();
 
     metricDataAnalysisService.saveAnalysisRecords(newRelicMetricAnalysisRecord);
-    NewRelicMetricAnalysisRecord analysisRecord =
-        timeSeriesResource.getMetricsAnalysis(stateExecutionId, workflowExecutionId, accountId).getResource();
+    List<NewRelicMetricAnalysisRecord> analysisRecords =
+        timeSeriesResource.getMetricsAnalysisAppdynamics(stateExecutionId, workflowExecutionId, accountId, appId)
+            .getResource();
+    assertEquals(1, analysisRecords.size());
+
+    NewRelicMetricAnalysisRecord analysisRecord = analysisRecords.get(0);
     assertEquals(3, analysisRecord.getMetricAnalyses().size());
     assertEquals("account", analysisRecord.getMetricAnalyses().get(0).getMetricName());
     assertEquals("login", analysisRecord.getMetricAnalyses().get(1).getMetricName());
@@ -355,8 +462,12 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
             .build();
 
     metricDataAnalysisService.saveAnalysisRecords(newRelicMetricAnalysisRecord);
-    NewRelicMetricAnalysisRecord analysisRecord =
-        timeSeriesResource.getMetricsAnalysis(stateExecutionId, workflowExecutionId, accountId).getResource();
+    List<NewRelicMetricAnalysisRecord> analysisRecords =
+        timeSeriesResource.getMetricsAnalysisAppdynamics(stateExecutionId, workflowExecutionId, accountId, appId)
+            .getResource();
+    assertEquals(1, analysisRecords.size());
+
+    NewRelicMetricAnalysisRecord analysisRecord = analysisRecords.get(0);
     assertEquals(3, analysisRecord.getMetricAnalyses().size());
     assertEquals("account", analysisRecord.getMetricAnalyses().get(0).getMetricName());
     assertEquals("login", analysisRecord.getMetricAnalyses().get(1).getMetricName());
@@ -394,8 +505,12 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
             .build();
 
     metricDataAnalysisService.saveAnalysisRecords(newRelicMetricAnalysisRecord);
-    NewRelicMetricAnalysisRecord analysisRecord =
-        timeSeriesResource.getMetricsAnalysis(stateExecutionId, workflowExecutionId, accountId).getResource();
+    List<NewRelicMetricAnalysisRecord> analysisRecords =
+        timeSeriesResource.getMetricsAnalysisAppdynamics(stateExecutionId, workflowExecutionId, accountId, appId)
+            .getResource();
+    assertEquals(1, analysisRecords.size());
+
+    NewRelicMetricAnalysisRecord analysisRecord = analysisRecords.get(0);
     List<NewRelicMetricAnalysis> metricAnalyses = analysisRecord.getMetricAnalyses();
     assertEquals(2, metricAnalyses.size());
     assertEquals("index.jsp", metricAnalyses.get(0).getMetricName());
@@ -427,6 +542,7 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
       record.setWorkflowExecutionId(workflowExecutionId);
       record.setStateExecutionId(stateExecutionId);
       record.setServiceId(serviceId);
+      record.setGroupName(groupName);
       record.setTimeStamp(record.getDataCollectionMinute());
       nodes.add(record.getHost());
     }
@@ -445,7 +561,7 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
     newRelicResource.saveMetricData(accountId, appId, stateExecutionId, delegateTaskId, controlRecords);
     List<NewRelicMetricDataRecord> results =
         timeSeriesResource
-            .getMetricData(accountId, appId, StateType.NEW_RELIC, workflowExecutionId, true,
+            .getMetricData(accountId, appId, StateType.NEW_RELIC, workflowExecutionId, groupName, true,
                 TSRequest.builder()
                     .applicationId(appId)
                     .workflowId(workflowId)

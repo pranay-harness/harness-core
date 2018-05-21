@@ -166,6 +166,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
               if (timeStamp < managerAnalysisStartTime) {
                 logger.debug("New relic sending us data in the past. request start time {}, received time {}",
                     managerAnalysisStartTime, timeStamp);
+                continue;
               }
               final NewRelicMetricDataRecord metricDataRecord =
                   NewRelicMetricDataRecord.builder()

@@ -1,8 +1,10 @@
 package software.wings.service.impl.appdynamics;
 
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -13,7 +15,7 @@ import java.util.List;
 public class AppdynamicsMetric {
   private AppdynamicsMetricType type;
   private String name;
-  private List<AppdynamicsMetric> childMetrices;
+  @Default private List<AppdynamicsMetric> childMetrices = new ArrayList<>();
 
   public enum AppdynamicsMetricType { leaf, folder }
 }

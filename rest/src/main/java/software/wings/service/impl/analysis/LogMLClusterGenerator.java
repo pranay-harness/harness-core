@@ -14,7 +14,6 @@ import software.wings.service.intfc.analysis.LogAnalysisResource;
  */
 public class LogMLClusterGenerator implements Runnable {
   private static final Logger logger = LoggerFactory.getLogger(LogMLClusterGenerator.class);
-  private static final String CLUSTER_ML_SHELL_FILE_NAME = "run_cluster_log_ml.sh";
 
   private LearningEngineService learningEngineService;
 
@@ -45,7 +44,6 @@ public class LogMLClusterGenerator implements Runnable {
         + "&appId=" + context.getAppId() + "&clusterLevel=" + toLevel.name() + "&stateType=" + context.getStateType();
 
     LearningEngineAnalysisTask analysisTask = LearningEngineAnalysisTask.builder()
-                                                  .ml_shell_file_name(CLUSTER_ML_SHELL_FILE_NAME)
                                                   .control_input_url(inputLogsUrl)
                                                   .analysis_save_url(clusteredLogSaveUrl)
                                                   .workflow_id(context.getWorkflowId())

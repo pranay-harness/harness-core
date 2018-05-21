@@ -4,6 +4,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLScores;
+import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricHostAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
@@ -31,40 +32,38 @@ public interface MetricDataAnalysisService {
   @ValidationGroups(Create.class)
   boolean saveAnalysisRecordsML(@NotNull StateType stateType, @NotNull String accountId, @NotNull String appId,
       @NotNull String stateExecutionId, @NotNull String workflowExecutionId, @NotNull String workflowId,
-      @NotNull String serviceId, @NotNull Integer analysisMinute, @NotNull String taskId, String baseLineExecutionId,
-      @Valid TimeSeriesMLAnalysisRecord mlAnalysisResponse);
+      @NotNull String serviceId, String groupName, @NotNull Integer analysisMinute, @NotNull String taskId,
+      String baseLineExecutionId, @Valid TimeSeriesMLAnalysisRecord mlAnalysisResponse);
 
   @ValidationGroups(Create.class) void saveTimeSeriesMLScores(TimeSeriesMLScores scores);
 
   List<TimeSeriesMLScores> getTimeSeriesMLScores(String appId, String workflowId, int analysisMinute, int limit);
 
   List<NewRelicMetricDataRecord> getRecords(StateType stateType, String appId, String workflowExecutionId,
-      String stateExecutionId, String workflowId, String serviceId, Set<String> nodes, int analysisMinute,
-      int analysisStartMinute);
+      String stateExecutionId, String workflowId, String serviceId, String groupName, Set<String> nodes,
+      int analysisMinute, int analysisStartMinute);
 
   List<NewRelicMetricDataRecord> getPreviousSuccessfulRecords(StateType stateType, String appId, String workflowId,
-      String serviceId, int analysisMinute, int analysisStartMinute);
-
-  List<NewRelicMetricDataRecord> getPreviousSuccessfulRecords(StateType stateType, String appId, String workflowId,
-      String workflowExecutionID, String serviceId, int analysisMinute, int analysisStartMinute);
+      String workflowExecutionID, String serviceId, String groupName, int analysisMinute, int analysisStartMinute);
 
   List<String> getLastSuccessfulWorkflowExecutionIds(String workflowId);
 
-  NewRelicMetricAnalysisRecord getMetricsAnalysis(String stateExecutionId, String workflowExecutionId);
+  List<NewRelicMetricAnalysisRecord> getMetricsAnalysis(
+      String appId, String stateExecutionId, String workflowExecutionId);
 
   boolean isStateValid(String appId, String stateExecutionID);
 
-  NewRelicMetricDataRecord getLastHeartBeat(
-      StateType stateType, String appId, String stateExecutionId, String workflowExecutionId, String serviceId);
+  NewRelicMetricDataRecord getLastHeartBeat(StateType stateType, String appId, String stateExecutionId,
+      String workflowExecutionId, String serviceId, String metricGroup);
 
   void bumpCollectionMinuteToProcess(StateType stateType, String appId, String stateExecutionId,
-      String workflowExecutionId, String serviceId, int analysisMinute);
+      String workflowExecutionId, String serviceId, String groupName, int analysisMinute);
 
-  int getMaxControlMinuteWithData(
-      StateType stateType, String appId, String serviceId, String workflowId, String workflowExecutionId);
+  int getMaxControlMinuteWithData(StateType stateType, String appId, String serviceId, String workflowId,
+      String workflowExecutionId, String groupName);
 
-  int getMinControlMinuteWithData(
-      StateType stateType, String appId, String serviceId, String workflowId, String workflowExecutionId);
+  int getMinControlMinuteWithData(StateType stateType, String appId, String serviceId, String workflowId,
+      String workflowExecutionId, String groupName);
 
   String getLastSuccessfulWorkflowExecutionIdWithData(
       StateType stateType, String appId, String workflowId, String serviceId);
@@ -74,13 +73,18 @@ public interface MetricDataAnalysisService {
 
   Map<String, TimeSeriesMetricDefinition> getMetricTemplate(StateType stateType, String stateExecutionId);
 
-  NewRelicMetricDataRecord getAnalysisMinute(
-      StateType stateType, String appId, String stateExecutionId, String workflowExecutionId, String serviceId);
+  NewRelicMetricDataRecord getAnalysisMinute(StateType stateType, String appId, String stateExecutionId,
+      String workflowExecutionId, String serviceId, String groupName);
 
   void saveMetricTemplates(
       StateType stateType, String stateExecutionId, Map<String, TimeSeriesMetricDefinition> metricTemplates);
 
   Map<String, TimeSeriesMetricDefinition> getMetricTemplates(StateType stateType, String stateExecutionId);
+
+  void saveMetricGroups(
+      String appId, StateType stateType, String stateExecutionId, Map<String, TimeSeriesMlAnalysisGroupInfo> groups);
+
+  Map<String, TimeSeriesMlAnalysisGroupInfo> getMetricGroups(String appId, String stateExecutionId);
 
   void cleanUpForMetricRetry(String stateExecutionId);
 }

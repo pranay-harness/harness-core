@@ -11,6 +11,7 @@ import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by rsingh on 4/17/17.
@@ -33,7 +34,7 @@ public interface AppdynamicsRestClient {
    * @return
    */
   @GET("rest/applications/{appdynamicsAppId}/tiers?output=json")
-  Call<List<AppdynamicsTier>> listTiers(
+  Call<Set<AppdynamicsTier>> listTiers(
       @Header("Authorization") String authorization, @Path("appdynamicsAppId") long appdynamicsAppId);
 
   /**
@@ -46,16 +47,6 @@ public interface AppdynamicsRestClient {
   @GET("rest/applications/{appdynamicsAppId}/tiers/{tierId}?output=json")
   Call<List<AppdynamicsTier>> getTierDetails(@Header("Authorization") String authorization,
       @Path("appdynamicsAppId") long appdynamicsAppId, @Path("tierId") long tierId);
-
-  /**
-   * List the parent metrices of appdynamics application
-   *
-   * @param authorization the authorization
-   * @return the call
-   */
-  @GET("rest/applications/{applicationId}/metrics?output=JSON")
-  Call<List<AppdynamicsMetric>> listParentMetrics(
-      @Header("Authorization") String authorization, @Path("applicationId") int applicationId);
 
   /**
    * List the metrices of appdynamics application for a give path

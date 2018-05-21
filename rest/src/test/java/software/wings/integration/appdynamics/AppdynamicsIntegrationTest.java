@@ -22,7 +22,9 @@ import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 
@@ -134,6 +136,38 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
                 leafMetric.getChildMetrices().size());
           }
         }
+      }
+    }
+  }
+
+  @Test
+  public void testGetDependentTiers() throws IOException {
+    WebTarget target = client.target(
+        API_BASE + "/appdynamics/applications?settingId=" + appdynamicsSettingId + "&accountId=" + accountId);
+    RestResponse<List<NewRelicApplication>> restResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<NewRelicApplication>>>() {});
+
+    for (NewRelicApplication application : restResponse.getResource()) {
+      WebTarget btTarget = client.target(API_BASE + "/appdynamics/tiers?settingId=" + appdynamicsSettingId
+          + "&accountId=" + accountId + "&appdynamicsAppId=" + application.getId());
+      RestResponse<List<AppdynamicsTier>> tierRestResponse =
+          getRequestBuilderWithAuthHeader(btTarget).get(new GenericType<RestResponse<List<AppdynamicsTier>>>() {});
+      assertFalse(tierRestResponse.getResource().isEmpty());
+
+      for (AppdynamicsTier tier : tierRestResponse.getResource()) {
+        assertTrue(tier.getId() > 0);
+        assertFalse(isBlank(tier.getName()));
+        assertFalse(isBlank(tier.getType()));
+        assertFalse(isBlank(tier.getAgentType()));
+        assertFalse(tier.getName().isEmpty());
+
+        WebTarget dependentTarget =
+            client.target(API_BASE + "/appdynamics/dependent-tiers?settingId=" + appdynamicsSettingId
+                + "&accountId=" + accountId + "&appdynamicsAppId=" + application.getId() + "&tierId=" + tier.getId());
+        RestResponse<Set<AppdynamicsTier>> dependentTierResponse =
+            getRequestBuilderWithAuthHeader(dependentTarget).get(new GenericType<RestResponse<Set<AppdynamicsTier>>>() {
+            });
+        System.out.println(dependentTierResponse.getResource());
       }
     }
   }

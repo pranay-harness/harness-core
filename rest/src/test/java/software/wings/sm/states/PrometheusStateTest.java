@@ -200,8 +200,11 @@ public class PrometheusStateTest extends WingsBaseTest {
     assertEquals(ExecutionStatus.SUCCESS, response.getExecutionStatus());
     assertEquals("Could not find nodes to analyze!", response.getErrorMessage());
 
-    NewRelicMetricAnalysisRecord metricsAnalysis =
-        metricDataAnalysisService.getMetricsAnalysis(stateExecutionId, workflowExecutionId);
+    List<NewRelicMetricAnalysisRecord> metricAnalysisRecords =
+        metricDataAnalysisService.getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId);
+    assertEquals(1, metricAnalysisRecords.size());
+
+    NewRelicMetricAnalysisRecord metricsAnalysis = metricAnalysisRecords.get(0);
     assertEquals(stateExecutionId, metricsAnalysis.getStateExecutionId());
     assertEquals(workflowExecutionId, metricsAnalysis.getWorkflowExecutionId());
     assertEquals(workflowId, metricsAnalysis.getWorkflowId());
@@ -224,8 +227,11 @@ public class PrometheusStateTest extends WingsBaseTest {
     assertEquals("Skipping analysis due to lack of baseline data (First time deployment or Last phase).",
         response.getErrorMessage());
 
-    NewRelicMetricAnalysisRecord metricsAnalysis =
-        metricDataAnalysisService.getMetricsAnalysis(stateExecutionId, workflowExecutionId);
+    List<NewRelicMetricAnalysisRecord> metricAnalysisRecords =
+        metricDataAnalysisService.getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId);
+    assertEquals(1, metricAnalysisRecords.size());
+
+    NewRelicMetricAnalysisRecord metricsAnalysis = metricAnalysisRecords.get(0);
     assertEquals(stateExecutionId, metricsAnalysis.getStateExecutionId());
     assertEquals(workflowExecutionId, metricsAnalysis.getWorkflowExecutionId());
     assertEquals(workflowId, metricsAnalysis.getWorkflowId());
@@ -248,8 +254,11 @@ public class PrometheusStateTest extends WingsBaseTest {
     assertEquals("Skipping analysis due to lack of baseline data (First time deployment or Last phase).",
         response.getErrorMessage());
 
-    NewRelicMetricAnalysisRecord metricsAnalysis =
-        metricDataAnalysisService.getMetricsAnalysis(stateExecutionId, workflowExecutionId);
+    List<NewRelicMetricAnalysisRecord> metricAnalysisRecords =
+        metricDataAnalysisService.getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId);
+    assertEquals(1, metricAnalysisRecords.size());
+
+    NewRelicMetricAnalysisRecord metricsAnalysis = metricAnalysisRecords.get(0);
     assertEquals(stateExecutionId, metricsAnalysis.getStateExecutionId());
     assertEquals(workflowExecutionId, metricsAnalysis.getWorkflowExecutionId());
     assertEquals(workflowId, metricsAnalysis.getWorkflowId());

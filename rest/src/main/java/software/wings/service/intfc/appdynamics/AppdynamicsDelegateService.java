@@ -11,6 +11,7 @@ import software.wings.service.impl.newrelic.NewRelicApplication;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by rsingh on 4/17/17.
@@ -21,8 +22,12 @@ public interface AppdynamicsDelegateService {
       AppDynamicsConfig appDynamicsConfig, List<EncryptedDataDetail> encryptionDetails) throws IOException;
 
   @DelegateTaskType(TaskType.APPDYNAMICS_GET_TIER_TASK)
-  List<AppdynamicsTier> getTiers(
-      AppDynamicsConfig value, long appdynamicsAppId, List<EncryptedDataDetail> encryptionDetails) throws IOException;
+  Set<AppdynamicsTier> getTiers(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
+      List<EncryptedDataDetail> encryptionDetails) throws IOException;
+
+  @DelegateTaskType(TaskType.APPDYNAMICS_GET_TIER_MAP)
+  Set<AppdynamicsTier> getTierDependencies(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
+      List<EncryptedDataDetail> encryptionDetails) throws IOException;
 
   @DelegateTaskType(TaskType.APPDYNAMICS_CONFIGURATION_VALIDATE_TASK)
   boolean validateConfig(AppDynamicsConfig appDynamicsConfig) throws IOException;
@@ -33,4 +38,7 @@ public interface AppdynamicsDelegateService {
   List<AppdynamicsMetricData> getTierBTMetricData(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
       long tierId, String btName, String hostName, int durantionInMinutes, List<EncryptedDataDetail> encryptionDetails)
       throws IOException;
+
+  AppdynamicsTier getAppdynamicsTier(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId,
+      List<EncryptedDataDetail> encryptionDetails) throws IOException;
 }

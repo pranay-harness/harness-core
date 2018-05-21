@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -15,6 +16,7 @@ import static software.wings.beans.TemplateExpression.Builder.aTemplateExpressio
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import org.atmosphere.cpr.Broadcaster;
@@ -40,12 +42,14 @@ import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
+import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionBaselineService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContextImpl;
@@ -56,6 +60,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.waitnotify.WaitNotifyEngine;
 
+import java.io.IOException;
 import java.text.ParseException;
 import java.util.Collections;
 import java.util.Date;
@@ -98,11 +103,12 @@ public class AppDynamicsStateTest extends WingsBaseTest {
   @Mock private Application application;
   @Mock private Artifact artifact;
   @Mock private StateExecutionInstance stateExecutionInstance;
+  @Mock private AppdynamicsService appdynamicsService;
 
   private AppDynamicsState appDynamicsState;
 
   @Before
-  public void setup() {
+  public void setup() throws IOException {
     accountId = UUID.randomUUID().toString();
     appId = UUID.randomUUID().toString();
     stateExecutionId = UUID.randomUUID().toString();
@@ -150,6 +156,8 @@ public class AppDynamicsStateTest extends WingsBaseTest {
     appDynamicsState.setTierId("456");
     appDynamicsState.setTimeDuration("6000");
 
+    when(appdynamicsService.getTiers(anyString(), anyLong()))
+        .thenReturn(Sets.newHashSet(AppdynamicsTier.builder().id(456).name("tier").build()));
     setInternalState(appDynamicsState, "appService", appService);
     setInternalState(appDynamicsState, "configuration", configuration);
     setInternalState(appDynamicsState, "settingsService", settingsService);
@@ -162,6 +170,7 @@ public class AppDynamicsStateTest extends WingsBaseTest {
     setInternalState(appDynamicsState, "workflowExecutionService", workflowExecutionService);
     setInternalState(appDynamicsState, "continuousVerificationService", continuousVerificationService);
     setInternalState(appDynamicsState, "workflowExecutionBaselineService", workflowExecutionBaselineService);
+    setInternalState(appDynamicsState, "appdynamicsService", appdynamicsService);
   }
 
   @Test
@@ -197,7 +206,7 @@ public class AppDynamicsStateTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldTestAllTemplatized() throws ParseException {
+  public void shouldTestAllTemplatized() throws ParseException, IOException {
     AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
                                               .accountId(accountId)
                                               .controllerUrl("appd-url")
@@ -242,6 +251,8 @@ public class AppDynamicsStateTest extends WingsBaseTest {
         .thenReturn(settingAttribute.getUuid());
     when(executionContext.renderExpression("${workflow.variables.AppDynamics_App}")).thenReturn("30444");
     when(executionContext.renderExpression("${workflow.variables.AppDynamics_Tier}")).thenReturn("30889");
+    when(appdynamicsService.getTiers(anyString(), anyLong()))
+        .thenReturn(Sets.newHashSet(AppdynamicsTier.builder().id(30889).name("tier").build()));
     when(workflowStandardParams.getEnv())
         .thenReturn(Environment.Builder.anEnvironment().withUuid(UUID.randomUUID().toString()).build());
     when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);

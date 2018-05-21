@@ -13,6 +13,7 @@ import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 import software.wings.service.impl.analysis.MLAnalysisType;
+import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 
@@ -38,7 +39,6 @@ public class LearningEngineAnalysisTask extends Base {
   public static long TIME_SERIES_ANALYSIS_TASK_TIME_OUT = TimeUnit.MINUTES.toMillis(2);
   public static final int RETRIES = 3;
 
-  private String ml_shell_file_name;
   private String workflow_id;
   private @Indexed String workflow_execution_id;
   private @Indexed String state_execution_id;
@@ -57,6 +57,8 @@ public class LearningEngineAnalysisTask extends Base {
   private String metric_template_url;
   private String log_analysis_get_url;
   @Default private String group_name = NewRelicMetricDataRecord.DEAULT_GROUP_NAME;
+  private TimeSeriesMlAnalysisType time_series_ml_analysis_type;
+  private int analysis_start_time;
   private double sim_threshold;
   private Integer cluster_level;
   private List<String> query;

@@ -1041,8 +1041,9 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     assertEquals("er ror", elkAnalysisState.getQuery());
   }
 
-  private void formatDate() throws Exception {
-    ZonedDateTime zdt = ZonedDateTime.parse("2018-05-03T00:15:12.618905414+00:00");
+  @Test
+  public void formatDate() throws Exception {
+    ZonedDateTime zdt = ZonedDateTime.parse("2018-05-10T16:35:27.044Z");
     System.out.println(zdt.toEpochSecond());
 
     zdt = ZonedDateTime.parse("2018-04-27T23:11:23.628Z");

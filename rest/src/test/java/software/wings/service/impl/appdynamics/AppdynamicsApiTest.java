@@ -9,19 +9,23 @@ import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
+import static software.wings.service.impl.appdynamics.AppdynamicsDelegateServiceImpl.BT_PERFORMANCE_PATH_PREFIX;
+import static software.wings.service.impl.appdynamics.AppdynamicsDelegateServiceImpl.EXTERNAL_CALLS;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import okhttp3.internal.http.RealResponseBody;
 import org.apache.http.HttpStatus;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import retrofit2.Call;
 import retrofit2.Response;
 import software.wings.WingsBaseTest;
@@ -43,9 +47,12 @@ import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -77,7 +84,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
 
   @Test
   public void testUnreachableAppdynamicsServer() throws IOException {
-    Call<List<NewRelicApplication>> restCall = Mockito.mock(Call.class);
+    Call<List<NewRelicApplication>> restCall = mock(Call.class);
     RuntimeException runtimeException = new RuntimeException(UUID.randomUUID().toString());
     when(restCall.execute()).thenThrow(runtimeException);
     when(appdynamicsRestClient.listAllApplications(anyString())).thenReturn(restCall);
@@ -96,7 +103,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
 
   @Test
   public void testInvalidCredential() throws IOException {
-    Call<List<NewRelicApplication>> restCall = Mockito.mock(Call.class);
+    Call<List<NewRelicApplication>> restCall = mock(Call.class);
     when(restCall.execute()).thenReturn(Response.error(HttpStatus.SC_UNAUTHORIZED, new RealResponseBody(null, null)));
     when(appdynamicsRestClient.listAllApplications(anyString())).thenReturn(restCall);
 
@@ -114,7 +121,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
 
   @Test
   public void testValidConfig() throws IOException {
-    Call<List<NewRelicApplication>> restCall = Mockito.mock(Call.class);
+    Call<List<NewRelicApplication>> restCall = mock(Call.class);
     when(restCall.execute()).thenReturn(Response.success(Collections.emptyList()));
     when(appdynamicsRestClient.listAllApplications(anyString())).thenReturn(restCall);
 
@@ -126,7 +133,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
 
   @Test
   public void testGetApplications() throws IOException {
-    Call<List<NewRelicApplication>> restCall = Mockito.mock(Call.class);
+    Call<List<NewRelicApplication>> restCall = mock(Call.class);
     List<NewRelicApplication> applications = Lists.newArrayList(
         NewRelicApplication.builder().name(UUID.randomUUID().toString()).id(new Random().nextInt()).build(),
         NewRelicApplication.builder().name(UUID.randomUUID().toString()).id(new Random().nextInt()).build());
@@ -143,31 +150,78 @@ public class AppdynamicsApiTest extends WingsBaseTest {
 
   @Test
   public void testGetTiers() throws IOException {
-    Call<List<AppdynamicsTier>> restCall = Mockito.mock(Call.class);
-    List<AppdynamicsTier> tiers = Lists.newArrayList(
-        AppdynamicsTier.builder().name(UUID.randomUUID().toString()).id(new Random().nextInt()).build(),
-        AppdynamicsTier.builder().name(UUID.randomUUID().toString()).id(new Random().nextInt()).build());
+    Call<Set<AppdynamicsTier>> restCall = mock(Call.class);
+    Set<AppdynamicsTier> tiers =
+        Sets.newHashSet(AppdynamicsTier.builder().name(UUID.randomUUID().toString()).id(new Random().nextInt()).build(),
+            AppdynamicsTier.builder().name(UUID.randomUUID().toString()).id(new Random().nextInt()).build());
     when(restCall.execute()).thenReturn(Response.success(tiers));
     when(appdynamicsRestClient.listTiers(anyString(), anyLong())).thenReturn(restCall);
 
     String savedAttributeId = saveAppdynamicsConfig();
 
-    RestResponse<List<AppdynamicsTier>> allTiers =
+    RestResponse<Set<AppdynamicsTier>> allTiers =
         appdynamicsResource.getAllTiers(accountId, savedAttributeId, new Random().nextLong());
     assertTrue(allTiers.getResponseMessages().isEmpty());
     assertEquals(tiers, allTiers.getResource());
   }
 
   @Test
+  @Ignore
+  public void testGetTierDependencies() throws IOException {
+    int numOfTiers = 5;
+    Call<Set<AppdynamicsTier>> restCall = mock(Call.class);
+    Set<AppdynamicsTier> tiers = new HashSet<>();
+    for (int i = 0; i < numOfTiers; i++) {
+      tiers.add(AppdynamicsTier.builder().name("tier" + i).id(i).build());
+    }
+
+    when(restCall.execute()).thenReturn(Response.success(tiers));
+    when(appdynamicsRestClient.listTiers(anyString(), anyLong())).thenReturn(restCall);
+
+    for (int i = 0; i < numOfTiers; i++) {
+      Call<List<AppdynamicsMetric>> appTxnCall = mock(Call.class);
+      List<AppdynamicsMetric> appdynamicsTxns = new ArrayList<>();
+      for (int j = i; j < numOfTiers; j++) {
+        AppdynamicsMetric appdynamicsTxn =
+            AppdynamicsMetric.builder().name("txn" + j).type(AppdynamicsMetricType.folder).build();
+        appdynamicsTxns.add(appdynamicsTxn);
+      }
+      when(appTxnCall.execute()).thenReturn(Response.success(appdynamicsTxns));
+      when(appdynamicsRestClient.listMetrices(anyString(), anyLong(), eq(BT_PERFORMANCE_PATH_PREFIX + "tier" + i)))
+          .thenReturn(appTxnCall);
+      Call<List<AppdynamicsMetric>> externalMetricsCall = mock(Call.class);
+      AppdynamicsMetric externalCallMetric =
+          AppdynamicsMetric.builder().name("txn-" + i + "-" + EXTERNAL_CALLS + String.valueOf(i)).build();
+      when(externalMetricsCall.execute()).thenReturn(Response.success(Lists.newArrayList(externalCallMetric)));
+
+      when(appdynamicsRestClient.listMetrices(anyString(), anyLong(),
+               eq(BT_PERFORMANCE_PATH_PREFIX + "tier" + i + "|"
+                   + "txn" + i + "|")))
+          .thenReturn(externalMetricsCall);
+    }
+
+    AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
+                                              .accountId(accountId)
+                                              .controllerUrl(UUID.randomUUID().toString())
+                                              .username(UUID.randomUUID().toString())
+                                              .password(UUID.randomUUID().toString().toCharArray())
+                                              .accountname(UUID.randomUUID().toString())
+                                              .build();
+
+    Set<AppdynamicsTier> tierDependencies =
+        delegateService.getTierDependencies(appDynamicsConfig, 100, Collections.emptyList());
+  }
+
+  @Test
   public void testGetBTs() throws IOException {
-    Call<List<AppdynamicsTier>> tierRestCall = Mockito.mock(Call.class);
+    Call<List<AppdynamicsTier>> tierRestCall = mock(Call.class);
     AppdynamicsTier tier =
         AppdynamicsTier.builder().name(UUID.randomUUID().toString()).id(new Random().nextInt()).build();
     List<AppdynamicsTier> tiers = Lists.newArrayList(tier);
     when(tierRestCall.execute()).thenReturn(Response.success(tiers));
     when(appdynamicsRestClient.getTierDetails(anyString(), anyLong(), anyLong())).thenReturn(tierRestCall);
 
-    Call<List<AppdynamicsMetric>> btsCall = Mockito.mock(Call.class);
+    Call<List<AppdynamicsMetric>> btsCall = mock(Call.class);
     List<AppdynamicsMetric> bts = Lists.newArrayList(
         AppdynamicsMetric.builder().name(UUID.randomUUID().toString()).type(AppdynamicsMetricType.leaf).build(),
         AppdynamicsMetric.builder().name(UUID.randomUUID().toString()).type(AppdynamicsMetricType.leaf).build());
@@ -189,14 +243,14 @@ public class AppdynamicsApiTest extends WingsBaseTest {
 
   @Test
   public void testGetBTData() throws IOException {
-    Call<List<AppdynamicsTier>> tierRestCall = Mockito.mock(Call.class);
+    Call<List<AppdynamicsTier>> tierRestCall = mock(Call.class);
     AppdynamicsTier tier =
         AppdynamicsTier.builder().name(UUID.randomUUID().toString()).id(new Random().nextInt()).build();
     List<AppdynamicsTier> tiers = Lists.newArrayList(tier);
     when(tierRestCall.execute()).thenReturn(Response.success(tiers));
     when(appdynamicsRestClient.getTierDetails(anyString(), anyLong(), anyLong())).thenReturn(tierRestCall);
 
-    Call<List<AppdynamicsMetricData>> btDataCall = Mockito.mock(Call.class);
+    Call<List<AppdynamicsMetricData>> btDataCall = mock(Call.class);
     List<AppdynamicsMetricData> btData =
         Lists.newArrayList(AppdynamicsMetricData.builder()
                                .metricId(new Random().nextLong())
