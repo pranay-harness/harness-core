@@ -137,7 +137,7 @@ public class TriggerServiceImpl implements TriggerService {
 
   @Override
   public Trigger save(Trigger trigger) {
-    validateInput(trigger);
+    validateInput(trigger, null);
     Trigger savedTrigger =
         duplicateCheck(() -> wingsPersistence.saveAndGet(Trigger.class, trigger), "name", trigger.getName());
     if (trigger.getCondition().getConditionType().equals(SCHEDULED)) {
@@ -153,7 +153,7 @@ public class TriggerServiceImpl implements TriggerService {
     notNullCheck("Trigger was deleted ", existingTrigger, USER);
     Validator.equalCheck(trigger.getWorkflowType(), existingTrigger.getWorkflowType());
 
-    validateInput(trigger);
+    validateInput(trigger, existingTrigger);
 
     Trigger updatedTrigger =
         duplicateCheck(() -> wingsPersistence.saveAndGet(Trigger.class, trigger), "name", trigger.getName());
@@ -170,7 +170,7 @@ public class TriggerServiceImpl implements TriggerService {
   public WebHookToken generateWebHookToken(String appId, String triggerId) {
     Trigger trigger = wingsPersistence.get(Trigger.class, appId, triggerId);
     Validator.notNullCheck("Trigger was deleted", trigger, USER);
-    return generateWebHookToken(trigger);
+    return generateWebHookToken(trigger, null);
   }
 
   private boolean deleteTrigger(String triggerId) {
@@ -228,7 +228,7 @@ public class TriggerServiceImpl implements TriggerService {
     return wingsPersistence.query(Trigger.class, aPageRequest().addFilter("appId", EQ, appId).build()).getResponse();
   }
 
-  private WebHookToken generateWebHookToken(Trigger trigger) {
+  private WebHookToken generateWebHookToken(Trigger trigger, WebHookToken existingToken) {
     List<Service> services = null;
     boolean artifactNeeded = true;
     Map<String, String> parameters = new HashMap<>();
@@ -270,8 +270,14 @@ public class TriggerServiceImpl implements TriggerService {
         }
       }
     }
-    WebHookToken webHookToken =
-        WebHookToken.builder().httpMethod("POST").webHookToken(CryptoUtil.secureRandAlphaNumString(40)).build();
+    WebHookToken webHookToken;
+    if (existingToken == null || existingToken.getWebHookToken() == null) {
+      webHookToken =
+          WebHookToken.builder().httpMethod("POST").webHookToken(CryptoUtil.secureRandAlphaNumString(40)).build();
+    } else {
+      webHookToken = existingToken;
+    }
+
     Map<String, Object> payload = new HashMap<>();
     payload.put("application", trigger.getAppId());
 
@@ -910,7 +916,7 @@ public class TriggerServiceImpl implements TriggerService {
     return artifactStream;
   }
 
-  private void validateAndSetTriggerCondition(Trigger trigger) {
+  private void validateAndSetTriggerCondition(Trigger trigger, Trigger existingTrigger) {
     switch (trigger.getCondition().getConditionType()) {
       case NEW_ARTIFACT:
         ArtifactTriggerCondition artifactTriggerCondition = (ArtifactTriggerCondition) trigger.getCondition();
@@ -927,11 +933,16 @@ public class TriggerServiceImpl implements TriggerService {
         break;
       case WEBHOOK:
         WebHookTriggerCondition webHookTriggerCondition = (WebHookTriggerCondition) trigger.getCondition();
-        if (webHookTriggerCondition.getWebHookToken() == null
-            || isBlank(webHookTriggerCondition.getWebHookToken().getWebHookToken())) {
-          WebHookToken webHookToken = generateWebHookToken(trigger);
-          webHookTriggerCondition.setWebHookToken(webHookToken);
+        WebHookToken existingWebhookToken = null;
+        if (existingTrigger != null) {
+          if (existingTrigger.getCondition().getConditionType().equals(WEBHOOK)) {
+            WebHookTriggerCondition existingTriggerCondition = (WebHookTriggerCondition) existingTrigger.getCondition();
+            existingWebhookToken = existingTriggerCondition.getWebHookToken();
+          }
         }
+
+        WebHookToken webHookToken = generateWebHookToken(trigger, existingWebhookToken);
+        webHookTriggerCondition.setWebHookToken(webHookToken);
         trigger.setWebHookToken(webHookTriggerCondition.getWebHookToken().getWebHookToken());
         break;
       case SCHEDULED:
@@ -1034,7 +1045,7 @@ public class TriggerServiceImpl implements TriggerService {
     }
   }
 
-  private void validateInput(Trigger trigger) {
+  private void validateInput(Trigger trigger, Trigger existingTrigger) {
     List<Service> services;
     if (PIPELINE.equals(trigger.getWorkflowType())) {
       Pipeline executePipeline = validatePipeline(trigger.getAppId(), trigger.getWorkflowId(), true);
@@ -1051,7 +1062,7 @@ public class TriggerServiceImpl implements TriggerService {
       services = workflow.getServices();
       validateAndSetArtifactSelections(trigger, services);
     }
-    validateAndSetTriggerCondition(trigger);
+    validateAndSetTriggerCondition(trigger, existingTrigger);
     validateAndSetCronExpression(trigger);
   }
 

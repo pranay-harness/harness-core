@@ -76,11 +76,7 @@ public class StencilPostProcessor {
       DefaultValue defaultValue = field.getAnnotation(DefaultValue.class);
       if (enumData != null || defaultValue != null) {
         if (enumData != null) {
-          DataProvider dataProvider = injector.getInstance(enumData.enumDataProvider());
-          Map<String, String> data = dataProvider.getData(appId, args);
-          if (data == null) {
-            data = new HashMap<>();
-          }
+          Map<String, String> data = getEnumData(appId, args, enumData);
           stencil = addEnumDataToNode(stencil, data, field.getName());
         }
       }
@@ -97,11 +93,7 @@ public class StencilPostProcessor {
         DefaultValue defaultValue = method.getAnnotation(DefaultValue.class);
         if (enumData != null || defaultValue != null) {
           if (enumData != null) {
-            DataProvider dataProvider = injector.getInstance(enumData.enumDataProvider());
-            Map<String, String> data = dataProvider.getData(appId, args);
-            if (data == null) {
-              data = new HashMap<>();
-            }
+            Map<String, String> data = getEnumData(appId, args, enumData);
             stencil = addEnumDataToNode(stencil, data, field);
           }
         }
@@ -157,6 +149,15 @@ public class StencilPostProcessor {
     }
 
     return returnValue;
+  }
+
+  private Map<String, String> getEnumData(String appId, Map<String, String> args, EnumData enumData) {
+    DataProvider dataProvider = injector.getInstance(enumData.enumDataProvider());
+    Map<String, String> data = dataProvider.getData(appId, args);
+    if (data == null) {
+      data = new HashMap<>();
+    }
+    return data;
   }
 
   private <T extends Stencil> Stencil addDefaultValueToStencil(T stencil, String fieldName, String value) {
