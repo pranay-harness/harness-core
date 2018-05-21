@@ -7,6 +7,9 @@ import migrations.all.FixInstanceData;
 import migrations.all.FixInstanceDataForAwsSSH;
 import migrations.all.GitSyncToAllAccounts;
 import migrations.all.LogAnalysisExperimentalRecordsMigration;
+import migrations.all.MetricAnalysisRecordGroupNameMigration;
+import migrations.all.MetricDataRecordGroupNameMigration;
+import migrations.all.MetricMLAnalysisRecordGroupNameMigration;
 import migrations.all.NewRelicMetricAnalysisRecordsMigration;
 import migrations.all.NewRelicMetricDataRecordsMigration;
 import migrations.all.RemoveResizeFromStatefulSetWorkflows;
@@ -38,6 +41,9 @@ public class MigrationList {
         .add(Pair.of(139, RenameProvisionNodeToInfrastructureNodeWorkflows.class))
         .add(Pair.of(140, GitSyncToAllAccounts.class))
         .add(Pair.of(141, RemoveResizeFromStatefulSetWorkflows.class))
+        .add(Pair.of(142, MetricDataRecordGroupNameMigration.class))
+        .add(Pair.of(143, MetricAnalysisRecordGroupNameMigration.class))
+        .add(Pair.of(144, MetricMLAnalysisRecordGroupNameMigration.class))
         .build();
   }
 }
