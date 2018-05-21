@@ -6,6 +6,7 @@ import migrations.all.AddUsersToAdminUserGroup;
 import migrations.all.FixInstanceData;
 import migrations.all.FixInstanceDataForAwsSSH;
 import migrations.all.GitSyncToAllAccounts;
+import migrations.all.LearningEngineTaskGroupNameMigration;
 import migrations.all.LogAnalysisExperimentalRecordsMigration;
 import migrations.all.MetricAnalysisRecordGroupNameMigration;
 import migrations.all.MetricDataRecordGroupNameMigration;
@@ -44,6 +45,7 @@ public class MigrationList {
         .add(Pair.of(142, MetricDataRecordGroupNameMigration.class))
         .add(Pair.of(143, MetricAnalysisRecordGroupNameMigration.class))
         .add(Pair.of(144, MetricMLAnalysisRecordGroupNameMigration.class))
+        .add(Pair.of(145, LearningEngineTaskGroupNameMigration.class))
         .build();
   }
 }

@@ -1,6 +1,7 @@
 package software.wings.service.impl.newrelic;
 
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
@@ -55,6 +56,7 @@ public class LearningEngineAnalysisTask extends Base {
   private String analysis_save_url;
   private String metric_template_url;
   private String log_analysis_get_url;
+  @Default private String group_name = NewRelicMetricDataRecord.DEAULT_GROUP_NAME;
   private double sim_threshold;
   private Integer cluster_level;
   private List<String> query;
