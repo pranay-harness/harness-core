@@ -131,7 +131,8 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     ExpressionEvaluator.isValidVariableName(serviceVariable.getName());
 
     wingsPersistence.updateFields(ServiceVariable.class, serviceVariable.getUuid(),
-        ImmutableMap.of("value", serviceVariable.getValue(), "type", serviceVariable.getType()));
+        ImmutableMap.of(
+            "value", serviceVariable.getValue(), "type", serviceVariable.getType(), "name", serviceVariable.getName()));
 
     ServiceVariable updatedServiceVariable = get(serviceVariable.getAppId(), serviceVariable.getUuid());
 
