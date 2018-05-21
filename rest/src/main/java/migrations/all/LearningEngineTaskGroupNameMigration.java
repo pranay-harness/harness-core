@@ -31,6 +31,6 @@ public class LearningEngineTaskGroupNameMigration extends AddFieldMigration {
 
   @Override
   protected Object getFieldValue() {
-    return NewRelicMetricDataRecord.DEAULT_GROUP_NAME;
+    return NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
   }
 }

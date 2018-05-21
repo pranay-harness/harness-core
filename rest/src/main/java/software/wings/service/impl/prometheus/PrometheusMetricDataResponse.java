@@ -1,5 +1,7 @@
 package software.wings.service.impl.prometheus;
 
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
+
 import com.google.common.collect.TreeBasedTable;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -88,6 +90,7 @@ public class PrometheusMetricDataResponse implements MetricCollectionResponse {
                                  .timeStamp(timeStamp)
                                  .stateType(StateType.PROMETHEUS)
                                  .host(host)
+                                 .groupName(DEFAULT_GROUP_NAME)
                                  .build();
           metricDataRecord.setAppId(appId);
           rv.put(transactionName, timeStamp, metricDataRecord);

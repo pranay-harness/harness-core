@@ -6,7 +6,7 @@ import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
-import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEAULT_GROUP_NAME;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -115,7 +115,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     mlAnalysisResponse.setGroupName(groupName);
 
     if (isEmpty(mlAnalysisResponse.getGroupName())) {
-      mlAnalysisResponse.setGroupName(DEAULT_GROUP_NAME);
+      mlAnalysisResponse.setGroupName(DEFAULT_GROUP_NAME);
     }
 
     TimeSeriesMLScores timeSeriesMLScores = TimeSeriesMLScores.builder()
@@ -692,10 +692,10 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                                       .get(new FindOptions().limit(1));
 
     return timeSeriesMetricGroup == null ? new ImmutableMap.Builder<String, TimeSeriesMlAnalysisGroupInfo>()
-                                               .put(DEAULT_GROUP_NAME,
+                                               .put(DEFAULT_GROUP_NAME,
                                                    TimeSeriesMlAnalysisGroupInfo.builder()
-                                                       .groupName(DEAULT_GROUP_NAME)
-                                                       .dependencyPath(DEAULT_GROUP_NAME)
+                                                       .groupName(DEFAULT_GROUP_NAME)
+                                                       .dependencyPath(DEFAULT_GROUP_NAME)
                                                        .mlAnalysisType(TimeSeriesMlAnalysisType.COMPARATIVE)
                                                        .build())
                                                .build()

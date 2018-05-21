@@ -1,7 +1,7 @@
 package software.wings.service.impl.newrelic;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEAULT_GROUP_NAME;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -59,7 +59,7 @@ public class NewRelicMetricAnalysisRecord extends Base implements Comparable<New
 
   private String baseLineExecutionId;
 
-  @Default @Indexed private String groupName = DEAULT_GROUP_NAME;
+  @Default @Indexed private String groupName = DEFAULT_GROUP_NAME;
 
   private String dependencyPath;
 

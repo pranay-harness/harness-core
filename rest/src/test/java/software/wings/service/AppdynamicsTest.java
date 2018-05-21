@@ -134,13 +134,6 @@ public class AppdynamicsTest extends WingsBaseTest {
     }
   }
 
-  @Test
-  public void xyzn() throws Exception {
-    Set<AppdynamicsTier> dependentTiers = appdynamicsService.getDependentTiers(
-        settingAttribute.getUuid(), 6719, AppdynamicsTier.builder().id(135482).name("tier1").build());
-    System.out.println(dependentTiers);
-  }
-
   private KmsConfig getKmsConfig() {
     final KmsConfig kmsConfig = new KmsConfig();
     kmsConfig.setName("myKms");

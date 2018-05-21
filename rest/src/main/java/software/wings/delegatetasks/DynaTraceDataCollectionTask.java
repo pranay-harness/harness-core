@@ -2,6 +2,7 @@ package software.wings.delegatetasks;
 
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.TreeBasedTable;
@@ -115,6 +116,7 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
                     .dataCollectionMinute(dataCollectionMinute)
                     .timeStamp(collectionStartTime)
                     .level(ClusterLevel.H0)
+                    .groupName(DEFAULT_GROUP_NAME)
                     .build());
 
             records.putAll(processMetricData(metricsData));
@@ -273,6 +275,7 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
                                        .stateType(StateType.DYNA_TRACE)
                                        .host(dataResponse.getResult().getHost())
                                        .values(new HashMap<>())
+                                       .groupName(DEFAULT_GROUP_NAME)
                                        .build();
                 records.put(btName, timeStamp.longValue(), metricDataRecord);
               }

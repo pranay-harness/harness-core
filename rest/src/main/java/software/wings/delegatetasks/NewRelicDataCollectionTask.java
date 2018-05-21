@@ -2,6 +2,7 @@ package software.wings.delegatetasks;
 
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.APDEX_SCORE;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.AVERAGE_RESPONSE_TIME;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.CALL_COUNT;
@@ -180,6 +181,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                       .timeStamp(timeStamp)
                       .host(node.getHost())
                       .values(new HashMap<>())
+                      .groupName(DEFAULT_GROUP_NAME)
                       .build();
 
               metricDataRecord.setDataCollectionMinute(
@@ -364,6 +366,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                     .dataCollectionMinute(dataCollectionMinuteEnd)
                     .timeStamp(windowStartTimeManager)
                     .level(ClusterLevel.H0)
+                    .groupName(DEFAULT_GROUP_NAME)
                     .build());
             logger.info(
                 "Sending heartbeat new relic metric record to the server for minute " + dataCollectionMinuteEnd);
