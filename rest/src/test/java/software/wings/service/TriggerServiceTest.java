@@ -397,6 +397,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     assertThat(((WebHookTriggerCondition) trigger.getCondition()).getWebHookToken().getWebHookToken()).isNotNull();
     verify(wingsPersistence).saveAndGet(any(), any(Trigger.class));
   }
+
   @Test
   public void shouldUpdateWebhookConditionTrigger() {
     when(wingsPersistence.saveAndGet(any(), any(Trigger.class))).thenReturn(webhookConditionTrigger);
