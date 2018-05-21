@@ -444,7 +444,10 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     if (artifacts == null && isNotEmpty(artifactIds)) {
       List<Artifact> list = new ArrayList<>();
       for (String artifactId : artifactIds) {
-        list.add(artifactService.get(appId, artifactId));
+        Artifact artifact = artifactService.get(appId, artifactId);
+        if (artifact != null) {
+          list.add(artifact);
+        }
       }
       artifacts = list;
     }
@@ -459,7 +462,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
    */
   public Artifact getArtifactForService(String serviceId) {
     getArtifacts();
-    if (artifacts == null) {
+    if (isEmpty(artifacts)) {
       return null;
     }
     return artifacts.stream().filter(artifact -> artifact.getServiceIds().contains(serviceId)).findFirst().orElse(null);
