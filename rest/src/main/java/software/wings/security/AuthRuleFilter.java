@@ -8,6 +8,7 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.HttpMethod.OPTIONS;
 import static javax.ws.rs.Priorities.AUTHORIZATION;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 import static software.wings.beans.ErrorCode.ACCESS_DENIED;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
@@ -186,7 +187,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     }
 
     if (servletRequest != null && featureFlagService.isEnabled(FeatureName.WHITELIST, accountId)) {
-      String remoteHost = servletRequest.getRemoteHost();
+      String forwardedFor = servletRequest.getHeader("X-Forwarded-For");
+      String remoteHost = isNotBlank(forwardedFor) ? forwardedFor : servletRequest.getRemoteHost();
       if (!whitelistService.isValidIPAddress(accountId, remoteHost)) {
         String msg = "Current IP Address (" + remoteHost + ") is not whitelisted.";
         logger.warn(msg);
