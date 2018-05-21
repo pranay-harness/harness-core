@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
   @Index(fields = {
     @Field("workflow_execution_id")
     , @Field("state_execution_id"), @Field("executionStatus"), @Field("analysis_minute"), @Field("cluster_level"),
-        @Field("ml_analysis_type"), @Field("control_nodes")
+        @Field("ml_analysis_type"), @Field("control_nodes"), @Field("group_name")
   }, options = @IndexOptions(unique = true, name = "metricUniqueIdx"))
 })
 @Data
