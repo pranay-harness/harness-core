@@ -21,8 +21,9 @@ import java.util.Map;
  * Created by sriram_parthasarathy on 9/22/17.
  */
 @Entity(value = "timeSeriesAnalysisRecords", noClassnameStored = true)
-@Indexes(@Index(fields = { @Field("workflowExecutionId")
-                           , @Field("stateExecutionId"), @Field("analysisMinute") },
+@Indexes(@Index(fields =
+    { @Field("workflowExecutionId")
+      , @Field("stateExecutionId"), @Field("analysisMinute"), @Field("groupName") },
     options = @IndexOptions(unique = true, name = "MetricAnalysisUniqueIdx")))
 @Data
 @EqualsAndHashCode(callSuper = false)
