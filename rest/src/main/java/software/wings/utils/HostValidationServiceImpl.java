@@ -1,8 +1,10 @@
 package software.wings.utils;
 
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
+import static software.wings.common.Constants.WINDOWS_HOME_DIR;
 import static software.wings.utils.SshHelperUtil.getSshSessionConfig;
 import static software.wings.utils.SshHelperUtil.normalizeError;
+import static software.wings.utils.WinRmHelperUtil.HandleWinRmClientException;
 
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
@@ -18,14 +20,18 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.HostValidationResponse;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.core.ssh.executors.SshSessionFactory;
+import software.wings.core.winrm.executors.WinRmSession;
+import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.ExecutionStatus;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -44,25 +50,11 @@ public class HostValidationServiceImpl implements HostValidationService {
     try {
       timeLimiter.callWithTimeout(() -> {
         hostNames.forEach(hostName -> {
-          CommandExecutionContext commandExecutionContext = aCommandExecutionContext()
-                                                                .withHostConnectionAttributes(connectionSetting)
-                                                                .withExecutionCredential(executionCredential)
-                                                                .build();
-          SshSessionConfig sshSessionConfig =
-              getSshSessionConfig(hostName, "HOST_CONNECTION_TEST", commandExecutionContext, 60);
-
-          HostValidationResponse response = HostValidationResponse.Builder.aHostValidationResponse()
-                                                .withHostName(hostName)
-                                                .withStatus(ExecutionStatus.SUCCESS.name())
-                                                .build();
-          try {
-            Session sshSession = SshSessionFactory.getSSHSession(sshSessionConfig);
-            sshSession.disconnect();
-          } catch (JSchException jschEx) {
-            ErrorCode errorCode = normalizeError(jschEx);
-            response.setStatus(ExecutionStatus.FAILED.name());
-            response.setErrorCode(errorCode.name());
-            response.setErrorDescription(errorCode.getDescription());
+          HostValidationResponse response;
+          if (connectionSetting.getValue() instanceof WinRmConnectionAttributes) {
+            response = validateHostWinRm(hostName, (WinRmConnectionAttributes) connectionSetting.getValue());
+          } else {
+            response = validateHostSsh(hostName, connectionSetting, executionCredential);
           }
           hostValidationResponses.add(response);
         });
@@ -92,5 +84,59 @@ public class HostValidationServiceImpl implements HostValidationService {
       }
     }
     return hostValidationResponses;
+  }
+
+  private HostValidationResponse validateHostSsh(
+      String hostName, SettingAttribute connectionSetting, ExecutionCredential executionCredential) {
+    CommandExecutionContext commandExecutionContext = aCommandExecutionContext()
+                                                          .withHostConnectionAttributes(connectionSetting)
+                                                          .withExecutionCredential(executionCredential)
+                                                          .build();
+    SshSessionConfig sshSessionConfig =
+        getSshSessionConfig(hostName, "HOST_CONNECTION_TEST", commandExecutionContext, 60);
+
+    HostValidationResponse response = HostValidationResponse.Builder.aHostValidationResponse()
+                                          .withHostName(hostName)
+                                          .withStatus(ExecutionStatus.SUCCESS.name())
+                                          .build();
+    try {
+      Session sshSession = SshSessionFactory.getSSHSession(sshSessionConfig);
+      sshSession.disconnect();
+    } catch (JSchException jschEx) {
+      ErrorCode errorCode = normalizeError(jschEx);
+      response.setStatus(ExecutionStatus.FAILED.name());
+      response.setErrorCode(errorCode.name());
+      response.setErrorDescription(errorCode.getDescription());
+    }
+    return response;
+  }
+
+  private HostValidationResponse validateHostWinRm(String hostName, WinRmConnectionAttributes connectionAttributes) {
+    HostValidationResponse response = HostValidationResponse.Builder.aHostValidationResponse()
+                                          .withHostName(hostName)
+                                          .withStatus(ExecutionStatus.SUCCESS.name())
+                                          .build();
+
+    WinRmSessionConfig config = WinRmSessionConfig.builder()
+                                    .hostname(hostName)
+                                    .commandUnitName("HOST_CONNECTION_TEST")
+                                    .domain(connectionAttributes.getDomain())
+                                    .username(connectionAttributes.getUsername())
+                                    .password(String.valueOf(connectionAttributes.getPassword()))
+                                    .authenticationScheme(connectionAttributes.getAuthenticationScheme())
+                                    .port(connectionAttributes.getPort())
+                                    .skipCertChecks(connectionAttributes.isSkipCertChecks())
+                                    .useSSL(connectionAttributes.isUseSSL())
+                                    .workingDirectory(WINDOWS_HOME_DIR)
+                                    .environment(Collections.emptyMap())
+                                    .build();
+
+    try (WinRmSession session = new WinRmSession(config)) {
+    } catch (Exception e) {
+      String errorMessage = HandleWinRmClientException(e);
+      response.setStatus(ExecutionStatus.FAILED.name());
+      response.setErrorDescription(errorMessage);
+    }
+    return response;
   }
 }

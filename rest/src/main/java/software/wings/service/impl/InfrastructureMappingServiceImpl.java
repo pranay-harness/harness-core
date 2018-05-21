@@ -94,6 +94,7 @@ import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.cloudprovider.aws.AwsCodeDeployService;
+import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.HQuery.QueryChecks;
 import software.wings.dl.PageRequest;
@@ -1239,8 +1240,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     SettingAttribute hostConnectionSetting = settingsService.get(validationRequest.getHostConnectionAttrs());
     List<EncryptedDataDetail> encryptionDetails =
         secretManager.getEncryptionDetails((Encryptable) hostConnectionSetting.getValue(), null, null);
-    SyncTaskContext syncTaskContext =
-        aContext().withAccountId(hostConnectionSetting.getAccountId()).withAppId(validationRequest.getAppId()).build();
+    SyncTaskContext syncTaskContext = aContext()
+                                          .withAccountId(hostConnectionSetting.getAccountId())
+                                          .withAppId(validationRequest.getAppId())
+                                          .withTimeout(Constants.DEFAULT_SYNC_CALL_TIMEOUT * 3)
+                                          .build();
     return delegateProxyFactory.get(HostValidationService.class, syncTaskContext)
         .validateHost(validationRequest.getHostNames(), hostConnectionSetting, encryptionDetails,
             validationRequest.getExecutionCredential());

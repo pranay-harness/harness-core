@@ -1,8 +1,10 @@
 package software.wings.delegatetasks.validation;
 
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
+import static software.wings.common.Constants.WINDOWS_HOME_DIR;
 import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
 import static software.wings.utils.SshHelperUtil.getSshSessionConfig;
+import static software.wings.utils.WinRmHelperUtil.HandleWinRmClientException;
 
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
@@ -14,12 +16,16 @@ import software.wings.annotation.Encryptable;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.WinRmConnectionAttributes;
+import software.wings.core.winrm.executors.WinRmSession;
+import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.delegatetasks.validation.DelegateConnectionResult.DelegateConnectionResultBuilder;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.time.Clock;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -53,23 +59,48 @@ public class HostValidationValidation extends AbstractDelegateValidateTask {
         for (String hostName : hostNames) {
           DelegateConnectionResultBuilder resultBuilder = DelegateConnectionResult.builder().criteria(hostName);
           long startTime = clock.millis();
-          try {
-            getSSHSession(getSshSessionConfig(hostName, "HOST_CONNECTION_TEST",
-                              aCommandExecutionContext()
-                                  .withHostConnectionAttributes(connectionSetting)
-                                  .withExecutionCredential(executionCredential)
-                                  .build(),
-                              20))
-                .disconnect();
-            resultBuilder.validated(true);
-          } catch (JSchException jschEx) {
-            // Invalid credentials error is still a valid connection
-            resultBuilder.validated(StringUtils.contains(jschEx.getMessage(), "Auth"));
-          } catch (Exception e) {
-            resultBuilder.validated(false);
+          if (connectionSetting.getValue() instanceof WinRmConnectionAttributes) {
+            WinRmConnectionAttributes connectionAttributes = (WinRmConnectionAttributes) connectionSetting.getValue();
+            WinRmSessionConfig config = WinRmSessionConfig.builder()
+                                            .hostname(hostName)
+                                            .commandUnitName("HOST_CONNECTION_TEST")
+                                            .domain(connectionAttributes.getDomain())
+                                            .username(connectionAttributes.getUsername())
+                                            .password(String.valueOf(connectionAttributes.getPassword()))
+                                            .authenticationScheme(connectionAttributes.getAuthenticationScheme())
+                                            .port(connectionAttributes.getPort())
+                                            .skipCertChecks(connectionAttributes.isSkipCertChecks())
+                                            .useSSL(connectionAttributes.isUseSSL())
+                                            .workingDirectory(WINDOWS_HOME_DIR)
+                                            .environment(Collections.emptyMap())
+                                            .build();
+
+            try (WinRmSession session = new WinRmSession(config)) {
+              resultBuilder.validated(true);
+            } catch (Exception e) {
+              String errorMessage = HandleWinRmClientException(e);
+              resultBuilder.validated(!StringUtils.contains(errorMessage, "Cannot reach remote host"));
+            }
+          } else {
+            try {
+              getSSHSession(getSshSessionConfig(hostName, "HOST_CONNECTION_TEST",
+                                aCommandExecutionContext()
+                                    .withHostConnectionAttributes(connectionSetting)
+                                    .withExecutionCredential(executionCredential)
+                                    .build(),
+                                20))
+                  .disconnect();
+              resultBuilder.validated(true);
+            } catch (JSchException jschEx) {
+              // Invalid credentials error is still a valid connection
+              resultBuilder.validated(StringUtils.contains(jschEx.getMessage(), "Auth"));
+            } catch (Exception e) {
+              resultBuilder.validated(false);
+            }
           }
           results.add(resultBuilder.duration(clock.millis() - startTime).build());
         }
+
         return true;
       }, 30L, TimeUnit.SECONDS, true);
     } catch (Exception e) {
