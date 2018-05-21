@@ -53,7 +53,6 @@ public class LogAnalysisManagerJob implements Job {
   @Override
   public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
     try {
-      long timestamp = jobExecutionContext.getMergedJobDataMap().getLong("timestamp");
       String params = jobExecutionContext.getMergedJobDataMap().getString("jobParams");
       String delegateTaskId = jobExecutionContext.getMergedJobDataMap().getString("delegateTaskId");
 
