@@ -14,6 +14,7 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
 import software.wings.service.intfc.analysis.ClusterLevel;
@@ -40,6 +41,8 @@ import java.util.Map;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class NewRelicMetricDataRecord extends Base {
+  @Transient public static String DEAULT_GROUP_NAME = "default";
+
   @NotEmpty @Indexed private StateType stateType;
 
   @NotEmpty @Indexed private String name;
@@ -62,6 +65,8 @@ public class NewRelicMetricDataRecord extends Base {
 
   private String tag;
 
+  @Default @Indexed private String groupName = DEAULT_GROUP_NAME;
+
   // generic values
   @Default private Map<String, Double> values = new HashMap<>();
 
@@ -69,7 +74,7 @@ public class NewRelicMetricDataRecord extends Base {
   public NewRelicMetricDataRecord(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords, String entityYamlPath, StateType stateType,
       String name, String workflowId, String workflowExecutionId, String serviceId, String stateExecutionId,
-      long timeStamp, int dataCollectionMinute, String host, ClusterLevel level, String tag,
+      long timeStamp, int dataCollectionMinute, String host, ClusterLevel level, String tag, String groupName,
       Map<String, Double> values) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
     this.stateType = stateType;
@@ -83,6 +88,7 @@ public class NewRelicMetricDataRecord extends Base {
     this.host = host;
     this.level = level;
     this.tag = tag;
+    this.groupName = groupName;
     this.values = values;
   }
 }

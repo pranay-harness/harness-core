@@ -167,18 +167,19 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                 logger.debug("New relic sending us data in the past. request start time {}, received time {}",
                     managerAnalysisStartTime, timeStamp);
               }
-              final NewRelicMetricDataRecord metricDataRecord = new NewRelicMetricDataRecord();
-              metricDataRecord.setName(metric.getName());
-              metricDataRecord.setAppId(dataCollectionInfo.getApplicationId());
-              metricDataRecord.setWorkflowId(dataCollectionInfo.getWorkflowId());
-              metricDataRecord.setWorkflowExecutionId(dataCollectionInfo.getWorkflowExecutionId());
-              metricDataRecord.setServiceId(dataCollectionInfo.getServiceId());
-              metricDataRecord.setStateExecutionId(dataCollectionInfo.getStateExecutionId());
-              metricDataRecord.setStateType(getStateType());
-
-              metricDataRecord.setTimeStamp(timeStamp);
-              metricDataRecord.setHost(node.getHost());
-              metricDataRecord.setValues(new HashMap<>());
+              final NewRelicMetricDataRecord metricDataRecord =
+                  NewRelicMetricDataRecord.builder()
+                      .name(metric.getName())
+                      .appId(dataCollectionInfo.getApplicationId())
+                      .workflowId(dataCollectionInfo.getWorkflowId())
+                      .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
+                      .serviceId(dataCollectionInfo.getServiceId())
+                      .stateExecutionId(dataCollectionInfo.getStateExecutionId())
+                      .stateType(getStateType())
+                      .timeStamp(timeStamp)
+                      .host(node.getHost())
+                      .values(new HashMap<>())
+                      .build();
 
               metricDataRecord.setDataCollectionMinute(
                   (int) ((timeStamp - managerAnalysisStartTime) / TimeUnit.MINUTES.toMillis(1)));

@@ -1,8 +1,10 @@
 package software.wings.service.impl.newrelic;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEAULT_GROUP_NAME;
 
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -56,12 +58,14 @@ public class NewRelicMetricAnalysisRecord extends Base {
 
   private String baseLineExecutionId;
 
+  @Default @Indexed private String groupName = DEAULT_GROUP_NAME;
+
   @Builder
   public NewRelicMetricAnalysisRecord(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords, String entityYamlPath, StateType stateType,
       String message, RiskLevel riskLevel, String workflowId, String workflowExecutionId, String stateExecutionId,
       List<NewRelicMetricAnalysis> metricAnalyses, int analysisMinute, boolean showTimeSeries,
-      String baseLineExecutionId) {
+      String baseLineExecutionId, String groupName) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
     this.stateType = stateType;
     this.message = message;
@@ -73,6 +77,7 @@ public class NewRelicMetricAnalysisRecord extends Base {
     this.analysisMinute = analysisMinute;
     this.showTimeSeries = showTimeSeries;
     this.baseLineExecutionId = baseLineExecutionId;
+    this.groupName = groupName;
   }
 
   public void addNewRelicMetricAnalysis(NewRelicMetricAnalysis analysis) {

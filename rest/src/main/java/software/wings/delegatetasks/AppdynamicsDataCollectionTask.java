@@ -168,18 +168,19 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
 
           NewRelicMetricDataRecord hostRecord = hostVsRecordMap.get(nodeName);
           if (hostRecord == null) {
-            hostRecord = new NewRelicMetricDataRecord();
-            hostRecord.setName(btName);
-            hostRecord.setAppId(dataCollectionInfo.getApplicationId());
-            hostRecord.setWorkflowId(dataCollectionInfo.getWorkflowId());
-            hostRecord.setWorkflowExecutionId(dataCollectionInfo.getWorkflowExecutionId());
-            hostRecord.setServiceId(dataCollectionInfo.getServiceId());
-            hostRecord.setStateExecutionId(dataCollectionInfo.getStateExecutionId());
-            hostRecord.setDataCollectionMinute(dataCollectionMinute);
-            hostRecord.setTimeStamp(metricDataValue.getStartTimeInMillis());
-            hostRecord.setHost(nodeName);
-            hostRecord.setStateType(getStateType());
-            hostRecord.setValues(new HashMap<>());
+            hostRecord = NewRelicMetricDataRecord.builder()
+                             .name(btName)
+                             .appId(dataCollectionInfo.getApplicationId())
+                             .workflowId(dataCollectionInfo.getWorkflowId())
+                             .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
+                             .serviceId(dataCollectionInfo.getServiceId())
+                             .stateExecutionId(dataCollectionInfo.getStateExecutionId())
+                             .dataCollectionMinute(dataCollectionMinute)
+                             .timeStamp(metricDataValue.getStartTimeInMillis())
+                             .host(nodeName)
+                             .stateType(getStateType())
+                             .values(new HashMap<>())
+                             .build();
             hostVsRecordMap.put(nodeName, hostRecord);
           }
 

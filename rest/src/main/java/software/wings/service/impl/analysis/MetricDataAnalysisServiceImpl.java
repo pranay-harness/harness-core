@@ -1,10 +1,12 @@
 package software.wings.service.impl.analysis;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEAULT_GROUP_NAME;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -106,6 +108,10 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     mlAnalysisResponse.setStateExecutionId(stateExecutionId);
     mlAnalysisResponse.setAnalysisMinute(analysisMinute);
     mlAnalysisResponse.setBaseLineExecutionId(baseLineExecutionId);
+
+    if (isEmpty(mlAnalysisResponse.getGroupName())) {
+      mlAnalysisResponse.setGroupName(DEAULT_GROUP_NAME);
+    }
 
     TimeSeriesMLScores timeSeriesMLScores = TimeSeriesMLScores.builder()
                                                 .appId(appId)

@@ -1,5 +1,8 @@
 package software.wings.service.impl.analysis;
 
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEAULT_GROUP_NAME;
+
+import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -33,6 +36,8 @@ public class TimeSeriesMLAnalysisRecord extends Base {
   @NotEmpty @Indexed private int analysisMinute;
 
   private String baseLineExecutionId;
+
+  @Default @Indexed private String groupName = DEAULT_GROUP_NAME;
 
   private Map<String, TimeSeriesMLTxnSummary> transactions;
 }
