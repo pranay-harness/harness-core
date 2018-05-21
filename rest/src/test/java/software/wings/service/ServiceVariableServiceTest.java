@@ -208,7 +208,8 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldUpdate() {
-    ServiceVariable variable = ServiceVariable.builder().entityType(EntityType.SERVICE_TEMPLATE).build();
+    ServiceVariable variable =
+        ServiceVariable.builder().name(SERVICE_VARIABLE_NAME).entityType(EntityType.SERVICE_TEMPLATE).build();
     variable.setAppId(APP_ID);
     variable.setUuid(SERVICE_VARIABLE_ID);
 
@@ -216,7 +217,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     serviceVariableService.update(SERVICE_VARIABLE);
     verify(wingsPersistence)
         .updateFields(ServiceVariable.class, SERVICE_VARIABLE_ID,
-            ImmutableMap.of("value", SERVICE_VARIABLE.getValue(), "type", TEXT));
+            ImmutableMap.of("value", SERVICE_VARIABLE.getValue(), "type", TEXT, "name", SERVICE_VARIABLE_NAME));
   }
 
   /**
