@@ -47,6 +47,18 @@ public class KubernetesSteadyStateCheckTask extends AbstractDelegateRunnableTask
         kubernetesSteadyStateCheckParams.getAccountId(), kubernetesSteadyStateCheckParams.getAppId(),
         kubernetesSteadyStateCheckParams.getActivityId(), kubernetesSteadyStateCheckParams.getCommandName());
 
+    if (containerDeploymentDelegateHelper.getControllerCountByLabels(
+            kubernetesSteadyStateCheckParams.getContainerServiceParams(),
+            containerDeploymentDelegateHelper.getKubernetesConfig(
+                kubernetesSteadyStateCheckParams.getContainerServiceParams()),
+            kubernetesSteadyStateCheckParams.getLabels())
+        == 0) {
+      String msg = String.format(
+          "No controller found for the specified Labels: %s", kubernetesSteadyStateCheckParams.getLabels());
+      executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
+      return KubernetesSteadyStateCheckResponse.builder().executionStatus(ExecutionStatus.FAILED).build();
+    }
+
     List<ContainerInfo> containerInfos = new ArrayList<>();
     try {
       timeLimiter.callWithTimeout(

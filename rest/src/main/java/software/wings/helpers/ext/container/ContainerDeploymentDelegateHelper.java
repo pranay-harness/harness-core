@@ -158,6 +158,14 @@ public class ContainerDeploymentDelegateHelper {
     return kubernetesConfig;
   }
 
+  public int getControllerCountByLabels(
+      ContainerServiceParams containerServiceParams, KubernetesConfig kubernetesConfig, Map<String, String> labels) {
+    List<? extends HasMetadata> controllers = kubernetesContainerService.getControllers(
+        kubernetesConfig, containerServiceParams.getEncryptionDetails(), labels);
+
+    return controllers.size();
+  }
+
   public List<ContainerInfo> getContainerInfosWhenReadyByLabels(ContainerServiceParams containerServiceParams,
       KubernetesConfig kubernetesConfig, ExecutionLogCallback executionLogCallback, Map<String, String> labels) {
     List<? extends HasMetadata> controllers = kubernetesContainerService.getControllers(
