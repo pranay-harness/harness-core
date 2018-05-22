@@ -2,6 +2,8 @@ package software.wings.beans;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import lombok.Builder;
@@ -19,6 +21,7 @@ import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.CloudProviderYaml;
 
 @JsonTypeName("KUBERNETES_CLUSTER")
+@JsonInclude(Include.NON_NULL)
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Builder
