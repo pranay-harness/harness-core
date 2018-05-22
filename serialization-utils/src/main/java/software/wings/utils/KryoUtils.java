@@ -149,6 +149,7 @@ public class KryoUtils {
             kryo.register(java.lang.ExceptionInInitializerError.class, 70);
             kryo.register(java.net.UnknownHostException.class, 71);
             kryo.register(java.lang.NoSuchMethodException.class, 72);
+            kryo.register(java.lang.NoClassDefFoundError.class, 73);
 
             // External Serializers
             UnmodifiableCollectionsSerializer.registerSerializers(kryo);
