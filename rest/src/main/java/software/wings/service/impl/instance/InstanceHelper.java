@@ -120,7 +120,7 @@ public class InstanceHelper {
       }
 
       Validator.notNullCheck("ElementStatusSummary is null for state execution " + stateExecutionInstanceId,
-          phaseStepExecutionData.getElementStatusSummary());
+          phaseStepExecutionData.getElementStatusSummary(), USER_SRE);
 
       if (workflowStandardParams == null) {
         logger.warn("workflowStandardParams can't be null, skipping instance processing");
@@ -529,8 +529,8 @@ public class InstanceHelper {
 
       PhaseStepExecutionData phaseStepExecutionData =
           (PhaseStepExecutionData) stateExecutionInstance.getStateExecutionData();
-      notNullCheck(
-          "phase step execution data is null for phase step " + phaseStepSubWorkflow.getId(), phaseStepExecutionData);
+      notNullCheck("phase step execution data is null for phase step " + phaseStepSubWorkflow.getId(),
+          phaseStepExecutionData, USER_SRE);
 
       StateExecutionInstance phaseStateExecutionInstance = workflowExecutionService.getStateExecutionData(
           workflowExecution.getAppId(), stateExecutionInstance.getParentInstanceId());
@@ -544,10 +544,10 @@ public class InstanceHelper {
               (PhaseExecutionData) stateExecutionData, phaseStepExecutionData, workflowStandardParams,
               context.getAppId(), workflowExecution);
         } else {
-          logger.error("Fetched execution data is not of type phase for phase step {}", phaseStepSubWorkflow.getId());
+          logger.warn("Fetched execution data is not of type phase for phase step {}", phaseStepSubWorkflow.getId());
         }
       } else {
-        logger.error("Could not locate phase for phase step {}", phaseStepSubWorkflow.getId());
+        logger.warn("Could not locate phase for phase step {}", phaseStepSubWorkflow.getId());
       }
     }
   }

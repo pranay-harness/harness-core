@@ -28,6 +28,7 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.HarnessUserGroupService;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
@@ -90,10 +91,20 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
 
     accountIds.removeAll(excludeAccountIds);
     if (isNotEmpty(accountIds)) {
-      return accountService.list(aPageRequest().addFilter("_id", Operator.IN, accountIds.toArray()).build());
+      List<Account> accountList =
+          accountService.list(aPageRequest().addFilter("_id", Operator.IN, accountIds.toArray()).build());
+      accountList.sort(new AccountComparator());
+      return accountList;
     }
 
     return Collections.emptyList();
+  }
+
+  private class AccountComparator implements Comparator<Account> {
+    @Override
+    public int compare(Account lhs, Account rhs) {
+      return lhs.getAccountName().compareToIgnoreCase(rhs.getAccountName());
+    }
   }
 
   @Override
