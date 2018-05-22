@@ -1,7 +1,9 @@
 package software.wings.sm.states.provision;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
@@ -43,14 +45,22 @@ import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.delegation.TerraformProvisionParameters;
+import software.wings.dl.WingsPersistence;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
+import software.wings.security.encryption.EncryptedData;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
+import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.EncryptionConfig;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -67,10 +77,12 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 public abstract class TerraformProvisionState extends State {
   private static final Logger logger = LoggerFactory.getLogger(TerraformProvisionState.class);
 
+  @Inject @Transient private transient AppService appService;
   @Inject @Transient private transient ActivityService activityService;
   @Inject @Transient private transient InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject @Transient private transient DelegateService delegateService;
@@ -78,6 +90,10 @@ public abstract class TerraformProvisionState extends State {
   @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
   @Inject @Transient private transient SecretManager secretManager;
   @Inject @Transient private transient FileService fileService;
+  @Inject @Transient private transient ServiceVariableService serviceVariableService;
+  @Inject @Transient private transient EncryptionService encryptionService;
+
+  @Inject @Transient private transient WingsPersistence wingsPersistence;
 
   @Attributes(title = "Provisioner") @Getter @Setter String provisionerId;
 
@@ -161,21 +177,54 @@ public abstract class TerraformProvisionState extends State {
 
   private Map<String, String> getVariables(
       TerraformInfrastructureProvisioner terraformProvisioner, ExecutionContext context) {
-    Map<String, String> result = new HashMap<>();
+    return getVariablesStream(terraformProvisioner)
+        .filter(entry -> entry.getValueType().equals("TEXT"))
+        .collect(toMap(NameValuePair::getName, entry -> context.renderExpression(entry.getValue())));
+  }
+
+  private Map<String, EncryptedDataDetail> getEncryptedVariables(
+      TerraformInfrastructureProvisioner terraformProvisioner, ExecutionContext context) {
+    String accountId = appService.getAccountIdByAppId(context.getAppId());
+    return getVariablesStream(terraformProvisioner)
+        .filter(entry -> entry.getValueType().equals("ENCRYPTED_TEXT"))
+        .collect(toMap(NameValuePair::getName, entry -> {
+
+          final EncryptedData encryptedData = wingsPersistence.createQuery(EncryptedData.class)
+                                                  .filter(EncryptedData.ACCOUNT_ID_KEY, accountId)
+                                                  .filter(EncryptedData.ID_KEY, entry.getValue())
+                                                  .get();
+
+          if (encryptedData == null) {
+            throw new InvalidRequestException(format("The encrypted variable %s was not found", entry.getName()));
+          }
+
+          EncryptionConfig encryptionConfig =
+              secretManager.getEncryptionConfig(accountId, encryptedData.getKmsId(), encryptedData.getEncryptionType());
+
+          return EncryptedDataDetail.builder()
+              .encryptionType(encryptedData.getEncryptionType())
+              .encryptedData(encryptedData)
+              .encryptionConfig(encryptionConfig)
+              .build();
+        }));
+  }
+
+  private Stream<NameValuePair> getVariablesStream(TerraformInfrastructureProvisioner terraformProvisioner) {
+    Stream<NameValuePair> stream = null;
 
     if (isNotEmpty(terraformProvisioner.getVariables())) {
-      for (NameValuePair entry : terraformProvisioner.getVariables()) {
-        result.put(entry.getName(), context.renderExpression(entry.getValue()));
-      }
+      stream = terraformProvisioner.getVariables().stream();
     }
 
     if (isNotEmpty(variables)) {
-      for (NameValuePair entry : variables) {
-        result.put(entry.getName(), context.renderExpression(entry.getValue()));
-      }
+      stream = stream == null ? variables.stream() : Stream.concat(stream, variables.stream());
     }
 
-    return result;
+    if (stream == null) {
+      return Stream.empty();
+    }
+
+    return stream;
   }
 
   private ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
@@ -222,6 +271,7 @@ public abstract class TerraformProvisionState extends State {
                     .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null))
                     .scriptPath(terraformProvisioner.getPath())
                     .variables(getVariables(terraformProvisioner, context))
+                    .encryptedVariables(getEncryptedVariables(terraformProvisioner, context))
                     .build()})
             .build();
 
