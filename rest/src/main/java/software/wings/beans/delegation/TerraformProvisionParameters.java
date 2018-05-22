@@ -17,6 +17,7 @@ public class TerraformProvisionParameters {
   private String accountId;
   private final String appId;
   private final String activityId;
+
   private final String entityId;
 
   private final String currentStateFileId;
