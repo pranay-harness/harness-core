@@ -92,7 +92,7 @@ public class FileServiceIntegrationTest extends WingsBaseTest {
     String fileId = fileService.saveFile(anExtendedFile().withName("dummy.txt").withFileName("dummy.txt").build(),
         new FileInputStream(tempFile), FileBucket.ARTIFACTS);
     assertThat(fileId).isNotNull();
-    fileService.updateParentEntityIdAndVersion(null, FILE_ID, 1, fileId, FileBucket.ARTIFACTS);
+    fileService.updateParentEntityIdAndVersion(null, FILE_ID, 1, fileId, null, FileBucket.ARTIFACTS);
     assertThat(fileService.getAllFileIds(FILE_ID, FileBucket.ARTIFACTS)).hasSize(1).contains(fileId);
   }
 

@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static com.google.common.collect.ImmutableMap.of;
 import static com.mongodb.client.model.Sorts.descending;
 import static com.mongodb.client.model.Sorts.orderBy;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.StreamSupport.stream;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -188,14 +189,20 @@ public class FileServiceImpl implements FileService {
    * {@inheritDoc}
    */
   @Override
-  public boolean updateParentEntityIdAndVersion(
-      Class entityClass, String entityId, Integer version, String fileId, FileBucket fileBucket) {
+  public boolean updateParentEntityIdAndVersion(Class entityClass, String entityId, Integer version, String fileId,
+      Map<String, Object> others, FileBucket fileBucket) {
     DBCollection collection =
         wingsPersistence.getDatastore().getDB().getCollection(fileBucket.representationName() + ".files");
+
+    // TODO: creating this index here makes no sense
     collection.createIndex(
         new BasicDBObject(of("metadata.entityId", 1, "metadata.version", 1)), new BasicDBObject("background", true));
 
     Map<String, Object> updateMap = new HashMap<>();
+    if (isNotEmpty(others)) {
+      updateMap.putAll(others);
+    }
+
     if (entityClass != null) {
       updateMap.put("metadata.class", entityClass.getCanonicalName());
     }

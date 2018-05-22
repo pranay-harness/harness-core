@@ -16,12 +16,14 @@ import static software.wings.service.intfc.FileService.FileBucket.TERRAFORM_STAT
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.reinert.jjschema.Attributes;
+import com.mongodb.client.gridfs.model.GridFSFile;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.io.IOUtils;
@@ -81,6 +83,9 @@ import java.util.stream.Stream;
 
 public abstract class TerraformProvisionState extends State {
   private static final Logger logger = LoggerFactory.getLogger(TerraformProvisionState.class);
+
+  private static final String VARIABLES_KEY = "variables";
+  private static final String ENCRYPTED_VARIABLES_KEY = "encrypted_variables";
 
   @Inject @Transient private transient AppService appService;
   @Inject @Transient private transient ActivityService activityService;
@@ -154,9 +159,22 @@ public abstract class TerraformProvisionState extends State {
     TerraformExecutionData terraformExecutionData = (TerraformExecutionData) response.get(activityId);
     terraformExecutionData.setActivityId(activityId);
 
+    TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
+
+    final Map<String, Object> others = ImmutableMap.<String, Object>builder()
+                                           .put(VARIABLES_KEY,
+                                               getVariablesStream(terraformProvisioner)
+                                                   .filter(item -> item.getValueType().equals("TEXT"))
+                                                   .collect(toMap(item -> item.getName(), item -> item.getValue())))
+                                           .put(ENCRYPTED_VARIABLES_KEY,
+                                               getVariablesStream(terraformProvisioner)
+                                                   .filter(item -> item.getValueType().equals("ENCRYPTED_TEXT"))
+                                                   .collect(toMap(item -> item.getName(), item -> item.getValue())))
+                                           .build();
+
     if (terraformExecutionData.getExecutionStatus() == SUCCESS && terraformExecutionData.getOutputs() != null) {
       fileService.updateParentEntityIdAndVersion(PhaseStep.class, terraformExecutionData.getEntityId(), null,
-          terraformExecutionData.getStateFileId(), FileBucket.TERRAFORM_STATE);
+          terraformExecutionData.getStateFileId(), others, FileBucket.TERRAFORM_STATE);
       Map<String, Object> outputs = parseOutputs(terraformExecutionData.getOutputs());
       infrastructureProvisionerService.regenerateInfrastructureMappings(provisionerId, context, outputs);
     }
@@ -175,18 +193,15 @@ public abstract class TerraformProvisionState extends State {
     activityService.updateStatus(activityId, appId, status);
   }
 
-  private Map<String, String> getVariables(
-      TerraformInfrastructureProvisioner terraformProvisioner, ExecutionContext context) {
-    return getVariablesStream(terraformProvisioner)
-        .filter(entry -> entry.getValueType().equals("TEXT"))
+  private Map<String, String> getVariables(Stream<NameValuePair> stream, ExecutionContext context) {
+    return stream.filter(entry -> entry.getValueType().equals("TEXT"))
         .collect(toMap(NameValuePair::getName, entry -> context.renderExpression(entry.getValue())));
   }
 
   private Map<String, EncryptedDataDetail> getEncryptedVariables(
-      TerraformInfrastructureProvisioner terraformProvisioner, ExecutionContext context) {
+      Stream<NameValuePair> stream, ExecutionContext context) {
     String accountId = appService.getAccountIdByAppId(context.getAppId());
-    return getVariablesStream(terraformProvisioner)
-        .filter(entry -> entry.getValueType().equals("ENCRYPTED_TEXT"))
+    return stream.filter(entry -> entry.getValueType().equals("ENCRYPTED_TEXT"))
         .collect(toMap(NameValuePair::getName, entry -> {
 
           final EncryptedData encryptedData = wingsPersistence.createQuery(EncryptedData.class)
@@ -228,16 +243,7 @@ public abstract class TerraformProvisionState extends State {
   }
 
   private ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
-    final InfrastructureProvisioner infrastructureProvisioner =
-        infrastructureProvisionerService.get(context.getAppId(), provisionerId);
-
-    if (infrastructureProvisioner == null
-        || (!(infrastructureProvisioner instanceof TerraformInfrastructureProvisioner))) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST);
-    }
-
-    TerraformInfrastructureProvisioner terraformProvisioner =
-        (TerraformInfrastructureProvisioner) infrastructureProvisioner;
+    TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
 
     SettingAttribute gitSettingAttribute = settingsService.get(terraformProvisioner.getSourceRepoSettingId());
     Validator.notNullCheck("gitSettingAttribute", gitSettingAttribute);
@@ -252,6 +258,35 @@ public abstract class TerraformProvisionState extends State {
     final String entityId = terraformProvisioner.getUuid() + "-" + executionContext.getEnv().getUuid();
 
     final String fileId = fileService.getLatestFileId(entityId, TERRAFORM_STATE);
+
+    Map<String, String> variables = null;
+    Map<String, EncryptedDataDetail> encryptedVariables = null;
+
+    if (this instanceof DestroyTerraformProvisionState && fileId != null) {
+      final GridFSFile gridFsFile = fileService.getGridFsFile(fileId, FileBucket.TERRAFORM_STATE);
+
+      final Map<String, Object> rawVariables = (Map<String, Object>) gridFsFile.getExtraElements().get(VARIABLES_KEY);
+      variables = getVariables(rawVariables.entrySet().stream().map(entry
+                                   -> NameValuePair.builder()
+                                          .valueType("TEXT")
+                                          .name(entry.getKey())
+                                          .value((String) entry.getValue())
+                                          .build()),
+          context);
+
+      final Map<String, Object> rawEncryptedVariables =
+          (Map<String, Object>) gridFsFile.getExtraElements().get(ENCRYPTED_VARIABLES_KEY);
+      encryptedVariables = getEncryptedVariables(rawEncryptedVariables.entrySet().stream().map(entry
+                                                     -> NameValuePair.builder()
+                                                            .valueType("ENCRYPTED_TEXT")
+                                                            .name(entry.getKey())
+                                                            .value((String) entry.getValue())
+                                                            .build()),
+          context);
+    } else {
+      variables = getVariables(getVariablesStream(terraformProvisioner), context);
+      encryptedVariables = getEncryptedVariables(getVariablesStream(terraformProvisioner), context);
+    }
 
     DelegateTask delegateTask =
         aDelegateTask()
@@ -270,8 +305,8 @@ public abstract class TerraformProvisionState extends State {
                     .sourceRepo(gitConfig)
                     .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null))
                     .scriptPath(terraformProvisioner.getPath())
-                    .variables(getVariables(terraformProvisioner, context))
-                    .encryptedVariables(getEncryptedVariables(terraformProvisioner, context))
+                    .variables(variables)
+                    .encryptedVariables(encryptedVariables)
                     .build()})
             .build();
 
@@ -286,6 +321,18 @@ public abstract class TerraformProvisionState extends State {
         .withDelegateTaskId(delegateTaskId)
         .withStateExecutionData(ScriptStateExecutionData.builder().activityId(activityId).build())
         .build();
+  }
+
+  private TerraformInfrastructureProvisioner getTerraformInfrastructureProvisioner(ExecutionContext context) {
+    final InfrastructureProvisioner infrastructureProvisioner =
+        infrastructureProvisionerService.get(context.getAppId(), provisionerId);
+
+    if (infrastructureProvisioner == null
+        || (!(infrastructureProvisioner instanceof TerraformInfrastructureProvisioner))) {
+      throw new WingsException(ErrorCode.INVALID_REQUEST);
+    }
+
+    return (TerraformInfrastructureProvisioner) infrastructureProvisioner;
   }
 
   private String createActivity(ExecutionContext executionContext) {
