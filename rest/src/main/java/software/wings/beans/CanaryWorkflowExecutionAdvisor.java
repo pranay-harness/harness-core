@@ -235,8 +235,8 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
               phaseStepSubWorkflow, executionEvent, workflowExecution, context, stateExecutionInstance);
         }
       } catch (Exception ex) {
-        logger.error("Error while getting workflow execution data for instance sync for execution: {}",
-            workflowExecution.getUuid());
+        logger.warn("Error while getting workflow execution data for instance sync for execution: {}",
+            workflowExecution.getUuid(), ex);
       }
     }
   }
