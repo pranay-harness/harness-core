@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
@@ -14,7 +15,6 @@ import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -47,7 +47,9 @@ import software.wings.utils.Validator;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import javax.validation.Valid;
 
@@ -130,19 +132,23 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
 
     ExpressionEvaluator.isValidVariableName(serviceVariable.getName());
 
-    wingsPersistence.updateFields(ServiceVariable.class, serviceVariable.getUuid(),
-        ImmutableMap.of(
-            "value", serviceVariable.getValue(), "type", serviceVariable.getType(), "name", serviceVariable.getName()));
-
-    ServiceVariable updatedServiceVariable = get(serviceVariable.getAppId(), serviceVariable.getUuid());
-
-    if (updatedServiceVariable == null) {
-      return null;
+    Map<String, Object> updateMap = new HashMap<>();
+    if (isNotEmpty(serviceVariable.getValue())) {
+      updateMap.put("value", serviceVariable.getValue());
     }
-
-    executorService.submit(() -> saveServiceVariableYamlChangeSet(serviceVariable));
-
-    return updatedServiceVariable;
+    if (serviceVariable.getType() != null) {
+      updateMap.put("type", serviceVariable.getType());
+    }
+    if (isNotEmpty(updateMap)) {
+      wingsPersistence.updateFields(ServiceVariable.class, serviceVariable.getUuid(), updateMap);
+      ServiceVariable updatedServiceVariable = get(serviceVariable.getAppId(), serviceVariable.getUuid());
+      if (updatedServiceVariable == null) {
+        return null;
+      }
+      executorService.submit(() -> saveServiceVariableYamlChangeSet(serviceVariable));
+      return updatedServiceVariable;
+    }
+    return serviceVariable;
   }
 
   @Override
