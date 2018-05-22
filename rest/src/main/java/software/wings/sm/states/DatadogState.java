@@ -56,7 +56,9 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class DatadogState extends AbstractMetricAnalysisState {
+public class
+
+    DatadogState extends AbstractMetricAnalysisState {
   @Transient @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(DatadogState.class);
 
   public DatadogState(String name) {

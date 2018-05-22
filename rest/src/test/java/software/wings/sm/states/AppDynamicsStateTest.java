@@ -45,6 +45,7 @@ import software.wings.service.impl.analysis.ContinuousVerificationService;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionBaselineService;
@@ -96,6 +97,8 @@ public class AppDynamicsStateTest extends WingsBaseTest {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ContinuousVerificationService continuousVerificationService;
   @Inject private WorkflowExecutionBaselineService workflowExecutionBaselineService;
+  @Inject private FeatureFlagService featureFlagService;
+
   @Mock private MetricDataAnalysisService metricAnalysisService;
   @Mock private QuartzScheduler jobScheduler;
   @Mock private PhaseElement phaseElement;
@@ -171,6 +174,7 @@ public class AppDynamicsStateTest extends WingsBaseTest {
     setInternalState(appDynamicsState, "continuousVerificationService", continuousVerificationService);
     setInternalState(appDynamicsState, "workflowExecutionBaselineService", workflowExecutionBaselineService);
     setInternalState(appDynamicsState, "appdynamicsService", appdynamicsService);
+    setInternalState(appDynamicsState, "featureFlagService", featureFlagService);
   }
 
   @Test

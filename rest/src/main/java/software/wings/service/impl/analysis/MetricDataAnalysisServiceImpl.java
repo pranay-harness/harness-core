@@ -429,6 +429,23 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     }
   }
 
+  public NewRelicMetricAnalysisRecord getMetricsAnalysisForDemo(
+      String appId, String stateExecutionId, String workflowExecutionId) {
+    logger.info("Creating analysis summary for demo {}", stateExecutionId);
+    StateExecutionInstance stateExecutionInstance =
+        wingsPersistence.createQuery(StateExecutionInstance.class).field("_id").equal(stateExecutionId).get();
+    if (stateExecutionId == null) {
+      logger.error("State execution instance not found for {}", stateExecutionId);
+      return null;
+    }
+
+    if (stateExecutionInstance.getStatus() == ExecutionStatus.SUCCESS) {
+      return getMetricsAnalysis("CV-Demo", "CV-Demo-TS-Success", "CV-Demo").get(0);
+    } else {
+      return getMetricsAnalysis("CV-Demo", "CV-Demo-TS-Failure", "CV-Demo").get(0);
+    }
+  }
+
   @Override
   public List<NewRelicMetricAnalysisRecord> getMetricsAnalysis(
       String appId, String stateExecutionId, String workflowExecutionId) {

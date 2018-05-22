@@ -87,4 +87,7 @@ public interface MetricDataAnalysisService {
   Map<String, TimeSeriesMlAnalysisGroupInfo> getMetricGroups(String appId, String stateExecutionId);
 
   void cleanUpForMetricRetry(String stateExecutionId);
+
+  NewRelicMetricAnalysisRecord getMetricsAnalysisForDemo(
+      String appId, String stateExecutionId, String workflowExecutionId);
 }

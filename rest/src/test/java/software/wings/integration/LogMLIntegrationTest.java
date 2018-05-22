@@ -12,6 +12,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
+import static software.wings.dl.HQuery.excludeAuthority;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.TreeBasedTable;
@@ -32,6 +33,7 @@ import org.quartz.Scheduler;
 import software.wings.api.PhaseElement.PhaseElementBuilder;
 import software.wings.api.ServiceElement;
 import software.wings.beans.CountsByStatuses;
+import software.wings.beans.FeatureFlag;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
@@ -48,7 +50,9 @@ import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLClusterGenerator;
 import software.wings.service.impl.analysis.LogMLFeedback;
 import software.wings.service.impl.analysis.LogRequest;
+import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
@@ -76,6 +80,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
@@ -94,6 +99,9 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private DelegateService delegateService;
   @Inject private LearningEngineService learningEngineService;
+  @Inject private FeatureFlagService featureFlagService;
+
+  private Random r;
 
   private String appId;
   private String stateExecutionId;
@@ -118,8 +126,151 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
     workflowExecutionId = UUID.randomUUID().toString();
     serviceId = UUID.randomUUID().toString();
     delegateTaskId = UUID.randomUUID().toString();
+    r = new Random(System.currentTimeMillis());
   }
 
+  private SplunkAnalysisCluster getRandomClusterEvent() {
+    SplunkAnalysisCluster analysisCluster = new SplunkAnalysisCluster();
+    analysisCluster.setCluster_label(r.nextInt(100));
+    analysisCluster.setAnomalous_counts(Lists.newArrayList(r.nextInt(100), r.nextInt(100), r.nextInt(100)));
+    analysisCluster.setText(UUID.randomUUID().toString());
+    analysisCluster.setTags(
+        Lists.newArrayList(UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString()));
+    analysisCluster.setDiff_tags(
+        Lists.newArrayList(UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString()));
+    analysisCluster.setX(r.nextDouble());
+    analysisCluster.setY(r.nextDouble());
+    analysisCluster.setUnexpected_freq(r.nextBoolean());
+    List<Map> frequencyMapList = new ArrayList<>();
+    for (int i = 0; i < 1 + r.nextInt(10); i++) {
+      Map<String, Integer> frequencyMap = new HashMap<>();
+      frequencyMap.put("count", r.nextInt(100));
+      frequencyMapList.add(frequencyMap);
+    }
+
+    analysisCluster.setMessage_frequencies(frequencyMapList);
+    return analysisCluster;
+  }
+
+  @Test
+  public void testFeatureflagDemoSuccess() throws Exception {
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", "CV_DEMO"));
+
+    wingsPersistence.save(FeatureFlag.builder().name("CV_DEMO").build());
+
+    wingsPersistence.update(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", "CV_DEMO"),
+        wingsPersistence.createUpdateOperations(FeatureFlag.class).addToSet("accountIds", "xyz"));
+
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    stateExecutionInstance.setUuid(stateExecutionId);
+    stateExecutionInstance.setStatus(ExecutionStatus.SUCCESS);
+    stateExecutionInstance.setAppId(appId);
+    wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(stateExecutionInstance));
+
+    int numOfTestClusters = 1 + r.nextInt(10);
+    List<SplunkAnalysisCluster> clusterEvents = new ArrayList<>();
+    Map<String, Map<String, SplunkAnalysisCluster>> testClusters = new HashMap<>();
+    Set<String> hosts = new HashSet<>();
+    Map<String, List<SplunkAnalysisCluster>> controlEvents = new HashMap<>();
+    controlEvents.put("xyz", Lists.newArrayList(getRandomClusterEvent()));
+    for (int i = 0; i < numOfTestClusters; i++) {
+      SplunkAnalysisCluster cluster = getRandomClusterEvent();
+      clusterEvents.add(cluster);
+      Map<String, SplunkAnalysisCluster> hostMap = new HashMap<>();
+      String host = UUID.randomUUID().toString() + ".harness.com";
+      hostMap.put(host, cluster);
+      hosts.add(host);
+      testClusters.put(UUID.randomUUID().toString(), hostMap);
+    }
+    LogMLAnalysisRecord record = new LogMLAnalysisRecord();
+    record.setStateExecutionId("CV-Demo-LOG-Success");
+    record.setAppId("CV-Demo");
+    record.setStateType(StateType.ELK);
+    record.setLogCollectionMinute(0);
+    record.setQuery("cv-demo-query");
+    record.setControl_events(controlEvents);
+    record.setTest_clusters(testClusters);
+    analysisService.saveLogAnalysisRecords(record, StateType.ELK, Optional.empty());
+
+    WebTarget getTarget = client.target(API_BASE + "/" + LogAnalysisResource.LOG_ANALYSIS
+        + LogAnalysisResource.ANALYSIS_STATE_GET_ANALYSIS_SUMMARY_URL + "?accountId=" + accountId
+        + "&applicationId=" + appId + "&stateExecutionId=" + stateExecutionId + "&stateType=" + StateType.ELK);
+
+    RestResponse<LogMLAnalysisSummary> restResponse =
+        getRequestBuilderWithAuthHeader(getTarget).get(new GenericType<RestResponse<LogMLAnalysisSummary>>() {});
+    assertNull(restResponse.getResource());
+
+    wingsPersistence.update(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", "CV_DEMO"),
+        wingsPersistence.createUpdateOperations(FeatureFlag.class).addToSet("accountIds", accountId));
+
+    restResponse =
+        getRequestBuilderWithAuthHeader(getTarget).get(new GenericType<RestResponse<LogMLAnalysisSummary>>() {});
+    assertNotNull(restResponse.getResource());
+
+    LogMLAnalysisSummary summary = restResponse.getResource();
+    assertEquals("cv-demo-query", summary.getQuery());
+  }
+
+  @Test
+  public void testFeatureflagDemoFail() throws Exception {
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", "CV_DEMO"));
+
+    wingsPersistence.save(FeatureFlag.builder().name("CV_DEMO").build());
+
+    wingsPersistence.update(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", "CV_DEMO"),
+        wingsPersistence.createUpdateOperations(FeatureFlag.class).addToSet("accountIds", "xyz"));
+
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    stateExecutionInstance.setUuid(stateExecutionId);
+    stateExecutionInstance.setStatus(ExecutionStatus.FAILED);
+    stateExecutionInstance.setAppId(appId);
+    wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(stateExecutionInstance));
+
+    int numOfTestClusters = 1 + r.nextInt(10);
+    List<SplunkAnalysisCluster> clusterEvents = new ArrayList<>();
+    Map<String, Map<String, SplunkAnalysisCluster>> testClusters = new HashMap<>();
+    Set<String> hosts = new HashSet<>();
+    Map<String, List<SplunkAnalysisCluster>> controlEvents = new HashMap<>();
+    controlEvents.put("xyz", Lists.newArrayList(getRandomClusterEvent()));
+    for (int i = 0; i < numOfTestClusters; i++) {
+      SplunkAnalysisCluster cluster = getRandomClusterEvent();
+      clusterEvents.add(cluster);
+      Map<String, SplunkAnalysisCluster> hostMap = new HashMap<>();
+      String host = UUID.randomUUID().toString() + ".harness.com";
+      hostMap.put(host, cluster);
+      hosts.add(host);
+      testClusters.put(UUID.randomUUID().toString(), hostMap);
+    }
+    LogMLAnalysisRecord record = new LogMLAnalysisRecord();
+    record.setStateExecutionId("CV-Demo-LOG-Failure");
+    record.setAppId("CV-Demo");
+    record.setStateType(StateType.ELK);
+    record.setLogCollectionMinute(0);
+    record.setQuery("cv-demo-query");
+    record.setControl_events(controlEvents);
+    record.setTest_clusters(testClusters);
+    analysisService.saveLogAnalysisRecords(record, StateType.ELK, Optional.empty());
+
+    WebTarget getTarget = client.target(API_BASE + "/" + LogAnalysisResource.LOG_ANALYSIS
+        + LogAnalysisResource.ANALYSIS_STATE_GET_ANALYSIS_SUMMARY_URL + "?accountId=" + accountId
+        + "&applicationId=" + appId + "&stateExecutionId=" + stateExecutionId + "&stateType=" + StateType.ELK);
+
+    RestResponse<LogMLAnalysisSummary> restResponse =
+        getRequestBuilderWithAuthHeader(getTarget).get(new GenericType<RestResponse<LogMLAnalysisSummary>>() {});
+    assertNull(restResponse.getResource());
+
+    wingsPersistence.update(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", "CV_DEMO"),
+        wingsPersistence.createUpdateOperations(FeatureFlag.class).addToSet("accountIds", accountId));
+
+    restResponse =
+        getRequestBuilderWithAuthHeader(getTarget).get(new GenericType<RestResponse<LogMLAnalysisSummary>>() {});
+    assertNotNull(restResponse.getResource());
+
+    LogMLAnalysisSummary summary = restResponse.getResource();
+    assertEquals("cv-demo-query", summary.getQuery());
+  }
   @Test
   public void testFirstLevelClustering() throws Exception {
     for (String host : hosts) {
