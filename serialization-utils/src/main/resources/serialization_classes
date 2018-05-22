@@ -37,6 +37,7 @@ software.wings.sm.states.ForkState$ForkStateExecutionData, 4006
 software.wings.api.ForkElement, 4007
 software.wings.beans.CountsByStatuses, 4008
 software.wings.sm.ExecutionInterrupt, 4009
+software.wings.api.ContainerRollbackRequestElement, 4010
 
 software.wings.beans.Base, 5001
 software.wings.beans.DelegateScripts, 5002
