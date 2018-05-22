@@ -1,7 +1,11 @@
 package io.harness.logging;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.core.Appender;
+import ch.qos.logback.core.AppenderBase;
+import ch.qos.logback.core.helpers.NOPAppender;
 import ch.qos.logback.core.spi.DeferredProcessingAware;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -9,16 +13,20 @@ import io.dropwizard.logging.AbstractAppenderFactory;
 import io.dropwizard.logging.async.AsyncAppenderFactory;
 import io.dropwizard.logging.filter.LevelFilterFactory;
 import io.dropwizard.logging.layout.LayoutFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import javax.validation.constraints.NotNull;
 
 @JsonTypeName("rest-log")
 public class RsyslogAppenderFactory<E extends DeferredProcessingAware> extends AbstractAppenderFactory<E> {
+  private static final Log log = LogFactory.getLog(RsyslogAppenderFactory.class);
+
   @NotNull private String name = "rest-log-appender";
 
   @NotNull private String programName;
 
-  @NotNull private String key;
+  private String key;
 
   @NotNull private int maxMessageLength = 128000;
 
@@ -65,12 +73,20 @@ public class RsyslogAppenderFactory<E extends DeferredProcessingAware> extends A
   @Override
   public Appender<E> build(LoggerContext context, String applicationName, LayoutFactory<E> layoutFactory,
       LevelFilterFactory<E> levelFilterFactory, AsyncAppenderFactory<E> asyncAppenderFactory) {
-    RestLogAppender<E> appender = new RestLogAppender<>(programName, key);
-    appender.setName(name);
-    appender.setContext(context);
-    appender.setLayout(buildLayout(context, layoutFactory));
-    appender.addFilter(levelFilterFactory.build(threshold));
-    getFilterFactories().stream().forEach(f -> appender.addFilter(f.build()));
+    AppenderBase<E> appender;
+    if (isEmpty(key)) {
+      appender = new NOPAppender();
+      log.info("Using NOPAppender as LogAppender, log streaming is DISABLED");
+    } else {
+      appender = new RestLogAppender<>(programName, key);
+      RestLogAppender restLogAppender = (RestLogAppender) new RestLogAppender<>(programName, key);
+      restLogAppender.setName(name);
+      restLogAppender.setContext(context);
+      restLogAppender.setLayout(buildLayout(context, layoutFactory));
+      restLogAppender.addFilter(levelFilterFactory.build(threshold));
+      getFilterFactories().stream().forEach(f -> restLogAppender.addFilter(f.build()));
+      log.info("Using RestLogAppender as LogAppender, log streaming is ENABLED");
+    }
 
     appender.start();
 

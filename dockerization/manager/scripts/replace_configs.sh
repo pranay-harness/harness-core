@@ -28,7 +28,10 @@ if [[ -v "MONGO_URI" ]]; then
     sed -i "s|uri: mongodb://localhost:27017/harness|uri: ${MONGO_URI}|" /opt/harness/config.yml
 fi
 
-if [[ -v "LOGDNA_KEY" ]]; then
+
+if [[ "${SKIP_LOGS}" == "true" ]]; then
+    sed -i "s|9a3e6eac4dcdbdc41a93ca99100537df||" /opt/harness/config.yml
+elif [[ -v "LOGDNA_KEY" ]]; then
     sed -i "s|9a3e6eac4dcdbdc41a93ca99100537df|${LOGDNA_KEY}|" /opt/harness/config.yml
 fi
 
@@ -72,4 +75,12 @@ fi
 
 if [[ -v "FEATURES" ]]; then
     sed -i "s|featuresEnabled:|featuresEnabled: ${FEATURES}|" /opt/harness/config.yml
+fi
+
+if [[ -v "COMPANYNAME" ]]; then
+   sed -i "s|manager-saas|manager-${COMPANYNAME}-${DEPLOY_MODE}|" /opt/harness/config.yml
+fi
+
+if [[ -v "GLOBAL_WHITELIST" ]]; then
+    sed -i "s|filters: 127.0.0.1/8|filters: ${GLOBAL_WHITELIST}|" /opt/harness/config.yml
 fi
