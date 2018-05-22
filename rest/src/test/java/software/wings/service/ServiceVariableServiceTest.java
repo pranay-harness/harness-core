@@ -3,6 +3,7 @@ package software.wings.service;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -207,17 +208,37 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should update.
    */
   @Test
-  public void shouldUpdate() {
+  public void shouldUpdateNone() {
     ServiceVariable variable =
         ServiceVariable.builder().name(SERVICE_VARIABLE_NAME).entityType(EntityType.SERVICE_TEMPLATE).build();
     variable.setAppId(APP_ID);
     variable.setUuid(SERVICE_VARIABLE_ID);
 
     when(wingsPersistence.get(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(variable);
-    serviceVariableService.update(SERVICE_VARIABLE);
+    serviceVariableService.update(variable);
+    verify(wingsPersistence, times(0))
+        .updateFields(ServiceVariable.class, SERVICE_VARIABLE_ID, ImmutableMap.of("type", TEXT));
+  }
+
+  /**
+   * Should update.
+   */
+  @Test
+  public void shouldUpdateValueAndType() {
+    ServiceVariable variable = ServiceVariable.builder()
+                                   .name(SERVICE_VARIABLE_NAME)
+                                   .value(SERVICE_VARIABLE.getValue())
+                                   .type(TEXT)
+                                   .entityType(EntityType.SERVICE_TEMPLATE)
+                                   .build();
+    variable.setAppId(APP_ID);
+    variable.setUuid(SERVICE_VARIABLE_ID);
+
+    when(wingsPersistence.get(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(variable);
+    serviceVariableService.update(variable);
     verify(wingsPersistence)
         .updateFields(ServiceVariable.class, SERVICE_VARIABLE_ID,
-            ImmutableMap.of("value", SERVICE_VARIABLE.getValue(), "type", TEXT, "name", SERVICE_VARIABLE_NAME));
+            ImmutableMap.of("type", TEXT, "value", SERVICE_VARIABLE.getValue()));
   }
 
   /**
