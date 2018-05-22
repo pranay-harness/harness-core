@@ -11,6 +11,7 @@ import static software.wings.sm.ExecutionStatus.RUNNING;
 import static software.wings.sm.ExecutionStatus.STARTING;
 import static software.wings.sm.ExecutionStatus.WAITING;
 
+import com.google.common.util.concurrent.RateLimiter;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
@@ -62,6 +63,11 @@ public class WorkflowExecutionMonitorJob implements Job {
     jobScheduler.scheduleJob(job, trigger);
   }
 
+  // Our current workflow execution has a flow and we get WorkflowExecution is in non final state, but there is no
+  // active state execution for it during the normal operations. It is added here to catch a case where we get stuck
+  // in such situation. This rate limit will eliminate the noise and still will let us know if there is a real issue.
+  static RateLimiter noStateRateLimiter = RateLimiter.create(5.0 / Duration.ofHours(1).getSeconds());
+
   @Override
   public void execute(JobExecutionContext jobExecutionContext) {
     executorService.submit(() -> asyncExecute());
@@ -112,8 +118,10 @@ public class WorkflowExecutionMonitorJob implements Job {
 
         if (!hasActiveStates
             && workflowExecution.getCreatedAt() < System.currentTimeMillis() + WorkflowExecution.EXPIRY.toMillis()) {
-          logger.error("WorkflowExecution {} is in non final state, but there is no active state execution for it.",
-              workflowExecution.getUuid());
+          if (!noStateRateLimiter.tryAcquire()) {
+            logger.error("WorkflowExecution {} is in non final state, but there is no active state execution for it.",
+                workflowExecution.getUuid());
+          }
           // TODO: enable this force fix of workflow execution if needed
           //          Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
           //                                               .filter(WorkflowExecution.APP_ID_KEY,
