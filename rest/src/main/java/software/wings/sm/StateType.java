@@ -389,14 +389,14 @@ public enum StateType implements StateTypeDescriptor {
   PCF_UNMAP_ROUTE(UnmapRouteState.class, FLOW_CONTROLS, Constants.PCF_UNMAP_ROUT,
       Lists.newArrayList(InfrastructureMappingType.PCF_PCF), asList(PhaseStepType.PCF_RESIZE), ORCHESTRATION_STENCILS),
 
-  TERRAFORM_PROVISION(ApplyTerraformProvisionState.class, PROVISIONERS, asList(InfrastructureMappingType.AWS_SSH),
-      asList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS),
+  TERRAFORM_PROVISION(ApplyTerraformProvisionState.class, PROVISIONERS, 0, "Terraform Provision",
+      asList(InfrastructureMappingType.AWS_SSH), asList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS),
 
   //  TERRAFORM_ADJUST(AdjustTerraformProvisionState.class, PROVISIONERS, asList(InfrastructureMappingType.AWS_SSH),
   //      asList(INFRASTRUCTURE_NODE), ORCHESTRATION_STENCILS),
 
-  TERRAFORM_DESTROY(DestroyTerraformProvisionState.class, PROVISIONERS, asList(InfrastructureMappingType.AWS_SSH),
-      asList(POST_DEPLOYMENT), ORCHESTRATION_STENCILS);
+  TERRAFORM_DESTROY(DestroyTerraformProvisionState.class, PROVISIONERS, 0, "Terraform Destroy",
+      asList(InfrastructureMappingType.AWS_SSH), asList(POST_DEPLOYMENT), ORCHESTRATION_STENCILS);
 
   private static final String stencilsPath = "/templates/stencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";
