@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import software.wings.beans.FeatureName;
 import software.wings.beans.RestResponse;
 import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute;
@@ -21,6 +22,7 @@ import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLFeedback;
 import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.impl.analysis.LogRequest;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
@@ -43,6 +45,7 @@ import javax.ws.rs.QueryParam;
 @Scope(PermissionAttribute.ResourceType.SETTING)
 public class LogMLResource {
   @Inject private AnalysisService analysisService;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Produces({"application/json", "application/v1+json"})
   @POST
@@ -116,7 +119,11 @@ public class LogMLResource {
   public RestResponse<LogMLAnalysisSummary> getLogAnalysisSummary(@QueryParam("accountId") String accountId,
       @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
       @QueryParam("stateType") StateType stateType) throws IOException {
-    return new RestResponse<>(analysisService.getAnalysisSummary(stateExecutionId, applicationId, stateType));
+    if (featureFlagService.isEnabledRelaodCache(FeatureName.CV_DEMO, accountId)) {
+      return new RestResponse<>(analysisService.getAnalysisSummaryForDemo(stateExecutionId, applicationId, stateType));
+    } else {
+      return new RestResponse<>(analysisService.getAnalysisSummary(stateExecutionId, applicationId, stateType));
+    }
   }
 
   @POST

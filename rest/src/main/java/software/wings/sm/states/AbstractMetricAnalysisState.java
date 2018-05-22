@@ -71,6 +71,15 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     this.analysisContext = getAnalysisContext(context, UUID.randomUUID().toString());
     saveMetaDataForDashboard(analysisContext.getAccountId(), context);
 
+    if (isDemoPath(analysisContext.getAccountId())) {
+      boolean failedState = settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().contains("fail");
+      if (failedState) {
+        return generateAnalysisResponse(context, ExecutionStatus.FAILED, "Demo CV");
+      } else {
+        return generateAnalysisResponse(context, ExecutionStatus.SUCCESS, "Demo CV");
+      }
+    }
+
     Set<String> canaryNewHostNames = analysisContext.getTestNodes();
     if (isEmpty(canaryNewHostNames)) {
       getLogger().warn("Could not find test nodes to compare the data");

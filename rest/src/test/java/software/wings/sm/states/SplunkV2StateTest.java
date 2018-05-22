@@ -48,6 +48,7 @@ import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionBaselineService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -100,6 +101,7 @@ public class SplunkV2StateTest extends WingsBaseTest {
   @Inject private SecretManager secretManager;
   @Inject private ContinuousVerificationService continuousVerificationService;
   @Inject private WorkflowExecutionBaselineService workflowExecutionBaselineService;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Mock private PhaseElement phaseElement;
@@ -169,6 +171,7 @@ public class SplunkV2StateTest extends WingsBaseTest {
     setInternalState(splunkState, "workflowExecutionService", workflowExecutionService);
     setInternalState(splunkState, "continuousVerificationService", continuousVerificationService);
     setInternalState(splunkState, "workflowExecutionBaselineService", workflowExecutionBaselineService);
+    setInternalState(splunkState, "featureFlagService", featureFlagService);
   }
 
   @Test

@@ -10,6 +10,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
+import software.wings.beans.FeatureName;
 import software.wings.beans.NewRelicConfig;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicApplicationInstance;
@@ -40,6 +41,12 @@ public class NewRelicTest extends WingsBaseTest {
                          .newRelicUrl("https://api.newrelic.com")
                          .apiKey("5ed76b50ebcfda54b77cd1daaabe635bd7f2e13dc6c5b11".toCharArray())
                          .build();
+  }
+
+  @Test
+  public void cvdemo() throws IOException {
+    // DO NOT REMOVE CV_DEMO FEATURE FLAG
+    FeatureName.valueOf("CV_DEMO");
   }
 
   @Test

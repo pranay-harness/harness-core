@@ -2,6 +2,7 @@ package software.wings.service.impl.analysis;
 
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
+import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -27,6 +28,7 @@ import java.util.Map;
     options = @IndexOptions(unique = true, name = "MetricAnalysisUniqueIdx")))
 @Data
 @EqualsAndHashCode(callSuper = false)
+@Builder
 public class TimeSeriesMLAnalysisRecord extends Base {
   @NotEmpty @Indexed private StateType stateType;
 

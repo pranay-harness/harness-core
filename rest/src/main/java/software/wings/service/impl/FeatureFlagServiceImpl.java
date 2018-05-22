@@ -43,6 +43,12 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
   Map<FeatureName, FeatureFlag> cache = new HashMap<>();
 
   @Override
+  public boolean isEnabledRelaodCache(FeatureName featureName, String accountId) {
+    cache.clear();
+    return isEnabled(featureName, accountId);
+  }
+
+  @Override
   public boolean isEnabled(@NotNull FeatureName featureName, String accountId) {
     FeatureFlag featureFlag = null;
 

@@ -53,6 +53,7 @@ import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionBaselineService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -104,6 +105,7 @@ public class ELKAnalysisStateTest extends WingsBaseTest {
   @Inject private SecretManager secretManager;
   @Inject private ContinuousVerificationService continuousVerificationService;
   @Inject private WorkflowExecutionBaselineService workflowExecutionBaselineService;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Mock private PhaseElement phaseElement;
@@ -175,6 +177,7 @@ public class ELKAnalysisStateTest extends WingsBaseTest {
     setInternalState(elkAnalysisState, "workflowExecutionService", workflowExecutionService);
     setInternalState(elkAnalysisState, "continuousVerificationService", continuousVerificationService);
     setInternalState(elkAnalysisState, "workflowExecutionBaselineService", workflowExecutionBaselineService);
+    setInternalState(elkAnalysisState, "featureFlagService", featureFlagService);
   }
 
   @Test

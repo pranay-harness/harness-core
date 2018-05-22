@@ -301,6 +301,24 @@ public class AnalysisServiceImpl implements AnalysisService {
   }
 
   @Override
+  public LogMLAnalysisSummary getAnalysisSummaryForDemo(
+      String stateExecutionId, String applicationId, StateType stateType) {
+    logger.info("Creating log analysis summary for demo {}", stateExecutionId);
+    StateExecutionInstance stateExecutionInstance =
+        workflowExecutionService.getStateExecutionData(applicationId, stateExecutionId);
+    if (stateExecutionId == null) {
+      logger.error("State execution instance not found for {}", stateExecutionId);
+      return null;
+    }
+
+    if (stateExecutionInstance.getStatus() == ExecutionStatus.SUCCESS) {
+      return getAnalysisSummary("CV-Demo-LOG-Success", "CV-Demo", stateType);
+    } else {
+      return getAnalysisSummary("CV-Demo-LOG-Failure", "CV-Demo", stateType);
+    }
+  }
+
+  @Override
   public List<LogMLFeedbackRecord> getMLFeedback(String serviceId, String workflowId, String workflowExecutionId) {
     Query<LogMLFeedbackRecord> query = wingsPersistence.createQuery(LogMLFeedbackRecord.class);
     query.or(query.criteria("serviceId").equal(serviceId), query.criteria("workflowId").equal(workflowId),

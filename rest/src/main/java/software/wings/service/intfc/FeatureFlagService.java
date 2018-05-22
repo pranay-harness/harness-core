@@ -6,4 +6,6 @@ public interface FeatureFlagService {
   boolean isEnabled(FeatureName featureName, String accountId);
 
   void initializeFeatureFlags();
+
+  boolean isEnabledRelaodCache(FeatureName featureName, String accountId);
 }

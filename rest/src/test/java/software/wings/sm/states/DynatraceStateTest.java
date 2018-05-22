@@ -47,6 +47,7 @@ import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
 import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionBaselineService;
@@ -99,6 +100,8 @@ public class DynatraceStateTest extends WingsBaseTest {
   @Inject private WorkflowExecutionBaselineService workflowExecutionBaselineService;
 
   @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private FeatureFlagService featureFlagService;
+
   @Mock private PhaseElement phaseElement;
   @Mock private Environment environment;
   @Mock private Application application;
@@ -169,6 +172,7 @@ public class DynatraceStateTest extends WingsBaseTest {
     setInternalState(dynatraceState, "workflowExecutionService", workflowExecutionService);
     setInternalState(dynatraceState, "continuousVerificationService", continuousVerificationService);
     setInternalState(dynatraceState, "workflowExecutionBaselineService", workflowExecutionBaselineService);
+    setInternalState(dynatraceState, "featureFlagService", featureFlagService);
   }
 
   @Test

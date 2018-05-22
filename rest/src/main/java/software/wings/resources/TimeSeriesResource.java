@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import software.wings.beans.FeatureName;
 import software.wings.beans.RestResponse;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -17,6 +18,7 @@ import software.wings.service.impl.analysis.TimeSeriesMLScores;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricHostAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.sm.StateType;
@@ -40,7 +42,7 @@ import javax.ws.rs.QueryParam;
 @Scope(ResourceType.SETTING)
 public class TimeSeriesResource {
   @Inject private NewRelicService newRelicService;
-
+  @Inject private FeatureFlagService featureFlagService;
   @Inject private MetricDataAnalysisService metricDataAnalysisService;
 
   @POST
@@ -89,8 +91,13 @@ public class TimeSeriesResource {
       @QueryParam("stateExecutionId") final String stateExecutionId,
       @QueryParam("workflowExecutionId") final String workflowExecutionId,
       @QueryParam("accountId") final String accountId, @QueryParam("appId") final String appId) throws IOException {
-    return new RestResponse<>(
-        metricDataAnalysisService.getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId).get(0));
+    if (featureFlagService.isEnabledRelaodCache(FeatureName.CV_DEMO, accountId)) {
+      return new RestResponse<>(
+          metricDataAnalysisService.getMetricsAnalysisForDemo(appId, stateExecutionId, workflowExecutionId));
+    } else {
+      return new RestResponse<>(
+          metricDataAnalysisService.getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId).get(0));
+    }
   }
 
   @GET

@@ -91,4 +91,6 @@ public interface AnalysisService {
   void cleanUpForLogRetry(String stateExecutionId);
 
   boolean deleteFeedback(String feedbackId) throws IOException;
+
+  LogMLAnalysisSummary getAnalysisSummaryForDemo(String stateExecutionId, String applicationId, StateType stateType);
 }

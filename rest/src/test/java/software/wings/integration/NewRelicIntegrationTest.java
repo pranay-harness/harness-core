@@ -6,11 +6,13 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
+import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.APDEX_SCORE;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.AVERAGE_RESPONSE_TIME;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.ERROR;
@@ -29,6 +31,8 @@ import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.Scheduler;
 import software.wings.beans.CountsByStatuses;
+import software.wings.beans.FeatureFlag;
+import software.wings.beans.FeatureName;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
@@ -44,6 +48,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.SettingsService;
@@ -82,6 +87,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private DelegateService delegateService;
   @Inject private NewRelicDelegateService newRelicDelegateService;
+  @Inject private FeatureFlagService featureFlagService;
 
   private String newRelicConfigId;
 
@@ -228,6 +234,101 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
           wingsPersistence.createQuery(NewRelicMetricDataRecord.class).filter("stateExecutionId", stateExecutionId);
       assertEquals((batchNum + 1) * numOfMetricsPerBatch * hosts.size() * numOfMinutes, query.count());
     }
+  }
+
+  @Test
+  public void testFeatureflagDemoSuccess() throws Exception {
+    final String stateExecutionId = UUID.randomUUID().toString();
+    final String appId = createApp(UUID.randomUUID().toString()).getUuid();
+    final String workflowId = UUID.randomUUID().toString();
+    final String workflowExecutionId = UUID.randomUUID().toString();
+
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", "CV_DEMO"));
+
+    wingsPersistence.save(FeatureFlag.builder().name("CV_DEMO").build());
+
+    wingsPersistence.update(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", "CV_DEMO"),
+        wingsPersistence.createUpdateOperations(FeatureFlag.class).addToSet("accountIds", "xyz"));
+
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    stateExecutionInstance.setUuid(stateExecutionId);
+    stateExecutionInstance.setStatus(ExecutionStatus.SUCCESS);
+    stateExecutionInstance.setAppId(appId);
+    wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(stateExecutionInstance));
+
+    final NewRelicMetricAnalysisRecord record = NewRelicMetricAnalysisRecord.builder()
+                                                    .workflowId(workflowId)
+                                                    .workflowExecutionId("CV-Demo")
+                                                    .stateExecutionId("CV-Demo-TS-Success")
+                                                    .appId("CV-Demo")
+                                                    .stateType(StateType.NEW_RELIC)
+                                                    .metricAnalyses(new ArrayList<>())
+                                                    .message("CV-demo")
+                                                    .build();
+    wingsPersistence.saveIgnoringDuplicateKeys(Lists.newArrayList(record));
+
+    WebTarget target = client.target(API_BASE + "/timeseries/generate-metrics?accountId=" + accountId
+        + "&stateExecutionId=" + stateExecutionId + "&workflowExecutionId=" + workflowExecutionId + "&appId=" + appId);
+    RestResponse<NewRelicMetricAnalysisRecord> restResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<NewRelicMetricAnalysisRecord>>() {});
+    NewRelicMetricAnalysisRecord savedRecord = restResponse.getResource();
+    assertNull(savedRecord.getWorkflowExecutionId());
+
+    wingsPersistence.update(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", "CV_DEMO"),
+        wingsPersistence.createUpdateOperations(FeatureFlag.class).addToSet("accountIds", accountId));
+    assertTrue(featureFlagService.isEnabled(FeatureName.CV_DEMO, accountId));
+    restResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<NewRelicMetricAnalysisRecord>>() {});
+    savedRecord = restResponse.getResource();
+    assertEquals("CV-Demo", savedRecord.getWorkflowExecutionId());
+  }
+
+  @Test
+  public void testFeatureflagDemoFail() throws Exception {
+    final String stateExecutionId = UUID.randomUUID().toString();
+    final String appId = createApp(UUID.randomUUID().toString()).getUuid();
+    final String workflowId = UUID.randomUUID().toString();
+    final String workflowExecutionId = UUID.randomUUID().toString();
+
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", "CV_DEMO"));
+
+    wingsPersistence.save(FeatureFlag.builder().name("CV_DEMO").build());
+
+    wingsPersistence.update(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", "CV_DEMO"),
+        wingsPersistence.createUpdateOperations(FeatureFlag.class).addToSet("accountIds", "xyz"));
+
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    stateExecutionInstance.setUuid(stateExecutionId);
+    stateExecutionInstance.setStatus(ExecutionStatus.FAILED);
+    stateExecutionInstance.setAppId(appId);
+    wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(stateExecutionInstance));
+
+    final NewRelicMetricAnalysisRecord record = NewRelicMetricAnalysisRecord.builder()
+                                                    .workflowId(workflowId)
+                                                    .workflowExecutionId("CV-Demo")
+                                                    .stateExecutionId("CV-Demo-TS-Failure")
+                                                    .appId("CV-Demo")
+                                                    .stateType(StateType.NEW_RELIC)
+                                                    .metricAnalyses(new ArrayList<>())
+                                                    .build();
+    wingsPersistence.saveIgnoringDuplicateKeys(Lists.newArrayList(record));
+
+    WebTarget target = client.target(API_BASE + "/timeseries/generate-metrics?accountId=" + accountId
+        + "&stateExecutionId=" + stateExecutionId + "&workflowExecutionId=" + workflowExecutionId + "&appId=" + appId);
+    RestResponse<NewRelicMetricAnalysisRecord> restResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<NewRelicMetricAnalysisRecord>>() {});
+    NewRelicMetricAnalysisRecord savedRecord = restResponse.getResource();
+    assertNull(savedRecord.getWorkflowExecutionId());
+
+    wingsPersistence.update(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", "CV_DEMO"),
+        wingsPersistence.createUpdateOperations(FeatureFlag.class).addToSet("accountIds", accountId));
+
+    restResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<NewRelicMetricAnalysisRecord>>() {});
+    savedRecord = restResponse.getResource();
+    assertEquals("CV-Demo", savedRecord.getWorkflowExecutionId());
   }
 
   @Test

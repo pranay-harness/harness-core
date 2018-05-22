@@ -29,6 +29,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.ElementExecutionSummary;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.SearchFilter.Operator;
@@ -58,6 +59,7 @@ import software.wings.service.impl.instance.ContainerInstanceHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionBaselineService;
@@ -125,6 +127,8 @@ public abstract class AbstractAnalysisState extends State {
   @Transient @Inject @SchemaIgnore private AwsHelperService awsHelperService;
 
   @Transient @Inject @SchemaIgnore private DelegateProxyFactory delegateProxyFactory;
+
+  @Transient @Inject private FeatureFlagService featureFlagService;
 
   protected String hostnameField;
 
@@ -482,5 +486,9 @@ public abstract class AbstractAnalysisState extends State {
         .withIssuedAt(new Date())
         .withExpiresAt(new Date(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(1)))
         .sign(algorithm);
+  }
+
+  protected boolean isDemoPath(String accountId) {
+    return featureFlagService.isEnabled(FeatureName.CV_DEMO, accountId);
   }
 }
