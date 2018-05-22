@@ -24,6 +24,7 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.GitConfig.GitRepositoryType;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.delegation.TerraformProvisionParameters;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
@@ -100,6 +101,13 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
           for (Entry<String, String> entry : parameters.getVariables().entrySet()) {
             // TODO: we should probably do some escaping here
             writer.write(String.format("%s = \"%s\"%n", entry.getKey(), entry.getValue()));
+          }
+
+          for (Entry<String, EncryptedDataDetail> entry : parameters.getEncryptedVariables().entrySet()) {
+            String value = new String(encryptionService.getDecryptedValue(entry.getValue()));
+
+            // TODO: we should probably do some escaping here
+            writer.write(String.format("%s = \"%s\"%n", entry.getKey(), value));
           }
         }
       } else {

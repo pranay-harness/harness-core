@@ -41,6 +41,8 @@ public interface SecretManager {
 
   List<EncryptedDataDetail> getEncryptionDetails(Encryptable object, String appId, String workflowExecutionId);
 
+  EncryptionConfig getEncryptionConfig(String accountId, String entityId, EncryptionType encryptionType);
+
   Collection<UuidAware> listEncryptedValues(String accountId);
 
   String getEncryptedYamlRef(Encryptable object, String... fieldName) throws IllegalAccessException;

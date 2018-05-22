@@ -25,6 +25,7 @@ public class TerraformProvisionParameters {
   List<EncryptedDataDetail> sourceRepoEncryptionDetails;
   private final String scriptPath;
   private final Map<String, String> variables;
+  private final Map<String, EncryptedDataDetail> encryptedVariables;
 
   private final String commandUnitName;
   private final long timeoutInMillis = TimeUnit.MINUTES.toMillis(10);

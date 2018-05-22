@@ -857,7 +857,8 @@ public class SecretManagerImpl implements SecretManager {
     return rv;
   }
 
-  private EncryptionConfig getEncryptionConfig(String accountId, String entityId, EncryptionType encryptionType) {
+  @Override
+  public EncryptionConfig getEncryptionConfig(String accountId, String entityId, EncryptionType encryptionType) {
     switch (encryptionType) {
       case LOCAL:
         return null;
