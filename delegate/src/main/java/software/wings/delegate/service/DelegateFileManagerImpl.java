@@ -172,7 +172,7 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
 
   private void upload(DelegateFile delegateFile, File content) throws IOException {
     RequestBody filename = RequestBody.create(MediaType.parse(MULTIPART_FORM_DATA), "file");
-    logger.info("Uploading file name {} ", filename);
+    logger.info("Uploading file name {} ", delegateFile.getLocalFilePath());
     // create RequestBody instance from file
     RequestBody requestFile = RequestBody.create(MediaType.parse(MULTIPART_FORM_DATA), content);
 
@@ -189,7 +189,7 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
   @Override
   public DelegateFile upload(DelegateFile delegateFile, InputStream contentSource) {
     File file = new File(delegateConfiguration.getLocalDiskPath(), generateUuid());
-    logger.info("File local name {} for delegate file id {} created", file.getName(), delegateFile.getFileId());
+    logger.info("File local name {} for delegate file created", file.getName());
     try {
       FileOutputStream fout = new FileOutputStream(file);
       IOUtils.copy(contentSource, fout);

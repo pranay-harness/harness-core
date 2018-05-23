@@ -115,7 +115,7 @@ public abstract class NodeSelectState extends State {
             == OrchestrationWorkflowType.ROLLING) {
           instancesToAdd = instanceCountTotal;
         } else {
-          instancesToAdd = instanceCountTotal - hostExclusionList.size();
+          instancesToAdd = Math.max(0, instanceCountTotal - hostExclusionList.size());
         }
       }
       selectionParams.withCount(instancesToAdd);
