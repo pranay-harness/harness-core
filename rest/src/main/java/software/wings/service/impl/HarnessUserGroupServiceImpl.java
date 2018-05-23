@@ -51,7 +51,7 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
 
   @Override
   public Set<Action> listAllowedUserActionsForAccount(String accountId, String userId) {
-    Query<HarnessUserGroup> query = wingsPersistence.createQuery(HarnessUserGroup.class);
+    Query<HarnessUserGroup> query = wingsPersistence.createQuery(HarnessUserGroup.class, excludeAuthority);
     query.filter("memberIds", userId);
     query.or(query.criteria("applyToAllAccounts").equal(true), query.criteria("accountIds").equal(accountId));
     List<HarnessUserGroup> harnessUserGroups = query.asList();

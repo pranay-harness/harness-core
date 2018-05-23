@@ -511,8 +511,11 @@ public class PipelineServiceTest extends WingsBaseTest {
 
     Workflow workflow = aWorkflow().withOrchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build();
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
-    PageRequest<WorkflowExecution> workflowExecutionPageRequest =
-        aPageRequest().withLimit("2").addFilter("workflowId", EQ, pipeline.getUuid()).build();
+    PageRequest<WorkflowExecution> workflowExecutionPageRequest = aPageRequest()
+                                                                      .withLimit("2")
+                                                                      .addFilter("workflowId", EQ, pipeline.getUuid())
+                                                                      .addFilter("appId", EQ, pipeline.getAppId())
+                                                                      .build();
     when(workflowExecutionService.listExecutions(workflowExecutionPageRequest, false, false, false, false))
         .thenReturn(aPageResponse().build());
 
@@ -566,8 +569,11 @@ public class PipelineServiceTest extends WingsBaseTest {
                                .withDeploymentType(DeploymentType.SSH.name())
                                .build()));
 
-    PageRequest<WorkflowExecution> workflowExecutionPageRequest =
-        aPageRequest().withLimit("2").addFilter("workflowId", EQ, pipeline.getUuid()).build();
+    PageRequest<WorkflowExecution> workflowExecutionPageRequest = aPageRequest()
+                                                                      .withLimit("2")
+                                                                      .addFilter("workflowId", EQ, pipeline.getUuid())
+                                                                      .addFilter("appId", EQ, pipeline.getAppId())
+                                                                      .build();
     when(workflowExecutionService.listExecutions(workflowExecutionPageRequest, false, false, false, false))
         .thenReturn(aPageResponse().build());
 
