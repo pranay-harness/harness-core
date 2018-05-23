@@ -57,6 +57,7 @@ public class ArtifactCollectionState extends State {
   @Attributes(title = "Artifact Source")
   @NotEmpty
   private String artifactStreamId;
+  @Attributes(title = "Regex") private boolean regex;
   @Attributes(title = "Build / Tag") private String buildNo;
   @Transient @Inject private ArtifactStreamService artifactStreamService;
   @Transient @Inject private ArtifactService artifactService;
@@ -219,7 +220,7 @@ public class ArtifactCollectionState extends State {
       return artifactService.fetchLastCollectedArtifactForArtifactStream(
           context.getAppId(), artifactStreamId, sourceName);
     } else {
-      return artifactService.getArtifactByBuildNumber(context.getAppId(), artifactStreamId, sourceName, buildNo);
+      return artifactService.getArtifactByBuildNumber(context.getAppId(), artifactStreamId, sourceName, buildNo, regex);
     }
   }
 
@@ -237,5 +238,13 @@ public class ArtifactCollectionState extends State {
 
   public void setBuildNo(String buildNo) {
     this.buildNo = buildNo;
+  }
+
+  public boolean isRegex() {
+    return regex;
+  }
+
+  public void setRegex(boolean regex) {
+    this.regex = regex;
   }
 }

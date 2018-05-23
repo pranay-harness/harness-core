@@ -134,7 +134,7 @@ public class ArtifactCollectionStateTest {
   @Test
   public void shouldArtifactCollectionEvaluateBuildNo() {
     artifactCollectionState.setBuildNo("${regex.extract('...', ${workflow.variables.sourceCommitHash})}");
-    when(artifactService.getArtifactByBuildNumber(APP_ID, ARTIFACT_STREAM_ID, ARTIFACT_SOURCE_NAME, "0fc"))
+    when(artifactService.getArtifactByBuildNumber(APP_ID, ARTIFACT_STREAM_ID, ARTIFACT_SOURCE_NAME, "0fc", false))
         .thenReturn(anArtifact().withAppId(APP_ID).withStatus(Status.APPROVED).build());
     artifactCollectionState.handleAsyncResponse(executionContext,
         ImmutableMap.of(
@@ -146,7 +146,7 @@ public class ArtifactCollectionStateTest {
   @Ignore // for srinivas to modify; need to simulate real Jenkins
   public void shouldArtifactCollectionEvaluateBuildNoFromDescription() {
     artifactCollectionState.setBuildNo("${regex.replace('tag: ([\\w-]+)', '$1', ${Jenkins.description}}");
-    when(artifactService.getArtifactByBuildNumber(APP_ID, ARTIFACT_STREAM_ID, ARTIFACT_SOURCE_NAME, "0fc"))
+    when(artifactService.getArtifactByBuildNumber(APP_ID, ARTIFACT_STREAM_ID, ARTIFACT_SOURCE_NAME, "0fc", false))
         .thenReturn(anArtifact().withAppId(APP_ID).withStatus(Status.APPROVED).build());
     artifactCollectionState.handleAsyncResponse(executionContext,
         ImmutableMap.of(

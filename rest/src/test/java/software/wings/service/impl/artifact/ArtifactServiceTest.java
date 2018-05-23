@@ -357,7 +357,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
     Artifact savedArtifact = artifactService.create(artifact);
     artifactService.updateStatus(savedArtifact.getUuid(), savedArtifact.getAppId(), APPROVED);
     Artifact latestArtifact = artifactService.getArtifactByBuildNumber(savedArtifact.getAppId(),
-        savedArtifact.getArtifactStreamId(), savedArtifact.getArtifactSourceName(), savedArtifact.getBuildNo());
+        savedArtifact.getArtifactStreamId(), savedArtifact.getArtifactSourceName(), savedArtifact.getBuildNo(), false);
     assertThat(latestArtifact)
         .isNotNull()
         .extracting(Artifact::getArtifactSourceName)
