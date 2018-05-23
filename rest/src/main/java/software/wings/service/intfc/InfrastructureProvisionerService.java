@@ -10,10 +10,12 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ownership.OwnedByApplication;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
 import java.util.Map;
+import java.util.Optional;
 import javax.validation.Valid;
 
 public interface InfrastructureProvisionerService extends OwnedByApplication {
@@ -38,4 +40,7 @@ public interface InfrastructureProvisionerService extends OwnedByApplication {
   void pruneDescendingEntities(String appId, String infrastructureProvisionerId);
 
   void regenerateInfrastructureMappings(String provisionerId, ExecutionContext context, Map<String, Object> outputs);
+
+  void regenerateInfrastructureMappings(String provisionerId, ExecutionContext context, Map<String, Object> outputs,
+      Optional<ManagerExecutionLogCallback> executionLogCallback, Optional<String> region);
 }

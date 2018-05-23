@@ -22,6 +22,8 @@ import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.SELECT_NODE;
 import static software.wings.beans.PhaseStepType.START_SERVICE;
 import static software.wings.beans.PhaseStepType.STOP_SERVICE;
+import static software.wings.common.Constants.DE_PROVISION_CLOUD_FORMATION;
+import static software.wings.common.Constants.PROVISION_CLOUD_FORMATION;
 import static software.wings.sm.StateTypeScope.COMMON;
 import static software.wings.sm.StateTypeScope.NONE;
 import static software.wings.sm.StateTypeScope.ORCHESTRATION_STENCILS;
@@ -110,6 +112,8 @@ import software.wings.sm.states.pcf.PcfRollbackState;
 import software.wings.sm.states.pcf.PcfSetupState;
 import software.wings.sm.states.pcf.UnmapRouteState;
 import software.wings.sm.states.provision.ApplyTerraformProvisionState;
+import software.wings.sm.states.provision.CloudFormationCreateStackState;
+import software.wings.sm.states.provision.CloudFormationDeleteStackState;
 import software.wings.sm.states.provision.DestroyTerraformProvisionState;
 import software.wings.stencils.OverridingStencil;
 import software.wings.stencils.StencilCategory;
@@ -402,6 +406,12 @@ public enum StateType implements StateTypeDescriptor {
   //      asList(INFRASTRUCTURE_NODE), ORCHESTRATION_STENCILS),
 
   TERRAFORM_DESTROY(DestroyTerraformProvisionState.class, PROVISIONERS, 0, "Terraform Destroy",
+      asList(InfrastructureMappingType.AWS_SSH), asList(POST_DEPLOYMENT), ORCHESTRATION_STENCILS),
+
+  CLOUD_FORMATION_CREATE_STACK(CloudFormationCreateStackState.class, PROVISIONERS, PROVISION_CLOUD_FORMATION,
+      asList(InfrastructureMappingType.AWS_SSH), asList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS),
+
+  CLOUD_FORMATION_DELETE_STACK(CloudFormationDeleteStackState.class, PROVISIONERS, DE_PROVISION_CLOUD_FORMATION,
       asList(InfrastructureMappingType.AWS_SSH), asList(POST_DEPLOYMENT), ORCHESTRATION_STENCILS);
 
   private static final String stencilsPath = "/templates/stencils/";

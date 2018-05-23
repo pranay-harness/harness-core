@@ -15,5 +15,6 @@ public class CloudFormationCommandRequest {
   private String commandName;
   private AwsConfig awsConfig;
   private int timeoutInMs;
+  private String region;
   public enum CloudFormationCommandType { CREATE_STACK, GET_STACKS, DELETE_STACK }
 }

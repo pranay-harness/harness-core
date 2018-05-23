@@ -100,7 +100,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
    * Create cluster.
    */
   public void createCluster() {
-    CreateStackResult result = awsHelperService.createStack("AKIAJLEKM45P4PO5QUFQ",
+    CreateStackResult result = awsHelperService.createStack("us-east-1", "AKIAJLEKM45P4PO5QUFQ",
         "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE".toCharArray(),
         new CreateStackRequest()
             .withStackName("EC2ContainerService-demo")
@@ -428,7 +428,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     Stack stack;
     while (!"CREATE_COMPLETE".equals(
         (stack = awsHelperService
-                     .describeStacks("AKIAJLEKM45P4PO5QUFQ", "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE".toCharArray(),
+                     .describeStacks("us-east-1", "AKIAJLEKM45P4PO5QUFQ",
+                         "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE".toCharArray(),
                          new DescribeStacksRequest().withStackName("EC2ContainerService-test2"))
                      .getStacks()
                      .get(0))
@@ -443,7 +444,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
    * Destroy cluster.
    */
   public void destroyCluster() {
-    CreateStackResult result = awsHelperService.createStack("AKIAJLEKM45P4PO5QUFQ",
+    CreateStackResult result = awsHelperService.createStack("us-east-1", "AKIAJLEKM45P4PO5QUFQ",
         "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE".toCharArray(),
         new CreateStackRequest()
             .withStackName("EC2ContainerService-test2")
@@ -772,7 +773,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     Stack stack;
     while (!"CREATE_COMPLETE".equals(
         (stack = awsHelperService
-                     .describeStacks("AKIAJLEKM45P4PO5QUFQ", "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE".toCharArray(),
+                     .describeStacks("us-east-1", "AKIAJLEKM45P4PO5QUFQ",
+                         "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE".toCharArray(),
                          new DescribeStacksRequest().withStackName("EC2ContainerService-test2"))
                      .getStacks()
                      .get(0))

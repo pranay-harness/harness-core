@@ -55,12 +55,19 @@ import com.amazonaws.services.autoscaling.model.DescribeScalingActivitiesResult;
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import com.amazonaws.services.autoscaling.model.SetDesiredCapacityRequest;
 import com.amazonaws.services.cloudformation.AmazonCloudFormationClient;
+import com.amazonaws.services.cloudformation.AmazonCloudFormationClientBuilder;
+import com.amazonaws.services.cloudformation.model.AmazonCloudFormationException;
 import com.amazonaws.services.cloudformation.model.CreateStackRequest;
 import com.amazonaws.services.cloudformation.model.CreateStackResult;
 import com.amazonaws.services.cloudformation.model.DeleteStackRequest;
+import com.amazonaws.services.cloudformation.model.DescribeStackEventsRequest;
+import com.amazonaws.services.cloudformation.model.DescribeStackEventsResult;
 import com.amazonaws.services.cloudformation.model.DescribeStacksRequest;
 import com.amazonaws.services.cloudformation.model.DescribeStacksResult;
 import com.amazonaws.services.cloudformation.model.Stack;
+import com.amazonaws.services.cloudformation.model.StackEvent;
+import com.amazonaws.services.cloudformation.model.UpdateStackRequest;
+import com.amazonaws.services.cloudformation.model.UpdateStackResult;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClientBuilder;
 import com.amazonaws.services.cloudwatch.model.Datapoint;
@@ -418,8 +425,11 @@ public class AwsHelperService {
    * @return the amazon cloud formation client
    */
   @VisibleForTesting
-  AmazonCloudFormationClient getAmazonCloudFormationClient(String accessKey, char[] secretKey) {
-    return new AmazonCloudFormationClient(new BasicAWSCredentials(accessKey, new String(secretKey)));
+  AmazonCloudFormationClient getAmazonCloudFormationClient(Regions region, String accessKey, char[] secretKey) {
+    return (AmazonCloudFormationClient) AmazonCloudFormationClientBuilder.standard()
+        .withRegion(region)
+        .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, new String(secretKey))))
+        .build();
   }
 
   /**
@@ -653,6 +663,12 @@ public class AwsHelperService {
         throw amazonServiceException;
       }
       throw new WingsException(ErrorCode.AWS_ACCESS_DENIED).addParam("message", amazonServiceException.getMessage());
+    } else if (amazonServiceException instanceof AmazonCloudFormationException) {
+      if (amazonServiceException.getMessage().contains("No updates are to be performed")) {
+        logger.info("Nothing to update on stack" + amazonServiceException.getMessage());
+      } else {
+        throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", amazonServiceException.getMessage());
+      }
     } else {
       logger.error("Unhandled aws exception");
       throw new WingsException(ErrorCode.AWS_ACCESS_DENIED).addParam("message", amazonServiceException.getMessage());
@@ -1785,9 +1801,11 @@ public class AwsHelperService {
     return false;
   }
 
-  public CreateStackResult createStack(String accessKey, char[] secretKey, CreateStackRequest createStackRequest) {
+  public CreateStackResult createStack(
+      String region, String accessKey, char[] secretKey, CreateStackRequest createStackRequest) {
     try {
-      AmazonCloudFormationClient cloudFormationClient = getAmazonCloudFormationClient(accessKey, secretKey);
+      AmazonCloudFormationClient cloudFormationClient =
+          getAmazonCloudFormationClient(Regions.fromName(region), accessKey, secretKey);
       return cloudFormationClient.createStack(createStackRequest);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -1795,10 +1813,23 @@ public class AwsHelperService {
     return new CreateStackResult();
   }
 
-  public DescribeStacksResult describeStacks(
-      String accessKey, char[] secretKey, DescribeStacksRequest describeStacksRequest) {
+  public UpdateStackResult updateStack(
+      String region, String accessKey, char[] secretKey, UpdateStackRequest updateStackRequest) {
     try {
-      AmazonCloudFormationClient cloudFormationClient = getAmazonCloudFormationClient(accessKey, secretKey);
+      AmazonCloudFormationClient cloudFormationClient =
+          getAmazonCloudFormationClient(Regions.fromName(region), accessKey, secretKey);
+      return cloudFormationClient.updateStack(updateStackRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new UpdateStackResult();
+  }
+
+  public DescribeStacksResult describeStacks(
+      String region, String accessKey, char[] secretKey, DescribeStacksRequest describeStacksRequest) {
+    try {
+      AmazonCloudFormationClient cloudFormationClient =
+          getAmazonCloudFormationClient(Regions.fromName(region), accessKey, secretKey);
       return cloudFormationClient.describeStacks(describeStacksRequest);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -1806,8 +1837,10 @@ public class AwsHelperService {
     return new DescribeStacksResult();
   }
 
-  public List<Stack> getAllStacks(String accessKey, char[] secretKey, DescribeStacksRequest describeStacksRequest) {
-    AmazonCloudFormationClient cloudFormationClient = getAmazonCloudFormationClient(accessKey, secretKey);
+  public List<Stack> getAllStacks(
+      String region, String accessKey, char[] secretKey, DescribeStacksRequest describeStacksRequest) {
+    AmazonCloudFormationClient cloudFormationClient =
+        getAmazonCloudFormationClient(Regions.fromName(region), accessKey, secretKey);
     try {
       List<Stack> stacks = new ArrayList<>();
       String nextToken = null;
@@ -1824,9 +1857,30 @@ public class AwsHelperService {
     return emptyList();
   }
 
-  public void deleteStack(String accessKey, char[] secretKey, DeleteStackRequest deleteStackRequest) {
+  public List<StackEvent> getAllStackEvents(
+      String region, String accessKey, char[] secretKey, DescribeStackEventsRequest describeStackEventsRequest) {
+    AmazonCloudFormationClient cloudFormationClient =
+        getAmazonCloudFormationClient(Regions.fromName(region), accessKey, secretKey);
     try {
-      AmazonCloudFormationClient cloudFormationClient = getAmazonCloudFormationClient(accessKey, secretKey);
+      List<StackEvent> stacksEvents = new ArrayList<>();
+      String nextToken = null;
+      do {
+        describeStackEventsRequest.withNextToken(nextToken);
+        DescribeStackEventsResult result = cloudFormationClient.describeStackEvents(describeStackEventsRequest);
+        nextToken = result.getNextToken();
+        stacksEvents.addAll(result.getStackEvents());
+      } while (nextToken != null);
+      return stacksEvents;
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return emptyList();
+  }
+
+  public void deleteStack(String region, String accessKey, char[] secretKey, DeleteStackRequest deleteStackRequest) {
+    try {
+      AmazonCloudFormationClient cloudFormationClient =
+          getAmazonCloudFormationClient(Regions.fromName(region), accessKey, secretKey);
       cloudFormationClient.deleteStack(deleteStackRequest);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);

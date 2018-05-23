@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.DeploymentType;
+import software.wings.beans.CloudFormationInfrastructureProvisioner;
 import software.wings.beans.GitConfig;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingBlueprint;
@@ -44,6 +45,7 @@ import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
@@ -51,6 +53,7 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -136,6 +139,16 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       if (settingAttribute != null && settingAttribute.getValue() instanceof GitConfig) {
         detailsBuilder.repository(((GitConfig) settingAttribute.getValue()).getRepoUrl());
       }
+    } else if (provisioner instanceof CloudFormationInfrastructureProvisioner) {
+      CloudFormationInfrastructureProvisioner cloudFormationInfrastructureProvisioner =
+          (CloudFormationInfrastructureProvisioner) provisioner;
+      String sourceType = "UNKNOWN";
+      if (cloudFormationInfrastructureProvisioner.provisionByBody()) {
+        sourceType = "Template Body";
+      } else if (cloudFormationInfrastructureProvisioner.provisionByUrl()) {
+        sourceType = "Amazon S3";
+      }
+      detailsBuilder.cloudFormationSourceType(sourceType);
     }
 
     if (isNotEmpty(provisioner.getMappingBlueprints())) {
@@ -211,9 +224,27 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     }
   }
 
-  private void applyProperties(
-      Map<String, Object> contextMap, InfrastructureMapping infrastructureMapping, List<NameValuePair> properties) {
+  // Region is optional and is not present in the blue print properties for cloud formation provisioners and
+  // present for terraform
+  private void applyProperties(Map<String, Object> contextMap, InfrastructureMapping infrastructureMapping,
+      List<NameValuePair> properties, Optional<ManagerExecutionLogCallback> executionLogCallbackOptional,
+      Optional<String> region) {
     final Map<String, Object> stringMap = new HashMap<>();
+
+    generateMapToUpdateInfraMapping(contextMap, properties, executionLogCallbackOptional, stringMap, region);
+
+    try {
+      infrastructureMapping.applyProvisionerVariables(stringMap);
+      infrastructureMappingService.update(infrastructureMapping);
+    } catch (Exception e) {
+      addToExecutionLog(executionLogCallbackOptional, e.getMessage());
+      throw e;
+    }
+  }
+
+  private void generateMapToUpdateInfraMapping(Map<String, Object> contextMap, List<NameValuePair> properties,
+      Optional<ManagerExecutionLogCallback> executionLogCallbackOptional, Map<String, Object> stringMap,
+      Optional<String> region) {
     for (NameValuePair property : properties) {
       if (property.getValue() == null) {
         continue;
@@ -222,26 +253,40 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       try {
         evaluated = evaluator.evaluate(property.getValue(), contextMap);
       } catch (Exception exception) {
-        throw new InvalidRequestException(
+        String errorMsg =
             String.format("The infrastructure provisioner mapping value %s was not resolved from the provided outputs",
-                property.getName()),
-            exception, USER);
+                property.getName());
+        addToExecutionLog(executionLogCallbackOptional, errorMsg);
+        throw new InvalidRequestException(errorMsg, exception, USER);
       }
       if (evaluated == null) {
-        throw new InvalidRequestException(
+        String errorMsg =
             String.format("The infrastructure provisioner mapping value %s was not resolved from the provided outputs",
-                property.getName()));
+                property.getName());
+        addToExecutionLog(executionLogCallbackOptional, errorMsg);
+        throw new InvalidRequestException(errorMsg);
       }
       stringMap.put(property.getName(), evaluated);
     }
+    region.ifPresent(s -> stringMap.put("region", s));
+  }
 
-    infrastructureMapping.applyProvisionerVariables(stringMap);
-    infrastructureMappingService.update(infrastructureMapping);
+  private void addToExecutionLog(Optional<ManagerExecutionLogCallback> executionLogCallbackOptional, String errorMsg) {
+    if (executionLogCallbackOptional.isPresent()) {
+      executionLogCallbackOptional.get().saveExecutionLog("# " + errorMsg);
+    }
   }
 
   @Override
   public void regenerateInfrastructureMappings(
       String provisionerId, ExecutionContext context, Map<String, Object> outputs) {
+    regenerateInfrastructureMappings(provisionerId, context, outputs, Optional.empty(), Optional.empty());
+  }
+
+  @Override
+  public void regenerateInfrastructureMappings(String provisionerId, ExecutionContext context,
+      Map<String, Object> outputs, Optional<ManagerExecutionLogCallback> executionLogCallbackOptional,
+      Optional<String> region) {
     final InfrastructureProvisioner infrastructureProvisioner = get(context.getAppId(), provisionerId);
 
     final Map<String, Object> contextMap = context.asMap();
@@ -265,7 +310,11 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
             .forEach(blueprint -> {
               logger.info("Provisioner {} updates infrastructureMapping {}", infrastructureProvisioner.getUuid(),
                   infrastructureMapping.getUuid());
-              applyProperties(contextMap, infrastructureMapping, blueprint.getProperties());
+              addToExecutionLog(executionLogCallbackOptional,
+                  "Provisioner " + infrastructureProvisioner.getUuid() + " updates infrastructureMapping "
+                      + infrastructureMapping.getUuid());
+              applyProperties(
+                  contextMap, infrastructureMapping, blueprint.getProperties(), executionLogCallbackOptional, region);
             });
       }
     }

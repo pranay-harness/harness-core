@@ -469,3 +469,9 @@ AMI_RESOURCE_ATTRIBUTES_FILTER:
       value: ami-platform
     - name: Owner ID
       value: ami-owner-id
+
+CLOUD_FORMATION_SOURCE_TYPE:
+    - name: TEMPLATE_BODY
+      value: Template Body
+    - name: TEMPLATE_URL
+      value: Amazon S3
