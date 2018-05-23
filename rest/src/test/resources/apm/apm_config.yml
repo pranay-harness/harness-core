@@ -1,0 +1,22 @@
+- metricName: RequestDuration
+  metricType: RESP_TIME
+  tag: Servlet
+  collectionUrl: query
+  responseType: JSON
+  method: POST
+  responseMappings:
+      txnNameFieldValue: ResponseTime
+      timestampJsonPath: series[*].pointlist[*].[1]
+      metricValueJsonPath: series[*].pointlist[*].[0]
+- metricName: Hits
+  metricType: THROUGHPUT
+  tag: Servlet
+  collectionUrl: query
+  responseType: JSON
+  method: POST
+  responseMappings:
+      txnNameJsonPath: series[*].scope
+      txnNameRegex: ((?<=host:)(.*))(?=,resource_name)
+      timestampJsonPath: series[*].pointlist[*].[1]
+      timestampFormat: yyyy-MM-dd'T'HH:mm:ss.SSSX
+      metricValueJsonPath: series[*].pointlist[*].[0]
