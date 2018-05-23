@@ -20,6 +20,7 @@ import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.PageRequest;
@@ -31,6 +32,7 @@ import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
 import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
+import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
@@ -39,6 +41,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.MetricDataAnalysisService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.ExecutionStatus;
@@ -65,6 +68,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private LearningEngineService learningEngineService;
   @Inject protected DelegateServiceImpl delegateService;
+  @Inject protected SettingsService settingsService;
 
   @Override
   public boolean saveMetricData(String accountId, String appId, String stateExecutionId, String delegateTaskId,
@@ -429,7 +433,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     }
   }
 
-  public NewRelicMetricAnalysisRecord getMetricsAnalysisForDemo(
+  public List<NewRelicMetricAnalysisRecord> getMetricsAnalysisForDemo(
       String appId, String stateExecutionId, String workflowExecutionId) {
     logger.info("Creating analysis summary for demo {}", stateExecutionId);
     StateExecutionInstance stateExecutionInstance =
@@ -439,11 +443,23 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       return null;
     }
 
-    if (stateExecutionInstance.getStatus() == ExecutionStatus.SUCCESS) {
-      return getMetricsAnalysis("CV-Demo", "CV-Demo-TS-Success", "CV-Demo").get(0);
-    } else {
-      return getMetricsAnalysis("CV-Demo", "CV-Demo-TS-Failure", "CV-Demo").get(0);
+    SettingAttribute settingAttribute = settingsService.get(
+        ((MetricAnalysisExecutionData) stateExecutionInstance.getStateExecutionData()).getServerConfigId());
+
+    if (stateExecutionInstance.getStateType().equals(StateType.NEW_RELIC.name())) {
+      if (settingAttribute.getName().toLowerCase().endsWith("dev")
+          || settingAttribute.getName().toLowerCase().endsWith("prod")) {
+        if (stateExecutionInstance.getStatus() == ExecutionStatus.SUCCESS) {
+          return getMetricsAnalysis(
+              "CV-Demo-" + stateExecutionInstance.getStateType(), "CV-Demo-TS-Success", "CV-Demo");
+        } else {
+          return getMetricsAnalysis(
+              "CV-Demo-" + stateExecutionInstance.getStateType(), "CV-Demo-TS-Failure", "CV-Demo");
+        }
+      }
     }
+
+    return getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId);
   }
 
   @Override

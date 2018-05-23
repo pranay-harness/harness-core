@@ -41,6 +41,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
+import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.impl.newrelic.MetricAnalysisJob.MetricAnalysisGenerator;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicMetric;
@@ -56,6 +57,7 @@ import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.states.AbstractAnalysisState;
@@ -69,6 +71,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
@@ -251,9 +254,21 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     wingsPersistence.update(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", "CV_DEMO"),
         wingsPersistence.createUpdateOperations(FeatureFlag.class).addToSet("accountIds", "xyz"));
 
+    wingsPersistence.delete(wingsPersistence.createQuery(SettingAttribute.class)
+                                .filter("accountId", accountId)
+                                .filter("name", "newrelic_prod"));
+
+    String serverConfigId = wingsPersistence.save(
+        SettingAttribute.Builder.aSettingAttribute().withAccountId(accountId).withName("newrelic_prod").build());
+
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setUuid(stateExecutionId);
     stateExecutionInstance.setStatus(ExecutionStatus.SUCCESS);
+    stateExecutionInstance.setStateType(StateType.NEW_RELIC.name());
+    stateExecutionInstance.setDisplayName("Relic_Fail");
+    Map<String, StateExecutionData> hashMap = new HashMap();
+    hashMap.put("Relic_Fail", MetricAnalysisExecutionData.builder().serverConfigId(serverConfigId).build());
+    stateExecutionInstance.setStateExecutionMap(hashMap);
     stateExecutionInstance.setAppId(appId);
     wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(stateExecutionInstance));
 
@@ -261,7 +276,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
                                                     .workflowId(workflowId)
                                                     .workflowExecutionId("CV-Demo")
                                                     .stateExecutionId("CV-Demo-TS-Success")
-                                                    .appId("CV-Demo")
+                                                    .appId("CV-Demo-" + StateType.NEW_RELIC)
                                                     .stateType(StateType.NEW_RELIC)
                                                     .metricAnalyses(new ArrayList<>())
                                                     .message("CV-demo")
@@ -299,17 +314,29 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     wingsPersistence.update(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", "CV_DEMO"),
         wingsPersistence.createUpdateOperations(FeatureFlag.class).addToSet("accountIds", "xyz"));
 
+    wingsPersistence.delete(wingsPersistence.createQuery(SettingAttribute.class)
+                                .filter("accountId", accountId)
+                                .filter("name", "newrelic_dev"));
+
+    String serverConfigId = wingsPersistence.save(
+        SettingAttribute.Builder.aSettingAttribute().withAccountId(accountId).withName("newrelic_dev").build());
+
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setUuid(stateExecutionId);
     stateExecutionInstance.setStatus(ExecutionStatus.FAILED);
     stateExecutionInstance.setAppId(appId);
+    stateExecutionInstance.setStateType(StateType.NEW_RELIC.name());
+    stateExecutionInstance.setDisplayName("Relic_Fail");
+    Map<String, StateExecutionData> hashMap = new HashMap();
+    hashMap.put("Relic_Fail", MetricAnalysisExecutionData.builder().serverConfigId(serverConfigId).build());
+    stateExecutionInstance.setStateExecutionMap(hashMap);
     wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(stateExecutionInstance));
 
     final NewRelicMetricAnalysisRecord record = NewRelicMetricAnalysisRecord.builder()
                                                     .workflowId(workflowId)
                                                     .workflowExecutionId("CV-Demo")
                                                     .stateExecutionId("CV-Demo-TS-Failure")
-                                                    .appId("CV-Demo")
+                                                    .appId("CV-Demo-" + StateType.NEW_RELIC)
                                                     .stateType(StateType.NEW_RELIC)
                                                     .metricAnalyses(new ArrayList<>())
                                                     .build();

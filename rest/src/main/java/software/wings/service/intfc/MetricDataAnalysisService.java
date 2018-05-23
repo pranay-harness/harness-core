@@ -88,6 +88,6 @@ public interface MetricDataAnalysisService {
 
   void cleanUpForMetricRetry(String stateExecutionId);
 
-  NewRelicMetricAnalysisRecord getMetricsAnalysisForDemo(
+  List<NewRelicMetricAnalysisRecord> getMetricsAnalysisForDemo(
       String appId, String stateExecutionId, String workflowExecutionId);
 }

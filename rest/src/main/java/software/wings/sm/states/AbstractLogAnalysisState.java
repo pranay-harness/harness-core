@@ -84,12 +84,15 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     saveMetaDataForDashboard(analysisContext.getAccountId(), executionContext);
 
     Set<String> canaryNewHostNames = analysisContext.getTestNodes();
-    if (isDemoPath(analysisContext.getAccountId())) {
-      boolean failedState = settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().contains("fail");
-      if (failedState) {
-        return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED, "Demo CV");
-      } else {
-        return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS, "Demo CV");
+    if (isDemoPath(analysisContext.getAccountId()) && getStateType().equals(StateType.ELK)) {
+      if (settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev")
+          || settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("prod")) {
+        boolean failedState = settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev");
+        if (failedState) {
+          return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED, "Demo CV");
+        } else {
+          return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS, "Demo CV");
+        }
       }
     }
 

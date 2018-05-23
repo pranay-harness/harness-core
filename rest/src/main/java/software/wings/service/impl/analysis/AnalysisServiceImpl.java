@@ -311,11 +311,21 @@ public class AnalysisServiceImpl implements AnalysisService {
       return null;
     }
 
-    if (stateExecutionInstance.getStatus() == ExecutionStatus.SUCCESS) {
-      return getAnalysisSummary("CV-Demo-LOG-Success", "CV-Demo", stateType);
-    } else {
-      return getAnalysisSummary("CV-Demo-LOG-Failure", "CV-Demo", stateType);
+    SettingAttribute settingAttribute = settingsService.get(
+        ((LogAnalysisExecutionData) stateExecutionInstance.getStateExecutionData()).getServerConfigId());
+
+    if (stateType.equals(StateType.ELK)) {
+      if (settingAttribute.getName().toLowerCase().endsWith("dev")
+          || settingAttribute.getName().toLowerCase().endsWith("prod")) {
+        if (stateExecutionInstance.getStatus() == ExecutionStatus.SUCCESS) {
+          return getAnalysisSummary("CV-Demo-LOG-Success", "CV-Demo", stateType);
+        } else {
+          return getAnalysisSummary("CV-Demo-LOG-Failure", "CV-Demo", stateType);
+        }
+      }
     }
+
+    return getAnalysisSummary(stateExecutionId, applicationId, stateType);
   }
 
   @Override
