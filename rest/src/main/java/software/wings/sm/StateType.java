@@ -50,6 +50,7 @@ import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PhaseStepType;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
+import software.wings.sm.states.APMVerificationState;
 import software.wings.sm.states.AppDynamicsState;
 import software.wings.sm.states.ApprovalState;
 import software.wings.sm.states.ArtifactCheckState;
@@ -234,6 +235,11 @@ public enum StateType implements StateTypeDescriptor {
 
   AWS_LAMBDA_VERIFICATION(
       AwsLambdaVerification.class, VERIFICATIONS, 13, "AWS Lambda Verification", asList(), ORCHESTRATION_STENCILS),
+
+  /**
+   * Generic APM verification state type.
+   */
+  APM_VERIFICATION(APMVerificationState.class, VERIFICATIONS, 14, "APM Verification", asList(), ORCHESTRATION_STENCILS),
 
   /**
    * Env state state type.

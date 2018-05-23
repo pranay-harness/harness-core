@@ -177,6 +177,7 @@ public class MetricAnalysisJob implements Job {
         case PROMETHEUS:
         case CLOUD_WATCH:
         case DATA_DOG:
+        case APM_VERIFICATION:
           stateValuesToAnalyze = getMetricTypeMap(
               analysisService.getMetricTemplates(context.getStateType(), context.getStateExecutionId()));
           break;

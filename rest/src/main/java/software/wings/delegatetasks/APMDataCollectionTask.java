@@ -43,11 +43,14 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
   private static final Logger logger = LoggerFactory.getLogger(APMDataCollectionTask.class);
   private static final int INITIAL_DELYA_MINS = 2;
   private static final int COLLECT_WINDOW = 1;
+  private static Pattern pattern = Pattern.compile("\\$\\{(.*?)\\}");
 
   @Inject private NewRelicDelegateService newRelicDelegateService;
   @Inject private MetricDataStoreService metricStoreService;
@@ -70,10 +73,13 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
   protected DataCollectionTaskResult initDataCollection(Object[] parameters) {
     dataCollectionInfo = (APMDataCollectionInfo) parameters[0];
     logger.info("apm collection - dataCollectionInfo: {}", dataCollectionInfo);
+    char[] decryptedValue;
     for (EncryptedDataDetail encryptedDataDetail : dataCollectionInfo.getEncryptedDataDetails()) {
       try {
-        decryptedFields.put(
-            encryptedDataDetail.getFieldName(), new String(encryptionService.getDecryptedValue(encryptedDataDetail)));
+        decryptedValue = encryptionService.getDecryptedValue(encryptedDataDetail);
+        if (decryptedValue != null) {
+          decryptedFields.put(encryptedDataDetail.getFieldName(), new String(decryptedValue));
+        }
       } catch (IOException e) {
         throw new WingsException(dataCollectionInfo.getStateType().getName()
             + ": APM data collection : Unable to decrypt field " + encryptedDataDetail.getFieldName());
@@ -113,7 +119,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
       this.dataCollectionMinute = dataCollectionInfo.getDataCollectionMinute();
     }
 
-    private APMRestClient getAPMRestClient(final String baseUrl, final APMMetricInfo config) {
+    private APMRestClient getAPMRestClient(final String baseUrl) {
       final Retrofit retrofit =
           new Retrofit.Builder()
               .baseUrl(baseUrl)
@@ -123,6 +129,39 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
       return retrofit.create(APMRestClient.class);
     }
 
+    private String resolveDollarReferences(String url, String host) {
+      if (isEmpty(url)) {
+        return url;
+      }
+      String result = url;
+      if (result.contains("${start_time}")) {
+        result = result.replace("${start_time}", String.valueOf(collectionStartTime));
+      }
+      if (result.contains("${end_time}")) {
+        result = result.replace(
+            "${end_time}", String.valueOf(collectionStartTime + TimeUnit.MINUTES.toMillis(COLLECT_WINDOW)));
+      }
+      if (result.contains("${start_time_seconds}")) {
+        result = result.replace("${start_time_seconds}", String.valueOf(collectionStartTime / 1000L));
+      }
+      if (result.contains("${end_time_seconds}")) {
+        result = result.replace("${end_time_seconds}",
+            String.valueOf((collectionStartTime + TimeUnit.MINUTES.toMillis(COLLECT_WINDOW)) / 1000L));
+      }
+
+      if (result.contains("${host}")) {
+        result = result.replace("${host}", host);
+      }
+
+      Matcher matcher = pattern.matcher(result);
+      while (matcher.find()) {
+        result = result.replace(
+            matcher.group(), decryptedFields.get(matcher.group().substring(2, matcher.group().length() - 1)));
+      }
+
+      return result;
+    }
+
     private BiMap<String, Object> resolveDollarReferences(Map<String, String> input) {
       BiMap<String, Object> output = HashBiMap.create();
       if (input == null) {
@@ -130,10 +169,13 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
       }
       for (Map.Entry<String, String> entry : input.entrySet()) {
         if (entry.getValue().equals("${start_time}")) {
-          // TODO how to know minutes or seconds
-          output.put(entry.getKey(), collectionStartTime / 1000L);
+          output.put(entry.getKey(), collectionStartTime);
         } else if (entry.getValue().equals("${end_time}")) {
-          // TODO how to know minutes or seconds
+          output.put(entry.getKey(), collectionStartTime + TimeUnit.MINUTES.toMillis(COLLECT_WINDOW));
+        }
+        if (entry.getValue().equals("${start_time_seconds}")) {
+          output.put(entry.getKey(), collectionStartTime / 1000L);
+        } else if (entry.getValue().equals("${end_time_seconds}")) {
           output.put(entry.getKey(), (collectionStartTime + TimeUnit.MINUTES.toMillis(COLLECT_WINDOW)) / 1000L);
         } else if (entry.getValue().equals("${host}")) {
           output.put(entry.getKey(), entry.getValue());
@@ -173,23 +215,38 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
       return "";
     }
 
-    private List<APMResponseParser.APMResponseData> collect(String baseUrl, APMMetricInfo config) {
+    private List<APMResponseParser.APMResponseData> collect(String baseUrl, Map<String, String> headers,
+        Map<String, String> options, String url, List<APMMetricInfo> metricInfos) {
       List<APMResponseParser.APMResponseData> responses = new ArrayList<>();
-      BiMap<String, Object> headersBiMap = resolveDollarReferences(config.getHeaders());
-      BiMap<String, Object> optionsBiMap = resolveDollarReferences(config.getOptions());
+
+      //      /**
+      //       * Headers and options are special fields.
+      //       * See {@APMVerificationConfig.inputMap} for format details.
+      //       */
+      //      if (decryptedFields.containsKey("headers")) {
+      //        config.getHeaders().putAll(APMVerificationConfig.inputMap(decryptedFields.get("headers")));
+      //      }
+      //      if (decryptedFields.containsKey("options")) {
+      //        config.getOptions().putAll(APMVerificationConfig.inputMap(decryptedFields.get("options")));
+      //      }
+
+      BiMap<String, Object> headersBiMap = resolveDollarReferences(headers);
+      BiMap<String, Object> optionsBiMap = resolveDollarReferences(options);
+      // TODO Resolve dollar references for url
       String hostKey = fetchHostKey(optionsBiMap);
-      if (!isEmpty(hostKey)) {
+      if (!isEmpty(hostKey) || url.contains("${host}")) {
         for (String host : dataCollectionInfo.getHosts()) {
-          optionsBiMap.put(hostKey, ((String) optionsBiMap.get(hostKey)).replace("${host}", host));
-          responses.add(new APMResponseParser.APMResponseData(config.getTransactionName(), config.getMetricName(), host,
-              collect(getAPMRestClient(baseUrl, config).collect(config.getUrl(), headersBiMap, optionsBiMap)),
-              config.getTag(), config.getResponseMappers()));
+          if (!isEmpty(hostKey)) {
+            optionsBiMap.put(hostKey, ((String) optionsBiMap.get(hostKey)).replace("${host}", host));
+          }
+          url = resolveDollarReferences(url, host);
+          responses.add(new APMResponseParser.APMResponseData(
+              host, collect(getAPMRestClient(baseUrl).collect(url, headersBiMap, optionsBiMap)), metricInfos));
         }
       } else {
-        responses.add(new APMResponseParser.APMResponseData(config.getTransactionName(), config.getMetricName(),
-            config.getHostName(),
-            collect(getAPMRestClient(baseUrl, config).collect(config.getUrl(), headersBiMap, optionsBiMap)),
-            config.getTag(), config.getResponseMappers()));
+        url = resolveDollarReferences(url, "");
+        responses.add(new APMResponseParser.APMResponseData(
+            "", collect(getAPMRestClient(baseUrl).collect(url, headersBiMap, optionsBiMap)), metricInfos));
       }
 
       return responses;
@@ -203,26 +260,27 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
           try {
             TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
 
-            for (List<APMMetricInfo> metricInfos : dataCollectionInfo.getMetricEndpoints()) {
-              List<APMResponseParser.APMResponseData> apmResponseDataList = new ArrayList<>();
-              for (APMMetricInfo metricInfo : metricInfos) {
-                apmResponseDataList.addAll(collect(dataCollectionInfo.getBaseUrl(), metricInfo));
-              }
-
-              Collection<NewRelicMetricDataRecord> newRelicMetricDataRecords =
-                  new APMResponseParser().extract(apmResponseDataList);
-
-              newRelicMetricDataRecords.stream().forEach(newRelicMetricDataRecord -> {
-                newRelicMetricDataRecord.setServiceId(dataCollectionInfo.getServiceId());
-                newRelicMetricDataRecord.setStateExecutionId(dataCollectionInfo.getStateExecutionId());
-                newRelicMetricDataRecord.setWorkflowExecutionId(dataCollectionInfo.getWorkflowExecutionId());
-                newRelicMetricDataRecord.setWorkflowId(dataCollectionInfo.getWorkflowId());
-                newRelicMetricDataRecord.setStateType(dataCollectionInfo.getStateType());
-                newRelicMetricDataRecord.setDataCollectionMinute(dataCollectionMinute);
-                records.put(newRelicMetricDataRecord.getName(), newRelicMetricDataRecord.getTimeStamp(),
-                    newRelicMetricDataRecord);
-              });
+            List<APMResponseParser.APMResponseData> apmResponseDataList = new ArrayList<>();
+            for (Map.Entry<String, List<APMMetricInfo>> metricInfoEntry :
+                dataCollectionInfo.getMetricEndpoints().entrySet()) {
+              apmResponseDataList.addAll(collect(dataCollectionInfo.getBaseUrl(), dataCollectionInfo.getHeaders(),
+                  dataCollectionInfo.getOptions(), metricInfoEntry.getKey(), metricInfoEntry.getValue()));
             }
+            Collection<NewRelicMetricDataRecord> newRelicMetricDataRecords =
+                new APMResponseParser().extract(apmResponseDataList);
+
+            newRelicMetricDataRecords.stream().forEach(newRelicMetricDataRecord -> {
+              newRelicMetricDataRecord.setServiceId(dataCollectionInfo.getServiceId());
+              newRelicMetricDataRecord.setStateExecutionId(dataCollectionInfo.getStateExecutionId());
+              newRelicMetricDataRecord.setWorkflowExecutionId(dataCollectionInfo.getWorkflowExecutionId());
+              newRelicMetricDataRecord.setWorkflowId(dataCollectionInfo.getWorkflowId());
+              newRelicMetricDataRecord.setStateType(dataCollectionInfo.getStateType());
+              newRelicMetricDataRecord.setDataCollectionMinute(dataCollectionMinute);
+              newRelicMetricDataRecord.setAppId(dataCollectionInfo.getApplicationId());
+              records.put(newRelicMetricDataRecord.getName(), newRelicMetricDataRecord.getTimeStamp(),
+                  newRelicMetricDataRecord);
+            });
+
             // HeartBeat
             records.put(HARNESS_HEARTBEAT_METRIC_NAME, 0L,
                 NewRelicMetricDataRecord.builder()

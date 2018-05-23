@@ -87,6 +87,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -182,6 +183,29 @@ public class SecretManagerImpl implements SecretManager {
     }
     rv.setName(secretName);
     return rv;
+  }
+
+  public String encrypt(String accountId, String secret) {
+    EncryptedData encryptedData = encrypt(getEncryptionType(accountId), accountId,
+        SettingVariableTypes.APM_VERIFICATION, secret.toCharArray(), null, UUID.randomUUID().toString());
+    return wingsPersistence.save(encryptedData);
+  }
+
+  public Optional<EncryptedDataDetail> encryptedDataDetails(String accountId, String fieldName, String refId) {
+    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, refId);
+    if (encryptedData == null) {
+      logger.info("No encrypted record set for field {} for id: {}", fieldName, refId);
+      return Optional.empty();
+    }
+    EncryptionConfig encryptionConfig =
+        getEncryptionConfig(accountId, encryptedData.getKmsId(), encryptedData.getEncryptionType());
+
+    return Optional.of(EncryptedDataDetail.builder()
+                           .encryptionType(encryptedData.getEncryptionType())
+                           .encryptedData(encryptedData)
+                           .encryptionConfig(encryptionConfig)
+                           .fieldName(fieldName)
+                           .build());
   }
 
   @Override
