@@ -326,6 +326,7 @@ public class PipelineServiceImpl implements PipelineService {
       boolean hasSshInfraMapping = false;
       List<String> invalidWorkflows = new ArrayList<>();
       List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
+      List<Variable> pipelineVariables = new ArrayList<>();
       for (PipelineStage pipelineStage : pipelineStages) {
         List<String> invalidStageWorkflows = new ArrayList<>();
         for (PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
@@ -345,8 +346,8 @@ public class PipelineServiceImpl implements PipelineService {
               }
               if (isNotEmpty(pipelineStageElement.getWorkflowVariables())) {
                 pipeline.setTemplatized(true);
-                validatePipelineEnvState(workflow, pipelineStageElement, invalidStageWorkflows);
               }
+              validatePipelineEnvState(workflow, pipelineStageElement, invalidStageWorkflows, pipelineVariables);
             } catch (Exception ex) {
               logger.warn("Exception occurred while reading workflow associated to the pipeline {}", pipeline, ex);
             }
@@ -364,6 +365,7 @@ public class PipelineServiceImpl implements PipelineService {
         pipeline.setValidationMessage(format(PIPELINE_ENV_STATE_VALIDATION_MESSAGE, invalidWorkflows.toString()));
       }
       pipeline.setHasSshInfraMapping(hasSshInfraMapping);
+      pipeline.setPipelineVariables(pipelineVariables);
     }
   }
 
@@ -416,13 +418,29 @@ public class PipelineServiceImpl implements PipelineService {
     }
   }
 
-  private void validatePipelineEnvState(Workflow workflow, PipelineStageElement pse, List<String> invalidWorkflows) {
+  private void validatePipelineEnvState(
+      Workflow workflow, PipelineStageElement pse, List<String> invalidWorkflows, List<Variable> pipelineVariables) {
     Map<String, String> pseWorkflowVariables = pse.getWorkflowVariables();
-    if (isEmpty(pseWorkflowVariables) || workflow == null || workflow.getOrchestrationWorkflow() == null) {
+    if (workflow == null || workflow.getOrchestrationWorkflow() == null) {
+      return;
+    }
+    List<Variable> userVariables = workflow.getOrchestrationWorkflow().getUserVariables();
+    if (isEmpty(userVariables)) {
+      userVariables = new ArrayList<>();
+    }
+
+    List<Variable> nonEntityVariables =
+        userVariables.stream()
+            .filter(variable -> (variable.getEntityType() == null) & !variable.isFixed())
+            .collect(toList());
+
+    if (isEmpty(pseWorkflowVariables)) {
+      if (!isEmpty(userVariables)) {
+        pipelineVariables.addAll(nonEntityVariables);
+      }
       return;
     }
     Set<String> pseWorkflowVariableNames = pseWorkflowVariables.keySet();
-    List<Variable> userVariables = workflow.getOrchestrationWorkflow().getUserVariables();
     Set<String> workflowVariableNames = (userVariables == null)
         ? new HashSet<>()
         : userVariables.stream().map(variable -> variable.getName()).collect(toSet());
@@ -432,6 +450,11 @@ public class PipelineServiceImpl implements PipelineService {
         pse.setValidationMessage("Workflow variables updated or deleted");
         invalidWorkflows.add(workflow.getName());
         break;
+      }
+    }
+    for (Variable variable : nonEntityVariables) {
+      if (pseWorkflowVariables.get(variable.getName()) == null) {
+        pipelineVariables.add(variable);
       }
     }
   }

@@ -89,6 +89,7 @@ public class WebHookServiceImpl implements WebHookService {
         } else {
           String requestBuildNumber = isBlank(webHookRequest.getBuildNumber()) ? webHookRequest.getDockerImageTag()
                                                                                : webHookRequest.getBuildNumber();
+          logger.info("Build Number {}", requestBuildNumber);
           artifact = artifactService.getArtifactByBuildNumber(appId, artifactStreamId, requestBuildNumber);
           if (artifact == null) {
             // do collection and then run

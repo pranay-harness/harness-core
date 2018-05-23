@@ -14,6 +14,8 @@ import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrast
 import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.EntityType.ARTIFACT;
+import static software.wings.beans.EntityType.ENVIRONMENT;
+import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.SSH_PASSWORD;
 import static software.wings.beans.EntityType.SSH_USER;
@@ -30,7 +32,9 @@ import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
+import static software.wings.utils.WingsTestConstants.INFRA_NAME;
 import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
@@ -60,6 +64,7 @@ import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.RepairActionCode;
 import software.wings.beans.Service;
+import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
@@ -82,6 +87,7 @@ import software.wings.sm.StateType;
 import software.wings.utils.JsonUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -537,6 +543,100 @@ public class PipelineServiceTest extends WingsBaseTest {
     verify(workflowExecutionService, times(2)).listExecutions(workflowExecutionPageRequest, false, false, false, false);
   }
 
+  @Test
+  public void shouldListPipelinesWithVariables() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("envId", ENV_ID);
+    properties.put("workflowId", WORKFLOW_ID);
+    PipelineStage pipelineStage =
+        PipelineStage.builder()
+            .pipelineStageElements(asList(
+                PipelineStageElement.builder().name("STAGE1").type(ENV_STATE.name()).properties(properties).build()))
+            .build();
+
+    FailureStrategy failureStrategy =
+        FailureStrategy.builder().repairActionCode(RepairActionCode.MANUAL_INTERVENTION).build();
+    Pipeline pipeline = Pipeline.builder()
+                            .name("pipeline1")
+                            .appId(APP_ID)
+                            .uuid(PIPELINE_ID)
+                            .pipelineStages(asList(pipelineStage))
+                            .failureStrategies(asList(failureStrategy))
+                            .build();
+
+    Map<String, Object> properties2 = new HashMap<>();
+    properties2.put("envId", ENV_ID);
+    properties2.put("workflowId", WORKFLOW_ID);
+    PipelineStage pipelineStage2 =
+        PipelineStage.builder()
+            .pipelineStageElements(asList(PipelineStageElement.builder()
+                                              .workflowVariables(ImmutableMap.of(ENV_NAME, ENV_ID, SERVICE_NAME,
+                                                  SERVICE_ID, INFRA_NAME, INFRA_MAPPING_ID))
+                                              .name("STAGE1")
+                                              .type(ENV_STATE.name())
+                                              .properties(properties)
+                                              .build()))
+            .build();
+
+    Pipeline pipeline2 = Pipeline.builder()
+                             .name("pipeline2")
+                             .appId(APP_ID)
+                             .uuid(PIPELINE_ID)
+                             .pipelineStages(asList(pipelineStage2))
+                             .build();
+    when(wingsPersistence.query(Pipeline.class, aPageRequest().build()))
+        .thenReturn(aPageResponse().withResponse(asList(pipeline, pipeline2)).build());
+
+    List<Variable> variables = Arrays.asList(aVariable().withName("MyVar1").build(),
+        aVariable().withName("MyFixedVar").withFixed(true).build(),
+        aVariable().withEntityType(SERVICE).withName(SERVICE_NAME).build(),
+        aVariable().withEntityType(ENVIRONMENT).withName(ENV_NAME).build(),
+        aVariable().withEntityType(INFRASTRUCTURE_MAPPING).withName(INFRA_NAME).build());
+
+    Workflow workflow =
+        aWorkflow()
+            .withOrchestrationWorkflow(aCanaryOrchestrationWorkflow().withUserVariables(variables).build())
+            .build();
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
+    PageRequest<WorkflowExecution> workflowExecutionPageRequest =
+        aPageRequest().withLimit("2").addFilter("workflowId", EQ, pipeline.getUuid()).build();
+    when(workflowExecutionService.listExecutions(workflowExecutionPageRequest, false, false, false, false))
+        .thenReturn(aPageResponse().build());
+
+    PageResponse pageResponse = pipelineService.listPipelines(aPageRequest().build(), true, 2);
+    List<Pipeline> pipelines = pageResponse.getResponse();
+    assertThat(pipelines).isNotEmpty().size().isEqualTo(2);
+    assertThat(pipelines.get(0).getName()).isEqualTo("pipeline1");
+    assertThat(pipelines.get(0).getAppId()).isEqualTo(APP_ID);
+    assertThat(pipelines.get(0).isValid()).isEqualTo(true);
+    assertThat(pipelines.get(0).getPipelineVariables()).isNotEmpty().extracting(Variable::getName).contains("MyVar1");
+    assertThat(pipelines.get(0).getPipelineVariables())
+        .isNotEmpty()
+        .extracting(Variable::getName)
+        .doesNotContain("MyFixedVar");
+    assertThat(pipelines.get(0).getPipelineVariables())
+        .isNotEmpty()
+        .extracting(Variable::getName)
+        .doesNotContain(SERVICE_NAME, ENV_NAME, INFRA_NAME);
+    assertThat(pipelines.get(1).getName()).isEqualTo("pipeline2");
+    assertThat(pipelines.get(1).getAppId()).isEqualTo(APP_ID);
+    assertThat(pipelines.get(1).isValid()).isEqualTo(true);
+    assertThat(pipelines.get(1).getPipelineVariables()).isNotEmpty().extracting(Variable::getName).contains("MyVar1");
+    assertThat(pipelines.get(1).getPipelineVariables())
+        .isNotEmpty()
+        .extracting(Variable::getName)
+        .doesNotContain("MyFixedVar");
+    assertThat(pipelines.get(1).getPipelineVariables())
+        .isNotEmpty()
+        .extracting(Variable::getName)
+        .doesNotContain(SERVICE_NAME, ENV_NAME, INFRA_NAME);
+    assertThat(pipelines.get(1).isHasSshInfraMapping()).isEqualTo(false);
+
+    verify(workflowService)
+        .getResolvedInfraMappings(
+            workflow, ImmutableMap.of(ENV_NAME, ENV_ID, SERVICE_NAME, SERVICE_ID, INFRA_NAME, INFRA_MAPPING_ID));
+    verify(workflowExecutionService, times(2)).listExecutions(workflowExecutionPageRequest, false, false, false, false);
+  }
   @Test
   public void shouldListPipelinesWithDetailsWithSshInfraMapping() {
     Map<String, Object> properties = new HashMap<>();

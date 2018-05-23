@@ -156,6 +156,11 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   }
 
   @Override
+  public Environment get(String appId, String envId) {
+    return wingsPersistence.get(Environment.class, appId, envId);
+  }
+
+  @Override
   public Environment get(@NotEmpty String appId, @NotEmpty String envId, @NotNull SetupStatus status) {
     Environment environment = get(appId, envId, true);
     if (status == SetupStatus.INCOMPLETE) {

@@ -20,6 +20,8 @@ public interface WingsTestConstants {
 
   String SERVICE_NAME = "SERVICE_NAME";
 
+  String INFRA_NAME = "INFRA_NAME";
+
   String ENV_ID = "ENV_ID";
 
   String ENV_ID_CHANGED = "ENV_ID_CHANGED";
