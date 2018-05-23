@@ -41,6 +41,14 @@ public interface EnvironmentService extends OwnedByApplication {
   Environment get(@NotEmpty String appId, @NotEmpty String envId, boolean withSummary);
 
   /**
+   * Gets the environment and does not throw exception if not found
+   * @param appId
+   * @param envId
+   * @return
+   */
+  Environment get(@NotEmpty String appId, @NotEmpty String envId);
+
+  /**
    * Get environment.
    *
    * @param appId  the app id

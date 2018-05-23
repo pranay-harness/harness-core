@@ -17,6 +17,7 @@ import com.google.inject.Singleton;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import software.wings.beans.CanaryOrchestrationWorkflow;
+import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
@@ -26,7 +27,6 @@ import software.wings.beans.TemplateExpression;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
-import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -63,7 +63,6 @@ public class WorkflowServiceHelper {
       + "      targetAverageUtilization: ${UTILIZATION}\n";
 
   @Inject private EnvironmentService environmentService;
-  @Inject private WingsPersistence wingsPersistence;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
 
@@ -91,20 +90,9 @@ public class WorkflowServiceHelper {
       List<Variable> userVariables = orchestrationWorkflow.getUserVariables();
       List<String> serviceNames = new ArrayList<>();
       if (userVariables != null) {
-        serviceNames = userVariables.stream()
-                           .filter((Variable variable) -> SERVICE.equals(variable.getEntityType()))
-                           .map(Variable::getName)
-                           .collect(toList());
+        serviceNames = getEntityNames(userVariables, SERVICE);
       }
-      List<String> serviceIds = new ArrayList<>();
-      if (workflowVariables != null) {
-        Set<String> workflowVariableNames = workflowVariables.keySet();
-        for (String variableName : workflowVariableNames) {
-          if (serviceNames.contains(variableName)) {
-            serviceIds.add(workflowVariables.get(variableName));
-          }
-        }
-      }
+      List<String> serviceIds = getTemplatizedIds(workflowVariables, serviceNames);
       List<String> templatizedServiceIds = orchestrationWorkflow.getTemplatizedServiceIds();
       List<String> workflowServiceIds = workflow.getOrchestrationWorkflow().getServiceIds();
       if (workflowServiceIds != null) {
@@ -116,6 +104,19 @@ public class WorkflowServiceHelper {
     } else {
       return workflow.getServices();
     }
+  }
+
+  private List<String> getTemplatizedIds(Map<String, String> workflowVariables, List<String> entityNames) {
+    List<String> entityIds = new ArrayList<>();
+    if (workflowVariables != null) {
+      Set<String> workflowVariableNames = workflowVariables.keySet();
+      for (String variableName : workflowVariableNames) {
+        if (entityNames.contains(variableName)) {
+          entityIds.add(workflowVariables.get(variableName));
+        }
+      }
+    }
+    return entityIds;
   }
 
   public List<InfrastructureMapping> getResolvedInfraMappings(
@@ -134,20 +135,9 @@ public class WorkflowServiceHelper {
     List<Variable> userVariables = orchestrationWorkflow.getUserVariables();
     List<String> infraMappingNames = new ArrayList<>();
     if (userVariables != null) {
-      infraMappingNames = userVariables.stream()
-                              .filter(variable -> INFRASTRUCTURE_MAPPING.equals(variable.getEntityType()))
-                              .map(Variable::getName)
-                              .collect(toList());
+      infraMappingNames = getEntityNames(userVariables, INFRASTRUCTURE_MAPPING);
     }
-    List<String> infraMappingIds = new ArrayList<>();
-    if (workflowVariables != null) {
-      Set<String> workflowVariableNames = workflowVariables.keySet();
-      for (String variableName : workflowVariableNames) {
-        if (infraMappingNames.contains(variableName)) {
-          infraMappingIds.add(workflowVariables.get(variableName));
-        }
-      }
-    }
+    List<String> infraMappingIds = getTemplatizedIds(workflowVariables, infraMappingNames);
     List<String> templatizedInfraMappingIds = orchestrationWorkflow.getTemplatizedInfraMappingIds();
     List<String> workflowInframappingIds = orchestrationWorkflow.getInfraMappingIds();
     if (workflowInframappingIds != null) {
@@ -156,6 +146,13 @@ public class WorkflowServiceHelper {
           .forEach(infraMappingIds::add);
     }
     return infrastructureMappingService.getInfraStructureMappingsByUuids(workflow.getAppId(), infraMappingIds);
+  }
+
+  private List<String> getEntityNames(List<Variable> userVariables, EntityType entityType) {
+    return userVariables.stream()
+        .filter(variable -> entityType.equals(variable.getEntityType()))
+        .map(Variable::getName)
+        .collect(toList());
   }
 
   public boolean workflowHasSshInfraMapping(String appId, CanaryOrchestrationWorkflow canaryOrchestrationWorkflow) {

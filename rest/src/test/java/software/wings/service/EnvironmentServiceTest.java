@@ -178,6 +178,14 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldGetEnvironmentOnly() {
+    when(wingsPersistence.get(Environment.class, APP_ID, ENV_ID))
+        .thenReturn(anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).build());
+    Environment environment = environmentService.get(APP_ID, ENV_ID);
+    assertThat(environment).isNotNull();
+    verify(wingsPersistence).get(Environment.class, APP_ID, ENV_ID);
+  }
+  @Test
   public void shouldReturnTrueForExistingEnvironmentInExistApi() {
     when(query.getKey()).thenReturn(new Key<>(Environment.class, "environments", ENV_ID));
     assertThat(environmentService.exist(APP_ID, ENV_ID)).isTrue();
