@@ -21,6 +21,7 @@ import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AwsInstanceFilter.AwsInstanceFilterBuilder;
+import software.wings.beans.AwsInstanceFilter.Tag;
 import software.wings.beans.AwsInstanceFilter.Tag.TagBuilder;
 import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
@@ -92,29 +93,25 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
             if (builder == null) {
               builder = AwsInstanceFilter.builder();
             }
-            builder.vpcIds((List<String>) entry.getValue());
+            builder.vpcIds(getList(entry.getValue()));
             break;
           case "subnets":
             if (builder == null) {
               builder = AwsInstanceFilter.builder();
             }
-            builder.subnetIds((List<String>) entry.getValue());
+            builder.subnetIds(getList(entry.getValue()));
             break;
           case "securityGroups":
             if (builder == null) {
               builder = AwsInstanceFilter.builder();
             }
-            builder.securityGroupIds((List<String>) entry.getValue());
+            builder.securityGroupIds(getList(entry.getValue()));
             break;
           case "tags":
             if (builder == null) {
               builder = AwsInstanceFilter.builder();
             }
-            final Map<String, Object> value = (Map<String, Object>) entry.getValue();
-            builder.tags(value.entrySet()
-                             .stream()
-                             .map(item -> new TagBuilder().key(item.getKey()).value((String) item.getValue()).build())
-                             .collect(toList()));
+            getTags(entry.getValue(), builder);
             break;
           default:
             throw new InvalidRequestException(
@@ -133,6 +130,34 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     if (builder != null) {
       setAwsInstanceFilter(builder.build());
     }
+  }
+
+  private void getTags(Object input, AwsInstanceFilterBuilder builder) {
+    if (input instanceof Map) {
+      final Map<String, Object> value = (Map<String, Object>) input;
+      builder.tags(value.entrySet()
+                       .stream()
+                       .map(item -> new TagBuilder().key(item.getKey()).value((String) item.getValue()).build())
+                       .collect(toList()));
+    } else {
+      List<Tag> tags = new ArrayList<>();
+      String[] tokens = ((String) input).split(";");
+      Arrays.stream(tokens).forEach(token -> {
+        String[] subTokens = token.split(":");
+        if (subTokens.length == 2) {
+          tags.add(new TagBuilder().key(subTokens[0]).value(subTokens[1]).build());
+        }
+      });
+      builder.tags(tags);
+    }
+  }
+
+  private List<String> getList(Object input) {
+    if (input instanceof String) {
+      return Arrays.asList(((String) input).split(","));
+    }
+
+    return (List<String>) input;
   }
 
   /**

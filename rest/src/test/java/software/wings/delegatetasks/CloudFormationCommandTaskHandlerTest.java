@@ -9,7 +9,6 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -59,7 +58,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
     String templateBody = "Template Body";
     String accessKey = "abcd";
     char[] secretKey = "pqrs".toCharArray();
-    String stackName = "Stack Name 00";
+    String stackNameSuffix = "Stack Name 00";
     CloudFormationCreateStackRequest request =
         CloudFormationCreateStackRequest.builder()
             .commandType(CloudFormationCommandType.CREATE_STACK)
@@ -71,27 +70,29 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
             .timeoutInMs(10 * 60 * 1000)
             .createType(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY)
             .data(templateBody)
-            .stackName(stackName)
+            .stackNameSuffix(stackNameSuffix)
             .build();
     doNothing().when(mockEncryptionService).decrypt(any(), any());
     CreateStackRequest createStackRequest =
-        new CreateStackRequest().withStackName(stackName).withTemplateBody(templateBody);
+        new CreateStackRequest().withStackName("HarnessStack-" + stackNameSuffix).withTemplateBody(templateBody);
     String stackId = "Stack Id 00";
     CreateStackResult createStackResult = new CreateStackResult().withStackId(stackId);
-    doReturn(createStackResult).when(mockAwsHelperService).createStack(anyString(), any(), eq(createStackRequest));
-    DescribeStacksRequest describeStacksRequest = new DescribeStacksRequest().withStackName(stackId);
+    doReturn(createStackResult)
+        .when(mockAwsHelperService)
+        .createStack(anyString(), anyString(), any(), eq(createStackRequest));
     List<Stack> createProgressList = Collections.singletonList(new Stack().withStackStatus("CREATE_IN_PROGRESS"));
     List<Stack> createCompleteList =
         Collections.singletonList(new Stack()
                                       .withStackStatus("CREATE_COMPLETE")
-                                      .withOutputs(new Output().withOutputKey("region").withOutputValue("us-east-1"),
-                                          new Output().withOutputKey("vpcs").withOutputValue("vpcs"),
+                                      .withOutputs(new Output().withOutputKey("vpcs").withOutputValue("vpcs"),
                                           new Output().withOutputKey("subnets").withOutputValue("subnets"),
-                                          new Output().withOutputKey("securityGroups").withOutputValue("sgs"),
-                                          new Output().withOutputKey("tags").withOutputValue("k1:v1")));
-    when(mockAwsHelperService.getAllStacks(anyString(), any(), eq(describeStacksRequest)))
-        .thenReturn(createProgressList)
-        .thenReturn(createCompleteList);
+                                          new Output().withOutputKey("securityGroups").withOutputValue("sgs")));
+    doReturn(Collections.emptyList())
+        .doReturn(createProgressList)
+        .doReturn(createCompleteList)
+        .when(mockAwsHelperService)
+        .getAllStacks(anyString(), anyString(), any(), any());
+
     CloudFormationCommandExecutionResponse response = createStackHandler.execute(request, null);
     assertNotNull(response);
     assertEquals(CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());
@@ -100,30 +101,61 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
     assertTrue(formationCommandResponse instanceof CloudFormationCreateStackResponse);
     CloudFormationCreateStackResponse createStackResponse =
         (CloudFormationCreateStackResponse) formationCommandResponse;
-    assertEquals("us-east-1", createStackResponse.getRegion());
-    assertStringListContents(createStackResponse.getVpcs(), "vpcs");
-    assertStringListContents(createStackResponse.getSubnets(), "subnets");
-    assertStringListContents(createStackResponse.getSecurityGroups(), "sgs");
-    Map<String, Object> tagMap = createStackResponse.getTagMap();
-    assertNotNull(tagMap);
-    assertEquals(tagMap.size(), 1);
-    assertTrue(tagMap.containsKey("k1"));
-    assertEquals(tagMap.get("k1"), "v1");
+    Map<String, Object> outputMap = createStackResponse.getCloudFormationOutputMap();
+    assertEquals(outputMap.size(), 3);
+    validateMapContents(outputMap, "vpcs", "vpcs");
+    validateMapContents(outputMap, "subnets", "subnets");
+    validateMapContents(outputMap, "securityGroups", "sgs");
   }
 
-  private void assertStringListContents(List<String> strings, String... values) {
-    assertNotNull(strings);
-    assertEquals(strings.size(), values.length);
-    for (int i = 0; i < strings.size(); i++) {
-      assertEquals(values[i], strings.get(i));
-    }
+  private void validateMapContents(Map<String, Object> map, String key, String value) {
+    assertTrue(map.containsKey(key));
+    assertEquals((String) map.get(key), value);
+  }
+
+  @Test
+  public void testUpdateStack() {
+    String templateBody = "Template Body";
+    String accessKey = "abcd";
+    char[] secretKey = "pqrs".toCharArray();
+    String stackNameSuffix = "Stack Name 00";
+    CloudFormationCreateStackRequest request =
+        CloudFormationCreateStackRequest.builder()
+            .commandType(CloudFormationCommandType.CREATE_STACK)
+            .accountId(ACCOUNT_ID)
+            .appId(APP_ID)
+            .activityId(ACTIVITY_ID)
+            .commandName("Create Stack")
+            .awsConfig(AwsConfig.builder().accessKey(accessKey).accountId(ACCOUNT_ID).secretKey(secretKey).build())
+            .timeoutInMs(10 * 60 * 1000)
+            .createType(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY)
+            .data(templateBody)
+            .stackNameSuffix(stackNameSuffix)
+            .build();
+    doNothing().when(mockEncryptionService).decrypt(any(), any());
+    List<Stack> exitingList = Collections.singletonList(
+        new Stack().withStackStatus("CREATE_COMPLETE").withStackName("HarnessStack-" + stackNameSuffix));
+    List<Stack> updateProgressList = Collections.singletonList(new Stack().withStackStatus("UPDATE_IN_PROGRESS"));
+    List<Stack> updateCompleteList = Collections.singletonList(new Stack().withStackStatus("UPDATE_COMPLETE"));
+    doReturn(exitingList)
+        .doReturn(updateProgressList)
+        .doReturn(updateCompleteList)
+        .when(mockAwsHelperService)
+        .getAllStacks(anyString(), anyString(), any(), any());
+
+    CloudFormationCommandExecutionResponse response = createStackHandler.execute(request, null);
+    assertNotNull(response);
+    assertEquals(CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());
+    CloudFormationCommandResponse formationCommandResponse = response.getCommandResponse();
+    assertNotNull(formationCommandResponse);
+    assertTrue(formationCommandResponse instanceof CloudFormationCreateStackResponse);
   }
 
   @Test
   public void testDeleteStack() {
     String accessKey = "abcd";
     char[] secretKey = "pqrs".toCharArray();
-    String stackId = "Stack Id 01";
+    String stackNameSuffix = "Stack Name 01";
     CloudFormationDeleteStackRequest request =
         CloudFormationDeleteStackRequest.builder()
             .commandType(CloudFormationCommandType.DELETE_STACK)
@@ -133,21 +165,26 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
             .commandName("Delete Stack")
             .awsConfig(AwsConfig.builder().accessKey(accessKey).accountId(ACCOUNT_ID).secretKey(secretKey).build())
             .timeoutInMs(10 * 60 * 1000)
-            .stackId(stackId)
+            .stackNameSuffix(stackNameSuffix)
             .build();
     doNothing().when(mockEncryptionService).decrypt(any(), any());
-    DescribeStacksRequest describeStacksRequest = new DescribeStacksRequest().withStackName(stackId);
+    String stackId = "Stack Id 01";
+
+    List<Stack> existingStackList =
+        Collections.singletonList(new Stack().withStackName("HarnessStack-" + stackNameSuffix).withStackId(stackId));
     List<Stack> deleteInProgressList =
         Collections.singletonList(new Stack().withStackId(stackId).withStackStatus("DELETE_IN_PROGRESS"));
     List<Stack> deleteCompleteList =
         Collections.singletonList(new Stack().withStackId(stackId).withStackStatus("DELETE_COMPLETE"));
-    when(mockAwsHelperService.getAllStacks(anyString(), any(), eq(describeStacksRequest)))
-        .thenReturn(deleteInProgressList)
-        .thenReturn(deleteCompleteList);
+    doReturn(existingStackList)
+        .doReturn(deleteInProgressList)
+        .doReturn(deleteCompleteList)
+        .when(mockAwsHelperService)
+        .getAllStacks(anyString(), anyString(), any(), any());
     CloudFormationCommandExecutionResponse response = deleteStackHandler.execute(request, null);
     assertNotNull(response);
     assertEquals(CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());
-    verify(mockAwsHelperService).deleteStack(anyString(), any(), any());
+    verify(mockAwsHelperService).deleteStack(anyString(), anyString(), any(), any());
   }
 
   @Test
@@ -176,7 +213,9 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
             .withStackName("sName2")
             .withStackStatus("sStatus2")
             .withStackStatusReason("sReason2"));
-    doReturn(stacks).when(mockAwsHelperService).getAllStacks(anyString(), any(), eq(describeStacksRequest));
+    doReturn(stacks)
+        .when(mockAwsHelperService)
+        .getAllStacks(anyString(), anyString(), any(), eq(describeStacksRequest));
     CloudFormationCommandExecutionResponse response = listStacksHandler.execute(request, null);
     assertNotNull(response);
     assertEquals(CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());

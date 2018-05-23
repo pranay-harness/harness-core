@@ -9,6 +9,10 @@ public class ServiceVersionConvention {
     return Misc.normalizeExpression(appName + DELIMITER + serviceName + DELIMITER + envName);
   }
 
+  public static String getPrefix(String appName, String envName) {
+    return Misc.normalizeExpression(appName + DELIMITER + envName);
+  }
+
   public static String getServiceName(String prefix, Integer revision) {
     return trim(prefix) + DELIMITER + revision;
   }

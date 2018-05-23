@@ -38,9 +38,7 @@ public class InfrastructureProvisionerGenerator {
 
   @Inject WingsPersistence wingsPersistence;
 
-  public enum InfrastructureProvisioners {
-    TERRAFORM_TEST,
-  }
+  public enum InfrastructureProvisioners { TERRAFORM_TEST }
 
   public InfrastructureProvisioner ensurePredefined(
       Randomizer.Seed seed, Owners owners, InfrastructureProvisioners predefined) {
@@ -50,10 +48,8 @@ public class InfrastructureProvisionerGenerator {
       default:
         unhandled(predefined);
     }
-
     return null;
   }
-
   private InfrastructureProvisioner ensureTerraformTest(Randomizer.Seed seed, Owners owners) {
     final Service archive =
         serviceGenerator.ensureService(seed, owners, builder().name("Archive").artifactType(ArtifactType.WAR).build());
@@ -143,12 +139,10 @@ public class InfrastructureProvisionerGenerator {
 
     InfrastructureProvisioner newInfrastructureProvisioner = null;
     switch (infrastructureProvisionerType) {
-      case TERRAFORM:
+      case TERRAFORM: {
         final TerraformInfrastructureProvisioner terraformInfrastructureProvisioner =
             (TerraformInfrastructureProvisioner) infrastructureProvisioner;
-        final TerraformInfrastructureProvisionerBuilder builder =
-            TerraformInfrastructureProvisioner.builder().infrastructureProvisionerType(
-                infrastructureProvisionerType.name());
+        final TerraformInfrastructureProvisionerBuilder builder = TerraformInfrastructureProvisioner.builder();
 
         if (infrastructureProvisioner != null && infrastructureProvisioner.getAppId() != null) {
           builder.appId(infrastructureProvisioner.getAppId());
@@ -191,13 +185,13 @@ public class InfrastructureProvisionerGenerator {
         }
 
         newInfrastructureProvisioner = builder.build();
-
         break;
-      default:
+      }
+      default: {
         unhandled(infrastructureProvisionerType);
         throw new UnsupportedOperationException();
+      }
     }
-
     return infrastructureProvisionerService.save(newInfrastructureProvisioner);
   }
 }

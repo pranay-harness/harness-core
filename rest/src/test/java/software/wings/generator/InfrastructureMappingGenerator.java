@@ -52,10 +52,7 @@ public class InfrastructureMappingGenerator {
 
   @Inject private WingsPersistence wingsPersistence;
 
-  public enum InfrastructureMappings {
-    AWS_SSH_TEST,
-    TERRAFORM_AWS_SSH_TEST,
-  }
+  public enum InfrastructureMappings { AWS_SSH_TEST, TERRAFORM_AWS_SSH_TEST }
 
   public InfrastructureMapping ensurePredefined(
       Randomizer.Seed seed, Owners owners, InfrastructureMappings predefined) {
@@ -67,7 +64,6 @@ public class InfrastructureMappingGenerator {
       default:
         unhandled(predefined);
     }
-
     return null;
   }
 

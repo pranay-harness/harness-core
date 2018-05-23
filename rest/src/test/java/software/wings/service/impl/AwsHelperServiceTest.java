@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
@@ -14,10 +15,15 @@ import com.amazonaws.services.autoscaling.model.Activity;
 import com.amazonaws.services.autoscaling.model.DescribeScalingActivitiesRequest;
 import com.amazonaws.services.autoscaling.model.DescribeScalingActivitiesResult;
 import com.amazonaws.services.cloudformation.AmazonCloudFormationClient;
+import com.amazonaws.services.cloudformation.model.CreateStackRequest;
 import com.amazonaws.services.cloudformation.model.DeleteStackRequest;
+import com.amazonaws.services.cloudformation.model.DescribeStackEventsRequest;
+import com.amazonaws.services.cloudformation.model.DescribeStackEventsResult;
 import com.amazonaws.services.cloudformation.model.DescribeStacksRequest;
 import com.amazonaws.services.cloudformation.model.DescribeStacksResult;
 import com.amazonaws.services.cloudformation.model.Stack;
+import com.amazonaws.services.cloudformation.model.StackEvent;
+import com.amazonaws.services.cloudformation.model.UpdateStackRequest;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -44,30 +50,98 @@ public class AwsHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldUpdateStack() {
+    String accessKey = "abcd";
+    char[] secretKey = "pqrs".toCharArray();
+    String stackName = "Stack Name";
+    String region = "us-west-1";
+    UpdateStackRequest request = new UpdateStackRequest().withStackName(stackName);
+    AmazonCloudFormationClient mockClient = mock(AmazonCloudFormationClient.class);
+    AwsHelperService service = spy(new AwsHelperService());
+    doReturn(mockClient).when(service).getAmazonCloudFormationClient(any(), anyString(), any());
+    service.updateStack(region, accessKey, secretKey, request);
+    verify(mockClient).updateStack(request);
+  }
+
+  @Test
   public void shouldDeleteStack() {
     String accessKey = "abcd";
     char[] secretKey = "pqrs".toCharArray();
     String stackName = "Stack Name";
+    String region = "us-west-1";
     DeleteStackRequest request = new DeleteStackRequest().withStackName(stackName);
     AmazonCloudFormationClient mockClient = mock(AmazonCloudFormationClient.class);
     AwsHelperService service = spy(new AwsHelperService());
-    doReturn(mockClient).when(service).getAmazonCloudFormationClient(accessKey, secretKey);
-    service.deleteStack(accessKey, secretKey, request);
+    doReturn(mockClient).when(service).getAmazonCloudFormationClient(any(), anyString(), any());
+    service.deleteStack(region, accessKey, secretKey, request);
     verify(mockClient).deleteStack(request);
+  }
+
+  @Test
+  public void shouldDescribeStack() {
+    String accessKey = "qwer";
+    char[] secretKey = "pqrs".toCharArray();
+    String stackName = "Stack Name";
+    String region = "us-west-1";
+    DescribeStacksRequest request = new DescribeStacksRequest().withStackName(stackName);
+    AmazonCloudFormationClient mockClient = mock(AmazonCloudFormationClient.class);
+    AwsHelperService service = spy(new AwsHelperService());
+    doReturn(mockClient).when(service).getAmazonCloudFormationClient(any(), anyString(), any());
+    DescribeStacksResult result = new DescribeStacksResult().withStacks(new Stack().withStackName(stackName));
+    doReturn(result).when(mockClient).describeStacks(request);
+    DescribeStacksResult actual = service.describeStacks(region, accessKey, secretKey, request);
+    assertThat(actual).isNotNull();
+    assertThat(actual.getStacks().size()).isEqualTo(1);
+    assertThat(actual.getStacks().get(0).getStackName()).isEqualTo(stackName);
+  }
+
+  @Test
+  public void shouldGetAllEvents() {
+    String accessKey = "qwer";
+    char[] secretKey = "pqrs".toCharArray();
+    String stackName = "Stack Name";
+    String region = "us-west-1";
+    DescribeStackEventsRequest request = new DescribeStackEventsRequest().withStackName(stackName);
+    AmazonCloudFormationClient mockClient = mock(AmazonCloudFormationClient.class);
+    AwsHelperService service = spy(new AwsHelperService());
+    doReturn(mockClient).when(service).getAmazonCloudFormationClient(any(), anyString(), any());
+    DescribeStackEventsResult result =
+        new DescribeStackEventsResult().withStackEvents(new StackEvent().withStackName(stackName).withEventId("id"));
+    doReturn(result).when(mockClient).describeStackEvents(request);
+    List<StackEvent> events = service.getAllStackEvents(region, accessKey, secretKey, request);
+    assertThat(events).isNotNull();
+    assertThat(events.size()).isEqualTo(1);
+    assertThat(events.get(0).getStackName()).isEqualTo(stackName);
+    assertThat(events.get(0).getEventId()).isEqualTo("id");
+  }
+
+  @Test
+  public void shouldCreateStack() {
+    String accessKey = "abcd";
+    char[] secretKey = "pqrs".toCharArray();
+    String stackName = "Stack Name";
+    String region = "us-west-1";
+    CreateStackRequest request = new CreateStackRequest().withStackName(stackName);
+    AmazonCloudFormationClient mockClient = mock(AmazonCloudFormationClient.class);
+    AwsHelperService service = spy(new AwsHelperService());
+    doReturn(mockClient).when(service).getAmazonCloudFormationClient(any(), anyString(), any());
+    service.createStack(region, accessKey, secretKey, request);
+    verify(mockClient).createStack(request);
   }
 
   @Test
   public void shouldListStacks() {
     String accessKey = "qwer";
-    char[] secretKey = "tyui".toCharArray();
+    char[] secretKey = "pqrs".toCharArray();
     String stackName = "Stack Name";
+    String region = "us-west-1";
     DescribeStacksRequest request = new DescribeStacksRequest().withStackName(stackName);
     AmazonCloudFormationClient mockClient = mock(AmazonCloudFormationClient.class);
     AwsHelperService service = spy(new AwsHelperService());
-    doReturn(mockClient).when(service).getAmazonCloudFormationClient(accessKey, secretKey);
+    doReturn(mockClient).when(service).getAmazonCloudFormationClient(any(), anyString(), any());
     DescribeStacksResult result = new DescribeStacksResult().withStacks(new Stack().withStackName(stackName));
     doReturn(result).when(mockClient).describeStacks(request);
-    List<Stack> stacks = service.getAllStacks(accessKey, secretKey, request);
+    List<Stack> stacks = service.getAllStacks(region, accessKey, secretKey, request);
     assertThat(stacks).isNotNull();
     assertThat(stacks.size()).isEqualTo(1);
     assertThat(stacks.get(0).getStackName()).isEqualTo(stackName);

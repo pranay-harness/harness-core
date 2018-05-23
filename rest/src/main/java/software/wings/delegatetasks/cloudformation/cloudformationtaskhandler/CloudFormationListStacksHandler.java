@@ -18,8 +18,9 @@ import software.wings.helpers.ext.cloudformation.response.CloudFormationListStac
 import software.wings.helpers.ext.cloudformation.response.StackSummaryInfo;
 import software.wings.security.encryption.EncryptedDataDetail;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Singleton
 @NoArgsConstructor
@@ -37,18 +38,21 @@ public class CloudFormationListStacksHandler extends CloudFormationCommandTaskHa
         describeStacksRequest.withStackName(stackId);
       }
       executionLogCallback.saveExecutionLog("Sending list stacks call to Aws");
-      List<Stack> stacks =
-          awsHelperService.getAllStacks(awsConfig.getAccessKey(), awsConfig.getSecretKey(), describeStacksRequest);
+      List<Stack> stacks = awsHelperService.getAllStacks(
+          request.getRegion(), awsConfig.getAccessKey(), awsConfig.getSecretKey(), describeStacksRequest);
       executionLogCallback.saveExecutionLog("Completed list stacks call to Aws");
-      List<StackSummaryInfo> summaryInfos = new ArrayList<>();
-      stacks.stream().forEach(stack -> {
-        summaryInfos.add(StackSummaryInfo.builder()
-                             .stackId(stack.getStackId())
-                             .stackName(stack.getStackName())
-                             .stackStatus(stack.getStackStatus())
-                             .stackStatusReason(stack.getStackStatusReason())
-                             .build());
-      });
+      List<StackSummaryInfo> summaryInfos = Collections.emptyList();
+      if (isNotEmpty(stacks)) {
+        summaryInfos = stacks.stream()
+                           .map(stack
+                               -> StackSummaryInfo.builder()
+                                      .stackId(stack.getStackId())
+                                      .stackName(stack.getStackName())
+                                      .stackStatus(stack.getStackStatus())
+                                      .stackStatusReason(stack.getStackStatusReason())
+                                      .build())
+                           .collect(Collectors.toList());
+      }
       builder.commandExecutionStatus(CommandExecutionStatus.SUCCESS)
           .commandResponse(CloudFormationListStacksResponse.builder().stackSummaryInfos(summaryInfos).build());
     } catch (Exception ex) {

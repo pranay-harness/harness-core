@@ -14,4 +14,5 @@ public class InfrastructureProvisionerDetails {
   private String infrastructureProvisionerType;
   private String repository;
   private Map<String, String> services;
+  private String cloudFormationSourceType;
 }
