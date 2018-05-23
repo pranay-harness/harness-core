@@ -79,7 +79,7 @@ public class RsyslogAppenderFactory<E extends DeferredProcessingAware> extends A
       log.info("Using NOPAppender as LogAppender, log streaming is DISABLED");
     } else {
       appender = new RestLogAppender<>(programName, key);
-      RestLogAppender restLogAppender = (RestLogAppender) new RestLogAppender<>(programName, key);
+      RestLogAppender restLogAppender = (RestLogAppender) appender;
       restLogAppender.setName(name);
       restLogAppender.setContext(context);
       restLogAppender.setLayout(buildLayout(context, layoutFactory));
