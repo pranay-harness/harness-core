@@ -6,14 +6,17 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.sm.StateType;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Data
 @Builder
 public class APMDataCollectionInfo {
   private String baseUrl;
-  List<List<APMMetricInfo>> metricEndpoints;
+  private Map<String, String> headers;
+  private Map<String, String> options;
   List<EncryptedDataDetail> encryptedDataDetails;
+  Map<String, List<APMMetricInfo>> metricEndpoints;
   private Set<String> hosts;
   private StateType stateType;
   private long startTime;

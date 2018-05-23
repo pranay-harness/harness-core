@@ -1,6 +1,4 @@
 {
   "type": { "ui:widget": "hidden" },
-  "headers": { "ui:widget": "textarea" },
-  "options": { "ui:widget": "textarea" },
-  "ui:order": [ "type", "url", "headers",  "options", "validationUrl"]
+  "ui:order": [ "type", "url", "headersList", "optionsList", "validationUrl"]
 }

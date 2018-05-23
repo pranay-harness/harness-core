@@ -35,6 +35,7 @@ import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
 import software.wings.service.impl.apm.APMMetricInfo;
+import software.wings.service.impl.apm.APMMetricInfo.APMMetricInfoBuilder;
 import software.wings.service.impl.datadog.DatadogSettingProvider;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -199,12 +200,12 @@ public class
     this.serviceName = serviceName;
   }
 
-  public static List<List<APMMetricInfo>> metricEndpointsInfo(String serviceName, List<String> metricNames) {
+  public static Map<String, List<APMMetricInfo>> metricEndpointsInfo(String serviceName, List<String> metricNames) {
     YamlUtils yamlUtils = new YamlUtils();
     URL url = DatadogState.class.getResource("/apm/datadog.yml");
     try {
       String yaml = Resources.toString(url, Charsets.UTF_8);
-      Map<String, APMMetricInfo> metricInfos = yamlUtils.read(yaml, new TypeReference<Map<String, APMMetricInfo>>() {});
+      Map<String, MetricInfo> metricInfos = yamlUtils.read(yaml, new TypeReference<Map<String, MetricInfo>>() {});
       Map<String, Metric> metricMap = metrics(metricNames);
       List<Metric> metrics = new ArrayList<>();
       for (String metricName : metricNames) {
@@ -213,32 +214,30 @@ public class
         }
         metrics.add(metricMap.get(metricName));
       }
-      List<List<APMMetricInfo>> result = new ArrayList<>();
-      result.add(new ArrayList<>());
+      Map<String, List<APMMetricInfo>> result = new HashMap<>();
       for (Metric metric : metrics) {
-        APMMetricInfo newMetricInfo = new APMMetricInfo();
+        APMMetricInfoBuilder newMetricInfoBuilder = APMMetricInfo.builder();
+        MetricInfo metricInfo = metricInfos.get(metric.getDatadogMetricType());
+        String metricUrl = metricInfo.getUrl();
+        newMetricInfoBuilder.responseMappers(metricInfo.responseMapperMap());
+        newMetricInfoBuilder.metricName(metric.getDisplayName());
+        newMetricInfoBuilder.metricType(metric.getMlMetricType());
+        newMetricInfoBuilder.tag(metric.getDatadogMetricType());
+        newMetricInfoBuilder.responseMappers(metricInfo.responseMapperMap());
+        newMetricInfoBuilder.metricName(metric.getDisplayName());
+
         if (metric.getDatadogMetricType().equals("System")) {
-          APMMetricInfo systemMetricInfo = metricInfos.get(metric.getDatadogMetricType());
-          newMetricInfo.buildFrom(systemMetricInfo);
-          newMetricInfo.setMetricName(metric.getDisplayName());
-          newMetricInfo.getOptions().put(
-              "query", metricInfos.get("System").getOptions().get("query").replace("${query}", metric.getMetricName()));
-          newMetricInfo.setMetricType(newMetricInfo.getMetricType());
-          newMetricInfo.setTag(metric.getDatadogMetricType());
-          result.get(result.size() - 1).add(newMetricInfo);
+          metricUrl = metricUrl.replace("${query}", metric.getMetricName());
+          if (!result.containsKey(metricUrl)) {
+            result.put(metricUrl, new ArrayList<>());
+          }
+          result.get(metricUrl).add(newMetricInfoBuilder.build());
         } else if (metric.getDatadogMetricType().equals("Servlet")) {
-          APMMetricInfo systemMetricInfo = metricInfos.get(metric.getDatadogMetricType());
-          newMetricInfo.buildFrom(systemMetricInfo);
-          newMetricInfo.setMetricName(metric.getDisplayName());
-          newMetricInfo.getOptions().put("query",
-              metricInfos.get("Servlet")
-                  .getOptions()
-                  .get("query")
-                  .replace("${serviceName}", serviceName)
-                  .replace("${query}", metric.getMetricName()));
-          newMetricInfo.setMetricType(metric.getMlMetricType());
-          newMetricInfo.setTag(metric.getDatadogMetricType());
-          result.get(result.size() - 1).add(newMetricInfo);
+          metricUrl = metricUrl.replace("${serviceName}", serviceName).replace("${query}", metric.getMetricName());
+          if (!result.containsKey(metricUrl)) {
+            result.put(metricUrl, new ArrayList<>());
+          }
+          result.get(metricUrl).add(newMetricInfoBuilder.build());
         } else {
           throw new WingsException("Unsupported template type for" + metric);
         }
@@ -315,5 +314,19 @@ public class
     private String datadogMetricType;
     private String displayName;
     private Set<String> tags;
+  }
+
+  @Data
+  @Builder
+  public static class MetricInfo {
+    private String url;
+    private List<APMMetricInfo.ResponseMapper> responseMappers;
+    public Map<String, APMMetricInfo.ResponseMapper> responseMapperMap() {
+      Map<String, APMMetricInfo.ResponseMapper> result = new HashMap<>();
+      for (APMMetricInfo.ResponseMapper responseMapper : responseMappers) {
+        result.put(responseMapper.getFieldName(), responseMapper);
+      }
+      return result;
+    }
   }
 }

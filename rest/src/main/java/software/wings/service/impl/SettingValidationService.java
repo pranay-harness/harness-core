@@ -52,6 +52,7 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.service.intfc.newrelic.NewRelicService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.sm.StateType;
 import software.wings.utils.Misc;
@@ -80,6 +81,7 @@ public class SettingValidationService {
   @Inject private ElkAnalysisService elkAnalysisService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject @Transient private transient FeatureFlagService featureFlagService;
+  @Inject private SecretManager secretManager;
 
   public boolean validate(SettingAttribute settingAttribute) {
     // Name has leading/trailing spaces
@@ -132,6 +134,7 @@ public class SettingValidationService {
     } else if (settingValue instanceof APMVerificationConfig) {
       newRelicService.validateAPMConfig(
           settingAttribute, ((APMVerificationConfig) settingAttribute.getValue()).createAPMValidateCollectorConfig());
+      ((APMVerificationConfig) settingAttribute.getValue()).encryptFields(secretManager);
     } else if (settingValue instanceof SplunkConfig) {
       analysisService.validateConfig(settingAttribute, StateType.SPLUNKV2);
     } else if (settingValue instanceof ElkConfig) {

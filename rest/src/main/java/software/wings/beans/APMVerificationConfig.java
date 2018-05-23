@@ -3,37 +3,43 @@ package software.wings.beans;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.annotations.Transient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
-import software.wings.annotation.Encrypted;
 import software.wings.exception.WingsException;
-import software.wings.jersey.JsonViews;
+import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @JsonTypeName("APM_VERIFICATION")
 @Data
 @EqualsAndHashCode(callSuper = false)
+@ToString(exclude = {"headers", "options"})
 public class APMVerificationConfig extends SettingValue implements Encryptable {
+  @Transient @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(APMVerificationConfig.class);
+
   @Attributes(title = "Base Url") private String url;
-
-  @Attributes(title = "Headers", description = "<key>:<value> one per line") @Encrypted private char[] headers;
-
-  @Attributes(title = "Options", description = "<key>:<value> one per line") @Encrypted private char[] options;
 
   @NotEmpty @Attributes(title = "Validation Url", required = true) private String validationUrl;
 
   @SchemaIgnore @NotEmpty private String accountId;
 
-  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedHeaders;
-  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedOptions;
+  private List<KeyValues> headersList;
+  private List<KeyValues> optionsList;
 
   /**
    * Instantiates a new config.
@@ -46,42 +52,102 @@ public class APMVerificationConfig extends SettingValue implements Encryptable {
     super(type.name());
   }
 
+  public Map<String, String> collectionHeaders() {
+    Map<String, String> headers = new HashMap<>();
+    if (!isEmpty(headersList)) {
+      for (KeyValues keyValue : headersList) {
+        if (keyValue.encrypted) {
+          headers.put(keyValue.getKey(), "${" + keyValue.getKey() + "}");
+        } else {
+          headers.put(keyValue.getKey(), keyValue.getValue());
+        }
+      }
+    }
+    return headers;
+  }
+
+  public Map<String, String> collectionParams() {
+    Map<String, String> params = new HashMap<>();
+    if (!isEmpty(optionsList)) {
+      for (KeyValues keyValue : optionsList) {
+        if (keyValue.encrypted) {
+          params.put(keyValue.getKey(), "${" + keyValue.getKey() + "}");
+        } else {
+          params.put(keyValue.getKey(), keyValue.getValue());
+        }
+      }
+    }
+    return params;
+  }
+
   public APMValidateCollectorConfig createAPMValidateCollectorConfig() {
+    Map<String, String> headers = new HashMap<>();
+    if (!isEmpty(headersList)) {
+      for (KeyValues keyValue : headersList) {
+        headers.put(keyValue.getKey(), keyValue.getValue());
+      }
+    }
+
+    Map<String, String> options = new HashMap<>();
+    if (!isEmpty(optionsList)) {
+      for (KeyValues keyValue : optionsList) {
+        options.put(keyValue.getKey(), keyValue.getValue());
+      }
+    }
+
     return APMValidateCollectorConfig.builder()
         .baseUrl(url)
         .url(validationUrl)
-        .options(optionsMap())
-        .headers(headerMap())
+        .headers(headers)
+        .options(options)
         .build();
   }
 
-  public Map<String, String> headerMap() {
-    Map<String, String> headerMap = new HashMap<>();
-    if (!isEmpty(headers)) {
-      String[] headerList = new String(getHeaders()).split("\\r?\\n");
-      for (String header : headerList) {
-        String[] headerTokens = header.split(":");
-        if (headerTokens.length != 2) {
-          throw new WingsException("Unknown header format. Should be <key>:<value> one per line");
-        }
-        headerMap.put(headerTokens[0], headerTokens[1]);
-      }
-    }
-    return headerMap;
+  @Data
+  @Builder
+  public static class KeyValues {
+    private String key;
+    private String value;
+    private boolean encrypted;
   }
 
-  public Map<String, String> optionsMap() {
-    Map<String, String> optionsMap = new HashMap<>();
-    if (!isEmpty(options)) {
-      String[] optionsList = new String(options).split("\\r?\\n");
-      for (String options : optionsList) {
-        String[] optionsTokens = options.split(":");
-        if (optionsTokens.length != 2) {
-          throw new WingsException("Unknown header format. Should be <key>:<value> one per line");
-        }
-        optionsMap.put(optionsTokens[0], optionsTokens[1]);
-      }
+  public List<EncryptedDataDetail> encryptedDataDetails(SecretManager secretManager) {
+    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
+
+    if (headersList != null) {
+      encryptedDataDetails.addAll(
+          headersList.stream()
+              .filter(entry -> entry.encrypted)
+              .map(entry
+                  -> secretManager.encryptedDataDetails(accountId, entry.key, entry.value)
+                         .orElseThrow(() -> new WingsException("Unable to decrypt field " + entry.key)))
+              .collect(Collectors.toList()));
     }
-    return optionsMap;
+    if (optionsList != null) {
+      encryptedDataDetails.addAll(
+          optionsList.stream()
+              .filter(entry -> entry.encrypted)
+              .map(entry
+                  -> secretManager.encryptedDataDetails(accountId, entry.key, entry.value)
+                         .orElseThrow(() -> new WingsException("Unable to decrypt field " + entry.key)))
+              .collect(Collectors.toList()));
+    }
+
+    return encryptedDataDetails.size() > 0 ? encryptedDataDetails : null;
+  }
+
+  // TODO won't work for vault
+  public void encryptFields(SecretManager secretManager) {
+    if (headersList != null) {
+      headersList.stream()
+          .filter(header -> header.encrypted)
+          .forEach(header -> header.value = secretManager.encrypt(accountId, header.value));
+    }
+
+    if (optionsList != null) {
+      optionsList.stream()
+          .filter(option -> option.encrypted)
+          .forEach(option -> option.value = secretManager.encrypt(accountId, option.value));
+    }
   }
 }

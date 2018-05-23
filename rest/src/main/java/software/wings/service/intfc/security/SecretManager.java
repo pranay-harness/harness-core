@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Created by rsingh on 10/30/17.
@@ -36,8 +37,12 @@ public interface SecretManager {
 
   List<SecretChangeLog> getChangeLogs(String entityId, SettingVariableTypes variableType) throws IllegalAccessException;
 
+  String encrypt(String accountId, String secret);
+
   EncryptedData encrypt(EncryptionType encryptionType, String accountId, SettingVariableTypes settingType,
       char[] secret, EncryptedData encryptedData, String secretName);
+
+  Optional<EncryptedDataDetail> encryptedDataDetails(String accountId, String fieldName, String refId);
 
   List<EncryptedDataDetail> getEncryptionDetails(Encryptable object, String appId, String workflowExecutionId);
 

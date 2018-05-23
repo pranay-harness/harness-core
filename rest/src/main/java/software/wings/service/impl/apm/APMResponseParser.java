@@ -28,12 +28,9 @@ public class APMResponseParser {
   @AllArgsConstructor
   @Builder
   public static class APMResponseData {
-    private String txnName;
-    private String metricName;
     private String hostName;
     private String text;
-    private String tag;
-    private List<APMMetricInfo.ResponseMapper> apmResponseMapper;
+    private List<APMMetricInfo> metricInfos;
   }
 
   private static Pattern p = Pattern.compile("\\[(.*?)\\]");
@@ -77,18 +74,23 @@ public class APMResponseParser {
   public static Collection<NewRelicMetricDataRecord> extract(List<APMResponseData> apmResponseData) {
     Map<String, NewRelicMetricDataRecord> resultMap = new HashMap<>();
     for (APMResponseData data : apmResponseData) {
-      APMResponseParser apmResponseParser = new APMResponseParser();
-      for (APMMetricInfo.ResponseMapper responseParser : data.getApmResponseMapper()) {
-        apmResponseParser.put(
-            responseParser.getJsonPath().split("\\."), responseParser.getFieldName(), responseParser.getRegexs());
+      for (APMMetricInfo metricInfo : data.getMetricInfos()) {
+        APMResponseParser apmResponseParser = new APMResponseParser();
+        for (APMMetricInfo.ResponseMapper responseMapper : metricInfo.getResponseMappers().values()) {
+          if (!isEmpty(responseMapper.getJsonPath())) {
+            apmResponseParser.put(
+                responseMapper.getJsonPath().split("\\."), responseMapper.getFieldName(), responseMapper.getRegexs());
+          }
+        }
+        List<Multimap<String, Object>> output = apmResponseParser.extract(data.text);
+        createRecords(metricInfo.getResponseMappers().get("txnName").getFieldValue(), metricInfo.getMetricName(),
+            data.hostName, metricInfo.getTag(), output, resultMap);
       }
-      List<Multimap<String, Object>> output = apmResponseParser.extract(data.txnName, data.metricName, data.text);
-      createRecords(data.txnName, data.metricName, data.hostName, data.tag, output, resultMap);
     }
     return resultMap.values();
   }
 
-  private List<Multimap<String, Object>> extract(String txnName, String metricName, String text) {
+  private List<Multimap<String, Object>> extract(String text) {
     JSONObject jsonObject = new JSONObject(text);
     List<Multimap<String, Object>> output = new ArrayList<>();
     /*

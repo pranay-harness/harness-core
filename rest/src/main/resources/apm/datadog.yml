@@ -1,5 +1,5 @@
 Servlet:
-  url: query
+  url: query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=${query}{service:${serviceName}, host:${host}}by{resource_name, host}.rollup(avg,60)
   responseMappers:
         -
             fieldName: txnName
@@ -18,15 +18,9 @@ Servlet:
         -
             fieldName: value
             jsonPath: series[*].pointlist[*].[1]
-  options:
-        api_key: ${apiKey}
-        application_key: ${applicationKey}
-        from: ${start_time}
-        to: ${end_time}
-        query: ${query}{service:${serviceName}, host:${host}}by{resource_name, host}.rollup(avg,60)
 
 System:
-  url: query
+  url: query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=${query}{host:${host}}by{host}.rollup(avg,60)
   responseMappers:
         -
             fieldName: txnName
@@ -42,9 +36,3 @@ System:
             jsonPath: series[*].scope
             regexs:
               - ((?<=host:)(.*))
-  options:
-        api_key: ${apiKey}
-        application_key: ${applicationKey}
-        from: ${start_time}
-        to: ${end_time}
-        query: ${query}{host:${host}}by{host}.rollup(avg,60)
