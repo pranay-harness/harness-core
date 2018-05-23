@@ -35,6 +35,7 @@ import software.wings.api.ServiceElement;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.RestResponse;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.scheduler.LogAnalysisManagerJob;
@@ -42,6 +43,7 @@ import software.wings.scheduler.LogAnalysisManagerJob.LogAnalysisTask;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
+import software.wings.service.impl.analysis.LogAnalysisExecutionData;
 import software.wings.service.impl.analysis.LogClusterContext;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogElement;
@@ -58,6 +60,7 @@ import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
@@ -162,10 +165,19 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
     wingsPersistence.update(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", "CV_DEMO"),
         wingsPersistence.createUpdateOperations(FeatureFlag.class).addToSet("accountIds", "xyz"));
 
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(SettingAttribute.class).filter("accountId", accountId).filter("name", "elk_prod"));
+    String serverConfigId = wingsPersistence.save(
+        SettingAttribute.Builder.aSettingAttribute().withAccountId(accountId).withName("elk_prod").build());
+
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setUuid(stateExecutionId);
     stateExecutionInstance.setStatus(ExecutionStatus.SUCCESS);
     stateExecutionInstance.setAppId(appId);
+    stateExecutionInstance.setDisplayName("Relic_Fail");
+    Map<String, StateExecutionData> hashMap = new HashMap();
+    hashMap.put("Relic_Fail", LogAnalysisExecutionData.builder().serverConfigId(serverConfigId).build());
+    stateExecutionInstance.setStateExecutionMap(hashMap);
     wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(stateExecutionInstance));
 
     int numOfTestClusters = 1 + r.nextInt(10);
@@ -222,10 +234,18 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
     wingsPersistence.update(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", "CV_DEMO"),
         wingsPersistence.createUpdateOperations(FeatureFlag.class).addToSet("accountIds", "xyz"));
 
+    wingsPersistence.delete(wingsPersistence.createQuery(SettingAttribute.class).filter("name", "elk_dev"));
+
+    String serverConfigId = wingsPersistence.save(
+        SettingAttribute.Builder.aSettingAttribute().withAccountId(accountId).withName("elk_dev").build());
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setUuid(stateExecutionId);
     stateExecutionInstance.setStatus(ExecutionStatus.FAILED);
     stateExecutionInstance.setAppId(appId);
+    stateExecutionInstance.setDisplayName("Relic_Fail");
+    Map<String, StateExecutionData> hashMap = new HashMap();
+    hashMap.put("Relic_Fail", LogAnalysisExecutionData.builder().serverConfigId(serverConfigId).build());
+    stateExecutionInstance.setStateExecutionMap(hashMap);
     wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(stateExecutionInstance));
 
     int numOfTestClusters = 1 + r.nextInt(10);

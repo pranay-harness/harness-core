@@ -93,7 +93,7 @@ public class TimeSeriesResource {
       @QueryParam("accountId") final String accountId, @QueryParam("appId") final String appId) throws IOException {
     if (featureFlagService.isEnabledRelaodCache(FeatureName.CV_DEMO, accountId)) {
       return new RestResponse<>(
-          metricDataAnalysisService.getMetricsAnalysisForDemo(appId, stateExecutionId, workflowExecutionId));
+          metricDataAnalysisService.getMetricsAnalysisForDemo(appId, stateExecutionId, workflowExecutionId).get(0));
     } else {
       return new RestResponse<>(
           metricDataAnalysisService.getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId).get(0));

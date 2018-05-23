@@ -71,12 +71,15 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     this.analysisContext = getAnalysisContext(context, UUID.randomUUID().toString());
     saveMetaDataForDashboard(analysisContext.getAccountId(), context);
 
-    if (isDemoPath(analysisContext.getAccountId())) {
-      boolean failedState = settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().contains("fail");
-      if (failedState) {
-        return generateAnalysisResponse(context, ExecutionStatus.FAILED, "Demo CV");
-      } else {
-        return generateAnalysisResponse(context, ExecutionStatus.SUCCESS, "Demo CV");
+    if (isDemoPath(analysisContext.getAccountId()) && getStateType().equals(StateType.NEW_RELIC.name())) {
+      if (settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev")
+          || settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("prod")) {
+        boolean failedState = settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev");
+        if (failedState) {
+          return generateAnalysisResponse(context, ExecutionStatus.FAILED, "Demo CV");
+        } else {
+          return generateAnalysisResponse(context, ExecutionStatus.SUCCESS, "Demo CV");
+        }
       }
     }
 
