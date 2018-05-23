@@ -1,0 +1,3 @@
+{
+  "ui:order": ["artifactStreamId", "regex", "buildNo", "timeoutMillis"]
+}

@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.regex.Pattern.compile;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
@@ -373,12 +374,13 @@ public class ArtifactServiceImpl implements ArtifactService {
 
   @Override
   public Artifact getArtifactByBuildNumber(
-      String appId, String artifactStreamId, String artifactSource, String buildNumber) {
+      String appId, String artifactStreamId, String artifactSource, String buildNumber, boolean regex) {
     return wingsPersistence.createQuery(Artifact.class)
         .filter("appId", appId)
         .filter("artifactStreamId", artifactStreamId)
         .filter("artifactSourceName", artifactSource)
-        .filter("metadata.buildNo", buildNumber)
+        .filter("metadata.buildNo", regex ? compile(buildNumber) : buildNumber)
+        .order("-createdAt")
         .disableValidation()
         .get();
   }
