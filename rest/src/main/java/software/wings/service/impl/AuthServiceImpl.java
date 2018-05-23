@@ -11,6 +11,7 @@ import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
 import static software.wings.beans.ErrorCode.EXPIRED_TOKEN;
 import static software.wings.beans.ErrorCode.INVALID_TOKEN;
 import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
+import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.exception.WingsException.USER_ADMIN;
 
@@ -357,7 +358,8 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public void invalidateAllTokensForUser(String userId) {
-    List<Key<AuthToken>> keyList = wingsPersistence.createQuery(AuthToken.class).filter("userId", userId).asKeyList();
+    List<Key<AuthToken>> keyList =
+        wingsPersistence.createQuery(AuthToken.class, excludeAuthority).filter("userId", userId).asKeyList();
     keyList.forEach(authTokenKey -> {
       wingsPersistence.delete(AuthToken.class, authTokenKey.getId().toString());
       dbCache.invalidate(AuthToken.class, authTokenKey.getId().toString());

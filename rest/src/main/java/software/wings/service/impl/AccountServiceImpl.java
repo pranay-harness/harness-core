@@ -11,6 +11,7 @@ import static software.wings.beans.RoleType.NON_PROD_SUPPORT;
 import static software.wings.beans.RoleType.PROD_SUPPORT;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SystemCatalog.CatalogType.APPSTACK;
+import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.utils.Misc.generateSecretKey;
 
@@ -197,7 +198,7 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public List<Account> list(PageRequest<Account> pageRequest) {
-    return wingsPersistence.query(Account.class, pageRequest).getResponse();
+    return wingsPersistence.query(Account.class, pageRequest, excludeAuthority).getResponse();
   }
 
   private void createDefaultNotificationGroup(Account account, Role role) {

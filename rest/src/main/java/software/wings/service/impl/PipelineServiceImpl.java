@@ -130,6 +130,7 @@ public class PipelineServiceImpl implements PipelineService {
                   .listExecutions(aPageRequest()
                                       .withLimit(previousExecutionsCount.toString())
                                       .addFilter("workflowId", EQ, pipeline.getUuid())
+                                      .addFilter("appId", EQ, pipeline.getAppId())
                                       .build(),
                       false, false, false, false)
                   .getResponse();
