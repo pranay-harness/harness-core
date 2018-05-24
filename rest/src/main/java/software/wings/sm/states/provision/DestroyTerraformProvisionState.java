@@ -10,7 +10,7 @@ public class DestroyTerraformProvisionState extends TerraformProvisionState {
   public static final String COMMAND_UNIT = "Destroy";
 
   public DestroyTerraformProvisionState(String name) {
-    super(name, StateType.TERRAFORM_PROVISION.name());
+    super(name, StateType.TERRAFORM_DESTROY.name());
   }
 
   protected String commandUnit() {
