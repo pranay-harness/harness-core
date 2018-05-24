@@ -119,9 +119,6 @@ public class InstanceHelper {
         return;
       }
 
-      Validator.notNullCheck("ElementStatusSummary is null for state execution " + stateExecutionInstanceId,
-          phaseStepExecutionData.getElementStatusSummary(), USER_SRE);
-
       if (workflowStandardParams == null) {
         logger.warn("workflowStandardParams can't be null, skipping instance processing");
         return;
@@ -162,6 +159,14 @@ public class InstanceHelper {
 
         if (checkIfAnyStepsFailed(phaseStepExecutionSummary)) {
           logger.info("Deploy Service Phase step failed, not capturing any instances");
+          return;
+        }
+
+        if (phaseStepExecutionData.getElementStatusSummary() == null) {
+          logger.warn(
+              "elementStatusSummary is null for InfraMappingType {}, appId: {}, WorkflowExecution<Name, Id> :<{},{}>",
+              infrastructureMapping.getInfraMappingType(), appId, workflowExecution.getName(),
+              workflowExecution.getWorkflowId());
           return;
         }
 
