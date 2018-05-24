@@ -7,11 +7,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import com.mongodb.DBCursor;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.FindAndModifyOptions;
-import org.mongodb.morphia.query.FindOptions;
-import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -193,19 +190,12 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
 
   @Override
   public Optional<LearningEngineAnalysisTask> earliestQueued() {
-    MorphiaIterator<LearningEngineAnalysisTask, LearningEngineAnalysisTask> task =
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .filter("executionStatus", ExecutionStatus.QUEUED)
-            .order("-createdAt")
-            .fetch(new FindOptions().limit(1));
+    LearningEngineAnalysisTask task = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                                          .filter("executionStatus", ExecutionStatus.QUEUED)
+                                          .order("-createdAt")
+                                          .get();
 
-    try (DBCursor cursor = task.getCursor()) {
-      if (!task.hasNext()) {
-        return Optional.empty();
-      }
-
-      return Optional.of(task.next());
-    }
+    return task == null ? Optional.empty() : Optional.of(task);
   }
 
   @Override

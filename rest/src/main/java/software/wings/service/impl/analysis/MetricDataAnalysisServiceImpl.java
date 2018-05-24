@@ -1,7 +1,6 @@
 package software.wings.service.impl.analysis;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
@@ -13,6 +12,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.mongodb.DBCursor;
+import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
@@ -272,7 +272,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                                             .field("level")
                                                             .notIn(asList(ClusterLevel.H0, ClusterLevel.HF))
                                                             .order("-dataCollectionMinute")
-                                                            .get(new FindOptions().limit(1));
+                                                            .get();
 
     return newRelicMetricDataRecord == null ? -1 : newRelicMetricDataRecord.getDataCollectionMinute();
   }
@@ -290,7 +290,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                                             .field("level")
                                                             .notIn(asList(ClusterLevel.H0, ClusterLevel.HF))
                                                             .order("dataCollectionMinute")
-                                                            .get(new FindOptions().limit(1));
+                                                            .get();
 
     return newRelicMetricDataRecord == null ? -1 : newRelicMetricDataRecord.getDataCollectionMinute();
   }
@@ -300,8 +300,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       StateType stateType, String appId, String workflowId, String serviceId) {
     List<String> successfulExecutions = getLastSuccessfulWorkflowExecutionIds(workflowId);
     for (String successfulExecution : successfulExecutions) {
-      List<NewRelicMetricDataRecord> lastSuccessfulRecords =
-          wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
+      if (wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
               .filter("stateType", stateType)
               .filter("appId", appId)
               .filter("workflowId", workflowId)
@@ -309,8 +308,8 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
               .filter("serviceId", serviceId)
               .field("level")
               .notIn(asList(ClusterLevel.H0, ClusterLevel.HF))
-              .asList(new FindOptions().limit(1));
-      if (isNotEmpty(lastSuccessfulRecords)) {
+              .count(new CountOptions().limit(1))
+          > 0) {
         return successfulExecution;
       }
     }
@@ -626,7 +625,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                                             .field("level")
                                                             .in(Lists.newArrayList(ClusterLevel.HF))
                                                             .order("-dataCollectionMinute")
-                                                            .get(new FindOptions().limit(1));
+                                                            .get();
 
     if (newRelicMetricDataRecord == null) {
       logger.info(
@@ -651,7 +650,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                                             .field("level")
                                                             .in(Lists.newArrayList(ClusterLevel.H0))
                                                             .order("-dataCollectionMinute")
-                                                            .get(new FindOptions().limit(1));
+                                                            .get();
 
     if (newRelicMetricDataRecord == null) {
       logger.info(
@@ -700,7 +699,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                                              .equal(stateType)
                                                              .field("stateExecutionId")
                                                              .equal(stateExecutionId)
-                                                             .get(new FindOptions().limit(1));
+                                                             .get();
     return newRelicMetricDataRecord == null ? null : newRelicMetricDataRecord.getMetricTemplates();
   }
 
@@ -722,7 +721,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                                       .equal(stateExecutionId)
                                                       .field("appId")
                                                       .equal(appId)
-                                                      .get(new FindOptions().limit(1));
+                                                      .get();
 
     return timeSeriesMetricGroup == null ? new ImmutableMap.Builder<String, TimeSeriesMlAnalysisGroupInfo>()
                                                .put(DEFAULT_GROUP_NAME,

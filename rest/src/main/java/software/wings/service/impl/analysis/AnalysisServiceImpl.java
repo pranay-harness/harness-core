@@ -15,7 +15,7 @@ import com.google.inject.Inject;
 
 import com.mongodb.DBCursor;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
@@ -443,16 +443,14 @@ public class AnalysisServiceImpl implements AnalysisService {
     // TODO should we limit the number of executions to search in ??
     List<String> successfulExecutions = getLastSuccessfulWorkflowExecutionIds(appId, workflowId);
     for (String successfulExecution : successfulExecutions) {
-      Query<LogDataRecord> lastSuccessfulRecordQuery = wingsPersistence.createQuery(LogDataRecord.class)
-                                                           .filter("stateType", stateType)
-                                                           .filter("workflowId", workflowId)
-                                                           .filter("workflowExecutionId", successfulExecution)
-                                                           .filter("serviceId", serviceId)
-                                                           .filter("clusterLevel", ClusterLevel.L2)
-                                                           .limit(1);
-
-      List<LogDataRecord> lastSuccessfulRecords = lastSuccessfulRecordQuery.asList();
-      if (isNotEmpty(lastSuccessfulRecords)) {
+      if (wingsPersistence.createQuery(LogDataRecord.class)
+              .filter("stateType", stateType)
+              .filter("workflowId", workflowId)
+              .filter("workflowExecutionId", successfulExecution)
+              .filter("serviceId", serviceId)
+              .filter("clusterLevel", ClusterLevel.L2)
+              .count(new CountOptions().limit(1))
+          > 0) {
         return successfulExecution;
       }
     }
@@ -611,109 +609,99 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Override
   public LogMLAnalysisRecord getLogAnalysisRecords(
       String appId, String stateExecutionId, String query, StateType stateType, Integer logCollectionMinute) {
-    final MorphiaIterator<LogMLAnalysisRecord, LogMLAnalysisRecord> iteratorAnalysisRecord =
-        wingsPersistence.createQuery(LogMLAnalysisRecord.class)
-            .filter("stateExecutionId", stateExecutionId)
-            .filter("appId", appId)
-            .filter("query", query)
-            .filter("stateType", stateType)
-            .field("logCollectionMinute")
-            .lessThanOrEq(logCollectionMinute)
-            .order("-logCollectionMinute")
-            .fetch(new FindOptions().limit(1));
-
-    try (DBCursor cursor = iteratorAnalysisRecord.getCursor()) {
-      return iteratorAnalysisRecord.hasNext() ? iteratorAnalysisRecord.next() : null;
-    }
+    return wingsPersistence.createQuery(LogMLAnalysisRecord.class)
+        .filter("stateExecutionId", stateExecutionId)
+        .filter("appId", appId)
+        .filter("query", query)
+        .filter("stateType", stateType)
+        .field("logCollectionMinute")
+        .lessThanOrEq(logCollectionMinute)
+        .order("-logCollectionMinute")
+        .get();
   }
 
   @Override
   public LogMLAnalysisSummary getExperimentalAnalysisSummary(
       String stateExecutionId, String appId, StateType stateType, String expName) {
-    final MorphiaIterator<ExperimentalLogMLAnalysisRecord, ExperimentalLogMLAnalysisRecord> iteratorAnalysisRecord =
-        wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class)
-            .filter("stateExecutionId", stateExecutionId)
-            .filter("appId", appId)
-            .filter("stateType", stateType)
-            .filter("experiment_name", expName)
-            .order("-logCollectionMinute")
-            .fetch(new FindOptions().limit(1));
-
-    try (DBCursor cursor = iteratorAnalysisRecord.getCursor()) {
-      if (!iteratorAnalysisRecord.hasNext()) {
-        return null;
-      }
-      ExperimentalLogMLAnalysisRecord analysisRecord = iteratorAnalysisRecord.next();
-      final LogMLAnalysisSummary analysisSummary = new LogMLAnalysisSummary();
-      analysisSummary.setQuery(analysisRecord.getQuery());
-      analysisSummary.setScore(analysisRecord.getScore() * 100);
-      analysisSummary.setControlClusters(
-          computeCluster(analysisRecord.getControl_clusters(), Collections.emptyMap(), CLUSTER_TYPE.CONTROL));
-      LogMLClusterScores logMLClusterScores =
-          analysisRecord.getCluster_scores() != null ? analysisRecord.getCluster_scores() : new LogMLClusterScores();
-      analysisSummary.setTestClusters(
-          computeCluster(analysisRecord.getTest_clusters(), logMLClusterScores.getTest(), CLUSTER_TYPE.TEST));
-      analysisSummary.setUnknownClusters(
-          computeCluster(analysisRecord.getUnknown_clusters(), logMLClusterScores.getUnknown(), CLUSTER_TYPE.UNKNOWN));
-
-      if (!analysisRecord.isBaseLineCreated()) {
-        analysisSummary.setTestClusters(analysisSummary.getControlClusters());
-        analysisSummary.setControlClusters(new ArrayList<>());
-      }
-
-      RiskLevel riskLevel = RiskLevel.NA;
-      String analysisSummaryMsg = isEmpty(analysisRecord.getAnalysisSummaryMessage())
-          ? analysisSummary.getControlClusters().isEmpty()
-              ? "No baseline data for the given queries. This will be baseline for the next run."
-              : analysisSummary.getTestClusters().isEmpty()
-                  ? "No new data for the given queries. Showing baseline data if any."
-                  : "No anomaly found"
-          : analysisRecord.getAnalysisSummaryMessage();
-
-      int unknownClusters = 0;
-      int highRiskClusters = 0;
-      int mediumRiskCluster = 0;
-      int lowRiskClusters = 0;
-      if (isNotEmpty(analysisSummary.getUnknownClusters())) {
-        for (LogMLClusterSummary clusterSummary : analysisSummary.getUnknownClusters()) {
-          if (clusterSummary.getScore() > HIGH_RISK_THRESHOLD) {
-            ++highRiskClusters;
-          } else if (clusterSummary.getScore() > MEDIUM_RISK_THRESHOLD) {
-            ++mediumRiskCluster;
-          } else if (clusterSummary.getScore() > 0) {
-            ++lowRiskClusters;
-          }
-        }
-        riskLevel = highRiskClusters > 0
-            ? RiskLevel.HIGH
-            : mediumRiskCluster > 0 ? RiskLevel.MEDIUM : lowRiskClusters > 0 ? RiskLevel.LOW : RiskLevel.HIGH;
-
-        unknownClusters = analysisSummary.getUnknownClusters().size();
-        analysisSummary.setHighRiskClusters(highRiskClusters);
-        analysisSummary.setMediumRiskClusters(mediumRiskCluster);
-        analysisSummary.setLowRiskClusters(lowRiskClusters);
-      }
-
-      int unknownFrequency = getUnexpectedFrequency(analysisRecord.getTest_clusters());
-      if (unknownFrequency > 0) {
-        analysisSummary.setHighRiskClusters(analysisSummary.getHighRiskClusters() + unknownFrequency);
-        riskLevel = RiskLevel.HIGH;
-      }
-
-      if (highRiskClusters > 0 || mediumRiskCluster > 0 || lowRiskClusters > 0) {
-        analysisSummaryMsg = analysisSummary.getHighRiskClusters() + " high risk, "
-            + analysisSummary.getMediumRiskClusters() + " medium risk, " + analysisSummary.getLowRiskClusters()
-            + " low risk anomalous cluster(s) found";
-      } else if (unknownClusters > 0 || unknownFrequency > 0) {
-        final int totalAnomalies = unknownClusters + unknownFrequency;
-        analysisSummaryMsg = totalAnomalies == 1 ? totalAnomalies + " anomalous cluster found"
-                                                 : totalAnomalies + " anomalous clusters found";
-      }
-
-      analysisSummary.setRiskLevel(riskLevel);
-      analysisSummary.setAnalysisSummaryMessage(analysisSummaryMsg);
-      return analysisSummary;
+    ExperimentalLogMLAnalysisRecord analysisRecord = wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class)
+                                                         .filter("stateExecutionId", stateExecutionId)
+                                                         .filter("appId", appId)
+                                                         .filter("stateType", stateType)
+                                                         .filter("experiment_name", expName)
+                                                         .order("-logCollectionMinute")
+                                                         .get();
+    if (analysisRecord == null) {
+      return null;
     }
+    final LogMLAnalysisSummary analysisSummary = new LogMLAnalysisSummary();
+    analysisSummary.setQuery(analysisRecord.getQuery());
+    analysisSummary.setScore(analysisRecord.getScore() * 100);
+    analysisSummary.setControlClusters(
+        computeCluster(analysisRecord.getControl_clusters(), Collections.emptyMap(), CLUSTER_TYPE.CONTROL));
+    LogMLClusterScores logMLClusterScores =
+        analysisRecord.getCluster_scores() != null ? analysisRecord.getCluster_scores() : new LogMLClusterScores();
+    analysisSummary.setTestClusters(
+        computeCluster(analysisRecord.getTest_clusters(), logMLClusterScores.getTest(), CLUSTER_TYPE.TEST));
+    analysisSummary.setUnknownClusters(
+        computeCluster(analysisRecord.getUnknown_clusters(), logMLClusterScores.getUnknown(), CLUSTER_TYPE.UNKNOWN));
+
+    if (!analysisRecord.isBaseLineCreated()) {
+      analysisSummary.setTestClusters(analysisSummary.getControlClusters());
+      analysisSummary.setControlClusters(new ArrayList<>());
+    }
+
+    RiskLevel riskLevel = RiskLevel.NA;
+    String analysisSummaryMsg = isEmpty(analysisRecord.getAnalysisSummaryMessage())
+        ? analysisSummary.getControlClusters().isEmpty()
+            ? "No baseline data for the given queries. This will be baseline for the next run."
+            : analysisSummary.getTestClusters().isEmpty()
+                ? "No new data for the given queries. Showing baseline data if any."
+                : "No anomaly found"
+        : analysisRecord.getAnalysisSummaryMessage();
+
+    int unknownClusters = 0;
+    int highRiskClusters = 0;
+    int mediumRiskCluster = 0;
+    int lowRiskClusters = 0;
+    if (isNotEmpty(analysisSummary.getUnknownClusters())) {
+      for (LogMLClusterSummary clusterSummary : analysisSummary.getUnknownClusters()) {
+        if (clusterSummary.getScore() > HIGH_RISK_THRESHOLD) {
+          ++highRiskClusters;
+        } else if (clusterSummary.getScore() > MEDIUM_RISK_THRESHOLD) {
+          ++mediumRiskCluster;
+        } else if (clusterSummary.getScore() > 0) {
+          ++lowRiskClusters;
+        }
+      }
+      riskLevel = highRiskClusters > 0
+          ? RiskLevel.HIGH
+          : mediumRiskCluster > 0 ? RiskLevel.MEDIUM : lowRiskClusters > 0 ? RiskLevel.LOW : RiskLevel.HIGH;
+
+      unknownClusters = analysisSummary.getUnknownClusters().size();
+      analysisSummary.setHighRiskClusters(highRiskClusters);
+      analysisSummary.setMediumRiskClusters(mediumRiskCluster);
+      analysisSummary.setLowRiskClusters(lowRiskClusters);
+    }
+
+    int unknownFrequency = getUnexpectedFrequency(analysisRecord.getTest_clusters());
+    if (unknownFrequency > 0) {
+      analysisSummary.setHighRiskClusters(analysisSummary.getHighRiskClusters() + unknownFrequency);
+      riskLevel = RiskLevel.HIGH;
+    }
+
+    if (highRiskClusters > 0 || mediumRiskCluster > 0 || lowRiskClusters > 0) {
+      analysisSummaryMsg = analysisSummary.getHighRiskClusters() + " high risk, "
+          + analysisSummary.getMediumRiskClusters() + " medium risk, " + analysisSummary.getLowRiskClusters()
+          + " low risk anomalous cluster(s) found";
+    } else if (unknownClusters > 0 || unknownFrequency > 0) {
+      final int totalAnomalies = unknownClusters + unknownFrequency;
+      analysisSummaryMsg = totalAnomalies == 1 ? totalAnomalies + " anomalous cluster found"
+                                               : totalAnomalies + " anomalous clusters found";
+    }
+
+    analysisSummary.setRiskLevel(riskLevel);
+    analysisSummary.setAnalysisSummaryMessage(analysisSummaryMsg);
+    return analysisSummary;
   }
 
   @Override
@@ -799,98 +787,93 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   @Override
   public LogMLAnalysisSummary getAnalysisSummary(String stateExecutionId, String appId, StateType stateType) {
-    final MorphiaIterator<LogMLAnalysisRecord, LogMLAnalysisRecord> iteratorAnalysisRecord =
-        wingsPersistence.createQuery(LogMLAnalysisRecord.class)
-            .filter("stateExecutionId", stateExecutionId)
-            .filter("appId", appId)
-            .filter("stateType", stateType)
-            .order("-logCollectionMinute")
-            .fetch(new FindOptions().limit(1));
+    LogMLAnalysisRecord analysisRecord = wingsPersistence.createQuery(LogMLAnalysisRecord.class)
+                                             .filter("stateExecutionId", stateExecutionId)
+                                             .filter("appId", appId)
+                                             .filter("stateType", stateType)
+                                             .order("-logCollectionMinute")
+                                             .get();
 
-    try (DBCursor cursor = iteratorAnalysisRecord.getCursor()) {
-      if (!iteratorAnalysisRecord.hasNext()) {
-        return null;
-      }
-
-      Map<CLUSTER_TYPE, Map<Integer, LogMLFeedbackRecord>> mlUserFeedbacks =
-          getMLUserFeedbacks(stateExecutionId, appId);
-
-      LogMLAnalysisRecord analysisRecord = iteratorAnalysisRecord.next();
-      final LogMLAnalysisSummary analysisSummary = new LogMLAnalysisSummary();
-      analysisSummary.setQuery(analysisRecord.getQuery());
-      analysisSummary.setScore(analysisRecord.getScore() * 100);
-      analysisSummary.setBaseLineExecutionId(analysisRecord.getBaseLineExecutionId());
-      analysisSummary.setControlClusters(
-          computeCluster(analysisRecord.getControl_clusters(), Collections.emptyMap(), CLUSTER_TYPE.CONTROL));
-      LogMLClusterScores logMLClusterScores =
-          analysisRecord.getCluster_scores() != null ? analysisRecord.getCluster_scores() : new LogMLClusterScores();
-      analysisSummary.setTestClusters(
-          computeCluster(analysisRecord.getTest_clusters(), logMLClusterScores.getTest(), CLUSTER_TYPE.TEST));
-      analysisSummary.setUnknownClusters(
-          computeCluster(analysisRecord.getUnknown_clusters(), logMLClusterScores.getUnknown(), CLUSTER_TYPE.UNKNOWN));
-      analysisSummary.setIgnoreClusters(
-          computeCluster(analysisRecord.getIgnore_clusters(), Collections.emptyMap(), CLUSTER_TYPE.IGNORE));
-
-      if (!analysisRecord.isBaseLineCreated()) {
-        analysisSummary.setTestClusters(analysisSummary.getControlClusters());
-        analysisSummary.setControlClusters(new ArrayList<>());
-      }
-
-      assignUserFeedback(analysisSummary, mlUserFeedbacks);
-
-      RiskLevel riskLevel = RiskLevel.NA;
-      String analysisSummaryMsg = isEmpty(analysisRecord.getAnalysisSummaryMessage())
-          ? analysisSummary.getControlClusters().isEmpty() ? "No baseline data for the given query was found."
-                                                           : analysisSummary.getTestClusters().isEmpty()
-                  ? "No new data for the given queries. Showing baseline data if any."
-                  : "No anomaly found"
-          : analysisRecord.getAnalysisSummaryMessage();
-
-      int unknownClusters = 0;
-      int highRiskClusters = 0;
-      int mediumRiskCluster = 0;
-      int lowRiskClusters = 0;
-      if (isNotEmpty(analysisSummary.getUnknownClusters())) {
-        for (LogMLClusterSummary clusterSummary : analysisSummary.getUnknownClusters()) {
-          if (clusterSummary.getScore() > HIGH_RISK_THRESHOLD) {
-            ++highRiskClusters;
-          } else if (clusterSummary.getScore() > MEDIUM_RISK_THRESHOLD) {
-            ++mediumRiskCluster;
-          } else if (clusterSummary.getScore() > 0) {
-            ++lowRiskClusters;
-          }
-        }
-        riskLevel = highRiskClusters > 0
-            ? RiskLevel.HIGH
-            : mediumRiskCluster > 0 ? RiskLevel.MEDIUM : lowRiskClusters > 0 ? RiskLevel.LOW : RiskLevel.HIGH;
-
-        unknownClusters = analysisSummary.getUnknownClusters().size();
-        analysisSummary.setHighRiskClusters(highRiskClusters);
-        analysisSummary.setMediumRiskClusters(mediumRiskCluster);
-        analysisSummary.setLowRiskClusters(lowRiskClusters);
-      }
-
-      int unknownFrequency = getUnexpectedFrequency(analysisRecord.getTest_clusters());
-      if (unknownFrequency > 0) {
-        analysisSummary.setHighRiskClusters(analysisSummary.getHighRiskClusters() + unknownFrequency);
-        riskLevel = RiskLevel.HIGH;
-      }
-
-      if (highRiskClusters > 0 || mediumRiskCluster > 0 || lowRiskClusters > 0) {
-        analysisSummaryMsg = analysisSummary.getHighRiskClusters() + " high risk, "
-            + analysisSummary.getMediumRiskClusters() + " medium risk, " + analysisSummary.getLowRiskClusters()
-            + " low risk anomalous cluster(s) found";
-      } else if (unknownClusters > 0 || unknownFrequency > 0) {
-        final int totalAnomalies = unknownClusters + unknownFrequency;
-        analysisSummaryMsg = totalAnomalies == 1 ? totalAnomalies + " anomalous cluster found"
-                                                 : totalAnomalies + " anomalous clusters found";
-      }
-
-      analysisSummary.setRiskLevel(riskLevel);
-      analysisSummary.setAnalysisSummaryMessage(analysisSummaryMsg);
-      analysisSummary.setStateType(stateType);
-      return analysisSummary;
+    if (analysisRecord == null) {
+      return null;
     }
+
+    Map<CLUSTER_TYPE, Map<Integer, LogMLFeedbackRecord>> mlUserFeedbacks = getMLUserFeedbacks(stateExecutionId, appId);
+
+    final LogMLAnalysisSummary analysisSummary = new LogMLAnalysisSummary();
+    analysisSummary.setQuery(analysisRecord.getQuery());
+    analysisSummary.setScore(analysisRecord.getScore() * 100);
+    analysisSummary.setBaseLineExecutionId(analysisRecord.getBaseLineExecutionId());
+    analysisSummary.setControlClusters(
+        computeCluster(analysisRecord.getControl_clusters(), Collections.emptyMap(), CLUSTER_TYPE.CONTROL));
+    LogMLClusterScores logMLClusterScores =
+        analysisRecord.getCluster_scores() != null ? analysisRecord.getCluster_scores() : new LogMLClusterScores();
+    analysisSummary.setTestClusters(
+        computeCluster(analysisRecord.getTest_clusters(), logMLClusterScores.getTest(), CLUSTER_TYPE.TEST));
+    analysisSummary.setUnknownClusters(
+        computeCluster(analysisRecord.getUnknown_clusters(), logMLClusterScores.getUnknown(), CLUSTER_TYPE.UNKNOWN));
+    analysisSummary.setIgnoreClusters(
+        computeCluster(analysisRecord.getIgnore_clusters(), Collections.emptyMap(), CLUSTER_TYPE.IGNORE));
+
+    if (!analysisRecord.isBaseLineCreated()) {
+      analysisSummary.setTestClusters(analysisSummary.getControlClusters());
+      analysisSummary.setControlClusters(new ArrayList<>());
+    }
+
+    assignUserFeedback(analysisSummary, mlUserFeedbacks);
+
+    RiskLevel riskLevel = RiskLevel.NA;
+    String analysisSummaryMsg = isEmpty(analysisRecord.getAnalysisSummaryMessage())
+        ? analysisSummary.getControlClusters().isEmpty() ? "No baseline data for the given query was found."
+                                                         : analysisSummary.getTestClusters().isEmpty()
+                ? "No new data for the given queries. Showing baseline data if any."
+                : "No anomaly found"
+        : analysisRecord.getAnalysisSummaryMessage();
+
+    int unknownClusters = 0;
+    int highRiskClusters = 0;
+    int mediumRiskCluster = 0;
+    int lowRiskClusters = 0;
+    if (isNotEmpty(analysisSummary.getUnknownClusters())) {
+      for (LogMLClusterSummary clusterSummary : analysisSummary.getUnknownClusters()) {
+        if (clusterSummary.getScore() > HIGH_RISK_THRESHOLD) {
+          ++highRiskClusters;
+        } else if (clusterSummary.getScore() > MEDIUM_RISK_THRESHOLD) {
+          ++mediumRiskCluster;
+        } else if (clusterSummary.getScore() > 0) {
+          ++lowRiskClusters;
+        }
+      }
+      riskLevel = highRiskClusters > 0
+          ? RiskLevel.HIGH
+          : mediumRiskCluster > 0 ? RiskLevel.MEDIUM : lowRiskClusters > 0 ? RiskLevel.LOW : RiskLevel.HIGH;
+
+      unknownClusters = analysisSummary.getUnknownClusters().size();
+      analysisSummary.setHighRiskClusters(highRiskClusters);
+      analysisSummary.setMediumRiskClusters(mediumRiskCluster);
+      analysisSummary.setLowRiskClusters(lowRiskClusters);
+    }
+
+    int unknownFrequency = getUnexpectedFrequency(analysisRecord.getTest_clusters());
+    if (unknownFrequency > 0) {
+      analysisSummary.setHighRiskClusters(analysisSummary.getHighRiskClusters() + unknownFrequency);
+      riskLevel = RiskLevel.HIGH;
+    }
+
+    if (highRiskClusters > 0 || mediumRiskCluster > 0 || lowRiskClusters > 0) {
+      analysisSummaryMsg = analysisSummary.getHighRiskClusters() + " high risk, "
+          + analysisSummary.getMediumRiskClusters() + " medium risk, " + analysisSummary.getLowRiskClusters()
+          + " low risk anomalous cluster(s) found";
+    } else if (unknownClusters > 0 || unknownFrequency > 0) {
+      final int totalAnomalies = unknownClusters + unknownFrequency;
+      analysisSummaryMsg = totalAnomalies == 1 ? totalAnomalies + " anomalous cluster found"
+                                               : totalAnomalies + " anomalous clusters found";
+    }
+
+    analysisSummary.setRiskLevel(riskLevel);
+    analysisSummary.setAnalysisSummaryMessage(analysisSummaryMsg);
+    analysisSummary.setStateType(stateType);
+    return analysisSummary;
   }
 
   @Override
@@ -1124,13 +1107,12 @@ public class AnalysisServiceImpl implements AnalysisService {
   }
 
   private boolean logExist(StateType stateType, WorkflowExecution workflowExecution) {
-    Query<LogDataRecord> lastSuccessfulRecords = wingsPersistence.createQuery(LogDataRecord.class)
-                                                     .filter("stateType", stateType)
-                                                     .filter("workflowId", workflowExecution.getWorkflowId())
-                                                     .filter("workflowExecutionId", workflowExecution.getUuid())
-                                                     .limit(1);
-
-    return !lastSuccessfulRecords.asList().isEmpty();
+    return wingsPersistence.createQuery(LogDataRecord.class)
+               .filter("stateType", stateType)
+               .filter("workflowId", workflowExecution.getWorkflowId())
+               .filter("workflowExecutionId", workflowExecution.getUuid())
+               .count(new CountOptions().limit(1))
+        > 0;
   }
 
   private void deleteNotRequiredLogs(StateType stateType, WorkflowExecution workflowExecution) {
@@ -1235,21 +1217,17 @@ public class AnalysisServiceImpl implements AnalysisService {
     /**
      * Get the data records for the found heartbeat.
      */
-    final MorphiaIterator<LogDataRecord, LogDataRecord> logDataRecordsIterator =
-        wingsPersistence.createQuery(LogDataRecord.class)
-            .filter("appId", appId)
-            .filter("stateExecutionId", stateExecutionId)
-            .filter("stateType", type)
-            .filter("clusterLevel", level)
-            .filter("logCollectionMinute", logCollectionMinute)
-            .filter("query", query)
-            .field("host")
-            .in(nodes)
-            .fetch(new FindOptions().limit(1));
-
-    try (DBCursor cursor = logDataRecordsIterator.getCursor()) {
-      return logDataRecordsIterator.hasNext();
-    }
+    return wingsPersistence.createQuery(LogDataRecord.class)
+               .filter("appId", appId)
+               .filter("stateExecutionId", stateExecutionId)
+               .filter("stateType", type)
+               .filter("clusterLevel", level)
+               .filter("logCollectionMinute", logCollectionMinute)
+               .filter("query", query)
+               .field("host")
+               .in(nodes)
+               .count(new CountOptions().limit(1))
+        > 0;
   }
 
   @Override
@@ -1269,33 +1247,22 @@ public class AnalysisServiceImpl implements AnalysisService {
       query = query.filter("host", host);
     }
 
-    final MorphiaIterator<LogDataRecord, LogDataRecord> logDataRecordsIterator =
-        query.fetch(new FindOptions().limit(1));
+    final LogDataRecord logDataRecords = query.get();
 
     // Nothing more to process. break.
-    try (DBCursor cursor = logDataRecordsIterator.getCursor()) {
-      if (!logDataRecordsIterator.hasNext()) {
-        return Optional.empty();
-      }
-
-      return Optional.of(logDataRecordsIterator.next());
-    }
+    return logDataRecords == null ? Optional.empty() : Optional.of(logDataRecords);
   }
 
   private int getLastProcessedMinute(String query, String appId, String stateExecutionId, StateType type) {
-    final MorphiaIterator<LogDataRecord, LogDataRecord> logDataRecordsIterator =
-        wingsPersistence.createQuery(LogDataRecord.class)
-            .filter("appId", appId)
-            .filter("stateExecutionId", stateExecutionId)
-            .filter("stateType", type)
-            .filter("clusterLevel", ClusterLevel.getFinal())
-            .filter("query", query)
-            .order("-logCollectionMinute")
-            .fetch(new FindOptions().limit(1));
-
-    try (DBCursor cursor = logDataRecordsIterator.getCursor()) {
-      return logDataRecordsIterator.hasNext() ? logDataRecordsIterator.next().getLogCollectionMinute() : -1;
-    }
+    LogDataRecord logDataRecords = wingsPersistence.createQuery(LogDataRecord.class)
+                                       .filter("appId", appId)
+                                       .filter("stateExecutionId", stateExecutionId)
+                                       .filter("stateType", type)
+                                       .filter("clusterLevel", ClusterLevel.getFinal())
+                                       .filter("query", query)
+                                       .order("-logCollectionMinute")
+                                       .get();
+    return logDataRecords == null ? -1 : logDataRecords.getLogCollectionMinute();
   }
 
   @Override
