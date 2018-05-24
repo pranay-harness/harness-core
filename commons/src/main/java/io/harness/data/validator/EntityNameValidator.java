@@ -26,10 +26,13 @@ public class EntityNameValidator implements ConstraintValidator<EntityName, Stri
    * Used only for Applications right now
    */
   public static boolean isValid(String value) {
+    return true;
+    /*
     if (isEmpty(value)) {
       return true;
     }
     return ALLOWED_CHARS_SET.containsAll(Sets.newHashSet(Lists.charactersOf(value)));
+    */
   }
 
   /**
