@@ -13,6 +13,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import freemarker.template.TemplateException;
+import io.harness.data.validator.Trimmed;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -126,6 +127,15 @@ public class DelegateResource {
     delegate.setAccountId(accountId);
     delegate.setUuid(delegateId);
     return new RestResponse<>(delegateService.update(delegate));
+  }
+
+  @PUT
+  @Path("{delegateId}/description")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Delegate> updateDescription(@PathParam("delegateId") @NotEmpty String delegateId,
+      @QueryParam("accountId") @NotEmpty String accountId, @Trimmed String newDescription) {
+    return new RestResponse<>(delegateService.updateDescription(accountId, delegateId, newDescription));
   }
 
   @DELETE

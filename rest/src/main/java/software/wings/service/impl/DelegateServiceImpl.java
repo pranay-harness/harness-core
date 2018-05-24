@@ -130,6 +130,7 @@ import javax.validation.executable.ValidateOnExecution;
 public class DelegateServiceImpl implements DelegateService {
   private static final Logger logger = LoggerFactory.getLogger(DelegateServiceImpl.class);
 
+  private static final String ACCOUNT_ID = "accountId";
   private static final Configuration cfg = new Configuration(VERSION_2_3_23);
   public static final int DELEGATE_METADATA_HTTP_CALL_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(10);
 
@@ -202,6 +203,16 @@ public class DelegateServiceImpl implements DelegateService {
 
     logger.info("Updating delegate : {}", delegate.getUuid());
     return updateDelegate(delegate, updateOperations);
+  }
+
+  @Override
+  public Delegate updateDescription(String accountId, String delegateId, String newDescription) {
+    logger.info("Updating delegate : {} with new description", delegateId);
+    wingsPersistence.update(
+        wingsPersistence.createQuery(Delegate.class).filter(ACCOUNT_ID, accountId).filter(ID_KEY, delegateId),
+        wingsPersistence.createUpdateOperations(Delegate.class).set("description", newDescription));
+
+    return get(accountId, delegateId);
   }
 
   @Override
