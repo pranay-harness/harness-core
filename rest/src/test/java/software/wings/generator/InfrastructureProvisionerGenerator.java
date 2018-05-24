@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.github.benas.randombeans.api.EnhancedRandom;
+import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.InfrastructureProvisioner;
@@ -24,6 +25,7 @@ import software.wings.generator.OwnerManager.Owners;
 import software.wings.generator.SettingGenerator.Settings;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.ArtifactType;
 
 @Singleton
@@ -35,6 +37,7 @@ public class InfrastructureProvisionerGenerator {
 
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
+  @Inject private SecretManager secretManager;
 
   @Inject WingsPersistence wingsPersistence;
 
@@ -63,19 +66,18 @@ public class InfrastructureProvisionerGenerator {
     final SettingAttribute gitSourceSettingAttribute =
         settingGenerator.ensurePredefined(seed, Settings.TERRAFORM_TEST_GIT_REPO);
 
+    final Account account = owners.obtainAccount();
+
     final TerraformInfrastructureProvisioner terraformInfrastructureProvisioner =
         TerraformInfrastructureProvisioner.builder()
             .name("Harness Terraform Test")
             .sourceRepoSettingId(gitSourceSettingAttribute.getUuid())
-            .variables(asList(NameValuePair.builder()
-                                  .name("access_key")
-                                  .value("AKIAJJUEMEKQBYHZCQSA")
-                                  .valueType("ENCRYPTED_TEXT")
-                                  .build(),
+            .variables(asList(
+                NameValuePair.builder().name("access_key").value("AKIAJJUEMEKQBYHZCQSA").valueType("TEXT").build(),
                 NameValuePair.builder()
                     .name("secret_key")
                     .value("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")
-                    .valueType("ENCRYPTED_TEXT")
+                    .valueType("TEXT")
                     .build()))
             .mappingBlueprints(asList(
                 InfrastructureMappingBlueprint.builder()
