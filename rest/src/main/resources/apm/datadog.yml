@@ -24,7 +24,7 @@ System:
   responseMappers:
         -
             fieldName: txnName
-            jsonPath: series[*].scope
+            jsonPath: series[*].metric
         -
             fieldName: timestamp
             jsonPath: series[*].pointlist[*].[0]
@@ -36,3 +36,21 @@ System:
             jsonPath: series[*].scope
             regexs:
               - ((?<=host:)(.*))
+
+Kubernetes:
+  url: query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=${query}{pod_name:${host}}by{pod_name}.rollup(avg,60)
+  responseMappers:
+        -
+            fieldName: txnName
+            jsonPath: series[*].metric
+        -
+            fieldName: timestamp
+            jsonPath: series[*].pointlist[*].[0]
+        -
+            fieldName: value
+            jsonPath: series[*].pointlist[*].[1]
+        -
+            fieldName: host
+            jsonPath: series[*].scope
+            regexs:
+              - ((?<=pod_name:)(.*))

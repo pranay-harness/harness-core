@@ -246,7 +246,6 @@ public class AuthHandler {
               permissionTypeAppIdEntityMap.get(permissionType).get(appId), (GenericEntityFilter) entityFilter);
           AppPermissionSummaryForUI finalAppPermissionSummaryForUI = appPermissionSummaryForUI;
           entityIds.forEach(entityId -> {
-
             Map<String, Set<Action>> permissionMap =
                 setActionsForEntity(finalAppPermissionSummaryForUI.getServicePermissions(), entityId, entityActions);
             finalAppPermissionSummaryForUI.setServicePermissions(permissionMap);
@@ -304,7 +303,6 @@ public class AuthHandler {
           AppPermissionSummaryForUI finalAppPermissionSummaryForUI = appPermissionSummaryForUI;
 
           entityIds.forEach(entityId -> {
-
             Map<String, Set<Action>> permissionMap =
                 setActionsForEntity(finalAppPermissionSummaryForUI.getWorkflowPermissions(), entityId, entityActions);
             finalAppPermissionSummaryForUI.setWorkflowPermissions(permissionMap);

@@ -73,7 +73,6 @@ public class PrometheusResource {
             timeSeries.getMetricName() + " has been configured as " + metricNameToType.get(timeSeries.getMetricName())
                 + " in previous transactions. Same metric name can not have different metric types.");
       }
-
     });
     return invalidFields;
   }

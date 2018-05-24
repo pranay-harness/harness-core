@@ -8,6 +8,7 @@ import com.google.common.collect.Sets;
 
 import org.junit.Test;
 import software.wings.WingsBaseTest;
+import software.wings.exception.WingsException;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.apm.APMMetricInfo;
@@ -51,7 +52,19 @@ public class DatadogStateTest extends WingsBaseTest {
     assertEquals(2, metricEndpointsInfo.size());
     List<APMMetricInfo> apmMetricInfos = metricEndpointsInfo.values().iterator().next();
     assertEquals(
-        "[{\"metricName\":\"IO Wait\",\"responseMappers\":{\"host\":{\"fieldName\":\"host\",\"jsonPath\":\"series[*].scope\",\"regexs\":[\"((?<=host:)(.*))\"]},\"value\":{\"fieldName\":\"value\",\"jsonPath\":\"series[*].pointlist[*].[1]\"},\"txnName\":{\"fieldName\":\"txnName\",\"jsonPath\":\"series[*].scope\"},\"timestamp\":{\"fieldName\":\"timestamp\",\"jsonPath\":\"series[*].pointlist[*].[0]\"}},\"metricType\":{},\"tag\":\"System\"}]",
+        "[{\"metricName\":\"IO Wait\",\"responseMappers\":{\"host\":{\"fieldName\":\"host\",\"jsonPath\":\"series[*].scope\",\"regexs\":[\"((?<=host:)(.*))\"]},\"value\":{\"fieldName\":\"value\",\"jsonPath\":\"series[*].pointlist[*].[1]\"},\"txnName\":{\"fieldName\":\"txnName\",\"jsonPath\":\"series[*].metric\"},\"timestamp\":{\"fieldName\":\"timestamp\",\"jsonPath\":\"series[*].pointlist[*].[0]\"}},\"metricType\":{},\"tag\":\"System\"}]",
         JsonUtils.asJson(apmMetricInfos));
+  }
+
+  @Test(expected = WingsException.class)
+  public void testBadMetric() {
+    Map<String, List<APMMetricInfo>> metricEndpointsInfo =
+        DatadogState.metricEndpointsInfo("todolist", Lists.newArrayList("dummyMetricName"));
+  }
+
+  @Test(expected = WingsException.class)
+  public void testBadServiceName() {
+    Map<String, List<APMMetricInfo>> metricEndpointsInfo = DatadogState.metricEndpointsInfo(
+        null, Lists.newArrayList("trace.servlet.request.duration", "system.cpu.iowait"));
   }
 }

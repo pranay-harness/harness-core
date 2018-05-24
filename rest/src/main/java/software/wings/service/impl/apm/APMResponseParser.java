@@ -10,6 +10,8 @@ import lombok.Builder;
 import lombok.Data;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.expression.RegexFunctor;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 
@@ -35,6 +37,7 @@ public class APMResponseParser {
 
   private static Pattern p = Pattern.compile("\\[(.*?)\\]");
   private static RegexFunctor regexFunctor = new RegexFunctor();
+  private static final Logger logger = LoggerFactory.getLogger(APMResponseData.class);
   private List<String> value;
   private Map<String, APMResponseParser> children;
   private List<List<String>> regex;
@@ -168,6 +171,7 @@ public class APMResponseParser {
         Object val = values.next();
         metricName =
             record.containsKey("metricName") ? (String) record.get("metricName").iterator().next() : metricName;
+
         resultMap.get(key).getValues().put(metricName, (double) cast(val, "value"));
       }
     }

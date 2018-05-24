@@ -110,7 +110,6 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
             throw new WingsException(ErrorCode.APPDYNAMICS_ERROR, e)
                 .addParam("reason", "could not fetch Appdynamics tier BTs");
           }
-
         });
         return null;
       } catch (Exception e) {

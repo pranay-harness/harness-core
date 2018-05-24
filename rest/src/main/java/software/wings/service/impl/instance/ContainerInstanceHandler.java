@@ -105,7 +105,6 @@ public class ContainerInstanceHandler extends InstanceHandler {
     // This is to handle the case of the instances stored in the new schema.
     if (containerSvcNameInstanceMap.size() > 0) {
       containerSvcNameInstanceMap.keySet().forEach(containerSvcName -> {
-
         // Get all the instances for the given containerSvcName (In kubernetes, this is replication Controller and in
         // ECS it is taskDefinition)
         ContainerSyncResponse instanceSyncResponse =
