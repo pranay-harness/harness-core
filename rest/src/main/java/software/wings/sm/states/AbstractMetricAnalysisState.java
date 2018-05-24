@@ -208,8 +208,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
     MetricDataAnalysisResponse executionResponse = (MetricDataAnalysisResponse) response.values().iterator().next();
 
-    if (executionResponse.getExecutionStatus() == ExecutionStatus.ERROR
-        || executionResponse.getExecutionStatus() == ExecutionStatus.FAILED) {
+    if (ExecutionStatus.isBrokeStatus(executionResponse.getExecutionStatus())) {
       continuousVerificationService.setMetaDataExecutionStatus(
           context.getStateExecutionInstanceId(), ExecutionStatus.FAILED);
       return anExecutionResponse()

@@ -12,8 +12,6 @@ import static software.wings.beans.FailureNotification.Builder.aFailureNotificat
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_NOTIFICATION;
-import static software.wings.sm.ExecutionStatus.ABORTED;
-import static software.wings.sm.ExecutionStatus.ERROR;
 import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.PAUSED;
 import static software.wings.sm.ExecutionStatus.RESUMED;
@@ -164,10 +162,9 @@ public class WorkflowNotificationHelper {
 
   private List<NotificationRule> getNotificationApplicableToScope(
       ExecutionContextImpl context, ExecutionScope executionScope, ExecutionStatus status) {
-    if (status == FAILED || status == ERROR || status == ABORTED) {
+    if (ExecutionStatus.isFailStatus(status)) {
       status = FAILED;
-    }
-    if (status == RESUMED) {
+    } else if (status == RESUMED) {
       status = PAUSED;
     }
 

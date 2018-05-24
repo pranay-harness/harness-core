@@ -70,6 +70,7 @@ import software.wings.service.intfc.ownership.OwnedByPipeline;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
+import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateMachine;
 import software.wings.utils.validation.Create;
 import software.wings.yaml.gitSync.YamlGitConfig;
@@ -211,7 +212,7 @@ public class PipelineServiceImpl implements PipelineService {
     PageResponse<PipelineExecution> pageResponse = wingsPersistence.query(PipelineExecution.class, pageRequest);
     if (pageResponse == null || isEmpty(pageResponse.getResponse())
         || pageResponse.getResponse().stream().allMatch(
-               pipelineExecution -> pipelineExecution.getStatus().isFinalStatus())) {
+               pipelineExecution -> ExecutionStatus.isFinalStatus(pipelineExecution.getStatus()))) {
       List<Trigger> triggers = triggerService.getTriggersHasPipelineAction(pipeline.getAppId(), pipeline.getUuid());
       if (isEmpty(triggers)) {
         return;

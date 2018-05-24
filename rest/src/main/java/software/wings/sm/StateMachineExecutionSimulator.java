@@ -222,8 +222,7 @@ public class StateMachineExecutionSimulator {
           State success = stateMachine.getSuccessTransition(state.getName());
           extrapolateProgress(
               countsByStatuses, context, stateMachine, success, parentPath, stateExecutionInstanceMap, false);
-        } else if (status == ExecutionStatus.FAILED || status == ExecutionStatus.ERROR
-            || status == ExecutionStatus.ABORTING || status == ExecutionStatus.ABORTED) {
+        } else if (ExecutionStatus.isFailStatus(status)) {
           countsByStatuses.setFailed(countsByStatuses.getFailed() + 1);
           State failed = stateMachine.getFailureTransition(state.getName());
           extrapolateProgress(

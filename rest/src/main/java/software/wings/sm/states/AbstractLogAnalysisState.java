@@ -187,8 +187,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       ExecutionContext executionContext, Map<String, NotifyResponseData> response) {
     LogAnalysisResponse executionResponse = (LogAnalysisResponse) response.values().iterator().next();
 
-    if (executionResponse.getExecutionStatus() == ExecutionStatus.ERROR
-        || executionResponse.getExecutionStatus() == ExecutionStatus.FAILED) {
+    if (ExecutionStatus.isBrokeStatus(executionResponse.getExecutionStatus())) {
       continuousVerificationService.setMetaDataExecutionStatus(
           executionContext.getStateExecutionInstanceId(), ExecutionStatus.FAILED);
       return anExecutionResponse()

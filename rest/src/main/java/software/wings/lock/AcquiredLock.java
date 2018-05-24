@@ -43,7 +43,7 @@ public class AcquiredLock implements Closeable {
     // working in parallel with the current process.
     final long elapsed = monotonicTimestamp() - startTimestamp;
     final int timeout = lock.getOptions().getInactiveLockTimeout();
-    if (monotonicTimestamp() - startTimestamp > timeout) {
+    if (elapsed > timeout) {
       logger.error(format("The distributed lock %s was not released on time. "
               + "THIS IS VERY BAD!!!, elapsed: %d, timeout %d",
           lock.getName(), elapsed, timeout));

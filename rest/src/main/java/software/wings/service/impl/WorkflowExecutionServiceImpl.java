@@ -400,12 +400,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (workflowExecution == null || workflowExecution.getPipelineExecution() == null) {
       return;
     }
-    if (workflowExecution.getPipelineExecution().getStatus().isFinalStatus()
+    if (ExecutionStatus.isFinalStatus(workflowExecution.getPipelineExecution().getStatus())
         && workflowExecution.getPipelineExecution()
                .getPipelineStageExecutions()
                .stream()
                .flatMap(pipelineStageExecution -> pipelineStageExecution.getWorkflowExecutions().stream())
-               .allMatch(workflowExecution1 -> workflowExecution1.getStatus().isFinalStatus())) {
+               .allMatch(workflowExecution1 -> ExecutionStatus.isFinalStatus(workflowExecution1.getStatus()))) {
       return;
     }
 
@@ -474,7 +474,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     pipelineExecution.setPipelineStageExecutions(stageExecutionDataList);
 
-    if (workflowExecution.getStatus().isFinalStatus()) {
+    if (ExecutionStatus.isFinalStatus(workflowExecution.getStatus())) {
       pipelineExecution.setStatus(workflowExecution.getStatus());
     } else if (stageExecutionDataList.stream().anyMatch(
                    pipelineStageExecution -> pipelineStageExecution.getStatus() == WAITING)) {
@@ -503,7 +503,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private void updatePipelineEstimates(WorkflowExecution workflowExecution) {
-    if (!workflowExecution.getStatus().isFinalStatus()) {
+    if (!ExecutionStatus.isFinalStatus(workflowExecution.getStatus())) {
       return;
     }
 
@@ -640,7 +640,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       return;
     }
 
-    if (!workflowExecution.getStatus().isFinalStatus()) {
+    if (!ExecutionStatus.isFinalStatus(workflowExecution.getStatus())) {
       if (allInstancesIdMap.values().stream().anyMatch(
               i -> i.getStatus() == ExecutionStatus.PAUSED || i.getStatus() == ExecutionStatus.PAUSING)) {
         workflowExecution.setStatus(ExecutionStatus.PAUSED);
@@ -1368,7 +1368,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           .addParam("args", "No WorkflowExecution for executionUuid:" + executionUuid);
     }
 
-    if (workflowExecution.getStatus().isFinalStatus()) {
+    if (ExecutionStatus.isFinalStatus(workflowExecution.getStatus())) {
       // There is a race between the workflow progress and request coming from the user.
       // It is completely normal the workflow to finish while interrupt request is coming.
       // Therefore there is nothing alarming when this occurs.
@@ -1407,7 +1407,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           getWorkflowExecution(workflowExecution.getAppId(), envStateExecutionData.getWorkflowExecutionId());
 
       if (workflowExecution2 == null
-          || (workflowExecution2.getStatus() != null && workflowExecution2.getStatus().isFinalStatus())) {
+          || (workflowExecution2.getStatus() != null
+                 && ExecutionStatus.isFinalStatus(workflowExecution2.getStatus()))) {
         continue;
       }
 
@@ -1739,10 +1740,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (!serviceExecutionSummaryMap.isEmpty()) {
       Collections.sort(serviceExecutionSummaries, ElementExecutionSummary.startTsComparator);
       workflowExecution.setServiceExecutionSummaries(serviceExecutionSummaries);
-      if (workflowExecution.getStatus() == ExecutionStatus.SUCCESS
-          || workflowExecution.getStatus() == ExecutionStatus.FAILED
-          || workflowExecution.getStatus() == ExecutionStatus.ERROR
-          || workflowExecution.getStatus() == ExecutionStatus.ABORTED) {
+      if (ExecutionStatus.isFinalStatus(workflowExecution.getStatus())) {
         wingsPersistence.updateField(WorkflowExecution.class, workflowExecution.getUuid(), "serviceExecutionSummaries",
             workflowExecution.getServiceExecutionSummaries());
       }
@@ -1856,7 +1854,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private void refreshBreakdown(WorkflowExecution workflowExecution) {
-    if (workflowExecution.getStatus().isFinalStatus() && workflowExecution.getBreakdown() != null) {
+    if (ExecutionStatus.isFinalStatus(workflowExecution.getStatus()) && workflowExecution.getBreakdown() != null) {
       return;
     }
     CountsByStatuses breakdown = null;
@@ -1897,7 +1895,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     logger.info("Got the breakdown workflowExecution: {}, status: {}, breakdown: {}", workflowExecution.getUuid(),
         workflowExecution.getStatus(), breakdown);
 
-    if (workflowExecution.getStatus().isFinalStatus()) {
+    if (ExecutionStatus.isFinalStatus(workflowExecution.getStatus())) {
       logger.info("Set the breakdown of the completed workflowExecution: {}, status: {}, breakdown: {}",
           workflowExecution.getUuid(), workflowExecution.getStatus(), breakdown);
 
