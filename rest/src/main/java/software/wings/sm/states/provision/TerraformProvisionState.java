@@ -164,20 +164,23 @@ public abstract class TerraformProvisionState extends State {
 
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
 
-    final Collection<NameValuePair> variables = calculateVariables(getVariables(), terraformProvisioner.getVariables());
-    final Map<String, Object> others =
-        ImmutableMap.<String, Object>builder()
-            .put(VARIABLES_KEY,
-                variables.stream()
-                    .filter(item -> item.getValue() != null)
-                    .filter(item -> item.getValueType() == null || "TEXT".equals(item.getValueType()))
-                    .collect(toMap(item -> item.getName(), item -> item.getValue())))
-            .put(ENCRYPTED_VARIABLES_KEY,
-                variables.stream()
-                    .filter(item -> item.getValue() != null)
-                    .filter(item -> "ENCRYPTED_TEXT".equals(item.getValueType()))
-                    .collect(toMap(item -> item.getName(), item -> item.getValue())))
-            .build();
+    Map<String, Object> others = null;
+    if (!(this instanceof DestroyTerraformProvisionState)) {
+      final Collection<NameValuePair> variables =
+          calculateVariables(getVariables(), terraformProvisioner.getVariables());
+      others = ImmutableMap.<String, Object>builder()
+                   .put(VARIABLES_KEY,
+                       variables.stream()
+                           .filter(item -> item.getValue() != null)
+                           .filter(item -> item.getValueType() == null || "TEXT".equals(item.getValueType()))
+                           .collect(toMap(item -> item.getName(), item -> item.getValue())))
+                   .put(ENCRYPTED_VARIABLES_KEY,
+                       variables.stream()
+                           .filter(item -> item.getValue() != null)
+                           .filter(item -> "ENCRYPTED_TEXT".equals(item.getValueType()))
+                           .collect(toMap(item -> item.getName(), item -> item.getValue())))
+                   .build();
+    }
 
     if (terraformExecutionData.getExecutionStatus() == SUCCESS && terraformExecutionData.getOutputs() != null) {
       fileService.updateParentEntityIdAndVersion(PhaseStep.class, terraformExecutionData.getEntityId(), null,
