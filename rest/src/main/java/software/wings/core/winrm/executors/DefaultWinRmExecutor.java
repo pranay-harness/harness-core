@@ -8,13 +8,14 @@ import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
-import static software.wings.utils.WinRmHelperUtil.HandleWinRmClientException;
+import static software.wings.utils.WinRmHelperUtil.GetErrorDetailsFromWinRmClientException;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Log.LogLevel;
+import software.wings.beans.ResponseMessage;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CopyConfigCommandUnit.ConfigFileMetaData;
 import software.wings.delegatetasks.DelegateLogService;
@@ -75,8 +76,9 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
     } catch (Exception e) {
       commandExecutionStatus = FAILURE;
       logger.error("Error while executing command", e);
+      ResponseMessage details = GetErrorDetailsFromWinRmClientException(e);
       saveExecutionLog(
-          format("Command execution failed. Error: %s", HandleWinRmClientException(e)), INFO, commandExecutionStatus);
+          format("Command execution failed. Error: %s", details.getMessage()), ERROR, commandExecutionStatus);
     }
     return commandExecutionStatus;
   }

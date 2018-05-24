@@ -254,7 +254,9 @@ public enum ErrorCode {
 
   INVALID_TOTP_TOKEN(UNAUTHORIZED),
 
-  EMAIL_FAILED;
+  EMAIL_FAILED,
+
+  SSL_HANDSHAKE_FAILED;
 
   private Status status = BAD_REQUEST;
   private String description;
