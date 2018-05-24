@@ -75,7 +75,7 @@ public interface UserGroupService {
    * @return The newly created clone.
    */
   UserGroup cloneUserGroup(
-      @NotEmpty String accountId, @NotEmpty String uuid, @NotEmpty String newName, @NotEmpty String newDescription);
+      @NotEmpty String accountId, @NotEmpty String uuid, @NotEmpty String newName, String newDescription);
 
   List<UserGroup> getUserGroupsByAccountId(String accountId, User user);
 }
