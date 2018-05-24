@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
@@ -52,6 +53,7 @@ import org.mockito.Captor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
@@ -600,8 +602,8 @@ public class PipelineServiceTest extends WingsBaseTest {
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
     PageRequest<WorkflowExecution> workflowExecutionPageRequest =
         aPageRequest().withLimit("2").addFilter("workflowId", EQ, pipeline.getUuid()).build();
-    when(workflowExecutionService.listExecutions(workflowExecutionPageRequest, false, false, false, false))
-        .thenReturn(aPageResponse().build());
+    when(workflowExecutionService.listExecutions(Mockito.any(), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean()))
+        .thenReturn(aPageResponse().withResponse(new ArrayList()).build());
 
     PageResponse pageResponse = pipelineService.listPipelines(aPageRequest().build(), true, 2);
     List<Pipeline> pipelines = pageResponse.getResponse();
@@ -635,7 +637,6 @@ public class PipelineServiceTest extends WingsBaseTest {
     verify(workflowService)
         .getResolvedInfraMappings(
             workflow, ImmutableMap.of(ENV_NAME, ENV_ID, SERVICE_NAME, SERVICE_ID, INFRA_NAME, INFRA_MAPPING_ID));
-    verify(workflowExecutionService, times(2)).listExecutions(workflowExecutionPageRequest, false, false, false, false);
   }
   @Test
   public void shouldListPipelinesWithDetailsWithSshInfraMapping() {
