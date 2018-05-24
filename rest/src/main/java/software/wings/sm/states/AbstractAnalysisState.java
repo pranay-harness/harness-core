@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.emptySet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
@@ -228,19 +229,28 @@ public abstract class AbstractAnalysisState extends State {
 
       List<ContainerInfo> containerInfoForService = containerInstanceHandler.getContainerInfoForService(
           containerServiceNames, context, infraMappingId, serviceId);
-      Set<String> hosts = containerInfoForService.stream()
-                              .map(containerInfo -> {
-                                if (containerInfo instanceof KubernetesContainerInfo) {
-                                  return ((KubernetesContainerInfo) containerInfo).getPodName();
-                                }
+      Set<String> serviceHosts = containerInfoForService.stream()
+                                     .map(containerInfo -> {
+                                       if (containerInfo instanceof KubernetesContainerInfo) {
+                                         return ((KubernetesContainerInfo) containerInfo).getPodName();
+                                       }
 
-                                if (containerInfo instanceof EcsContainerInfo) {
-                                  return ((EcsContainerInfo) containerInfo).getServiceName();
-                                }
+                                       if (containerInfo instanceof EcsContainerInfo) {
+                                         return ((EcsContainerInfo) containerInfo).getServiceName();
+                                       }
 
-                                throw new IllegalStateException("Invalid type " + containerInfo);
-                              })
-                              .collect(Collectors.toSet());
+                                       throw new IllegalStateException("Invalid type " + containerInfo);
+                                     })
+                                     .collect(Collectors.toSet());
+      final Set<String> hosts = new HashSet<>();
+      serviceHosts.forEach(serviceHost -> {
+        if (isEmpty(hostnameTemplate)) {
+          hosts.add(serviceHost);
+        } else {
+          hosts.add(context.renderExpression(
+              hostnameTemplate, Lists.newArrayList(aHostElement().withHostName(serviceHost).build())));
+        }
+      });
       hosts.removeAll(phaseHosts);
       return hosts;
     }
