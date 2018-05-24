@@ -31,6 +31,8 @@ public interface DelegateService {
 
   Delegate update(@Valid Delegate delegate);
 
+  Delegate updateDescription(String accountId, String delegateId, String newDescription);
+
   Delegate updateScopes(@Valid Delegate delegate);
 
   DelegateScripts checkForUpgrade(String accountId, String delegateId, String version, String managerHost)

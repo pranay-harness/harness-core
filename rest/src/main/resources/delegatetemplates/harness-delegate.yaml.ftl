@@ -71,8 +71,6 @@ spec:
           value: ${deployMode}
         - name: DELEGATE_NAME
           value: ${delegateName}
-        - name: DESCRIPTION
-          value: description here
         - name: PROXY_HOST
           value: ""
         - name: PROXY_PORT

@@ -182,6 +182,25 @@ public class DelegateResourceTest {
   }
 
   @Test
+  public void shouldUpdateDelegateDescription() throws Exception {
+    final String newDesc = "newDescription";
+    Delegate delegate = aDelegate().withUuid(ID_KEY).withAccountId(ACCOUNT_ID).withDescription(newDesc).build();
+
+    when(DELEGATE_SERVICE.updateDescription(ACCOUNT_ID, ID_KEY, newDesc)).thenReturn(delegate);
+    RestResponse<Delegate> restResponse =
+        RESOURCES.client()
+            .target("/delegates/" + ID_KEY + "/description/?accountId=" + ACCOUNT_ID)
+            .request()
+            .put(entity(newDesc, MediaType.TEXT_PLAIN), new GenericType<RestResponse<Delegate>>() {});
+
+    verify(DELEGATE_SERVICE, atLeastOnce()).updateDescription(ACCOUNT_ID, ID_KEY, newDesc);
+    Delegate resource = restResponse.getResource();
+    assertThat(resource.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(resource.getUuid()).isEqualTo(ID_KEY);
+    assertThat(resource.getDescription()).isEqualTo(newDesc);
+  }
+
+  @Test
   public void shouldDelete() throws Exception {
     Response restResponse =
         RESOURCES.client().target("/delegates/" + ID_KEY + "?accountId=" + ACCOUNT_ID).request().delete();

@@ -71,8 +71,6 @@ spec:
           value: AWS
         - name: DELEGATE_NAME
           value: harness-delegate
-        - name: DESCRIPTION
-          value: description here
         - name: PROXY_HOST
           value: ""
         - name: PROXY_PORT
