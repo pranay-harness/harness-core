@@ -2,8 +2,11 @@ package software.wings.delegatetasks.validation;
 
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Collections.singletonList;
+import static software.wings.beans.ErrorCode.INVALID_CREDENTIAL;
+import static software.wings.beans.ErrorCode.SSL_HANDSHAKE_FAILED;
 import static software.wings.common.Constants.HARNESS_KUBE_CONFIG_PATH;
 import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
+import static software.wings.utils.WinRmHelperUtil.GetErrorDetailsFromWinRmClientException;
 
 import com.google.inject.Inject;
 
@@ -16,6 +19,7 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesConfig;
+import software.wings.beans.ResponseMessage;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.core.ssh.executors.SshSessionConfig;
@@ -25,7 +29,6 @@ import software.wings.delegatetasks.validation.DelegateConnectionResult.Delegate
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
-import software.wings.utils.WinRmHelperUtil;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -91,8 +94,9 @@ public class ShellScriptValidation extends AbstractDelegateValidateTask {
             resultBuilder.validated(true);
           }
         } catch (Exception e) {
-          logger.error(WinRmHelperUtil.HandleWinRmClientException(e), e);
-          resultBuilder.validated(false);
+          ResponseMessage details = GetErrorDetailsFromWinRmClientException(e);
+          logger.error(details.getMessage(), e);
+          resultBuilder.validated(details.getCode() == SSL_HANDSHAKE_FAILED || details.getCode() == INVALID_CREDENTIAL);
         }
         break;
 

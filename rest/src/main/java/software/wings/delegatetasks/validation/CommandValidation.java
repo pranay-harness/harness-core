@@ -3,11 +3,13 @@ package software.wings.delegatetasks.validation;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.network.Http.connectableHttpUrl;
 import static java.util.Collections.singletonList;
+import static software.wings.beans.ErrorCode.INVALID_CREDENTIAL;
+import static software.wings.beans.ErrorCode.SSL_HANDSHAKE_FAILED;
 import static software.wings.common.Constants.ALWAYS_TRUE_CRITERIA;
 import static software.wings.common.Constants.WINDOWS_HOME_DIR;
 import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
 import static software.wings.utils.SshHelperUtil.getSshSessionConfig;
-import static software.wings.utils.WinRmHelperUtil.HandleWinRmClientException;
+import static software.wings.utils.WinRmHelperUtil.GetErrorDetailsFromWinRmClientException;
 
 import com.google.inject.Inject;
 
@@ -24,6 +26,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesConfig;
+import software.wings.beans.ResponseMessage;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.EcsResizeParams;
@@ -109,8 +112,8 @@ public class CommandValidation extends AbstractDelegateValidateTask {
     try (WinRmSession session = new WinRmSession(config)) {
       resultBuilder.validated(true);
     } catch (Exception e) {
-      String errorMessage = HandleWinRmClientException(e);
-      resultBuilder.validated(!StringUtils.contains(errorMessage, "Cannot reach remote host"));
+      ResponseMessage details = GetErrorDetailsFromWinRmClientException(e);
+      resultBuilder.validated(details.getCode() == SSL_HANDSHAKE_FAILED || details.getCode() == INVALID_CREDENTIAL);
     }
     return resultBuilder.build();
   }
