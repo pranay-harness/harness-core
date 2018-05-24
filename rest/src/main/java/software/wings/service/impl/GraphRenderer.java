@@ -87,7 +87,7 @@ public class GraphRenderer {
     }
 
     List<ExecutionStatus> activeStatuses =
-        statuses.stream().filter(status -> !status.isFinalStatus()).collect(toList());
+        statuses.stream().filter(status -> !ExecutionStatus.isFinalStatus(status)).collect(toList());
 
     if (activeStatuses.stream().anyMatch(status -> status == WAITING)) {
       return WAITING;

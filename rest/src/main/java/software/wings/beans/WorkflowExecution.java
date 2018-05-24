@@ -367,19 +367,7 @@ public class WorkflowExecution extends Base {
    * @return the boolean
    */
   public boolean isRunningStatus() {
-    return status != null
-        && (status == ExecutionStatus.NEW || status == ExecutionStatus.STARTING || status == ExecutionStatus.RUNNING
-               || status == ExecutionStatus.QUEUED || status == ExecutionStatus.ABORTING);
-  }
-
-  /**
-   * Is failed status boolean.
-   *
-   * @return the boolean
-   */
-  public boolean isFailedStatus() {
-    return status != null
-        && (status == ExecutionStatus.FAILED || status == ExecutionStatus.ABORTED || status == ExecutionStatus.ERROR);
+    return ExecutionStatus.isRunningStatus(status);
   }
 
   /**

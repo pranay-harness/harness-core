@@ -23,8 +23,6 @@ import static software.wings.beans.stats.AppKeyStatistics.AppKeyStatsBreakdown.B
 import static software.wings.beans.stats.NotificationCount.Builder.aNotificationCount;
 import static software.wings.beans.stats.UserStatistics.Builder.anUserStatistics;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
-import static software.wings.sm.ExecutionStatus.ABORTED;
-import static software.wings.sm.ExecutionStatus.ERROR;
 import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 
@@ -469,8 +467,7 @@ public class StatisticsServiceImpl implements StatisticsService {
       return;
     }
     for (WorkflowExecution execution : wflExecutions) {
-      if (execution.getStatus() != SUCCESS && execution.getStatus() != FAILED && execution.getStatus() != ABORTED
-          && execution.getStatus() != ERROR) {
+      if (!ExecutionStatus.isFinalStatus(execution.getStatus())) {
         continue;
       }
       final List<ElementExecutionSummary> serviceExecutionSummaries = new ArrayList<>();
@@ -535,8 +532,7 @@ public class StatisticsServiceImpl implements StatisticsService {
     try (DBCursor ignored = executionIterator.getCursor()) {
       while (executionIterator.hasNext()) {
         WorkflowExecution workflowExecution = executionIterator.next();
-        if ((workflowExecution.getStatus() != SUCCESS && workflowExecution.getStatus() != FAILED
-                && workflowExecution.getStatus() != ABORTED && workflowExecution.getStatus() != ERROR)
+        if (!ExecutionStatus.isFinalStatus(workflowExecution.getStatus())
             || workflowExecution.getServiceExecutionSummaries() == null) {
           continue;
         }

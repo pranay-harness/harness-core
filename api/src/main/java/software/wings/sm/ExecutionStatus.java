@@ -1,82 +1,58 @@
 package software.wings.sm;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 /**
  * Describes possible execution statuses for a state.
- *
- * @author Rishi
  */
 public enum ExecutionStatus {
-  /**
-   * New execution status.
-   */
-  NEW,
-  /**
-   * Starting execution status.
-   */
-  STARTING,
-  /**
-   * Running execution status.
-   */
-  RUNNING,
-  /**
-   * Success execution status.
-   */
-  SUCCESS(true),
-  /**
-   * Aborting execution status.
-   */
+  ABORTED,
   ABORTING,
-  /**
-   * Aborted execution status.
-   */
-  ABORTED(true),
-  /**
-   * Failed execution status.
-   */
-  FAILED(true),
-  /**
-   * Queued execution status.
-   */
-  QUEUED,
-  /**
-   * Scheduled execution status.
-   */
-  SCHEDULED,
-  /**
-   * Error execution status.
-   */
-  ERROR(true),
-  /**
-   * Waiting on error execution status.
-   */
-  WAITING,
-  /**
-   * Pausing on execution
-   */
-  PAUSING,
-  /**
-   * Paused execution status.
-   */
+  ERROR,
+  FAILED,
+  NEW,
   PAUSED,
-  /**
-   * Resumed execution status.
-   */
-  RESUMED;
+  PAUSING,
+  QUEUED,
+  RESUMED,
+  RUNNING,
+  SCHEDULED,
+  STARTING,
+  SUCCESS,
+  WAITING;
 
-  private boolean finalStatus;
+  private static Set<ExecutionStatus> finalStatuses = EnumSet.<ExecutionStatus>of(ABORTED, ERROR, FAILED, SUCCESS);
+  private static Set<ExecutionStatus> brokeStatuses = EnumSet.<ExecutionStatus>of(ERROR, FAILED);
+  private static Set<ExecutionStatus> failStatuses = EnumSet.<ExecutionStatus>of(ABORTED, ABORTING, ERROR, FAILED);
+  private static Set<ExecutionStatus> runningStatuses =
+      EnumSet.<ExecutionStatus>of(ABORTING, NEW, RUNNING, STARTING, QUEUED);
+  private static Set<ExecutionStatus> activeStatuses =
+      EnumSet.<ExecutionStatus>of(ABORTING, NEW, PAUSED, RUNNING, STARTING, QUEUED, WAITING);
 
   ExecutionStatus() {}
 
-  ExecutionStatus(boolean finalStatus) {
-    this.finalStatus = finalStatus;
+  public static boolean isFinalStatus(ExecutionStatus status) {
+    return status != null && finalStatuses.contains(status);
   }
 
-  /**
-   * Is final status boolean.
-   *
-   * @return the boolean
-   */
-  public boolean isFinalStatus() {
-    return finalStatus;
+  public static Set<ExecutionStatus> brokeStatuses() {
+    return brokeStatuses;
+  }
+
+  public static boolean isBrokeStatus(ExecutionStatus status) {
+    return status != null && brokeStatuses.contains(status);
+  }
+
+  public static boolean isFailStatus(ExecutionStatus status) {
+    return status != null && failStatuses.contains(status);
+  }
+
+  public static boolean isRunningStatus(ExecutionStatus status) {
+    return status != null && runningStatuses.contains(status);
+  }
+
+  public static Set<ExecutionStatus> activeStatuses() {
+    return activeStatuses;
   }
 }

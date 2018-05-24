@@ -528,7 +528,7 @@ public class InstanceHelper {
   public void extractInstance(PhaseStepSubWorkflow phaseStepSubWorkflow, ExecutionEvent executionEvent,
       WorkflowExecution workflowExecution, ExecutionContext context, StateExecutionInstance stateExecutionInstance) {
     if (isDeployPhaseStep(phaseStepSubWorkflow.getPhaseStepType())
-        && executionEvent.getExecutionStatus().isFinalStatus()) {
+        && ExecutionStatus.isFinalStatus(executionEvent.getExecutionStatus())) {
       WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
       notNullCheck("params are null for workflow " + workflowExecution.getUuid(), workflowStandardParams);
 

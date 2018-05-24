@@ -505,7 +505,7 @@ public class StateMachineExecutor {
         return handleExecutionEventAdvice(context, stateExecutionInstance, status, executionEventAdvice);
       } else if (status == SUCCESS) {
         return successTransition(context);
-      } else if (status == FAILED || status == ERROR) {
+      } else if (ExecutionStatus.isBrokeStatus(status)) {
         return failedTransition(context, null);
       } else if (status == ABORTED) {
         endTransition(context, stateExecutionInstance, ABORTED, null);
@@ -519,7 +519,7 @@ public class StateMachineExecutor {
     String stateExecutionInstanceId = stateExecutionInstance.getUuid();
     stateExecutionInstance = getStateExecutionInstance(
         stateExecutionInstance.getAppId(), stateExecutionInstance.getExecutionUuid(), stateExecutionInstanceId);
-    if (stateExecutionInstance.getStatus().isFinalStatus()) {
+    if (ExecutionStatus.isFinalStatus(stateExecutionInstance.getStatus())) {
       if (logger.isDebugEnabled()) {
         logger.debug("StateExecutionInstance already reached the final status. Skipping the update for "
             + stateExecutionInstanceId);
@@ -559,18 +559,18 @@ public class StateMachineExecutor {
           ops.set("stateParams", executionEventAdvice.getStateParams());
         }
 
-        List<ExecutionStatus> existingExecutionStatus = asList(ERROR, FAILED);
         Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
                                                   .filter("appId", stateExecutionInstance.getAppId())
                                                   .filter(ID_KEY, stateExecutionInstance.getUuid())
                                                   .field("status")
-                                                  .in(existingExecutionStatus);
+                                                  .in(ExecutionStatus.brokeStatuses());
         UpdateResults updateResult = wingsPersistence.update(query, ops);
         if (updateResult == null || updateResult.getWriteResult() == null
             || updateResult.getWriteResult().getN() != 1) {
           logger.error(
               "StateExecutionInstance status could not be updated- stateExecutionInstance: {}, status: {}, existingExecutionStatus: {}, stateParams: {}",
-              stateExecutionInstance.getUuid(), status, existingExecutionStatus, executionEventAdvice.getStateParams());
+              stateExecutionInstance.getUuid(), status, ExecutionStatus.brokeStatuses(),
+              executionEventAdvice.getStateParams());
         }
         // Open an alert
         openAnAlert(context, stateExecutionInstance);
@@ -609,7 +609,7 @@ public class StateMachineExecutor {
         break;
       }
       case END_EXECUTION: {
-        if (!status.isFinalStatus()) {
+        if (!ExecutionStatus.isFinalStatus(status)) {
           status = ABORTED;
         }
         endTransition(context, stateExecutionInstance, status, null);
@@ -971,7 +971,7 @@ public class StateMachineExecutor {
 
   private boolean updateStateExecutionData(StateExecutionInstance stateExecutionInstance,
       StateExecutionData stateExecutionData, ExecutionStatus status, String errorMsg,
-      List<ExecutionStatus> runningStatusLists, List<ContextElement> contextElements,
+      Collection<ExecutionStatus> runningStatusLists, List<ContextElement> contextElements,
       List<ContextElement> notifyElements, String delegateTaskId) {
     Map<String, StateExecutionData> stateExecutionMap = stateExecutionInstance.getStateExecutionMap();
     if (stateExecutionMap == null) {
@@ -996,7 +996,7 @@ public class StateMachineExecutor {
     stateExecutionInstance.setStatus(status);
     ops.set("status", stateExecutionInstance.getStatus());
 
-    if (status.isFinalStatus()) {
+    if (ExecutionStatus.isFinalStatus(status)) {
       stateExecutionInstance.setEndTs(System.currentTimeMillis());
       ops.set("endTs", stateExecutionInstance.getEndTs());
     }
@@ -1026,7 +1026,7 @@ public class StateMachineExecutor {
     stateExecutionData.setStateParams(stateExecutionInstance.getStateParams());
 
     if (isEmpty(runningStatusLists)) {
-      runningStatusLists = asList(NEW, QUEUED, STARTING, RUNNING, PAUSED, WAITING, ABORTING);
+      runningStatusLists = ExecutionStatus.activeStatuses();
     }
 
     if (isNotBlank(delegateTaskId)) {

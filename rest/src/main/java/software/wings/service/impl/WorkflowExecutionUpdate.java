@@ -150,11 +150,11 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
         }
       }
     } else {
-      if (status.isFinalStatus() && status.equals(SUCCESS)) {
+      if (status == SUCCESS) {
         triggerService.triggerExecutionPostPipelineCompletionAsync(appId, context.getWorkflowId());
       }
     }
-    if (status.isFinalStatus()) {
+    if (ExecutionStatus.isFinalStatus(status)) {
       alertService.deploymentCompleted(appId, context.getWorkflowExecutionId());
     }
   }

@@ -248,7 +248,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
 
     if (status == ExecutionStatus.SUCCESS) {
       return State.ARRIVED;
-    } else if (status.isFinalStatus()) {
+    } else if (ExecutionStatus.isFinalStatus(status)) {
       return State.ABANDONED;
     }
 
