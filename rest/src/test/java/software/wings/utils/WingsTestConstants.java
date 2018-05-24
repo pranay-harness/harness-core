@@ -42,6 +42,8 @@ public interface WingsTestConstants {
 
   String BUILD_JOB_NAME = "BUILD_JOB_NAME";
 
+  String BUILD_NO = "BUILD_NO";
+
   String ARTIFACT_GROUP_ID = "ARTIFACT_GROUP_ID";
 
   String STATE_EXECUTION_ID = "STATE_EXECUTION_ID";

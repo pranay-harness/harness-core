@@ -1,43 +1,41 @@
 package software.wings.service.impl;
 
 import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.beans.WorkflowType.PIPELINE;
 
 import com.google.inject.Inject;
 
 import com.jayway.jsonpath.DocumentContext;
+import org.mongodb.morphia.query.CountOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
+import software.wings.beans.Service;
 import software.wings.beans.WebHookRequest;
 import software.wings.beans.WebHookResponse;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowType;
-import software.wings.beans.artifact.Artifact;
-import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.WebHookTriggerCondition;
+import software.wings.dl.WingsPersistence;
 import software.wings.expression.ExpressionEvaluator;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.ArtifactService;
-import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WebHookService;
 import software.wings.utils.JsonUtils;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import javax.validation.executable.ValidateOnExecution;
 
 @ValidateOnExecution
 public class WebHookServiceImpl implements WebHookService {
-  @Inject private ArtifactStreamService artifactStreamService;
-  @Inject private ArtifactService artifactService;
   @Inject private TriggerService triggerService;
   @Inject private AppService appService;
   @Inject private MainConfiguration configuration;
+  @Inject private WingsPersistence wingsPersistence;
 
   private static final Logger logger = LoggerFactory.getLogger(WebHookServiceImpl.class);
 
@@ -74,56 +72,43 @@ public class WebHookServiceImpl implements WebHookService {
       if (app == null) {
         return WebHookResponse.builder().error("Application does not exist").build();
       }
-      String artifactStreamId = webHookRequest.getArtifactSource();
-      WorkflowExecution workflowExecution;
-      if (artifactStreamId != null) {
-        // TODO: For backward compatible purpose
-        ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
-        if (artifactStream == null) {
-          return WebHookResponse.builder().error("Invalid request payload. ArtifactStream does not exists").build();
-        }
-        Artifact artifact;
-        if (isBlank(webHookRequest.getBuildNumber()) && isBlank(webHookRequest.getDockerImageTag())) {
-          artifact = artifactService.fetchLatestArtifactForArtifactStream(
-              appId, artifactStreamId, artifactStream.getSourceName());
-        } else {
-          String requestBuildNumber = isBlank(webHookRequest.getBuildNumber()) ? webHookRequest.getDockerImageTag()
-                                                                               : webHookRequest.getBuildNumber();
-          logger.info("Build Number {}", requestBuildNumber);
-          artifact = artifactService.getArtifactByBuildNumber(appId, artifactStreamId, requestBuildNumber);
-          if (artifact == null) {
-            // do collection and then run
-            logger.warn("Artifact not found for webhook request " + webHookRequest);
-          }
-        }
-        workflowExecution =
-            triggerService.triggerExecutionByWebHook(appId, token, artifact, webHookRequest.getParameters());
-      } else {
-        Map<String, String> serviceBuildNumbers = new HashMap<>();
-        if (webHookRequest.getArtifacts() != null) {
-          for (Map<String, String> artifact : webHookRequest.getArtifacts()) {
-            String serviceName = artifact.get("service");
-            String buildNumber = artifact.get("buildNumber");
-            logger.info("Service name {} and Build Number {}", serviceName, buildNumber);
-            if (serviceName != null) {
-              serviceBuildNumbers.put(serviceName, buildNumber);
+
+      Map<String, String> serviceBuildNumbers = new HashMap<>();
+      List<Map<String, String>> artifacts = webHookRequest.getArtifacts();
+      if (artifacts != null) {
+        for (Map<String, String> artifact : artifacts) {
+          String serviceName = artifact.get("service");
+          String buildNumber = artifact.get("buildNumber");
+          logger.info("Service name {} and Build Number {}", serviceName, buildNumber);
+          if (serviceName != null) {
+            if (wingsPersistence.createQuery(Service.class)
+                    .filter("appId", appId)
+                    .filter("name", serviceName)
+                    .count(new CountOptions().limit(1))
+                == 0) {
+              return WebHookResponse.builder().error("Service Name [" + serviceName + "] does not exist").build();
             }
+            serviceBuildNumbers.put(serviceName, buildNumber);
           }
         }
-        workflowExecution =
-            triggerService.triggerExecutionByWebHook(appId, token, serviceBuildNumbers, webHookRequest.getParameters());
       }
+      WorkflowExecution workflowExecution =
+          triggerService.triggerExecutionByWebHook(appId, token, serviceBuildNumbers, webHookRequest.getParameters());
       return WebHookResponse.builder()
           .requestId(workflowExecution.getUuid())
           .status(workflowExecution.getStatus().name())
           .apiUrl(getApiUrl(app.getAccountId(), appId, workflowExecution.getUuid()))
-          .uiUrl(getUiUrl(WorkflowType.PIPELINE.equals(workflowExecution.getWorkflowType()), app.getAccountId(), appId,
+          .uiUrl(getUiUrl(PIPELINE.equals(workflowExecution.getWorkflowType()), app.getAccountId(), appId,
               workflowExecution.getEnvId(), workflowExecution.getUuid()))
           .build();
     } catch (Exception ex) {
-      logger.error("WebHook call failed [%s]", token, ex);
-      return WebHookResponse.builder().error(ex.getMessage().toLowerCase()).build();
+      return constructWebhookResponse(token, ex);
     }
+  }
+
+  private WebHookResponse constructWebhookResponse(String token, Exception ex) {
+    logger.warn("WebHook call failed [%s]", token, ex);
+    return WebHookResponse.builder().error(ex.getMessage().toLowerCase()).build();
   }
 
   @Override
@@ -171,8 +156,7 @@ public class WebHookServiceImpl implements WebHookService {
           .build();
 
     } catch (Exception ex) {
-      logger.error("WebHook call failed [%s]", token, ex);
-      return WebHookResponse.builder().error(ex.getMessage().toLowerCase()).build();
+      return constructWebhookResponse(token, ex);
     }
   }
 }

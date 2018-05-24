@@ -14,9 +14,6 @@ import java.util.Map;
 @Data
 public class WebHookRequest {
   @NotEmpty private String application;
-  private String artifactSource;
-  private String buildNumber;
-  private String dockerImageTag;
   private List<Map<String, String>> artifacts;
   private Map<String, String> parameters;
 }
