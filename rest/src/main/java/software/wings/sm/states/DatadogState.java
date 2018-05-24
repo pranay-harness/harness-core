@@ -226,7 +226,7 @@ public class
         newMetricInfoBuilder.responseMappers(metricInfo.responseMapperMap());
         newMetricInfoBuilder.metricName(metric.getDisplayName());
 
-        if (metric.getDatadogMetricType().equals("System")) {
+        if (Arrays.asList("System", "Kubernetes").contains(metric.getDatadogMetricType())) {
           metricUrl = metricUrl.replace("${query}", metric.getMetricName());
           if (!result.containsKey(metricUrl)) {
             result.put(metricUrl, new ArrayList<>());

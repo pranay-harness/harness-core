@@ -89,7 +89,6 @@ public class FixInstanceDataForAwsSSH implements Migration {
                   updateOperations.set("hostInstanceKey.hostName", changedHostName);
                   updateOperations.set("instanceInfo.hostName", changedHostName);
                   wingsPersistence.update(instance, updateOperations);
-
                 });
 
                 logger.info("Instance fix completed for infraMapping [{}]", infraMappingId);

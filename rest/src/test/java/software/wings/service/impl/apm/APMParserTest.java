@@ -37,7 +37,7 @@ public class APMParserTest extends WingsBaseTest {
         APMResponseParser.APMResponseData.builder().text(textLoad).metricInfos(metricInfoIterator.next()).build(),
         APMResponseParser.APMResponseData.builder().text(textMem).metricInfos(metricInfoIterator.next()).build()));
 
-    assertEquals(40, records.size());
+    assertEquals(80, records.size());
     String output = Resources.toString(
         APMParserTest.class.getResource("/apm/datadog_sample_collected_response.json"), Charsets.UTF_8);
 

@@ -216,7 +216,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
     }
 
     private List<APMResponseParser.APMResponseData> collect(String baseUrl, Map<String, String> headers,
-        Map<String, String> options, String url, List<APMMetricInfo> metricInfos) {
+        Map<String, String> options, final String url, List<APMMetricInfo> metricInfos) {
       List<APMResponseParser.APMResponseData> responses = new ArrayList<>();
 
       //      /**
@@ -236,17 +236,19 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
       String hostKey = fetchHostKey(optionsBiMap);
       if (!isEmpty(hostKey) || url.contains("${host}")) {
         for (String host : dataCollectionInfo.getHosts()) {
+          BiMap<String, Object> curOptionsBiMap = resolveDollarReferences(options);
           if (!isEmpty(hostKey)) {
-            optionsBiMap.put(hostKey, ((String) optionsBiMap.get(hostKey)).replace("${host}", host));
+            curOptionsBiMap.put(hostKey, ((String) curOptionsBiMap.get(hostKey)).replace("${host}", host));
           }
-          url = resolveDollarReferences(url, host);
+          // This needs to be a new variable else it will overwrite url for next iteration
+          String curUrl = resolveDollarReferences(url, host);
           responses.add(new APMResponseParser.APMResponseData(
-              host, collect(getAPMRestClient(baseUrl).collect(url, headersBiMap, optionsBiMap)), metricInfos));
+              host, collect(getAPMRestClient(baseUrl).collect(curUrl, headersBiMap, curOptionsBiMap)), metricInfos));
         }
       } else {
-        url = resolveDollarReferences(url, "");
+        String curUrl = resolveDollarReferences(url, "");
         responses.add(new APMResponseParser.APMResponseData(
-            "", collect(getAPMRestClient(baseUrl).collect(url, headersBiMap, optionsBiMap)), metricInfos));
+            "", collect(getAPMRestClient(baseUrl).collect(curUrl, headersBiMap, optionsBiMap)), metricInfos));
       }
 
       return responses;
@@ -277,8 +279,8 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
               newRelicMetricDataRecord.setStateType(dataCollectionInfo.getStateType());
               newRelicMetricDataRecord.setDataCollectionMinute(dataCollectionMinute);
               newRelicMetricDataRecord.setAppId(dataCollectionInfo.getApplicationId());
-              records.put(newRelicMetricDataRecord.getName(), newRelicMetricDataRecord.getTimeStamp(),
-                  newRelicMetricDataRecord);
+              records.put(newRelicMetricDataRecord.getName() + newRelicMetricDataRecord.getHost(),
+                  newRelicMetricDataRecord.getTimeStamp(), newRelicMetricDataRecord);
             });
 
             // HeartBeat
@@ -290,6 +292,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
                     .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
                     .serviceId(dataCollectionInfo.getServiceId())
                     .stateExecutionId(dataCollectionInfo.getStateExecutionId())
+                    .appId(dataCollectionInfo.getApplicationId())
                     .dataCollectionMinute(dataCollectionMinute)
                     .timeStamp(collectionStartTime)
                     .level(ClusterLevel.H0)

@@ -208,7 +208,6 @@ public class FixInstanceData implements Migration {
           }
 
           return StringUtils.equals(lhs, rhs);
-
         })
         .findFirst();
   }

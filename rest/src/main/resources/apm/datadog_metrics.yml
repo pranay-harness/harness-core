@@ -31,7 +31,37 @@ System:
       datadogMetricType: System
       displayName: IO Wait
 
-
+Kubernetes:
+  -
+      metricName: kubernetes.cpu.usage.total
+      mlMetricType: INFRA
+      datadogMetricType: Kubernetes
+      displayName: K8 CPU Usage
+  -
+      metricName: kubernetes.memory.usage
+      mlMetricType: INFRA
+      datadogMetricType: Kubernetes
+      displayName: K8 Mem usage
+  -
+      metricName: kubernetes.io.write_bytes
+      mlMetricType: INFRA
+      datadogMetricType: Kubernetes
+      displayName: K8 IO Write bytes
+  -
+      metricName: kubernetes.memory.usage_pct
+      mlMetricType: INFRA
+      datadogMetricType: Kubernetes
+      displayName: K8 Mem usage percentage
+  -
+      metricName: kubernetes.filesystem.usage_pct
+      mlMetricType: INFRA
+      datadogMetricType: Kubernetes
+      displayName: K8 Filesystem usage percentage
+  -
+      metricName: kubernetes.filesystem.usage
+      mlMetricType: INFRA
+      datadogMetricType: Kubernetes
+      displayName: K8 Filesystem usage
 
 
 

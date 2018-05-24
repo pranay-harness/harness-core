@@ -212,7 +212,6 @@ public abstract class TerraformProvisionState extends State {
     return variables.filter(entry -> entry.getValue() != null)
         .filter(entry -> "ENCRYPTED_TEXT".equals(entry.getValueType()))
         .collect(toMap(NameValuePair::getName, entry -> {
-
           final EncryptedData encryptedData = wingsPersistence.createQuery(EncryptedData.class)
                                                   .filter(EncryptedData.ACCOUNT_ID_KEY, accountId)
                                                   .filter(EncryptedData.ID_KEY, entry.getValue())

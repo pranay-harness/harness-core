@@ -342,7 +342,6 @@ public abstract class AbstractAnalysisState extends State {
         .stream()
         .filter(stateExecutionData -> stateExecutionData.getStateType().equals(StateType.PHASE.name()))
         .forEach(stateExecutionData -> {
-
           PhaseExecutionData phaseExecutionData = (PhaseExecutionData) stateExecutionData;
           phaseExecutionData.getElementStatusSummary().stream().forEach(elementExecutionSummary -> {
             PhaseElement phaseElement = (PhaseElement) elementExecutionSummary.getContextElement();
@@ -373,9 +372,7 @@ public abstract class AbstractAnalysisState extends State {
                     elementExecutionSummary);
               }
             }
-
           });
-
         });
     return hosts;
   }
