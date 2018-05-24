@@ -74,11 +74,14 @@ import software.wings.utils.Validator;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 public abstract class TerraformProvisionState extends State {
@@ -161,16 +164,20 @@ public abstract class TerraformProvisionState extends State {
 
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
 
-    final Map<String, Object> others = ImmutableMap.<String, Object>builder()
-                                           .put(VARIABLES_KEY,
-                                               getVariablesStream(terraformProvisioner)
-                                                   .filter(item -> item.getValueType().equals("TEXT"))
-                                                   .collect(toMap(item -> item.getName(), item -> item.getValue())))
-                                           .put(ENCRYPTED_VARIABLES_KEY,
-                                               getVariablesStream(terraformProvisioner)
-                                                   .filter(item -> item.getValueType().equals("ENCRYPTED_TEXT"))
-                                                   .collect(toMap(item -> item.getName(), item -> item.getValue())))
-                                           .build();
+    final Collection<NameValuePair> variables = calculateVariables(getVariables(), terraformProvisioner.getVariables());
+    final Map<String, Object> others =
+        ImmutableMap.<String, Object>builder()
+            .put(VARIABLES_KEY,
+                variables.stream()
+                    .filter(item -> item.getValue() != null)
+                    .filter(item -> item.getValueType() == null || "TEXT".equals(item.getValueType()))
+                    .collect(toMap(item -> item.getName(), item -> item.getValue())))
+            .put(ENCRYPTED_VARIABLES_KEY,
+                variables.stream()
+                    .filter(item -> item.getValue() != null)
+                    .filter(item -> "ENCRYPTED_TEXT".equals(item.getValueType()))
+                    .collect(toMap(item -> item.getName(), item -> item.getValue())))
+            .build();
 
     if (terraformExecutionData.getExecutionStatus() == SUCCESS && terraformExecutionData.getOutputs() != null) {
       fileService.updateParentEntityIdAndVersion(PhaseStep.class, terraformExecutionData.getEntityId(), null,
@@ -193,15 +200,17 @@ public abstract class TerraformProvisionState extends State {
     activityService.updateStatus(activityId, appId, status);
   }
 
-  private Map<String, String> getVariables(Stream<NameValuePair> stream, ExecutionContext context) {
-    return stream.filter(entry -> entry.getValueType().equals("TEXT"))
+  private Map<String, String> getVariables(Stream<NameValuePair> variables, ExecutionContext context) {
+    return variables.filter(entry -> entry.getValue() != null)
+        .filter(entry -> "TEXT".equals(entry.getValueType()))
         .collect(toMap(NameValuePair::getName, entry -> context.renderExpression(entry.getValue())));
   }
 
   private Map<String, EncryptedDataDetail> getEncryptedVariables(
-      Stream<NameValuePair> stream, ExecutionContext context) {
+      Stream<NameValuePair> variables, ExecutionContext context) {
     String accountId = appService.getAccountIdByAppId(context.getAppId());
-    return stream.filter(entry -> entry.getValueType().equals("ENCRYPTED_TEXT"))
+    return variables.filter(entry -> entry.getValue() != null)
+        .filter(entry -> "ENCRYPTED_TEXT".equals(entry.getValueType()))
         .collect(toMap(NameValuePair::getName, entry -> {
 
           final EncryptedData encryptedData = wingsPersistence.createQuery(EncryptedData.class)
@@ -224,22 +233,36 @@ public abstract class TerraformProvisionState extends State {
         }));
   }
 
-  private Stream<NameValuePair> getVariablesStream(TerraformInfrastructureProvisioner terraformProvisioner) {
-    Stream<NameValuePair> stream = null;
-
-    if (isNotEmpty(terraformProvisioner.getVariables())) {
-      stream = terraformProvisioner.getVariables().stream();
+  protected static Collection<NameValuePair> calculateVariables(
+      List<NameValuePair> variables, List<NameValuePair> provisionerVariables) {
+    Map<String, NameValuePair> map = new HashMap<>();
+    if (isNotEmpty(provisionerVariables)) {
+      provisionerVariables.stream().forEach(variable -> map.put(variable.getName(), variable));
     }
 
+    List<NameValuePair> list = new ArrayList<>();
     if (isNotEmpty(variables)) {
-      stream = stream == null ? variables.stream() : Stream.concat(stream, variables.stream());
+      variables.stream()
+          .filter(variable -> {
+            final NameValuePair nameValuePair = map.get(variable.getName());
+            if (nameValuePair == null) {
+              return false;
+            }
+            if (!Objects.equals(nameValuePair.getValueType(), variable.getValueType())) {
+              throw new InvalidRequestException(format(
+                  "The type of variable %s has changed. Please correct it in the workflow step.", variable.getName()));
+            }
+            return true;
+          })
+          .forEach(variable -> list.add(variable));
     }
 
-    if (stream == null) {
-      return Stream.empty();
+    if (map.size() > list.size()) {
+      throw new InvalidRequestException(
+          "The provisioner requires more variables. Please correct it in the workflow step.");
     }
 
-    return stream;
+    return list;
   }
 
   private ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
@@ -284,8 +307,10 @@ public abstract class TerraformProvisionState extends State {
                                                             .build()),
           context);
     } else {
-      variables = getVariables(getVariablesStream(terraformProvisioner), context);
-      encryptedVariables = getEncryptedVariables(getVariablesStream(terraformProvisioner), context);
+      final Collection<NameValuePair> allVariables =
+          calculateVariables(getVariables(), terraformProvisioner.getVariables());
+      variables = getVariables(allVariables.stream(), context);
+      encryptedVariables = getEncryptedVariables(allVariables.stream(), context);
     }
 
     DelegateTask delegateTask =
