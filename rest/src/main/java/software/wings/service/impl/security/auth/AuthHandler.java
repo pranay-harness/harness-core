@@ -1,6 +1,7 @@
 package software.wings.service.impl.security.auth;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.noop;
 import static java.util.Arrays.asList;
 import static software.wings.beans.FeatureName.RBAC;
@@ -26,7 +27,9 @@ import static software.wings.security.PermissionAttribute.PermissionType.USER_PE
 import static software.wings.security.PermissionAttribute.PermissionType.WORKFLOW;
 import static software.wings.security.UserRequestContext.EntityInfo;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
@@ -149,6 +152,8 @@ public class AuthHandler {
   private Map<String, AppPermissionSummaryForUI> populateAppPermissions(List<UserGroup> userGroups,
       Map<PermissionType, Map<String, List<Base>>> permissionTypeAppIdEntityMap, HashSet<String> allAppIds) {
     Map<String, AppPermissionSummaryForUI> appPermissionMap = new HashMap<>();
+    Multimap<String, Action> envActionMapForPipeline = HashMultimap.create();
+    Multimap<String, Action> envActionMapForDeployment = HashMultimap.create();
 
     userGroups.stream().forEach(userGroup -> {
       Set<AppPermission> appPermissions = userGroup.getAppPermissions();
@@ -162,15 +167,33 @@ public class AuthHandler {
         }
 
         Set<String> appIds = getAppIdsByFilter(allAppIds, appPermission.getAppFilter());
-        if (appPermission.getPermissionType() == ALL_APP_ENTITIES) {
-          asList(SERVICE, PROVISIONER, ENV, WORKFLOW, PIPELINE, DEPLOYMENT).forEach(permissionType1 -> {
+        PermissionType permissionType = appPermission.getPermissionType();
+
+        if (permissionType == ALL_APP_ENTITIES) {
+          asList(SERVICE, PROVISIONER, ENV, WORKFLOW, DEPLOYMENT).forEach(permissionType1 -> {
             // ignoring entity filter in case of ALL_APP_ENTITIES
             attachPermission(appPermissionMap, permissionTypeAppIdEntityMap, appIds, permissionType1, null,
                 appPermission.getActions());
           });
+
+          attachPipelinePermission(envActionMapForPipeline, appPermissionMap, permissionTypeAppIdEntityMap, appIds,
+              PIPELINE, null, appPermission.getActions());
+          attachPipelinePermission(envActionMapForDeployment, appPermissionMap, permissionTypeAppIdEntityMap, appIds,
+              DEPLOYMENT, null, appPermission.getActions());
+
         } else {
-          attachPermission(appPermissionMap, permissionTypeAppIdEntityMap, appIds, appPermission.getPermissionType(),
-              appPermission.getEntityFilter(), appPermission.getActions());
+          if (permissionType == PIPELINE) {
+            attachPipelinePermission(envActionMapForPipeline, appPermissionMap, permissionTypeAppIdEntityMap, appIds,
+                permissionType, appPermission.getEntityFilter(), appPermission.getActions());
+          } else {
+            attachPermission(appPermissionMap, permissionTypeAppIdEntityMap, appIds, permissionType,
+                appPermission.getEntityFilter(), appPermission.getActions());
+
+            if (permissionType == DEPLOYMENT) {
+              attachPipelinePermission(envActionMapForDeployment, appPermissionMap, permissionTypeAppIdEntityMap,
+                  appIds, permissionType, appPermission.getEntityFilter(), appPermission.getActions());
+            }
+          }
         }
       });
     });
@@ -179,7 +202,7 @@ public class AuthHandler {
   }
 
   private Map<String, Set<Action>> setActionsForEntity(
-      Map<String, Set<Action>> permissionMap, String entityId, Set<Action> actionSet) {
+      Map<String, Set<Action>> permissionMap, String entityId, Collection<Action> actionCollection) {
     if (permissionMap == null) {
       permissionMap = new HashMap<>();
     }
@@ -191,7 +214,7 @@ public class AuthHandler {
       permissionMap.put(entityId, actions);
     }
 
-    actions.addAll(actionSet);
+    actions.addAll(actionCollection);
     return permissionMap;
   }
 
@@ -218,9 +241,7 @@ public class AuthHandler {
           if (isEmpty(entityActions)) {
             break;
           }
-          if (entityFilter != null) {
-            logger.info("entityFilter");
-          }
+
           Set<String> entityIds = getServiceIdsByFilter(
               permissionTypeAppIdEntityMap.get(permissionType).get(appId), (GenericEntityFilter) entityFilter);
           AppPermissionSummaryForUI finalAppPermissionSummaryForUI = appPermissionSummaryForUI;
@@ -239,9 +260,6 @@ public class AuthHandler {
           }
           if (isEmpty(entityActions)) {
             break;
-          }
-          if (entityFilter != null) {
-            logger.info("entityFilter");
           }
           Set<String> entityIds = getProvisionerIdsByFilter(
               permissionTypeAppIdEntityMap.get(permissionType).get(appId), (GenericEntityFilter) entityFilter);
@@ -294,30 +312,12 @@ public class AuthHandler {
 
           break;
         }
-        case PIPELINE: {
-          if (actions.contains(Action.CREATE)) {
-            appPermissionSummaryForUI.setCanCreatePipeline(true);
-          }
-          if (isEmpty(entityActions)) {
-            break;
-          }
-          Set<String> entityIds = getPipelineIdsByFilter(permissionTypeAppIdEntityMap.get(permissionType).get(appId),
-              permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter);
-          AppPermissionSummaryForUI finalAppPermissionSummaryForUI = appPermissionSummaryForUI;
-          entityIds.forEach(entityId -> {
-            Map<String, Set<Action>> permissionMap =
-                setActionsForEntity(finalAppPermissionSummaryForUI.getPipelinePermissions(), entityId, entityActions);
-            finalAppPermissionSummaryForUI.setPipelinePermissions(permissionMap);
-          });
-          break;
-        }
         case DEPLOYMENT: {
           if (isEmpty(entityActions)) {
             break;
           }
-          Set<String> entityIds = getDeploymentIdsByFilter(permissionTypeAppIdEntityMap.get(PIPELINE).get(appId),
-              permissionTypeAppIdEntityMap.get(WORKFLOW).get(appId), permissionTypeAppIdEntityMap.get(ENV).get(appId),
-              (EnvFilter) entityFilter, appId);
+          Set<String> entityIds = getDeploymentIdsByFilter(permissionTypeAppIdEntityMap.get(WORKFLOW).get(appId),
+              permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter, appId);
 
           AppPermissionSummaryForUI finalAppPermissionSummaryForUI = appPermissionSummaryForUI;
           entityIds.forEach(entityId -> {
@@ -327,6 +327,63 @@ public class AuthHandler {
           });
           break;
         }
+        default:
+          noop();
+      }
+    });
+  }
+
+  private void attachPipelinePermission(Multimap<String, Action> envActionMap,
+      Map<String, AppPermissionSummaryForUI> appPermissionMap,
+      Map<PermissionType, Map<String, List<Base>>> permissionTypeAppIdEntityMap, Set<String> appIds,
+      PermissionType permissionType, Filter entityFilter, Set<Action> actions) {
+    final HashSet<Action> fixedEntityActions =
+        Sets.newHashSet(Action.READ, Action.UPDATE, Action.DELETE, Action.EXECUTE);
+    appIds.forEach(appId -> {
+      AppPermissionSummaryForUI appPermissionSummaryForUI = appPermissionMap.get(appId);
+      if (appPermissionSummaryForUI == null) {
+        appPermissionSummaryForUI = new AppPermissionSummaryForUI();
+        appPermissionMap.put(appId, appPermissionSummaryForUI);
+      }
+
+      SetView<Action> intersection = Sets.intersection(fixedEntityActions, actions);
+      Set<Action> entityActions = new HashSet<>(intersection);
+      AppPermissionSummaryForUI finalAppPermissionSummaryForUI = appPermissionSummaryForUI;
+      Multimap<String, Action> pipelineIdActionMap;
+      switch (permissionType) {
+        case PIPELINE:
+          if (actions.contains(Action.CREATE)) {
+            appPermissionSummaryForUI.setCanCreatePipeline(true);
+          }
+
+          if (isEmpty(entityActions)) {
+            break;
+          }
+
+          pipelineIdActionMap = getPipelineIdsByFilter(permissionTypeAppIdEntityMap.get(PIPELINE).get(appId),
+              permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter, envActionMap, entityActions);
+          pipelineIdActionMap.asMap().entrySet().stream().forEach(entry -> {
+            Map<String, Set<Action>> permissionMap = setActionsForEntity(
+                finalAppPermissionSummaryForUI.getPipelinePermissions(), entry.getKey(), entry.getValue());
+            finalAppPermissionSummaryForUI.setPipelinePermissions(permissionMap);
+          });
+          break;
+
+        case DEPLOYMENT:
+          if (isEmpty(entityActions)) {
+            break;
+          }
+
+          pipelineIdActionMap = getPipelineIdsByFilter(permissionTypeAppIdEntityMap.get(PIPELINE).get(appId),
+              permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter, envActionMap, entityActions);
+
+          pipelineIdActionMap.asMap().entrySet().stream().forEach(entry -> {
+            Map<String, Set<Action>> permissionMap = setActionsForEntity(
+                finalAppPermissionSummaryForUI.getDeploymentPermissions(), entry.getKey(), entry.getValue());
+            finalAppPermissionSummaryForUI.setDeploymentPermissions(permissionMap);
+          });
+          break;
+
         default:
           noop();
       }
@@ -834,7 +891,7 @@ public class AuthHandler {
   }
 
   private Set<String> getDeploymentIdsByFilter(
-      List<Base> pipelines, List<Base> workflows, List<Base> environments, EnvFilter envFilter, String appId) {
+      List<Base> workflows, List<Base> environments, EnvFilter envFilter, String appId) {
     WorkflowFilter workflowFilter = getWorkflowFilterFromEnvFilter(envFilter);
 
     if (environments != null) {
@@ -845,14 +902,7 @@ public class AuthHandler {
       }
     }
 
-    Set<String> workflowIds = getWorkflowIdsByFilter(workflows, environments, workflowFilter);
-    Set<String> pipelineIds = getPipelineIdsByFilter(pipelines, environments, envFilter);
-
-    if (CollectionUtils.isNotEmpty(pipelineIds)) {
-      workflowIds.addAll(pipelineIds);
-    }
-
-    return workflowIds;
+    return getWorkflowIdsByFilter(workflows, environments, workflowFilter);
   }
 
   private WorkflowFilter getWorkflowFilterFromEnvFilter(EnvFilter envFilter) {
@@ -878,34 +928,64 @@ public class AuthHandler {
     return workflowFilter;
   }
 
-  private Set<String> getPipelineIdsByFilter(List<Base> pipelines, List<Base> environments, EnvFilter envFilter) {
-    if (pipelines == null) {
-      return new HashSet<>();
+  private Multimap<String, Action> getPipelineIdsByFilter(List<Base> pipelines, List<Base> environments,
+      EnvFilter envFilter, Multimap<String, Action> envActionMap, Set<Action> entityActionsFromCurrentPermission) {
+    Multimap<String, Action> pipelineActionMap = HashMultimap.create();
+
+    if (isEmpty(pipelines)) {
+      return pipelineActionMap;
     }
 
     Set<String> envIds;
-    if (environments != null) {
+    if (isNotEmpty(environments)) {
       envIds = getEnvIdsByFilter(environments, envFilter);
+      envIds.stream().forEach(envId -> envActionMap.putAll(envId, entityActionsFromCurrentPermission));
     } else {
       envIds = Collections.emptySet();
     }
 
-    return pipelines.stream()
-        .filter(p -> {
-          Pipeline pipeline = (Pipeline) p;
-          if (pipeline.getPipelineStages() == null) {
-            return true;
-          }
-          return pipeline.getPipelineStages().stream().allMatch(pipelineStage
-              -> pipelineStage != null && pipelineStage.getPipelineStageElements() != null
-                  && pipelineStage.getPipelineStageElements().stream().allMatch(pipelineStageElement
-                         -> (pipelineStageElement.getProperties() != null
-                                && (pipelineStageElement.getProperties().get("envId") == null
-                                       || envIds.contains(pipelineStageElement.getProperties().get("envId"))))
-                             || pipelineStageElement.getType().equals(StateType.APPROVAL.name())));
-        })
-        .map(pipeline -> pipeline.getUuid())
-        .collect(Collectors.toSet());
+    Set<String> envIdsFromOtherPermissions = envActionMap.keySet();
+    pipelines.stream().forEach(p -> {
+      Set<Action> entityActions = new HashSet(entityActionsFromCurrentPermission);
+      boolean match;
+      Pipeline pipeline = (Pipeline) p;
+      if (pipeline.getPipelineStages() == null) {
+        match = true;
+      } else {
+        match = pipeline.getPipelineStages().stream().allMatch(pipelineStage
+            -> pipelineStage != null && pipelineStage.getPipelineStageElements() != null
+                && pipelineStage.getPipelineStageElements().stream().allMatch(pipelineStageElement -> {
+                     if (pipelineStageElement.getType().equals(StateType.APPROVAL.name())) {
+                       return true;
+                     }
+
+                     if (pipelineStageElement.getProperties() == null) {
+                       return false;
+                     }
+
+                     Object stageEnvIdObj = pipelineStageElement.getProperties().get("envId");
+                     if (stageEnvIdObj == null) {
+                       return true;
+                     }
+
+                     String stageEnvId = (String) stageEnvIdObj;
+
+                     if (envIds.contains(stageEnvId)) {
+                       return true;
+                     } else if (envIdsFromOtherPermissions.contains(stageEnvId)) {
+                       entityActions.retainAll(envActionMap.get(stageEnvId));
+                       return true;
+                     }
+
+                     return false;
+                   }));
+      }
+
+      if (match) {
+        pipelineActionMap.putAll(pipeline.getUuid(), entityActions);
+      }
+    });
+    return pipelineActionMap;
   }
 
   private boolean isEnvTemplatized(Workflow workflow) {

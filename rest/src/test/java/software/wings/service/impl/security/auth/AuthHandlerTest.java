@@ -771,4 +771,150 @@ public class AuthHandlerTest extends WingsBaseTest {
         .isNotNull()
         .containsOnlyKeys(buildWorkflow.getUuid(), approvalPipeline.getUuid(), buildPipeline.getUuid());
   }
+
+  @Test
+  public void testPermissionsForPipelinesInMultipleEnvsAndMultiplePermissions() {
+    setupForAllApp();
+    EnvFilter devFilter = new EnvFilter();
+    devFilter.setFilterTypes(Sets.newHashSet(EnvFilter.FilterType.SELECTED));
+    devFilter.setIds(Sets.newHashSet(dev.getUuid()));
+
+    EnvFilter prodFilter = new EnvFilter();
+    prodFilter.setFilterTypes(Sets.newHashSet(EnvFilter.FilterType.PROD));
+
+    WorkflowFilter workflowFilter = new WorkflowFilter();
+    workflowFilter.setFilterTypes(Sets.newHashSet(NON_PROD));
+
+    AppPermission devEnvPermission =
+        AppPermission.builder()
+            .permissionType(ENV)
+            .appFilter(
+                GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(Sets.newHashSet(APP_ID)).build())
+            .entityFilter(devFilter)
+            .actions(new HashSet(allActions))
+            .build();
+
+    AppPermission workflowPermission =
+        AppPermission.builder()
+            .permissionType(WORKFLOW)
+            .appFilter(
+                GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(Sets.newHashSet(APP_ID)).build())
+            .entityFilter(workflowFilter)
+            .actions(new HashSet(allActions))
+            .build();
+
+    AppPermission devPipelinePermission =
+        AppPermission.builder()
+            .permissionType(PIPELINE)
+            .appFilter(
+                GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(Sets.newHashSet(APP_ID)).build())
+            .entityFilter(devFilter)
+            .actions(new HashSet(allActions))
+            .build();
+
+    AppPermission prodPipelinePermission =
+        AppPermission.builder()
+            .permissionType(PIPELINE)
+            .appFilter(
+                GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(Sets.newHashSet(APP_ID)).build())
+            .entityFilter(prodFilter)
+            .actions(new HashSet(allActions))
+            .build();
+
+    AppPermission devDeploymentPermission =
+        AppPermission.builder()
+            .permissionType(DEPLOYMENT)
+            .appFilter(
+                GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(Sets.newHashSet(APP_ID)).build())
+            .entityFilter(devFilter)
+            .actions(new HashSet(allActions))
+            .build();
+
+    AppPermission prodDeploymentPermission =
+        AppPermission.builder()
+            .permissionType(DEPLOYMENT)
+            .appFilter(
+                GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(Sets.newHashSet(APP_ID)).build())
+            .entityFilter(prodFilter)
+            .actions(new HashSet(allActions))
+            .build();
+
+    WorkflowFilter workflowFilter1 = new WorkflowFilter();
+    workflowFilter1.setFilterTypes(Sets.newHashSet(NON_PROD, PROD));
+
+    AppPermission workflowPermission1 = AppPermission.builder()
+                                            .permissionType(WORKFLOW)
+                                            .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                            .entityFilter(workflowFilter1)
+                                            .actions(Sets.newHashSet(Action.READ))
+                                            .build();
+
+    UserGroup devUserGroup = UserGroup.builder()
+                                 .accountId(ACCOUNT_ID)
+                                 .appPermissions(new HashSet(asList(devEnvPermission, workflowPermission,
+                                     workflowPermission1, devPipelinePermission, devDeploymentPermission)))
+                                 .build();
+    UserGroup prodUserGroup = UserGroup.builder()
+                                  .accountId(ACCOUNT_ID)
+                                  .appPermissions(new HashSet(asList(devEnvPermission, workflowPermission,
+                                      workflowPermission1, prodPipelinePermission, prodDeploymentPermission)))
+                                  .build();
+
+    UserGroup devAndProdUserGroup =
+        UserGroup.builder()
+            .accountId(ACCOUNT_ID)
+            .appPermissions(new HashSet(asList(devEnvPermission, workflowPermission, workflowPermission1,
+                devPipelinePermission, prodPipelinePermission, devDeploymentPermission, prodDeploymentPermission)))
+            .build();
+
+    // Scenario 1
+    List<UserGroup> userGroups = asList(devUserGroup, prodUserGroup);
+
+    UserPermissionInfo userPermissionInfo = authHandler.getUserPermissionInfo(ACCOUNT_ID, userGroups);
+
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getPipelinePermissions())
+        .isNotNull()
+        .containsOnlyKeys(pipeline1.getUuid(), pipeline2.getUuid());
+
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getDeploymentPermissions())
+        .isNotNull()
+        .containsKeys(pipeline1.getUuid(), pipeline2.getUuid());
+
+    // Scenario 2
+    userGroups = asList(prodUserGroup);
+
+    userPermissionInfo = authHandler.getUserPermissionInfo(ACCOUNT_ID, userGroups);
+
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getPipelinePermissions())
+        .isNotNull()
+        .containsOnlyKeys(pipeline2.getUuid());
+
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getDeploymentPermissions())
+        .isNotNull()
+        .containsKeys(pipeline2.getUuid())
+        .doesNotContainKeys(pipeline1.getUuid());
+
+    // Scenario 3
+    userGroups = asList(devAndProdUserGroup);
+
+    userPermissionInfo = authHandler.getUserPermissionInfo(ACCOUNT_ID, userGroups);
+
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getPipelinePermissions())
+        .isNotNull()
+        .containsOnlyKeys(pipeline1.getUuid(), pipeline2.getUuid());
+
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getDeploymentPermissions())
+        .isNotNull()
+        .containsKeys(pipeline1.getUuid(), pipeline2.getUuid());
+
+    // Scenario 4
+    userGroups = asList(devUserGroup);
+
+    userPermissionInfo = authHandler.getUserPermissionInfo(ACCOUNT_ID, userGroups);
+
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getPipelinePermissions()).isNull();
+
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getDeploymentPermissions())
+        .doesNotContainKeys(pipeline1.getUuid(), pipeline2.getUuid());
+  }
 }
