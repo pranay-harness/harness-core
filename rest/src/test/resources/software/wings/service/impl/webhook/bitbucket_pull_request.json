@@ -1,0 +1,102 @@
+{
+  "actor": {
+    "username": "srinivas",
+    "displayName": "srinivas gurubelli"
+  },
+  "pullrequest": {
+    "id": "23",
+    "title": "Bugfix/RM-4918 remote test",
+    "link": "https://bitbucket.harness.com/projects/WF/repos/test/pull-requests/23",
+    "authorLogin": "srinivas gurubelli",
+    "fromRef": {
+      "repository": {
+        "scmId": "git",
+        "project": {
+          "key": "WF",
+          "name": "WF"
+        },
+        "slug": "test",
+        "links": {
+          "self": [
+            {
+              "href": "https://bitbucket.harness.com/projects/WF/repos/test/browse"
+            }
+          ]
+        },
+        "ownerName": "WF",
+        "public": false,
+        "fullName": "WF/test",
+        "owner": {
+          "username": "WF",
+          "displayName": "WF"
+        }
+      },
+      "branch": {
+        "rawNode": "f812211205dc1d375f928f54f7f78e3738d4844f",
+        "name": "bugfix/RM-4918-remote-test"
+      },
+      "commit": {
+        "message": null,
+        "date": null,
+        "hash": "f812211205dc1d375f928f54f7f78e3738d4844f",
+        "authorTimestamp": 0
+      }
+    },
+    "toRef": {
+      "repository": {
+        "scmId": "git",
+        "project": {
+          "key": "WF",
+          "name": "WF"
+        },
+        "slug": "test",
+        "links": {
+          "self": [
+            {
+              "href": "https://bitbucket.harness.com/projects/WF/repos/test/browse"
+            }
+          ]
+        },
+        "ownerName": "WF",
+        "public": false,
+        "fullName": "WF/test",
+        "owner": {
+          "username": "WF",
+          "displayName": "WF"
+        }
+      },
+      "branch": {
+        "rawNode": "da74562e00867eb2b5bf4f4f70cb3e8519b5702c",
+        "name": "bugfix/RM-1526-ToDelete_05"
+      },
+      "commit": {
+        "message": null,
+        "date": null,
+        "hash": "da74562e00867eb2b5bf4f4f70cb3e8519b5702c",
+        "authorTimestamp": 0
+      }
+    }
+  },
+  "repository": {
+    "scmId": "git",
+    "project": {
+      "key": "WF",
+      "name": "WF"
+    },
+    "slug": "test",
+    "links": {
+      "self": [
+        {
+          "href": "https://bitbucket.harness.com/projects/WF/repos/test/browse"
+        }
+      ]
+    },
+    "ownerName": "WF",
+    "public": false,
+    "fullName": "WF/test",
+    "owner": {
+      "username": "WF",
+      "displayName": "WF"
+    }
+  }
+}

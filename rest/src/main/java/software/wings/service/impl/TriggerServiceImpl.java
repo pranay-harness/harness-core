@@ -436,20 +436,16 @@ public class TriggerServiceImpl implements TriggerService {
           String serviceName = finalServices.get(artifactSelection.getServiceId());
           String buildNumber = serviceBuildNumbers.get(serviceName);
           if (isBlank(buildNumber)) {
-            ArtifactStream artifactStream =
-                artifactStreamService.get(trigger.getAppId(), artifactSelection.getArtifactStreamId());
-            if (artifactStream != null) {
-              artifact = artifactService.fetchLatestArtifactForArtifactStream(
-                  trigger.getAppId(), artifactSelection.getArtifactStreamId(), artifactStream.getSourceName());
-              if (artifact != null) {
-                artifacts.add(artifact);
-              }
-            }
+            throw new WingsException("Webhook services " + serviceBuildNumbers.keySet()
+                + " do not match with the trigger services " + finalServices.values());
           } else {
             artifact = artifactService.getArtifactByBuildNumber(
                 trigger.getAppId(), artifactSelection.getArtifactStreamId(), buildNumber);
             if (artifact != null) {
               artifacts.add(artifact);
+            } else {
+              logger.warn("Artifact not yet collect for the build number {} of stream id {}", buildNumber,
+                  artifactSelection.getArtifactStreamId());
             }
           }
         });
@@ -727,7 +723,9 @@ public class TriggerServiceImpl implements TriggerService {
         if (templatizedEnvName != null) {
           envId = triggerWorkflowVariables.get(templatizedEnvName);
           if (envId == null) {
-            logger.warn("Environment templatized name  {} not present in the trigger variables", templatizedEnvName);
+            String msg = "Environment name [" + templatizedEnvName + "] not present in the trigger variables";
+            logger.warn(msg, templatizedEnvName);
+            throw new WingsException(msg);
           }
         }
         if (workflowVariables != null) {
