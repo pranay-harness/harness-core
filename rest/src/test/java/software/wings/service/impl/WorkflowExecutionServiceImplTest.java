@@ -36,7 +36,9 @@ import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anE
 import static software.wings.sm.ExecutionStatus.WAITING;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
+import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_NAME;
 import static software.wings.utils.WingsTestConstants.COMPANY_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -871,6 +873,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   public WorkflowExecution triggerWorkflow(Workflow workflow, Environment env) throws InterruptedException {
     String appId = workflow.getAppId();
     ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setArtifacts(asList(Artifact.Builder.anArtifact().withAppId(APP_ID).withUuid(ARTIFACT_ID).build()));
 
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
     WorkflowExecution execution = workflowExecutionService.triggerOrchestrationWorkflowExecution(
@@ -2124,5 +2127,25 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         JsonUtils.asJson(((CanaryOrchestrationWorkflow) orchestrationWorkflow4.getOrchestrationWorkflow()).getGraph()));
 
     return orchestrationWorkflow4;
+  }
+
+  @Test
+  public void shouldObtainNoLastGoodDeployedArtifacts() {
+    String appId = app.getUuid();
+    Workflow workflow = createExecutableWorkflow(appId, env);
+    List<Artifact> artifacts =
+        workflowExecutionService.obtainLastGoodDeployedArtifacts(workflow.getAppId(), workflow.getUuid());
+    assertThat(artifacts).isEmpty();
+  }
+
+  @Test
+  public void shouldObtainLastGoodDeployedArtifacts() throws InterruptedException {
+    String appId = app.getUuid();
+    Workflow workflow = createExecutableWorkflow(appId, env);
+    WorkflowExecution workflowExecution = triggerWorkflow(workflow, env);
+    assertThat(workflowExecution).isNotNull().hasFieldOrPropertyWithValue("releaseNo", "1");
+    List<Artifact> artifacts =
+        workflowExecutionService.obtainLastGoodDeployedArtifacts(workflow.getAppId(), workflow.getUuid());
+    assertThat(artifacts).isNotEmpty();
   }
 }

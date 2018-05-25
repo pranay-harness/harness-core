@@ -311,19 +311,21 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Map<StateTypeScope, List<Stencil>> mapByScope = null;
     WorkflowPhase workflowPhase = null;
     Map<String, String> entityMap = new HashMap<>(1);
+    boolean buildWorkflow = false;
     if (filterForWorkflow) {
       workflow = readWorkflow(appId, workflowId);
       if (workflow == null) {
         throw new InvalidRequestException(format("Workflow %s does not exist", workflowId), USER);
       }
+      OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+      if (orchestrationWorkflow != null) {
+        buildWorkflow = BUILD.equals(orchestrationWorkflow.getOrchestrationWorkflowType());
+      }
       String envId = workflow.getEnvId();
       entityMap.put(EntityType.ENVIRONMENT.name(), envId);
       if (filterForPhase) {
-        if (workflow != null) {
-          OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-          if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
-            workflowPhase = ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhaseIdMap().get(phaseId);
-          }
+        if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
+          workflowPhase = ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhaseIdMap().get(phaseId);
         }
         if (workflowPhase == null) {
           throw new InvalidRequestException(
@@ -377,6 +379,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         predicate = stencil
             -> stencil.getStencilCategory() != StencilCategory.COMMANDS
             && stencil.getStencilCategory() != StencilCategory.CLOUD;
+      }
+      if (!buildWorkflow) {
+        predicate = stencil -> stencil.getStencilCategory() != StencilCategory.COLLECTIONS;
       }
     }
     Predicate<Stencil> finalPredicate = predicate;

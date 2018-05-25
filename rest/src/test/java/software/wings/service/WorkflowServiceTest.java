@@ -59,8 +59,12 @@ import static software.wings.common.Constants.WORKFLOW_INFRAMAPPING_VALIDATION_M
 import static software.wings.common.Constants.WORKFLOW_VALIDATION_MESSAGE;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
+import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.ENV_STATE;
+import static software.wings.sm.StateType.FORK;
+import static software.wings.sm.StateType.HTTP;
+import static software.wings.sm.StateType.REPEAT;
 import static software.wings.utils.ArtifactType.DOCKER;
 import static software.wings.utils.ArtifactType.WAR;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -683,6 +687,27 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .extracting(Stencil::getType)
         .doesNotContain("BUILD", "ENV_STATE")
         .contains("REPEAT", "FORK", "HTTP");
+  }
+
+  @Test
+  public void stencilsForBuildWorkflow() throws IllegalArgumentException {
+    Workflow workflow = aWorkflow()
+                            .withName(WORKFLOW_NAME)
+                            .withAppId(APP_ID)
+                            .withOrchestrationWorkflow(aBuildOrchestrationWorkflow().build())
+                            .build();
+
+    Workflow workflow2 = workflowService.createWorkflow(workflow);
+    assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
+    Map<StateTypeScope, List<Stencil>> stencils =
+        workflowService.stencils(APP_ID, workflow2.getUuid(), null, StateTypeScope.ORCHESTRATION_STENCILS);
+
+    logger.debug(JsonUtils.asJson(stencils));
+    assertThat(stencils).isNotNull().hasSize(1).containsKeys(StateTypeScope.ORCHESTRATION_STENCILS);
+    assertThat(stencils.get(StateTypeScope.ORCHESTRATION_STENCILS))
+        .extracting(Stencil::getType)
+        .doesNotContain("BUILD", "ENV_STATE")
+        .contains(REPEAT.name(), FORK.name(), HTTP.name(), ARTIFACT_COLLECTION.name());
   }
 
   @Test
