@@ -25,6 +25,7 @@ import com.google.inject.Inject;
 
 import com.mongodb.DBCursor;
 import com.mongodb.DuplicateKeyException;
+import org.apache.commons.io.IOUtils;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
@@ -475,7 +476,7 @@ public class SecretManagerImpl implements SecretManager {
 
   @Override
   public void changeSecretManager(String accountId, String entityId, EncryptionType fromEncryptionType,
-      String fromKmsId, EncryptionType toEncryptionType, String toKmsId) {
+      String fromKmsId, EncryptionType toEncryptionType, String toKmsId) throws IOException {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, entityId);
     Preconditions.checkNotNull(encryptedData, "No encrypted data with id " + entityId);
     Preconditions.checkState(encryptedData.getEncryptionType() == fromEncryptionType,
@@ -486,6 +487,11 @@ public class SecretManagerImpl implements SecretManager {
     EncryptionConfig toConfig = getEncryptionConfig(accountId, toKmsId, toEncryptionType);
     Preconditions.checkNotNull(
         toConfig, "No kms found for account " + accountId + " with id " + entityId + " type: " + fromEncryptionType);
+
+    if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE) {
+      changeFileSecretManager(accountId, encryptedData, toEncryptionType, toConfig);
+      return;
+    }
 
     char[] decrypted = null;
     switch (fromEncryptionType) {
@@ -522,6 +528,35 @@ public class SecretManagerImpl implements SecretManager {
     encryptedData.setEncryptionKey(encrypted.getEncryptionKey());
     encryptedData.setEncryptedValue(encrypted.getEncryptedValue());
 
+    wingsPersistence.save(encryptedData);
+  }
+
+  private void changeFileSecretManager(String accountId, EncryptedData encryptedData, EncryptionType toEncryptionType,
+      EncryptionConfig toConfig) throws IOException {
+    String decryptedFileContent = getFileContents(accountId, encryptedData.getUuid());
+    String savedFileId = String.valueOf(encryptedData.getEncryptedValue());
+    EncryptedData encryptedFileData = null;
+    switch (toEncryptionType) {
+      case KMS:
+        encryptedFileData = kmsService.encryptFile(accountId, (KmsConfig) toConfig, encryptedData.getName(),
+            new BoundedInputStream(IOUtils.toInputStream(decryptedFileContent, "UTF-8")));
+        fileService.deleteFile(savedFileId, CONFIGS);
+        break;
+
+      case VAULT:
+        encryptedFileData =
+            vaultService.encryptFile(accountId, vaultService.getSecretConfig(accountId), encryptedData.getName(),
+                new BoundedInputStream(IOUtils.toInputStream(decryptedFileContent, "UTF-8")), encryptedData);
+        break;
+
+      default:
+        throw new IllegalArgumentException("Invalid type " + toEncryptionType);
+    }
+
+    encryptedData.setEncryptionKey(encryptedFileData.getEncryptionKey());
+    encryptedData.setEncryptedValue(encryptedFileData.getEncryptedValue());
+    encryptedData.setEncryptionType(toEncryptionType);
+    encryptedData.setKmsId(toConfig.getUuid());
     wingsPersistence.save(encryptedData);
   }
 
@@ -653,11 +688,13 @@ public class SecretManagerImpl implements SecretManager {
         break;
 
       case KMS:
-        recordId = wingsPersistence.save(kmsService.encryptFile(accountId, name, inputStream));
+        recordId = wingsPersistence.save(
+            kmsService.encryptFile(accountId, kmsService.getSecretConfig(accountId), name, inputStream));
         break;
 
       case VAULT:
-        recordId = wingsPersistence.save(vaultService.encryptFile(accountId, name, inputStream, null));
+        recordId = wingsPersistence.save(
+            vaultService.encryptFile(accountId, vaultService.getSecretConfig(accountId), name, inputStream, null));
         break;
 
       default:
@@ -760,12 +797,13 @@ public class SecretManagerImpl implements SecretManager {
         break;
 
       case KMS:
-        encryptedFileData = kmsService.encryptFile(accountId, name, inputStream);
+        encryptedFileData = kmsService.encryptFile(accountId, kmsService.getSecretConfig(accountId), name, inputStream);
         fileService.deleteFile(savedFileId, CONFIGS);
         break;
 
       case VAULT:
-        encryptedFileData = vaultService.encryptFile(accountId, name, inputStream, encryptedData);
+        encryptedFileData = vaultService.encryptFile(
+            accountId, vaultService.getSecretConfig(accountId), name, inputStream, encryptedData);
         break;
 
       default:

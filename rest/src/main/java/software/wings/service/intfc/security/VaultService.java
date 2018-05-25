@@ -28,8 +28,8 @@ public interface VaultService {
 
   VaultConfig getVaultConfig(String accountId, String entityId);
 
-  EncryptedData encryptFile(
-      String accountId, String name, BoundedInputStream inputStream, EncryptedData savedEncryptedData);
+  EncryptedData encryptFile(String accountId, VaultConfig vaultConfig, String name, BoundedInputStream inputStream,
+      EncryptedData savedEncryptedData);
 
   File decryptFile(File file, String accountId, EncryptedData encryptedData);
 

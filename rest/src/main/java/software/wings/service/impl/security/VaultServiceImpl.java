@@ -224,10 +224,9 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   }
 
   @Override
-  public EncryptedData encryptFile(
-      String accountId, String name, BoundedInputStream inputStream, EncryptedData savedEncryptedData) {
+  public EncryptedData encryptFile(String accountId, VaultConfig vaultConfig, String name,
+      BoundedInputStream inputStream, EncryptedData savedEncryptedData) {
     try {
-      VaultConfig vaultConfig = getSecretConfig(accountId);
       Preconditions.checkNotNull(vaultConfig);
       byte[] bytes = ByteStreams.toByteArray(inputStream);
       EncryptedData fileData = encrypt(name, new String(CHARSET.decode(ByteBuffer.wrap(bytes)).array()), accountId,

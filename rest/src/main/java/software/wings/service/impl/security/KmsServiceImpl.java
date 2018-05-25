@@ -279,9 +279,8 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   }
 
   @Override
-  public EncryptedData encryptFile(String accountId, String name, BoundedInputStream inputStream) {
+  public EncryptedData encryptFile(String accountId, KmsConfig kmsConfig, String name, BoundedInputStream inputStream) {
     try {
-      KmsConfig kmsConfig = getSecretConfig(accountId);
       Preconditions.checkNotNull(kmsConfig);
       byte[] bytes = ByteStreams.toByteArray(inputStream);
       EncryptedData fileData = encrypt(CHARSET.decode(ByteBuffer.wrap(bytes)).array(), accountId, kmsConfig);
