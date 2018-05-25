@@ -382,3 +382,4 @@ software.wings.beans.command.KubernetesYamlConfig, 5344
 software.wings.beans.container.Label, 5345
 software.wings.api.ScriptStateExecutionSummary, 5346
 software.wings.service.impl.analysis.TimeSeriesMlAnalysisType, 5347
+software.wings.exception.WingsException$ReportTarget, 5348
