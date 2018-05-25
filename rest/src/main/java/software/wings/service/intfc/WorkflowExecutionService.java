@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.MorphiaIterator;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.BuildExecutionSummary;
@@ -291,4 +292,6 @@ public interface WorkflowExecutionService {
 
   MorphiaIterator<WorkflowExecution, WorkflowExecution> obtainWorkflowExecutionIterator(
       List<String> appIds, long epochMilli);
+
+  List<Artifact> obtainLastGoodDeployedArtifacts(@NotEmpty String appId, @NotEmpty String workflowId);
 }

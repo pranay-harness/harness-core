@@ -36,6 +36,8 @@ import static software.wings.beans.ReadPref.CRITICAL;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.GE;
 import static software.wings.beans.WorkflowExecution.PIPELINE_EXECUTION_ID_KEY;
+import static software.wings.beans.WorkflowExecution.STATUS_KEY;
+import static software.wings.beans.WorkflowExecution.WORKFLOW_ID_KEY;
 import static software.wings.beans.WorkflowExecution.WORKFLOW_TYPE_ID_KEY;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.PIPELINE;
@@ -1139,13 +1141,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private void lastGoodReleaseInfo(WorkflowElement workflowElement, WorkflowExecution workflowExecution) {
-    WorkflowExecution workflowExecutionLast = wingsPersistence.get(WorkflowExecution.class,
-        aPageRequest()
-            .addFilter("appId", EQ, workflowExecution.getAppId())
-            .addFilter("workflowId", EQ, workflowExecution.getWorkflowId())
-            .addFilter("status", EQ, ExecutionStatus.SUCCESS)
-            .build());
-
+    WorkflowExecution workflowExecutionLast =
+        fetchLastSuccessDeployment(workflowExecution.getAppId(), workflowExecution.getWorkflowId());
     if (workflowExecutionLast != null) {
       workflowElement.setLastGoodDeploymentDisplayName(workflowExecutionLast.getDisplayName());
       workflowElement.setLastGoodDeploymentUuid(workflowExecutionLast.getUuid());
@@ -2343,5 +2340,26 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         .field(APP_ID_KEY)
         .in(appIds)
         .fetch();
+  }
+
+  @Override
+  public List<Artifact> obtainLastGoodDeployedArtifacts(String appId, String workflowId) {
+    WorkflowExecution workflowExecution = fetchLastSuccessDeployment(appId, workflowId);
+    if (workflowExecution != null) {
+      ExecutionArgs executionArgs = workflowExecution.getExecutionArgs();
+      if (executionArgs != null) {
+        return executionArgs.getArtifacts();
+      }
+    }
+    return new ArrayList<>();
+  }
+
+  private WorkflowExecution fetchLastSuccessDeployment(String appId, String workflowId) {
+    return wingsPersistence.createQuery(WorkflowExecution.class)
+        .filter(WORKFLOW_ID_KEY, workflowId)
+        .filter(APP_ID_KEY, appId)
+        .filter(STATUS_KEY, SUCCESS)
+        .order("-createdAt")
+        .get();
   }
 }

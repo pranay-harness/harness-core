@@ -10,7 +10,10 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import com.google.common.base.MoreObjects;
 
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.common.Constants;
@@ -32,6 +35,8 @@ import java.util.Map;
  * @author Rishi
  */
 @Entity(value = "workflowExecutions", noClassnameStored = true)
+@Indexes(@Index(fields = { @Field("workflowId")
+                           , @Field("status") }))
 public class WorkflowExecution extends Base {
   public static final String STATUS_KEY = "status";
   public static final String WORKFLOW_ID_KEY = "workflowId";

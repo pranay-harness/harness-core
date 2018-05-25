@@ -26,6 +26,7 @@ import software.wings.beans.StateExecutionElement;
 import software.wings.beans.StateExecutionInterrupt;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
 import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
@@ -397,5 +398,15 @@ public class ExecutionResource {
       @QueryParam("stateExecutionId") String stateExecutionId, @QueryParam("currentExecId") String currentExecId) {
     return new RestResponse<>(
         workflowExecutionService.getBaselineDetails(appId, baselineExecutionId, stateExecutionId, currentExecId));
+  }
+
+  @GET
+  @Path("artifacts")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = DEPLOYMENT, action = READ, skipAuth = true)
+  public RestResponse<List<Artifact>> getLastDeployedArtifacts(
+      @QueryParam("appId") String appId, @QueryParam("workflowId") String workflowId) {
+    return new RestResponse<>(workflowExecutionService.obtainLastGoodDeployedArtifacts(appId, workflowId));
   }
 }
