@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import software.wings.APMFetchConfig;
 import software.wings.beans.FeatureName;
 import software.wings.beans.RestResponse;
 import software.wings.metrics.TimeSeriesMetricDefinition;
@@ -168,5 +169,14 @@ public class TimeSeriesResource {
       @QueryParam("accountId") String accountId, @QueryParam("stateType") StateType stateType,
       @QueryParam("stateExecutionId") String stateExecutionId) {
     return new RestResponse<>(metricDataAnalysisService.getMetricTemplate(stateType, stateExecutionId));
+  }
+
+  @POST
+  @Path("/fetch")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<String> fetch(@QueryParam("accountId") String accountId,
+      @QueryParam("serverConfigId") String serverConfigId, APMFetchConfig fetchConfig) {
+    return new RestResponse<>(newRelicService.fetch(accountId, serverConfigId, fetchConfig));
   }
 }

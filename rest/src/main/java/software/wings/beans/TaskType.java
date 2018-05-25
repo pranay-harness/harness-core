@@ -117,6 +117,7 @@ public enum TaskType {
   AMAZON_S3_GET_BUILDS(TaskGroup.S3, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   AMAZON_S3_GET_PLANS(TaskGroup.S3, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   APM_VALIDATE_CONNECTOR_TASK(TaskGroup.APM, ServiceImplDelegateTask.class, APMValidation.class),
+  APM_GET_TASK(TaskGroup.APM, ServiceImplDelegateTask.class, APMValidation.class),
   APPDYNAMICS_CONFIGURATION_VALIDATE_TASK(
       TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class, AppdynamicsValidation.class),
   APPDYNAMICS_GET_APP_TASK(TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class, AppdynamicsValidation.class),

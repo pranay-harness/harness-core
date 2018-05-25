@@ -1,5 +1,6 @@
 package software.wings.service.intfc.newrelic;
 
+import software.wings.APMFetchConfig;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.newrelic.NewRelicApplication;
@@ -15,4 +16,5 @@ public interface NewRelicService {
   void validateConfig(@NotNull SettingAttribute settingAttribute, @NotNull StateType stateType);
   void validateAPMConfig(SettingAttribute settingAttribute, APMValidateCollectorConfig config);
   List<NewRelicApplication> getApplications(@NotNull String settingId, @NotNull StateType stateType);
+  String fetch(String accountId, String serverConfigId, APMFetchConfig url);
 }

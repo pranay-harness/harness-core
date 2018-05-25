@@ -6,8 +6,10 @@ import com.google.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.APMFetchConfig;
 import software.wings.annotation.Encryptable;
 import software.wings.beans.APMValidateCollectorConfig;
+import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
@@ -47,6 +49,27 @@ public class NewRelicServiceImpl implements NewRelicService {
       SyncTaskContext syncTaskContext =
           aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
       delegateProxyFactory.get(APMDelegateService.class, syncTaskContext).validateCollector(config);
+    } catch (Exception e) {
+      String errorMsg = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
+      throw new WingsException(ErrorCode.APM_CONFIGURATION_ERROR).addParam("reason", errorMsg);
+    }
+  }
+
+  @Override
+  public String fetch(String accountId, String serverConfigId, APMFetchConfig fetchConfig) {
+    try {
+      SettingAttribute settingAttribute = settingsService.get(serverConfigId);
+      APMVerificationConfig apmVerificationConfig = (APMVerificationConfig) settingAttribute.getValue();
+      APMValidateCollectorConfig apmValidateCollectorConfig =
+          APMValidateCollectorConfig.builder()
+              .baseUrl(apmVerificationConfig.getUrl())
+              .headers(apmVerificationConfig.collectionHeaders())
+              .options(apmVerificationConfig.collectionParams())
+              .url(fetchConfig.getUrl())
+              .encryptedDataDetails(apmVerificationConfig.encryptedDataDetails(secretManager))
+              .build();
+      SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
+      return delegateProxyFactory.get(APMDelegateService.class, syncTaskContext).fetch(apmValidateCollectorConfig);
     } catch (Exception e) {
       String errorMsg = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
       throw new WingsException(ErrorCode.APM_CONFIGURATION_ERROR).addParam("reason", errorMsg);
