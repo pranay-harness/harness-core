@@ -84,7 +84,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     saveMetaDataForDashboard(analysisContext.getAccountId(), executionContext);
 
     Set<String> canaryNewHostNames = analysisContext.getTestNodes();
-    if (isDemoPath(analysisContext.getAccountId()) && getStateType().equals(StateType.ELK)) {
+    if (isDemoPath(analysisContext.getAccountId()) && getStateType().equals(StateType.ELK.name())) {
       if (settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev")
           || settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("prod")) {
         boolean failedState = settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev");
