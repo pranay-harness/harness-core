@@ -162,9 +162,14 @@ public class GcrServiceImpl implements GcrService {
   private boolean isSuccessful(Response<?> response) {
     int code = response.code();
     switch (code) {
+      case 200:
+        return true;
       case 404:
       case 400:
+        logger.info("Response code {} received. Mostly with Image does not exist", code);
+        return false;
       case 403:
+        logger.info("Response code {} received. User not authorized to access GCR Storage", code);
         throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
             .addParam("message", "User not authorized to access GCR Storage");
       case 401:
