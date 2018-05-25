@@ -2,6 +2,7 @@ package software.wings.delegatetasks.validation;
 
 import static java.util.Collections.singletonList;
 
+import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.DelegateTask;
@@ -19,12 +20,16 @@ public class APMValidation extends AbstractDelegateValidateTask {
   @Override
   public List<String> getCriteria() {
     return singletonList(Arrays.stream(getParameters())
-                             .filter(o -> o instanceof DatadogConfig || o instanceof APMVerificationConfig)
+                             .filter(o
+                                 -> o instanceof DatadogConfig || o instanceof APMVerificationConfig
+                                     || o instanceof APMValidateCollectorConfig)
                              .map(obj -> {
                                if (obj instanceof DatadogConfig) {
                                  return ((DatadogConfig) obj).getUrl();
-                               } else {
+                               } else if (obj instanceof APMVerificationConfig) {
                                  return ((APMVerificationConfig) obj).getUrl();
+                               } else {
+                                 return ((APMValidateCollectorConfig) obj).getUrl();
                                }
                              })
                              .findFirst()
