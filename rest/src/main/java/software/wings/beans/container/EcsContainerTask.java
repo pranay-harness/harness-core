@@ -47,6 +47,7 @@ public class EcsContainerTask extends ContainerTask {
   static final String DUMMY_EXECUTION_ROLE_ARN = "hv--execution-role--hv";
   static final String EXECUTION_ROLE_PLACEHOLDER_REGEX = "\\$\\{EXECUTION_ROLE}";
   private static final Pattern commentPattern = Pattern.compile("^#.*$");
+  public static final Integer DEFAULT_CONTAINER_DEFINITION_MEMORY = 1024;
 
   @EnumData(enumDataProvider = ArtifactEnumDataProvider.class) private String artifactName;
 
@@ -214,12 +215,15 @@ public class EcsContainerTask extends ContainerTask {
             .withName(strip(containerName))
             .withImage(strip(imageName));
 
-    if (harnessContainerDefinition.getCpu() != null && harnessContainerDefinition.getMemory() > 0) {
-      containerDefinition.setCpu(harnessContainerDefinition.getCpu());
-    }
-
     if (harnessContainerDefinition.getMemory() != null && harnessContainerDefinition.getMemory() > 0) {
       containerDefinition.setMemory(harnessContainerDefinition.getMemory());
+    } else {
+      // Memory can not be null, so setting to default value of 1024 in advanced config.
+      containerDefinition.setMemory(DEFAULT_CONTAINER_DEFINITION_MEMORY);
+    }
+
+    if (harnessContainerDefinition.getCpu() != null) {
+      containerDefinition.setCpu(harnessContainerDefinition.getCpu());
     }
 
     if (harnessContainerDefinition.getPortMappings() != null) {
