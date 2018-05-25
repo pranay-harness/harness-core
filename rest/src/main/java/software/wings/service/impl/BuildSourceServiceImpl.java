@@ -4,6 +4,7 @@ import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
+import static software.wings.beans.artifact.ArtifactStreamType.GCS;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -118,7 +119,8 @@ public class BuildSourceServiceImpl implements BuildSourceService {
 
     ArtifactStreamAttributes artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, service);
 
-    if (AMAZON_S3.name().equals(artifactStreamType) || AMI.name().equals(artifactStreamType)) {
+    if (AMAZON_S3.name().equals(artifactStreamType) || AMI.name().equals(artifactStreamType)
+        || GCS.name().equals(artifactStreamType)) {
       return getBuildService(settingAttribute, appId, artifactStreamType)
           .getBuilds(appId, artifactStreamAttributes, settingValue, encryptedDataDetails);
     } else {

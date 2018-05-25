@@ -20,6 +20,7 @@ public enum TaskGroup {
   DOCKER,
   ECR,
   GCR,
+  GCS,
   ACR,
   NEXUS,
   S3,

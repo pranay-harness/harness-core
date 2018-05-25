@@ -444,6 +444,11 @@
         </dependency>
 
         <dependency>
+            <groupId>com.google.apis</groupId>
+            <artifactId>google-api-services-storage</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>io.fabric8</groupId>
             <artifactId>kubernetes-api</artifactId>
         </dependency>
@@ -596,7 +601,6 @@
             <groupId>com.github.allbegray</groupId>
             <artifactId>slack-api</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.sonatype.nexus.plugins</groupId>
             <artifactId>nexus-restlet1x-model</artifactId>

@@ -15,6 +15,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
+import static software.wings.beans.artifact.ArtifactStreamType.GCS;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.exception.WingsException.USER;
@@ -294,10 +295,15 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     } else if (service.getArtifactType().equals(ArtifactType.AMI)) {
       return ImmutableMap.of(AMI.name(), AMI.name());
     }
-    return ImmutableMap.of(ArtifactStreamType.JENKINS.name(), ArtifactStreamType.JENKINS.name(),
-        ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.NEXUS.name(),
-        ArtifactStreamType.NEXUS.name(), ArtifactStreamType.ARTIFACTORY.name(), ArtifactStreamType.ARTIFACTORY.name(),
-        AMAZON_S3.name(), AMAZON_S3.name());
+
+    return new ImmutableMap.Builder<String, String>()
+        .put(ArtifactStreamType.JENKINS.name(), ArtifactStreamType.JENKINS.name())
+        .put(ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.BAMBOO.name())
+        .put(GCS.name(), GCS.name())
+        .put(ArtifactStreamType.NEXUS.name(), ArtifactStreamType.NEXUS.name())
+        .put(ArtifactStreamType.ARTIFACTORY.name(), ArtifactStreamType.ARTIFACTORY.name())
+        .put(AMAZON_S3.name(), AMAZON_S3.name())
+        .build();
   }
 
   @Override

@@ -63,6 +63,9 @@ ARTIFACT_STREAM_TYPE:
       value: Azure Container Registry
     - name: AMI
       value: AMI
+    - name: GCS
+      value: Google Cloud Storage
+
 
 DEPLOYMENT_STRATEGY:
     - name: Serial

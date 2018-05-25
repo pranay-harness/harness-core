@@ -18,6 +18,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
+import static software.wings.beans.artifact.ArtifactStreamType.GCS;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.exception.WingsException.USER;
@@ -94,11 +95,12 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
         logger.info("Artifact Stream {} does not exist. Returning", artifactStreamId);
         return newArtifacts;
       }
-      if (metadataOnlyStreams.contains(artifactStream.getArtifactStreamType())) {
+      String artifactStreamType = artifactStream.getArtifactStreamType();
+      if (metadataOnlyStreams.contains(artifactStreamType)) {
         collectMetaDataOnlyArtifacts(artifactStream, newArtifacts);
-      } else if (artifactStream.getArtifactStreamType().equals(ARTIFACTORY.name())) {
+      } else if (ARTIFACTORY.name().equals(artifactStreamType)) {
         collectArtifactoryArtifacts(appId, artifactStream, newArtifacts);
-      } else if (artifactStream.getArtifactStreamType().equals(AMAZON_S3.name())) {
+      } else if (AMAZON_S3.name().equals(artifactStreamType) || GCS.name().equals(artifactStreamType)) {
         collectGenericArtifacts(appId, artifactStream, newArtifacts);
       } else {
         // Jenkins or Bamboo case
@@ -156,10 +158,11 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
 
   private void collectGenericArtifacts(String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts) {
     String artifactStreamId = artifactStream.getUuid();
+    String artifactStreamType = artifactStream.getArtifactStreamType();
     logger.debug("Collecting Artifacts for artifact stream id {} type {} and source name {} ", artifactStreamId,
-        artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
+        artifactStreamType, artifactStream.getSourceName());
     List<BuildDetails> builds;
-    if (ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())) {
+    if (ARTIFACTORY.name().equals(artifactStreamType)) {
       builds = buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId(), 25);
     } else {
       builds = buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId());
