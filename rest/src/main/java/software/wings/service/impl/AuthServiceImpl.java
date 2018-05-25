@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
@@ -446,6 +447,52 @@ public class AuthServiceImpl implements AuthService {
 
     // not found in cache. cache write through failed as well. rebuild anyway
     return getUserPermissionInfoFromDB(accountId, user);
+  }
+
+  @Override
+  public Set<String> getAppPermissionsForUser(
+      String userId, String accountId, String appId, PermissionType permissionType, Action action) {
+    AppPermissionSummary appPermissionSummary = getAppPermissionSummaryForUser(userId, accountId, appId);
+    if (appPermissionSummary == null) {
+      return emptySet();
+    }
+
+    Map<Action, Set<String>> actionPermissionMap;
+    switch (permissionType) {
+      case SERVICE:
+        actionPermissionMap = appPermissionSummary.getServicePermissions();
+        break;
+      case ENV:
+        actionPermissionMap = appPermissionSummary.getEnvPermissions();
+        break;
+      case WORKFLOW:
+        actionPermissionMap = appPermissionSummary.getWorkflowPermissions();
+        break;
+      case PIPELINE:
+        actionPermissionMap = appPermissionSummary.getPipelinePermissions();
+        break;
+      case DEPLOYMENT:
+        actionPermissionMap = appPermissionSummary.getDeploymentPermissions();
+        break;
+      case PROVISIONER:
+        actionPermissionMap = appPermissionSummary.getProvisionerPermissions();
+        break;
+      default:
+        logger.error("Unsupported permissionType {}", permissionType);
+        return emptySet();
+    }
+
+    if (isEmpty(actionPermissionMap)) {
+      return emptySet();
+    }
+
+    return actionPermissionMap.get(action);
+  }
+
+  @Override
+  public AppPermissionSummary getAppPermissionSummaryForUser(String userId, String accountId, String appId) {
+    UserPermissionInfo userPermissionInfo = getUserPermissionInfo(accountId, userService.getUserFromCacheOrDB(userId));
+    return userPermissionInfo.getAppPermissionMapInternal().get(appId);
   }
 
   private String getUserPermissionInfoCacheKey(String accountId, String userId) {
