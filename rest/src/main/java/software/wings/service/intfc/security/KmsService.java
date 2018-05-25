@@ -28,7 +28,7 @@ public interface KmsService {
 
   Collection<KmsConfig> listKmsConfigs(String accountId, boolean maskSecret);
 
-  EncryptedData encryptFile(String accountId, String name, BoundedInputStream inputStream);
+  EncryptedData encryptFile(String accountId, KmsConfig kmsConfig, String name, BoundedInputStream inputStream);
 
   File decryptFile(File file, String accountId, EncryptedData encryptedData);
 

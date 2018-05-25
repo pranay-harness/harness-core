@@ -2116,6 +2116,82 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @RealMongo
+  public void transitionKmsForConfigFile() throws IOException, InterruptedException {
+    Thread listenerThread = startTransitionListener();
+    try {
+      final long seed = System.currentTimeMillis();
+      logger.info("seed: " + seed);
+      Random r = new Random(seed);
+      final String randomAccountId = UUID.randomUUID().toString();
+      final String randomAppId = UUID.randomUUID().toString();
+      KmsConfig fromConfig = getKmsConfig();
+      kmsResource.saveKmsConfig(randomAccountId, fromConfig);
+
+      Service service = Service.builder().name(UUID.randomUUID().toString()).appId(randomAppId).build();
+      wingsPersistence.save(service);
+
+      String secretName = UUID.randomUUID().toString();
+      File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
+      String secretFileId =
+          secretManager.saveFile(randomAccountId, secretName, new BoundedInputStream(new FileInputStream(fileToSave)));
+      String encryptedUuid =
+          wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE).get().getUuid();
+
+      ConfigFile configFile = ConfigFile.builder()
+                                  .templateId(UUID.randomUUID().toString())
+                                  .envId(UUID.randomUUID().toString())
+                                  .entityType(EntityType.SERVICE)
+                                  .entityId(service.getUuid())
+                                  .description(UUID.randomUUID().toString())
+                                  .parentConfigFileId(UUID.randomUUID().toString())
+                                  .relativeFilePath(UUID.randomUUID().toString())
+                                  .targetToAllEnv(r.nextBoolean())
+                                  .defaultVersion(r.nextInt())
+                                  .envIdVersionMapString(UUID.randomUUID().toString())
+                                  .setAsDefault(r.nextBoolean())
+                                  .notes(UUID.randomUUID().toString())
+                                  .overridePath(UUID.randomUUID().toString())
+                                  .configOverrideType(ConfigOverrideType.CUSTOM)
+                                  .configOverrideExpression(UUID.randomUUID().toString())
+                                  .accountId(randomAccountId)
+                                  .encryptedFileId(secretFileId)
+                                  .encrypted(true)
+                                  .build();
+
+      configFile.setName(UUID.randomUUID().toString());
+      configFile.setFileName(UUID.randomUUID().toString());
+      configFile.setAppId(randomAppId);
+
+      String configFileId = configService.save(configFile, null);
+      File download = configService.download(randomAppId, configFileId);
+      assertEquals(FileUtils.readFileToString(fileToSave, Charset.defaultCharset()),
+          FileUtils.readFileToString(download, Charset.defaultCharset()));
+
+      EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, encryptedUuid);
+      assertNotNull(encryptedData);
+      assertEquals(fromConfig.getUuid(), encryptedData.getKmsId());
+
+      KmsConfig toKmsConfig = getKmsConfig();
+      toKmsConfig.setKmsArn("arn:aws:kms:us-east-1:830767422336:key/e1aebd89-277b-4ec7-a4e9-9a238f8b2594");
+      kmsResource.saveKmsConfig(randomAccountId, toKmsConfig);
+
+      secretManagementResource.transitionSecrets(
+          randomAccountId, EncryptionType.KMS, fromConfig.getUuid(), EncryptionType.KMS, toKmsConfig.getUuid());
+      Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+
+      download = configService.download(randomAppId, configFileId);
+      assertEquals(FileUtils.readFileToString(fileToSave, Charset.defaultCharset()),
+          FileUtils.readFileToString(download, Charset.defaultCharset()));
+      encryptedData = wingsPersistence.get(EncryptedData.class, encryptedUuid);
+      assertNotNull(encryptedData);
+      assertEquals(toKmsConfig.getUuid(), encryptedData.getKmsId());
+    } finally {
+      stopTransitionListener(listenerThread);
+    }
+  }
+
+  @Test
   public void saveAwsConfig() throws IOException, InterruptedException {
     final String accountId = UUID.randomUUID().toString();
     KmsConfig fromConfig = getKmsConfig();
