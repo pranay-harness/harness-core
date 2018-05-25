@@ -11,6 +11,7 @@ import software.wings.service.intfc.BuildService;
 import software.wings.service.intfc.DockerBuildService;
 import software.wings.service.intfc.EcrBuildService;
 import software.wings.service.intfc.GcrBuildService;
+import software.wings.service.intfc.GcsBuildService;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.NexusBuildService;
 
@@ -42,6 +43,8 @@ public class ServiceClassLocator {
         return EcrBuildService.class;
       case GCR:
         return GcrBuildService.class;
+      case GCS:
+        return GcsBuildService.class;
       case JENKINS:
         return JenkinsBuildService.class;
       case NEXUS:

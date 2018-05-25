@@ -116,6 +116,12 @@ public enum TaskType {
   AMAZON_S3_LAST_SUCCESSFUL_BUILD(TaskGroup.S3, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   AMAZON_S3_GET_BUILDS(TaskGroup.S3, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   AMAZON_S3_GET_PLANS(TaskGroup.S3, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
+
+  GCS_COLLECTION(TaskGroup.GCS, AmazonS3CollectionTask.class, AlwaysTrueValidation.class),
+  GCS_GET_ARTIFACT_PATHS(TaskGroup.GCS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
+  GCS_GET_BUILDS(TaskGroup.GCS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
+  GCS_GET_PLANS(TaskGroup.GCS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
+
   APM_VALIDATE_CONNECTOR_TASK(TaskGroup.APM, ServiceImplDelegateTask.class, APMValidation.class),
   APM_GET_TASK(TaskGroup.APM, ServiceImplDelegateTask.class, APMValidation.class),
   APPDYNAMICS_CONFIGURATION_VALIDATE_TASK(

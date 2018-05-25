@@ -82,7 +82,7 @@ public class PluginServiceTest {
   @Test
   public void shouldGetInstalledPlugins() throws Exception {
     assertThat(pluginService.getInstalledPlugins(accountId))
-        .hasSize(24)
+        .hasSize(25)
         .containsExactly(anAccountPlugin()
                              .withSettingClass(JenkinsConfig.class)
                              .withAccountId(accountId)
@@ -105,6 +105,14 @@ public class PluginServiceTest {
                 .withIsEnabled(true)
                 .withDisplayName("Docker Registry")
                 .withType("DOCKER")
+                .withPluginCategories(asList(Artifact))
+                .build(),
+            anAccountPlugin()
+                .withSettingClass(GcpConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName("Google Cloud Storage")
+                .withType("GCS")
                 .withPluginCategories(asList(Artifact))
                 .build(),
             anAccountPlugin()
@@ -277,7 +285,7 @@ public class PluginServiceTest {
                 .build());
 
     assertThat(pluginService.getInstalledPlugins(azureEnabledAccountId))
-        .hasSize(25)
+        .hasSize(26)
         .contains(anAccountPlugin()
                       .withSettingClass(AzureConfig.class)
                       .withAccountId(azureEnabledAccountId)
@@ -288,7 +296,7 @@ public class PluginServiceTest {
                       .build());
 
     assertThat(pluginService.getInstalledPlugins(pcfEnabledAccountId))
-        .hasSize(26)
+        .hasSize(27)
         .contains(anAccountPlugin()
                       .withSettingClass(PcfConfig.class)
                       .withAccountId(pcfEnabledAccountId)
@@ -302,22 +310,23 @@ public class PluginServiceTest {
   @Test
   public void shouldGetPluginSettingSchema() throws Exception {
     assertThat(pluginService.getPluginSettingSchema(accountId))
-        .hasSize(24)
-        .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "PROMETHEUS", "APM_VERIFICATION", "DATA_DOG",
-            "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "ELK", "LOGZ", "SUMO", "AWS", "GCP", "PHYSICAL_DATA_CENTER",
-            "KUBERNETES_CLUSTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS", "ARTIFACTORY", "GIT");
-
-    assertThat(pluginService.getPluginSettingSchema(azureEnabledAccountId))
         .hasSize(25)
         .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "PROMETHEUS", "APM_VERIFICATION", "DATA_DOG",
-            "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "ELK", "LOGZ", "SUMO", "AWS", "GCP", "AZURE",
+            "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "ELK", "LOGZ", "SUMO", "AWS", "GCP", "GCS",
+            "PHYSICAL_DATA_CENTER", "KUBERNETES_CLUSTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS",
+            "ARTIFACTORY", "GIT");
+
+    assertThat(pluginService.getPluginSettingSchema(azureEnabledAccountId))
+        .hasSize(26)
+        .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "PROMETHEUS", "APM_VERIFICATION", "DATA_DOG",
+            "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "ELK", "LOGZ", "SUMO", "AWS", "GCP", "GCS", "AZURE",
             "PHYSICAL_DATA_CENTER", "KUBERNETES_CLUSTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS",
             "ARTIFACTORY", "GIT");
 
     assertThat(pluginService.getPluginSettingSchema(pcfEnabledAccountId))
-        .hasSize(26)
+        .hasSize(27)
         .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "PROMETHEUS", "APM_VERIFICATION", "DATA_DOG",
-            "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "ELK", "LOGZ", "SUMO", "AWS", "GCP", "AZURE",
+            "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "ELK", "LOGZ", "SUMO", "AWS", "GCP", "GCS", "AZURE",
             "PHYSICAL_DATA_CENTER", "KUBERNETES_CLUSTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS",
             "ARTIFACTORY", "PCF", "GIT");
   }

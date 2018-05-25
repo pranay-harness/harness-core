@@ -24,6 +24,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.BAMBOO;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
+import static software.wings.beans.artifact.ArtifactStreamType.GCS;
 import static software.wings.beans.artifact.ArtifactStreamType.JENKINS;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.beans.command.CommandUnitType.AWS_LAMBDA;
@@ -63,6 +64,7 @@ import software.wings.service.impl.yaml.handler.artifactstream.BambooArtifactStr
 import software.wings.service.impl.yaml.handler.artifactstream.DockerArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.EcrArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.GcrArtifactStreamYamlHandler;
+import software.wings.service.impl.yaml.handler.artifactstream.GcsArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.JenkinsArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.NexusArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.command.AmiCommandUnitYamlHandler;
@@ -177,6 +179,7 @@ public class YamlModule extends AbstractModule {
     artifactStreamYamlHelperMapBinder.addBinding(ACR.name()).to(AcrArtifactStreamYamlHandler.class);
     artifactStreamYamlHelperMapBinder.addBinding(JENKINS.name()).to(JenkinsArtifactStreamYamlHandler.class);
     artifactStreamYamlHelperMapBinder.addBinding(NEXUS.name()).to(NexusArtifactStreamYamlHandler.class);
+    artifactStreamYamlHelperMapBinder.addBinding(GCS.name()).to(GcsArtifactStreamYamlHandler.class);
 
     MapBinder<String, InfraMappingYamlHandler> infraMappingYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfraMappingYamlHandler.class);

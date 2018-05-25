@@ -189,6 +189,11 @@ public abstract class SettingValue implements ExtensionPoint {
     AWS("Amazon Web Services"),
 
     /**
+     * GCS setting variable types.
+     */
+    GCS("Google Cloud Storage"),
+
+    /**
      * GCP setting variable types.
      */
     GCP("Google Cloud Platform"),
