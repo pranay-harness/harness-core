@@ -86,6 +86,7 @@ public class ArtifactCollectionJob implements Job {
     try {
       artifacts = artifactCollectionService.collectNewArtifacts(appId, artifactStreamId);
     } catch (WingsException exception) {
+      logger.warn("Failed to collect artifacts for appId {}, artifact stream {}", appId, artifactStream.getUuid());
       exception.logProcessedMessages(MANAGER, logger);
     } catch (Exception e) {
       log(appId, artifactStream, new WingsException(e));
