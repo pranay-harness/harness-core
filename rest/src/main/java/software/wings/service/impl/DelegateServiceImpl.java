@@ -313,13 +313,16 @@ public class DelegateServiceImpl implements DelegateService {
     // TODO:: Specific restriction for account can be handled here.
     String delegateMetadataUrl = mainConfiguration.getDelegateMetadataUrl().trim();
     try {
-      return Request.Get(delegateMetadataUrl)
-          .connectTimeout(DELEGATE_METADATA_HTTP_CALL_TIMEOUT)
-          .socketTimeout(DELEGATE_METADATA_HTTP_CALL_TIMEOUT)
-          .execute()
-          .returnContent()
-          .asString()
-          .trim();
+      logger.info("Fetching delegate metadata from S3: {}", delegateMetadataUrl);
+      String result = Request.Get(delegateMetadataUrl)
+                          .connectTimeout(DELEGATE_METADATA_HTTP_CALL_TIMEOUT)
+                          .socketTimeout(DELEGATE_METADATA_HTTP_CALL_TIMEOUT)
+                          .execute()
+                          .returnContent()
+                          .asString()
+                          .trim();
+      logger.info("Received from S3: {}", result);
+      return result;
     } catch (IOException e) {
       logger.warn("Exception in fetching delegate version", e);
     }
