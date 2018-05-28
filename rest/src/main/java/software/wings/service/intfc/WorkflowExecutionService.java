@@ -99,7 +99,8 @@ public interface WorkflowExecutionService {
       String pipelineExecutionId, @NotNull ExecutionArgs executionArgs);
 
   WorkflowExecution triggerOrchestrationWorkflowExecution(String appId, String envId, String orchestrationId,
-      String pipelineExecutionId, ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate);
+      String pipelineExecutionId, @NotNull ExecutionArgs executionArgs,
+      WorkflowExecutionUpdate workflowExecutionUpdate);
 
   /**
    * Gets the execution details.

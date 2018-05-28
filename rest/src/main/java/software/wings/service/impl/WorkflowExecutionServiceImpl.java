@@ -210,6 +210,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -830,19 +831,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return triggerOrchestrationWorkflowExecution(appId, envId, workflowId, pipelineExecutionId, executionArgs, null);
   }
 
-  /**
-   * Trigger orchestration execution workflow execution.
-   *
-   * @param appId                   the app id
-   * @param envId                   the env id
-   * @param workflowId              the orchestration id
-   * @param executionArgs           the execution args
-   * @param workflowExecutionUpdate the workflow execution update
-   * @return the workflow execution
-   */
-  @SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
+  @Override
   public WorkflowExecution triggerOrchestrationWorkflowExecution(String appId, String envId, String workflowId,
-      String pipelineExecutionId, ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate) {
+      String pipelineExecutionId, @NotNull ExecutionArgs executionArgs,
+      WorkflowExecutionUpdate workflowExecutionUpdate) {
     // TODO - validate list of artifact Ids if it's matching for all the services involved in this orchestration
 
     Workflow workflow = workflowService.readWorkflow(appId, workflowId);
@@ -869,7 +861,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecution.setPipelineExecutionId(pipelineExecutionId);
     workflowExecution.setExecutionArgs(executionArgs);
 
-    Map<String, String> workflowVariables = executionArgs != null ? executionArgs.getWorkflowVariables() : null;
+    Map<String, String> workflowVariables = executionArgs.getWorkflowVariables();
     List<Service> services = workflowService.getResolvedServices(workflow, workflowVariables);
     if (isNotEmpty(services)) {
       workflowExecution.setServiceIds(services.stream().map(Service::getUuid).collect(toList()));
