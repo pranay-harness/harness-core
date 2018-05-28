@@ -4,6 +4,7 @@ import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
 
 import com.google.inject.Inject;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -18,6 +19,7 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.BarrierService;
 
 public class BarrierBackupJob implements Job {
+  @SuppressFBWarnings("MS_SHOULD_BE_FINAL")
   protected static Logger logger = LoggerFactory.getLogger(BarrierBackupJob.class);
 
   public static final String NAME = "BACKUP";

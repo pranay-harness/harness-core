@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.annotations.Api;
 import org.apache.commons.io.IOUtils;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
@@ -164,6 +165,7 @@ public class SettingResource {
    *
    * @return the rest response
    */
+  @SuppressFBWarnings({"NP_NULL_ON_SOME_PATH", "BC_VACUOUS_INSTANCEOF"}) // TODO
   @POST
   @Path("upload")
   @Consumes(MULTIPART_FORM_DATA)
@@ -251,6 +253,7 @@ public class SettingResource {
   @Consumes(MULTIPART_FORM_DATA)
   @Timed
   @ExceptionMetered
+  @SuppressFBWarnings("BC_VACUOUS_INSTANCEOF")
   public RestResponse<SettingAttribute> update(@PathParam("attrId") String attrId,
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @QueryParam("accountId") String accountId,
       @FormDataParam("type") String type, @FormDataParam("name") String name,

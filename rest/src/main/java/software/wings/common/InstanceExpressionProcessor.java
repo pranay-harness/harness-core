@@ -14,6 +14,7 @@ import static software.wings.dl.PageRequest.UNLIMITED;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PartitionElement;
@@ -178,6 +179,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
    * @param hosts the hosts
    * @return the instance expression processor
    */
+  @SuppressFBWarnings("URF_UNREAD_FIELD")
   public InstanceExpressionProcessor withHosts(String... hosts) {
     this.hostNames = hosts;
     return this;

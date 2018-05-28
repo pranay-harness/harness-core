@@ -18,6 +18,7 @@ import com.google.inject.Singleton;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.WriteResult;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.DatastoreImpl;
 import org.mongodb.morphia.query.MorphiaIterator;
 import org.slf4j.Logger;
@@ -111,6 +112,7 @@ public class LogServiceImpl implements LogService {
         wingsPersistence.createQuery(Log.class).filter("appId", appId).filter("activityId", activityId));
   }
 
+  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   @Override
   public void batchedSave(List<Log> logs) {
     if (isNotEmpty(logs)) {

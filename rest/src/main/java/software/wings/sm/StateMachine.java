@@ -11,6 +11,7 @@ import static software.wings.sm.states.RepeatState.Builder.aRepeatState;
 
 import com.google.common.collect.Lists;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
@@ -53,6 +54,7 @@ import java.util.Set;
  * @author Rishi
  */
 @Entity(value = "stateMachines", noClassnameStored = true)
+@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 public class StateMachine extends Base {
   private static final Logger logger = LoggerFactory.getLogger(StateMachine.class);
 
@@ -579,6 +581,7 @@ public class StateMachine extends Base {
    *
    * @return a transition flow map describing transition types to list of states.
    */
+  @SuppressFBWarnings("WMI_WRONG_MAP_ITERATOR")
   public Map<String, Map<TransitionType, List<State>>> getTransitionFlowMap() {
     if (isNotEmpty(cachedTransitionFlowMap)) {
       return cachedTransitionFlowMap;

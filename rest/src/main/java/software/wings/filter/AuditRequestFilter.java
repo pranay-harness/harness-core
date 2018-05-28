@@ -9,6 +9,7 @@ import static software.wings.common.Constants.FILE_CONTENT_NOT_STORED;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -113,6 +114,7 @@ public class AuditRequestFilter implements ContainerRequestFilter {
         .contains(requestContext.getMethod());
   }
 
+  @SuppressFBWarnings("WMI_WRONG_MAP_ITERATOR")
   private String getHeaderString(MultivaluedMap<String, String> headers) {
     if (isEmpty(headers)) {
       return "";
@@ -135,6 +137,7 @@ public class AuditRequestFilter implements ContainerRequestFilter {
     return headerStr;
   }
 
+  @SuppressFBWarnings({"SBSC_USE_STRINGBUFFER_CONCATENATION", "WMI_WRONG_MAP_ITERATOR"})
   private String getQueryParams(MultivaluedMap<String, String> queryParameters) {
     String queryParams = "";
     for (String key : queryParameters.keySet()) {

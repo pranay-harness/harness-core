@@ -25,6 +25,7 @@ import com.google.inject.Inject;
 
 import com.mongodb.DBCursor;
 import com.mongodb.DuplicateKeyException;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.io.IOUtils;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.MorphiaIterator;
@@ -97,7 +98,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class SecretManagerImpl implements SecretManager {
   public static final String HARNESS_DEFAULT_SECRET_MANAGER = "Harness Manager";
-  public static final char[] ENCRYPTED_FIELD_MASK = "*******".toCharArray();
+  @SuppressFBWarnings("MS_MUTABLE_ARRAY") public static final char[] ENCRYPTED_FIELD_MASK = "*******".toCharArray();
   protected static final Logger logger = LoggerFactory.getLogger(SecretManagerImpl.class);
 
   @Inject private WingsPersistence wingsPersistence;
@@ -383,6 +384,7 @@ public class SecretManagerImpl implements SecretManager {
     return rv.values();
   }
 
+  @SuppressFBWarnings("DMI_INVOKING_TOSTRING_ON_ARRAY")
   @Override
   public String getEncryptedYamlRef(Encryptable object, String... fieldNames) throws IllegalAccessException {
     if (object.getSettingType() == SettingVariableTypes.CONFIG_FILE) {
@@ -738,6 +740,7 @@ public class SecretManagerImpl implements SecretManager {
     }
   }
 
+  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   @Override
   public String getFileContents(String accountId, String uuid) {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, uuid);
@@ -843,6 +846,7 @@ public class SecretManagerImpl implements SecretManager {
     return true;
   }
 
+  @SuppressFBWarnings("SBSC_USE_STRINGBUFFER_CONCATENATION")
   @Override
   public boolean deleteFile(String accountId, String uuId) {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, uuId);

@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.time.Timestamp;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
@@ -51,6 +52,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by raghu on 8/4/17.
  */
+@SuppressFBWarnings("MF_CLASS_MASKS_FIELD")
 public class ElkAnalysisState extends AbstractLogAnalysisState {
   @SchemaIgnore @Transient protected static final String DEFAULT_TIME_FIELD = "@timestamp";
 

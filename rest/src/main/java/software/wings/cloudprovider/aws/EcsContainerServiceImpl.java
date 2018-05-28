@@ -56,6 +56,7 @@ import com.amazonaws.services.ecs.model.UpdateServiceResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.network.Http;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -99,6 +100,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   /**
    * Create cluster.
    */
+  @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT")
   public void createCluster() {
     CreateStackResult result = awsHelperService.createStack("us-east-1", "AKIAJLEKM45P4PO5QUFQ",
         "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE".toCharArray(),
@@ -443,6 +445,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   /**
    * Destroy cluster.
    */
+  @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT")
   public void destroyCluster() {
     CreateStackResult result = awsHelperService.createStack("us-east-1", "AKIAJLEKM45P4PO5QUFQ",
         "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE".toCharArray(),

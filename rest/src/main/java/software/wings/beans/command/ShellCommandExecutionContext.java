@@ -1,5 +1,6 @@
 package software.wings.beans.command;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CopyConfigCommandUnit.ConfigFileMetaData;
@@ -11,6 +12,7 @@ import java.util.List;
 /**
  * Created by peeyushaggarwal on 8/2/16.
  */
+@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 public class ShellCommandExecutionContext extends CommandExecutionContext {
   private BaseExecutor executor;
 

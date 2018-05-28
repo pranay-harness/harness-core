@@ -42,6 +42,7 @@ import com.mongodb.DBCursor;
 import de.danielbechler.diff.ObjectDifferBuilder;
 import de.danielbechler.diff.node.DiffNode;
 import de.danielbechler.diff.path.NodePath;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.data.validator.EntityNameValidator;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -1024,6 +1025,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   /**
    * {@inheritDoc}
    */
+  @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
   @Override
   public ServiceCommand getCommandByName(
       @NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName) {

@@ -2,9 +2,11 @@ package software.wings.yaml.directory;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public class DirectoryPath {
   private String path;
-  private final String delimiter = "/";
+  @SuppressFBWarnings("SS_SHOULD_BE_STATIC") private final String delimiter = "/";
 
   public DirectoryPath(String path) {
     this.path = path;
@@ -20,6 +22,7 @@ public class DirectoryPath {
     return this;
   }
 
+  @SuppressFBWarnings("CN_IMPLEMENTS_CLONE_BUT_NOT_CLONEABLE")
   public DirectoryPath clone() {
     return new DirectoryPath(this.path);
   }

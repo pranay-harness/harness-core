@@ -7,6 +7,7 @@ import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 
 import com.google.inject.Inject;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import groovy.lang.Singleton;
 import org.apache.commons.lang3.reflect.MethodUtils;
 import org.slf4j.Logger;
@@ -191,6 +192,7 @@ public class YamlChangeSetHelper {
     }
   }
 
+  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   private String loadFileContentIntoString(ConfigFile configFile) {
     if (!configFile.isEncrypted()) {
       ByteArrayOutputStream outputStream = new ByteArrayOutputStream();

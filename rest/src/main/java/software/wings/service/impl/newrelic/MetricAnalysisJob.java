@@ -8,6 +8,7 @@ import static software.wings.delegatetasks.AppdynamicsDataCollectionTask.PREDECT
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
@@ -305,6 +306,7 @@ public class MetricAnalysisJob implements Job {
       }
     }
 
+    @SuppressFBWarnings("REC_CATCH_EXCEPTION")
     @Override
     public void run() {
       logger.info("Starting analysis for " + context.getStateExecutionId());

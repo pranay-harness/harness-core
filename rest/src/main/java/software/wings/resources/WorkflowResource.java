@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.annotations.Api;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.GraphNode;
@@ -110,6 +111,7 @@ public class WorkflowResource {
    * @param targetCpuUtilizationPercentage
    * @return
    */
+  @SuppressFBWarnings("BX_UNBOXING_IMMEDIATELY_REBOXED")
   @GET
   @Path("hpa-metric-yaml")
   @Timed

@@ -1,5 +1,7 @@
 package software.wings.beans.command;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public enum ContainerApiVersions {
   KUBERNETES_V1("v1"),
   KUBERNETES_V1_ALPHA1("v1alpha1"),
@@ -25,6 +27,7 @@ public enum ContainerApiVersions {
    *
    * @param versionName the version name
    */
+  @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
   public void setVersionName(String versionName) {
     this.versionName = versionName;
   }

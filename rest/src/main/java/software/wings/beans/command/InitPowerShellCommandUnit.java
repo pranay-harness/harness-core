@@ -7,6 +7,7 @@ import com.google.common.collect.Maps;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +37,7 @@ public class InitPowerShellCommandUnit extends AbstractCommandUnit {
     setName(INIT_POWERSHELL_UNIT_NAME);
   }
 
+  @SuppressFBWarnings("VA_FORMAT_STRING_USES_NEWLINE")
   private String getInitCommand(String runtimePath) {
     String script = "$RUNTIME_PATH=[System.Environment]::ExpandEnvironmentVariables(\"%s\")\n"
         + "if(!(Test-Path \"$RUNTIME_PATH\"))\n"
@@ -51,6 +53,7 @@ public class InitPowerShellCommandUnit extends AbstractCommandUnit {
     return String.format(script, runtimePath);
   }
 
+  @SuppressFBWarnings("BC_UNCONFIRMED_CAST")
   @Override
   public CommandExecutionStatus execute(CommandExecutionContext context) {
     activityId = context.getActivityId();

@@ -16,6 +16,7 @@ import com.google.inject.Singleton;
 
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.Reservation;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -463,6 +464,7 @@ public class InstanceHelper {
     builder.instanceInfo(instanceInfo);
   }
 
+  @SuppressFBWarnings("NP_LOAD_OF_KNOWN_NULL_VALUE")
   public void handleDeploymentEvent(DeploymentEvent deploymentEvent) {
     DeploymentInfo deploymentInfo = deploymentEvent.getDeploymentInfo();
     if (deploymentInfo == null) {

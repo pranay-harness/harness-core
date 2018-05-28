@@ -77,6 +77,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.DBCursor;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.mongodb.morphia.query.MorphiaIterator;
@@ -839,6 +840,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    * @param workflowExecutionUpdate the workflow execution update
    * @return the workflow execution
    */
+  @SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
   public WorkflowExecution triggerOrchestrationWorkflowExecution(String appId, String envId, String workflowId,
       String pipelineExecutionId, ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate) {
     // TODO - validate list of artifact Ids if it's matching for all the services involved in this orchestration
@@ -952,6 +954,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return triggerExecution(workflowExecution, stateMachine, null, workflowExecutionUpdate, stdParams, contextElements);
   }
 
+  @SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
   private WorkflowExecution triggerExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,
       ExecutionEventAdvisor workflowExecutionAdvisor, WorkflowExecutionUpdate workflowExecutionUpdate,
       WorkflowStandardParams stdParams, ContextElement... contextElements) {
@@ -1424,6 +1427,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return executionInterrupt;
   }
 
+  @SuppressFBWarnings("RpC_REPEATED_CONDITIONAL_TEST")
   @Override
   public RequiredExecutionArgs getRequiredExecutionArgs(String appId, String envId, ExecutionArgs executionArgs) {
     notNullCheck("workflowType", executionArgs.getWorkflowType());
@@ -1495,6 +1499,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return true;
   }
 
+  @SuppressFBWarnings({"DLS_DEAD_LOCAL_STORE", "UC_USELESS_VOID_METHOD"})
   private void notifyWorkflowExecution(WorkflowExecution workflowExecution) {
     EntityType entityType = ORCHESTRATED_DEPLOYMENT;
     if (workflowExecution.getWorkflowType() == WorkflowType.SIMPLE) {

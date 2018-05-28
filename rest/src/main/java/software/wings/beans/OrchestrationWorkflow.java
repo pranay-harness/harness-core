@@ -27,6 +27,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import software.wings.beans.Variable.VariableBuilder;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
@@ -167,6 +168,7 @@ public abstract class OrchestrationWorkflow {
   /***
    * Add template expressions to workflow variables
    */
+  @SuppressFBWarnings("UC_USELESS_OBJECT")
   public void addToUserVariables(
       List<TemplateExpression> templateExpressions, String stateType, String name, State state) {
     if (isEmpty(templateExpressions)) {

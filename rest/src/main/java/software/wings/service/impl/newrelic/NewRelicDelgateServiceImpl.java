@@ -8,6 +8,7 @@ import static software.wings.service.impl.security.SecretManagementDelegateServi
 
 import com.google.inject.Inject;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.network.Http;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -41,6 +42,7 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * Created by rsingh on 8/28/17.
  */
+@SuppressFBWarnings("STCAL_STATIC_SIMPLE_DATE_FORMAT_INSTANCE")
 public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   private static final String NEW_RELIC_DATE_FORMAT = "YYYY-MM-dd'T'HH:mm:ssZ";
   public static final SimpleDateFormat dateFormatter = new SimpleDateFormat(NEW_RELIC_DATE_FORMAT);
@@ -166,6 +168,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     return getMetricData(newRelicConfig, encryptedDataDetails, baseUrl, metricNames, fromTime, toTime);
   }
 
+  @SuppressFBWarnings({"STCAL_INVOKE_ON_STATIC_DATE_FORMAT_INSTANCE", "SBSC_USE_STRINGBUFFER_CONCATENATION"})
   private NewRelicMetricData getMetricData(NewRelicConfig newRelicConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String baseUrl, Collection<String> metricNames, long fromTime,
       long toTime) throws IOException {

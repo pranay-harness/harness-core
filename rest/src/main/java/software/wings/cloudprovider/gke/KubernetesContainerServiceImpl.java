@@ -21,6 +21,7 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerStateRunning;
@@ -752,6 +753,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     return customResourceDefinition;
   }
 
+  @SuppressFBWarnings("DE_MIGHT_IGNORE")
   @Override
   public void deleteRouteRule(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {

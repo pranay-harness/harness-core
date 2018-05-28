@@ -18,6 +18,7 @@ import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.containerregistry.Registry;
 import com.microsoft.azure.management.containerservice.KubernetesCluster;
 import com.microsoft.rest.LogLevel;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.fabric8.kubernetes.api.model.AuthInfo;
 import io.fabric8.kubernetes.api.model.Cluster;
 import io.fabric8.kubernetes.api.model.Context;
@@ -221,6 +222,7 @@ public class AzureHelperService {
     return null;
   }
 
+  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   private KubernetesConfig parseConfig(String configContent, String namespace) {
     try {
       byte[] configBytes = Base64.getDecoder().decode(configContent);
@@ -309,6 +311,7 @@ public class AzureHelperService {
     return retrofit.create(AzureManagementRestClient.class);
   }
 
+  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   private String getAuthHeader(String username, String password) {
     return "Basic " + encodeBase64String(format("%s:%s", username, password).getBytes());
   }

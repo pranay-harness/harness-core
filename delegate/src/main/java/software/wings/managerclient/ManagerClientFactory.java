@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.network.FibonacciBackOff;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
@@ -36,6 +37,7 @@ class ManagerClientX509TrustManager implements X509TrustManager {
 }
 
 public class ManagerClientFactory implements Provider<ManagerClient> {
+  @SuppressFBWarnings("MS_MUTABLE_ARRAY")
   public static final TrustManager[] TRUST_ALL_CERTS = new X509TrustManager[] {new ManagerClientX509TrustManager()};
 
   private static final Logger logger = LoggerFactory.getLogger("http");

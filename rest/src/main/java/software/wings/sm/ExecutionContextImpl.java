@@ -9,6 +9,7 @@ import static software.wings.sm.ContextElement.SERVICE_VARIABLE;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
@@ -388,6 +389,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     return evaluate(sb.toString(), normalizedExpressionMap, context, defaultObjectPrefix);
   }
 
+  @SuppressFBWarnings("WMI_WRONG_MAP_ITERATOR")
   private Object evaluate(String expr, Map<String, String> normalizedExpressionMap, Map<String, Object> context,
       String defaultObjectPrefix) {
     Map<String, Object> evaluatedValueMap = new HashMap<>();

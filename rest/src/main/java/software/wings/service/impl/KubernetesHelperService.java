@@ -18,6 +18,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.fabric8.kubernetes.api.model.DoneableHorizontalPodAutoscaler;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscalerList;
@@ -169,6 +170,7 @@ public class KubernetesHelperService {
    * use DefaultKubernetesClient(config) constructor version as it internally call
    * super(createHttpClient(config), config)
    */
+  @SuppressFBWarnings({"NP_LOAD_OF_KNOWN_NULL_VALUE", "NP_ALWAYS_NULL", "REC_CATCH_EXCEPTION"}) // TODO
   private OkHttpClient createHttpClientWithProxySetting(final Config config) {
     try {
       OkHttpClient.Builder httpClientBuilder = getOkHttpClientBuilder();
@@ -320,6 +322,7 @@ public class KubernetesHelperService {
     return null;
   }
 
+  @SuppressFBWarnings({"DM_DEFAULT_ENCODING"}) // TODO
   private String encode(char[] value) {
     String encodedValue = new String(value).trim();
     if (isNotBlank(encodedValue) && encodedValue.startsWith("-----BEGIN ")) {

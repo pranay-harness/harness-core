@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -149,6 +150,7 @@ public class APMResponseParser {
     return val;
   }
 
+  @SuppressFBWarnings("BX_UNBOXING_IMMEDIATELY_REBOXED")
   private static void createRecords(String txnName, String metricName, String hostName, String tag,
       List<Multimap<String, Object>> response, Map<String, NewRelicMetricDataRecord> resultMap) {
     for (Multimap<String, Object> record : response) {
@@ -212,6 +214,7 @@ public class APMResponseParser {
     return result;
   }
 
+  @SuppressFBWarnings("DM_BOXED_PRIMITIVE_FOR_PARSING")
   private static Object getValue(Object jsonObject, String field) {
     if (field.contains("[")) {
       if (field.charAt(0) == '[') {

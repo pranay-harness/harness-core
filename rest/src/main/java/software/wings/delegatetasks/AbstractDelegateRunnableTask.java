@@ -3,6 +3,7 @@ package software.wings.delegatetasks;
 
 import com.google.inject.Inject;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
@@ -91,6 +92,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
     return appId;
   }
 
+  @SuppressFBWarnings("EI_EXPOSE_REP")
   public Object[] getParameters() {
     return parameters;
   }

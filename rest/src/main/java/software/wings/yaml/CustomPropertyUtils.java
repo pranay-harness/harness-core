@@ -6,6 +6,7 @@ import static software.wings.beans.yaml.YamlConstants.FIELD_TYPE;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.introspector.BeanAccess;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.introspector.Property;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.introspector.PropertyUtils;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +34,7 @@ class CustomPropertyUtils extends PropertyUtils {
     return null;
   }
 
+  @SuppressFBWarnings("SE_COMPARATOR_SHOULD_BE_SERIALIZABLE")
   private static class CustomComparator implements Comparator<Property> {
     @Override
     public int compare(Property lhs, Property rhs) {

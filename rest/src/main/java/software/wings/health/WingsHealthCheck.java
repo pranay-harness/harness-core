@@ -1,6 +1,7 @@
 package software.wings.health;
 
 import com.codahale.metrics.health.HealthCheck;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import software.wings.app.MainConfiguration;
 
 /**
@@ -16,6 +17,7 @@ public class WingsHealthCheck extends HealthCheck {
    *
    * @param configuration the configuration
    */
+  @SuppressFBWarnings("URF_UNREAD_FIELD")
   public WingsHealthCheck(MainConfiguration configuration) {
     this.configuration = configuration;
   }

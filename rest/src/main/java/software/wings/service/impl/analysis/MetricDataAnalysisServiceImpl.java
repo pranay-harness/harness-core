@@ -12,6 +12,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.mongodb.DBCursor;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.MorphiaIterator;
@@ -432,6 +433,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     }
   }
 
+  @SuppressFBWarnings("NP_LOAD_OF_KNOWN_NULL_VALUE")
   public List<NewRelicMetricAnalysisRecord> getMetricsAnalysisForDemo(
       String appId, String stateExecutionId, String workflowExecutionId) {
     logger.info("Creating analysis summary for demo {}", stateExecutionId);

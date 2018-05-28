@@ -17,6 +17,7 @@ import com.google.inject.Key;
 import com.google.inject.name.Names;
 
 import com.ning.http.client.AsyncHttpClient;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.LogManager;
 import org.slf4j.Logger;
@@ -48,6 +49,7 @@ public class DelegateApplication {
     return processId;
   }
 
+  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   public static void main(String... args) throws IOException {
     processId = Splitter.on("@").split(ManagementFactory.getRuntimeMXBean().getName()).iterator().next();
     // Optionally remove existing handlers attached to j.u.l root logger
@@ -81,6 +83,7 @@ public class DelegateApplication {
     delegateApplication.run(configuration, watcherProcess);
   }
 
+  @SuppressFBWarnings("DM_EXIT")
   private void run(DelegateConfiguration configuration, String watcherProcess) {
     Injector injector = Guice.createInjector(
         new AbstractModule() {

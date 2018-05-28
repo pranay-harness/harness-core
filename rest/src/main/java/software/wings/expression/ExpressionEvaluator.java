@@ -5,6 +5,7 @@ import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 
 import com.google.inject.Singleton;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.data.algorithm.IdentifierName;
 import org.apache.commons.collections.map.SingletonMap;
 import org.apache.commons.jexl3.JexlBuilder;
@@ -164,6 +165,7 @@ public class ExpressionEvaluator {
     }
   }
 
+  @SuppressFBWarnings("WMI_WRONG_MAP_ITERATOR")
   private JexlContext prepareContext(Map<String, Object> context) {
     JexlContext jc = new MapContext();
     if (context != null) {

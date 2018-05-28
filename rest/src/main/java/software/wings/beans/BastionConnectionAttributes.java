@@ -3,6 +3,7 @@ package software.wings.beans;
 import static software.wings.settings.SettingValue.SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -84,6 +85,7 @@ public class BastionConnectionAttributes extends HostConnectionAttributes {
      * @param key the key
      * @return the builder
      */
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder withKey(char[] key) {
       this.key = key;
       return this;

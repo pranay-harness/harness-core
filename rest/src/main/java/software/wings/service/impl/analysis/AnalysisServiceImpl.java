@@ -14,6 +14,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.mongodb.DBCursor;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.MorphiaIterator;
@@ -88,6 +89,7 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   private final Random random = new Random();
 
+  @SuppressFBWarnings("MS_PKGPROTECT")
   public static final StateType[] logAnalysisStates = new StateType[] {StateType.SPLUNKV2, StateType.ELK};
 
   @Inject protected WingsPersistence wingsPersistence;
@@ -300,6 +302,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     return deleteFeedbackHelper(feedbackId);
   }
 
+  @SuppressFBWarnings("NP_LOAD_OF_KNOWN_NULL_VALUE")
   @Override
   public LogMLAnalysisSummary getAnalysisSummaryForDemo(
       String stateExecutionId, String applicationId, StateType stateType) {
@@ -337,6 +340,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     return query.asList();
   }
 
+  @SuppressFBWarnings({"NP_ALWAYS_NULL", "NP_LOAD_OF_KNOWN_NULL_VALUE"})
   @Override
   public boolean saveFeedback(LogMLFeedback feedback, StateType stateType) {
     if (!isEmpty(feedback.getLogMLFeedbackId())) {
@@ -1115,6 +1119,7 @@ public class AnalysisServiceImpl implements AnalysisService {
         > 0;
   }
 
+  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   private void deleteNotRequiredLogs(StateType stateType, WorkflowExecution workflowExecution) {
     Query<LogDataRecord> deleteQuery = wingsPersistence.createQuery(LogDataRecord.class)
                                            .filter("stateType", stateType)

@@ -18,6 +18,7 @@ import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -264,6 +265,7 @@ public class ConfigServiceImpl implements ConfigService {
     return file;
   }
 
+  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   @Override
   public String getFileContent(String appId, ConfigFile configFile) {
     if (configFile.isEncrypted()) {

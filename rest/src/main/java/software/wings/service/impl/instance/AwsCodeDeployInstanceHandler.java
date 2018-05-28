@@ -7,6 +7,7 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import software.wings.annotation.Encryptable;
 import software.wings.api.AwsCodeDeployDeploymentInfo;
 import software.wings.api.CommandStepExecutionSummary;
@@ -91,6 +92,7 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
     syncInstancesInternal(appId, infraMappingId, null);
   }
 
+  @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
   private void syncInstancesInternal(String appId, String infraMappingId, DeploymentInfo newDeploymentInfo)
       throws HarnessException {
     InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);

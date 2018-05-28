@@ -14,6 +14,7 @@ import static software.wings.exception.WingsException.USER;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -106,6 +107,7 @@ public class WorkflowServiceHelper {
     }
   }
 
+  @SuppressFBWarnings("WMI_WRONG_MAP_ITERATOR")
   private List<String> getTemplatizedIds(Map<String, String> workflowVariables, List<String> entityNames) {
     List<String> entityIds = new ArrayList<>();
     if (workflowVariables != null) {

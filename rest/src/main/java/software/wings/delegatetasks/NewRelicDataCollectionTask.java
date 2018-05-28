@@ -15,6 +15,7 @@ import com.google.common.collect.Table.Cell;
 import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.time.Timestamp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -291,6 +292,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       return (int) ((t2Millis - t1Millis) / TimeUnit.MINUTES.toMillis(1));
     }
 
+    @SuppressFBWarnings({"RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE", "REC_CATCH_EXCEPTION"})
     @Override
     public void run() {
       try {
@@ -482,6 +484,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       return new HashSet<>(webTransactionMetrics.values());
     }
 
+    @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
     private Set<String> getMetricsWithNoData(Collection<String> metricNames) throws IOException {
       final long currentTime = System.currentTimeMillis();
       Set<String> metricsWithNoData = Sets.newHashSet(metricNames);

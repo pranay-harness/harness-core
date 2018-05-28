@@ -47,6 +47,7 @@ import com.google.inject.name.Named;
 
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.model.Tag;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.data.validator.EntityNameValidator;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -790,6 +791,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         services, descending -> descending.pruneByInfrastructureMapping(appId, infraMappingId));
   }
 
+  @SuppressFBWarnings("VA_FORMAT_STRING_EXTRA_ARGUMENTS_PASSED")
   @Override
   public void ensureSafeToDelete(@NotEmpty String appId, @NotEmpty String infraMappingId) {
     List<Workflow> workflows =

@@ -9,6 +9,7 @@ import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.inject.Inject;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import software.wings.api.HostElement;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.infrastructure.Host;
@@ -118,6 +119,7 @@ public class HostExpressionProcessor implements ExpressionProcessor {
    *
    * @return the list
    */
+  @SuppressFBWarnings("UWF_UNWRITTEN_FIELD")
   public List<HostElement> list() {
     List<Host> hosts = null;
     PageRequest<Host> pageRequest =

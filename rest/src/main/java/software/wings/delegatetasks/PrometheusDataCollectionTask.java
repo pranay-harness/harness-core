@@ -11,6 +11,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.time.Timestamp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,6 +93,7 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
       this.dataCollectionMinute = dataCollectionInfo.getDataCollectionMinute();
     }
 
+    @SuppressFBWarnings("REC_CATCH_EXCEPTION")
     @Override
     public void run() {
       try {

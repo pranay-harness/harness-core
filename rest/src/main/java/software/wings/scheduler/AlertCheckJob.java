@@ -7,6 +7,7 @@ import static software.wings.beans.Base.GLOBAL_APP_ID;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.collections.CollectionUtils;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
@@ -116,6 +117,7 @@ public class AlertCheckJob implements Job {
    * If any delegate hasn't sent heartbeat for last MAX_HB_TIMEOUT (5 mins currently),
    * raise a dashboard alert
    */
+  @SuppressFBWarnings("RpC_REPEATED_CONDITIONAL_TEST")
   private void checkIfAnyDelegatesAreDown(String accountId, List<Delegate> delegates) {
     List<Delegate> delegatesDown =
         delegates.stream()

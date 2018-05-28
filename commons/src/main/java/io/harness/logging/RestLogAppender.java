@@ -11,6 +11,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
 import ch.qos.logback.core.Layout;
 import com.fasterxml.jackson.databind.JsonNode;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.network.Http;
 import lombok.AllArgsConstructor;
 import lombok.Value;
@@ -64,6 +65,7 @@ public class RestLogAppender<E> extends AppenderBase<E> {
     this.key = key;
   }
 
+  @SuppressFBWarnings({"DLS_DEAD_LOCAL_STORE", "IS2_INCONSISTENT_SYNC"})
   private void submitLogs() {
     try {
       int batchSize = 0;

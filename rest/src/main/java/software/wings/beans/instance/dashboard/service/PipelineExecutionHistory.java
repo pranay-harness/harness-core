@@ -1,5 +1,6 @@
 package software.wings.beans.instance.dashboard.service;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import software.wings.beans.instance.dashboard.ArtifactSummary;
 import software.wings.beans.instance.dashboard.EntitySummary;
 
@@ -41,6 +42,7 @@ public class PipelineExecutionHistory {
     this.status = status;
   }
 
+  @SuppressFBWarnings("EI_EXPOSE_REP")
   public Date getStartTime() {
     return startTime;
   }
@@ -49,6 +51,7 @@ public class PipelineExecutionHistory {
     this.startTime = startTime;
   }
 
+  @SuppressFBWarnings("EI_EXPOSE_REP")
   public Date getEndTime() {
     return endTime;
   }
@@ -94,11 +97,13 @@ public class PipelineExecutionHistory {
       return this;
     }
 
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder withStartTime(Date startTime) {
       this.startTime = startTime;
       return this;
     }
 
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder withEndTime(Date endTime) {
       this.endTime = endTime;
       return this;

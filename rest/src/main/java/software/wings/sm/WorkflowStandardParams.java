@@ -11,6 +11,7 @@ import static software.wings.common.Constants.PHASE_PARAM;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.http.client.utils.URIBuilder;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
@@ -619,6 +620,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
      *
      * @return the workflow standard params
      */
+    @SuppressFBWarnings("UWF_UNWRITTEN_FIELD")
     public WorkflowStandardParams build() {
       WorkflowStandardParams workflowStandardParams = new WorkflowStandardParams();
       workflowStandardParams.setAppId(appId);

@@ -4,6 +4,7 @@ import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.common.Constants.DEFAULT_SYNC_CALL_TIMEOUT;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Converters;
 import org.mongodb.morphia.annotations.Entity;
@@ -61,10 +62,12 @@ public class DelegateTask extends Base {
     this.taskType = taskType;
   }
 
+  @SuppressFBWarnings("EI_EXPOSE_REP")
   public Object[] getParameters() {
     return parameters;
   }
 
+  @SuppressFBWarnings("EI_EXPOSE_REP2")
   public void setParameters(Object[] parameters) {
     this.parameters = parameters;
   }
@@ -188,10 +191,12 @@ public class DelegateTask extends Base {
     setSerializedNotifyResponseData(notifyResponse != null ? KryoUtils.asBytes(notifyResponse) : null);
   }
 
+  @SuppressFBWarnings("EI_EXPOSE_REP")
   public byte[] getSerializedNotifyResponseData() {
     return serializedNotifyResponseData;
   }
 
+  @SuppressFBWarnings("EI_EXPOSE_REP2")
   public void setSerializedNotifyResponseData(byte[] serializedNotifyResponseData) {
     this.serializedNotifyResponseData = serializedNotifyResponseData;
   }
@@ -352,6 +357,7 @@ public class DelegateTask extends Base {
       return this;
     }
 
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder withParameters(Object[] parameters) {
       this.parameters = parameters;
       return this;

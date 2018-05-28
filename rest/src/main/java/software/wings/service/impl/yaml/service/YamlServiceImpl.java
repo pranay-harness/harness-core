@@ -42,6 +42,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.error.Mark;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.scanner.ScannerException;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.eraro.Level;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -198,6 +199,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     }
   }
 
+  @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_BAD_PRACTICE")
   protected List<GitFileChange> getChangesForZipFile(String accountId, InputStream fileInputStream, String yamlPath)
       throws IOException {
     List<GitFileChange> changeList = Lists.newArrayList();
@@ -255,6 +257,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     Collections.sort(changeList, new FilePathComparator());
   }
 
+  @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
   private <T extends BaseYamlHandler> List<ChangeContext> validate(List<Change> changeList)
       throws YamlProcessingException {
     List<ChangeContext> changeContextList = Lists.newArrayList();

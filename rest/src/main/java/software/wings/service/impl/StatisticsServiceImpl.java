@@ -33,6 +33,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.DBCursor;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.time.EpochUtil;
 import org.mongodb.morphia.aggregation.Accumulator;
 import org.mongodb.morphia.aggregation.Group;
@@ -303,6 +304,7 @@ public class StatisticsServiceImpl implements StatisticsService {
     return instanceStats;
   }
 
+  @SuppressFBWarnings("ICAST_INTEGER_MULTIPLY_CAST_TO_LONG")
   @Override
   public NotificationCount getNotificationCount(String accountId, List<String> appIds, int minutesFromNow) {
     long queryStartEpoch = System.currentTimeMillis() - (minutesFromNow * 60 * 1000);
@@ -522,6 +524,7 @@ public class StatisticsServiceImpl implements StatisticsService {
     }
   }
 
+  @SuppressFBWarnings({"UC_USELESS_OBJECT", "WMI_WRONG_MAP_ITERATOR"})
   private void getTopInstancesDeployed(List<TopConsumer> topConsumers, List<String> appIds, int days) {
     Map<String, String> serviceIdNames = new HashMap<>();
     Map<String, String> serviceAppIdMap = new HashMap<>();

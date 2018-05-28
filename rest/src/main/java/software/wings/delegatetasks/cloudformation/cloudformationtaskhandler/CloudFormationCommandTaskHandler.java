@@ -9,6 +9,7 @@ import com.amazonaws.services.cloudformation.model.DescribeStackEventsRequest;
 import com.amazonaws.services.cloudformation.model.DescribeStacksRequest;
 import com.amazonaws.services.cloudformation.model.Stack;
 import com.amazonaws.services.cloudformation.model.StackEvent;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -30,7 +31,7 @@ public abstract class CloudFormationCommandTaskHandler {
   @Inject private DelegateLogService delegateLogService;
 
   protected ExecutionLogCallback executionLogCallback;
-  protected static String stackNamePrefix = "HarnessStack-";
+  @SuppressFBWarnings("MS_SHOULD_BE_FINAL") protected static String stackNamePrefix = "HarnessStack-";
 
   protected Optional<Stack> getIfStackExists(String suffix, AwsConfig awsConfig, String region) {
     List<Stack> stacks = awsHelperService.getAllStacks(

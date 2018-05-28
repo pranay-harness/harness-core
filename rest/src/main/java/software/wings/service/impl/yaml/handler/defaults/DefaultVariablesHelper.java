@@ -6,6 +6,7 @@ import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.collections.CollectionUtils;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.SettingAttribute;
@@ -53,6 +54,7 @@ public class DefaultVariablesHelper {
         .collect(toList());
   }
 
+  @SuppressFBWarnings("NP_NULL_ON_SOME_PATH") // TODO
   public void saveOrUpdateDefaults(Yaml updatedYaml, String appId, String accountId) throws HarnessException {
     List<SettingAttribute> previousDefaultValues = getCurrentDefaultVariables(appId, accountId);
     List<NameValuePair.Yaml> previousDefaultYamls = convertToNameValuePairYamlList(previousDefaultValues);

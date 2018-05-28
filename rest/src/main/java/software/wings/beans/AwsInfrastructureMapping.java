@@ -15,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -533,6 +534,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
      *
      * @param displayName the display name
      */
+    @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
     public void setDisplayName(String displayName) {
       this.displayName = displayName;
     }

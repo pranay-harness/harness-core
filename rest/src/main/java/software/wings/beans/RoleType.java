@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import static software.wings.beans.Permission.Builder.aPermission;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
@@ -47,10 +48,12 @@ public enum RoleType {
     return displayName;
   }
 
+  @SuppressFBWarnings("EI_EXPOSE_REP")
   public Permission[] getPermissions() {
     return permissions;
   }
 
+  @SuppressFBWarnings({"ME_ENUM_FIELD_SETTER", "EI_EXPOSE_REP2"})
   public void setPermissions(Permission[] permissions) {
     this.permissions = permissions;
   }

@@ -95,6 +95,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
@@ -1504,6 +1505,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     PruneEntityJob.pruneDescendingEntities(services, descending -> descending.pruneByWorkflow(appId, workflowId));
   }
 
+  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE") // TODO
   @Override
   public boolean workflowHasSshInfraMapping(String appId, String workflowId) {
     Workflow workflow = readWorkflow(appId, workflowId);
@@ -1826,6 +1828,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
    *
    * @param serviceMapping
    */
+  @SuppressFBWarnings("WMI_WRONG_MAP_ITERATOR") // TODO
   private void validateServiceMapping(String appId, String targetAppId, Map<String, String> serviceMapping) {
     if (serviceMapping == null) {
       throw new InvalidRequestException("At least one service mapping required to clone across applications", USER);
@@ -2126,6 +2129,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
   }
 
+  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE") // TODO
   private void generateNewWorkflowPhaseStepsForECS(
       String appId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
@@ -2525,6 +2529,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .build();
   }
 
+  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE") // TODO
   private WorkflowPhase generateRollbackWorkflowPhaseForSSH(
       String appId, WorkflowPhase workflowPhase, OrchestrationWorkflowType orchestrationWorkflowType) {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
@@ -2804,6 +2809,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
   }
 
+  @SuppressFBWarnings("NP_NULL_ON_SOME_PATH") // TODO
   private void validateBasicOrRollingWorkflow(Workflow workflow) {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     if (orchestrationWorkflow != null

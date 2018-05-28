@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -43,6 +44,7 @@ public class KubernetesConfig extends SettingValue implements Encryptable {
     super(SettingVariableTypes.KUBERNETES.name());
   }
 
+  @SuppressFBWarnings("EI_EXPOSE_REP2")
   public KubernetesConfig(String masterUrl, String username, char[] password, char[] caCert, char[] clientCert,
       char[] clientKey, char[] clientKeyPassphrase, String clientKeyAlgo, String namespace, String accountId,
       String encryptedPassword, String encryptedCaCert, String encryptedClientCert, String encryptedClientKey,

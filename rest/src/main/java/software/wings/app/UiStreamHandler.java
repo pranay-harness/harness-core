@@ -13,6 +13,7 @@ import static software.wings.beans.ResponseMessage.aResponseMessage;
 import com.google.common.base.Splitter;
 import com.google.inject.Inject;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.atmosphere.cache.UUIDBroadcasterCache;
 import org.atmosphere.config.service.AtmosphereHandlerService;
 import org.atmosphere.cpr.AtmosphereRequest;
@@ -49,6 +50,7 @@ public class UiStreamHandler extends AtmosphereHandlerAdapter {
   public static final Splitter SPLITTER = Splitter.on("/").omitEmptyStrings();
   @Inject private AuthService authService;
 
+  @SuppressFBWarnings("NP_IMMEDIATE_DEREFERENCE_OF_READLINE")
   @Override
   public void onRequest(AtmosphereResource resource) throws IOException {
     AtmosphereRequest req = resource.getRequest();

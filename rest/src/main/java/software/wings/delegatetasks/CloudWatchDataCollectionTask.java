@@ -18,6 +18,7 @@ import com.amazonaws.services.cloudwatch.model.Datapoint;
 import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsRequest;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsResult;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.time.Timestamp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,6 +102,7 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
       this.dataCollectionMinute = dataCollectionInfo.getDataCollectionMinute();
     }
 
+    @SuppressFBWarnings("REC_CATCH_EXCEPTION")
     @Override
     public void run() {
       encryptionService.decrypt(dataCollectionInfo.getAwsConfig(), dataCollectionInfo.getEncryptedDataDetails());

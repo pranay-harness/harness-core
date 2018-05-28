@@ -46,6 +46,7 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
@@ -1320,6 +1321,7 @@ public class StateMachineExecutor {
     }
   }
 
+  @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE") // TODO
   private boolean markAbortingState(ExecutionInterrupt workflowExecutionInterrupt, WorkflowExecution workflowExecution,
       Collection<ExecutionStatus> statuses) {
     // Get all that are eligible for aborting

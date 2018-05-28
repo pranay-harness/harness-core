@@ -1,11 +1,13 @@
 package software.wings.service.impl.analysis;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.ExecutionStatusData;
 
 /**
  * Created by rsingh on 5/26/17.
  */
+@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 public class LogAnalysisResponse extends ExecutionStatusData {
   private LogAnalysisExecutionData logAnalysisExecutionData;
 

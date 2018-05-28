@@ -1,6 +1,7 @@
 package software.wings.core.ssh.executors;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.Encryptable;
@@ -157,6 +158,7 @@ public class SshSessionConfig implements Encryptable {
       return this;
     }
 
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder withPassword(char[] password) {
       this.password = password;
       return this;
@@ -167,11 +169,13 @@ public class SshSessionConfig implements Encryptable {
       return this;
     }
 
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder withKey(char[] key) {
       this.key = key;
       return this;
     }
 
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder withKeyPassphrase(char[] keyPassphrase) {
       this.keyPassphrase = keyPassphrase;
       return this;
@@ -182,6 +186,7 @@ public class SshSessionConfig implements Encryptable {
       return this;
     }
 
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder withSudoAppPassword(char[] sudoAppPassword) {
       this.sudoAppPassword = sudoAppPassword;
       return this;

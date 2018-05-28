@@ -9,6 +9,7 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -166,6 +167,7 @@ public class PcfSetupState extends State {
     }
   }
 
+  @SuppressFBWarnings({"DLS_DEAD_LOCAL_STORE", "BX_UNBOXING_IMMEDIATELY_REBOXED"}) // TODO
   protected ExecutionResponse executeInternal(ExecutionContext context) {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
@@ -283,6 +285,7 @@ public class PcfSetupState extends State {
     return new StringBuilder().append(appName).append("_").append(serviceName).append("_").append(envName).toString();
   }
 
+  @SuppressFBWarnings("NP_NULL_ON_SOME_PATH") // TODO
   private void validateSpecification(PcfServiceSpecification pcfServiceSpecification) {
     if (pcfServiceSpecification == null || pcfServiceSpecification.getManifestYaml() == null
         || !pcfServiceSpecification.getManifestYaml().contains("{FILE_LOCATION}")
@@ -306,6 +309,7 @@ public class PcfSetupState extends State {
     }
   }
 
+  @SuppressFBWarnings("BX_UNBOXING_IMMEDIATELY_REBOXED") // TODO
   protected ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, NotifyResponseData> response) {
     String activityId = response.keySet().iterator().next();
 

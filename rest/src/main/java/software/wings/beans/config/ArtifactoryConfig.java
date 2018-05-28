@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -40,6 +41,7 @@ public class ArtifactoryConfig extends SettingValue implements Encryptable {
     super(SettingVariableTypes.ARTIFACTORY.name());
   }
 
+  @SuppressFBWarnings("EI_EXPOSE_REP2")
   public ArtifactoryConfig(
       String artifactoryUrl, String username, char[] password, String accountId, String encryptedPassword) {
     this();

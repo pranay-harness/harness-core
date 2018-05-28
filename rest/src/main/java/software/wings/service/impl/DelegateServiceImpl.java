@@ -55,6 +55,7 @@ import com.google.inject.Singleton;
 
 import com.github.zafarkhaja.semver.Version;
 import com.mongodb.BasicDBObject;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
@@ -397,6 +398,7 @@ public class DelegateServiceImpl implements DelegateService {
     return null;
   }
 
+  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   @Override
   public File downloadScripts(String managerHost, String accountId) throws IOException, TemplateException {
     File delegateFile = File.createTempFile(DELEGATE_DIR, ".zip");
@@ -489,6 +491,7 @@ public class DelegateServiceImpl implements DelegateService {
     return delegateFile;
   }
 
+  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   @Override
   public File downloadDocker(String managerHost, String accountId) throws IOException, TemplateException {
     File dockerDelegateFile = File.createTempFile(DOCKER_DELEGATE, ".zip");
@@ -532,6 +535,7 @@ public class DelegateServiceImpl implements DelegateService {
     return dockerDelegateFile;
   }
 
+  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   @Override
   public File downloadKubernetes(String managerHost, String accountId, String delegateName)
       throws IOException, TemplateException {

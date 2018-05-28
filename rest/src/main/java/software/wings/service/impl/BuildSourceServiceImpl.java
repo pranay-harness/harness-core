@@ -12,6 +12,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
@@ -104,6 +105,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
                                .getArtifactPaths(jobName, groupId, value, encryptedDataDetails));
   }
 
+  @SuppressFBWarnings("NP_GUARANTEED_DEREF")
   @Override
   public List<BuildDetails> getBuilds(String appId, String artifactStreamId, String settingId) {
     SettingAttribute settingAttribute = settingsService.get(settingId);

@@ -9,6 +9,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.base.MoreObjects;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -37,6 +38,7 @@ import java.util.Map;
 @Entity(value = "workflowExecutions", noClassnameStored = true)
 @Indexes(@Index(fields = { @Field("workflowId")
                            , @Field("status") }))
+@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 public class WorkflowExecution extends Base {
   public static final String STATUS_KEY = "status";
   public static final String WORKFLOW_ID_KEY = "workflowId";

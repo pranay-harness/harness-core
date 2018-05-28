@@ -10,6 +10,7 @@ import com.google.inject.Singleton;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.tuple.Pair;
@@ -166,6 +167,7 @@ public class ScpCommandUnit extends SshCommandUnit {
      *
      * @param name the name
      */
+    @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
     public void setName(String name) {
       this.name = name;
     }

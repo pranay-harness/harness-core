@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import static software.wings.utils.CryptoUtil.secureRandAlphaNumString;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.annotations.Entity;
 import org.simpleframework.xml.Transient;
 
@@ -9,6 +10,7 @@ import org.simpleframework.xml.Transient;
  * Created by anubhaw on 3/14/16.
  */
 @Entity(value = "authTokens", noClassnameStored = true)
+@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 public class AuthToken extends Base {
   @Transient private User user;
   private String userId;

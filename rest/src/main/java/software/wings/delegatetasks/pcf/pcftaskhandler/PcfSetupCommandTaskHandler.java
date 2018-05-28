@@ -4,6 +4,7 @@ import static software.wings.helpers.ext.pcf.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_
 
 import com.google.inject.Singleton;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.data.structure.EmptyPredicate;
 import lombok.NoArgsConstructor;
 import org.apache.commons.collections.CollectionUtils;
@@ -36,6 +37,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
    * This method is responsible for fetching previous release version information
    * like, previous releaseNames with Running instances, All existing previous releaseNames.
    */
+  @SuppressFBWarnings({"BC_UNCONFIRMED_CAST", "REC_CATCH_EXCEPTION"})
   public PcfCommandExecutionResponse executeTaskInternal(
       PcfCommandRequest pcfCommandRequest, List<EncryptedDataDetail> encryptedDataDetails) {
     executionLogCallback.saveExecutionLog("---------- Starting PCF App Setup Command");

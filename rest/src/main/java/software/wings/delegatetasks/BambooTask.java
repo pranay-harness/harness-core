@@ -8,6 +8,7 @@ import static software.wings.sm.states.BambooState.BambooExecutionResponse;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.BambooConfig;
@@ -55,6 +56,7 @@ public class BambooTask extends AbstractDelegateRunnableTask {
     return bambooExecutionResponse;
   }
 
+  @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
   public BambooExecutionResponse run(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails,
       String planKey, List<ParameterEntry> parameterEntries, List<FilePathAssertionEntry> filePathAssertionEntries) {
     BambooExecutionResponse bambooExecutionResponse = new BambooExecutionResponse();

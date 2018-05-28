@@ -32,6 +32,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import de.danielbechler.util.Collections;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -419,6 +420,7 @@ public class PipelineServiceImpl implements PipelineService {
     }
   }
 
+  @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE") // TODO
   private void validatePipelineEnvState(
       Workflow workflow, PipelineStageElement pse, List<String> invalidWorkflows, List<Variable> pipelineVariables) {
     Map<String, String> pseWorkflowVariables = pse.getWorkflowVariables();

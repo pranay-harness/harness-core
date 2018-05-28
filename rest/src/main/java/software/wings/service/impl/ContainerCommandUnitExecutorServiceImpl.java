@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.command.CommandExecutionContext;
@@ -41,6 +42,7 @@ public class ContainerCommandUnitExecutorServiceImpl implements CommandUnitExecu
   /**
    * {@inheritDoc}
    */
+  @SuppressFBWarnings("VA_FORMAT_STRING_USES_NEWLINE")
   @Override
   public CommandExecutionStatus execute(Host host, CommandUnit commandUnit, CommandExecutionContext context) {
     String activityId = context.getActivityId();

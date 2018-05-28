@@ -5,6 +5,7 @@ import static software.wings.exception.WingsException.USER;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
@@ -30,6 +31,7 @@ public class TwoFactorAuthenticationManager {
     }
   }
 
+  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   public User authenticate(String jwtTokens) {
     String[] decryptedData = new String(Base64.getDecoder().decode(jwtTokens)).split(":");
     if (decryptedData.length < 2) {

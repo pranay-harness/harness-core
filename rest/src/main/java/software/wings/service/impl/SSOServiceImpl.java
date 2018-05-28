@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import com.coveo.saml.SamlClient;
 import com.coveo.saml.SamlException;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import software.wings.beans.Account;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.sso.SSOSettings;
@@ -33,6 +34,7 @@ public class SSOServiceImpl implements SSOService {
   @Inject AuthenticationUtil authenticationUtil;
   @Inject SamlClientService samlClientService;
 
+  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   @Override
   public SSOConfig uploadSamlConfiguration(String accountId, InputStream inputStream, String displayName) {
     try {
@@ -51,6 +53,7 @@ public class SSOServiceImpl implements SSOService {
     return setAuthenticationMechanism(accountId, AuthenticationMechanism.USER_PASSWORD);
   }
 
+  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   @Override
   public SSOConfig setAuthenticationMechanism(String accountId, AuthenticationMechanism mechanism) {
     Account account = accountService.get(accountId);

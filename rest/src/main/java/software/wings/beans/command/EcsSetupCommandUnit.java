@@ -30,6 +30,7 @@ import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -305,6 +306,7 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
    * @param executionLogCallback
    * @return
    */
+  @SuppressFBWarnings("WMI_WRONG_MAP_ITERATOR")
   private TaskDefinition createTaskDefinition(EcsContainerTask ecsContainerTask, String containerName,
       String dockerImageName, EcsSetupParams ecsSetupParams, SettingAttribute settingAttribute,
       Map<String, String> serviceVariables, Map<String, String> safeDisplayServiceVariables,

@@ -6,6 +6,7 @@ import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anA
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -46,6 +47,7 @@ public class NexusArtifactStream extends ArtifactStream {
     this.dockerPort = dockerPort;
   }
 
+  @SuppressFBWarnings("STCAL_INVOKE_ON_STATIC_DATE_FORMAT_INSTANCE")
   public String getArtifactDisplayName(String buildNo) {
     if (!isEmpty(artifactPaths)) {
       return format("%s_%s_%s", getSourceName(), buildNo, dateFormat.format(new Date()));

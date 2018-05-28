@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -51,6 +52,7 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
     super(SettingVariableTypes.KUBERNETES_CLUSTER.name());
   }
 
+  @SuppressFBWarnings("EI_EXPOSE_REP2")
   public KubernetesClusterConfig(boolean useKubernetesDelegate, String delegateName, String masterUrl, String username,
       char[] password, char[] caCert, char[] clientCert, char[] clientKey, char[] clientKeyPassphrase,
       String clientKeyAlgo, String encryptedPassword, String encryptedCaCert, String encryptedClientCert,

@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.annotations.Entity;
 
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.concurrent.TimeUnit;
  * Created by peeyushaggarwal on 3/22/17.
  */
 @Entity(value = "licenses", noClassnameStored = true)
+@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 public class License extends Base {
   private String name;
   private List<Entitlement> entitlements;

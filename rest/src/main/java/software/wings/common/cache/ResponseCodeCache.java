@@ -3,6 +3,7 @@ package software.wings.common.cache;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.text.StrSubstitutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +21,7 @@ import java.util.Properties;
  * The Class ResponseCodeCache.
  */
 public class ResponseCodeCache {
+  @SuppressFBWarnings("MS_SHOULD_BE_FINAL")
   protected static Logger logger = LoggerFactory.getLogger(ResponseCodeCache.class);
 
   private static final String RESPONSE_MESSAGE_FILE = "/response_messages.properties";

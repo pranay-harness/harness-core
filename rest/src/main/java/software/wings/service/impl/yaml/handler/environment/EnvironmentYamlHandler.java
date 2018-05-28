@@ -11,6 +11,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.Key;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -205,6 +206,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
     }
   }
 
+  @SuppressFBWarnings({"UC_USELESS_OBJECT", "UC_USELESS_OBJECT"})
   private void saveOrUpdateVariableOverrides(List<VariableOverrideYaml> previousVariableOverrideList,
       List<VariableOverrideYaml> latestVariableOverrideList, List<ServiceVariable> currentVariables, String appId,
       String envId) throws HarnessException {

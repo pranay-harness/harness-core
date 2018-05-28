@@ -28,6 +28,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.DBCursor;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
@@ -72,10 +73,9 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
   public static final Duration timeout = Duration.ofMinutes(10);
   private static final Logger logger = LoggerFactory.getLogger(ArtifactCollectionServiceImpl.class);
 
-  public static final
-
-      List<String> metadataOnlyStreams =
-          asList(DOCKER.name(), ECR.name(), GCR.name(), ACR.name(), NEXUS.name(), AMI.name());
+  @SuppressFBWarnings("MS_MUTABLE_COLLECTION_PKGPROTECT")
+  public static final List<String> metadataOnlyStreams =
+      asList(DOCKER.name(), ECR.name(), GCR.name(), ACR.name(), NEXUS.name(), AMI.name());
 
   @Override
   public Artifact collectArtifact(String appId, String artifactStreamId, BuildDetails buildDetails) {

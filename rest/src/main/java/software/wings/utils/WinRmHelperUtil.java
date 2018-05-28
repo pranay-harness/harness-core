@@ -7,6 +7,7 @@ import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
 import static software.wings.beans.ErrorCode.UNREACHABLE_HOST;
 import static software.wings.beans.ResponseMessage.ResponseMessageBuilder;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import software.wings.beans.ResponseMessage;
 
 import java.lang.reflect.InvocationTargetException;
@@ -14,6 +15,7 @@ import java.lang.reflect.UndeclaredThrowableException;
 import javax.xml.ws.soap.SOAPFaultException;
 
 public class WinRmHelperUtil {
+  @SuppressFBWarnings("NM_METHOD_NAMING_CONVENTION")
   public static ResponseMessage GetErrorDetailsFromWinRmClientException(Throwable e) {
     ResponseMessageBuilder builder = ResponseMessage.aResponseMessage().code(UNKNOWN_ERROR).message("Generic Error");
     Throwable e1 = e;

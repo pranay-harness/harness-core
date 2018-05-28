@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import lombok.EqualsAndHashCode;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,6 +10,7 @@ import java.util.Map;
  * Created by anubhaw on 7/27/16.
  */
 @JsonTypeName("INFORMATION")
+@EqualsAndHashCode(callSuper = true)
 public class InformationNotification extends Notification {
   private String displayText;
 

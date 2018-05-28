@@ -4,6 +4,7 @@ import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext
 
 import com.google.inject.Inject;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import software.wings.annotation.Encryptable;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
@@ -24,6 +25,7 @@ import java.util.Map;
 /**
  * Created by rsingh on 8/23/17.
  */
+@SuppressFBWarnings("MF_CLASS_MASKS_FIELD")
 public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAnalysisService {
   @Inject protected SettingsService settingsService;
   @Inject protected DelegateProxyFactory delegateProxyFactory;

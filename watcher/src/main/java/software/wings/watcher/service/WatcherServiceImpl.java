@@ -46,6 +46,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -109,6 +110,7 @@ public class WatcherServiceImpl implements WatcherService {
   private HttpHost httpProxyHost;
   private List<String> nonProxyHosts;
 
+  @SuppressFBWarnings({"UW_UNCOND_WAIT", "REC_CATCH_EXCEPTION", "WA_NOT_IN_LOOP", "DM_BOXED_PRIMITIVE_FOR_PARSING"})
   @Override
   public void run(boolean upgrade) {
     try {
@@ -577,6 +579,7 @@ public class WatcherServiceImpl implements WatcherService {
     return request.execute().returnContent().asString().trim();
   }
 
+  @SuppressFBWarnings("REC_CATCH_EXCEPTION")
   private void upgradeWatcher(String version, String newVersion) {
     StartedProcess process = null;
     try {

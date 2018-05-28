@@ -14,6 +14,7 @@ import com.amazonaws.services.kms.AWSKMSClientBuilder;
 import com.amazonaws.services.kms.model.DecryptRequest;
 import com.amazonaws.services.kms.model.GenerateDataKeyRequest;
 import com.amazonaws.services.kms.model.GenerateDataKeyResult;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Call;
@@ -47,7 +48,7 @@ import javax.crypto.spec.SecretKeySpec;
  * Created by rsingh on 10/2/17.
  */
 public class SecretManagementDelegateServiceImpl implements SecretManagementDelegateService {
-  public static int NUM_OF_RETRIES = 3;
+  @SuppressFBWarnings("MS_SHOULD_BE_FINAL") public static int NUM_OF_RETRIES = 3;
   private static final Logger logger = LoggerFactory.getLogger(SecretManagementDelegateServiceImpl.class);
 
   @Override
@@ -94,6 +95,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     throw new IllegalStateException("Encryption failed. This state should never have been reached");
   }
 
+  @SuppressFBWarnings("DM_STRING_CTOR")
   @Override
   public char[] decrypt(EncryptedData data, KmsConfig kmsConfig) throws IOException {
     if (data.getEncryptedValue() == null) {
@@ -194,9 +196,10 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     getVaultRestClient(vaultConfig).deleteSecret(String.valueOf(vaultConfig.getAuthToken()), path).execute();
   }
 
-  public static char[] encrypt(String src, Key key) throws NoSuchAlgorithmException, NoSuchPaddingException,
-                                                           InvalidKeyException, IllegalBlockSizeException,
-                                                           BadPaddingException, InvalidAlgorithmParameterException {
+  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
+  public static char[] encrypt(String src, Key key)
+      throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException,
+             BadPaddingException, InvalidAlgorithmParameterException {
     Cipher cipher = Cipher.getInstance("AES");
     cipher.init(Cipher.ENCRYPT_MODE, key);
 
@@ -204,9 +207,10 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     return Base64.getEncoder().encodeToString(enc).toCharArray();
   }
 
-  public static String decrypt(char[] src, Key key) throws NoSuchAlgorithmException, NoSuchPaddingException,
-                                                           InvalidKeyException, IllegalBlockSizeException,
-                                                           BadPaddingException, InvalidAlgorithmParameterException {
+  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
+  public static String decrypt(char[] src, Key key)
+      throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException,
+             BadPaddingException, InvalidAlgorithmParameterException {
     if (src == null) {
       return null;
     }

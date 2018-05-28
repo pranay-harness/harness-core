@@ -16,6 +16,7 @@ import static software.wings.helpers.ext.nexus.NexusServiceImpl.isSuccessful;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import okhttp3.Credentials;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -229,6 +230,7 @@ public class NexusTwoServiceImpl {
     return null;
   }
 
+  @SuppressFBWarnings("UC_USELESS_OBJECT")
   private Pair<String, InputStream> getUrlInputStream(NexusConfig nexusConfig,
       List<EncryptedDataDetail> encryptionDetails, Project project, List<IndexBrowserTreeNode> treeNodes,
       String repoType) {

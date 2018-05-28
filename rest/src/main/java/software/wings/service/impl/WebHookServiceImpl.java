@@ -6,6 +6,7 @@ import static software.wings.beans.WorkflowType.PIPELINE;
 import com.google.inject.Inject;
 
 import com.jayway.jsonpath.DocumentContext;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.query.CountOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -111,6 +112,7 @@ public class WebHookServiceImpl implements WebHookService {
     return WebHookResponse.builder().error(ex.getMessage().toLowerCase()).build();
   }
 
+  @SuppressFBWarnings("WMI_WRONG_MAP_ITERATOR")
   @Override
   public WebHookResponse executeByEvent(String token, String webhookEventPayload) {
     try {

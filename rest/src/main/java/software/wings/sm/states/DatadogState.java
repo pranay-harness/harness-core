@@ -12,6 +12,7 @@ import com.google.common.io.Resources;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.time.Timestamp;
 import lombok.Builder;
 import lombok.Data;
@@ -200,6 +201,7 @@ public class
     this.serviceName = serviceName;
   }
 
+  @SuppressFBWarnings("REC_CATCH_EXCEPTION")
   public static Map<String, List<APMMetricInfo>> metricEndpointsInfo(String serviceName, List<String> metricNames) {
     YamlUtils yamlUtils = new YamlUtils();
     URL url = DatadogState.class.getResource("/apm/datadog.yml");

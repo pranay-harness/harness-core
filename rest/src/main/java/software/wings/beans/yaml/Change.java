@@ -1,5 +1,6 @@
 package software.wings.beans.yaml;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Data;
 import lombok.ToString;
 
@@ -17,6 +18,7 @@ public class Change {
 
   public enum ChangeType { ADD, MODIFY, RENAME, DELETE }
 
+  @SuppressFBWarnings("CN_IMPLEMENTS_CLONE_BUT_NOT_CLONEABLE")
   public Builder clone() {
     return Builder.aFileChange()
         .withFilePath(getFilePath())
