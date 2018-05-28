@@ -3,7 +3,6 @@ package software.wings.sm.states.pcf;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
@@ -39,6 +38,7 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.common.Constants;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
@@ -164,7 +164,7 @@ public class PcfSetupState extends State {
     try {
       return executeInternal(context);
     } catch (Exception e) {
-      throw new WingsException(INVALID_REQUEST, e).addParam("message", e.getMessage());
+      throw new InvalidRequestException(e.getMessage(), e);
     }
   }
 
@@ -292,12 +292,11 @@ public class PcfSetupState extends State {
         || !pcfServiceSpecification.getManifestYaml().contains("{FILE_LOCATION}")
         || !pcfServiceSpecification.getManifestYaml().contains("{INSTANCE_COUNT}")
         || !pcfServiceSpecification.getManifestYaml().contains("{APPLICATION_NAME}")) {
-      throw new WingsException(INVALID_REQUEST, USER)
-          .addParam("message",
-              "Invalid manifest yaml "
-                  + (pcfServiceSpecification == null || pcfServiceSpecification.getManifestYaml() == null
-                            ? "NULL"
-                            : pcfServiceSpecification.getManifestYaml()));
+      throw new InvalidRequestException("Invalid manifest yaml "
+              + (pcfServiceSpecification == null || pcfServiceSpecification.getManifestYaml() == null
+                        ? "NULL"
+                        : pcfServiceSpecification.getManifestYaml()),
+          USER);
     }
   }
 
@@ -308,7 +307,7 @@ public class PcfSetupState extends State {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new WingsException(INVALID_REQUEST, e).addParam("message", e.getMessage());
+      throw new InvalidRequestException(e.getMessage(), e);
     }
   }
 

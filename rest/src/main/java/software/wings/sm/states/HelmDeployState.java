@@ -30,7 +30,6 @@ import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.TaskType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
@@ -264,8 +263,7 @@ public class HelmDeployState extends State {
           ? 0
           : Integer.parseInt(releaseInfoList.get(releaseInfoList.size() - 1).getRevision());
     } else {
-      throw new WingsException(ErrorCode.INVALID_REQUEST)
-          .addParam("message", helmCommandExecutionResponse.getErrorMessage());
+      throw new InvalidRequestException(helmCommandExecutionResponse.getErrorMessage());
     }
     return prevVersion;
   }

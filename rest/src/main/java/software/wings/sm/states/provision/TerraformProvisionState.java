@@ -38,7 +38,6 @@ import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Application;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.GitConfig;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.NameValuePair;
@@ -50,7 +49,6 @@ import software.wings.beans.command.CommandType;
 import software.wings.beans.delegation.TerraformProvisionParameters;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.InvalidRequestException;
-import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.ActivityService;
@@ -275,7 +273,7 @@ public abstract class TerraformProvisionState extends State {
     SettingAttribute gitSettingAttribute = settingsService.get(terraformProvisioner.getSourceRepoSettingId());
     Validator.notNullCheck("gitSettingAttribute", gitSettingAttribute);
     if (!(gitSettingAttribute.getValue() instanceof GitConfig)) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST);
+      throw new InvalidRequestException("");
     }
 
     GitConfig gitConfig = (GitConfig) gitSettingAttribute.getValue();
@@ -358,7 +356,7 @@ public abstract class TerraformProvisionState extends State {
 
     if (infrastructureProvisioner == null
         || (!(infrastructureProvisioner instanceof TerraformInfrastructureProvisioner))) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST);
+      throw new InvalidRequestException("");
     }
 
     return (TerraformInfrastructureProvisioner) infrastructureProvisioner;

@@ -165,14 +165,13 @@ public class YamlGitServiceImpl implements YamlGitService {
     // Validate if SSH key is present
     if (gitConfig.isKeyAuth()) {
       if (gitConfig.getSshSettingAttribute() == null) {
-        throw new WingsException(ErrorCode.INVALID_REQUEST, USER).addParam("message", "SSH key can not be empty");
+        throw new InvalidRequestException("SSH key can not be empty");
       }
     }
     // Validate if username and password present
     else {
       if (gitConfig.getUsername() == null || gitConfig.getPassword() == null) {
-        throw new WingsException(ErrorCode.INVALID_REQUEST, USER)
-            .addParam("message", "Username and password can not be empty");
+        throw new InvalidRequestException("Username and password can not be empty", USER);
       }
     }
 
