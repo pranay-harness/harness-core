@@ -1,5 +1,6 @@
 package software.wings.sm;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import software.wings.beans.StatusInstanceBreakdown;
 
 import java.util.ArrayList;
@@ -8,6 +9,7 @@ import java.util.List;
 /**
  * Created by rishi on 8/18/16.
  */
+@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 public class ElementNotifyResponseData extends ExecutionStatusData {
   private List<ContextElement> contextElements;
   private StatusInstanceBreakdown statusInstanceBreakdown;
@@ -152,6 +154,7 @@ public class ElementNotifyResponseData extends ExecutionStatusData {
      * @param statusInstanceBreakdown the status instance breakdown
      * @return the element notify response data . builder
      */
+    @SuppressFBWarnings("URF_UNREAD_FIELD")
     public ElementNotifyResponseData.Builder withStatusInstanceBreakdown(
         StatusInstanceBreakdown statusInstanceBreakdown) {
       this.statusInstanceBreakdown = statusInstanceBreakdown;

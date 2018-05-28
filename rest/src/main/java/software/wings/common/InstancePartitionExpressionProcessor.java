@@ -3,6 +3,7 @@ package software.wings.common;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -45,31 +46,37 @@ public class InstancePartitionExpressionProcessor extends InstanceExpressionProc
     return this;
   }
 
+  @SuppressFBWarnings("EI_EXPOSE_REP")
   @Override
   public String[] getCounts() {
     return counts;
   }
 
+  @SuppressFBWarnings("EI_EXPOSE_REP2")
   @Override
   public void setCounts(String[] counts) {
     this.counts = counts;
   }
 
+  @SuppressFBWarnings("EI_EXPOSE_REP")
   @Override
   public String[] getPercentages() {
     return percentages;
   }
 
+  @SuppressFBWarnings("EI_EXPOSE_REP2")
   @Override
   public void setPercentages(String[] percentages) {
     this.percentages = percentages;
   }
 
+  @SuppressFBWarnings("EI_EXPOSE_REP")
   @Override
   public String[] getBreakdowns() {
     return breakdowns;
   }
 
+  @SuppressFBWarnings("EI_EXPOSE_REP2")
   @Override
   public void setBreakdowns(String[] breakdowns) {
     this.breakdowns = breakdowns;

@@ -9,6 +9,7 @@ import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -122,6 +123,7 @@ public class EcsServiceSetup extends ContainerServiceSetup {
     }
   }
 
+  @SuppressFBWarnings("DM_BOXED_PRIMITIVE_FOR_PARSING")
   @Override
   protected ContainerServiceElement buildContainerServiceElement(ExecutionContext context,
       CommandExecutionResult executionResult, ExecutionStatus status, ImageDetails imageDetails) {

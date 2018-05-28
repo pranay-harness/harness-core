@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
@@ -41,6 +42,7 @@ public class SSOResource {
   private SSOService ssoService;
   private FeatureFlagService featureFlagService;
 
+  @SuppressFBWarnings("URF_UNREAD_FIELD")
   @Inject
   public SSOResource(SSOService ssoService, FeatureFlagService featureFlagService) {
     this.ssoService = ssoService;

@@ -2,6 +2,7 @@ package software.wings.waitnotify;
 
 import com.google.common.base.MoreObjects;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.core.queue.Queuable;
 
@@ -145,11 +146,13 @@ public class NotifyEvent extends Queuable {
       return this;
     }
 
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder withResetTimestamp(Date resetTimestamp) {
       this.resetTimestamp = resetTimestamp;
       return this;
     }
 
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder withEarliestGet(Date earliestGet) {
       this.earliestGet = earliestGet;
       return this;
@@ -160,6 +163,7 @@ public class NotifyEvent extends Queuable {
       return this;
     }
 
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder withCreated(Date created) {
       this.created = created;
       return this;

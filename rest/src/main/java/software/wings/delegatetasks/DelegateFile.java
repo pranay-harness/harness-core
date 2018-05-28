@@ -1,6 +1,7 @@
 package software.wings.delegatetasks;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import software.wings.beans.ChecksumType;
 import software.wings.beans.FileMetadata;
 import software.wings.service.intfc.FileService;
@@ -14,6 +15,7 @@ import java.io.InputStream;
 /**
  * Created by rishi on 12/19/16.
  */
+@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 public class DelegateFile extends FileMetadata {
   private String fileId;
   private FileService.FileBucket bucket;

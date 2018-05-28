@@ -2,12 +2,14 @@ package software.wings.beans;
 
 import static software.wings.utils.CryptoUtil.secureRandAlphaNumString;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.annotations.Entity;
 
 /**
  * Created by rsingh on 06/21/17.
  */
 @Entity(value = "externalServiceAuthTokens", noClassnameStored = true)
+@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 public class ExternalServiceAuthToken extends Base {
   private long expireAt;
 

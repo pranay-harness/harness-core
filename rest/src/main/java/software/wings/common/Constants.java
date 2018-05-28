@@ -9,6 +9,8 @@ import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -765,6 +767,7 @@ public interface Constants {
   /**
    * The Auto downloaded.
    */
+  @SuppressFBWarnings("MS_MUTABLE_COLLECTION")
   List<String> autoDownloaded = asList(DOCKER.name(), ECR.name(), GCR.name(), ACR.name(), AMAZON_S3.name(), AMI.name());
   /**
    * The constant DEPLOYMENT.

@@ -10,6 +10,7 @@ import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Transient;
@@ -45,6 +46,7 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
     setArtifactNeeded(true);
   }
 
+  @SuppressFBWarnings("VA_FORMAT_STRING_USES_NEWLINE")
   @Override
   public CommandExecutionStatus execute(CommandExecutionContext context) {
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(
@@ -137,6 +139,7 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
     }
   }
 
+  @SuppressFBWarnings("VA_FORMAT_STRING_USES_NEWLINE")
   private void resizeInstances(ContextData contextData, List<ContainerServiceData> instanceData,
       ResizeCommandUnitExecutionDataBuilder executionDataBuilder, ExecutionLogCallback executionLogCallback,
       boolean isUpsize) {
@@ -234,6 +237,7 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
     }
   }
 
+  @SuppressFBWarnings("WMI_WRONG_MAP_ITERATOR")
   private List<ContainerServiceData> getOldInstanceData(ContextData contextData, ContainerServiceData newServiceData) {
     List<ContainerServiceData> oldInstanceData = new ArrayList<>();
     Map<String, Integer> previousCounts = getActiveServiceCounts(contextData);

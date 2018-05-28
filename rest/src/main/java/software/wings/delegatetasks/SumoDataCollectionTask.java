@@ -10,6 +10,7 @@ import com.sumologic.client.SumoLogicClient;
 import com.sumologic.client.model.LogMessage;
 import com.sumologic.client.searchjob.model.GetMessagesForSearchJobResponse;
 import com.sumologic.client.searchjob.model.GetSearchJobStatusResponse;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.time.Timestamp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -104,6 +105,7 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
           + logCollectionMinute * TimeUnit.MINUTES.toMillis(1);
     }
 
+    @SuppressFBWarnings({"RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE", "REC_CATCH_EXCEPTION"})
     @Override
     public void run() {
       try {

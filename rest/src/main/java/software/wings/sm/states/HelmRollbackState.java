@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 
 import com.github.reinert.jjschema.Attributes;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import software.wings.api.HelmDeployContextElement;
 import software.wings.api.HelmDeployStateExecutionData;
 import software.wings.beans.Application;
@@ -34,6 +35,7 @@ public class HelmRollbackState extends HelmDeployState {
     super(name, StateType.HELM_ROLLBACK.name());
   }
 
+  @SuppressFBWarnings("NP_NULL_ON_SOME_PATH") // TODO
   @Override
   protected HelmCommandRequest getHelmCommandRequest(ExecutionContext context,
       HelmChartSpecification helmChartSpecification, ContainerServiceParams containerServiceParams, String releaseName,

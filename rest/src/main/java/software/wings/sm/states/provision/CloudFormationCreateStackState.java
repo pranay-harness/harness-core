@@ -7,6 +7,7 @@ import static software.wings.beans.TaskType.CLOUD_FORMATION_TASK;
 
 import com.google.inject.Inject;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
@@ -72,6 +73,7 @@ public class CloudFormationCreateStackState extends CloudFormationState {
             new Object[] {builder.build(), secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, null)})
         .build();
   }
+  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   protected void handleResponse(CloudFormationCommandResponse commandResponse, ExecutionContext context) {
     CloudFormationCreateStackResponse createStackResponse = (CloudFormationCreateStackResponse) commandResponse;
     ScriptStateExecutionData scriptStateExecutionData = (ScriptStateExecutionData) context.getStateExecutionData();

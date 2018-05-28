@@ -1,10 +1,14 @@
 <FindBugsFilter>
+    <!---
     <Match>
-        <!---
-        <Class name="~.*Builder" />
-        <Method name="~with.*" />
-        <Bug pattern="EI_EXPOSE_REP2" />
-        -->
+    <Class name="~.*Builder" />
+    <Method name="~with.*" />
+    <Bug pattern="EI_EXPOSE_REP2" />
+    </Match>
+    -->
+    <Match>
+        <Class name="software.wings.beans.command.CommandUnitType" />
+        <Bug pattern="SE_BAD_FIELD" />
     </Match>
 </FindBugsFilter>
 

@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static software.wings.utils.JsonUtils.asObject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.PostLoad;
 import org.mongodb.morphia.annotations.Transient;
@@ -15,6 +16,7 @@ import software.wings.utils.JsonUtils;
  * Created by peeyushaggarwal on 6/20/16.
  */
 @Entity(value = "history", noClassnameStored = true)
+@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 public class History extends Base {
   private static final Logger logger = LoggerFactory.getLogger(History.class);
 

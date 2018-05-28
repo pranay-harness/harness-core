@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -206,26 +207,31 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
       return this;
     }
 
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder withPassword(char[] password) {
       this.password = password;
       return this;
     }
 
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder withCaCert(char[] caCert) {
       this.caCert = caCert;
       return this;
     }
 
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder withClientCert(char[] clientCert) {
       this.clientCert = clientCert;
       return this;
     }
 
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder withClientKey(char[] clientKey) {
       this.clientKey = clientKey;
       return this;
     }
 
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder withClientKeyPassphrase(char[] clientKeyPassphrase) {
       this.clientKeyPassphrase = clientKeyPassphrase;
       return this;

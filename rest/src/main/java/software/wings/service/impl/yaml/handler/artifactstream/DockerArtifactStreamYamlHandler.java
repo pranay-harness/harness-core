@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml.handler.artifactstream;
 
 import com.google.inject.Singleton;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream.DockerArtifactStreamBuilder;
 import software.wings.beans.artifact.DockerArtifactStream.Yaml;
@@ -47,6 +48,7 @@ public class DockerArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Y
     return new DockerArtifactStream();
   }
 
+  @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT")
   private void toBean(String accountId, DockerArtifactStreamBuilder builder, Yaml artifactStreamYaml, String appId) {
     builder.settingId(getSettingId(accountId, appId, artifactStreamYaml.getServerName()))
         .imageName(artifactStreamYaml.getImageName())

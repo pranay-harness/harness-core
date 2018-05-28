@@ -12,6 +12,7 @@ import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -100,6 +101,7 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
     return Collections.emptyList();
   }
 
+  @SuppressFBWarnings("SIC_INNER_SHOULD_BE_STATIC")
   private class AccountComparator implements Comparator<Account> {
     @Override
     public int compare(Account lhs, Account rhs) {

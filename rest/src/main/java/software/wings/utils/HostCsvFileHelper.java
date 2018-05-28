@@ -9,6 +9,7 @@ import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import software.wings.beans.SettingAttribute;
@@ -32,6 +33,7 @@ public class HostCsvFileHelper {
       "HOST_NAME", "HOST_CONNECTION_ATTRIBUTES", "BASTION_HOST_CONNECTION_ATTRIBUTES", "TAGS"};
   @Inject private SettingsService attributeService;
   @Inject private AppService appService;
+  @SuppressFBWarnings("URF_UNREAD_FIELD")
   private SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
   public List<Host> parseHosts(String infraId, String appId, String envId, BoundedInputStream inputStream) {

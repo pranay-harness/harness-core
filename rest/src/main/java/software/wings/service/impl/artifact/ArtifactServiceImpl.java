@@ -45,6 +45,7 @@ import com.google.inject.name.Named;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCursor;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.MorphiaIterator;
@@ -130,6 +131,7 @@ public class ArtifactServiceImpl implements ArtifactService {
     return pageResponse;
   }
 
+  @SuppressFBWarnings("WMI_WRONG_MAP_ITERATOR")
   @Override
   public PageResponse<Artifact> listSortByBuildNo(PageRequest<Artifact> pageRequest) {
     PageResponse<Artifact> pageResponse = wingsPersistence.query(Artifact.class, pageRequest);

@@ -9,6 +9,7 @@ import static software.wings.exception.WingsException.USER_ADMIN;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
@@ -99,6 +100,7 @@ public class AuthenticationManager {
         .withTwoFactorJwtToken(jwtToken)
         .build();
   }
+  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   public User defaultLogin(String basicToken) {
     try {
       String[] decryptedData = new String(Base64.getDecoder().decode(basicToken)).split(":");
@@ -136,6 +138,7 @@ public class AuthenticationManager {
     }
   }
 
+  @SuppressFBWarnings({"DM_DEFAULT_ENCODING", "DM_DEFAULT_ENCODING"})
   public Response samlLogin(String... credentials) throws URISyntaxException {
     try {
       User user = samlBasedAuthHandler.authenticate(credentials);

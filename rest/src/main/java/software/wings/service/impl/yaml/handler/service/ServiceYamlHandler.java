@@ -9,6 +9,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -151,6 +152,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     return yamlHelper.getService(appId, yamlFilePath);
   }
 
+  @SuppressFBWarnings({"UC_USELESS_OBJECT"})
   private void saveOrUpdateServiceVariables(Yaml previousYaml, Yaml updatedYaml,
       List<ServiceVariable> previousServiceVariables, String appId, String serviceId) throws HarnessException {
     // what are the config variable changes? Which are additions and which are deletions?

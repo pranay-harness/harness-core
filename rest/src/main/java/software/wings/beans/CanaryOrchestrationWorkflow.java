@@ -33,6 +33,7 @@ import static software.wings.common.Constants.phaseNamePattern;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -49,6 +50,7 @@ import java.util.Set;
  * Created by rishi on 12/21/16.
  */
 @JsonTypeName("CANARY")
+@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
   public CanaryOrchestrationWorkflow() {
     setOrchestrationWorkflowType(CANARY);
@@ -208,6 +210,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     return workflowPhaseIdMap.values().stream().map(WorkflowPhase::getInfraMappingId).distinct().collect(toList());
   }
 
+  @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
   @Override
   public void setCloneMetadata(Map<String, String> serviceIdMapping) {
     if (workflowPhaseIdMap == null || serviceIdMapping == null) {

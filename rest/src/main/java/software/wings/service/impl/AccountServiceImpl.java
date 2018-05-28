@@ -20,6 +20,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
@@ -160,6 +161,7 @@ public class AccountServiceImpl implements AccountService {
     }
   }
 
+  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   @Override
   public String suggestAccountName(String accountName) {
     String suggestedAccountName = accountName;

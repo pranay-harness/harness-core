@@ -51,6 +51,7 @@ import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.Payload;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -475,6 +476,7 @@ public class UserServiceImpl implements UserService {
         aPageRequest().addFilter("accountId", Operator.EQ, accountId).addFilter("uuid", Operator.EQ, inviteId).build());
   }
 
+  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   @Override
   public UserInvite completeInvite(UserInvite userInvite) {
     UserInvite existingInvite = getInvite(userInvite.getAccountId(), userInvite.getUuid());
@@ -543,6 +545,7 @@ public class UserServiceImpl implements UserService {
     return true;
   }
 
+  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   @Override
   public boolean updatePassword(String resetPasswordToken, char[] password) {
     String jwtPasswordSecret = configuration.getPortal().getJwtPasswordSecret();
@@ -867,6 +870,7 @@ public class UserServiceImpl implements UserService {
     return null;
   }
 
+  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   @Override
   public ZendeskSsoLoginResponse generateZendeskSsoJwt(String returnToUrl) {
     String jwtZendeskSecret = configuration.getPortal().getJwtZendeskSecret();
@@ -915,6 +919,7 @@ public class UserServiceImpl implements UserService {
     return ZendeskSsoLoginResponse.builder().redirectUrl(redirectUrl).userId(user.getUuid()).build();
   }
 
+  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   @Override
   public User addUserGroups(User user, List<UserGroup> userGroups) {
     UpdateResults updated = wingsPersistence.update(
@@ -943,6 +948,7 @@ public class UserServiceImpl implements UserService {
         existingUser, account, Lists.newArrayList(roleService.getAccountAdminRole(account.getUuid())));
   }
 
+  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   private User addAccountRoles(User existingUser, Account account, List<Role> roles) {
     UpdateResults updated = wingsPersistence.update(wingsPersistence.createQuery(User.class)
                                                         .filter("email", existingUser.getEmail())
@@ -951,6 +957,7 @@ public class UserServiceImpl implements UserService {
     return existingUser;
   }
 
+  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   private User addRoles(User user, List<Role> roles) {
     UpdateResults updated = wingsPersistence.update(
         wingsPersistence.createQuery(User.class).filter("email", user.getEmail()).filter("appId", user.getAppId()),
@@ -996,6 +1003,7 @@ public class UserServiceImpl implements UserService {
     }
   }
 
+  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   @Override
   public User verifyJWTToken(String jwtToken, SecretManager.JWT_CATEGORY category) {
     String jwtPasswordSecret = secretManager.getJWTSecret(category);

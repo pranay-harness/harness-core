@@ -1,5 +1,6 @@
 package software.wings.beans.command;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.container.ContainerTask;
@@ -122,11 +123,13 @@ public class EcsSetupParams extends ContainerSetupParams {
       return this;
     }
 
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public EcsSetupParamsBuilder withSubnetIds(String[] subnetIds) {
       this.subnetIds = subnetIds;
       return this;
     }
 
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public EcsSetupParamsBuilder withSecurityGroupIds(String[] securityGroupIds) {
       this.securityGroupIds = securityGroupIds;
       return this;

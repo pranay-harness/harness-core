@@ -1,11 +1,14 @@
 package software.wings.beans;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * The Class GraphGroup.
  */
+@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 public class GraphGroup extends GraphNode {
   private List<GraphNode> elements = new ArrayList<>();
 

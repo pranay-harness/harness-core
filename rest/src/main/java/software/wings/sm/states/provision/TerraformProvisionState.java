@@ -24,6 +24,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.reinert.jjschema.Attributes;
 import com.mongodb.client.gridfs.model.GridFSFile;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.io.IOUtils;
@@ -156,6 +157,7 @@ public abstract class TerraformProvisionState extends State {
     return outputs;
   }
 
+  @SuppressFBWarnings("WMI_WRONG_MAP_ITERATOR")
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
     String activityId = response.keySet().iterator().next();

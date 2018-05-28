@@ -13,6 +13,7 @@ import com.google.inject.Singleton;
 
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
@@ -112,6 +113,7 @@ public class HostValidationServiceImpl implements HostValidationService {
     return response;
   }
 
+  @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NULL_VALUE")
   private HostValidationResponse validateHostWinRm(String hostName, WinRmConnectionAttributes connectionAttributes) {
     HostValidationResponse response = HostValidationResponse.Builder.aHostValidationResponse()
                                           .withHostName(hostName)

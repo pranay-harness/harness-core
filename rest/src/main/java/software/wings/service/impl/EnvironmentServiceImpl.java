@@ -35,6 +35,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -299,6 +300,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     delete(environment);
   }
 
+  @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE") // TODO
   @Override
   public List<Service> getServicesWithOverrides(String appId, String envId) {
     List<Service> services = new ArrayList<>();
@@ -415,6 +417,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     return wingsPersistence.query(Environment.class, pageRequest).getResponse();
   }
 
+  @SuppressFBWarnings("NP_NULL_ON_SOME_PATH") // TODO
   @Override
   public Environment cloneEnvironment(String appId, String envId, CloneMetadata cloneMetadata) {
     notNullCheck("cloneMetadata", cloneMetadata, USER);
@@ -659,6 +662,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
    *
    * @param serviceMapping
    */
+  @SuppressFBWarnings("WMI_WRONG_MAP_ITERATOR") // TODO
   private void validateServiceMapping(String appId, String targetAppId, Map<String, String> serviceMapping) {
     if (serviceMapping != null) {
       Set<String> serviceIds = serviceMapping.keySet();

@@ -3,6 +3,7 @@ package software.wings.helpers.ext.pcf;
 import static java.util.stream.Collectors.toList;
 import static software.wings.helpers.ext.pcf.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.data.structure.EmptyPredicate;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -185,6 +186,7 @@ public class PcfClientImpl implements PcfClient {
     return applicationSummaries;
   }
 
+  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   public void scaleApplications(PcfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException {
     logger.info(new StringBuilder()

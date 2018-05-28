@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import com.amazonaws.regions.Regions;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ElbStateExecutionData;
 import software.wings.api.InstanceElement;
@@ -56,6 +57,7 @@ public class ElasticLoadBalancerState extends State {
     super(name, StateType.ELASTIC_LOAD_BALANCER.name());
   }
 
+  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     ExecutionStatus status = ExecutionStatus.SUCCESS;

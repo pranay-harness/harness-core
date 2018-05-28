@@ -5,6 +5,7 @@ import static software.wings.helpers.ext.pcf.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_
 
 import com.google.inject.Singleton;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
@@ -37,6 +38,7 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
    * @param encryptedDataDetails
    * @return
    */
+  @SuppressFBWarnings("BC_UNCONFIRMED_CAST")
   public PcfCommandExecutionResponse executeTaskInternal(
       PcfCommandRequest pcfCommandRequest, List<EncryptedDataDetail> encryptedDataDetails) {
     PcfCommandDeployRequest pcfCommandDeployRequest = (PcfCommandDeployRequest) pcfCommandRequest;

@@ -10,6 +10,7 @@ import static software.wings.exception.WingsException.USER;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.User;
 import software.wings.exception.WingsException;
@@ -20,6 +21,7 @@ public class PasswordBasedAuthHandler implements AuthHandler {
   private MainConfiguration configuration;
   private UserService userService;
 
+  @SuppressFBWarnings("URF_UNREAD_FIELD")
   @Inject
   public PasswordBasedAuthHandler(MainConfiguration configuration, UserService userService) {
     this.configuration = configuration;

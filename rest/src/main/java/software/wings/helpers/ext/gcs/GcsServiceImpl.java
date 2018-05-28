@@ -20,6 +20,7 @@ import com.google.api.services.storage.model.StorageObject;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.collections4.map.HashedMap;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -97,6 +98,7 @@ public class GcsServiceImpl implements GcsService {
     }
   }
 
+  @SuppressFBWarnings("NP_NULL_PARAM_DEREF")
   @Override
   public List<BuildDetails> getArtifactsBuildDetails(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails,
       String bucketName, String artifactPath, boolean isExpression, boolean versioningEnabledForBucket) {
@@ -206,6 +208,7 @@ public class GcsServiceImpl implements GcsService {
     return jsonObj.get("project_id").toString();
   }
 
+  @SuppressFBWarnings("ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD")
   @Override
   public Map<String, String> listBuckets(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     Storage.Buckets bucketsObj = null;
@@ -234,6 +237,7 @@ public class GcsServiceImpl implements GcsService {
     return bucketList;
   }
 
+  @SuppressFBWarnings({"DLS_DEAD_LOCAL_STORE", "ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"})
   @Override
   public void createBucket(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails, String bucketName) {
     Storage.Buckets bucketsObj = null;
@@ -258,6 +262,7 @@ public class GcsServiceImpl implements GcsService {
     }
   }
 
+  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   @Override
   public void deleteBucket(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails, String bucketName) {
     Storage.Buckets bucketsObj = null;

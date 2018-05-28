@@ -8,6 +8,7 @@ import com.google.common.collect.Table.Cell;
 import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.time.Timestamp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -226,6 +227,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
           + collectionDuration);
     }
 
+    @SuppressFBWarnings({"DMI_ARGUMENTS_WRONG_ORDER", "REC_CATCH_EXCEPTION"})
     @Override
     public void run() {
       try {

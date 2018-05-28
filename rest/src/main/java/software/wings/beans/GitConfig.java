@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -48,6 +49,7 @@ public class GitConfig extends SettingValue implements Encryptable {
     super(SettingVariableTypes.GIT.name());
   }
 
+  @SuppressFBWarnings("EI_EXPOSE_REP2")
   @Builder
   public GitConfig(String username, char[] password, String repoUrl, String branch, String accountId,
       String encryptedPassword, String sshSettingId, SettingAttribute sshSettingAttribute, boolean keyAuth) {

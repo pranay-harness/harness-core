@@ -2,6 +2,7 @@ package software.wings.service.impl.elk;
 
 import static java.util.Arrays.asList;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Builder;
 import lombok.Data;
 import org.json.JSONObject;
@@ -84,6 +85,7 @@ public class ElkLogFetchRequest {
     return result.toString();
   }
 
+  @SuppressFBWarnings("REC_CATCH_EXCEPTION")
   protected JSONObject eval() {
     try {
       String[] tokens = insertSpaces(query).split(" ");

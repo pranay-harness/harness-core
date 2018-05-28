@@ -5,6 +5,7 @@ import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 
 import com.google.inject.Inject;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.time.Timestamp;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -94,6 +95,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
       this.taskResult = taskResult;
     }
 
+    @SuppressFBWarnings({"DLS_DEAD_LOCAL_STORE", "REC_CATCH_EXCEPTION"})
     @Override
     public void run() {
       try {

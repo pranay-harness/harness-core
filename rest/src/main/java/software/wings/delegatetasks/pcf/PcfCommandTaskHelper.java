@@ -6,6 +6,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.filesystem.FileIo;
 import org.apache.commons.io.IOUtils;
@@ -286,6 +287,7 @@ public class PcfCommandTaskHelper {
     executionLogCallback.saveExecutionLog(builder.toString());
   }
 
+  @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_BAD_PRACTICE")
   public File downloadArtifact(List<ArtifactFile> artifactFiles, String activityId, String accountId)
       throws IOException, ExecutionException {
     List<Pair<String, String>> fileIds = Lists.newArrayList();
@@ -341,6 +343,7 @@ public class PcfCommandTaskHelper {
     return -1;
   }
 
+  @SuppressFBWarnings({"DM_DEFAULT_ENCODING", "RV_RETURN_VALUE_IGNORED_BAD_PRACTICE"})
   public File createManifestYamlFileLocally(
       PcfCommandSetupRequest pcfCommandSetupRequest, String tempPath, String releaseName) throws IOException {
     String manifestYaml = pcfCommandSetupRequest.getManifestYaml();

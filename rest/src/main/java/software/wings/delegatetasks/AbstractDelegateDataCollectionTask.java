@@ -6,6 +6,7 @@ import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import software.wings.beans.DelegateTask;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
@@ -49,6 +50,7 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
     super(delegateId, delegateTask, consumer, preExecute);
   }
 
+  @SuppressFBWarnings({"UW_UNCOND_WAIT", "WA_NOT_IN_LOOP"})
   private void waitForCompletion() {
     synchronized (lockObject) {
       try {

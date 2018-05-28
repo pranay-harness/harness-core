@@ -1,5 +1,6 @@
 package software.wings.beans.instance.dashboard.service;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import software.wings.beans.instance.dashboard.ArtifactSummary;
 import software.wings.beans.instance.dashboard.EntitySummary;
 
@@ -47,6 +48,7 @@ public class CurrentActiveInstances {
     this.serviceInfra = serviceInfra;
   }
 
+  @SuppressFBWarnings("EI_EXPOSE_REP")
   public Date getDeployedAt() {
     return deployedAt;
   }
@@ -88,6 +90,7 @@ public class CurrentActiveInstances {
       return this;
     }
 
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder withDeployedAt(Date deployedAt) {
       this.deployedAt = deployedAt;
       return this;

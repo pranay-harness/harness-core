@@ -51,6 +51,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import com.ning.http.client.AsyncHttpClient;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.network.FibonacciBackOff;
 import okhttp3.ResponseBody;
 import org.apache.commons.io.FileUtils;
@@ -185,9 +186,12 @@ public class DelegateServiceImpl implements DelegateService {
     return hostName;
   }
 
+  @SuppressFBWarnings({"UW_UNCOND_WAIT", "WA_NOT_IN_LOOP", "DM_BOXED_PRIMITIVE_FOR_PARSING",
+      "ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD", "REC_CATCH_EXCEPTION"})
   @Override
   @SuppressWarnings("unchecked")
-  public void run(boolean watched) {
+  public void
+  run(boolean watched) {
     try {
       hostName = getLocalHostName();
 

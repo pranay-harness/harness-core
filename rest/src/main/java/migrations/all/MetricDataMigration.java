@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import migrations.Migration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,30 +18,31 @@ import java.util.Map;
 /**
  * Created by rsingh on 3/26/18.
  */
+@SuppressFBWarnings("UUF_UNUSED_FIELD")
 public class MetricDataMigration implements Migration {
   private static final Logger logger = LoggerFactory.getLogger(TrimYamlMigration.class);
 
   @Inject WingsPersistence wingsPersistence;
 
-  private double error = -1;
+  @SuppressFBWarnings("URF_UNREAD_FIELD") private double error = -1;
 
   // new relic metrics
-  private double throughput = -1;
-  private double averageResponseTime = -1;
-  private double apdexScore = -1;
+  @SuppressFBWarnings("URF_UNREAD_FIELD") private double throughput = -1;
+  @SuppressFBWarnings("URF_UNREAD_FIELD") private double averageResponseTime = -1;
+  @SuppressFBWarnings("URF_UNREAD_FIELD") private double apdexScore = -1;
   private double callCount;
-  private double requestsPerMinute = -1;
+  @SuppressFBWarnings("URF_UNREAD_FIELD") private double requestsPerMinute = -1;
 
-  private double response95th = -1;
-  private double stalls = -1;
-  private double slowCalls = -1;
+  @SuppressFBWarnings("URF_UNREAD_FIELD") private double response95th = -1;
+  @SuppressFBWarnings("URF_UNREAD_FIELD") private double stalls = -1;
+  @SuppressFBWarnings("URF_UNREAD_FIELD") private double slowCalls = -1;
 
-  private double clientSideFailureRate = -1;
-  private double errorCountHttp4xx = -1;
-  private double errorCountHttp5xx = -1;
-  private double requestsPerMin = -1;
-  private double responseTime = -1;
-  private double serverSideFailureRate = -1;
+  @SuppressFBWarnings("URF_UNREAD_FIELD") private double clientSideFailureRate = -1;
+  @SuppressFBWarnings("URF_UNREAD_FIELD") private double errorCountHttp4xx = -1;
+  @SuppressFBWarnings("URF_UNREAD_FIELD") private double errorCountHttp5xx = -1;
+  @SuppressFBWarnings("URF_UNREAD_FIELD") private double requestsPerMin = -1;
+  @SuppressFBWarnings("URF_UNREAD_FIELD") private double responseTime = -1;
+  @SuppressFBWarnings("URF_UNREAD_FIELD") private double serverSideFailureRate = -1;
 
   @Override
   public void migrate() {

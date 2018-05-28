@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
@@ -46,6 +47,7 @@ import java.util.regex.Pattern;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("KUBERNETES")
+@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 public class KubernetesContainerTask extends ContainerTask {
   private static final Logger logger = LoggerFactory.getLogger(KubernetesContainerTask.class);
 

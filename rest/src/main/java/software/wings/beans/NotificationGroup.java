@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -26,6 +27,7 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "notificationGroups", noClassnameStored = true)
 @Indexes(@Index(fields = { @Field("accountId")
                            , @Field("name") }, options = @IndexOptions(unique = true)))
+@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 public class NotificationGroup extends Base {
   @NotEmpty private String accountId;
   @NotNull private String name;

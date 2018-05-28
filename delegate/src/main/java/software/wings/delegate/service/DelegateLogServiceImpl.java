@@ -15,6 +15,7 @@ import com.google.inject.Singleton;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.RemovalCause;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Log;
@@ -56,6 +57,7 @@ public class DelegateLogServiceImpl implements DelegateLogService {
   }
 
   @Override
+  @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
   public void save(String accountId, Log log) {
     cache.get(accountId, s -> new ArrayList<>()).add(log);
   }

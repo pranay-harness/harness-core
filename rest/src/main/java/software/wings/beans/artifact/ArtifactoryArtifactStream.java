@@ -6,6 +6,7 @@ import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anA
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -50,6 +51,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
     this.dockerRepositoryServer = dockerRepositoryServer;
   }
 
+  @SuppressFBWarnings("STCAL_INVOKE_ON_STATIC_DATE_FORMAT_INSTANCE")
   @Override
   public String getArtifactDisplayName(String buildNo) {
     return isBlank(getImageName())

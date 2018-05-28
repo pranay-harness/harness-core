@@ -31,6 +31,7 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import groovyx.net.http.HttpResponseException;
 import io.harness.network.Http;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -121,6 +122,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     }
   }
 
+  @SuppressFBWarnings("BC_IMPOSSIBLE_INSTANCEOF")
   private Map<String, String> getRepositories(ArtifactoryConfig artifactoryConfig,
       List<EncryptedDataDetail> encryptionDetails, EnumSet<PackageType> packageTypes) {
     logger.info("Retrieving repositories for packages {}", packageTypes.toArray());
@@ -404,6 +406,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     return new ArrayList<>();
   }
 
+  @SuppressFBWarnings("BC_IMPOSSIBLE_INSTANCEOF")
   public List<String> getGroupIds(Artifactory artifactory, String repoKey) {
     logger.info("Retrieving groupIds for repoKey {}", repoKey);
     List<String> groupIdList = new ArrayList<>();
@@ -438,7 +441,6 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
           }
         }
       }
-
     } catch (Exception e) {
       if (e instanceof HttpResponseException) {
         HttpResponseException httpResponseException = (HttpResponseException) e;
@@ -684,6 +686,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     return artifactIds;
   }
 
+  @SuppressFBWarnings("REC_CATCH_EXCEPTION")
   @Override
   public ListNotifyResponseData downloadArtifacts(ArtifactoryConfig artifactoryConfig,
       List<EncryptedDataDetail> encryptionDetails, String repoType, String groupId, List<String> artifactPaths,

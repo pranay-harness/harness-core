@@ -11,6 +11,7 @@ import static software.wings.delegatetasks.DelegateFile.Builder.aDelegateFile;
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,6 +68,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     return run((TerraformProvisionParameters) parameters[0]);
   }
 
+  @SuppressFBWarnings({"DM_DEFAULT_ENCODING", "DM_DEFAULT_ENCODING", "REC_CATCH_EXCEPTION"})
   private TerraformExecutionData run(TerraformProvisionParameters parameters) {
     GitConfig gitConfig = parameters.getSourceRepo();
     gitConfig.setGitRepoType(GitRepositoryType.TERRAFORM);

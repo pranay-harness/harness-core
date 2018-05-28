@@ -7,6 +7,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
@@ -41,6 +42,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
   @Inject private WingsPersistence wingsPersistence;
   private final ServiceApiVersion learningEngineApiVersion;
 
+  @SuppressFBWarnings("OBL_UNSATISFIED_OBLIGATION")
   public LearningEngineAnalysisServiceImpl() throws IOException {
     Properties messages = new Properties();
     InputStream in = getClass().getResourceAsStream(SERVICE_VERSION_FILE);

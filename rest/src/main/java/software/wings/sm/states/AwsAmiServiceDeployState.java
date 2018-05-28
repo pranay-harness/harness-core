@@ -21,6 +21,7 @@ import com.google.inject.name.Named;
 import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.github.reinert.jjschema.Attributes;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -364,6 +365,7 @@ public class AwsAmiServiceDeployState extends State {
         .build();
   }
 
+  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   protected List<InstanceElement> handleAsyncInternal(ExecutionContext context, String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, AmiServiceSetupElement serviceSetupElement,
       ManagerExecutionLogCallback executionLogCallback) {

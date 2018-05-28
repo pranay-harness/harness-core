@@ -24,6 +24,7 @@ import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -135,6 +136,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     return executeCommandString(command, null);
   }
 
+  @SuppressFBWarnings("REC_CATCH_EXCEPTION") // TODO
   @Override
   public CommandExecutionStatus executeCommandString(String command, StringBuffer output) {
     CommandExecutionStatus commandExecutionStatus = FAILURE;
@@ -323,6 +325,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
         .orElse(CommandExecutionStatus.SUCCESS);
   }
 
+  @SuppressFBWarnings("DMI_INVOKING_TOSTRING_ON_ARRAY") // TODO
   private void passwordPromptResponder(String line, OutputStream outputStream) throws IOException {
     if (matchesPasswordPromptPattern(line)) {
       outputStream.write((config.getSudoAppPassword() + "\n").getBytes(UTF_8));

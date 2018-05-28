@@ -4,6 +4,7 @@ import static io.harness.network.Http.connectableHttpUrl;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
@@ -67,6 +68,7 @@ public abstract class AbstractDelegateValidateTask implements DelegateValidateTa
     }
   }
 
+  @SuppressFBWarnings("EI_EXPOSE_REP")
   public Object[] getParameters() {
     return parameters;
   }

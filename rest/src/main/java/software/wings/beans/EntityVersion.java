@@ -1,8 +1,11 @@
 package software.wings.beans;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /**
  * Created by rishi on 10/13/16.
  */
+@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 public class EntityVersion extends Base {
   public static final Integer INITIAL_VERSION = 1;
 

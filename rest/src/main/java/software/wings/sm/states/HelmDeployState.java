@@ -13,6 +13,7 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.HelmDeployStateExecutionData;
@@ -124,6 +125,7 @@ public class HelmDeployState extends State {
     }
   }
 
+  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE") // TODO
   protected ExecutionResponse executeInternal(ExecutionContext context) throws InterruptedException {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
@@ -202,6 +204,7 @@ public class HelmDeployState extends State {
     }
   }
 
+  @SuppressFBWarnings("DB_DUPLICATE_BRANCHES") // TODO
   protected HelmCommandRequest getHelmCommandRequest(ExecutionContext context,
       HelmChartSpecification helmChartSpecification, ContainerServiceParams containerServiceParams, String releaseName,
       String accountId, String appId, String activityId, ImageDetails imageDetails,
@@ -235,6 +238,7 @@ public class HelmDeployState extends State {
         .build();
   }
 
+  @SuppressFBWarnings("NP_NULL_ON_SOME_PATH") // TODO
   protected int getPreviousReleaseVersion(String appId, String accountId, String releaseName,
       ContainerServiceParams containerServiceParams) throws InterruptedException {
     int prevVersion = 0;

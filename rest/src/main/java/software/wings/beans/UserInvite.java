@@ -3,6 +3,7 @@ package software.wings.beans;
 import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
@@ -16,6 +17,7 @@ import java.util.List;
  * Created by anubhaw on 3/6/17.
  */
 @Entity(value = "userInvites", noClassnameStored = true)
+@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 //@Indexes(@Index(fields = {@Field("accountId"), @Field("email")}, options = @IndexOptions(unique = true))) //TODO:
 // handle update with insert and then uncomment
 public class UserInvite extends Base {
@@ -117,10 +119,12 @@ public class UserInvite extends Base {
     this.name = name;
   }
 
+  @SuppressFBWarnings("EI_EXPOSE_REP")
   public char[] getPassword() {
     return password;
   }
 
+  @SuppressFBWarnings("EI_EXPOSE_REP2")
   public void setPassword(char[] password) {
     this.password = password;
   }

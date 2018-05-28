@@ -3,6 +3,7 @@ package software.wings.app;
 import com.google.inject.AbstractModule;
 
 import com.hazelcast.core.HazelcastInstance;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.dropwizard.setup.Environment;
 import org.atmosphere.cpr.ApplicationConfig;
 import org.atmosphere.cpr.AtmosphereServlet;
@@ -26,6 +27,7 @@ public class StreamModule extends AbstractModule {
    *
    * @param environment the environment
    */
+  @SuppressFBWarnings("ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD")
   public StreamModule(Environment environment, HazelcastInstance hazelcastInstance) {
     atmosphereServlet = new AtmosphereServlet();
 

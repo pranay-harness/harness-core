@@ -48,6 +48,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import org.apache.commons.collections.map.LRUMap;
@@ -85,6 +86,7 @@ import java.util.Random;
 import java.util.concurrent.ExecutorService;
 
 public class ZombieHunterJob implements Job {
+  @SuppressFBWarnings("MS_SHOULD_BE_FINAL")
   protected static Logger logger = LoggerFactory.getLogger(ZombieHunterJob.class);
 
   public static final String GROUP = "ZOMBIE_HUNTER_GROUP";
@@ -124,6 +126,7 @@ public class ZombieHunterJob implements Job {
   public static final String ENVIRONMENTS = "environments";
   public static final String SERVICES = "services";
 
+  @SuppressFBWarnings("MS_MUTABLE_COLLECTION_PKGPROTECT")
   protected static final List<ZombieType> zombieTypes =
       asList(new ZombieType("applications", "accountId", asList("accounts"), null),
           new ZombieType("artifactStream", ArtifactStream.SERVICE_ID_KEY, asList(SERVICES), null),

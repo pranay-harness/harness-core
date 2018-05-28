@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ITopic;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.atmosphere.cpr.AtmosphereConfig;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.Broadcaster;
@@ -18,6 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Created by peeyushaggarwal on 1/11/17.
  */
+@SuppressFBWarnings("MS_CANNOT_BE_FINAL")
 public class HazelcastBroadcaster extends AbstractBroadcasterProxy {
   private static final Logger logger = LoggerFactory.getLogger(HazelcastBroadcaster.class);
 

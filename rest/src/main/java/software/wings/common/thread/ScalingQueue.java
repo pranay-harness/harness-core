@@ -1,5 +1,7 @@
 package software.wings.common.thread;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -12,6 +14,7 @@ import java.util.concurrent.ThreadPoolExecutor;
  * @param <E> the element type
  * @author Rishi
  */
+@SuppressFBWarnings("SE_BAD_FIELD")
 public class ScalingQueue<E> extends LinkedBlockingQueue<E> {
   private static final long serialVersionUID = 2006711824734916827L;
   /**

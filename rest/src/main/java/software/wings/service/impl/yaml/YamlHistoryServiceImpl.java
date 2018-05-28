@@ -5,6 +5,7 @@ import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
@@ -85,6 +86,7 @@ public class YamlHistoryServiceImpl implements YamlHistoryService {
   /* (non-Javadoc)
    * @see software.wings.service.intfc.yaml.YamlHistoryService#get(java.lang.String)
    */
+  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   @Override
   public List<YamlVersion> getList(String entityId, Type type) {
     List<YamlVersion> versions = new ArrayList<>();

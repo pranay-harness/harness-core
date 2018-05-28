@@ -37,6 +37,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import net.redhogs.cronparser.DescriptionTypeEnum;
 import net.redhogs.cronparser.I18nMessages;
 import net.redhogs.cronparser.Options;
@@ -673,6 +674,7 @@ public class TriggerServiceImpl implements TriggerService {
     return triggerExecution(artifacts, trigger, null);
   }
 
+  @SuppressFBWarnings("WMI_WRONG_MAP_ITERATOR")
   private WorkflowExecution triggerExecution(
       List<Artifact> artifacts, Trigger trigger, Map<String, String> parameters) {
     WorkflowExecution workflowExecution = null;

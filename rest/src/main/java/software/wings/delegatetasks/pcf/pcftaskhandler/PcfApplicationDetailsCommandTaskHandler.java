@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.toList;
 
 import com.google.inject.Singleton;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NoArgsConstructor;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -26,6 +27,7 @@ import java.util.List;
 public class PcfApplicationDetailsCommandTaskHandler extends PcfCommandTaskHandler {
   private static final Logger logger = LoggerFactory.getLogger(PcfApplicationDetailsCommandTaskHandler.class);
 
+  @SuppressFBWarnings("BC_UNCONFIRMED_CAST")
   public PcfCommandExecutionResponse executeTaskInternal(
       PcfCommandRequest pcfCommandRequest, List<EncryptedDataDetail> encryptedDataDetails) {
     PcfCommandExecutionResponse pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder().build();

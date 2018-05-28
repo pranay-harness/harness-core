@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import com.mongodb.DBCursor;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import migrations.Migration;
 import migrations.MigrationList;
 import org.apache.commons.lang3.tuple.Pair;
@@ -36,6 +37,7 @@ public class MigrationServiceImpl implements MigrationService {
   @Inject private Injector injector;
   @Inject private YamlGitService yamlGitService;
 
+  @SuppressFBWarnings("REC_CATCH_EXCEPTION")
   @Override
   public void runMigrations() {
     Map<Integer, Class<? extends Migration>> migrations =

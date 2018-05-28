@@ -8,6 +8,7 @@ import com.google.common.base.Charsets;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.security.encryption.EncryptionUtils;
@@ -102,6 +103,7 @@ public class SshSessionFactory {
   /**
    * The Class jschLogger.
    */
+  @SuppressFBWarnings("NM_CLASS_NAMING_CONVENTION")
   public static class jschLogger implements com.jcraft.jsch.Logger {
     /**
      * The Name.

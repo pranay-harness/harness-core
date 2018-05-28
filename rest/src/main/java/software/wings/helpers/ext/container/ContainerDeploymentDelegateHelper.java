@@ -12,6 +12,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import groovy.lang.Singleton;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -59,6 +60,7 @@ public class ContainerDeploymentDelegateHelper {
   public static final LoadingCache<String, Object> lockObjects =
       CacheBuilder.newBuilder().expireAfterAccess(30, TimeUnit.MINUTES).build(CacheLoader.from(Object::new));
 
+  @SuppressFBWarnings({"DM_DEFAULT_ENCODING", "RV_RETURN_VALUE_IGNORED_BAD_PRACTICE"})
   public String createAndGetKubeConfigLocation(ContainerServiceParams containerServiceParam) {
     try {
       KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParam);

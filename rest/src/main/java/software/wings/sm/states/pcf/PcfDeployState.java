@@ -7,6 +7,7 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
@@ -134,6 +135,7 @@ public class PcfDeployState extends State {
     }
   }
 
+  @SuppressFBWarnings({"DLS_DEAD_LOCAL_STORE", "DLS_DEAD_LOCAL_STORE"})
   protected ExecutionResponse executeInternal(ExecutionContext context) {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
@@ -251,6 +253,7 @@ public class PcfDeployState extends State {
     return updateCount;
   }
 
+  @SuppressFBWarnings("BX_UNBOXING_IMMEDIATELY_REBOXED")
   protected PcfCommandRequest getPcfCommandRequest(ExecutionContext context, Application application, String activityId,
       PcfSetupContextElement pcfSetupContextElement, PcfConfig pcfConfig, Integer updateCount,
       Integer downsizeUpdateCount, PcfDeployStateExecutionData stateExecutionData) {

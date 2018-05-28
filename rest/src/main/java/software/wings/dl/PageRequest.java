@@ -9,6 +9,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.mapping.MappedClass;
 import org.mongodb.morphia.mapping.MappedField;
@@ -254,6 +255,7 @@ public class PageRequest<T> {
     this.options = options;
   }
 
+  @SuppressFBWarnings("WMI_WRONG_MAP_ITERATOR")
   public void populateFilters(MultivaluedMap<String, String> map, MappedClass mappedClass, Mapper mapper) {
     int fieldCount = 0;
     int orderCount = 0;

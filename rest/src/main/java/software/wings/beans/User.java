@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toList;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -257,6 +258,7 @@ public class User extends Base implements Principal {
    *
    * @return the password
    */
+  @SuppressFBWarnings("EI_EXPOSE_REP")
   public char[] getPassword() {
     return password;
   }
@@ -266,6 +268,7 @@ public class User extends Base implements Principal {
    *
    * @param password the password
    */
+  @SuppressFBWarnings("EI_EXPOSE_REP2")
   public void setPassword(char[] password) {
     this.password = password;
   }
@@ -558,6 +561,7 @@ public class User extends Base implements Principal {
       return this;
     }
 
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder withPassword(char[] password) {
       this.password = password;
       return this;

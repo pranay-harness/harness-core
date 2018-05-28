@@ -11,6 +11,7 @@ import static software.wings.exception.WingsException.ReportTarget.LOG_SYSTEM;
 import static software.wings.exception.WingsException.ReportTarget.RED_BELL_ALERT;
 import static software.wings.exception.WingsException.ReportTarget.REST_API;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Getter;
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
@@ -75,6 +76,7 @@ public class WingsException extends WingsApiException {
     this(ErrorCode.UNKNOWN_ERROR, message);
   }
 
+  @SuppressFBWarnings("EI_EXPOSE_REP2")
   public WingsException(String message, ReportTarget[] reportTargets) {
     this(ErrorCode.UNKNOWN_ERROR, message);
     this.reportTargets = reportTargets;
@@ -100,6 +102,7 @@ public class WingsException extends WingsApiException {
     this(errorCode, null, reportTargets, cause);
   }
 
+  @SuppressFBWarnings("EI_EXPOSE_REP2")
   public WingsException(ErrorCode errorCode, String message, ReportTarget[] reportTargets, Throwable cause) {
     this(errorCode, message, cause);
     this.reportTargets = reportTargets;
@@ -109,6 +112,7 @@ public class WingsException extends WingsApiException {
     this(errorCode, (Throwable) null);
   }
 
+  @SuppressFBWarnings("EI_EXPOSE_REP2")
   public WingsException(ErrorCode errorCode, ReportTarget[] reportTargets) {
     this(errorCode, (Throwable) null);
     this.reportTargets = reportTargets;

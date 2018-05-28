@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.annotations.Api;
 import software.wings.beans.Activity;
 import software.wings.beans.Log;
@@ -52,6 +53,7 @@ public class ActivityResource {
    * @param activityService the activity service
    * @param logService      the log service
    */
+  @SuppressFBWarnings("URF_UNREAD_FIELD")
   @Inject
   public ActivityResource(AppService appService, ActivityService activityService, LogService logService) {
     this.appService = appService;

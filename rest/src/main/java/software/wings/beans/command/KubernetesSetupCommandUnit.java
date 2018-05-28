@@ -40,6 +40,7 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
@@ -685,6 +686,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     return null;
   }
 
+  @SuppressFBWarnings("REC_CATCH_EXCEPTION")
   private Ingress createIngressDefinition(KubernetesSetupParams setupParams, Service service,
       String kubernetesServiceName, String containerServiceName, ExecutionLogCallback executionLogCallback) {
     int port = isNotEmpty(service.getSpec().getPorts()) ? service.getSpec().getPorts().get(0).getPort() : 80;
@@ -824,6 +826,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         .build();
   }
 
+  @SuppressFBWarnings("WMI_WRONG_MAP_ITERATOR")
   private IstioResource createRouteRuleDefinition(KubernetesSetupParams setupParams, String kubernetesServiceName,
       Map<String, String> serviceLabels, Map<String, Integer> activeControllers, boolean isStatefulSet,
       ExecutionLogCallback executionLogCallback) {
@@ -856,6 +859,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     return routeRule;
   }
 
+  @SuppressFBWarnings({"VA_FORMAT_STRING_USES_NEWLINE", "VA_FORMAT_STRING_USES_NEWLINE"})
   private void listContainerInfosWhenReady(List<EncryptedDataDetail> encryptedDataDetails,
       int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback, KubernetesConfig kubernetesConfig,
       String containerServiceName, List<Pod> originalPods, long startTime, boolean isRollback) {
@@ -1059,6 +1063,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                                : ContainerApiVersions.KUBERNETES_V2_BETA1.getVersionName();
   }
 
+  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   private Secret createRegistrySecret(
       String secretName, String namespace, ImageDetails imageDetails, ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog("Setting image pull secret " + secretName);

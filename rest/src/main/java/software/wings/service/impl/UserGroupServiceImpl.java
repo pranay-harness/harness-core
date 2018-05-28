@@ -9,6 +9,7 @@ import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Account;
@@ -68,6 +69,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     return res;
   }
 
+  @SuppressFBWarnings("SIC_INNER_SHOULD_BE_STATIC")
   private class UserGroupComparator implements Comparator<UserGroup> {
     @Override
     public int compare(UserGroup lhs, UserGroup rhs) {

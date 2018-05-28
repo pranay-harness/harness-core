@@ -5,6 +5,7 @@ import static software.wings.service.impl.analysis.LogAnalysisResponse.Builder.a
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.AllArgsConstructor;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
@@ -41,6 +42,7 @@ public class LogClusterManagerJob implements Job {
 
   @org.simpleframework.xml.Transient @Inject private LearningEngineService learningEngineService;
 
+  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   @Override
   public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
     try {
@@ -78,6 +80,7 @@ public class LogClusterManagerJob implements Job {
       }
     }
 
+    @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT")
     private void cluster() {
       boolean completeCron = false;
       boolean keepProcessing = true;

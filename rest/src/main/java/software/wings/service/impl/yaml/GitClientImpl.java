@@ -17,6 +17,7 @@ import static software.wings.exception.WingsException.USER_ADMIN;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import groovy.lang.Singleton;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
@@ -499,6 +500,7 @@ public class GitClientImpl implements GitClient {
    *
    * @param gitConfig the git config
    */
+  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   public synchronized void ensureRepoLocallyClonedAndUpdated(GitConfig gitConfig) {
     File repoDir = new File(getRepoDirectory(gitConfig));
     if (repoDir.exists()) {
@@ -552,6 +554,7 @@ public class GitClientImpl implements GitClient {
     return gitCommand;
   }
 
+  @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_BAD_PRACTICE")
   private void setSshAuthCredentials(TransportCommand gitCommand, GitConfig gitConfig) {
     String keyPath = null;
     try {
@@ -591,6 +594,7 @@ public class GitClientImpl implements GitClient {
         return jsch;
       }
 
+      @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_BAD_PRACTICE")
       @Override
       public void releaseSession(RemoteSession session) {
         super.releaseSession(session);
@@ -599,6 +603,7 @@ public class GitClientImpl implements GitClient {
     };
   }
 
+  @SuppressFBWarnings({"DM_DEFAULT_ENCODING", "RV_RETURN_VALUE_IGNORED_BAD_PRACTICE"})
   private String getTempSshKeyPath(String sshKey) throws IOException {
     String keyFilePath = TEMP_SSH_KEY_DIR + "/" + UUIDGenerator.generateUuid();
     File keyFile = new File(keyFilePath);

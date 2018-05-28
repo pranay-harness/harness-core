@@ -30,6 +30,7 @@ import com.nimbusds.jose.JWEDecrypter;
 import com.nimbusds.jose.KeyLengthException;
 import com.nimbusds.jose.crypto.DirectDecrypter;
 import com.nimbusds.jwt.EncryptedJWT;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.collections.CollectionUtils;
@@ -277,6 +278,7 @@ public class AuthServiceImpl implements AuthService {
     }
   }
 
+  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   @Override
   public void validateDelegateToken(String accountId, String tokenString) {
     logger.info("Delegate token validation, account id [{}] token requested", accountId);

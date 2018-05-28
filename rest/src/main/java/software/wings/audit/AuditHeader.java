@@ -1,5 +1,6 @@
 package software.wings.audit;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
@@ -15,6 +16,7 @@ import software.wings.beans.User;
  * @author Rishi
  */
 @Entity(value = "audits", noClassnameStored = true)
+@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 public class AuditHeader extends Base {
   /**
    * The Remote user.

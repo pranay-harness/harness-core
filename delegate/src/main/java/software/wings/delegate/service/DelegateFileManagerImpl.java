@@ -10,6 +10,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody.Part;
 import okhttp3.RequestBody;
@@ -170,6 +171,7 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
     }
   }
 
+  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   private void upload(DelegateFile delegateFile, File content) throws IOException {
     RequestBody filename = RequestBody.create(MediaType.parse(MULTIPART_FORM_DATA), "file");
     logger.info("Uploading file name {} ", delegateFile.getLocalFilePath());

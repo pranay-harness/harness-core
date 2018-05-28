@@ -15,6 +15,7 @@ import static software.wings.helpers.ext.helm.HelmConstants.HELM_VERSION_COMMAND
 
 import com.google.inject.Singleton;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Builder;
 import lombok.Data;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -171,6 +172,7 @@ public class HelmClientImpl implements HelmClient {
     return chartReference;
   }
 
+  @SuppressFBWarnings({"DM_DEFAULT_ENCODING", "RV_RETURN_VALUE_IGNORED_BAD_PRACTICE"})
   private String constructValueOverrideFile(HelmInstallCommandRequest requestParameters)
       throws IOException, ExecutionException {
     StringBuilder fileOverrides = new StringBuilder();

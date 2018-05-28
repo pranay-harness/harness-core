@@ -7,6 +7,7 @@ import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anA
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -40,6 +41,7 @@ public class AmazonS3ArtifactStream extends ArtifactStream {
     this.artifactPaths = artifactPaths;
   }
 
+  @SuppressFBWarnings("STCAL_INVOKE_ON_STATIC_DATE_FORMAT_INSTANCE")
   @Override
   public String getArtifactDisplayName(String buildNo) {
     return isBlank(getSourceName()) ? format("%s_%s_%s", getSourceName(), buildNo, dateFormat.format(new Date()))

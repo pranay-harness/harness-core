@@ -5,6 +5,7 @@ import static software.wings.yaml.YamlVersion.Builder.aYamlVersion;
 import com.google.common.base.MoreObjects;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -102,6 +103,7 @@ public class YamlVersion extends Base implements YamlHistory {
     return Objects.hash(type, entityId, yaml);
   }
 
+  @SuppressFBWarnings("EQ_OVERRIDING_EQUALS_NOT_SYMMETRIC") // TODO
   @Override
   public boolean equals(Object o) {
     if (o == this) {
@@ -149,6 +151,7 @@ public class YamlVersion extends Base implements YamlHistory {
     NOTIFICATION_GROUP
   }
 
+  @SuppressFBWarnings("CN_IMPLEMENTS_CLONE_BUT_NOT_CLONEABLE") // TODO
   public YamlVersion clone() {
     return aYamlVersion()
         .withUuid(getYamlVersionId())
@@ -224,21 +227,25 @@ public class YamlVersion extends Base implements YamlHistory {
       return this;
     }
 
+    @SuppressFBWarnings("URF_UNREAD_FIELD") // TODO
     public YamlVersion.Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
+    @SuppressFBWarnings("URF_UNREAD_FIELD") // TODO
     public YamlVersion.Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
+    @SuppressFBWarnings("URF_UNREAD_FIELD") // TODO
     public YamlVersion.Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
+    @SuppressFBWarnings("URF_UNREAD_FIELD") // TODO
     public YamlVersion.Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;

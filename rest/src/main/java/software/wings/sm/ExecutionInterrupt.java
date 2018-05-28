@@ -4,6 +4,7 @@
 
 package software.wings.sm;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
@@ -18,6 +19,7 @@ import javax.validation.constraints.NotNull;
  * @author Rishi
  */
 @Entity(value = "executionInterrupts", noClassnameStored = true)
+@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 public class ExecutionInterrupt extends Base {
   @NotNull private ExecutionInterruptType executionInterruptType;
 

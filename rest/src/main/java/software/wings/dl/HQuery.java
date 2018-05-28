@@ -8,6 +8,7 @@ import static software.wings.dl.HQuery.QueryChecks.VALIDATE;
 import com.google.common.collect.Sets;
 
 import com.mongodb.DBCollection;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Criteria;
@@ -28,14 +29,19 @@ import java.util.Set;
  *
  * @param <T> the type parameter
  */
+@SuppressFBWarnings("EQ_DOESNT_OVERRIDE_EQUALS")
 public class HQuery<T> extends QueryImpl<T> {
   private static final Logger logger = LoggerFactory.getLogger(HQuery.class);
 
   public enum QueryChecks { VALIDATE, AUTHORITY, COUNT }
 
+  @SuppressFBWarnings("MS_SHOULD_BE_FINAL")
   public static Set<QueryChecks> allChecks = EnumSet.<QueryChecks>of(VALIDATE, AUTHORITY, COUNT);
+  @SuppressFBWarnings("MS_SHOULD_BE_FINAL")
   public static Set<QueryChecks> excludeValidate = EnumSet.<QueryChecks>of(AUTHORITY, COUNT);
+  @SuppressFBWarnings("MS_SHOULD_BE_FINAL")
   public static Set<QueryChecks> excludeAuthority = EnumSet.<QueryChecks>of(VALIDATE, COUNT);
+  @SuppressFBWarnings("MS_SHOULD_BE_FINAL")
   public static Set<QueryChecks> excludeCount = EnumSet.<QueryChecks>of(AUTHORITY, VALIDATE);
 
   private Set<QueryChecks> queryChecks = allChecks;
