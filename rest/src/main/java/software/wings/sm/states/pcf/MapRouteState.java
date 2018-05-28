@@ -20,7 +20,6 @@ import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.SettingAttribute;
@@ -28,6 +27,7 @@ import software.wings.beans.TaskType;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.common.Constants;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
@@ -111,7 +111,7 @@ public class MapRouteState extends State {
     try {
       return executeInternal(context);
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, e).addParam("message", e.getMessage());
+      throw new InvalidRequestException(e.getMessage(), e);
     }
   }
 
@@ -248,7 +248,7 @@ public class MapRouteState extends State {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, e).addParam("message", e.getMessage());
+      throw new InvalidRequestException(e.getMessage(), e);
     }
   }
 

@@ -29,6 +29,7 @@ import software.wings.beans.command.LogCallback;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -81,8 +82,7 @@ public class ContainerDeploymentDelegateHelper {
         return file.getAbsolutePath();
       }
     } catch (Exception e) {
-      logger.error("Error occurred in creating config file", e);
-      throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", e.getMessage());
+      throw new InvalidRequestException(e.getMessage(), e);
     }
   }
 
@@ -128,8 +128,7 @@ public class ContainerDeploymentDelegateHelper {
       encryptionService.decrypt(kubernetesConfig, containerServiceParam.getEncryptionDetails());
       return getConfigFileContent(kubernetesConfig);
     } catch (Exception e) {
-      logger.error("Error occurred in creating config file Content", e);
-      throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", e.getMessage());
+      throw new InvalidRequestException(e.getMessage(), e);
     }
   }
 

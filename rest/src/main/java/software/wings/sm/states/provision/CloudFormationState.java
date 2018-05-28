@@ -25,14 +25,13 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.Command.Builder;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandType;
-import software.wings.exception.WingsException;
+import software.wings.exception.InvalidRequestException;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandExecutionResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandResponse;
 import software.wings.service.intfc.ActivityService;
@@ -121,7 +120,7 @@ public abstract class CloudFormationState extends State {
         infrastructureProvisionerService.get(context.getAppId(), provisionerId);
 
     if (!(infrastructureProvisioner instanceof CloudFormationInfrastructureProvisioner)) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST);
+      throw new InvalidRequestException("");
     }
     return (CloudFormationInfrastructureProvisioner) infrastructureProvisioner;
   }
@@ -131,7 +130,7 @@ public abstract class CloudFormationState extends State {
     SettingAttribute awsSettingAttribute = settingsService.get(awsConfigId);
     Validator.notNullCheck("awsSettingAttribute", awsSettingAttribute);
     if (!(awsSettingAttribute.getValue() instanceof AwsConfig)) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST);
+      throw new InvalidRequestException("");
     }
     AwsConfig awsConfig = (AwsConfig) awsSettingAttribute.getValue();
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;

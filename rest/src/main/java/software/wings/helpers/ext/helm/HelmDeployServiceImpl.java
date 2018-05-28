@@ -11,12 +11,12 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.LogCallback;
 import software.wings.cloudprovider.ContainerInfo;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.helm.HelmClientImpl.HelmCliResponse;
@@ -129,7 +129,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       throws InterruptedException, IOException, TimeoutException {
     HelmCliResponse cliResponse = helmClient.getClientAndServerVersion(helmCommandRequest);
     if (cliResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.FAILURE)) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, cliResponse.getOutput());
+      throw new InvalidRequestException(cliResponse.getOutput());
     }
     return new HelmCommandResponse(cliResponse.getCommandExecutionStatus(), cliResponse.getOutput());
   }

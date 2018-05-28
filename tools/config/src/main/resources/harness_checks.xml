@@ -116,6 +116,8 @@
         -->
         <module name="io.harness.checks.UseIsEmptyCheck"/>
 
+        <module name="io.harness.checks.WingsExceptionCheck"/>
+
         <module name="com.github.sevntu.checkstyle.checks.coding.AvoidNotShortCircuitOperatorsForBooleanCheck"/>
 
         <module name="com.github.sevntu.checkstyle.checks.coding.ReturnNullInsteadOfBooleanCheck"/>

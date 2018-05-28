@@ -182,8 +182,7 @@ public class SettingValidationService {
 
   private void validatePcfConfig(SettingAttribute settingAttribute, PcfConfig pcfConfig) {
     if (!featureFlagService.isEnabled(PIVOTAL_CLOUD_FOUNDRY_SUPPORT, settingAttribute.getAccountId())) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST)
-          .addParam("message", "Adding Pivotal Cloud Foundry as Cloud Provider is not supported yet.");
+      throw new InvalidRequestException("Adding Pivotal Cloud Foundry as Cloud Provider is not supported yet.");
     }
     pcfHelperService.validate(pcfConfig);
   }

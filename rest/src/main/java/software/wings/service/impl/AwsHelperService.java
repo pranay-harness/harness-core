@@ -668,7 +668,7 @@ public class AwsHelperService {
       if (amazonServiceException.getMessage().contains("No updates are to be performed")) {
         logger.info("Nothing to update on stack" + amazonServiceException.getMessage());
       } else {
-        throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", amazonServiceException.getMessage());
+        throw new InvalidRequestException(amazonServiceException.getMessage(), amazonServiceException);
       }
     } else {
       logger.error("Unhandled aws exception");
