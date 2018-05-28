@@ -12,6 +12,7 @@ COPY docker-image-files/rest-0.0.1-SNAPSHOT-capsule.jar rest/newrelic.yml keysto
 COPY dockerization/manager/scripts /opt/harness
 
 RUN chmod +x /opt/harness/*.sh
+RUN mkdir /opt/harness/plugins
 
 WORKDIR /opt/harness
 

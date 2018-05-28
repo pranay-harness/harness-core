@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.gcs;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
@@ -20,8 +21,6 @@ import com.google.api.services.storage.model.StorageObject;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import org.apache.commons.collections4.map.HashedMap;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +40,6 @@ import java.util.regex.Pattern;
 
 public class GcsServiceImpl implements GcsService {
   private static final Logger logger = LoggerFactory.getLogger(software.wings.helpers.ext.gcs.GcsServiceImpl.class);
-  private static String GOOGLE_PROJECT_NAME = "test";
   private GcpHelperService gcpHelperService;
 
   @Inject
@@ -54,8 +52,8 @@ public class GcsServiceImpl implements GcsService {
   public List<String> getArtifactPaths(
       GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String bucketName) {
     List<String> objectNameList = Lists.newArrayList();
-    Storage.Objects objs = null;
-    Objects listOfObjects = null;
+    Storage.Objects objs;
+    Objects listOfObjects;
     try {
       Storage gcsStorageService = gcpHelperService.getGcsStorageService(gcpConfig, encryptionDetails);
       objs = gcsStorageService.objects();
@@ -66,7 +64,7 @@ public class GcsServiceImpl implements GcsService {
     }
 
     // Get objects for the bucket
-    List<StorageObject> items = null;
+    List<StorageObject> items;
     if (listOfObjects != null && listOfObjects.getItems().size() > 0) {
       items = listOfObjects.getItems();
       for (StorageObject storageObject : items) {
@@ -98,7 +96,6 @@ public class GcsServiceImpl implements GcsService {
     }
   }
 
-  @SuppressFBWarnings("NP_NULL_PARAM_DEREF")
   @Override
   public List<BuildDetails> getArtifactsBuildDetails(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails,
       String bucketName, String artifactPath, boolean isExpression, boolean versioningEnabledForBucket) {
@@ -110,16 +107,13 @@ public class GcsServiceImpl implements GcsService {
         Objects listOfObjects = gcsStorageService.objects().list(bucketName).execute();
 
         // Get all objects for the bucket
-        List<StorageObject> storageObjectList = null;
-        if (listOfObjects != null && listOfObjects.getItems().size() > 0) {
-          storageObjectList = listOfObjects.getItems();
-        }
-
-        List<String> objectKeyList = getObjectSummaries(pattern, storageObjectList);
-        for (String obj : objectKeyList) {
-          BuildDetails artifactMetadata =
-              getArtifactBuildDetails(gcpConfig, encryptionDetails, bucketName, obj, versioningEnabledForBucket);
-          buildDetailsList.add(artifactMetadata);
+        if (listOfObjects != null && isNotEmpty(listOfObjects.getItems())) {
+          List<String> objectKeyList = getObjectSummaries(pattern, listOfObjects.getItems());
+          for (String obj : objectKeyList) {
+            BuildDetails artifactMetadata =
+                getArtifactBuildDetails(gcpConfig, encryptionDetails, bucketName, obj, versioningEnabledForBucket);
+            buildDetailsList.add(artifactMetadata);
+          }
         }
       } catch (Exception e) {
         throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
@@ -146,16 +140,12 @@ public class GcsServiceImpl implements GcsService {
   public BuildDetails getArtifactBuildDetails(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails,
       String bucketName, String objName, boolean versioningEnabledForBucket) {
     try {
-      String versionId = null;
+      String versionId;
       if (versioningEnabledForBucket) {
         Storage gcsStorageService = gcpHelperService.getGcsStorageService(gcpConfig, encryptionDetails);
         Storage.Objects.Get request = gcsStorageService.objects().get(bucketName, objName);
-        versionId = request.execute().getGeneration().toString();
-        if (versionId != null) {
-          versionId = objName + ":" + versionId;
-        }
-      }
-      if (versionId == null) {
+        versionId = objName + ":" + request.execute().getGeneration().toString();
+      } else {
         versionId = objName;
       }
 
@@ -181,7 +171,7 @@ public class GcsServiceImpl implements GcsService {
 
   public boolean isVersioningEnabledForBucket(
       GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String bucketName) {
-    boolean versioningEnabled = false;
+    boolean versioningEnabled;
     try {
       encryptionService.decrypt(gcpConfig, encryptionDetails);
       // Get versioning info for given bucket
@@ -204,22 +194,20 @@ public class GcsServiceImpl implements GcsService {
   }
 
   private String getProject(char[] serviceAccountFileContent) {
-    JSONObject jsonObj = new JSONObject(new String(serviceAccountFileContent));
-    return jsonObj.get("project_id").toString();
+    return new JSONObject(new String(serviceAccountFileContent)).get("project_id").toString();
   }
 
-  @SuppressFBWarnings("ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD")
   @Override
   public Map<String, String> listBuckets(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    Storage.Buckets bucketsObj = null;
-    Buckets listOfBuckets = null;
+    Storage.Buckets bucketsObj;
+    Buckets listOfBuckets;
     Map<String, String> bucketList = new HashMap<>();
-    GOOGLE_PROJECT_NAME = getProject(gcpConfig.getServiceAccountKeyFileContent());
+    String projectId = getProject(gcpConfig.getServiceAccountKeyFileContent());
 
     try {
       Storage gcsStorageService = gcpHelperService.getGcsStorageService(gcpConfig, encryptedDataDetails);
       bucketsObj = gcsStorageService.buckets();
-      Storage.Buckets.List request = bucketsObj.list(GOOGLE_PROJECT_NAME);
+      Storage.Buckets.List request = bucketsObj.list(projectId);
       listOfBuckets = request.execute();
     } catch (Exception e) {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
@@ -227,7 +215,7 @@ public class GcsServiceImpl implements GcsService {
     }
 
     // Get buckets for the project
-    List<Bucket> items = null;
+    List<Bucket> items;
     if (listOfBuckets != null && listOfBuckets.getItems().size() > 0) {
       items = listOfBuckets.getItems();
       for (Bucket buck : items) {
@@ -237,24 +225,23 @@ public class GcsServiceImpl implements GcsService {
     return bucketList;
   }
 
-  @SuppressFBWarnings({"DLS_DEAD_LOCAL_STORE", "ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"})
   @Override
   public void createBucket(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails, String bucketName) {
-    Storage.Buckets bucketsObj = null;
+    Storage.Buckets bucketsObj;
 
     try {
       Storage gcsStorageService = gcpHelperService.getGcsStorageService(gcpConfig, encryptedDataDetails);
       bucketsObj = gcsStorageService.buckets();
 
       // Return if bucket already exists
-      Map<String, String> bucketList = new HashedMap<>();
+      Map<String, String> bucketList;
       bucketList = listBuckets(gcpConfig, encryptedDataDetails);
       if (bucketList.containsKey(bucketName)) {
         return;
       }
 
-      GOOGLE_PROJECT_NAME = getProject(gcpConfig.getServiceAccountKeyFileContent());
-      Storage.Buckets.Insert request = bucketsObj.insert(GOOGLE_PROJECT_NAME, new Bucket().setName(bucketName));
+      String projectId = getProject(gcpConfig.getServiceAccountKeyFileContent());
+      Storage.Buckets.Insert request = bucketsObj.insert(projectId, new Bucket().setName(bucketName));
       request.execute();
     } catch (Exception e) {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
@@ -262,17 +249,16 @@ public class GcsServiceImpl implements GcsService {
     }
   }
 
-  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   @Override
   public void deleteBucket(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails, String bucketName) {
-    Storage.Buckets bucketsObj = null;
+    Storage.Buckets bucketsObj;
 
     try {
       Storage gcsStorageService = gcpHelperService.getGcsStorageService(gcpConfig, encryptedDataDetails);
       bucketsObj = gcsStorageService.buckets();
 
       // Return if bucket not found
-      Map<String, String> bucketList = new HashedMap<>();
+      Map<String, String> bucketList;
       bucketList = listBuckets(gcpConfig, encryptedDataDetails);
       if (!bucketList.containsKey(bucketName)) {
         return;

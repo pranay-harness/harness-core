@@ -3,6 +3,8 @@ package software.wings.sm.states.pcf;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.collect.Maps;
@@ -26,7 +28,6 @@ import software.wings.beans.Application;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.ResizeStrategy;
@@ -163,7 +164,7 @@ public class PcfSetupState extends State {
     try {
       return executeInternal(context);
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, e).addParam("message", e.getMessage());
+      throw new WingsException(INVALID_REQUEST, e).addParam("message", e.getMessage());
     }
   }
 
@@ -282,7 +283,7 @@ public class PcfSetupState extends State {
   }
 
   private String getPrefix(String appName, String serviceName, String envName) {
-    return new StringBuilder().append(appName).append("_").append(serviceName).append("_").append(envName).toString();
+    return appName + "_" + serviceName + "_" + envName;
   }
 
   @SuppressFBWarnings("NP_NULL_ON_SOME_PATH") // TODO
@@ -291,10 +292,12 @@ public class PcfSetupState extends State {
         || !pcfServiceSpecification.getManifestYaml().contains("{FILE_LOCATION}")
         || !pcfServiceSpecification.getManifestYaml().contains("{INSTANCE_COUNT}")
         || !pcfServiceSpecification.getManifestYaml().contains("{APPLICATION_NAME}")) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST,
-          "Invalid manifest yaml "
-              + (pcfServiceSpecification.getManifestYaml() == null ? "NULL"
-                                                                   : pcfServiceSpecification.getManifestYaml()));
+      throw new WingsException(INVALID_REQUEST, USER)
+          .addParam("message",
+              "Invalid manifest yaml "
+                  + (pcfServiceSpecification == null || pcfServiceSpecification.getManifestYaml() == null
+                            ? "NULL"
+                            : pcfServiceSpecification.getManifestYaml()));
     }
   }
 
@@ -305,7 +308,7 @@ public class PcfSetupState extends State {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, e).addParam("message", e.getMessage());
+      throw new WingsException(INVALID_REQUEST, e).addParam("message", e.getMessage());
     }
   }
 
