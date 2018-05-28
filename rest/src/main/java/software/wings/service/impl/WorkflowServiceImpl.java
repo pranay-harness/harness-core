@@ -95,7 +95,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
@@ -1505,14 +1504,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     PruneEntityJob.pruneDescendingEntities(services, descending -> descending.pruneByWorkflow(appId, workflowId));
   }
 
-  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE") // TODO
   @Override
   public boolean workflowHasSshInfraMapping(String appId, String workflowId) {
     Workflow workflow = readWorkflow(appId, workflowId);
     notNullCheck("Workflow", workflow, USER);
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     notNullCheck("OrchestrationWorkflow", orchestrationWorkflow, USER);
-    List<String> infraMappingIds = new ArrayList<>();
     if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
       CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
       return workflowServiceHelper.workflowHasSshInfraMapping(appId, canaryOrchestrationWorkflow);
@@ -1828,25 +1825,22 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
    *
    * @param serviceMapping
    */
-  @SuppressFBWarnings("WMI_WRONG_MAP_ITERATOR") // TODO
   private void validateServiceMapping(String appId, String targetAppId, Map<String, String> serviceMapping) {
     if (serviceMapping == null) {
       throw new InvalidRequestException("At least one service mapping required to clone across applications", USER);
     }
-    Set<String> serviceIds = serviceMapping.keySet();
-    for (String serviceId : serviceIds) {
-      String targetServiceId = serviceMapping.get(serviceId);
-      if (serviceId != null && targetServiceId != null) {
-        Service oldService = serviceResourceService.get(appId, serviceId, false);
-        notNullCheck("service", oldService);
-        Service newService = serviceResourceService.get(targetAppId, targetServiceId, false);
-        notNullCheck("targetService", newService);
-        if (oldService.getArtifactType() != null
-            && !oldService.getArtifactType().equals(newService.getArtifactType())) {
-          throw new InvalidRequestException("Target service  [" + oldService.getName()
-                  + " ] is not compatible with service [" + newService.getName() + "]",
-              USER);
-        }
+    for (Entry<String, String> service : serviceMapping.entrySet()) {
+      if (service.getKey() == null || service.getValue() == null) {
+        continue;
+      }
+      Service oldService = serviceResourceService.get(appId, service.getKey(), false);
+      notNullCheck("service", oldService);
+      Service newService = serviceResourceService.get(targetAppId, service.getValue(), false);
+      notNullCheck("targetService", newService);
+      if (oldService.getArtifactType() != null && !oldService.getArtifactType().equals(newService.getArtifactType())) {
+        throw new InvalidRequestException("Target service  [" + oldService.getName()
+                + " ] is not compatible with service [" + newService.getName() + "]",
+            USER);
       }
     }
   }
@@ -2129,14 +2123,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
   }
 
-  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE") // TODO
   private void generateNewWorkflowPhaseStepsForECS(
       String appId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
     if (serviceSetupRequired) {
-      InfrastructureMapping infraMapping = infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
       workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
                                      .addStep(aGraphNode()
                                                   .withId(generateUuid())
@@ -2529,7 +2521,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .build();
   }
 
-  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE") // TODO
   private WorkflowPhase generateRollbackWorkflowPhaseForSSH(
       String appId, WorkflowPhase workflowPhase, OrchestrationWorkflowType orchestrationWorkflowType) {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
@@ -2537,15 +2528,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
-    StateType stateType = null;
-    if (orchestrationWorkflowType == ROLLING) {
-      stateType = ROLLING_NODE_SELECT;
-    } else {
-      stateType =
-          infrastructureMapping.getComputeProviderType().equals(SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
-          ? DC_NODE_SELECT
-          : AWS_NODE_SELECT;
-    }
 
     List<GraphNode> disableServiceSteps = commandNodes(commandMap, CommandType.DISABLE, true);
     List<GraphNode> enableServiceSteps = commandNodes(commandMap, CommandType.ENABLE, true);
@@ -2614,52 +2596,52 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       WorkflowPhase workflowPhase, String appId, boolean serviceSetupRequired) {
     if (workflowPhase.isDaemonSet() || workflowPhase.isStatefulSet()) {
       return generateRollbackSetupWorkflowPhase(workflowPhase);
-    } else {
-      WorkflowPhaseBuilder workflowPhaseBuilder =
-          aWorkflowPhase()
-              .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
-              .withRollback(true)
-              .withServiceId(workflowPhase.getServiceId())
-              .withComputeProviderId(workflowPhase.getComputeProviderId())
-              .withInfraMappingName(workflowPhase.getInfraMappingName())
-              .withPhaseNameForRollback(workflowPhase.getName())
-              .withDeploymentType(workflowPhase.getDeploymentType())
-              .withInfraMappingId(workflowPhase.getInfraMappingId())
-              .addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
-                                .addStep(aGraphNode()
-                                             .withId(generateUuid())
-                                             .withType(KUBERNETES_DEPLOY_ROLLBACK.name())
-                                             .withName(Constants.ROLLBACK_CONTAINERS)
-                                             .withRollback(true)
-                                             .build())
-                                .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
-                                .withStatusForRollback(ExecutionStatus.SUCCESS)
-                                .withRollback(true)
-                                .build());
-      if (serviceSetupRequired) {
-        workflowPhaseBuilder.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
-                                              .addStep(aGraphNode()
-                                                           .withId(generateUuid())
-                                                           .withType(KUBERNETES_SETUP_ROLLBACK.name())
-                                                           .withName(Constants.ROLLBACK_KUBERNETES_SETUP)
-                                                           .withRollback(true)
-                                                           .build())
-                                              .withPhaseStepNameForRollback(Constants.SETUP_CONTAINER)
-                                              .withStatusForRollback(ExecutionStatus.SUCCESS)
-                                              .withRollback(true)
-                                              .build());
-      }
-
-      // When we rolling back the verification steps the same criterie to run if deployment is needed should be used
-      workflowPhaseBuilder
-          .addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
-                            .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
-                            .withStatusForRollback(ExecutionStatus.SUCCESS)
-                            .withRollback(true)
-                            .build())
-          .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).withRollback(true).build());
-      return workflowPhaseBuilder.build();
     }
+
+    WorkflowPhaseBuilder workflowPhaseBuilder =
+        aWorkflowPhase()
+            .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
+            .withRollback(true)
+            .withServiceId(workflowPhase.getServiceId())
+            .withComputeProviderId(workflowPhase.getComputeProviderId())
+            .withInfraMappingName(workflowPhase.getInfraMappingName())
+            .withPhaseNameForRollback(workflowPhase.getName())
+            .withDeploymentType(workflowPhase.getDeploymentType())
+            .withInfraMappingId(workflowPhase.getInfraMappingId())
+            .addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
+                              .addStep(aGraphNode()
+                                           .withId(generateUuid())
+                                           .withType(KUBERNETES_DEPLOY_ROLLBACK.name())
+                                           .withName(Constants.ROLLBACK_CONTAINERS)
+                                           .withRollback(true)
+                                           .build())
+                              .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
+                              .withStatusForRollback(ExecutionStatus.SUCCESS)
+                              .withRollback(true)
+                              .build());
+    if (serviceSetupRequired) {
+      workflowPhaseBuilder.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
+                                            .addStep(aGraphNode()
+                                                         .withId(generateUuid())
+                                                         .withType(KUBERNETES_SETUP_ROLLBACK.name())
+                                                         .withName(Constants.ROLLBACK_KUBERNETES_SETUP)
+                                                         .withRollback(true)
+                                                         .build())
+                                            .withPhaseStepNameForRollback(Constants.SETUP_CONTAINER)
+                                            .withStatusForRollback(ExecutionStatus.SUCCESS)
+                                            .withRollback(true)
+                                            .build());
+    }
+
+    // When we rolling back the verification steps the same criterie to run if deployment is needed should be used
+    workflowPhaseBuilder
+        .addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+                          .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
+                          .withStatusForRollback(ExecutionStatus.SUCCESS)
+                          .withRollback(true)
+                          .build())
+        .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).withRollback(true).build());
+    return workflowPhaseBuilder.build();
   }
 
   private boolean isDaemonSet(String appId, String serviceId) {
@@ -2809,7 +2791,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
   }
 
-  @SuppressFBWarnings("NP_NULL_ON_SOME_PATH") // TODO
   private void validateBasicOrRollingWorkflow(Workflow workflow) {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     if (orchestrationWorkflow != null
@@ -2826,7 +2807,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
               || !(InfrastructureMappingType.AWS_SSH.name().equals(infrastructureMapping.getInfraMappingType())
                      || InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name().equals(
                             infrastructureMapping.getInfraMappingType()))) {
-            logger.warn("Rolling Deployment is requested for {}", infrastructureMapping.getInfraMappingType());
             throw new InvalidRequestException(
                 "Requested Infrastructure Type is not supported using Rolling Deployment", USER);
           }
