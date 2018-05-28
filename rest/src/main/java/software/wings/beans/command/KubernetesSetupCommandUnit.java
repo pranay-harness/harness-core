@@ -143,6 +143,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   @Transient private static final String NONE = "none";
   @Transient private static final String LOAD_BALANCER = "LoadBalancer";
   @Transient private static final String NODE_PORT = "NodePort";
+  @Transient private static final String POLICY_LOCAL = "Local";
 
   @Transient private static final String SERVICE_NAME_PLACEHOLDER_REGEX = "\\$\\{SERVICE_NAME}";
   @Transient private static final String SERVICE_PORT_PLACEHOLDER_REGEX = "\\$\\{SERVICE_PORT}";
@@ -328,12 +329,17 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             : createServiceDefinition(
                   kubernetesServiceName, setupParams.getNamespace(), serviceLabels, setupParams, executionLogCallback);
         if (service != null) {
-          // Keep the previous load balancer IP if it exists and a new one was not specified
-          LoadBalancerStatus loadBalancer = service.getStatus().getLoadBalancer();
-          if (serviceDefinition.getSpec().getType().equals(LOAD_BALANCER)
-              && isEmpty(serviceDefinition.getSpec().getLoadBalancerIP()) && loadBalancer != null
-              && !loadBalancer.getIngress().isEmpty()) {
-            serviceDefinition.getSpec().setLoadBalancerIP(loadBalancer.getIngress().get(0).getIp());
+          if (LOAD_BALANCER.equals(serviceDefinition.getSpec().getType())) {
+            LoadBalancerStatus loadBalancer = service.getStatus().getLoadBalancer();
+            // Keep the previous load balancer IP if it exists and a new one was not specified
+            if (isEmpty(serviceDefinition.getSpec().getLoadBalancerIP()) && loadBalancer != null
+                && !loadBalancer.getIngress().isEmpty()) {
+              serviceDefinition.getSpec().setLoadBalancerIP(loadBalancer.getIngress().get(0).getIp());
+            }
+            // When externalTrafficPolicy=Local the health check node port cannot change
+            if (POLICY_LOCAL.equals(service.getSpec().getExternalTrafficPolicy())) {
+              serviceDefinition.getSpec().setHealthCheckNodePort(service.getSpec().getHealthCheckNodePort());
+            }
           }
         }
         service = kubernetesContainerService.createOrReplaceService(
