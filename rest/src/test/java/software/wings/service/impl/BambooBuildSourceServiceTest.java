@@ -10,6 +10,7 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import com.google.inject.Inject;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -39,6 +40,7 @@ import java.util.UUID;
 /**
  * Created by rsingh on 10/9/17.
  */
+@Ignore("Unit tests should not access external resources")
 public class BambooBuildSourceServiceTest extends WingsBaseTest {
   private String accountId;
   private String appId;
