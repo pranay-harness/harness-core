@@ -2,6 +2,7 @@ package software.wings.expression;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
+import static software.wings.exception.WingsException.USER;
 
 import com.google.inject.Singleton;
 
@@ -160,7 +161,7 @@ public class ExpressionEvaluator {
     }
     Matcher matcher = ExpressionEvaluator.variableNamePattern.matcher(name);
     if (!matcher.matches()) {
-      throw new WingsException(INVALID_ARGUMENT)
+      throw new WingsException(INVALID_ARGUMENT, USER)
           .addParam("args", "Special characters are not allowed in variable name");
     }
   }

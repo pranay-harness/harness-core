@@ -11,14 +11,18 @@ import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.AccountRole.AccountRoleBuilder.anAccountRole;
 import static software.wings.beans.ApplicationRole.ApplicationRoleBuilder.anApplicationRole;
+import static software.wings.beans.ErrorCode.ACCOUNT_DOES_NOT_EXIT;
 import static software.wings.beans.ErrorCode.DOMAIN_NOT_ALLOWED_TO_REGISTER;
 import static software.wings.beans.ErrorCode.EMAIL_VERIFICATION_TOKEN_NOT_FOUND;
 import static software.wings.beans.ErrorCode.EXPIRED_TOKEN;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_CREDENTIAL;
+import static software.wings.beans.ErrorCode.INVALID_EMAIL;
 import static software.wings.beans.ErrorCode.ROLE_DOES_NOT_EXIST;
 import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
+import static software.wings.beans.ErrorCode.USER_ALREADY_REGISTERED;
 import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
+import static software.wings.beans.ErrorCode.USER_DOMAIN_NOT_ALLOWED;
 import static software.wings.beans.ErrorCode.USER_INVITATION_DOES_NOT_EXIST;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
@@ -70,7 +74,6 @@ import software.wings.beans.Application;
 import software.wings.beans.ApplicationRole;
 import software.wings.beans.Base;
 import software.wings.beans.EmailVerificationToken;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.Role;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
@@ -303,24 +306,24 @@ public class UserServiceImpl implements UserService {
   @Override
   public void verifyRegisteredOrAllowed(String email) {
     if (isBlank(email)) {
-      throw new WingsException(ErrorCode.INVALID_EMAIL);
+      throw new WingsException(INVALID_EMAIL, USER);
     }
 
     final String emailAddress = email.trim();
     if (!EmailValidator.getInstance().isValid(emailAddress)) {
-      throw new WingsException(ErrorCode.INVALID_EMAIL);
+      throw new WingsException(INVALID_EMAIL, USER);
     }
 
     User existingUser = getUserByEmail(emailAddress);
 
     if (existingUser != null && existingUser.isEmailVerified()) {
       logger.warn("USER_ALREADY_REGISTERED error for existingUser - {}", existingUser.toString());
-      throw new WingsException(ErrorCode.USER_ALREADY_REGISTERED);
+      throw new WingsException(USER_ALREADY_REGISTERED, USER);
     }
 
     if (!domainAllowedToRegister(emailAddress)) {
       logger.warn("USER_DOMAIN_NOT_ALLOWED error for emailAddress - {}", emailAddress);
-      throw new WingsException(ErrorCode.USER_DOMAIN_NOT_ALLOWED);
+      throw new WingsException(USER_DOMAIN_NOT_ALLOWED, USER);
     }
   }
 
@@ -328,7 +331,7 @@ public class UserServiceImpl implements UserService {
   public boolean resendVerificationEmail(String email) {
     User existingUser = getUserByEmail(email);
     if (existingUser == null) {
-      throw new WingsException(ErrorCode.USER_DOES_NOT_EXIST);
+      throw new WingsException(USER_DOES_NOT_EXIST);
     }
 
     sendVerificationEmail(existingUser);
@@ -481,19 +484,18 @@ public class UserServiceImpl implements UserService {
   public UserInvite completeInvite(UserInvite userInvite) {
     UserInvite existingInvite = getInvite(userInvite.getAccountId(), userInvite.getUuid());
     if (existingInvite == null) {
-      throw new WingsException(USER_INVITATION_DOES_NOT_EXIST);
+      throw new WingsException(USER_INVITATION_DOES_NOT_EXIST, USER);
     }
     if (existingInvite.isCompleted()) {
       return existingInvite;
     }
     if (userInvite.getName() == null || userInvite.getPassword() == null) {
-      throw new InvalidRequestException("User name/password");
+      throw new InvalidRequestException("User name/password", USER);
     }
 
-    Account account = accountService.get(existingInvite.getAccountId());
     User existingUser = getUserByEmail(existingInvite.getEmail());
     if (existingUser == null) {
-      throw new WingsException(USER_INVITATION_DOES_NOT_EXIST);
+      throw new WingsException(USER_INVITATION_DOES_NOT_EXIST, USER);
     } else {
       Map<String, Object> map = new HashMap();
       map.put("name", userInvite.getName().trim());
@@ -561,7 +563,7 @@ public class UserServiceImpl implements UserService {
       String email = decode.getClaim("email").asString();
       resetUserPassword(email, password, decode.getIssuedAt().getTime());
     } catch (UnsupportedEncodingException exception) {
-      throw new WingsException(UNKNOWN_ERROR).addParam("message", "Invalid reset password link");
+      throw new WingsException(UNKNOWN_ERROR, USER).addParam("message", "Invalid reset password link");
     } catch (JWTVerificationException exception) {
       throw new WingsException(EXPIRED_TOKEN, USER);
     }
@@ -813,7 +815,7 @@ public class UserServiceImpl implements UserService {
     if (account == null) {
       String message = "Account [" + accountId + "] does not exist";
       logger.warn(message);
-      throw new WingsException(ErrorCode.ACCOUNT_DOES_NOT_EXIT);
+      throw new WingsException(ACCOUNT_DOES_NOT_EXIT);
     }
     User user = get(userId);
 
