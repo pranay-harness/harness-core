@@ -38,7 +38,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import com.mongodb.DBCursor;
 import de.danielbechler.diff.ObjectDifferBuilder;
 import de.danielbechler.diff.node.DiffNode;
 import de.danielbechler.diff.path.NodePath;
@@ -46,7 +45,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.data.validator.EntityNameValidator;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -89,6 +87,7 @@ import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
+import software.wings.dl.HIterator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -1431,12 +1430,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   public void setArtifactStreams(List<Service> services) {
     List<String> serviceIds = services.stream().map(service -> service.getUuid()).collect(toList());
-    final MorphiaIterator<ArtifactStream, ArtifactStream> iterator =
-        wingsPersistence.createQuery(ArtifactStream.class).field("serviceId").in(serviceIds).fetch();
-
     ArrayListMultimap<String, ArtifactStream> serviceToArtifactStreamMap = ArrayListMultimap.create();
 
-    try (DBCursor ignored = iterator.getCursor()) {
+    try (HIterator<ArtifactStream> iterator = new HIterator<>(
+             wingsPersistence.createQuery(ArtifactStream.class).field("serviceId").in(serviceIds).fetch())) {
       while (iterator.hasNext()) {
         ArtifactStream artifactStream = iterator.next();
         serviceToArtifactStreamMap.put(artifactStream.getServiceId(), artifactStream);
@@ -1447,10 +1444,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   public void setServiceCommands(List<Service> services) {
     List<String> serviceIds = services.stream().map(service -> service.getUuid()).collect(toList());
-    final MorphiaIterator<ServiceCommand, ServiceCommand> iterator =
-        wingsPersistence.createQuery(ServiceCommand.class).field("serviceId").in(serviceIds).fetch();
     ArrayListMultimap<String, ServiceCommand> serviceToServiceCommandMap = ArrayListMultimap.create();
-    try (DBCursor ignored = iterator.getCursor()) {
+    try (HIterator<ServiceCommand> iterator = new HIterator<>(
+             wingsPersistence.createQuery(ServiceCommand.class).field("serviceId").in(serviceIds).fetch())) {
       while (iterator.hasNext()) {
         ServiceCommand serviceCommand = iterator.next();
         serviceToServiceCommandMap.put(serviceCommand.getServiceId(), serviceCommand);

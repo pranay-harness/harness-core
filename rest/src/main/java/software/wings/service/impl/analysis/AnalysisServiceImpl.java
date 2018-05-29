@@ -13,11 +13,9 @@ import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
-import com.mongodb.DBCursor;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.mongodb.morphia.query.CountOptions;
-import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +35,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.config.LogzConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.dl.HIterator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -245,35 +244,33 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Override
   public List<LogDataRecord> getLogData(LogRequest logRequest, boolean compareCurrent, String workflowExecutionId,
       ClusterLevel clusterLevel, StateType stateType) {
-    MorphiaIterator<LogDataRecord, LogDataRecord> records;
+    Query<LogDataRecord> recordQuery;
     if (compareCurrent) {
-      records = wingsPersistence.createQuery(LogDataRecord.class)
-                    .filter("stateType", stateType)
-                    .filter("stateExecutionId", logRequest.getStateExecutionId())
-                    .filter("workflowExecutionId", workflowExecutionId)
-                    .filter("appId", logRequest.getApplicationId())
-                    .filter("query", logRequest.getQuery())
-                    .filter("serviceId", logRequest.getServiceId())
-                    .filter("clusterLevel", clusterLevel)
-                    .filter("logCollectionMinute", logRequest.getLogCollectionMinute())
-                    .field("host")
-                    .hasAnyOf(logRequest.getNodes())
-                    .fetch();
+      recordQuery = wingsPersistence.createQuery(LogDataRecord.class)
+                        .filter("stateType", stateType)
+                        .filter("stateExecutionId", logRequest.getStateExecutionId())
+                        .filter("workflowExecutionId", workflowExecutionId)
+                        .filter("appId", logRequest.getApplicationId())
+                        .filter("query", logRequest.getQuery())
+                        .filter("serviceId", logRequest.getServiceId())
+                        .filter("clusterLevel", clusterLevel)
+                        .filter("logCollectionMinute", logRequest.getLogCollectionMinute())
+                        .field("host")
+                        .hasAnyOf(logRequest.getNodes());
 
     } else {
-      records = wingsPersistence.createQuery(LogDataRecord.class)
-                    .filter("stateType", stateType)
-                    .filter("workflowExecutionId", workflowExecutionId)
-                    .filter("appId", logRequest.getApplicationId())
-                    .filter("query", logRequest.getQuery())
-                    .filter("serviceId", logRequest.getServiceId())
-                    .filter("clusterLevel", clusterLevel)
-                    .filter("logCollectionMinute", logRequest.getLogCollectionMinute())
-                    .fetch();
+      recordQuery = wingsPersistence.createQuery(LogDataRecord.class)
+                        .filter("stateType", stateType)
+                        .filter("workflowExecutionId", workflowExecutionId)
+                        .filter("appId", logRequest.getApplicationId())
+                        .filter("query", logRequest.getQuery())
+                        .filter("serviceId", logRequest.getServiceId())
+                        .filter("clusterLevel", clusterLevel)
+                        .filter("logCollectionMinute", logRequest.getLogCollectionMinute());
     }
 
     List<LogDataRecord> rv = new ArrayList<>();
-    try (DBCursor cursor = records.getCursor()) {
+    try (HIterator<LogDataRecord> records = new HIterator<>(recordQuery.fetch())) {
       while (records.hasNext()) {
         rv.add(records.next());
       }
@@ -1162,19 +1159,17 @@ public class AnalysisServiceImpl implements AnalysisService {
       /**
        * Get the heartbeat records for L1.
        */
-      final MorphiaIterator<LogDataRecord, LogDataRecord> logHeartBeatRecordsIterator =
-          wingsPersistence.createQuery(LogDataRecord.class)
-              .filter("appId", appId)
-              .filter("stateExecutionId", stateExecutionId)
-              .filter("stateType", type)
-              .filter("clusterLevel", heartBeat)
-              .filter("query", query)
-              .field("host")
-              .in(nodes)
-              .order("logCollectionMinute")
-              .fetch();
-
-      try (DBCursor cursor = logHeartBeatRecordsIterator.getCursor()) {
+      try (HIterator<LogDataRecord> logHeartBeatRecordsIterator =
+               new HIterator<>(wingsPersistence.createQuery(LogDataRecord.class)
+                                   .filter("appId", appId)
+                                   .filter("stateExecutionId", stateExecutionId)
+                                   .filter("stateType", type)
+                                   .filter("clusterLevel", heartBeat)
+                                   .filter("query", query)
+                                   .field("host")
+                                   .in(nodes)
+                                   .order("logCollectionMinute")
+                                   .fetch())) {
         if (!logHeartBeatRecordsIterator.hasNext()) {
           return -1;
         }

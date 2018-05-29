@@ -15,8 +15,6 @@ import com.google.common.util.concurrent.RateLimiter;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-import com.mongodb.DBCursor;
-import org.mongodb.morphia.query.MorphiaIterator;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -27,6 +25,7 @@ import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.WorkflowExecution;
+import software.wings.dl.HIterator;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.sm.ExecutionInterrupt;
@@ -74,26 +73,23 @@ public class WorkflowExecutionMonitorJob implements Job {
   }
 
   public void asyncExecute() {
-    final MorphiaIterator<WorkflowExecution, WorkflowExecution> workflowExecutions =
-        wingsPersistence.createQuery(WorkflowExecution.class, excludeAuthority)
-            .field(WorkflowExecution.STATUS_KEY)
-            .in(asList(RUNNING, NEW, STARTING, PAUSED, WAITING))
-            .fetch();
-
-    try (DBCursor cursor = workflowExecutions.getCursor()) {
+    try (HIterator<WorkflowExecution> workflowExecutions =
+             new HIterator<>(wingsPersistence.createQuery(WorkflowExecution.class, excludeAuthority)
+                                 .field(WorkflowExecution.STATUS_KEY)
+                                 .in(asList(RUNNING, NEW, STARTING, PAUSED, WAITING))
+                                 .fetch())) {
       while (workflowExecutions.hasNext()) {
         WorkflowExecution workflowExecution = workflowExecutions.next();
 
-        final MorphiaIterator<StateExecutionInstance, StateExecutionInstance> stateExecutionInstances =
-            wingsPersistence.createQuery(StateExecutionInstance.class)
-                .filter(WorkflowExecution.APP_ID_KEY, workflowExecution.getAppId())
-                .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflowExecution.getUuid())
-                .field(StateExecutionInstance.STATUS_KEY)
-                .in(asList(RUNNING, NEW, STARTING, PAUSED, WAITING))
-                .fetch();
-
-        boolean hasActiveStates = stateExecutionInstances.hasNext();
-        try (DBCursor ignored = stateExecutionInstances.getCursor()) {
+        boolean hasActiveStates = false;
+        try (HIterator<StateExecutionInstance> stateExecutionInstances =
+                 new HIterator<>(wingsPersistence.createQuery(StateExecutionInstance.class)
+                                     .filter(WorkflowExecution.APP_ID_KEY, workflowExecution.getAppId())
+                                     .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflowExecution.getUuid())
+                                     .field(StateExecutionInstance.STATUS_KEY)
+                                     .in(asList(RUNNING, NEW, STARTING, PAUSED, WAITING))
+                                     .fetch())) {
+          hasActiveStates = stateExecutionInstances.hasNext();
           while (stateExecutionInstances.hasNext()) {
             StateExecutionInstance stateExecutionInstance = stateExecutionInstances.next();
             if (stateExecutionInstance.getExpiryTs() > System.currentTimeMillis()) {

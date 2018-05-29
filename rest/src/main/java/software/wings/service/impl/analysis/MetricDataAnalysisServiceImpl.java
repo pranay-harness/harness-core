@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
+import static software.wings.dl.HQuery.excludeCount;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
@@ -11,11 +12,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import com.mongodb.DBCursor;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.FindOptions;
-import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
@@ -212,32 +211,23 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   public List<NewRelicMetricDataRecord> getRecords(StateType stateType, String appId, String workflowExecutionId,
       String stateExecutionId, String workflowId, String serviceId, String groupName, Set<String> nodes,
       int analysisMinute, int analysisStartMinute) {
-    MorphiaIterator<NewRelicMetricDataRecord, NewRelicMetricDataRecord> query =
-        wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
-            .filter("stateType", stateType)
-            .filter("appId", appId)
-            .filter("workflowId", workflowId)
-            .filter("workflowExecutionId", workflowExecutionId)
-            .filter("stateExecutionId", stateExecutionId)
-            .filter("serviceId", serviceId)
-            .filter("groupName", groupName)
-            .field("host")
-            .hasAnyOf(nodes)
-            .field("level")
-            .notIn(asList(ClusterLevel.H0, ClusterLevel.HF))
-            .field("dataCollectionMinute")
-            .lessThanOrEq(analysisMinute)
-            .field("dataCollectionMinute")
-            .greaterThanOrEq(analysisStartMinute)
-            .fetch();
-    List<NewRelicMetricDataRecord> rv = new ArrayList<>();
-    try (DBCursor cursor = query.getCursor()) {
-      while (query.hasNext()) {
-        rv.add(query.next());
-      }
-    }
-
-    return rv;
+    return wingsPersistence.createQuery(NewRelicMetricDataRecord.class, excludeCount)
+        .filter("stateType", stateType)
+        .filter("appId", appId)
+        .filter("workflowId", workflowId)
+        .filter("workflowExecutionId", workflowExecutionId)
+        .filter("stateExecutionId", stateExecutionId)
+        .filter("serviceId", serviceId)
+        .filter("groupName", groupName)
+        .field("host")
+        .hasAnyOf(nodes)
+        .field("level")
+        .notIn(asList(ClusterLevel.H0, ClusterLevel.HF))
+        .field("dataCollectionMinute")
+        .lessThanOrEq(analysisMinute)
+        .field("dataCollectionMinute")
+        .greaterThanOrEq(analysisStartMinute)
+        .asList();
   }
 
   @Override

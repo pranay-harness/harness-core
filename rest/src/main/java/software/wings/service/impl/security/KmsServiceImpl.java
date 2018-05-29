@@ -12,9 +12,7 @@ import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 
-import com.mongodb.DBCursor;
 import org.mongodb.morphia.query.CountOptions;
-import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Base;
 import software.wings.beans.BaseFile;
@@ -23,6 +21,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.common.Constants;
+import software.wings.dl.HIterator;
 import software.wings.exception.WingsException;
 import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedData;
@@ -231,16 +230,15 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   public Collection<KmsConfig> listKmsConfigs(String accountId, boolean maskSecret) {
     List<KmsConfig> rv = new ArrayList<>();
 
-    final MorphiaIterator<KmsConfig, KmsConfig> query = wingsPersistence.createQuery(KmsConfig.class)
-                                                            .field("accountId")
-                                                            .in(Lists.newArrayList(accountId, Base.GLOBAL_ACCOUNT_ID))
-                                                            .order("-createdAt")
-                                                            .fetch();
-    try (DBCursor cursor = query.getCursor()) {
+    try (HIterator<KmsConfig> iterator = new HIterator(wingsPersistence.createQuery(KmsConfig.class)
+                                                           .field("accountId")
+                                                           .in(Lists.newArrayList(accountId, Base.GLOBAL_ACCOUNT_ID))
+                                                           .order("-createdAt")
+                                                           .fetch())) {
       KmsConfig globalConfig = null;
       boolean defaultSet = false;
-      while (query.hasNext()) {
-        KmsConfig kmsConfig = query.next();
+      while (iterator.hasNext()) {
+        KmsConfig kmsConfig = iterator.next();
         Query<EncryptedData> encryptedDataQuery = wingsPersistence.createQuery(EncryptedData.class)
                                                       .filter("accountId", accountId)
                                                       .filter("kmsId", kmsConfig.getUuid());

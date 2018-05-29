@@ -27,9 +27,7 @@ import static software.wings.service.impl.artifact.ArtifactCollectionUtil.getArt
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import com.mongodb.DBCursor;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +35,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.dl.HIterator;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -215,8 +214,7 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
   private Set<String> getNewBuildNumbers(ArtifactStream artifactStream, List<BuildDetails> builds) {
     Map<String, BuildDetails> buildNoDetails =
         builds.parallelStream().collect(Collectors.toMap(BuildDetails::getNumber, Function.identity()));
-    final MorphiaIterator<Artifact, Artifact> iterator = getArtifactQuery(artifactStream).fetch();
-    try (DBCursor ignored = iterator.getCursor()) {
+    try (HIterator<Artifact> iterator = new HIterator(getArtifactQuery(artifactStream).fetch())) {
       while (iterator.hasNext()) {
         buildNoDetails.remove(iterator.next().getBuildNo());
       }
@@ -227,8 +225,7 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
   private Set<String> getNewArtifactPaths(ArtifactStream artifactStream, List<BuildDetails> builds) {
     Map<String, BuildDetails> buildArtifactPathDetails =
         builds.parallelStream().collect(Collectors.toMap(BuildDetails::getArtifactPath, Function.identity()));
-    final MorphiaIterator<Artifact, Artifact> iterator = getArtifactQuery(artifactStream).fetch();
-    try (DBCursor ignored = iterator.getCursor()) {
+    try (HIterator<Artifact> iterator = new HIterator<>(getArtifactQuery(artifactStream).fetch())) {
       while (iterator.hasNext()) {
         buildArtifactPathDetails.remove(iterator.next().getArtifactPath());
       }

@@ -14,7 +14,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import com.mongodb.DBCursor;
 import io.harness.distribution.barrier.Barrier;
 import io.harness.distribution.barrier.BarrierId;
 import io.harness.distribution.barrier.ForceProctor;
@@ -23,8 +22,6 @@ import io.harness.distribution.barrier.Forcer.State;
 import io.harness.distribution.barrier.ForcerId;
 import lombok.Builder;
 import lombok.Value;
-import org.mongodb.morphia.query.MorphiaIterator;
-import org.mongodb.morphia.query.MorphiaKeyIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.BarrierInstance;
@@ -34,6 +31,8 @@ import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowPhase;
+import software.wings.dl.HIterator;
+import software.wings.dl.HKeyIterator;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.BarrierService;
@@ -92,15 +91,13 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
     for (int index = 0; index < pipeline.getWorkflows().size(); ++index) {
       BarrierInstance.Workflow workflow = pipeline.getWorkflows().get(index);
       if (workflow.getPipelineStateExecutionId() == null) {
-        final MorphiaKeyIterator<StateExecutionInstance> keys =
-            wingsPersistence.createQuery(StateExecutionInstance.class)
-                .filter(StateExecutionInstance.APP_ID_KEY, barrierInstance.getAppId())
-                .filter(StateExecutionInstance.EXECUTION_UUID_KEY, pipeline.getExecutionId())
-                .filter(StateExecutionInstance.STATE_TYPE_KEY, "ENV_STATE")
-                .filter(StateExecutionInstance.PIPELINE_STATE_ELEMENT_ID_KEY, workflow.getPipelineStateId())
-                .fetchKeys();
-
-        try (DBCursor cursor = keys.getCursor()) {
+        try (HKeyIterator<StateExecutionInstance> keys = new HKeyIterator(
+                 wingsPersistence.createQuery(StateExecutionInstance.class)
+                     .filter(StateExecutionInstance.APP_ID_KEY, barrierInstance.getAppId())
+                     .filter(StateExecutionInstance.EXECUTION_UUID_KEY, pipeline.getExecutionId())
+                     .filter(StateExecutionInstance.STATE_TYPE_KEY, "ENV_STATE")
+                     .filter(StateExecutionInstance.PIPELINE_STATE_ELEMENT_ID_KEY, workflow.getPipelineStateId())
+                     .fetchKeys())) {
           if (!keys.hasNext()) {
             continue;
           }
@@ -114,14 +111,13 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
       }
 
       if (workflow.getWorkflowExecutionId() == null) {
-        final MorphiaKeyIterator<WorkflowExecution> keys =
-            wingsPersistence.createQuery(WorkflowExecution.class)
-                .filter(WorkflowExecution.APP_ID_KEY, barrierInstance.getAppId())
-                .filter(WorkflowExecution.PIPELINE_EXECUTION_ID_KEY, pipeline.getExecutionId())
-                .filter(WorkflowExecution.ARGS_PIPELINE_PHASE_ELEMENT_ID_KEY, workflow.getPipelineStateId())
-                .filter(WorkflowExecution.WORKFLOW_ID_KEY, workflow.getUuid())
-                .fetchKeys();
-        try (DBCursor cursor = keys.getCursor()) {
+        try (HKeyIterator<WorkflowExecution> keys = new HKeyIterator(
+                 wingsPersistence.createQuery(WorkflowExecution.class)
+                     .filter(WorkflowExecution.APP_ID_KEY, barrierInstance.getAppId())
+                     .filter(WorkflowExecution.PIPELINE_EXECUTION_ID_KEY, pipeline.getExecutionId())
+                     .filter(WorkflowExecution.ARGS_PIPELINE_PHASE_ELEMENT_ID_KEY, workflow.getPipelineStateId())
+                     .filter(WorkflowExecution.WORKFLOW_ID_KEY, workflow.getUuid())
+                     .fetchKeys())) {
           if (!keys.hasNext()) {
             continue;
           }
@@ -133,15 +129,14 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
       }
 
       if (workflow.getPhaseExecutionId() == null) {
-        final MorphiaKeyIterator<StateExecutionInstance> keys =
-            wingsPersistence.createQuery(StateExecutionInstance.class)
-                .filter(StateExecutionInstance.APP_ID_KEY, barrierInstance.getAppId())
-                .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflow.getWorkflowExecutionId())
-                .filter(StateExecutionInstance.PHASE_SUBWORKFLOW_ID_KEY, workflow.getPhaseUuid())
-                .field(StateExecutionInstance.STATE_TYPE_KEY)
-                .in(asList(PHASE.name(), PHASE_STEP.name()))
-                .fetchKeys();
-        try (DBCursor cursor = keys.getCursor()) {
+        try (HKeyIterator<StateExecutionInstance> keys = new HKeyIterator(
+                 wingsPersistence.createQuery(StateExecutionInstance.class)
+                     .filter(StateExecutionInstance.APP_ID_KEY, barrierInstance.getAppId())
+                     .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflow.getWorkflowExecutionId())
+                     .filter(StateExecutionInstance.PHASE_SUBWORKFLOW_ID_KEY, workflow.getPhaseUuid())
+                     .field(StateExecutionInstance.STATE_TYPE_KEY)
+                     .in(asList(PHASE.name(), PHASE_STEP.name()))
+                     .fetchKeys())) {
           if (!keys.hasNext()) {
             continue;
           }
@@ -153,14 +148,13 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
       }
 
       if (workflow.getStepExecutionId() == null) {
-        final MorphiaKeyIterator<StateExecutionInstance> keys =
-            wingsPersistence.createQuery(StateExecutionInstance.class)
-                .filter(StateExecutionInstance.APP_ID_KEY, barrierInstance.getAppId())
-                .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflow.getWorkflowExecutionId())
-                .filter(StateExecutionInstance.STATE_TYPE_KEY, BARRIER.name())
-                .filter(StateExecutionInstance.STEP_ID_KEY, workflow.getStepUuid())
-                .fetchKeys();
-        try (DBCursor cursor = keys.getCursor()) {
+        try (HKeyIterator<StateExecutionInstance> keys = new HKeyIterator(
+                 wingsPersistence.createQuery(StateExecutionInstance.class)
+                     .filter(StateExecutionInstance.APP_ID_KEY, barrierInstance.getAppId())
+                     .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflow.getWorkflowExecutionId())
+                     .filter(StateExecutionInstance.STATE_TYPE_KEY, BARRIER.name())
+                     .filter(StateExecutionInstance.STEP_ID_KEY, workflow.getStepUuid())
+                     .fetchKeys())) {
           if (!keys.hasNext()) {
             continue;
           }
@@ -269,15 +263,13 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
                                            .get()
                                            .getPipelineExecutionId();
 
-    final MorphiaKeyIterator<BarrierInstance> keys =
-        wingsPersistence.createQuery(BarrierInstance.class)
-            .filter(BarrierInstance.APP_ID_KEY, appId)
-            .filter(BarrierInstance.NAME_KEY, identifier)
-            .filter(BarrierInstance.PIPELINE_EXECUTION_ID_KEY, pipelineExecutionId)
-            .filter(BarrierInstance.PIPELINE_WORKFLOWS_PIPELINE_STATE_ID_KEY, pipelineStateId)
-            .fetchKeys();
-
-    try (DBCursor cursor = keys.getCursor()) {
+    try (HKeyIterator<BarrierInstance> keys =
+             new HKeyIterator(wingsPersistence.createQuery(BarrierInstance.class)
+                                  .filter(BarrierInstance.APP_ID_KEY, appId)
+                                  .filter(BarrierInstance.NAME_KEY, identifier)
+                                  .filter(BarrierInstance.PIPELINE_EXECUTION_ID_KEY, pipelineExecutionId)
+                                  .filter(BarrierInstance.PIPELINE_WORKFLOWS_PIPELINE_STATE_ID_KEY, pipelineStateId)
+                                  .fetchKeys())) {
       if (!keys.hasNext()) {
         // We would not be able to find a barrier for if it is noop
         return null;
@@ -396,10 +388,10 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
 
   @Override
   public void updateAllActiveBarriers() {
-    MorphiaIterator<BarrierInstance, BarrierInstance> barrierInstances =
-        wingsPersistence.createQuery(BarrierInstance.class).filter(BarrierInstance.STATE_KEY, STANDING.name()).fetch();
-
-    try (DBCursor cursor = barrierInstances.getCursor()) {
+    try (HIterator<BarrierInstance> barrierInstances =
+             new HIterator<>(wingsPersistence.createQuery(BarrierInstance.class)
+                                 .filter(BarrierInstance.STATE_KEY, STANDING.name())
+                                 .fetch())) {
       while (barrierInstances.hasNext()) {
         BarrierInstance barrierInstance = barrierInstances.next();
         update(barrierInstance);
@@ -409,13 +401,11 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
 
   @Override
   public void updateAllActiveBarriers(String appId) {
-    MorphiaIterator<BarrierInstance, BarrierInstance> barrierInstances =
-        wingsPersistence.createQuery(BarrierInstance.class)
-            .filter(BarrierInstance.APP_ID_KEY, appId)
-            .filter(BarrierInstance.STATE_KEY, STANDING.name())
-            .fetch();
-
-    try (DBCursor cursor = barrierInstances.getCursor()) {
+    try (HIterator<BarrierInstance> barrierInstances =
+             new HIterator<>(wingsPersistence.createQuery(BarrierInstance.class)
+                                 .filter(BarrierInstance.APP_ID_KEY, appId)
+                                 .filter(BarrierInstance.STATE_KEY, STANDING.name())
+                                 .fetch())) {
       while (barrierInstances.hasNext()) {
         BarrierInstance barrierInstance = barrierInstances.next();
         update(barrierInstance);

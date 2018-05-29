@@ -12,8 +12,6 @@ import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import com.mongodb.DBCursor;
-import org.mongodb.morphia.query.MorphiaIterator;
 import software.wings.beans.Application;
 import software.wings.beans.NotificationChannelType;
 import software.wings.beans.NotificationGroup;
@@ -22,6 +20,7 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.yaml.Change.ChangeType;
+import software.wings.dl.HIterator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -148,10 +147,8 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
         .stream()
         .map(key -> key.getId().toString())
         .forEach(appId -> {
-          final MorphiaIterator<Workflow, Workflow> workflows =
-              wingsPersistence.createQuery(Workflow.class).filter(APP_ID_KEY, appId).fetch();
-
-          try (DBCursor cursor = workflows.getCursor()) {
+          try (HIterator<Workflow> workflows =
+                   new HIterator<>(wingsPersistence.createQuery(Workflow.class).filter(APP_ID_KEY, appId).fetch())) {
             while (workflows.hasNext()) {
               Workflow workflow = workflows.next();
               if (workflow.getOrchestrationWorkflow() != null

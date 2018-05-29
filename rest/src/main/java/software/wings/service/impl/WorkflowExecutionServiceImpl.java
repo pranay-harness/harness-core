@@ -76,11 +76,9 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import com.mongodb.DBCursor;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -141,6 +139,7 @@ import software.wings.beans.baseline.WorkflowExecutionBaseline;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.common.Constants;
 import software.wings.core.queue.Queue;
+import software.wings.dl.HIterator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsDeque;
@@ -1611,18 +1610,16 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     Map<String, Stat> stats = new HashMap<>();
-    MorphiaIterator<StateExecutionInstance, StateExecutionInstance> stateExecutionInstances =
-        wingsPersistence.createQuery(StateExecutionInstance.class)
-            .filter(StateExecutionInstance.APP_ID_KEY, appId)
-            .filter(StateExecutionInstance.EXECUTION_UUID_KEY, stateExecutionInstance.getExecutionUuid())
-            .filter(StateExecutionInstance.PARENT_INSTANCE_ID_KEY, stateExecutionInstanceId)
-            .project(StateExecutionInstance.ID_KEY, true)
-            .project(StateExecutionInstance.STATUS_KEY, true)
-            .project(StateExecutionInstance.PREV_INSTANCE_ID_KEY, true)
-            .project(StateExecutionInstance.CONTEXT_ELEMENT_KEY, true)
-            .fetch();
-
-    try (DBCursor ignored = stateExecutionInstances.getCursor()) {
+    try (HIterator<StateExecutionInstance> stateExecutionInstances = new HIterator<>(
+             wingsPersistence.createQuery(StateExecutionInstance.class)
+                 .filter(StateExecutionInstance.APP_ID_KEY, appId)
+                 .filter(StateExecutionInstance.EXECUTION_UUID_KEY, stateExecutionInstance.getExecutionUuid())
+                 .filter(StateExecutionInstance.PARENT_INSTANCE_ID_KEY, stateExecutionInstanceId)
+                 .project(StateExecutionInstance.ID_KEY, true)
+                 .project(StateExecutionInstance.STATUS_KEY, true)
+                 .project(StateExecutionInstance.PREV_INSTANCE_ID_KEY, true)
+                 .project(StateExecutionInstance.CONTEXT_ELEMENT_KEY, true)
+                 .fetch())) {
       while (stateExecutionInstances.hasNext()) {
         StateExecutionInstance instance = stateExecutionInstances.next();
         Stat stat = stats.computeIfAbsent(instance.getUuid(), x -> new Stat());
@@ -2313,11 +2310,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
-  public List<WorkflowExecution> calculateWorkflowExecutions(List<String> appIds, long fromDateEpochMilli) {
+  public List<WorkflowExecution> obtainWorkflowExecutions(List<String> appIds, long fromDateEpochMilli) {
     List<WorkflowExecution> workflowExecutions = new ArrayList<>();
-    MorphiaIterator<WorkflowExecution, WorkflowExecution> iterator =
-        obtainWorkflowExecutionIterator(appIds, fromDateEpochMilli);
-    try (DBCursor ignored = iterator.getCursor()) {
+    try (HIterator<WorkflowExecution> iterator = obtainWorkflowExecutionIterator(appIds, fromDateEpochMilli)) {
       while (iterator.hasNext()) {
         workflowExecutions.add(iterator.next());
       }
@@ -2325,18 +2320,18 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return workflowExecutions;
   }
 
-  public MorphiaIterator<WorkflowExecution, WorkflowExecution> obtainWorkflowExecutionIterator(
-      List<String> appIds, long epochMilli) {
-    return wingsPersistence.createQuery(WorkflowExecution.class)
-        .field(CREATED_AT_KEY)
-        .greaterThanOrEq(epochMilli)
-        .field(WORKFLOW_TYPE_ID_KEY)
-        .in(asList(ORCHESTRATION, SIMPLE, PIPELINE))
-        .field(PIPELINE_EXECUTION_ID_KEY)
-        .doesNotExist()
-        .field(APP_ID_KEY)
-        .in(appIds)
-        .fetch();
+  @Override
+  public HIterator<WorkflowExecution> obtainWorkflowExecutionIterator(List<String> appIds, long epochMilli) {
+    return new HIterator<>(wingsPersistence.createQuery(WorkflowExecution.class)
+                               .field(CREATED_AT_KEY)
+                               .greaterThanOrEq(epochMilli)
+                               .field(WORKFLOW_TYPE_ID_KEY)
+                               .in(asList(ORCHESTRATION, SIMPLE, PIPELINE))
+                               .field(PIPELINE_EXECUTION_ID_KEY)
+                               .doesNotExist()
+                               .field(APP_ID_KEY)
+                               .in(appIds)
+                               .fetch());
   }
 
   @Override

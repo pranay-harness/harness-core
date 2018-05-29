@@ -12,10 +12,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import com.mongodb.DBCursor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
-import org.mongodb.morphia.query.MorphiaIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
@@ -32,6 +30,7 @@ import software.wings.beans.NameValuePair;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TerraformInfrastructureProvisioner;
+import software.wings.dl.HIterator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.PageRequestBuilder;
 import software.wings.dl.PageResponse;
@@ -292,13 +291,11 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     final Map<String, Object> contextMap = context.asMap();
     contextMap.put(infrastructureProvisioner.variableKey(), outputs);
 
-    final MorphiaIterator<InfrastructureMapping, InfrastructureMapping> infrastructureMappings =
-        wingsPersistence.createQuery(InfrastructureMapping.class)
-            .filter(InfrastructureMapping.APP_ID_KEY, infrastructureProvisioner.getAppId())
-            .filter(InfrastructureMapping.PROVISIONER_ID_KEY, infrastructureProvisioner.getUuid())
-            .fetch();
-
-    try (DBCursor cursor = infrastructureMappings.getCursor()) {
+    try (HIterator<InfrastructureMapping> infrastructureMappings =
+             new HIterator<>(wingsPersistence.createQuery(InfrastructureMapping.class)
+                                 .filter(InfrastructureMapping.APP_ID_KEY, infrastructureProvisioner.getAppId())
+                                 .filter(InfrastructureMapping.PROVISIONER_ID_KEY, infrastructureProvisioner.getUuid())
+                                 .fetch())) {
       while (infrastructureMappings.hasNext()) {
         InfrastructureMapping infrastructureMapping = infrastructureMappings.next();
 

@@ -46,15 +46,14 @@ public abstract class AbstractSecretServiceImpl {
         break;
 
       default:
-        SettingAttribute settingAttribute = wingsPersistence.createQuery(SettingAttribute.class)
-                                                .filter("accountId", accountId)
-                                                .filter("name", entityName)
-                                                .filter("value.type", variableType)
-                                                .get();
+        final SettingAttribute settingAttribute = wingsPersistence.createQuery(SettingAttribute.class)
+                                                      .filter("accountId", accountId)
+                                                      .filter("name", entityName)
+                                                      .filter("value.type", variableType)
+                                                      .get();
         if (settingAttribute != null) {
           rv = (Encryptable) settingAttribute.getValue();
         }
-        break;
     }
 
     Preconditions.checkNotNull(

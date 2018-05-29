@@ -5,13 +5,12 @@ import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
 import io.harness.data.structure.ListUtil;
 import migrations.Migration;
-import org.mongodb.morphia.query.MorphiaIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Service;
+import software.wings.dl.HIterator;
 import software.wings.dl.WingsPersistence;
 
 import java.util.List;
@@ -26,10 +25,9 @@ public class ServiceKeywordsMigration implements Migration {
   public void migrate() {
     final DBCollection collection = wingsPersistence.getCollection("services");
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
-    MorphiaIterator<Service, Service> services =
-        wingsPersistence.createQuery(Service.class).project("appContainer", false).fetch();
     int i = 1;
-    try (DBCursor ignored = services.getCursor()) {
+    try (HIterator<Service> services =
+             new HIterator<>(wingsPersistence.createQuery(Service.class).project("appContainer", false).fetch())) {
       while (services.hasNext()) {
         Service service = services.next();
         if (i % BATCH_SIZE == 0) {

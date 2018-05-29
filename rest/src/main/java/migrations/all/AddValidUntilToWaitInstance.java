@@ -5,11 +5,10 @@ import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
 import migrations.Migration;
-import org.mongodb.morphia.query.MorphiaIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.dl.HIterator;
 import software.wings.dl.WingsPersistence;
 import software.wings.waitnotify.WaitInstance;
 
@@ -27,14 +26,12 @@ public class AddValidUntilToWaitInstance implements Migration {
     final DBCollection collection = wingsPersistence.getCollection("waitInstances");
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
 
-    final MorphiaIterator<WaitInstance, WaitInstance> waitInstances = wingsPersistence.createQuery(WaitInstance.class)
-                                                                          .field("validUntil")
-                                                                          .doesNotExist()
-                                                                          .project("createdAt", true)
-                                                                          .fetch();
-
     int i = 1;
-    try (DBCursor ignored = waitInstances.getCursor()) {
+    try (HIterator<WaitInstance> waitInstances = new HIterator<>(wingsPersistence.createQuery(WaitInstance.class)
+                                                                     .field("validUntil")
+                                                                     .doesNotExist()
+                                                                     .project("createdAt", true)
+                                                                     .fetch())) {
       while (waitInstances.hasNext()) {
         final WaitInstance waitInstance = waitInstances.next();
         final ZonedDateTime zonedDateTime =
