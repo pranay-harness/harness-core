@@ -443,6 +443,7 @@ public interface Constants {
    * The constant MAINTENANCE.
    */
   String MAINTENANCE = "maintenance";
+  String SHUTDOWN = "shutdown";
 
   String PROVISION_CLOUD_FORMATION = "Cloud Formation Create Stack";
   String DE_PROVISION_CLOUD_FORMATION = "Cloud Formation Delete Stack";

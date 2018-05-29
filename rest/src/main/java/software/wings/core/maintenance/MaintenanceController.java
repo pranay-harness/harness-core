@@ -3,10 +3,12 @@ package software.wings.core.maintenance;
 import static io.harness.threading.Morpheus.sleep;
 import static java.util.Collections.synchronizedSet;
 import static software.wings.common.Constants.MAINTENANCE;
+import static software.wings.common.Constants.SHUTDOWN;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.hazelcast.core.HazelcastInstance;
 import io.dropwizard.lifecycle.Managed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +29,7 @@ public class MaintenanceController implements Managed {
 
   private static Boolean forceMaintenance;
   private static final AtomicBoolean maintenance = new AtomicBoolean(true);
+  private static final AtomicBoolean shutdown = new AtomicBoolean(false);
 
   public static void forceMaintenance(boolean force) {
     logger.info("Setting forced maintenance {}", force);
@@ -43,6 +46,7 @@ public class MaintenanceController implements Managed {
   }
 
   @Inject private ExecutorService executorService;
+  @Inject private HazelcastInstance hazelcastInstance;
 
   private final AtomicBoolean running = new AtomicBoolean(true);
   private final Set<MaintenanceListener> maintenanceListeners = synchronizedSet(new HashSet<>());
@@ -58,7 +62,12 @@ public class MaintenanceController implements Managed {
   public void start() {
     executorService.submit(() -> {
       while (running.get()) {
-        boolean isMaintenance = forceMaintenance != null ? forceMaintenance : new File(MAINTENANCE).exists();
+        boolean isShutdown = new File(SHUTDOWN).exists();
+        if (shutdown.getAndSet(isShutdown) != isShutdown) {
+          hazelcastInstance.shutdown();
+        }
+        boolean isMaintenance =
+            forceMaintenance != null ? forceMaintenance : new File(MAINTENANCE).exists() || isShutdown;
         if (maintenance.getAndSet(isMaintenance) != isMaintenance) {
           logger.info("{} maintenance mode", isMaintenance ? "Entering" : "Leaving");
           synchronized (maintenanceListeners) {
