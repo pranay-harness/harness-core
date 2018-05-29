@@ -41,6 +41,7 @@ public class CommandStateEnumDataProvider implements DataProvider {
         services = Collections.singletonList(serviceResourceService.get(appId, serviceId, true));
       }
       return services.stream()
+          .filter(service -> service.getServiceCommands() != null)
           .flatMap(service -> service.getServiceCommands().stream())
           .map(command -> command.getName())
           .distinct()

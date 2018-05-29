@@ -133,7 +133,6 @@ import software.wings.utils.HostValidationService;
 import software.wings.utils.KubernetesConvention;
 import software.wings.utils.Misc;
 import software.wings.utils.Util;
-import software.wings.utils.Validator;
 import software.wings.utils.validation.Create;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
@@ -231,7 +230,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     ServiceTemplate serviceTemplate =
         serviceTemplateService.get(infraMapping.getAppId(), infraMapping.getServiceTemplateId());
-    notNullCheck("Service Template", serviceTemplate);
+    notNullCheck("Service Template", serviceTemplate, USER);
 
     infraMapping.setServiceId(serviceTemplate.getServiceId());
     if (computeProviderSetting != null) {
@@ -252,7 +251,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       if (isBlank(gcpKubernetesInfrastructureMapping.getNamespace())) {
         gcpKubernetesInfrastructureMapping.setNamespace("default");
       }
-      validateGcpInfraMapping(gcpKubernetesInfrastructureMapping, computeProviderSetting);
+      validateGcpInfraMapping(gcpKubernetesInfrastructureMapping);
     }
 
     if (infraMapping instanceof AzureKubernetesInfrastructureMapping) {
@@ -296,7 +295,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                  .distinct()
                                  .collect(toList());
     if (hostNames.isEmpty()) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Host names must not be empty");
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER).addParam("args", "Host names must not be empty");
     }
     return hostNames;
   }
@@ -340,7 +339,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   private void validateEcsInfraMapping(EcsInfrastructureMapping infraMapping, SettingAttribute computeProviderSetting) {
     SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
-    Validator.notNullCheck("SettingAttribute", settingAttribute);
+    notNullCheck("SettingAttribute", settingAttribute, USER);
     String clusterName = infraMapping.getClusterName();
     String region = infraMapping.getRegion();
 
@@ -363,10 +362,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
   }
 
-  private void validateGcpInfraMapping(
-      GcpKubernetesInfrastructureMapping infraMapping, SettingAttribute computeProviderSetting) {
+  private void validateGcpInfraMapping(GcpKubernetesInfrastructureMapping infraMapping) {
     SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
-    Validator.notNullCheck("SettingAttribute", settingAttribute);
+    notNullCheck("SettingAttribute", settingAttribute, USER);
     String clusterName = infraMapping.getClusterName();
     String namespace = infraMapping.getNamespace();
 
@@ -391,7 +389,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   private void validateAzureInfraMapping(AzureKubernetesInfrastructureMapping infraMapping) {
     SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
-    Validator.notNullCheck("SettingAttribute", settingAttribute);
+    notNullCheck("SettingAttribute", settingAttribute, USER);
     String clusterName = infraMapping.getClusterName();
     String subscriptionId = infraMapping.getSubscriptionId();
     String resourceGroup = infraMapping.getResourceGroup();
@@ -541,7 +539,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     } else if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
       GcpKubernetesInfrastructureMapping gcpKubernetesInfrastructureMapping =
           (GcpKubernetesInfrastructureMapping) infrastructureMapping;
-      validateGcpInfraMapping(gcpKubernetesInfrastructureMapping, computeProviderSetting);
+      validateGcpInfraMapping(gcpKubernetesInfrastructureMapping);
       keyValuePairs.put("clusterName", gcpKubernetesInfrastructureMapping.getClusterName());
       keyValuePairs.put("namespace",
           isNotBlank(gcpKubernetesInfrastructureMapping.getNamespace())
@@ -705,29 +703,30 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     infraMapping.setHostNames(getUniqueHostNames(infraMapping));
 
     SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
-    Validator.notNullCheck("ComputeProviderSettingAttribute", settingAttribute);
+    notNullCheck("ComputeProviderSettingAttribute", settingAttribute);
 
     settingAttribute = settingsService.get(infraMapping.getWinRmConnectionAttributes());
-    Validator.notNullCheck("WinRmConnectionAttributes", settingAttribute);
+    notNullCheck("WinRmConnectionAttributes", settingAttribute);
   }
 
   private void validatePcfInfrastructureMapping(PcfInfrastructureMapping infraMapping) {
     if (StringUtils.isBlank(infraMapping.getOrganization()) || StringUtils.isBlank(infraMapping.getSpace())) {
       logger.error("For PCFInfraMapping, Org and Space value cant be null");
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Host names must be unique");
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER).addParam("args", "Host names must be unique");
     }
 
     SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
-    Validator.notNullCheck("ComputeProviderSettingAttribute", settingAttribute);
+    notNullCheck("ComputeProviderSettingAttribute", settingAttribute, USER);
   }
 
   private void validateAwsLambdaInfrastructureMapping(AwsLambdaInfraStructureMapping lambdaInfraStructureMapping) {
     if (lambdaInfraStructureMapping.getVpcId() != null) {
       if (lambdaInfraStructureMapping.getSubnetIds().isEmpty()) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "At least one subnet must be provided");
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
+            .addParam("args", "At least one subnet must be provided");
       }
       if (lambdaInfraStructureMapping.getSecurityGroupIds().isEmpty()) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
             .addParam("args", "At least one security group must be provided");
       }
     }
@@ -816,9 +815,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
             .collect(toList());
 
     if (!referencingWorkflowNames.isEmpty()) {
-      throw new InvalidRequestException(format("Service Infrastructure %s is in use by %s %s [%s].", infraMappingId,
-          referencingWorkflowNames.size(), plural("workflow", referencingWorkflowNames.size()),
-          Joiner.on(", ").join(referencingWorkflowNames), USER));
+      throw new InvalidRequestException(
+          format("Service Infrastructure %s is in use by %s %s [%s].", infraMappingId, referencingWorkflowNames.size(),
+              plural("workflow", referencingWorkflowNames.size()), Joiner.on(", ").join(referencingWorkflowNames)),
+          USER);
     }
   }
 
@@ -1081,7 +1081,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     notNullCheck("Compute Provider", computeProviderSetting);
 
     if (computeProviderSetting == null || !(computeProviderSetting.getValue() instanceof PcfConfig)) {
-      throw new WingsException(INVALID_ARGUMENT).addParam("args", "InvalidConfiguration");
+      throw new WingsException(INVALID_ARGUMENT, USER).addParam("args", "InvalidConfiguration");
     }
     return pcfHelperService.listOrganizations((PcfConfig) computeProviderSetting.getValue());
   }
@@ -1092,7 +1092,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     notNullCheck("Compute Provider", computeProviderSetting);
 
     if (computeProviderSetting == null || !(computeProviderSetting.getValue() instanceof PcfConfig)) {
-      throw new WingsException(INVALID_ARGUMENT).addParam("args", "InvalidConfiguration");
+      throw new WingsException(INVALID_ARGUMENT, USER).addParam("args", "InvalidConfiguration");
     }
     return pcfHelperService.listSpaces((PcfConfig) computeProviderSetting.getValue(), organization);
   }
@@ -1103,7 +1103,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     notNullCheck("Compute Provider", computeProviderSetting);
 
     if (computeProviderSetting == null || !(computeProviderSetting.getValue() instanceof PcfConfig)) {
-      throw new WingsException(INVALID_ARGUMENT).addParam("args", "InvalidConfiguration");
+      throw new WingsException(INVALID_ARGUMENT, USER).addParam("args", "InvalidConfiguration");
     }
 
     return pcfHelperService.listRoutes((PcfConfig) computeProviderSetting.getValue(), organization, spaces);
@@ -1430,7 +1430,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
             + EcsConvention.DELIMITER + "0";
       }
     }
-    Validator.notNullCheck("SettingAttribute", settingAttribute);
+    notNullCheck("SettingAttribute", settingAttribute);
 
     List<EncryptedDataDetail> encryptionDetails =
         secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
