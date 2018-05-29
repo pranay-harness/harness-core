@@ -149,7 +149,7 @@ public class GcsServiceImpl implements GcsService {
       }
 
       Map<String, String> map = new HashMap<>();
-      map.put(URL, "https://www.googleapis.com/storage/v1/b" + bucketName + "/o" + objName);
+      map.put(URL, "https://storage.cloud.google.com/" + bucketName + "/" + objName);
       map.put(BUILD_NO, versionId);
       map.put(BUCKET_NAME, bucketName);
       map.put(ARTIFACT_PATH, objName);
