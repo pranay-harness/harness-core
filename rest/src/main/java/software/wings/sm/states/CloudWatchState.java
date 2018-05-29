@@ -1,17 +1,17 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.sm.states.DynatraceState.CONTROL_HOST_NAME;
 import static software.wings.sm.states.DynatraceState.TEST_HOST_NAME;
 
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.time.Timestamp;
+import lombok.Builder;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +23,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
+import software.wings.metrics.MetricType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.AwsSettingProvider;
@@ -44,6 +45,7 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,10 +59,10 @@ import java.util.concurrent.TimeUnit;
 public class CloudWatchState extends AbstractMetricAnalysisState {
   @Transient @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(CloudWatchState.class);
 
-  @Transient @Inject private SettingsService settingsService;
-  @Transient @Inject private AwsHelperService awsHelperService;
-  @Transient @Inject private SecretManager secretManager;
-  @Transient @Inject private CloudWatchService cloudWatchService;
+  @Inject private transient SettingsService settingsService;
+  @Inject private transient AwsHelperService awsHelperService;
+  @Inject private transient SecretManager secretManager;
+  @Inject private transient CloudWatchService cloudWatchService;
 
   @EnumData(enumDataProvider = AwsSettingProvider.class)
   @Attributes(required = true, title = "AWS account")
@@ -71,7 +73,9 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
   @EnumData(enumDataProvider = AwsRegionDataProvider.class)
   private String region = "us-east-1";
 
-  @Attributes(title = "Load Balancer") private String loadBalancerName;
+  @SchemaIgnore @Builder.Default private Map<String, List<CloudWatchMetric>> loadBalancerMetrics = new HashMap<>();
+
+  @SchemaIgnore @Builder.Default private List<CloudWatchMetric> ec2Metrics = new ArrayList<>();
 
   /**
    * Instantiates a new state.
@@ -86,7 +90,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
   @Attributes(required = true, title = "Baseline for Risk Analysis")
   @DefaultValue("COMPARE_WITH_PREVIOUS")
   public AnalysisComparisonStrategy getComparisonStrategy() {
-    if (isBlank(comparisonStrategy)) {
+    if (isEmpty(comparisonStrategy)) {
       return AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
     }
     return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
@@ -95,7 +99,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
   @Attributes(title = "Analysis Time duration (in minutes)", description = "Default 15 minutes")
   @DefaultValue("15")
   public String getTimeDuration() {
-    if (isBlank(timeDuration)) {
+    if (isEmpty(timeDuration)) {
       return String.valueOf(15);
     }
     return timeDuration;
@@ -105,7 +109,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
   @Attributes(required = true, title = "Failure Criteria")
   @DefaultValue("LOW")
   public AnalysisTolerance getAnalysisTolerance() {
-    if (isBlank(tolerance)) {
+    if (isEmpty(tolerance)) {
       return AnalysisTolerance.LOW;
     }
     return AnalysisTolerance.valueOf(tolerance);
@@ -125,22 +129,6 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
   @Override
   public void setAnalysisServerConfigId(String analysisServerConfigId) {
     this.analysisServerConfigId = analysisServerConfigId;
-  }
-
-  public String getRegion() {
-    return region;
-  }
-
-  public void setRegion(String region) {
-    this.region = region;
-  }
-
-  public String getLoadBalancerName() {
-    return loadBalancerName;
-  }
-
-  public void setLoadBalancerName(String loadBalancerName) {
-    this.loadBalancerName = loadBalancerName;
   }
 
   @Override
@@ -175,8 +163,8 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
             .encryptedDataDetails(
                 secretManager.getEncryptionDetails(awsConfig, context.getAppId(), context.getWorkflowExecutionId()))
             .hosts(hosts)
-            .loadBalancers(Sets.newHashSet(loadBalancerName))
-            .cloudWatchMetrics(cloudWatchMetrics)
+            .loadBalancerMetrics(loadBalancerMetrics)
+            .ec2Metrics(ec2Metrics)
             .build();
 
     String waitId = generateUuid();
@@ -211,10 +199,49 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
         rv.put(timeSeries.getMetricName(),
             TimeSeriesMetricDefinition.builder()
                 .metricName(timeSeries.getMetricName())
-                .metricType(timeSeries.getMetricType())
+                .metricType(MetricType.valueOf(timeSeries.getMetricType()))
                 .build());
       }
     }
     return rv;
+  }
+
+  @Attributes(required = false, title = "Expression for Host/Container name")
+  public String getHostnameTemplate() {
+    if (isEmpty(hostnameTemplate)) {
+      return "${host.ec2Instance.instanceId}";
+    }
+    return hostnameTemplate;
+  }
+
+  public void setHostnameTemplate(String hostnameTemplate) {
+    this.hostnameTemplate = hostnameTemplate;
+  }
+
+  public String getRegion() {
+    if (isEmpty(region)) {
+      return "us-east-1";
+    }
+    return region;
+  }
+
+  public void setRegion(String region) {
+    this.region = region;
+  }
+
+  public Map<String, List<CloudWatchMetric>> getLoadBalancerMetrics() {
+    return loadBalancerMetrics;
+  }
+
+  public void setLoadBalancerMetrics(Map<String, List<CloudWatchMetric>> loadBalancerMetrics) {
+    this.loadBalancerMetrics = loadBalancerMetrics;
+  }
+
+  public List<CloudWatchMetric> getEc2Metrics() {
+    return ec2Metrics;
+  }
+
+  public void setEc2Metrics(List<CloudWatchMetric> ec2Metrics) {
+    this.ec2Metrics = ec2Metrics;
   }
 }

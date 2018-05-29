@@ -6,6 +6,8 @@ import software.wings.beans.AwsConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +33,7 @@ public class CloudWatchDataCollectionInfo {
   private String region;
 
   @Builder.Default private Set<String> hosts = new HashSet<>();
-  @Builder.Default private Set<String> loadBalancers = new HashSet<>();
-  private Map<AwsNameSpace, List<CloudWatchMetric>> cloudWatchMetrics;
+
+  @Builder.Default private Map<String, List<CloudWatchMetric>> loadBalancerMetrics = new HashMap<>();
+  @Builder.Default private List<CloudWatchMetric> ec2Metrics = new ArrayList<>();
 }

@@ -1,3 +1,6 @@
 {
-  "ui:order": ["analysisServerConfigId", "region", "loadBalancerName", "comparisonStrategy", "analysisTolerance", "timeDuration"]
+  "ui:order" : [
+    "analysisServerConfigId", "region", "comparisonStrategy",
+    "analysisTolerance", "timeDuration"
+  ]
 }
