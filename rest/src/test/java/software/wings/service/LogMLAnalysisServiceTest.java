@@ -139,6 +139,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Ignore("Unit tests should not access external resources")
   public void testVersion() throws Exception {
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(elkDelegateService);
     setInternalState(elkAnalysisService, "delegateProxyFactory", delegateProxyFactory);
@@ -151,6 +152,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Ignore("Unit tests should not access external resources")
   public void testValidateSumoLogicConfig() throws Exception {
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(sumoDelegateService);
     setInternalState(analysisService, "delegateProxyFactory", delegateProxyFactory);
