@@ -20,6 +20,7 @@ import static software.wings.beans.yaml.YamlConstants.LOAD_BALANCERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.NOTIFICATION_GROUPS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlConstants.PIPELINES_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.PROVISIONERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.SERVICES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.VERIFICATION_PROVIDERS_FOLDER;
@@ -41,6 +42,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.Pipeline;
@@ -79,6 +81,7 @@ import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -106,14 +109,13 @@ import software.wings.yaml.directory.YamlNode;
 import software.wings.yaml.gitSync.YamlGitConfig;
 import software.wings.yaml.gitSync.YamlGitConfig.SyncMode;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 @Singleton
@@ -128,6 +130,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Inject private InfrastructureMappingService infraMappingService;
   @Inject private WorkflowService workflowService;
   @Inject private PipelineService pipelineService;
+  @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject private ArtifactStreamService artifactStreamService;
 
   @Inject private YamlArtifactStreamService yamlArtifactStreamService;
@@ -140,6 +143,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Inject private ConfigService configService;
   @Inject private NotificationSetupService notificationSetupService;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private ExecutorService executorService;
 
   @Override
   public YamlGitConfig weNeedToPushChanges(String accountId) {
@@ -160,7 +164,6 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       logger.info("Traverse Directory: " + (dn.getName() == null ? dn.getName() : path + "/" + dn.getName()));
 
       boolean addToFileChangeList = true;
-      boolean exceptionOccured = false;
       if (dn instanceof YamlNode) {
         String entityId = ((YamlNode) dn).getUuid();
         String yaml = "";
@@ -219,6 +222,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             case "Workflow":
               appId = ((AppLevelYamlNode) dn).getAppId();
               yaml = yamlResourceService.getWorkflow(appId, entityId).getResource().getYaml();
+              break;
+            case "InfrastructureProvisioner":
+              appId = ((AppLevelYamlNode) dn).getAppId();
+              yaml = yamlResourceService.getProvisioner(appId, entityId).getResource().getYaml();
               break;
             case "Pipeline":
               appId = ((AppLevelYamlNode) dn).getAppId();
@@ -323,10 +330,6 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     configFolder.addChild(new YamlNode(accountId, GLOBAL_APP_ID, defaultVarsYamlFileName, Defaults.class,
         directoryPath.clone().add(defaultVarsYamlFileName), yamlGitSyncService, Type.ACCOUNT_DEFAULTS));
 
-    //--------------------------------------
-    // parallelization using CompletionService
-    final ExecutorService pool = Executors.newFixedThreadPool(7);
-    final ExecutorCompletionService<FolderNode> completionService = new ExecutorCompletionService<>(pool);
     Map<String, AppPermissionSummary> appPermissionMap = null;
     if (applyPermissions && userPermissionInfo != null) {
       appPermissionMap = userPermissionInfo.getAppPermissionMapInternal();
@@ -334,45 +337,38 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
     Map<String, AppPermissionSummary> appPermissionMapFinal = appPermissionMap;
 
-    completionService.submit(
-        () -> doApplications(accountId, directoryPath.clone(), applyPermissions, appPermissionMapFinal));
+    List<Future<FolderNode>> futureList = new ArrayList<>();
+    futureList.add(executorService.submit(
+        () -> doApplications(accountId, directoryPath.clone(), applyPermissions, appPermissionMapFinal)));
 
-    completionService.submit(() -> doCloudProviders(accountId, directoryPath.clone()));
+    futureList.add(executorService.submit(() -> doCloudProviders(accountId, directoryPath.clone())));
 
-    completionService.submit(() -> doArtifactServers(accountId, directoryPath.clone()));
+    futureList.add(executorService.submit(() -> doArtifactServers(accountId, directoryPath.clone())));
 
-    completionService.submit(() -> doCollaborationProviders(accountId, directoryPath.clone()));
+    futureList.add(executorService.submit(() -> doCollaborationProviders(accountId, directoryPath.clone())));
 
-    completionService.submit(() -> doLoadBalancers(accountId, directoryPath.clone()));
+    futureList.add(executorService.submit(() -> doLoadBalancers(accountId, directoryPath.clone())));
 
-    completionService.submit(() -> doVerificationProviders(accountId, directoryPath.clone()));
+    futureList.add(executorService.submit(() -> doVerificationProviders(accountId, directoryPath.clone())));
 
-    completionService.submit(() -> doNotificationGroups(accountId, directoryPath.clone()));
+    futureList.add(executorService.submit(() -> doNotificationGroups(accountId, directoryPath.clone())));
 
     // collect results to this map so we can rebuild the correct order
     Map<String, FolderNode> map = new HashMap<>();
-    // the number of items submitted to the completionService
-    int count = 7;
 
-    for (int i = 0; i < count; ++i) {
+    for (Future<FolderNode> future : futureList) {
       try {
-        final Future<FolderNode> future = completionService.take();
+        final FolderNode fn = future.get();
 
-        try {
-          final FolderNode fn = future.get();
-
-          if (fn == null) {
-            logger.info("********* failure in completionService");
-          } else {
-            map.put(fn.getName(), fn);
-          }
-        } catch (InterruptedException e) {
-          Thread.currentThread().interrupt();
-        } catch (ExecutionException e) {
-          logger.error(e.getMessage(), e);
+        if (fn == null) {
+          logger.info("********* failure in completionService");
+        } else {
+          map.put(fn.getName(), fn);
         }
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
+      } catch (ExecutionException e) {
+        logger.error(e.getMessage(), e);
       }
     }
 
@@ -400,12 +396,6 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         accountId, APPLICATIONS_FOLDER, Application.class, directoryPath.add(APPLICATIONS_FOLDER), yamlGitSyncService);
 
     List<Application> apps = appService.getAppsByAccountId(accountId);
-
-    //--------------------------------------
-    // parallelization using CompletionService (part 1)
-    final ExecutorService pool = Executors.newFixedThreadPool(4);
-    final ExecutorCompletionService<FolderNode> completionService = new ExecutorCompletionService<>(pool);
-    //--------------------------------------
 
     Set<String> allowedAppIds = null;
     if (applyPermissions) {
@@ -440,6 +430,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
           appPermissionSummaryMap != null ? appPermissionSummaryMap.get(app.getUuid()) : null;
 
       Set<String> serviceSet = null;
+      Set<String> provisionerSet = null;
       Set<String> envSet = null;
       Set<String> workflowSet = null;
       Set<String> pipelineSet = null;
@@ -448,6 +439,11 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         Map<Action, Set<String>> servicePermissions = appPermissionSummary.getServicePermissions();
         if (servicePermissions != null) {
           serviceSet = servicePermissions.get(Action.READ);
+        }
+
+        Map<Action, Set<String>> provisionerPermissions = appPermissionSummary.getProvisionerPermissions();
+        if (provisionerPermissions != null) {
+          provisionerSet = provisionerPermissions.get(Action.READ);
         }
 
         Map<Action, Set<String>> envPermissions = appPermissionSummary.getEnvPermissions();
@@ -467,46 +463,47 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       }
 
       Set<String> allowedServices = serviceSet;
+      Set<String> allowedProvisioners = provisionerSet;
       Set<String> allowedEnvs = envSet;
       Set<String> allowedWorkflows = workflowSet;
       Set<String> allowedPipelines = pipelineSet;
 
       //--------------------------------------
       // parallelization using CompletionService (part 2)
-      completionService.submit(() -> doServices(app, appPath.clone(), applyPermissions, allowedServices));
+      List<Future<FolderNode>> futureResponseList = new ArrayList<>();
+      futureResponseList.add(
+          executorService.submit(() -> doServices(app, appPath.clone(), applyPermissions, allowedServices)));
 
-      completionService.submit(() -> doEnvironments(app, appPath.clone(), applyPermissions, allowedEnvs));
+      futureResponseList.add(
+          executorService.submit(() -> doEnvironments(app, appPath.clone(), applyPermissions, allowedEnvs)));
 
-      completionService.submit(() -> doWorkflows(app, appPath.clone(), applyPermissions, allowedWorkflows));
+      futureResponseList.add(
+          executorService.submit(() -> doWorkflows(app, appPath.clone(), applyPermissions, allowedWorkflows)));
 
-      completionService.submit(() -> doPipelines(app, appPath.clone(), applyPermissions, allowedPipelines));
+      futureResponseList.add(
+          executorService.submit(() -> doPipelines(app, appPath.clone(), applyPermissions, allowedPipelines)));
+
+      futureResponseList.add(
+          executorService.submit(() -> doProvisioners(app, appPath.clone(), applyPermissions, allowedProvisioners)));
 
       //      completionService.submit(() -> doTriggers(app, appPath.clone()));
 
       // collect results to this map so we can rebuild the correct order
       Map<String, FolderNode> map = new HashMap<>();
-      // the number of items submitted to the completionService
-      int count = 4;
 
-      for (int i = 0; i < count; ++i) {
+      for (Future<FolderNode> future : futureResponseList) {
         try {
-          final Future<FolderNode> future = completionService.take();
+          final FolderNode fn = future.get();
 
-          try {
-            final FolderNode fn = future.get();
-
-            if (fn == null) {
-              logger.info("********* failure in completionService");
-            } else {
-              map.put(fn.getName(), fn);
-            }
-          } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-          } catch (ExecutionException e) {
-            logger.error(e.getMessage(), e);
+          if (fn == null) {
+            logger.info("********* failure in completionService");
+          } else {
+            map.put(fn.getName(), fn);
           }
         } catch (InterruptedException e) {
           Thread.currentThread().interrupt();
+        } catch (ExecutionException e) {
+          logger.error(e.getMessage(), e);
         }
       }
 
@@ -515,6 +512,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       appFolder.addChild(map.get(ENVIRONMENTS_FOLDER));
       appFolder.addChild(map.get(WORKFLOWS_FOLDER));
       appFolder.addChild(map.get(PIPELINES_FOLDER));
+      appFolder.addChild(map.get(PROVISIONERS_FOLDER));
       //      appFolder.addChild(map.get(TRIGGERS_FOLDER));
       //--------------------------------------
     }
@@ -823,6 +821,38 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     return pipelinesFolder;
   }
 
+  private FolderNode doProvisioners(
+      Application app, DirectoryPath directoryPath, boolean applyPermissions, Set<String> allowedProvisioners) {
+    String accountId = app.getAccountId();
+    FolderNode provisionersFolder = new FolderNode(accountId, PROVISIONERS_FOLDER, InfrastructureProvisioner.class,
+        directoryPath.add(PROVISIONERS_FOLDER), app.getUuid(), yamlGitSyncService);
+
+    if (applyPermissions && isEmpty(allowedProvisioners)) {
+      return provisionersFolder;
+    }
+
+    PageRequest<InfrastructureProvisioner> pageRequest =
+        aPageRequest().addFilter("appId", Operator.EQ, app.getAppId()).build();
+    List<InfrastructureProvisioner> infrastructureProvisioners =
+        infrastructureProvisionerService.list(pageRequest).getResponse();
+
+    if (infrastructureProvisioners != null) {
+      for (InfrastructureProvisioner provisioner : infrastructureProvisioners) {
+        if (applyPermissions && !allowedProvisioners.contains(provisioner.getUuid())) {
+          continue;
+        }
+
+        DirectoryPath provisionerPath = directoryPath.clone();
+        String provisionerYamlFileName = provisioner.getName() + YAML_EXTENSION;
+        provisionersFolder.addChild(new AppLevelYamlNode(accountId, provisioner.getUuid(), provisioner.getAppId(),
+            provisionerYamlFileName, InfrastructureProvisioner.class, provisionerPath.add(provisionerYamlFileName),
+            yamlGitSyncService, Type.PROVISIONER));
+      }
+    }
+
+    return provisionersFolder;
+  }
+
   private boolean shouldLoadSettingAttributes(
       boolean applyPermissions, AccountPermissionSummary accountPermissionSummary) {
     if (applyPermissions) {
@@ -1117,6 +1147,12 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   public String getRootPathByWorkflow(Workflow workflow) {
     Application app = appService.get(workflow.getAppId());
     return getRootPathByApp(app) + PATH_DELIMITER + WORKFLOWS_FOLDER;
+  }
+
+  @Override
+  public String getRootPathByInfraProvisioner(InfrastructureProvisioner provisioner) {
+    Application app = appService.get(provisioner.getAppId());
+    return getRootPathByApp(app) + PATH_DELIMITER + PROVISIONERS_FOLDER;
   }
 
   @Override

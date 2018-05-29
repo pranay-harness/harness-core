@@ -17,6 +17,7 @@ import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Pipeline;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.RestResponse;
@@ -241,6 +242,11 @@ public class YamlHelper {
         return wingsPersistence.createQuery(Pipeline.class).filter(ID_KEY, entityId).get().getCreatedAt();
       case TRIGGER:
         return wingsPersistence.createQuery(ArtifactStream.class).filter(ID_KEY, entityId).get().getCreatedAt();
+      case PROVISIONER:
+        return wingsPersistence.createQuery(InfrastructureProvisioner.class)
+            .filter(ID_KEY, entityId)
+            .get()
+            .getCreatedAt();
       default:
         // nothing to do
     }

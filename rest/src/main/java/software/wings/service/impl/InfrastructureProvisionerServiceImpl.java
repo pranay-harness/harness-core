@@ -177,6 +177,14 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     return wingsPersistence.get(InfrastructureProvisioner.class, appId, infrastructureProvisionerId);
   }
 
+  @Override
+  public InfrastructureProvisioner getByName(String appId, String provisionerName) {
+    return wingsPersistence.createQuery(InfrastructureProvisioner.class)
+        .filter(InfrastructureProvisioner.APP_ID_KEY, appId)
+        .filter(InfrastructureProvisioner.NAME_KEY, provisionerName)
+        .get();
+  }
+
   private void ensureSafeToDelete(String appId, String infrastructureProvisionerId) {
     List<Key<InfrastructureMapping>> keys =
         wingsPersistence.createQuery(InfrastructureMapping.class)

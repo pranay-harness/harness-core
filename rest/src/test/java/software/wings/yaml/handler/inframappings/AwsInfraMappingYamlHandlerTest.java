@@ -26,7 +26,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import java.io.IOException;
 
 public class AwsInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandlerTest {
-  private String validYamlContent = "harnessApiVersion: '1.0'\n"
+  private String validYamlContent1 = "harnessApiVersion: '1.0'\n"
       + "type: AWS_SSH\n"
       + "computeProviderName: aws\n"
       + "computeProviderType: AWS\n"
@@ -37,6 +37,20 @@ public class AwsInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandlerT
       + "infraMappingType: AWS_SSH\n"
       + "provisionInstances: false\n"
       + "region: us-east-1\n"
+      + "serviceName: SERVICE_NAME\n"
+      + "usePublicDns: true";
+
+  private String validYamlContent2 = "harnessApiVersion: '1.0'\n"
+      + "type: AWS_SSH\n"
+      + "computeProviderName: aws\n"
+      + "computeProviderType: AWS\n"
+      + "connectionType: Wings Key\n"
+      + "deploymentType: SSH\n"
+      + "desiredCapacity: 0\n"
+      + "hostNameConvention: ${host.ec2Instance.privateDnsName.split('.')[0]}\n"
+      + "infraMappingType: AWS_SSH\n"
+      + "provisionInstances: false\n"
+      + "provisionerName: PROVISIONER_NAME\n"
       + "serviceName: SERVICE_NAME\n"
       + "usePublicDns: true";
 
@@ -53,8 +67,7 @@ public class AwsInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandlerT
     setup(validYamlFilePath, infraMappingName);
   }
 
-  @Test
-  public void testCRUDAndGet() throws HarnessException, IOException {
+  public void testCRUDAndGet(String validYamlContent) throws HarnessException, IOException {
     ChangeContext<Yaml> changeContext = getChangeContext(validYamlContent, validYamlFilePath, yamlHandler);
 
     Yaml yamlObject = (Yaml) getYaml(validYamlContent, Yaml.class);
@@ -83,5 +96,15 @@ public class AwsInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandlerT
 
     AwsInfrastructureMapping afterDelete = yamlHandler.get(ACCOUNT_ID, validYamlFilePath);
     assertNull(afterDelete);
+  }
+
+  @Test
+  public void testCRUDAndGet1() throws HarnessException, IOException {
+    testCRUDAndGet(validYamlContent1);
+  }
+
+  @Test
+  public void testCRUDAndGet2() throws HarnessException, IOException {
+    testCRUDAndGet(validYamlContent1);
   }
 }

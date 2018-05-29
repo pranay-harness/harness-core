@@ -23,8 +23,8 @@ public abstract class InfraMappingYamlWithComputeProviderHandler<
   }
 
   protected void toBean(ChangeContext<Y> context, B bean, String appId, String envId, String computeProviderId,
-      String serviceId) throws HarnessException {
-    super.toBean(context, bean, appId, envId, serviceId);
+      String serviceId, String provisionerId) throws HarnessException {
+    super.toBean(context, bean, appId, envId, serviceId, provisionerId);
     Y yaml = context.getYaml();
     bean.setComputeProviderSettingId(computeProviderId);
     bean.setComputeProviderName(yaml.getComputeProviderName());

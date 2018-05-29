@@ -8,6 +8,7 @@ import com.google.inject.Singleton;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -19,6 +20,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
@@ -35,6 +37,7 @@ import java.util.regex.Pattern;
 public class YamlHelper {
   @Inject ServiceResourceService serviceResourceService;
   @Inject AppService appService;
+  @Inject InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject EnvironmentService environmentService;
   @Inject ArtifactStreamService artifactStreamService;
   @Inject InfrastructureMappingService infraMappingService;
@@ -100,6 +103,21 @@ public class YamlHelper {
 
   public String getServiceName(String yamlFilePath) {
     return extractParentEntityName(YamlType.SERVICE.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
+  }
+
+  public String getInfrastructureProvisionerId(String appId, String yamlFilePath) {
+    InfrastructureProvisioner provisioner = getInfrastructureProvisioner(appId, yamlFilePath);
+    Validator.notNullCheck("InfrastructureProvisioner null in the given yaml file: " + yamlFilePath, provisioner);
+    return provisioner.getUuid();
+  }
+
+  public InfrastructureProvisioner getInfrastructureProvisioner(String accountId, String yamlFilePath) {
+    String appId = getAppId(accountId, yamlFilePath);
+    Validator.notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
+    String provisionerName = getNameFromYamlFilePath(yamlFilePath);
+    Validator.notNullCheck(
+        "InfrastructureProvisioner name null in the given yaml file: " + yamlFilePath, provisionerName);
+    return infrastructureProvisionerService.getByName(appId, provisionerName);
   }
 
   public String getEnvironmentId(String appId, String yamlFilePath) {

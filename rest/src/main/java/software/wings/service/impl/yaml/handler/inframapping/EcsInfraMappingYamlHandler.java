@@ -73,7 +73,7 @@ public class EcsInfraMappingYamlHandler
   private void toBean(EcsInfrastructureMapping bean, ChangeContext<Yaml> changeContext, String appId, String envId,
       String computeProviderId, String serviceId) throws HarnessException {
     Yaml yaml = changeContext.getYaml();
-    super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId);
+    super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId, null);
     bean.setRegion(yaml.getRegion());
     bean.setClusterName(yaml.getCluster());
     if (isBlank(yaml.getLaunchType())) {

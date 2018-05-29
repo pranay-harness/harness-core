@@ -22,9 +22,9 @@ public abstract class PhysicalInfraMappingBaseYamlHandler<Y extends PhysicalInfr
 
   @Override
   protected void toBean(ChangeContext<Y> changeContext, B bean, String appId, String envId, String computeProviderId,
-      String serviceId) throws HarnessException {
+      String serviceId, String provisionerId) throws HarnessException {
     Yaml yaml = changeContext.getYaml();
-    super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId);
+    super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId, provisionerId);
     if (isNotBlank(yaml.getLoadBalancer())) {
       bean.setLoadBalancerId(getSettingId(bean.getAccountId(), appId, yaml.getLoadBalancer()));
     } else {

@@ -4,6 +4,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.Pipeline;
@@ -98,4 +99,6 @@ public interface YamlDirectoryService {
   String getRootPathBySettingAttribute(SettingAttribute settingAttribute);
 
   String getRootPathByPcfServiceSpecification(Service service, PcfServiceSpecification pcfServiceSpecification);
+
+  String getRootPathByInfraProvisioner(InfrastructureProvisioner provisioner);
 }

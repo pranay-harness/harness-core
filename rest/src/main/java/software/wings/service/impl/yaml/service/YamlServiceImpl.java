@@ -22,6 +22,7 @@ import static software.wings.beans.yaml.YamlType.INFRA_MAPPING;
 import static software.wings.beans.yaml.YamlType.LOADBALANCER_PROVIDER;
 import static software.wings.beans.yaml.YamlType.NOTIFICATION_GROUP;
 import static software.wings.beans.yaml.YamlType.PIPELINE;
+import static software.wings.beans.yaml.YamlType.PROVISIONER;
 import static software.wings.beans.yaml.YamlType.SERVICE;
 import static software.wings.beans.yaml.YamlType.VERIFICATION_PROVIDER;
 import static software.wings.beans.yaml.YamlType.WORKFLOW;
@@ -111,7 +112,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   private List<YamlType> getEntityProcessingOrder() {
     return Lists.newArrayList(ACCOUNT_DEFAULTS, CLOUD_PROVIDER, ARTIFACT_SERVER, COLLABORATION_PROVIDER,
         LOADBALANCER_PROVIDER, VERIFICATION_PROVIDER, NOTIFICATION_GROUP, APPLICATION, APPLICATION_DEFAULTS, SERVICE,
-        ARTIFACT_STREAM, COMMAND, DEPLOYMENT_SPECIFICATION, CONFIG_FILE_CONTENT, CONFIG_FILE, ENVIRONMENT,
+        PROVISIONER, ARTIFACT_STREAM, COMMAND, DEPLOYMENT_SPECIFICATION, CONFIG_FILE_CONTENT, CONFIG_FILE, ENVIRONMENT,
         INFRA_MAPPING, CONFIG_FILE_OVERRIDE_CONTENT, CONFIG_FILE_OVERRIDE, WORKFLOW, PIPELINE);
   }
 

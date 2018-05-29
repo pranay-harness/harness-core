@@ -8,6 +8,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import software.wings.yaml.BaseEntityYaml;
 
 import java.util.List;
 
@@ -39,4 +40,25 @@ public abstract class InfrastructureProvisioner extends Base {
     this.mappingBlueprints = mappingBlueprints;
   }
   public abstract String variableKey();
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
+  public abstract static class Yaml extends BaseEntityYaml {
+    private String name;
+    private String description;
+    private String infrastructureProvisionerType;
+    private List<NameValuePair.Yaml> variables;
+    private List<InfrastructureMappingBlueprint.Yaml> mappingBlueprints;
+
+    public Yaml(String type, String harnessApiVersion, String name, String description,
+        String infrastructureProvisionerType, List<NameValuePair.Yaml> variables,
+        List<InfrastructureMappingBlueprint.Yaml> mappingBlueprints) {
+      super(type, harnessApiVersion);
+      setName(name);
+      setDescription(description);
+      setInfrastructureProvisionerType(infrastructureProvisionerType);
+      setMappingBlueprints(mappingBlueprints);
+    }
+  }
 }

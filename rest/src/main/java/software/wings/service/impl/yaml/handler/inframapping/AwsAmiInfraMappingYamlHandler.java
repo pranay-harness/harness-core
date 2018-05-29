@@ -67,7 +67,7 @@ public class AwsAmiInfraMappingYamlHandler
       String computeProviderId, String serviceId) throws HarnessException {
     Yaml infraMappingYaml = changeContext.getYaml();
 
-    super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId);
+    super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId, null);
 
     bean.setRegion(infraMappingYaml.getRegion());
     bean.setAutoScalingGroupName(infraMappingYaml.getAutoScalingGroupName());

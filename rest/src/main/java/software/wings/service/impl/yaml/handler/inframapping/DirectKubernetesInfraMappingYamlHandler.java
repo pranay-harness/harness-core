@@ -108,8 +108,8 @@ public class DirectKubernetesInfraMappingYamlHandler
       String envId, String computeProviderId, String serviceId) throws HarnessException {
     Yaml infraMappingYaml = changeContext.getYaml();
 
-    super.toBean(changeContext, bean, appId, envId, serviceId);
-    super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId);
+    super.toBean(changeContext, bean, appId, envId, serviceId, null);
+    super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId, null);
     bean.setMasterUrl(infraMappingYaml.getMasterUrl());
     bean.setUsername(infraMappingYaml.getUsername());
     bean.setNamespace(infraMappingYaml.getNamespace());

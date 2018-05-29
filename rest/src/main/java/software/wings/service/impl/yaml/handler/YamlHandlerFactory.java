@@ -23,6 +23,7 @@ import software.wings.service.impl.yaml.handler.deploymentspec.lambda.DefaultSpe
 import software.wings.service.impl.yaml.handler.deploymentspec.lambda.FunctionSpecificationYamlHandler;
 import software.wings.service.impl.yaml.handler.environment.EnvironmentYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.InfraMappingYamlHandler;
+import software.wings.service.impl.yaml.handler.infraprovisioner.InfrastructureProvisionerYamlHandler;
 import software.wings.service.impl.yaml.handler.notification.NotificationGroupYamlHandler;
 import software.wings.service.impl.yaml.handler.notification.NotificationRulesYamlHandler;
 import software.wings.service.impl.yaml.handler.service.ServiceYamlHandler;
@@ -53,10 +54,12 @@ public class YamlHandlerFactory {
   @Inject private Map<String, ArtifactStreamYamlHandler> artifactStreamHelperMap;
   @Inject private Map<String, InfraMappingYamlHandler> infraMappingHelperMap;
   @Inject private Map<String, WorkflowYamlHandler> workflowYamlHelperMap;
+  @Inject private Map<String, InfrastructureProvisionerYamlHandler> provisionerYamlHandlerMap;
   @Inject private Map<String, CommandUnitYamlHandler> commandUnitYamlHandlerMap;
   @Inject private Map<String, DeploymentSpecificationYamlHandler> deploymentSpecYamlHandlerMap;
   @Inject private Map<String, ArtifactServerYamlHandler> artifactServerYamlHelperMap;
   @Inject private Map<String, VerificationProviderYamlHandler> verificationProviderYamlHelperMap;
+  @Inject private Map<String, InfrastructureProvisionerYamlHandler> infrastructureProvisionerYamlHandler;
   @Inject private Map<String, CollaborationProviderYamlHandler> collaborationProviderYamlHelperMap;
   @Inject private Map<String, CloudProviderYamlHandler> cloudProviderYamlHelperMap;
 
@@ -143,6 +146,9 @@ public class YamlHandlerFactory {
         break;
       case WORKFLOW:
         yamlHandler = workflowYamlHelperMap.get(subType);
+        break;
+      case PROVISIONER:
+        yamlHandler = provisionerYamlHandlerMap.get(subType);
         break;
       case NAME_VALUE_PAIR:
         yamlHandler = nameValuePairYamlHandler;
