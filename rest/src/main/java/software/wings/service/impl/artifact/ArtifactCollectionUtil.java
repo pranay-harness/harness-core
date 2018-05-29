@@ -5,6 +5,7 @@ import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.BAMBOO;
+import static software.wings.beans.artifact.ArtifactStreamType.GCS;
 import static software.wings.beans.artifact.ArtifactStreamType.JENKINS;
 import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
 import static software.wings.common.Constants.ARTIFACT_PATH;
@@ -60,7 +61,7 @@ public class ArtifactCollectionUtil {
       }
       metadata.put(BUILD_NO, buildDetails.getNumber());
       return metadata;
-    } else if (artifactStreamType.equals(AMAZON_S3.name())) {
+    } else if (artifactStreamType.equals(AMAZON_S3.name()) || artifactStreamType.equals(GCS.name())) {
       Map<String, String> buildParameters = buildDetails.getBuildParameters();
       metadata.put(ARTIFACT_PATH, buildParameters.get(ARTIFACT_PATH));
       metadata.put(ARTIFACT_FILE_NAME, buildParameters.get(ARTIFACT_PATH));
