@@ -11,16 +11,15 @@ import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 
-import com.mongodb.DBCursor;
 import com.mongodb.DuplicateKeyException;
 import org.mongodb.morphia.query.CountOptions;
-import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
+import software.wings.dl.HIterator;
 import software.wings.exception.WingsException;
 import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedData;
@@ -197,11 +196,10 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   @Override
   public Collection<VaultConfig> listVaultConfigs(String accountId, boolean maskSecret) {
     List<VaultConfig> rv = new ArrayList<>();
-
-    final MorphiaIterator<VaultConfig, VaultConfig> query =
-        wingsPersistence.createQuery(VaultConfig.class).filter("accountId", accountId).order("-createdAt").fetch();
-
-    try (DBCursor cursor = query.getCursor()) {
+    try (HIterator<VaultConfig> query = new HIterator<>(wingsPersistence.createQuery(VaultConfig.class)
+                                                            .filter("accountId", accountId)
+                                                            .order("-createdAt")
+                                                            .fetch())) {
       while (query.hasNext()) {
         VaultConfig vaultConfig = query.next();
         Query<EncryptedData> encryptedDataQuery =

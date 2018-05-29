@@ -15,17 +15,16 @@ import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.WriteResult;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.DatastoreImpl;
-import org.mongodb.morphia.query.MorphiaIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Activity;
 import software.wings.beans.Log;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
+import software.wings.dl.HIterator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -151,22 +150,20 @@ public class LogServiceImpl implements LogService {
   public void purgeActivityLogs() {
     long startTime = System.currentTimeMillis();
     logger.info("Purging activities Start time", startTime);
-    final MorphiaIterator<Activity, Activity> nonPurgedActivityIterator =
-        wingsPersistence.createQuery(Activity.class, excludeAuthority)
-            .filter("logPurged", false)
-            .field("createdAt")
-            .greaterThan(System.currentTimeMillis() - DataCleanUpJob.LOGS_RETENTION_TIME)
-            .fetchEmptyEntities();
 
-    try (DBCursor ignored = nonPurgedActivityIterator.getCursor()) {
+    try (HIterator<Activity> nonPurgedActivityIterator =
+             new HIterator<>(wingsPersistence.createQuery(Activity.class, excludeAuthority)
+                                 .filter("logPurged", false)
+                                 .field("createdAt")
+                                 .greaterThan(System.currentTimeMillis() - DataCleanUpJob.LOGS_RETENTION_TIME)
+                                 .fetchEmptyEntities())) {
       while (nonPurgedActivityIterator.hasNext()) {
         String activityId = nonPurgedActivityIterator.next().getUuid();
         List<String> idsToKeep = new ArrayList<>();
-        final MorphiaIterator<Log, Log> logIterator = wingsPersistence.createQuery(Log.class, excludeAuthority)
-                                                          .filter("activityId", activityId)
-                                                          .order("-createdAt")
-                                                          .fetchEmptyEntities();
-        try (DBCursor cursor = logIterator.getCursor()) {
+        try (HIterator<Log> logIterator = new HIterator<>(wingsPersistence.createQuery(Log.class, excludeAuthority)
+                                                              .filter("activityId", activityId)
+                                                              .order("-createdAt")
+                                                              .fetchEmptyEntities())) {
           while (logIterator.hasNext()) {
             idsToKeep.add(logIterator.next().getUuid());
             if (idsToKeep.size() >= NUM_OF_LOGS_TO_KEEP) {

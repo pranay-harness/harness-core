@@ -29,15 +29,14 @@ import static software.wings.sm.ExecutionStatus.SUCCESS;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.collect.Streams;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import com.mongodb.DBCursor;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.time.EpochUtil;
 import org.mongodb.morphia.aggregation.Accumulator;
 import org.mongodb.morphia.aggregation.Group;
-import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import software.wings.api.ServiceElement;
 import software.wings.beans.Application;
@@ -59,6 +58,7 @@ import software.wings.beans.stats.TopConsumersStatistics;
 import software.wings.beans.stats.UserStatistics;
 import software.wings.beans.stats.UserStatistics.AppDeployment;
 import software.wings.beans.stats.WingsStatistics;
+import software.wings.dl.HIterator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.UserThreadLocal;
@@ -79,6 +79,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
 /**
  * Created by anubhaw on 8/15/16.
  */
@@ -125,21 +127,28 @@ public class StatisticsServiceImpl implements StatisticsService {
     topConsumers.forEach(topConsumer -> topConsumer.setAppName(appIdMap.get(topConsumer.getAppId()).getName()));
     return new TopConsumersStatistics(topConsumers);
   }
+
   @Override
   public Map<String, AppKeyStatistics> getApplicationKeyStats(List<String> appIds, int numOfDays) {
     long fromDateEpochMilli =
         EpochUtil.calculateEpochMilliOfStartOfDayForXDaysInPastFromNow(numOfDays, EpochUtil.PST_ZONE_ID);
 
-    Map<String, AppKeyStatistics> appKeyStatisticsMap = new HashMap<>();
+    try (HIterator<WorkflowExecution> workflowExecutionIterator =
+             workflowExecutionService.obtainWorkflowExecutionIterator(appIds, fromDateEpochMilli)) {
+      final Stream<WorkflowExecution> stream = Streams.stream(workflowExecutionIterator);
+      return calculateStringAppKeyStatisticsMap(appIds, stream);
+    }
+  }
 
-    List<WorkflowExecution> workflowExecutions =
-        workflowExecutionService.calculateWorkflowExecutions(appIds, fromDateEpochMilli);
-
+  @Override
+  public Map<String, AppKeyStatistics> calculateStringAppKeyStatisticsMap(
+      List<String> appIds, Stream<WorkflowExecution> stream) {
     Map<String, List<WorkflowExecution>> workflowExecutionsByApp =
-        workflowExecutions.stream().collect(groupingBy(WorkflowExecution::getAppId));
+        stream.collect(groupingBy(WorkflowExecution::getAppId));
 
     appIds.forEach(appId -> workflowExecutionsByApp.computeIfAbsent(appId, id -> asList()));
 
+    Map<String, AppKeyStatistics> appKeyStatisticsMap = new HashMap<>();
     workflowExecutionsByApp.forEach((appId, wexList) -> {
       AppKeyStatistics keyStatistics = getAppKeyStatistics(wexList);
       appKeyStatisticsMap.put(appId, keyStatistics);
@@ -217,7 +226,7 @@ public class StatisticsServiceImpl implements StatisticsService {
       authorizedAppIds = appIds;
     }
     List<WorkflowExecution> workflowExecutions =
-        workflowExecutionService.calculateWorkflowExecutions(authorizedAppIds, statsFetchedOn);
+        workflowExecutionService.obtainWorkflowExecutions(authorizedAppIds, statsFetchedOn);
 
     Map<String, List<WorkflowExecution>> wflExecutionsByApp = new HashMap<>();
     workflowExecutions.forEach(wflExecution
@@ -253,7 +262,7 @@ public class StatisticsServiceImpl implements StatisticsService {
       return deploymentStats;
     }
     List<WorkflowExecution> workflowExecutions =
-        workflowExecutionService.calculateWorkflowExecutions(appIds, fromDateEpochMilli);
+        workflowExecutionService.obtainWorkflowExecutions(appIds, fromDateEpochMilli);
     Map<EnvironmentType, List<WorkflowExecution>> wflExecutionByEnvType =
         workflowExecutions.parallelStream().collect(groupingBy(wex -> PROD.equals(wex.getEnvType()) ? PROD : NON_PROD));
 
@@ -278,7 +287,7 @@ public class StatisticsServiceImpl implements StatisticsService {
       }
     }
     List<WorkflowExecution> workflowExecutions =
-        workflowExecutionService.calculateWorkflowExecutions(appIds, fromDateEpochMilli);
+        workflowExecutionService.obtainWorkflowExecutions(appIds, fromDateEpochMilli);
     Comparator<TopConsumer> byCount = comparing(TopConsumer::getTotalCount, reverseOrder());
 
     List<TopConsumer> allTopConsumers = new ArrayList<>();
@@ -530,9 +539,8 @@ public class StatisticsServiceImpl implements StatisticsService {
     Map<String, String> serviceAppIdMap = new HashMap<>();
     Map<String, TopConsumer> topConsumerMap = new HashMap<>();
     long epochMilli = getEpochMilliPSTZone(days);
-    MorphiaIterator<WorkflowExecution, WorkflowExecution> executionIterator =
-        workflowExecutionService.obtainWorkflowExecutionIterator(appIds, epochMilli);
-    try (DBCursor ignored = executionIterator.getCursor()) {
+    try (HIterator<WorkflowExecution> executionIterator =
+             workflowExecutionService.obtainWorkflowExecutionIterator(appIds, epochMilli)) {
       while (executionIterator.hasNext()) {
         WorkflowExecution workflowExecution = executionIterator.next();
         if (!ExecutionStatus.isFinalStatus(workflowExecution.getStatus())

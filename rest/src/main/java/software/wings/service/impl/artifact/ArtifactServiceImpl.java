@@ -44,11 +44,9 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import com.mongodb.BasicDBObject;
-import com.mongodb.DBCursor;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.query.FindOptions;
-import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -64,6 +62,7 @@ import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.collect.CollectEvent;
 import software.wings.core.queue.Queue;
+import software.wings.dl.HIterator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -330,9 +329,8 @@ public class ArtifactServiceImpl implements ArtifactService {
 
   @Override
   public void pruneByApplication(String appId) {
-    final MorphiaIterator<Artifact, Artifact> iterator =
-        wingsPersistence.createQuery(Artifact.class).filter(APP_ID_KEY, appId).fetchEmptyEntities();
-    try (DBCursor ignored = iterator.getCursor()) {
+    try (HIterator<Artifact> iterator = new HIterator<>(
+             wingsPersistence.createQuery(Artifact.class).filter(APP_ID_KEY, appId).fetchEmptyEntities())) {
       while (iterator.hasNext()) {
         // TODO: Batch deleting
         prune(appId, iterator.next().getUuid());
@@ -450,12 +448,11 @@ public class ArtifactServiceImpl implements ArtifactService {
 
   @Override
   public void deleteArtifacts(int retentionSize) {
-    MorphiaIterator<ArtifactStream, ArtifactStream> artifactStreams = wingsPersistence.createQuery(ArtifactStream.class)
-                                                                          .project(ARTIFACT_STREAM_TYPE_KEY, true)
-                                                                          .project(APP_ID_KEY, true)
-                                                                          .project(METADATA_ONLY_KEY, true)
-                                                                          .fetch();
-    try (DBCursor ignored = artifactStreams.getCursor()) {
+    try (HIterator<ArtifactStream> artifactStreams = new HIterator(wingsPersistence.createQuery(ArtifactStream.class)
+                                                                       .project(ARTIFACT_STREAM_TYPE_KEY, true)
+                                                                       .project(APP_ID_KEY, true)
+                                                                       .project(METADATA_ONLY_KEY, true)
+                                                                       .fetch())) {
       while (artifactStreams.hasNext()) {
         ArtifactStream artifactStream = artifactStreams.next();
         if (artifactStream.isMetadataOnly() || metaDataOnlyStreams.contains(artifactStream.getArtifactStreamType())) {

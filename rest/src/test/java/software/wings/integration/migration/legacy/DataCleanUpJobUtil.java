@@ -4,11 +4,9 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import com.mongodb.BasicDBObject;
-import com.mongodb.DBCursor;
 import org.bson.types.ObjectId;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -20,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactFile;
+import software.wings.dl.HIterator;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
 import software.wings.scheduler.DataCleanUpJob;
@@ -178,8 +177,7 @@ public class DataCleanUpJobUtil extends WingsBaseTest {
 
       List<Artifact> artifacts = new ArrayList<>();
 
-      final MorphiaIterator<Artifact, Artifact> iterator = artifactQuery.fetch();
-      try (DBCursor cursor = iterator.getCursor()) {
+      try (HIterator<Artifact> iterator = new HIterator(artifactQuery.fetch())) {
         while (iterator.hasNext()) {
           artifacts.add(iterator.next());
         }
@@ -209,8 +207,7 @@ public class DataCleanUpJobUtil extends WingsBaseTest {
                                 .disableValidation();
 
       List<Artifact> artifacts = new ArrayList<>();
-      final MorphiaIterator<Artifact, Artifact> iterator = artifactQuery.fetch();
-      try (DBCursor ignored = iterator.getCursor()) {
+      try (HIterator<Artifact> iterator = new HIterator(artifactQuery.fetch())) {
         while (iterator.hasNext()) {
           artifacts.add(iterator.next());
         }

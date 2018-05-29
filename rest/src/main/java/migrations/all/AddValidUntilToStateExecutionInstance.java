@@ -5,11 +5,10 @@ import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
 import migrations.Migration;
-import org.mongodb.morphia.query.MorphiaIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.dl.HIterator;
 import software.wings.dl.WingsPersistence;
 import software.wings.sm.StateExecutionInstance;
 
@@ -27,15 +26,13 @@ public class AddValidUntilToStateExecutionInstance implements Migration {
     final DBCollection collection = wingsPersistence.getCollection("stateExecutionInstances");
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
 
-    final MorphiaIterator<StateExecutionInstance, StateExecutionInstance> stateExecutionInstances =
-        wingsPersistence.createQuery(StateExecutionInstance.class)
-            .field("validUntil")
-            .doesNotExist()
-            .project("createdAt", true)
-            .fetch();
-
     int i = 1;
-    try (DBCursor ignored = stateExecutionInstances.getCursor()) {
+    try (HIterator<StateExecutionInstance> stateExecutionInstances =
+             new HIterator<>(wingsPersistence.createQuery(StateExecutionInstance.class)
+                                 .field("validUntil")
+                                 .doesNotExist()
+                                 .project("createdAt", true)
+                                 .fetch())) {
       while (stateExecutionInstances.hasNext()) {
         final StateExecutionInstance stateExecutionInstance = stateExecutionInstances.next();
         final ZonedDateTime zonedDateTime =

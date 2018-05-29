@@ -10,10 +10,10 @@ import software.wings.rules.Integration;
 @Integration
 @Ignore
 public class MigrationTest extends WingsBaseTest {
-  @Inject private WorkflowKeywordsMigration workflowKeywordsMigration;
+  @Inject private AddValidUntilToWaitInstance migration;
 
   @Test
-  public void shouldMigrateWorkflowKeywords() {
-    workflowKeywordsMigration.migrate();
+  public void shouldMigrate() {
+    migration.migrate();
   }
 }

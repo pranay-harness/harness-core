@@ -2,15 +2,12 @@ package migrations.all;
 
 import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
 import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 
 import com.google.inject.Inject;
 
-import com.mongodb.DBCursor;
 import migrations.Migration;
-import org.mongodb.morphia.query.MorphiaIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
@@ -20,6 +17,7 @@ import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
+import software.wings.dl.HIterator;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
@@ -36,10 +34,7 @@ public class FixMaxInstancesFieldInContainerSetup implements Migration {
   @Override
   public void migrate() {
     logger.info("Retrieving applications");
-    MorphiaIterator<Application, Application> iterator =
-        wingsPersistence.createQuery(Application.class, excludeAuthority).fetch();
-
-    try (DBCursor cursor = iterator.getCursor()) {
+    try (HIterator<Application> iterator = new HIterator<>(wingsPersistence.createQuery(Application.class).fetch())) {
       while (iterator.hasNext()) {
         Application app = iterator.next();
         List<Workflow> workflows =

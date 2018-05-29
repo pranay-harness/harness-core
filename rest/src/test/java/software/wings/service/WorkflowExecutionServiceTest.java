@@ -58,6 +58,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.command.Command;
+import software.wings.dl.HIterator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -308,7 +309,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   public void shouldTestWorkflowExecutionIterator() {
     when(query.fetch()).thenReturn(executionIterator);
     long fromDateEpochMilli = calculateEpochMilliOfStartOfDayForXDaysInPastFromNow(30, PST_ZONE_ID);
-    MorphiaIterator<WorkflowExecution, WorkflowExecution> executionIterator =
+    HIterator<WorkflowExecution> executionIterator =
         workflowExecutionService.obtainWorkflowExecutionIterator(Arrays.asList(APP_ID), fromDateEpochMilli);
     assertNotNull(executionIterator);
   }
@@ -333,7 +334,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
 
     long fromDateEpochMilli = calculateEpochMilliOfStartOfDayForXDaysInPastFromNow(30, PST_ZONE_ID);
     List<WorkflowExecution> workflowExecutions =
-        workflowExecutionService.calculateWorkflowExecutions(Arrays.asList(APP_ID), fromDateEpochMilli);
+        workflowExecutionService.obtainWorkflowExecutions(Arrays.asList(APP_ID), fromDateEpochMilli);
     assertNotNull(workflowExecutions);
     Assertions.assertThat(workflowExecutions).hasSize(2);
   }

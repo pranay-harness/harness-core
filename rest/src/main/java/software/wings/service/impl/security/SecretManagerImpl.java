@@ -7,6 +7,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.dl.HQuery.excludeAuthority;
+import static software.wings.dl.HQuery.excludeCount;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.security.EncryptionType.LOCAL;
@@ -23,12 +24,9 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 
-import com.mongodb.DBCursor;
 import com.mongodb.DuplicateKeyException;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.io.IOUtils;
-import org.mongodb.morphia.query.FindOptions;
-import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,6 +50,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.KmsSetupAlert;
 import software.wings.core.queue.Queue;
+import software.wings.dl.HIterator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -338,34 +337,22 @@ public class SecretManagerImpl implements SecretManager {
   public List<SecretChangeLog> getChangeLogs(String entityId, SettingVariableTypes variableType)
       throws IllegalAccessException {
     final List<String> secretIds = getSecretIds(entityId, variableType);
-    List<SecretChangeLog> rv = new ArrayList<>();
-    final MorphiaIterator<SecretChangeLog, SecretChangeLog> secretChangeLogsQuery =
-        wingsPersistence.createQuery(SecretChangeLog.class)
-            .field("encryptedDataId")
-            .hasAnyOf(secretIds)
-            .order("-createdAt")
-            .fetch();
-
-    try (DBCursor cursor = secretChangeLogsQuery.getCursor()) {
-      while (secretChangeLogsQuery.hasNext()) {
-        rv.add(secretChangeLogsQuery.next());
-      }
-    }
-
-    return rv;
+    return wingsPersistence.createQuery(SecretChangeLog.class, excludeCount)
+        .field("encryptedDataId")
+        .hasAnyOf(secretIds)
+        .order("-createdAt")
+        .asList();
   }
 
   @Override
   public Collection<UuidAware> listEncryptedValues(String accountId) {
     Map<String, UuidAware> rv = new HashMap<>();
-    final MorphiaIterator<EncryptedData, EncryptedData> query =
-        wingsPersistence.createQuery(EncryptedData.class)
-            .filter("accountId", accountId)
-            .field("type")
-            .hasNoneOf(Lists.newArrayList(SettingVariableTypes.SECRET_TEXT, SettingVariableTypes.CONFIG_FILE))
-            .fetch();
-
-    try (DBCursor cursor = query.getCursor()) {
+    try (HIterator<EncryptedData> query = new HIterator<>(
+             wingsPersistence.createQuery(EncryptedData.class)
+                 .filter("accountId", accountId)
+                 .field("type")
+                 .hasNoneOf(Lists.newArrayList(SettingVariableTypes.SECRET_TEXT, SettingVariableTypes.CONFIG_FILE))
+                 .fetch())) {
       while (query.hasNext()) {
         EncryptedData data = query.next();
         if (data.getParentIds() != null && data.getType() != SettingVariableTypes.KMS) {
@@ -444,8 +431,7 @@ public class SecretManagerImpl implements SecretManager {
       query = query.field("type").notEqual(SettingVariableTypes.VAULT);
     }
 
-    final MorphiaIterator<EncryptedData, EncryptedData> iterator = query.fetch();
-    try (DBCursor cursor = iterator.getCursor()) {
+    try (HIterator<EncryptedData> iterator = new HIterator<>(query.fetch())) {
       while (iterator.hasNext()) {
         EncryptedData dataToTransition = iterator.next();
         transitionKmsQueue.send(KmsTransitionEvent.builder()
@@ -882,11 +868,10 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public List<EncryptedData> listSecrets(String accountId, SettingVariableTypes type) throws IllegalAccessException {
     List<EncryptedData> rv = new ArrayList<>();
-    final MorphiaIterator<EncryptedData, EncryptedData> iterator = wingsPersistence.createQuery(EncryptedData.class)
-                                                                       .filter("accountId", accountId)
-                                                                       .filter("type", type)
-                                                                       .fetch(new FindOptions());
-    try (DBCursor cursor = iterator.getCursor()) {
+    try (HIterator<EncryptedData> iterator = new HIterator<>(wingsPersistence.createQuery(EncryptedData.class)
+                                                                 .filter("accountId", accountId)
+                                                                 .filter("type", type)
+                                                                 .fetch())) {
       while (iterator.hasNext()) {
         EncryptedData encryptedData = iterator.next();
         encryptedData.setEncryptedValue(SECRET_MASK.toCharArray());

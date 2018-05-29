@@ -46,7 +46,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.aggregation.AggregationPipeline;
 import org.mongodb.morphia.aggregation.Group;
-import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Activity;
@@ -66,6 +65,7 @@ import software.wings.beans.stats.TopConsumer;
 import software.wings.beans.stats.TopConsumersStatistics;
 import software.wings.beans.stats.UserStatistics;
 import software.wings.beans.stats.UserStatistics.AppDeployment;
+import software.wings.dl.HIterator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.UserThreadLocal;
@@ -95,7 +95,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
   @Inject @InjectMocks private StatisticsService statisticsService;
 
   @Mock private AggregationPipeline aggregationPipeline;
-  @Mock private MorphiaIterator<WorkflowExecution, WorkflowExecution> executionIterator;
+  @Mock private HIterator<WorkflowExecution> executionIterator;
   @Mock private DBCursor dbCursor;
 
   @Before
@@ -107,7 +107,6 @@ public class StatisticsServiceTest extends WingsBaseTest {
     when(aggregationPipeline.group(anyList(), any(Group.class))).thenReturn(aggregationPipeline);
     when(aggregationPipeline.group(anyString(), any(Group.class))).thenReturn(aggregationPipeline);
     when(workflowExecutionService.obtainWorkflowExecutionIterator(anyList(), anyLong())).thenReturn(executionIterator);
-    when(executionIterator.getCursor()).thenReturn(dbCursor);
   }
 
   @Test
@@ -451,7 +450,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
             .withCreatedAt(startEpoch)
             .build());
 
-    when(workflowExecutionService.calculateWorkflowExecutions(anyList(), anyLong())).thenReturn(executions);
+    when(workflowExecutionService.obtainWorkflowExecutions(anyList(), anyLong())).thenReturn(executions);
 
     ServiceInstanceStatistics statistics = statisticsService.getServiceInstanceStatistics(ACCOUNT_ID, null, 30);
     assertThat(statistics.getStatsMap()).isNotEmpty();
@@ -469,6 +468,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
 
     assertThat(statistics.getStatsMap().get(NON_PROD)).hasSize(1);
   }
+
   @Test
   public void shouldGetApplicationKeyStats() {
     long endEpoch = LocalDate.now(ZoneId.of("America/Los_Angeles"))
@@ -519,9 +519,8 @@ public class StatisticsServiceTest extends WingsBaseTest {
             .withCreatedAt(startEpoch)
             .build());
 
-    when(workflowExecutionService.calculateWorkflowExecutions(anyList(), anyLong())).thenReturn(executions);
-
-    Map<String, AppKeyStatistics> applicationKeyStats = statisticsService.getApplicationKeyStats(asList(APP_ID), 10);
+    Map<String, AppKeyStatistics> applicationKeyStats =
+        statisticsService.calculateStringAppKeyStatisticsMap(asList(APP_ID), executions.stream());
     AppKeyStatistics appKeyStatistics = new AppKeyStatistics();
     appKeyStatistics.setStatsMap(ImmutableMap.of(PROD,
         anAppKeyStatistics().withArtifactCount(0).withDeploymentCount(2).withInstanceCount(2).build(), NON_PROD,
@@ -551,7 +550,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
             .withStatus(ExecutionStatus.FAILED)
             .build());
 
-    when(workflowExecutionService.calculateWorkflowExecutions(anyList(), anyLong())).thenReturn(executions);
+    when(workflowExecutionService.obtainWorkflowExecutions(anyList(), anyLong())).thenReturn(executions);
 
     when(appService.list(any(PageRequest.class), eq(false), eq(0), eq(0)))
         .thenReturn(aPageResponse().withResponse(asList(anApplication().withUuid(APP_ID).build())).build());
@@ -585,7 +584,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
             .withStatus(ExecutionStatus.FAILED)
             .build());
 
-    when(workflowExecutionService.calculateWorkflowExecutions(anyList(), anyLong())).thenReturn(executions);
+    when(workflowExecutionService.obtainWorkflowExecutions(anyList(), anyLong())).thenReturn(executions);
 
     when(appService.list(any(PageRequest.class), eq(false), eq(0), eq(0)))
         .thenReturn(aPageResponse().withResponse(asList(anApplication().withUuid(APP_ID).build())).build());
@@ -653,7 +652,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
             .withCreatedAt(startEpoch)
             .build());
 
-    when(workflowExecutionService.calculateWorkflowExecutions(anyList(), anyLong())).thenReturn(executions);
+    when(workflowExecutionService.obtainWorkflowExecutions(anyList(), anyLong())).thenReturn(executions);
 
     DeploymentStatistics deploymentStatistics =
         statisticsService.getDeploymentStatistics(ACCOUNT_ID, asList(APP_ID), 30);

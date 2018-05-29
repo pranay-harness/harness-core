@@ -8,17 +8,16 @@ import static software.wings.dl.HQuery.excludeAuthority;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
-import com.mongodb.DBCursor;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import migrations.Migration;
 import migrations.MigrationList;
 import org.apache.commons.lang3.tuple.Pair;
-import org.mongodb.morphia.query.MorphiaIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Schema;
+import software.wings.dl.HIterator;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.lock.AcquiredLock;
@@ -75,10 +74,8 @@ public class MigrationServiceImpl implements MigrationService {
 
         logger.info("Running Git full sync on all the accounts");
 
-        final MorphiaIterator<Account, Account> accounts =
-            wingsPersistence.createQuery(Account.class, excludeAuthority).project("accountName", true).fetch();
-
-        try (DBCursor cursor = accounts.getCursor()) {
+        try (HIterator<Account> accounts = new HIterator<>(
+                 wingsPersistence.createQuery(Account.class, excludeAuthority).project("accountName", true).fetch())) {
           while (accounts.hasNext()) {
             Account account = accounts.next();
             try {

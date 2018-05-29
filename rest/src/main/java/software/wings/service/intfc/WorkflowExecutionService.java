@@ -1,7 +1,6 @@
 package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.query.MorphiaIterator;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.BuildExecutionSummary;
 import software.wings.beans.CountsByStatuses;
@@ -17,6 +16,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
+import software.wings.dl.HIterator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.impl.WorkflowExecutionUpdate;
@@ -289,10 +289,9 @@ public interface WorkflowExecutionService {
   WorkflowExecutionBaseline getBaselineDetails(
       String appId, String workflowExecutionId, String stateExecutionId, String currentExecId);
 
-  List<WorkflowExecution> calculateWorkflowExecutions(List<String> appIds, long fromDateEpochMilli);
+  List<WorkflowExecution> obtainWorkflowExecutions(List<String> appIds, long fromDateEpochMilli);
 
-  MorphiaIterator<WorkflowExecution, WorkflowExecution> obtainWorkflowExecutionIterator(
-      List<String> appIds, long epochMilli);
+  HIterator<WorkflowExecution> obtainWorkflowExecutionIterator(List<String> appIds, long epochMilli);
 
   List<Artifact> obtainLastGoodDeployedArtifacts(@NotEmpty String appId, @NotEmpty String workflowId);
 }
