@@ -78,8 +78,7 @@ public class GcsServiceImpl implements GcsService {
   public List<BuildDetails> getArtifactsBuildDetails(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails,
       String bucketName, List<String> artifactPaths, boolean isExpression) {
     try {
-      // boolean versioningEnabledForBucket = isVersioningEnabledForBucket(gcpConfig, encryptionDetails, bucketName);
-      boolean versioningEnabledForBucket = false;
+      boolean versioningEnabledForBucket = isVersioningEnabledForBucket(gcpConfig, encryptionDetails, bucketName);
       List<BuildDetails> buildDetailsList = Lists.newArrayList();
 
       for (String artifactPath : artifactPaths) {
@@ -171,13 +170,16 @@ public class GcsServiceImpl implements GcsService {
 
   public boolean isVersioningEnabledForBucket(
       GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String bucketName) {
-    boolean versioningEnabled;
+    boolean versioningEnabled = false;
     try {
       encryptionService.decrypt(gcpConfig, encryptionDetails);
       // Get versioning info for given bucket
       Storage gcsStorageService = gcpHelperService.getGcsStorageService(gcpConfig, encryptionDetails);
       Storage.Buckets.Get request = gcsStorageService.buckets().get(bucketName);
-      versioningEnabled = request.execute().getVersioning().getEnabled();
+
+      if (request.execute().getVersioning() != null) {
+        versioningEnabled = request.execute().getVersioning().getEnabled();
+      }
     } catch (Exception e) {
       throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
           .addParam("message", "Could not get versioning information for GCS bucket. " + e.getMessage());
