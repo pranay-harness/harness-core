@@ -24,10 +24,10 @@ This is not to be run as an automated test[hence the @Ignore].
 public class AzureIntegrationTest {
   private static final Logger logger = LoggerFactory.getLogger(AzureIntegrationTest.class);
 
-  private static final String clientId = "2d7ae800-e1dd-4098-97f8-f6ae330abf82";
-  private static final String tenantId = "b229b2bb-5f33-4d22-bce0-730f6474e906";
-  private static final String key = "7cRKp5OKktQnxDeFYtGrpV2qYk3pyIMdB35siZpFa7o=";
-  private static final String subscriptionId = "12d2db62-5aa9-471d-84bb-faa489b3e319";
+  private static final String clientId = "placeholder";
+  private static final String tenantId = "placeholder";
+  private static final String key = "placeholder";
+  private static final String subscriptionId = "placeholder";
 
   private static AzureHelperService azureHelperService = new AzureHelperService();
 
