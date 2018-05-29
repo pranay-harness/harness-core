@@ -103,4 +103,6 @@ public interface YamlResourceService {
 
   RestResponse<YamlPayload> getPcfServiceSpecification(
       String accountId, String appId, String pcfServiceSpecificationId);
+
+  RestResponse<YamlPayload> getProvisioner(String appId, String provisionerId);
 }

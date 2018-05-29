@@ -18,6 +18,7 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.Pipeline;
@@ -43,6 +44,7 @@ import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -78,6 +80,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   @Inject private YamlGitService yamlGitSyncService;
   @Inject private YamlHandlerFactory yamlHandlerFactory;
   @Inject private NotificationSetupService notificationSetupService;
+  @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
 
   private static final Logger logger = LoggerFactory.getLogger(YamlResourceServiceImpl.class);
 
@@ -207,6 +210,26 @@ public class YamlResourceServiceImpl implements YamlResourceService {
 
     return YamlHelper.getYamlRestResponse(
         yamlGitSyncService, workflow.getUuid(), accountId, workflowYaml, workflow.getName() + YAML_EXTENSION);
+  }
+
+  /**
+   * Gets the yaml for a workflow
+   *
+   * @param appId     the app id
+   * @param provisionerId the provisioner id
+   * @return the rest response
+   */
+  public RestResponse<YamlPayload> getProvisioner(String appId, String provisionerId) {
+    String accountId = appService.getAccountIdByAppId(appId);
+    Validator.notNullCheck("No account found for appId:" + appId, accountId);
+    InfrastructureProvisioner infrastructureProvisioner = infrastructureProvisionerService.get(appId, provisionerId);
+    InfrastructureProvisioner.Yaml provisionerYaml =
+        (InfrastructureProvisioner.Yaml) yamlHandlerFactory
+            .getYamlHandler(YamlType.PROVISIONER, infrastructureProvisioner.getInfrastructureProvisionerType())
+            .toYaml(infrastructureProvisioner, appId);
+
+    return YamlHelper.getYamlRestResponse(yamlGitSyncService, infrastructureProvisioner.getUuid(), accountId,
+        provisionerYaml, provisionerYaml.getName() + YAML_EXTENSION);
   }
 
   /**

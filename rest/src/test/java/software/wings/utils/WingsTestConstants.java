@@ -12,6 +12,8 @@ public interface WingsTestConstants {
 
   String SERVICE_ID = "SERVICE_ID";
 
+  String PROVISIONER_ID = "PROVISIONER_ID";
+
   String SERVICE_COMMAND_ID = "SERVICE_COMMAND_ID";
 
   String TARGET_SERVICE_ID = "TARGET_SERVICE_ID";
@@ -21,6 +23,8 @@ public interface WingsTestConstants {
   String SERVICE_NAME = "SERVICE_NAME";
 
   String INFRA_NAME = "INFRA_NAME";
+
+  String PROVISIONER_NAME = "PROVISIONER_NAME";
 
   String ENV_ID = "ENV_ID";
 

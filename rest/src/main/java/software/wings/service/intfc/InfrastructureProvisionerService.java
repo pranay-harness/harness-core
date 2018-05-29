@@ -34,6 +34,7 @@ public interface InfrastructureProvisionerService extends OwnedByApplication {
   InfrastructureProvisioner update(@Valid InfrastructureProvisioner infrastructureProvisioner);
 
   InfrastructureProvisioner get(String appId, String infrastructureProvisionerId);
+  InfrastructureProvisioner getByName(String appId, String provisionerName);
 
   void delete(String appId, String infrastructureProvisionerId);
 

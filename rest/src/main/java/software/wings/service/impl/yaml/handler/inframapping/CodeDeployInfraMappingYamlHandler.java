@@ -65,7 +65,7 @@ public class CodeDeployInfraMappingYamlHandler
   private void toBean(CodeDeployInfrastructureMapping bean, ChangeContext<Yaml> context, String appId, String envId,
       String computeProviderId, String serviceId) throws HarnessException {
     Yaml infraMappingYaml = context.getYaml();
-    super.toBean(context, bean, appId, envId, computeProviderId, serviceId);
+    super.toBean(context, bean, appId, envId, computeProviderId, serviceId, null);
 
     bean.setRegion(infraMappingYaml.getRegion());
     bean.setApplicationName(infraMappingYaml.getApplicationName());

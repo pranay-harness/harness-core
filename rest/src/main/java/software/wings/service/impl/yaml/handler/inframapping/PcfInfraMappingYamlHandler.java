@@ -62,7 +62,7 @@ public class PcfInfraMappingYamlHandler
       String computeProviderId, String serviceId) throws HarnessException {
     Yaml yaml = changeContext.getYaml();
 
-    super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId);
+    super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId, null);
     bean.setOrganization(yaml.getOrganization());
     bean.setSpace(yaml.getSpace());
     bean.setTempRouteMap(yaml.getTempRouteMap());

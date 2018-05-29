@@ -7,6 +7,7 @@ import static software.wings.beans.InfrastructureMappingBlueprint.CloudProviderT
 import com.google.common.collect.ImmutableMap;
 
 import lombok.Builder;
+import lombok.Data;
 import lombok.Value;
 import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.validator.constraints.NotBlank;
@@ -55,5 +56,15 @@ public class InfrastructureMappingBlueprint {
     }
 
     return infrastructureMappingType;
+  }
+
+  @Value
+  @Builder
+  @Data
+  public static final class Yaml {
+    private String serviceName;
+    private DeploymentType deploymentType;
+    private CloudProviderType cloudProviderType;
+    private List<NameValuePair.Yaml> properties;
   }
 }

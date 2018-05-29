@@ -4,6 +4,7 @@ import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.Pipeline;
@@ -72,4 +73,7 @@ public interface EntityUpdateService {
 
   GitFileChange getPcfServiceSpecification(
       String accountId, Service service, PcfServiceSpecification pcfServiceSpecification, ChangeType changeType);
+
+  GitFileChange getInfraProvisionerGitSyncFile(
+      String accountId, InfrastructureProvisioner provisioner, ChangeType changeType);
 }

@@ -13,6 +13,7 @@ public interface YamlConstants {
   String SETUP_FOLDER = "Setup";
   String APPLICATIONS_FOLDER = "Applications";
   String SERVICES_FOLDER = "Services";
+  String PROVISIONERS_FOLDER = "Provisioners";
   String COMMANDS_FOLDER = "Commands";
   String CONFIG_FILES_FOLDER = "Config Files";
   String ENVIRONMENTS_FOLDER = "Environments";

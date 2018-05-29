@@ -16,6 +16,10 @@ public enum EntityType {
    */
   SERVICE,
   /**
+   * Provisioner entity type.
+   */
+  PROVISIONER,
+  /**
    * Environment entity type.
    */
   ENVIRONMENT,

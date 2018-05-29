@@ -13,6 +13,7 @@ import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.Pipeline;
@@ -298,6 +299,17 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
     }
     return createGitFileChange(
         accountId, yamlDirectoryService.getRootPathByWorkflow(workflow), workflow.getName(), yaml, changeType, false);
+  }
+
+  @Override
+  public GitFileChange getInfraProvisionerGitSyncFile(
+      String accountId, InfrastructureProvisioner provisioner, ChangeType changeType) {
+    String yaml = null;
+    if (!changeType.equals(ChangeType.DELETE)) {
+      yaml = yamlResourceService.getProvisioner(provisioner.getAppId(), provisioner.getUuid()).getResource().getYaml();
+    }
+    return createGitFileChange(accountId, yamlDirectoryService.getRootPathByInfraProvisioner(provisioner),
+        provisioner.getName(), yaml, changeType, false);
   }
 
   public GitFileChange getPipelineGitSyncFile(String accountId, Pipeline pipeline, ChangeType changeType) {

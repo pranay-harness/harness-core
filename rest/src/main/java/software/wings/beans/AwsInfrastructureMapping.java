@@ -173,8 +173,9 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     private String restrictions;
     // maps to restrictionExpression
     private String expression;
-    private String region = "us-east-1";
+    private String region;
     // maps to hostConnectionAttrs
+    private String provisionerName;
     private String connectionType;
     private String loadBalancer;
     private boolean usePublicDns;
@@ -192,15 +193,16 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     @lombok.Builder
     public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
         String infraMappingType, String deploymentType, String computeProviderName, String name, String restrictions,
-        String expression, String region, String connectionType, String loadBalancer, boolean usePublicDns,
-        boolean provisionInstances, String autoScalingGroup, int desiredCapacity, List<String> vpcs,
-        List<String> subnetIds, List<String> securityGroupIds, List<NameValuePair.Yaml> tags,
+        String expression, String region, String provisionerName, String connectionType, String loadBalancer,
+        boolean usePublicDns, boolean provisionInstances, String autoScalingGroup, int desiredCapacity,
+        List<String> vpcs, List<String> subnetIds, List<String> securityGroupIds, List<NameValuePair.Yaml> tags,
         String hostNameConvention) {
       super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
           computeProviderName);
       this.restrictions = restrictions;
       this.expression = expression;
       this.region = region;
+      this.provisionerName = provisionerName;
       this.connectionType = connectionType;
       this.loadBalancer = loadBalancer;
       this.usePublicDns = usePublicDns;

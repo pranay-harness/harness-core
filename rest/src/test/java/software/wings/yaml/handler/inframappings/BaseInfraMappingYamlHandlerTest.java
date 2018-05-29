@@ -14,6 +14,8 @@ import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.HOST_CONN_ATTR_ID;
+import static software.wings.utils.WingsTestConstants.PROVISIONER_ID;
+import static software.wings.utils.WingsTestConstants.PROVISIONER_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
@@ -23,9 +25,11 @@ import org.mockito.Mock;
 import org.mongodb.morphia.Key;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Environment;
+import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
@@ -34,6 +38,7 @@ import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
@@ -45,6 +50,9 @@ public class BaseInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   protected Service service =
       Service.builder().name(SERVICE_NAME).appId(APP_ID).uuid(SERVICE_ID).artifactType(ArtifactType.DOCKER).build();
 
+  protected InfrastructureProvisioner infrastructureProvisioner =
+      TerraformInfrastructureProvisioner.builder().name(PROVISIONER_NAME).appId(APP_ID).uuid(PROVISIONER_ID).build();
+
   protected Environment environment = anEnvironment().withName(ENV_NAME).withAppId(APP_ID).withUuid(ENV_ID).build();
 
   @Mock protected YamlHelper yamlHelper;
@@ -55,6 +63,8 @@ public class BaseInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   @Mock protected ServiceTemplateService serviceTemplateService;
   @Mock protected EnvironmentService environmentService;
   @Mock protected SettingsService settingsService;
+  @Mock protected InfrastructureProvisionerService infrastructureProvisionerService;
+
   private SettingAttribute setting = aSettingAttribute()
                                          .withUuid(SETTING_ID)
                                          .withAccountId(ACCOUNT_ID)
@@ -84,6 +94,9 @@ public class BaseInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
     when(serviceTemplateService.getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID))
         .thenReturn(singletonList(new Key<>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));
     when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(aServiceTemplate().withUuid(TEMPLATE_ID).build());
+
+    when(infrastructureProvisionerService.getByName(anyString(), anyString())).thenReturn(infrastructureProvisioner);
+    when(infrastructureProvisionerService.get(APP_ID, PROVISIONER_ID)).thenReturn(infrastructureProvisioner);
 
     when(settingsService.getByName(ACCOUNT_ID, APP_ID, "aws")).thenReturn(setting);
     when(settingsService.get(SETTING_ID)).thenReturn(setting);

@@ -49,6 +49,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
 
 import software.wings.api.DeploymentType;
+import software.wings.beans.InfrastructureProvisionerType;
 import software.wings.service.impl.yaml.AppYamlResourceServiceImpl;
 import software.wings.service.impl.yaml.YamlArtifactStreamServiceImpl;
 import software.wings.service.impl.yaml.YamlDirectoryServiceImpl;
@@ -105,6 +106,9 @@ import software.wings.service.impl.yaml.handler.inframapping.InfraMappingYamlHan
 import software.wings.service.impl.yaml.handler.inframapping.PcfInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.PhysicalInfraMappingWinRmYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.PhysicalInfraMappingYamlHandler;
+import software.wings.service.impl.yaml.handler.infraprovisioner.CloudFormationInfrastructureProvisionerYamlHandler;
+import software.wings.service.impl.yaml.handler.infraprovisioner.InfrastructureProvisionerYamlHandler;
+import software.wings.service.impl.yaml.handler.infraprovisioner.TerraformInfrastructureProvisionerYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.ArtifactServerYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.ArtifactoryConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.BambooConfigYamlHandler;
@@ -295,5 +299,12 @@ public class YamlModule extends AbstractModule {
         .to(KubernetesResizeCommandUnitYamlHandler.class);
     commandUnitYamlHandlerMapBinder.addBinding(ECS_SETUP.name()).to(EcsSetupCommandUnitYamlHandler.class);
     commandUnitYamlHandlerMapBinder.addBinding(KUBERNETES_SETUP.name()).to(KubernetesSetupCommandUnitYamlHandler.class);
+
+    MapBinder<String, InfrastructureProvisionerYamlHandler> infrastructureProvisionerYamlHandlerMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, InfrastructureProvisionerYamlHandler.class);
+    infrastructureProvisionerYamlHandlerMapBinder.addBinding(InfrastructureProvisionerType.TERRAFORM.name())
+        .to(TerraformInfrastructureProvisionerYamlHandler.class);
+    infrastructureProvisionerYamlHandlerMapBinder.addBinding(InfrastructureProvisionerType.CLOUD_FORMATION.name())
+        .to(CloudFormationInfrastructureProvisionerYamlHandler.class);
   }
 }

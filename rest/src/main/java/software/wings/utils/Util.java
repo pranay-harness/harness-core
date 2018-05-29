@@ -6,11 +6,13 @@ import static java.util.stream.Collectors.toList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.NameValuePair;
+import software.wings.beans.NameValuePair.Yaml;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.NameValuePairYamlHandler;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,6 +59,21 @@ public class Util {
     // here we do expect value to be null in some cases.
     return nameValuePairList.stream().collect(
         HashMap::new, (m, v) -> m.put(v.getName(), v.getValue()), HashMap::putAll);
+  }
+
+  public static List<NameValuePair.Yaml> getSortedNameValuePairYamlList(List<NameValuePair.Yaml> yamlList) {
+    if (isEmpty(yamlList)) {
+      return yamlList;
+    }
+
+    return yamlList.stream()
+        .sorted(new Comparator<Yaml>() {
+          @Override
+          public int compare(Yaml o1, Yaml o2) {
+            return o1.getName().compareTo(o2.getName());
+          }
+        })
+        .collect(toList());
   }
 
   public static <T extends Enum<T>> T getEnumFromString(Class<T> enumClass, String stringValue) {

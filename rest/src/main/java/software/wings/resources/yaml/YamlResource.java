@@ -20,6 +20,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
+import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Pipeline;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
@@ -120,6 +121,33 @@ public class YamlResource {
   public RestResponse<YamlPayload> getWorkflow(
       @QueryParam("appId") String appId, @PathParam("workflowId") String workflowId) {
     return yamlResourceService.getWorkflow(appId, workflowId);
+  }
+
+  /**
+   * Gets the yaml for a workflow
+   *
+   * @param appId      the app id
+   * @param provisionerId the provisioner id
+   * @return the rest response
+   */
+  @GET
+  @Path("/infrastructureprovisioners/{infraProvisionerId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.PROVISIONER, action = Action.READ)
+  public RestResponse<YamlPayload> getProvisioner(
+      @QueryParam("appId") String appId, @PathParam("infraProvisionerId") String provisionerId) {
+    return yamlResourceService.getProvisioner(appId, provisionerId);
+  }
+
+  @PUT
+  @Path("/infrastructureprovisioners/{infraProvisionerId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.PROVISIONER, action = Action.UPDATE)
+  public RestResponse<InfrastructureProvisioner> updateProvisioner(
+      @QueryParam("accountId") String accountId, @QueryParam("appId") String appId, YamlPayload yamlPayload) {
+    return yamlService.update(yamlPayload, accountId);
   }
 
   // TODO - need to add a PUT for updateWorkflow HERE

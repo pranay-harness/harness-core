@@ -61,7 +61,7 @@ public class AzureKubernetesInfraMappingYamlHandler
   private void toBean(AzureKubernetesInfrastructureMapping bean, ChangeContext<Yaml> changeContext, String appId,
       String envId, String computeProviderId, String serviceId) throws HarnessException {
     Yaml yaml = changeContext.getYaml();
-    super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId);
+    super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId, null);
     bean.setSubscriptionId(yaml.getSubscriptionId());
     bean.setResourceGroup(yaml.getResourceGroup());
     bean.setClusterName(yaml.getCluster());

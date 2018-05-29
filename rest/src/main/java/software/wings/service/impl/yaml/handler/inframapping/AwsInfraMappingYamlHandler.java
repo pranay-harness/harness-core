@@ -13,6 +13,7 @@ import software.wings.beans.AwsInstanceFilter;
 import software.wings.beans.AwsInstanceFilter.AwsInstanceFilterBuilder;
 import software.wings.beans.AwsInstanceFilter.Tag;
 import software.wings.beans.InfrastructureMappingType;
+import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
@@ -53,16 +54,25 @@ public class AwsInfraMappingYamlHandler
     yaml.setType(InfrastructureMappingType.AWS_SSH.name());
     yaml.setRestrictions(bean.getRestrictionType());
     yaml.setExpression(bean.getRestrictionExpression());
-    yaml.setRegion(bean.getRegion());
     yaml.setLoadBalancer(bean.getLoadBalancerName());
     yaml.setUsePublicDns(bean.isUsePublicDns());
     yaml.setProvisionInstances(bean.isProvisionInstances());
     yaml.setAutoScalingGroup(bean.getAutoScalingGroupName());
     yaml.setDesiredCapacity(bean.getDesiredCapacity());
-    yaml.setVpcs(vpcIds);
-    yaml.setSubnetIds(subnetIds);
-    yaml.setSecurityGroupIds(securityGroupIds);
-    yaml.setTags(getTagsYaml(tagList));
+
+    if (bean.getProvisionerId() == null) {
+      yaml.setRegion(bean.getRegion());
+      yaml.setVpcs(vpcIds);
+      yaml.setSubnetIds(subnetIds);
+      yaml.setSecurityGroupIds(securityGroupIds);
+      yaml.setTags(getTagsYaml(tagList));
+    } else {
+      final InfrastructureProvisioner infrastructureProvisioner =
+          infrastructureProvisionerService.get(appId, bean.getProvisionerId());
+      notNullCheck("Missing provisioner", infrastructureProvisioner);
+      yaml.setProvisionerName(infrastructureProvisioner.getName());
+    }
+
     yaml.setHostNameConvention(bean.getHostNameConvention());
     return yaml;
   }
@@ -81,9 +91,10 @@ public class AwsInfraMappingYamlHandler
     notNullCheck("Couldn't retrieve compute provider from yaml:" + yamlFilePath, computeProviderId, USER);
     String serviceId = getServiceId(appId, infraMappingYaml.getServiceName());
     notNullCheck("Couldn't retrieve service from yaml:" + yamlFilePath, serviceId, USER);
+    String provisionerId = getProvisionerId(appId, infraMappingYaml.getProvisionerName());
 
     AwsInfrastructureMapping current = new AwsInfrastructureMapping();
-    toBean(current, changeContext, appId, envId, computeProviderId, serviceId);
+    toBean(current, changeContext, appId, envId, computeProviderId, serviceId, provisionerId);
 
     String name = yamlHelper.getNameFromYamlFilePath(changeContext.getChange().getFilePath());
     AwsInfrastructureMapping previous =
@@ -114,7 +125,7 @@ public class AwsInfraMappingYamlHandler
   }
 
   private void toBean(AwsInfrastructureMapping bean, ChangeContext<Yaml> changeContext, String appId, String envId,
-      String computeProviderId, String serviceId) throws HarnessException {
+      String computeProviderId, String serviceId, String provisionerId) throws HarnessException {
     Yaml yaml = changeContext.getYaml();
 
     AwsInstanceFilterBuilder builder = AwsInstanceFilter.builder()
@@ -125,7 +136,7 @@ public class AwsInfraMappingYamlHandler
       builder.tags(getTags(yaml.getTags()));
     }
 
-    super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId);
+    super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId, provisionerId);
 
     String hostConnAttrsName = yaml.getConnectionType();
     SettingAttribute hostConnAttributes =

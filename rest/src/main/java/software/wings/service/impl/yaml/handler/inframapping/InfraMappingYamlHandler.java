@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -8,6 +9,7 @@ import com.google.inject.Inject;
 import org.mongodb.morphia.Key;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
@@ -17,6 +19,7 @@ import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
@@ -33,6 +36,7 @@ public abstract class InfraMappingYamlHandler<Y extends InfrastructureMapping.Ya
   @Inject ServiceResourceService serviceResourceService;
   @Inject YamlHelper yamlHelper;
   @Inject InfrastructureMappingService infraMappingService;
+  @Inject InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject ServiceTemplateService serviceTemplateService;
 
   protected String getSettingId(String accountId, String appId, String settingName) {
@@ -58,6 +62,17 @@ public abstract class InfraMappingYamlHandler<Y extends InfrastructureMapping.Ya
     Service service = serviceResourceService.getServiceByName(appId, serviceName);
     notNullCheck("Invalid Service:" + serviceName, service, USER);
     return service.getUuid();
+  }
+
+  protected String getProvisionerId(String appId, String provisionerName) {
+    if (isEmpty(provisionerName)) {
+      return null;
+    }
+
+    InfrastructureProvisioner infrastructureProvisioner =
+        infrastructureProvisionerService.getByName(appId, provisionerName);
+    notNullCheck("Invalid Infrastructure Provisioner:" + provisionerName, infrastructureProvisioner, USER);
+    return infrastructureProvisioner.getUuid();
   }
 
   protected String getServiceName(String appId, String serviceId) {
@@ -91,13 +106,14 @@ public abstract class InfraMappingYamlHandler<Y extends InfrastructureMapping.Ya
     yaml.setHarnessApiVersion(getHarnessApiVersion());
   }
 
-  protected void toBean(ChangeContext<Y> context, B bean, String appId, String envId, String serviceId)
-      throws HarnessException {
+  protected void toBean(ChangeContext<Y> context, B bean, String appId, String envId, String serviceId,
+      String provisionerId) throws HarnessException {
     Y yaml = context.getYaml();
     bean.setAutoPopulate(false);
     bean.setInfraMappingType(yaml.getInfraMappingType());
     bean.setServiceTemplateId(getServiceTemplateId(appId, serviceId, envId));
     bean.setEnvId(envId);
+    bean.setProvisionerId(provisionerId);
     bean.setServiceId(serviceId);
     bean.setDeploymentType(yaml.getDeploymentType());
     bean.setAppId(appId);

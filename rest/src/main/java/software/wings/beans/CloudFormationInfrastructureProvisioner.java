@@ -4,10 +4,12 @@ import static software.wings.beans.CloudFormationSourceType.TEMPLATE_BODY;
 import static software.wings.beans.CloudFormationSourceType.TEMPLATE_URL;
 import static software.wings.beans.InfrastructureProvisionerType.CLOUD_FORMATION;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import java.util.List;
@@ -48,5 +50,28 @@ public class CloudFormationInfrastructureProvisioner extends InfrastructureProvi
   @Override
   public String variableKey() {
     return VARIABLE_KEY;
+  }
+  /**
+   * The type Yaml.
+   */
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  @JsonPropertyOrder({"type", "harnessApiVersion"})
+  @NoArgsConstructor
+  public static final class Yaml extends InfrastructureProvisioner.Yaml {
+    private String sourceType;
+    private String templateBody;
+    private String templateFilePath;
+
+    @Builder
+    public Yaml(String type, String harnessApiVersion, String name, String description,
+        String infrastructureProvisionerType, List<NameValuePair.Yaml> variables,
+        List<InfrastructureMappingBlueprint.Yaml> mappingBlueprints, String sourceType, String templateBody,
+        String templateFilePath) {
+      super(type, harnessApiVersion, name, description, infrastructureProvisionerType, variables, mappingBlueprints);
+      this.sourceType = sourceType;
+      this.templateBody = templateBody;
+      this.templateFilePath = templateFilePath;
+    }
   }
 }
