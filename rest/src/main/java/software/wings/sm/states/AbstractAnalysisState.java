@@ -19,6 +19,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import software.wings.api.CanaryWorkflowStandardParams;
+import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PcfInstanceElement;
@@ -37,6 +38,7 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.instance.info.ContainerInfo;
 import software.wings.beans.infrastructure.instance.info.EcsContainerInfo;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
@@ -61,6 +63,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionBaselineService;
@@ -130,6 +133,8 @@ public abstract class AbstractAnalysisState extends State {
   @Transient @Inject @SchemaIgnore private DelegateProxyFactory delegateProxyFactory;
 
   @Transient @Inject private FeatureFlagService featureFlagService;
+
+  @Transient @Inject private HostService hostService;
 
   protected String hostnameField;
 
@@ -290,11 +295,12 @@ public abstract class AbstractAnalysisState extends State {
           }
           Set<String> hosts = new HashSet<>();
           for (InstanceStatusSummary instanceStatusSummary : executionSummary.getInstanceStatusSummaries()) {
-            if (isEmpty(hostnameTemplate)) {
+            if (isEmpty(getHostnameTemplate())) {
               hosts.add(instanceStatusSummary.getInstanceElement().getHostName());
             } else {
+              fillHostDetail(instanceStatusSummary.getInstanceElement(), context);
               hosts.add(context.renderExpression(
-                  hostnameTemplate, Lists.newArrayList(instanceStatusSummary.getInstanceElement())));
+                  getHostnameTemplate(), Lists.newArrayList(instanceStatusSummary.getInstanceElement())));
             }
           }
           getLogger().info("hosts deployed with last workflow execution: {}", hosts);
@@ -369,11 +375,11 @@ public abstract class AbstractAnalysisState extends State {
             if (serviceElement.getUuid().equals(serviceId)) {
               if (isNotEmpty(elementExecutionSummary.getInstanceStatusSummaries())) {
                 elementExecutionSummary.getInstanceStatusSummaries().forEach(instanceStatusSummary -> {
-                  if (isEmpty(hostnameTemplate)) {
+                  if (isEmpty(getHostnameTemplate())) {
                     hosts.add(instanceStatusSummary.getInstanceElement().getHostName());
                   } else {
                     hosts.add(context.renderExpression(
-                        hostnameTemplate, Lists.newArrayList(instanceStatusSummary.getInstanceElement())));
+                        getHostnameTemplate(), Lists.newArrayList(instanceStatusSummary.getInstanceElement())));
                   }
                 });
               } else {
@@ -404,10 +410,10 @@ public abstract class AbstractAnalysisState extends State {
       return rv;
     }
     for (InstanceElement instanceElement : canaryWorkflowStandardParams.getInstances()) {
-      if (isEmpty(hostnameTemplate)) {
+      if (isEmpty(getHostnameTemplate())) {
         rv.add(instanceElement.getHostName());
       } else {
-        rv.add(context.renderExpression(hostnameTemplate, Lists.newArrayList(instanceElement)));
+        rv.add(context.renderExpression(getHostnameTemplate(), Lists.newArrayList(instanceElement)));
       }
     }
     return rv;
@@ -497,5 +503,29 @@ public abstract class AbstractAnalysisState extends State {
 
   protected boolean isDemoPath(String accountId) {
     return featureFlagService.isEnabled(FeatureName.CV_DEMO, accountId);
+  }
+
+  public String getHostnameTemplate() {
+    return hostnameTemplate;
+  }
+
+  public void setHostnameTemplate(String hostnameTemplate) {
+    this.hostnameTemplate = hostnameTemplate;
+  }
+
+  private void fillHostDetail(InstanceElement instanceElement, ExecutionContext context) {
+    Preconditions.checkNotNull(instanceElement);
+    HostElement hostElement = instanceElement.getHost();
+    Preconditions.checkNotNull(hostElement, "host element null for " + instanceElement);
+    Host host =
+        hostService.get(context.getAppId(), ((ExecutionContextImpl) context).getEnv().getUuid(), hostElement.getUuid());
+    if (host == null) {
+      return;
+    }
+    instanceElement.setHost(aHostElement()
+                                .withHostName(host.getHostName())
+                                .withEc2Instance(host.getEc2Instance())
+                                .withPublicDns(host.getPublicDns())
+                                .build());
   }
 }

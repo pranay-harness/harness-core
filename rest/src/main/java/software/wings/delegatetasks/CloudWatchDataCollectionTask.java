@@ -38,6 +38,7 @@ import software.wings.waitnotify.NotifyResponseData;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -116,6 +117,7 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
                 NewRelicMetricDataRecord.builder()
                     .stateType(getStateType())
                     .name(HARNESS_HEARTBEAT_METRIC_NAME)
+                    .appId(getAppId())
                     .workflowId(dataCollectionInfo.getWorkflowId())
                     .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
                     .serviceId(dataCollectionInfo.getServiceId())
@@ -123,6 +125,7 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
                     .dataCollectionMinute(dataCollectionMinute)
                     .timeStamp(collectionStartTime)
                     .level(ClusterLevel.H0)
+                    .groupName(DEFAULT_GROUP_NAME)
                     .build());
 
             List<NewRelicMetricDataRecord> recordsToSave = getAllMetricRecords(metricDataRecords);
@@ -189,28 +192,16 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
                   new BasicAWSCredentials(dataCollectionInfo.getAwsConfig().getAccessKey(),
                       String.valueOf(dataCollectionInfo.getAwsConfig().getSecretKey()))))
               .build();
+      dataCollectionInfo.getLoadBalancerMetrics().forEach(
+          (loadBalancerName, cloudWatchMetrics) -> cloudWatchMetrics.forEach(cloudWatchMetric -> {
+            callables.add(
+                () -> getMetricDataRecords(AwsNameSpace.ELB, cloudWatchClient, cloudWatchMetric, loadBalancerName));
+          }));
 
-      dataCollectionInfo.getCloudWatchMetrics().forEach((awsNameSpace, cloudWatchMetrics) -> {
-        switch (awsNameSpace) {
-          case EC2:
-            dataCollectionInfo.getHosts().forEach(host
-                -> cloudWatchMetrics.forEach(cloudWatchMetric
-                    -> callables.add(
-                        () -> getMetricDataRecords(awsNameSpace, cloudWatchClient, cloudWatchMetric, host))));
-            break;
-
-          case ELB:
-            dataCollectionInfo.getLoadBalancers().forEach(loadBalancerName
-                -> cloudWatchMetrics.forEach(cloudWatchMetric
-                    -> callables.add(()
-                                         -> getMetricDataRecords(
-                                             awsNameSpace, cloudWatchClient, cloudWatchMetric, loadBalancerName))));
-            break;
-
-          default:
-            throw new WingsException("unsupported name space " + awsNameSpace);
-        }
-      });
+      dataCollectionInfo.getHosts().forEach(host
+          -> dataCollectionInfo.getEc2Metrics().forEach(cloudWatchMetric
+              -> callables.add(
+                  () -> getMetricDataRecords(AwsNameSpace.EC2, cloudWatchClient, cloudWatchMetric, host))));
 
       logger.info("fetching cloud watch metrics for {} strategy {} for min {}",
           dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getAnalysisComparisonStrategy(),
@@ -285,11 +276,13 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
           .withStatistics("Average");
       GetMetricStatisticsResult metricStatistics = cloudWatchClient.getMetricStatistics(metricStatisticsRequest);
       List<Datapoint> datapoints = metricStatistics.getDatapoints();
+      String metricName = awsNameSpace == AwsNameSpace.EC2 ? "EC2 Metrics" : dimensionValue;
       datapoints.forEach(datapoint -> {
         NewRelicMetricDataRecord newRelicMetricDataRecord =
             NewRelicMetricDataRecord.builder()
                 .stateType(StateType.CLOUD_WATCH)
-                .name(dimensionValue)
+                .appId(getAppId())
+                .name(metricName)
                 .workflowId(dataCollectionInfo.getWorkflowId())
                 .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
                 .serviceId(dataCollectionInfo.getServiceId())
@@ -298,6 +291,8 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
                 .dataCollectionMinute(dataCollectionMinute)
                 .host(host)
                 .groupName(DEFAULT_GROUP_NAME)
+                .tag(awsNameSpace.name())
+                .values(new HashMap<>())
                 .build();
         newRelicMetricDataRecord.getValues().put(cloudWatchMetric.getMetricName(), datapoint.getAverage());
 
@@ -311,10 +306,5 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
       records.cellSet().forEach(cell -> rv.add(cell.getValue()));
       return rv;
     }
-  }
-
-  @Override
-  protected int getInitialDelayMinutes() {
-    return 0;
   }
 }

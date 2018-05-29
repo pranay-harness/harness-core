@@ -23,8 +23,10 @@ import software.wings.sm.StateExecutionException;
 import software.wings.utils.YamlUtils;
 
 import java.net.URL;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -36,6 +38,7 @@ public class CloudWatchServiceImpl implements CloudWatchService {
   @Inject private SettingsService settingsService;
   @Inject private AwsHelperService awsHelperService;
   @Inject private SecretManager secretManager;
+  @Inject private AwsInfrastructureProvider awsInfrastructureProvider;
 
   private final Map<AwsNameSpace, List<CloudWatchMetric>> cloudWatchMetrics;
 
@@ -89,6 +92,18 @@ public class CloudWatchServiceImpl implements CloudWatchService {
         .flatMap(metric -> metric.getDimensions().stream().map(Dimension::getName))
         .distinct()
         .collect(Collectors.toList());
+  }
+
+  @Override
+  public Set<String> getLoadBalancerNames(String settingId, String region) {
+    final Set<String> loadBalancers = new HashSet<>();
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    if (settingAttribute == null || !(settingAttribute.getValue() instanceof AwsConfig)) {
+      throw new StateExecutionException("AWS account setting not found " + settingId);
+    }
+    loadBalancers.addAll(awsInfrastructureProvider.listClassicLoadBalancers(settingAttribute, region));
+    loadBalancers.addAll(awsInfrastructureProvider.listLoadBalancers(settingAttribute, region));
+    return loadBalancers;
   }
 
   private AwsConfig getAwsConfig(String settingId) {

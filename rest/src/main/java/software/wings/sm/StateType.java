@@ -224,26 +224,26 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Sumo state type.
    */
-  DATA_DOG(DatadogState.class, VERIFICATIONS, 9, "Datadog", emptyList(), ORCHESTRATION_STENCILS),
+  DATA_DOG(DatadogState.class, VERIFICATIONS, 11, "Datadog", emptyList(), ORCHESTRATION_STENCILS),
 
   /**
    * Cloud watch state type.
    */
-  CLOUD_WATCH(CloudWatchState.class, VERIFICATIONS, 11, "CloudWatch", asList(), ORCHESTRATION_STENCILS),
+  CLOUD_WATCH(CloudWatchState.class, VERIFICATIONS, 12, "CloudWatch", asList(), ORCHESTRATION_STENCILS),
 
   /**
    * New relic deployment marker state type.
    */
-  NEW_RELIC_DEPLOYMENT_MARKER(NewRelicDeploymentMarkerState.class, VERIFICATIONS, 12, "NewRelic Deployment Marker",
+  NEW_RELIC_DEPLOYMENT_MARKER(NewRelicDeploymentMarkerState.class, VERIFICATIONS, 13, "NewRelic Deployment Marker",
       asList(), ORCHESTRATION_STENCILS),
 
   AWS_LAMBDA_VERIFICATION(
-      AwsLambdaVerification.class, VERIFICATIONS, 13, "AWS Lambda Verification", asList(), ORCHESTRATION_STENCILS),
+      AwsLambdaVerification.class, VERIFICATIONS, 14, "AWS Lambda Verification", asList(), ORCHESTRATION_STENCILS),
 
   /**
    * Generic APM verification state type.
    */
-  APM_VERIFICATION(APMVerificationState.class, VERIFICATIONS, 14, "APM Verification", asList(), ORCHESTRATION_STENCILS),
+  APM_VERIFICATION(APMVerificationState.class, VERIFICATIONS, 15, "APM Verification", asList(), ORCHESTRATION_STENCILS),
 
   /**
    * Env state state type.

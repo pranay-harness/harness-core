@@ -50,7 +50,6 @@ import java.util.concurrent.TimeUnit;
 @Data
 @EqualsAndHashCode(callSuper = false)
 public class PrometheusState extends AbstractMetricAnalysisState {
-  public static final String TXN_TO_METRIC_NAME_SEPARATOR = ":sep:";
   @Transient @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(PrometheusState.class);
   @Transient @SchemaIgnore public static final String TEST_HOST_NAME = "testNode";
   @Transient @SchemaIgnore public static final String CONTROL_HOST_NAME = "controlNode";

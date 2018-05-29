@@ -397,9 +397,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     List<StateTypeDescriptor> stencils = new ArrayList<>();
-    Arrays.stream(values())
-        .filter(stateType -> !stateType.equals(StateType.CLOUD_WATCH))
-        .forEach(state -> stencils.add(state));
+    Arrays.stream(values()).forEach(state -> stencils.add(state));
 
     List<StateTypeDescriptor> plugins = pluginManager.getExtensions(StateTypeDescriptor.class);
     stencils.addAll(plugins);
