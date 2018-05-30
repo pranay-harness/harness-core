@@ -15,6 +15,7 @@ import software.wings.beans.WorkflowPhase;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.service.intfc.manipulation.SettingsServiceManipulationObserver;
 import software.wings.service.intfc.ownership.OwnedByApplication;
 import software.wings.service.intfc.ownership.OwnedByEnvironment;
 import software.wings.sm.StateMachine;
@@ -35,7 +36,7 @@ import javax.validation.constraints.NotNull;
  *
  * @author Rishi
  */
-public interface WorkflowService extends OwnedByApplication, OwnedByEnvironment {
+public interface WorkflowService extends OwnedByApplication, OwnedByEnvironment, SettingsServiceManipulationObserver {
   PageResponse<Workflow> listWorkflows(PageRequest<Workflow> pageRequest);
 
   PageResponse<Workflow> listWorkflowsWithoutOrchestration(PageRequest<Workflow> pageRequest);
