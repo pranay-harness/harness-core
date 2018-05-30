@@ -2,7 +2,6 @@ package software.wings.integration.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static software.wings.beans.FileMetadata.Builder.aFileMetadata;
 import static software.wings.service.ExtendedFile.Builder.anExtendedFile;
 import static software.wings.utils.WingsTestConstants.FILE_ID;
 
@@ -53,7 +52,7 @@ public class FileServiceIntegrationTest extends WingsBaseTest {
    */
   @Test
   public void shouldSaveFileWithMetadata() throws Exception {
-    FileMetadata fileMetadata = aFileMetadata().withFileName("dummy.txt").withMimeType("text/plain").build();
+    FileMetadata fileMetadata = FileMetadata.builder().fileName("dummy.txt").mimeType("text/plain").build();
     String fileId = fileService.saveFile(fileMetadata, new FileInputStream(tempFile), FileBucket.ARTIFACTS);
     assertThat(fileService.getGridFsFile(fileId, FileBucket.ARTIFACTS)).isNotNull();
   }
@@ -65,7 +64,7 @@ public class FileServiceIntegrationTest extends WingsBaseTest {
    */
   @Test
   public void shouldThrowExceptionWhenFileNameIsNullWithFileMetadata() throws Exception {
-    FileMetadata fileMetadata = aFileMetadata().withMimeType("text/plain").build();
+    FileMetadata fileMetadata = FileMetadata.builder().mimeType("text/plain").build();
     assertThatExceptionOfType(IllegalArgumentException.class)
         .isThrownBy(() -> fileService.saveFile(fileMetadata, new FileInputStream(tempFile), FileBucket.ARTIFACTS));
   }

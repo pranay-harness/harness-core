@@ -44,7 +44,6 @@ public enum ClusterLevel {
       case L0:
         return ClusterLevel.L1;
       case L1:
-        return ClusterLevel.L2;
       case L2:
         return ClusterLevel.L2;
       case H0:
@@ -52,7 +51,6 @@ public enum ClusterLevel {
       case H1:
         return ClusterLevel.H2;
       case H2:
-        return ClusterLevel.HF;
       case HF:
         return ClusterLevel.HF;
       default:

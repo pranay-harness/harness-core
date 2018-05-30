@@ -445,6 +445,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     List<String> successfulExecutions = getLastSuccessfulWorkflowExecutionIds(appId, workflowId);
     for (String successfulExecution : successfulExecutions) {
       if (wingsPersistence.createQuery(LogDataRecord.class)
+              .filter("appId", appId)
               .filter("stateType", stateType)
               .filter("workflowId", workflowId)
               .filter("workflowExecutionId", successfulExecution)
@@ -1109,6 +1110,7 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   private boolean logExist(StateType stateType, WorkflowExecution workflowExecution) {
     return wingsPersistence.createQuery(LogDataRecord.class)
+               .filter("appId", workflowExecution.getAppId())
                .filter("stateType", stateType)
                .filter("workflowId", workflowExecution.getWorkflowId())
                .filter("workflowExecutionId", workflowExecution.getUuid())
@@ -1119,6 +1121,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   private void deleteNotRequiredLogs(StateType stateType, WorkflowExecution workflowExecution) {
     Query<LogDataRecord> deleteQuery = wingsPersistence.createQuery(LogDataRecord.class)
+                                           .filter("appId", workflowExecution.getAppId())
                                            .filter("stateType", stateType)
                                            .filter("workflowId", workflowExecution.getWorkflowId())
                                            .field("workflowExecutionId")
