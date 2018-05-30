@@ -7,7 +7,6 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
-import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.cloudwatch.AwsNameSpace;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
@@ -33,7 +32,6 @@ public class CloudWatchResource {
   @GET
   @Path("/get-metric-names")
   @Timed
-  @DelegateAuth
   @ExceptionMetered
   public RestResponse<List<CloudWatchMetric>> getMetricNames(
       @QueryParam("accountId") final String accountId, @QueryParam("awsNameSpace") final AwsNameSpace awsNameSpace) {
@@ -43,7 +41,6 @@ public class CloudWatchResource {
   @GET
   @Path("/get-load-balancers")
   @Timed
-  @DelegateAuth
   @ExceptionMetered
   public RestResponse<Set<String>> getLoadBalancerNames(@QueryParam("accountId") final String accountId,
       @QueryParam("settingId") final String settingId, @QueryParam("region") final String region) {
