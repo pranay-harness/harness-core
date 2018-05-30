@@ -749,17 +749,18 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   private void validateAndSetCronExpression(Trigger trigger) {
+    if (trigger == null || !trigger.getCondition().getConditionType().equals(SCHEDULED)) {
+      return;
+    }
+    ScheduledTriggerCondition scheduledTriggerCondition = (ScheduledTriggerCondition) trigger.getCondition();
     try {
-      if (trigger == null || !trigger.getCondition().getConditionType().equals(SCHEDULED)) {
-        return;
-      }
-      ScheduledTriggerCondition scheduledTriggerCondition = (ScheduledTriggerCondition) trigger.getCondition();
       if (isNotBlank(scheduledTriggerCondition.getCronExpression())) {
         CronScheduleBuilder.cronSchedule(ScheduledTriggerJob.PREFIX + scheduledTriggerCondition.getCronExpression());
         scheduledTriggerCondition.setCronDescription(
             getCronDescription(ScheduledTriggerJob.PREFIX + scheduledTriggerCondition.getCronExpression()));
       }
     } catch (Exception ex) {
+      logger.warn("Error parsing cron expression: {}", scheduledTriggerCondition.getCronExpression(), ex.getMessage());
       throw new WingsException(INVALID_ARGUMENT, USER).addParam("args", "Invalid cron expression");
     }
   }
@@ -770,7 +771,7 @@ public class TriggerServiceImpl implements TriggerService {
           getDescription(DescriptionTypeEnum.FULL, cronExpression, new Options(), I18nMessages.DEFAULT_LOCALE);
       return StringUtils.lowerCase("" + description.charAt(0)) + description.substring(1);
     } catch (Exception e) {
-      logger.error("Error parsing cron expression: " + cronExpression, e);
+      logger.warn("Error parsing cron expression: {} ", cronExpression, e.getMessage());
       throw new WingsException(INVALID_ARGUMENT, USER).addParam("args", "Invalid cron expression");
     }
   }
