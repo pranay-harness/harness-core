@@ -65,7 +65,7 @@ public class PhysicalInfraMappingWinRmYamlHandler
   public void toBean(ChangeContext<Yaml> changeContext, PhysicalInfrastructureMappingWinRm bean, String appId,
       String envId, String computeProviderId, String serviceId) throws HarnessException {
     Yaml yaml = changeContext.getYaml();
-    super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId);
+    super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId, null);
 
     String winRmConnAttrsName = yaml.getWinRmProfile();
     SettingAttribute winRmConnAttributes =
