@@ -64,6 +64,7 @@ public class MaintenanceController implements Managed {
       while (running.get()) {
         boolean isShutdown = new File(SHUTDOWN).exists();
         if (shutdown.getAndSet(isShutdown) != isShutdown) {
+          logger.info("Shutdown started. Leaving hazelcast cluster.");
           hazelcastInstance.shutdown();
         }
         boolean isMaintenance =
