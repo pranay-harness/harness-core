@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
@@ -22,6 +23,7 @@ import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.Map;
 
+@Ignore("Unit tests should not depend on external resources")
 public class GcsServiceTest extends WingsBaseTest {
   @Inject GcpHelperService gcpHelperService;
   @Inject private GcsService gcsService;
