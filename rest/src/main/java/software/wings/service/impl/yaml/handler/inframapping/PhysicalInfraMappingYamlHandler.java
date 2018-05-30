@@ -65,7 +65,7 @@ public class PhysicalInfraMappingYamlHandler
   protected void toBean(ChangeContext<Yaml> changeContext, PhysicalInfrastructureMapping bean, String appId,
       String envId, String computeProviderId, String serviceId) throws HarnessException {
     Yaml yaml = changeContext.getYaml();
-    super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId);
+    super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId, null);
 
     String hostConnAttrsName = yaml.getConnection();
     SettingAttribute hostConnAttributes =
