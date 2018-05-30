@@ -12,9 +12,9 @@ import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.exception.WingsException.USER;
+import static software.wings.utils.Validator.duplicateCheck;
 import static software.wings.utils.Validator.notNullCheck;
 
-import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -43,7 +43,6 @@ import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
-import software.wings.utils.Validator;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
@@ -99,7 +98,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
 
     serviceVariable.setEnvId(envId);
 
-    ServiceVariable newServiceVariable = Validator.duplicateCheck(
+    ServiceVariable newServiceVariable = duplicateCheck(
         () -> wingsPersistence.saveAndGet(ServiceVariable.class, serviceVariable), "name", serviceVariable.getName());
 
     if (newServiceVariable == null) {
@@ -118,7 +117,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   @Override
   public ServiceVariable get(String appId, String settingId, boolean maskEncryptedFields) {
     ServiceVariable serviceVariable = wingsPersistence.get(ServiceVariable.class, appId, settingId);
-    Validator.notNullCheck("ServiceVariable is null for id: " + settingId, serviceVariable);
+    notNullCheck("ServiceVariable is null for id: " + settingId, serviceVariable);
     if (maskEncryptedFields) {
       processEncryptedServiceVariable(maskEncryptedFields, serviceVariable);
     }
@@ -128,7 +127,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   @Override
   public ServiceVariable update(@Valid ServiceVariable serviceVariable) {
     ServiceVariable savedServiceVariable = get(serviceVariable.getAppId(), serviceVariable.getUuid());
-    Validator.notNullCheck("Service variable", savedServiceVariable);
+    notNullCheck("Service variable", savedServiceVariable);
 
     ExpressionEvaluator.isValidVariableName(serviceVariable.getName());
 
@@ -248,7 +247,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
         serviceVariable.setValue(SECRET_MASK.toCharArray());
       }
       EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, serviceVariable.getEncryptedValue());
-      Preconditions.checkNotNull(encryptedData, "no encrypted ref found for " + serviceVariable.getUuid());
+      notNullCheck("no encrypted ref found for " + serviceVariable.getUuid(), encryptedData, USER);
       serviceVariable.setSecretTextName(encryptedData.getName());
     }
   }
