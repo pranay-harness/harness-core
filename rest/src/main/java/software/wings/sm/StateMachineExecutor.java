@@ -693,6 +693,7 @@ public class StateMachineExecutor {
     StateMachine sm = context.getStateMachine();
     State currentState =
         sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
+    addContext(context, exception);
     exception.logProcessedMessages(MANAGER, logger);
     updateStateExecutionData(stateExecutionInstance, null, FAILED, Misc.getMessage(exception), null, null);
 
@@ -1429,6 +1430,24 @@ public class StateMachineExecutor {
     return query.get();
   }
 
+  public static void addContext(ExecutionContextImpl context, WingsException exception) {
+    if (context == null) {
+      return;
+    }
+
+    if (context.getAppId() != null) {
+      exception.addContext(Application.class, context.getAppId());
+    }
+    if (context.getEnv() != null) {
+      exception.addContext(Environment.class, context.getEnv().getUuid());
+    }
+    exception.addContext(WorkflowExecution.class, context.getWorkflowExecutionId());
+
+    if (context.getStateExecutionInstance() != null) {
+      exception.addContext(StateExecutionInstance.class, context.getStateExecutionInstance().getUuid());
+    }
+  }
+
   private static class SmExecutionDispatcher implements Runnable {
     private ExecutionContextImpl context;
     private StateMachineExecutor stateMachineExecutor;
@@ -1452,10 +1471,7 @@ public class StateMachineExecutor {
       try {
         stateMachineExecutor.startExecution(context);
       } catch (WingsException exception) {
-        exception.addContext(Application.class, context.getAppId());
-        exception.addContext(Environment.class, context.getEnv().getUuid());
-        exception.addContext(WorkflowExecution.class, context.getWorkflowExecutionId());
-        exception.addContext(StateExecutionInstance.class, context.getStateExecutionInstance().getUuid());
+        addContext(context, exception);
         exception.logProcessedMessages(MANAGER, logger);
       } catch (Exception exception) {
         logger.error("Unhandled exception", exception);

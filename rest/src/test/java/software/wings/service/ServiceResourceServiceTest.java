@@ -49,6 +49,7 @@ import static software.wings.beans.command.ScpCommandUnit.Builder.aScpCommandUni
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
+import static software.wings.security.UserThreadLocal.userGuard;
 import static software.wings.stencils.StencilCategory.CONTAINERS;
 import static software.wings.utils.ArtifactType.JAR;
 import static software.wings.utils.ArtifactType.WAR;
@@ -120,6 +121,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.scheduler.JobScheduler;
+import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.ServiceResourceServiceImpl;
 import software.wings.service.impl.command.CommandHelper;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
@@ -340,28 +342,30 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    * Should update service.
    */
   @Test
-  public void shouldUpdateService() {
-    Service service = serviceBuilder.name("UPDATED_SERVICE_NAME")
-                          .description("UPDATED_SERVICE_DESC")
-                          .artifactType(WAR)
-                          .appContainer(anAppContainer().withUuid("UPDATED_APP_CONTAINER_ID").build())
-                          .build();
-    ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
-    when(executorService.submit(runnableCaptor.capture())).then(executeRunnable(runnableCaptor));
+  public void shouldUpdateService() throws IOException {
+    try (UserThreadLocal.Guard guard = userGuard(null)) {
+      Service service = serviceBuilder.name("UPDATED_SERVICE_NAME")
+                            .description("UPDATED_SERVICE_DESC")
+                            .artifactType(WAR)
+                            .appContainer(anAppContainer().withUuid("UPDATED_APP_CONTAINER_ID").build())
+                            .build();
+      ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
+      when(executorService.submit(runnableCaptor.capture())).then(executeRunnable(runnableCaptor));
 
-    srs.update(service);
-    verify(wingsPersistence).update(any(Service.class), any(UpdateOperations.class));
-    verify(wingsPersistence).createUpdateOperations(Service.class);
-    verify(updateOperations).set("name", "UPDATED_SERVICE_NAME");
-    verify(updateOperations).set("description", "UPDATED_SERVICE_DESC");
-    verify(updateOperations)
-        .set("keywords",
-            asList(service.getName().toLowerCase(), service.getDescription().toLowerCase(),
-                service.getArtifactType().name().toLowerCase()));
+      srs.update(service);
+      verify(wingsPersistence).update(any(Service.class), any(UpdateOperations.class));
+      verify(wingsPersistence).createUpdateOperations(Service.class);
+      verify(updateOperations).set("name", "UPDATED_SERVICE_NAME");
+      verify(updateOperations).set("description", "UPDATED_SERVICE_DESC");
+      verify(updateOperations)
+          .set("keywords",
+              asList(service.getName().toLowerCase(), service.getDescription().toLowerCase(),
+                  service.getArtifactType().name().toLowerCase()));
 
-    verify(serviceTemplateService)
-        .updateDefaultServiceTemplateName(APP_ID, SERVICE_ID, SERVICE_NAME, "UPDATED_SERVICE_NAME");
-    verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
+      verify(serviceTemplateService)
+          .updateDefaultServiceTemplateName(APP_ID, SERVICE_ID, SERVICE_NAME, "UPDATED_SERVICE_NAME");
+      verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
+    }
   }
 
   /**

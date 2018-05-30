@@ -507,7 +507,11 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
   @Override
   public String getAppId() {
-    return ((WorkflowStandardParams) getContextElement(ContextElementType.STANDARD)).getAppId();
+    final ContextElement contextElement = getContextElement(ContextElementType.STANDARD);
+    if (contextElement == null || !(contextElement instanceof WorkflowStandardParams)) {
+      return null;
+    }
+    return ((WorkflowStandardParams) contextElement).getAppId();
   }
 
   @Override
