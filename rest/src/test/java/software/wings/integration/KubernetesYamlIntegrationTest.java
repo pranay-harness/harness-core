@@ -44,49 +44,11 @@ import java.util.Optional;
 @Ignore
 public class KubernetesYamlIntegrationTest {
   private static final Logger logger = LoggerFactory.getLogger(KubernetesYamlIntegrationTest.class);
-  public static final String GCP_CONFIG = "{\n"
-      + "  \"type\": \"service_account\",\n"
-      + "  \"project_id\": \"exploration-161417\",\n"
-      + "  \"private_key_id\": \"c3cebea25120157ff4f16309f5a3894ae6aac964\",\n"
-      + "  \"private_key\": \"-----BEGIN PRIVATE KEY-----\\n"
-      + "MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCdYqaNvPh+f26q\\n"
-      + "55I0mXR0s4W7y8Rk+6lM8ZHwCFuEM6D3W4kNQDlYJ7QVaSmVkzE7XikwMp7/bbSG\\n"
-      + "dOcoB00gn5zGD92C6sZu8Szb0UFhU8nDbwXDlBcx1M1rrOyXtLd0+KLeKDloUgO/\\n"
-      + "0QVh+AWeHETyw1JxG77knsnxTfiXbjjJ6bxlbPboD6PLmM6wntPUqcrvXICG6uov\\n"
-      + "xyAjsJylKMraaulguWMOex1EpKjYvvMcONG4ko23QrE0YqROg5PsvqegAWapD6Fw\\n"
-      + "QL23Shjl+HsESOnzpeYGKVH2KsihDXLu5lSjHGBPzzwvg2N+F/+40+UFuvrgwxNu\\n"
-      + "dRJTN0/5AgMBAAECggEAY12ibECP30XTeEGmVGFCXl/tokifYWZmWHb4PcT5CrmR\\n"
-      + "+joniF8xFVBT6WSw5Ye+AI6NkKmVKw13eaCbRPF/J4a+c2oW344c5HSObuZp0eoV\\n"
-      + "q7cPu5BnKIYDf+T4pztozIgiRAK/Y/bL+TIdpOHzogSVH3RkO5dZ6Xu7YgdpWSk3\\n"
-      + "XCMPFKYILMwEyECSRs/ryFUGnfvXzTO4FSjLkVuLyvUSz0Vd5itIXbnbSqUM7V33\\n"
-      + "39gtZJzq0nZxA5mTtNAlDaSKnxo53rNx4EPJjjsSDL2AT9GzWMdkeGJAK0yTkNuR\\n"
-      + "gC2p60sjGhgZd56DVPkNEYUNoozFssV3RLA0zhc3UQKBgQDM1YQ66EU9ZCcq0WQV\\n"
-      + "kB/ykO59ythmw6vIwFWgvRelOZpuvrhDz1jOFIbjDaYo1nkhBdOLRKYiTcL7dKsN\\n"
-      + "iktvkMM67OY0C41hf+UYHa6EhH6+V/UNA38aGe3WLQQ3NqfEeLHKKLktp4GasV7L\\n"
-      + "R01j0APY6UhgNKWNPr7UZEd3/QKBgQDEsvEHHJGsEmslFgOufspoRRG4ylf5581s\\n"
-      + "hyDD2MQIiVdYqO8RbDkfwde2G0yIhQYEyPb/FkGkmj0PfcKLUwQ3G3XVP/3b7F3S\\n"
-      + "wJcUlrbrFJ33w2lIDQWSHnESb6N3UOyntplApH1g/ZPcwPG5q55Q4dbTyw+qiE9g\\n"
-      + "/TXm1KxCrQKBgQCOwLeY/ktTD7ukQa4IwRsiyBMOJBJQ/El6bWC/10jlY5HXYJ+2\\n"
-      + "0ojHhtLC5r5Ic8CTXSYjR0KpYZxj9tlHZHxSUoddR8DfwLVVn/afqf/4ZwaVzWMB\\n"
-      + "INCx9iQlQdZQTIz7hkoR4/O6d6UBlF/GN/kdeNlVkK9aLRa7q2D/UKvmWQKBgGv5\\n"
-      + "7uYAgNb8pWSOWScI4wOqJrhSG0lMPjA9XXclHzewbQp2cgYWaqVMO6X0BmdK3qrx\\n"
-      + "xuTwysgZAzvlxU3GHKJDqMOPhUOc1UREBKuAsJkLkEvaMYkj3NMBcwCz2AA/pCnM\\n"
-      + "ywP5R/peOTUNlaRe2WF9F/jbl5X9jdWoKla0mHthAoGBAL74vsUNr3/Px8oItAHT\\n"
-      + "QWAcQmAk+fV/xurP8LGBBoiu/JYzTJPtvBHVxpoXafmhD/ct66YG5hmnDJlVBzZe\\n"
-      + "Wj86UJtLNgSayoTRRMrmMQnkgZJLvPAf+HaJuNk9xvSI9jIi5gc/5TFEBx2dNnNU\\n"
-      + "sb5o1VMkdhFcc6MoSa25gjzJ\\n-----END PRIVATE KEY-----\\n\",\n"
-      + "  \"client_email\": \"wings-58@exploration-161417.iam.gserviceaccount.com\",\n"
-      + "  \"client_id\": \"118438022149431161950\",\n"
-      + "  \"auth_uri\": \"https://accounts.google.com/o/oauth2/auth\",\n"
-      + "  \"token_uri\": \"https://accounts.google.com/o/oauth2/token\",\n"
-      + "  \"auth_provider_x509_cert_url\": \"https://www.googleapis.com/oauth2/v1/certs\",\n"
-      + "  \"client_x509_cert_url\": \"https://www.googleapis.com/robot/v1/metadata/x509/wings-58%40exploration-161417.iam.gserviceaccount.com\"\n"
-      + "}";
 
   private static final SettingAttribute COMPUTE_PROVIDER_SETTING =
       aSettingAttribute()
           .withUuid("GCP_ID")
-          .withValue(GcpConfig.builder().serviceAccountKeyFileContent(GCP_CONFIG.toCharArray()).build())
+          .withValue(GcpConfig.builder().serviceAccountKeyFileContent("GCP_CONFIG".toCharArray()).build())
           .build();
 
   private static final String ZONE_CLUSTER = "us-central1-a" + ZONE_DELIMITER + "brett-test";
