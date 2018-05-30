@@ -383,7 +383,7 @@ public class DataGenUtil extends BaseIntegrationTest {
                                              .addFilter("accountId", Operator.EQ, accountId)
                                              .addFilter("name", Operator.EQ, userGroupName)
                                              .build();
-    PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest);
+    PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest, true);
     UserGroup userGroup = pageResponse.get(0);
     userGroup.setMembers(asList(user));
     userGroupService.updateMembers(userGroup);

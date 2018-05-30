@@ -1223,7 +1223,7 @@ public class AuthHandler {
                                              .addFilter("accountId", EQ, accountId)
                                              .addFilter("name", EQ, DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME)
                                              .build();
-    PageResponse<UserGroup> userGroups = userGroupService.list(accountId, pageRequest);
+    PageResponse<UserGroup> userGroups = userGroupService.list(accountId, pageRequest, true);
     UserGroup userGroup = null;
     if (CollectionUtils.isNotEmpty(userGroups)) {
       userGroup = userGroups.get(0);

@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static java.net.URLEncoder.encode;
@@ -24,6 +25,8 @@ import static software.wings.beans.ErrorCode.USER_ALREADY_REGISTERED;
 import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
 import static software.wings.beans.ErrorCode.USER_DOMAIN_NOT_ALLOWED;
 import static software.wings.beans.ErrorCode.USER_INVITATION_DOES_NOT_EXIST;
+import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.exception.WingsException.USER;
@@ -37,6 +40,8 @@ import static software.wings.security.PermissionAttribute.ResourceType.WORKFLOW;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -75,6 +80,7 @@ import software.wings.beans.ApplicationRole;
 import software.wings.beans.Base;
 import software.wings.beans.EmailVerificationToken;
 import software.wings.beans.Role;
+import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
@@ -107,6 +113,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -257,6 +264,11 @@ public class UserServiceImpl implements UserService {
     return user;
   }
 
+  private void loadUserGroups(String accountId, User user, boolean loadUsers) {
+    List<UserGroup> userGroupList = getUserGroupsOfUser(accountId, user.getUuid(), loadUsers);
+    user.setUserGroups(userGroupList);
+  }
+
   private boolean domainAllowedToRegister(String email) {
     return configuration.getPortal().getAllowedDomainsList().isEmpty()
         || configuration.getPortal().getAllowedDomains().contains(email.split("@")[1]);
@@ -373,11 +385,12 @@ public class UserServiceImpl implements UserService {
   }
 
   private UserInvite inviteUser(UserInvite userInvite) {
-    Account account = accountService.get(userInvite.getAccountId());
+    String accountId = userInvite.getAccountId();
+    Account account = accountService.get(accountId);
     String inviteId = wingsPersistence.save(userInvite);
 
     if (CollectionUtils.isEmpty(userInvite.getRoles())) {
-      Role accountAdminRole = roleService.getAccountAdminRole(userInvite.getAccountId());
+      Role accountAdminRole = roleService.getAccountAdminRole(accountId);
       if (accountAdminRole != null) {
         List<Role> roleList = new ArrayList<>();
         roleList.add(accountAdminRole);
@@ -399,8 +412,7 @@ public class UserServiceImpl implements UserService {
       user = save(user);
       sendNewInvitationMail(userInvite, account);
     } else {
-      boolean userAlreadyAddedToAccount =
-          user.getAccounts().stream().anyMatch(acc -> acc.getUuid().equals(userInvite.getAccountId()));
+      boolean userAlreadyAddedToAccount = user.getAccounts().stream().anyMatch(acc -> acc.getUuid().equals(accountId));
       if (userAlreadyAddedToAccount) {
         addRoles(user, userInvite.getRoles());
       } else {
@@ -412,7 +424,66 @@ public class UserServiceImpl implements UserService {
         sendAddedRoleEmail(user, account, userInvite.getRoles());
       }
     }
+
+    List<UserGroup> userGroups = userInvite.getUserGroups();
+    addUserToUserGroups(user, userGroups);
     return wingsPersistence.get(UserInvite.class, userInvite.getAppId(), inviteId);
+  }
+
+  private void addUserToUserGroups(User user, List<UserGroup> userGroups) {
+    if (isNotEmpty(userGroups)) {
+      final User userFinal = user;
+      userGroups.stream().forEach(userGroup -> {
+        List<User> userGroupMembers = userGroup.getMembers();
+        if (isEmpty(userGroupMembers)) {
+          userGroupMembers = new ArrayList<>();
+          userGroup.setMembers(userGroupMembers);
+        }
+        userGroupMembers.add(userFinal);
+        userGroupService.updateMembers(userGroup);
+      });
+    }
+  }
+
+  private void addUserToUserGroups(String accountId, User user, SetView<String> userGroupIds) {
+    if (isNotEmpty(userGroupIds)) {
+      List<UserGroup> userGroups = getUserGroups(accountId, userGroupIds);
+      addUserToUserGroups(user, userGroups);
+    }
+  }
+
+  private void removeUserFromUserGroups(String accountId, User user, SetView<String> userGroupIds) {
+    if (isNotEmpty(userGroupIds)) {
+      List<UserGroup> userGroups = getUserGroups(accountId, userGroupIds);
+      removeUserFromUserGroups(user, userGroups);
+    }
+  }
+
+  private void removeUserFromUserGroups(User user, List<UserGroup> userGroups) {
+    if (isNotEmpty(userGroups)) {
+      final User userFinal = user;
+      userGroups.stream().forEach(userGroup -> {
+        List<User> userGroupMembers = userGroup.getMembers();
+        if (userGroupMembers != null) {
+          userGroupMembers.remove(userFinal);
+          userGroupService.updateMembers(userGroup);
+        }
+      });
+    }
+  }
+
+  private List<UserGroup> getUserGroupsOfUser(String accountId, String userId, boolean loadUsers) {
+    PageRequest<UserGroup> pageRequest =
+        aPageRequest().addFilter("accountId", EQ, accountId).addFilter("memberIds", EQ, userId).build();
+    PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest, loadUsers);
+    return pageResponse.getResponse();
+  }
+
+  private List<UserGroup> getUserGroups(String accountId, SetView<String> userGroupIds) {
+    PageRequest<UserGroup> pageRequest =
+        aPageRequest().addFilter("_id", IN, userGroupIds.toArray()).addFilter("accountId", EQ, accountId).build();
+    PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest, true);
+    return pageResponse.getResponse();
   }
 
   private void sendNewInvitationMail(UserInvite userInvite, Account account) {
@@ -475,8 +546,8 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public UserInvite getInvite(String accountId, String inviteId) {
-    return wingsPersistence.get(UserInvite.class,
-        aPageRequest().addFilter("accountId", Operator.EQ, accountId).addFilter("uuid", Operator.EQ, inviteId).build());
+    return wingsPersistence.get(
+        UserInvite.class, aPageRequest().addFilter("accountId", EQ, accountId).addFilter("uuid", EQ, inviteId).build());
   }
 
   @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
@@ -662,14 +733,55 @@ public class UserServiceImpl implements UserService {
     return wingsPersistence.get(User.class, user.getAppId(), user.getUuid());
   }
 
+  @Override
+  public User updateUserGroupsOfUser(String userId, List<UserGroup> userGroups, String accountId) {
+    User userFromDB = get(accountId, userId);
+    List<UserGroup> oldUserGroups = userFromDB.getUserGroups();
+
+    Set<String> oldUserGroupIds = oldUserGroups.stream().map(UserGroup::getUuid).collect(Collectors.toSet());
+    Set<String> newUserGroupIds = userGroups.stream().map(UserGroup::getUuid).collect(Collectors.toSet());
+
+    SetView<String> userGroupMemberDeletions = Sets.difference(oldUserGroupIds, newUserGroupIds);
+    SetView<String> userGroupMemberAdditions = Sets.difference(newUserGroupIds, oldUserGroupIds);
+
+    if (isNotEmpty(userGroupMemberAdditions)) {
+      addUserToUserGroups(accountId, userFromDB, userGroupMemberAdditions);
+    }
+
+    if (isNotEmpty(userGroupMemberDeletions)) {
+      removeUserFromUserGroups(accountId, userFromDB, userGroupMemberDeletions);
+    }
+
+    authService.evictAccountUserPermissionInfoCache(accountId, Arrays.asList(userId));
+    return get(accountId, userId);
+  }
+
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#list(software.wings.dl.PageRequest)
    */
   @Override
   public PageResponse<User> list(PageRequest<User> pageRequest) {
+    String accountId = null;
+    SearchFilter searchFilter = pageRequest.getFilters()
+                                    .stream()
+                                    .filter(filter -> filter.getFieldName().equals("accounts"))
+                                    .findFirst()
+                                    .orElse(null);
+
+    if (searchFilter != null) {
+      Account account = (Account) searchFilter.getFieldValues()[0];
+      accountId = account.getUuid();
+    }
+
+    final String accountIdFinal = accountId;
     PageResponse<User> pageResponse = wingsPersistence.query(User.class, pageRequest);
     if (pageResponse != null) {
-      pageResponse.forEach(user -> loadSupportAccounts(user));
+      pageResponse.forEach(user -> {
+        loadSupportAccounts(user);
+        if (accountIdFinal != null) {
+          loadUserGroups(accountIdFinal, user, false);
+        }
+      });
     }
     return pageResponse;
   }
@@ -703,8 +815,8 @@ public class UserServiceImpl implements UserService {
       }
     }
 
-    PageResponse<UserGroup> pageResponse =
-        userGroupService.list(accountId, aPageRequest().addFilter("memberIds", Operator.HAS, user.getUuid()).build());
+    PageResponse<UserGroup> pageResponse = userGroupService.list(
+        accountId, aPageRequest().addFilter("memberIds", Operator.HAS, user.getUuid()).build(), true);
     List<UserGroup> userGroupList = pageResponse.getResponse();
     userGroupList.stream().forEach(userGroup -> {
       List<User> members = userGroup.getMembers();
@@ -723,6 +835,9 @@ public class UserServiceImpl implements UserService {
                                           .set("accounts", user.getAccounts());
     Query<User> updateQuery = wingsPersistence.createQuery(User.class).filter(ID_KEY, userId);
     wingsPersistence.update(updateQuery, updateOp);
+
+    removeUserFromUserGroups(user, user.getUserGroups());
+
     evictUserFromCache(userId);
   }
 
@@ -749,6 +864,21 @@ public class UserServiceImpl implements UserService {
     List<Account> accountList =
         harnessUserGroupService.listAllowedSupportAccountsForUser(user.getUuid(), excludeAccounts);
     user.setSupportAccounts(accountList);
+  }
+
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.UserService#get(java.lang.String, java.lang.String)
+   */
+  @Override
+  public User get(String accountId, String userId) {
+    User user = wingsPersistence.get(User.class, userId);
+    if (user == null) {
+      throw new WingsException(USER_DOES_NOT_EXIST);
+    }
+
+    loadSupportAccounts(user);
+    loadUserGroups(accountId, user, false);
+    return user;
   }
 
   @Override
@@ -919,15 +1049,6 @@ public class UserServiceImpl implements UserService {
       }
     }
     return ZendeskSsoLoginResponse.builder().redirectUrl(redirectUrl).userId(user.getUuid()).build();
-  }
-
-  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
-  @Override
-  public User addUserGroups(User user, List<UserGroup> userGroups) {
-    UpdateResults updated = wingsPersistence.update(
-        wingsPersistence.createQuery(User.class).filter("email", user.getEmail()).filter("appId", user.getAppId()),
-        wingsPersistence.createUpdateOperations(User.class).addToSet("userGroups", userGroups));
-    return user;
   }
 
   private Role ensureRolePresent(String roleId) {

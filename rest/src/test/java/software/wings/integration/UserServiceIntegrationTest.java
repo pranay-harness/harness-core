@@ -10,6 +10,7 @@ import static org.junit.Assert.assertTrue;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
+import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import com.google.inject.Inject;
 
@@ -26,6 +27,8 @@ import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
+import software.wings.beans.security.HarnessUserGroup;
+import software.wings.security.PermissionAttribute.Action;
 import software.wings.service.intfc.AccountService;
 import software.wings.utils.JsonUtils;
 
@@ -325,6 +328,15 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   public void testAccountCreationWithKms() {
     loginAdminUser();
+    User user = wingsPersistence.createQuery(User.class).filter("email", "admin@harness.io").get();
+
+    HarnessUserGroup harnessUserGroup = HarnessUserGroup.builder()
+                                            .applyToAllAccounts(true)
+                                            .memberIds(Sets.newHashSet(user.getUuid()))
+                                            .actions(Sets.newHashSet(Action.READ))
+                                            .build();
+    wingsPersistence.save(harnessUserGroup);
+
     Account account = Account.Builder.anAccount()
                           .withAccountName(UUID.randomUUID().toString())
                           .withCompanyName(UUID.randomUUID().toString())

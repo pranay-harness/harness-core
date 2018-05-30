@@ -58,6 +58,17 @@ public interface UserService {
   @ValidationGroups(Update.class) User update(@Valid User user);
 
   /**
+   * Update the user and the associated user groups.
+   *
+   * @param userId the user id
+   * @param userGroups updated user groups
+   * @param accountId the account id
+   * @return the user
+   */
+  @ValidationGroups(Update.class)
+  User updateUserGroupsOfUser(String userId, List<UserGroup> userGroups, String accountId);
+
+  /**
    * List.
    *
    * @param pageRequest the page request
@@ -80,6 +91,15 @@ public interface UserService {
    * @return the user
    */
   User get(@NotEmpty String userId);
+
+  /**
+   * Gets the user and loads the user groups for the given account.
+   *
+   * @param accountId the account Id
+   * @param userId the user id
+   * @return the user
+   */
+  User get(@NotEmpty String accountId, @NotEmpty String userId);
 
   /**
    * Gets user from cache or db.
@@ -240,8 +260,6 @@ public interface UserService {
    */
   ZendeskSsoLoginResponse generateZendeskSsoJwt(String returnToUrl);
 
-  User addUserGroups(User user, List<UserGroup> userGroups);
-
   /**
    *
    * @param userId
@@ -252,7 +270,8 @@ public interface UserService {
 
   /**
    *
-   * @param userId
+   * @param jwtToken
+   * @param category
    * @return
    */
   User verifyJWTToken(@NotEmpty String jwtToken, @NotNull SecretManager.JWT_CATEGORY category);

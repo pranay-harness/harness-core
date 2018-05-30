@@ -58,7 +58,8 @@ public class AddUsersToAdminUserGroup implements Migration {
           boolean rbacEnabled = featureFlagService.isEnabled(RBAC, account.getUuid());
           List<UserGroup> userGroupList = userGroupService.getUserGroupsByAccountId(account.getUuid(), user);
           if (!rbacEnabled && isEmpty(userGroupList)) {
-            PageResponse<UserGroup> pageResponse = userGroupService.list(account.getUuid(), aPageRequest().build());
+            PageResponse<UserGroup> pageResponse =
+                userGroupService.list(account.getUuid(), aPageRequest().build(), true);
             List<UserGroup> userGroupsOfAccount = pageResponse.getResponse();
             Optional<UserGroup> userGroupOptional =
                 userGroupsOfAccount.stream()

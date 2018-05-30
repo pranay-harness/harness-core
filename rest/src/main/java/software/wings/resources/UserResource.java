@@ -176,7 +176,15 @@ public class UserResource {
     if (existingUser == null) {
       throw new InvalidRequestException("Invalid User");
     }
-    return new RestResponse<>(userService.addAccount(account, existingUser));
+
+    if (harnessUserGroupService.isHarnessSupportUser(existingUser.getUuid())) {
+      return new RestResponse<>(userService.addAccount(account, existingUser));
+    } else {
+      return Builder.aRestResponse()
+          .withResponseMessages(Lists.newArrayList(
+              ResponseMessage.aResponseMessage().message("User not allowed to add account").level(Level.ERROR).build()))
+          .build();
+    }
   }
 
   /**
@@ -192,13 +200,9 @@ public class UserResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.USER_PERMISSION_MANAGEMENT)
-  public RestResponse<User> update(@PathParam("userId") String userId, User user) {
-    User authUser = UserThreadLocal.get();
-    if (!authUser.getUuid().equals(userId)) {
-      throw new WingsException(ErrorCode.ACCESS_DENIED);
-    }
-    user.setUuid(userId);
-    return new RestResponse<>(userService.update(user));
+  public RestResponse<User> updateUserGroupsOfUser(
+      @QueryParam("accountId") @NotEmpty String accountId, @PathParam("userId") String userId, User user) {
+    return new RestResponse<>(userService.updateUserGroupsOfUser(userId, user.getUserGroups(), accountId));
   }
 
   /**
