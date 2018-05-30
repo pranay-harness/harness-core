@@ -20,6 +20,8 @@ import static software.wings.api.DeploymentType.HELM;
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.PCF;
 import static software.wings.api.DeploymentType.SSH;
+import static software.wings.beans.Base.APP_ID_KEY;
+import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.WORKFLOW;
@@ -95,6 +97,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import io.harness.observer.Rejection;
 import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
@@ -138,6 +141,7 @@ import software.wings.beans.PhysicalInfrastructureMappingBase;
 import software.wings.beans.Pipeline;
 import software.wings.beans.RepairActionCode;
 import software.wings.beans.RoleType;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
@@ -2814,5 +2818,94 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         notNullCheck("Invalid serviceId", workflow.getServiceId(), USER);
       }
     }
+  }
+
+  private int verifyDeleteInEachPhaseStep(
+      PhaseStep phaseStep, SettingAttribute settingAttribute, List<String> context, StringBuilder sb) {
+    if (phaseStep.getSteps() == null) {
+      return 0;
+    }
+    int count = 0;
+    for (GraphNode step : phaseStep.getSteps()) {
+      if (step.getProperties() == null) {
+        continue;
+      }
+      for (Object values : step.getProperties().values()) {
+        if (!settingAttribute.getUuid().equals(values)) {
+          continue;
+        }
+        sb.append(" (")
+            .append(String.join(":", context))
+            .append(':')
+            .append(phaseStep.getName())
+            .append(':')
+            .append(step.getName())
+            .append(") ");
+        ++count;
+      }
+    }
+
+    return count;
+  }
+
+  @Override
+  public Rejection settingsServiceDeleting(SettingAttribute settingAttribute) {
+    List<Workflow> workflows = new ArrayList<>();
+    StringBuilder sb = new StringBuilder();
+
+    if (settingAttribute.getAppId().equals(GLOBAL_APP_ID)) {
+      String accountId = settingAttribute.getAccountId();
+      List<String> appsIds =
+          appService.getAppsByAccountId(accountId).stream().map(app -> app.getAppId()).collect(toList());
+
+      if (!appsIds.isEmpty()) {
+        workflows = listWorkflows(aPageRequest()
+                                      .withLimit(PageRequest.UNLIMITED)
+                                      .addFilter(APP_ID_KEY, Operator.IN, appsIds.toArray())
+                                      .build())
+                        .getResponse();
+      }
+    } else {
+      workflows = listWorkflows(aPageRequest()
+                                    .withLimit(PageRequest.UNLIMITED)
+                                    .addFilter(APP_ID_KEY, Operator.EQ, settingAttribute.getAppId())
+                                    .build())
+                      .getResponse();
+    }
+
+    int count = 0;
+    for (Workflow workflow : workflows) {
+      OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+      if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
+        CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
+
+        // predeployment steps
+        PhaseStep preDeploymentStep = canaryOrchestrationWorkflow.getPreDeploymentSteps();
+        count +=
+            verifyDeleteInEachPhaseStep(preDeploymentStep, settingAttribute, Arrays.asList(workflow.getName()), sb);
+
+        // workflow phases
+        List<WorkflowPhase> workflowPhases = canaryOrchestrationWorkflow.getWorkflowPhases();
+        for (WorkflowPhase workflowPhase : workflowPhases) {
+          for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
+            count += verifyDeleteInEachPhaseStep(
+                phaseStep, settingAttribute, Arrays.asList(workflow.getName(), workflowPhase.getName()), sb);
+          }
+        }
+
+        // postDeployment steps
+        PhaseStep postDeploymentStep = canaryOrchestrationWorkflow.getPostDeploymentSteps();
+        count +=
+            verifyDeleteInEachPhaseStep(postDeploymentStep, settingAttribute, Arrays.asList(workflow.getName()), sb);
+      }
+    }
+
+    if (count == 0) {
+      return null;
+    }
+
+    final String msg = format("Connector [%s] is referenced by %s [%s]", settingAttribute.getName(),
+        plural("workflow", count), sb.toString());
+    return (Rejection) () -> msg;
   }
 }

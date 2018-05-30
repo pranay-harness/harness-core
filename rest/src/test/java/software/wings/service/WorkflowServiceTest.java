@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.util.Lists.newArrayList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.inOrder;
@@ -40,6 +41,7 @@ import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.SELECT_NODE;
 import static software.wings.beans.Role.Builder.aRole;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.TemplateExpression.Builder.aTemplateExpression;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
@@ -64,6 +66,7 @@ import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.sm.StateType.FORK;
 import static software.wings.sm.StateType.HTTP;
+import static software.wings.sm.StateType.JENKINS;
 import static software.wings.sm.StateType.REPEAT;
 import static software.wings.utils.ArtifactType.DOCKER;
 import static software.wings.utils.ArtifactType.WAR;
@@ -75,7 +78,9 @@ import static software.wings.utils.WingsTestConstants.ENV_ID_CHANGED;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID_CHANGED;
+import static software.wings.utils.WingsTestConstants.JENKINS_URL;
 import static software.wings.utils.WingsTestConstants.NOTIFICATION_GROUP_ID;
+import static software.wings.utils.WingsTestConstants.PASSWORD;
 import static software.wings.utils.WingsTestConstants.ROLE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_COMMAND_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -83,6 +88,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID_CHANGED;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TARGET_APP_ID;
 import static software.wings.utils.WingsTestConstants.TARGET_SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.USER_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
@@ -122,6 +128,7 @@ import software.wings.beans.Graph;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
+import software.wings.beans.JenkinsConfig;
 import software.wings.beans.MultiServiceOrchestrationWorkflow;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
@@ -137,6 +144,8 @@ import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
@@ -3666,5 +3675,73 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .isNotEmpty()
         .extracting(infrastructureMapping -> infrastructureMapping.getUuid())
         .contains(INFRA_MAPPING_ID);
+  }
+
+  private PhaseStep createPhaseStep(String uuid) {
+    return aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
+        .addStep(aGraphNode()
+                     .withId(generateUuid())
+                     .withType(JENKINS.getName())
+                     .withName(UPGRADE_CONTAINERS)
+                     .addProperty(JENKINS.getName(), uuid)
+                     .build())
+        .build();
+  }
+
+  private Workflow createWorkflowWithParam(PhaseStep phaseStep) {
+    return aWorkflow()
+        .withName(WORKFLOW_NAME)
+        .withAppId(APP_ID)
+        .withWorkflowType(WorkflowType.ORCHESTRATION)
+        .withOrchestrationWorkflow(
+            aCanaryOrchestrationWorkflow()
+                .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                .addWorkflowPhase(aWorkflowPhase()
+                                      .withInfraMappingId(INFRA_MAPPING_ID)
+                                      .withServiceId(SERVICE_ID)
+                                      .addPhaseStep(phaseStep)
+                                      .withDeploymentType(SSH)
+                                      .build())
+                .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                .build())
+        .build();
+  }
+
+  @Test
+  public void testSettingsServiceDeleting() {
+    String uuid = generateUuid();
+
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(anAwsInfrastructureMapping()
+                        .withUuid(INFRA_MAPPING_ID)
+                        .withDeploymentType(SSH.name())
+                        .withComputeProviderType(SettingVariableTypes.AWS.name())
+                        .build());
+
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withAppId("APP_ID")
+                                            .withAccountId("ACCOUNT_ID")
+                                            .withName("SETTING_NAME")
+                                            .withCategory(Category.CONNECTOR)
+                                            .withUuid(uuid)
+                                            .withValue(JenkinsConfig.builder()
+                                                           .jenkinsUrl(JENKINS_URL)
+                                                           .password(PASSWORD)
+                                                           .username(USER_NAME)
+                                                           .accountId("ACCOUNT_ID")
+                                                           .build())
+                                            .build();
+
+    // Create a workflow with a random Jenkins Id
+    PhaseStep phaseStep = createPhaseStep(generateUuid());
+    Workflow workflow = createWorkflowWithParam(phaseStep);
+    workflowService.createWorkflow(workflow);
+    assertNull(workflowService.settingsServiceDeleting(settingAttribute));
+
+    // Create a workflow with a specific Jenkins Id
+    phaseStep = createPhaseStep(uuid);
+    workflow = createWorkflowWithParam(phaseStep);
+    workflowService.createWorkflow(workflow);
+    assertNotNull(workflowService.settingsServiceDeleting(settingAttribute).message());
   }
 }

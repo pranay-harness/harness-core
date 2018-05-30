@@ -40,6 +40,9 @@ import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.observer.Rejection;
+import io.harness.observer.Subject;
+import lombok.Getter;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,6 +74,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.manipulation.SettingsServiceManipulationObserver;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -102,6 +106,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private AuthHandler authHandler;
   @Transient @Inject private SecretManager secretManager;
   @Inject private EncryptionService encryptionService;
+  @Getter private Subject<SettingsServiceManipulationObserver> manipulationSubject = new Subject<>();
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.SettingsService#list(software.wings.dl.PageRequest)
@@ -484,6 +489,13 @@ public class SettingsServiceImpl implements SettingsService {
                 artifactStreamNames.size(), plural("Source", artifactStreamNames.size()),
                 Joiner.on(", ").join(artifactStreamNames)),
             USER);
+      }
+
+      List<Rejection> rejections = manipulationSubject.fireApproveFromAll(
+          SettingsServiceManipulationObxxxxxxxx:settingsServiceDeleting, connectorSetting);
+      if (isNotEmpty(rejections)) {
+        throw new InvalidRequestException(
+            format("[%s]", Joiner.on("\n").join(rejections.stream().map(Rejection::message).collect(toList()))), USER);
       }
     }
 

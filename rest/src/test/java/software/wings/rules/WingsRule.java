@@ -76,6 +76,7 @@ import software.wings.app.HQueryFactory;
 import software.wings.app.LicenseModule;
 import software.wings.app.MainConfiguration;
 import software.wings.app.QueueModule;
+import software.wings.app.WingsApplication;
 import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
 import software.wings.core.queue.AbstractQueueListener;
@@ -281,6 +282,7 @@ public class WingsRule implements MethodRule {
     ThreadContext.setContext(testName + "-");
     registerListeners(annotations.stream().filter(annotation -> Listeners.class.isInstance(annotation)).findFirst());
     registerScheduledJobs(injector);
+    WingsApplication.registerObservers(injector);
   }
 
   private MongoClient getRandomPortMongoClient() throws Exception {

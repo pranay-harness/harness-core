@@ -70,9 +70,13 @@ import software.wings.scheduler.ZombieHunterJob;
 import software.wings.security.AuthResponseFilter;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.AuthenticationFilter;
+import software.wings.service.impl.SettingsServiceImpl;
+import software.wings.service.impl.WorkflowServiceImpl;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.MigrationService;
+import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.JsonSubtypeResolver;
 import software.wings.waitnotify.Notifier;
 import software.wings.waitnotify.NotifyResponseCleanupHandler;
@@ -210,6 +214,8 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     scheduleJobs(injector);
 
+    registerObservers(injector);
+
     registerCronJobs(injector);
 
     registerCorsFilter(configuration, environment);
@@ -322,6 +328,13 @@ public class WingsApplication extends Application<MainConfiguration> {
         .scheduleWithFixedDelay(injector.getInstance(DelegateQueueTask.class), 0L, 5L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("gitChangeSet")))
         .scheduleWithFixedDelay(injector.getInstance(GitChangeSetRunnable.class), 0L, 2L, TimeUnit.SECONDS);
+  }
+
+  public static void registerObservers(Injector injector) {
+    SettingsServiceImpl settingsService = (SettingsServiceImpl) injector.getInstance(Key.get(SettingsService.class));
+    WorkflowServiceImpl workflowService = (WorkflowServiceImpl) injector.getInstance(Key.get(WorkflowService.class));
+
+    settingsService.getManipulationSubject().register(workflowService);
   }
 
   private void registerCronJobs(Injector injector) {
