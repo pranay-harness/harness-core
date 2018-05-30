@@ -2,7 +2,6 @@ package software.wings.integration;
 
 import static java.util.Arrays.asList;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.cloudprovider.aws.AwsClusterConfiguration.Builder.anAwsClusterConfiguration;
 
 import com.google.inject.Inject;
 
@@ -57,14 +56,14 @@ public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
 
   private AwsClusterConfiguration getAwsClusterConfiguration(Map<String, Object> params) {
     String serviceDefinition = getServiceDefinition(serviceJson, params);
-    return anAwsClusterConfiguration()
-        .withName((String) params.get("CLUSTER_NAME") + "_" + params.get("SERVICE_VERSION"))
-        .withSize((Integer) params.get("CLUSTER_SIZE"))
-        .withServiceDefinition(serviceDefinition)
-        .withLauncherConfiguration(params.get("LAUNCH_CONFIG") + "_" + params.get("SERVICE_VERSION"))
-        .withAutoScalingGroupName(params.get("LAUNCH_CONFIG") + "Asg_" + params.get("SERVICE_VERSION"))
-        .withVpcZoneIdentifiers("subnet-9725a6bd,subnet-42ddaf34,subnet-64d99b59,subnet-fbe268a3")
-        .withAvailabilityZones(asList("us-east-1a", "us-east-1c", "us-east-1d", "us-east-1e")) // optional
+    return AwsClusterConfiguration.builder()
+        .name((String) params.get("CLUSTER_NAME") + "_" + params.get("SERVICE_VERSION"))
+        .size((Integer) params.get("CLUSTER_SIZE"))
+        .serviceDefinition(serviceDefinition)
+        .launcherConfiguration(params.get("LAUNCH_CONFIG") + "_" + params.get("SERVICE_VERSION"))
+        .autoScalingGroupName(params.get("LAUNCH_CONFIG") + "Asg_" + params.get("SERVICE_VERSION"))
+        .vpcZoneIdentifiers("subnet-9725a6bd,subnet-42ddaf34,subnet-64d99b59,subnet-fbe268a3")
+        .availabilityZones(asList("us-east-1a", "us-east-1c", "us-east-1d", "us-east-1e")) // optional
         .build();
   }
 

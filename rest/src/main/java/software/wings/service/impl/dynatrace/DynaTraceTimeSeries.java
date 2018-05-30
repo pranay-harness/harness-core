@@ -71,46 +71,13 @@ public enum DynaTraceTimeSeries {
 
   public static Map<String, TimeSeriesMetricDefinition> getDefinitionsToAnalyze() {
     Map<String, TimeSeriesMetricDefinition> rv = new HashMap<>();
-
-    rv.put(CLIENT_SIDE_FAILURE_RATE.getSavedFieldName(),
-        TimeSeriesMetricDefinition.builder()
-            .metricName(CLIENT_SIDE_FAILURE_RATE.getSavedFieldName())
-            .metricType(MetricType.ERROR)
-            .build());
-
-    // errorcounthttp4xx
-    rv.put(ERROR_COUNT_HTTP_4XX.getSavedFieldName(),
-        TimeSeriesMetricDefinition.builder()
-            .metricName(ERROR_COUNT_HTTP_4XX.getSavedFieldName())
-            .metricType(MetricType.ERROR)
-            .build());
-
-    // errorcounthttp5xx
-    rv.put(ERROR_COUNT_HTTP_5XX.getSavedFieldName(),
-        TimeSeriesMetricDefinition.builder()
-            .metricName(ERROR_COUNT_HTTP_5XX.getSavedFieldName())
-            .metricType(MetricType.ERROR)
-            .build());
-
-    // serversidefailurerate
-    rv.put(SERVER_SIDE_FAILURE_RATE.getSavedFieldName(),
-        TimeSeriesMetricDefinition.builder()
-            .metricName(SERVER_SIDE_FAILURE_RATE.getSavedFieldName())
-            .metricType(MetricType.ERROR)
-            .build());
-
-    rv.put(REQUEST_PER_MINUTE.getSavedFieldName(),
-        TimeSeriesMetricDefinition.builder()
-            .metricName(REQUEST_PER_MINUTE.getSavedFieldName())
-            .metricType(MetricType.THROUGHPUT)
-            .build());
-
-    rv.put(RESPONSE_TIME.getSavedFieldName(),
-        TimeSeriesMetricDefinition.builder()
-            .metricName(RESPONSE_TIME.getSavedFieldName())
-            .metricType(MetricType.RESP_TIME)
-            .build());
-
+    for (DynaTraceTimeSeries timeSeries : DynaTraceTimeSeries.values()) {
+      rv.put(timeSeries.getSavedFieldName(),
+          TimeSeriesMetricDefinition.builder()
+              .metricName(timeSeries.getSavedFieldName())
+              .metricType(timeSeries.getMetricType())
+              .build());
+    }
     return rv;
   }
 

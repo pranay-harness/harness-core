@@ -5,7 +5,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.cloudprovider.aws.AwsClusterConfiguration.Builder.anAwsClusterConfiguration;
 import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
 import static software.wings.utils.WingsTestConstants.AUTO_SCALING_GROUP_NAME;
 import static software.wings.utils.WingsTestConstants.CLUSTER_NAME;
@@ -37,14 +36,14 @@ public class AwsClusterServiceImplTest extends WingsBaseTest {
 
   private SettingAttribute cloudProviderSetting =
       aSettingAttribute().withValue(AwsConfig.builder().accessKey(ACCESS_KEY).secretKey(SECRET_KEY).build()).build();
-  private AwsClusterConfiguration clusterConfiguration = anAwsClusterConfiguration()
-                                                             .withName(CLUSTER_NAME)
-                                                             .withSize(5)
-                                                             .withServiceDefinition(SERVICE_DEFINITION)
-                                                             .withLauncherConfiguration(LAUNCHER_TEMPLATE_NAME)
-                                                             .withAutoScalingGroupName(AUTO_SCALING_GROUP_NAME)
-                                                             .withVpcZoneIdentifiers("VPC_ZONE_1, VPC_ZONE_2")
-                                                             .withAvailabilityZones(asList("AZ1", "AZ2"))
+  private AwsClusterConfiguration clusterConfiguration = AwsClusterConfiguration.builder()
+                                                             .name(CLUSTER_NAME)
+                                                             .size(5)
+                                                             .serviceDefinition(SERVICE_DEFINITION)
+                                                             .launcherConfiguration(LAUNCHER_TEMPLATE_NAME)
+                                                             .autoScalingGroupName(AUTO_SCALING_GROUP_NAME)
+                                                             .vpcZoneIdentifiers("VPC_ZONE_1, VPC_ZONE_2")
+                                                             .availabilityZones(asList("AZ1", "AZ2"))
                                                              .build();
 
   @Test
