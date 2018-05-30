@@ -13,6 +13,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.security.UserGroup;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserRequestInfo;
 import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
@@ -41,6 +42,8 @@ public class User extends Base implements Principal {
   @Transient private String accountName;
 
   @Reference(idOnly = true, ignoreMissing = true) private List<Role> roles = new ArrayList<>();
+
+  @Transient private List<UserGroup> userGroups = new ArrayList<>();
 
   @Reference(idOnly = true, ignoreMissing = true) private List<Account> accounts = new ArrayList<>();
 
@@ -385,6 +388,14 @@ public class User extends Base implements Principal {
     this.supportAccounts = supportAccounts;
   }
 
+  public List<UserGroup> getUserGroups() {
+    return userGroups;
+  }
+
+  public void setUserGroups(List<UserGroup> userGroups) {
+    this.userGroups = userGroups;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -492,6 +503,7 @@ public class User extends Base implements Principal {
     private String companyName;
     private String accountName;
     private List<Role> roles = new ArrayList<>();
+    private List<UserGroup> userGroups = new ArrayList<>();
     private List<Account> accounts = new ArrayList<>();
     private List<Account> supportAccounts = new ArrayList<>();
     private long lastLogin;
@@ -543,6 +555,11 @@ public class User extends Base implements Principal {
 
     public Builder withRoles(List<Role> roles) {
       this.roles = roles;
+      return this;
+    }
+
+    public Builder withUserGroups(List<UserGroup> userGroups) {
+      this.userGroups = userGroups;
       return this;
     }
 
@@ -640,6 +657,7 @@ public class User extends Base implements Principal {
           .withPasswordHash(passwordHash)
           .withCompanyName(companyName)
           .withRoles(roles)
+          .withUserGroups(userGroups)
           .withAccounts(accounts)
           .withSupportAccounts(supportAccounts)
           .withLastLogin(lastLogin)
@@ -668,6 +686,7 @@ public class User extends Base implements Principal {
       user.setCompanyName(companyName);
       user.setAccountName(accountName);
       user.setRoles(roles);
+      user.setUserGroups(userGroups);
       user.setAccounts(accounts);
       user.setSupportAccounts(supportAccounts);
       user.setLastLogin(lastLogin);

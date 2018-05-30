@@ -53,7 +53,7 @@ public class CreateSupportUserGroupsAndRenameAccountAdmin implements Migration {
                 .addFilter("name", IN, DEFAULT_OLD_USER_GROUP_NAME, DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME,
                     DEFAULT_PROD_SUPPORT_USER_GROUP_NAME, DEFAULT_NON_PROD_SUPPORT_USER_GROUP_NAME)
                 .build();
-        PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest);
+        PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest, true);
 
         List<UserGroup> userGroupList = pageResponse.getResponse();
 

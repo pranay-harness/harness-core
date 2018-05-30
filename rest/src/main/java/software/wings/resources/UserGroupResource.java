@@ -65,7 +65,7 @@ public class UserGroupResource {
   @AuthRule(permissionType = PermissionType.USER_PERMISSION_MANAGEMENT)
   public RestResponse<PageResponse<UserGroup>> list(
       @BeanParam PageRequest<UserGroup> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
-    PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest);
+    PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest, true);
     return new RestResponse<>(pageResponse);
   }
 

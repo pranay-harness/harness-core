@@ -8,6 +8,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.security.UserGroup;
 import software.wings.utils.validation.Update;
 
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ public class UserInvite extends Base {
   @NotEmpty private String accountId;
   @NotEmpty(groups = {Update.class}) private String email;
   @Reference(idOnly = true, ignoreMissing = true) private List<Role> roles = new ArrayList<>();
+  @Transient private List<UserGroup> userGroups = new ArrayList<>();
   private boolean completed;
   @Transient @JsonProperty(access = WRITE_ONLY) private List<String> emails = new ArrayList<>();
 
@@ -85,6 +87,14 @@ public class UserInvite extends Base {
     this.roles = roles;
   }
 
+  public List<UserGroup> getUserGroups() {
+    return userGroups;
+  }
+
+  public void setUserGroups(List<UserGroup> userGroups) {
+    this.userGroups = userGroups;
+  }
+
   /**
    * Is complete boolean.
    *
@@ -133,6 +143,7 @@ public class UserInvite extends Base {
     private String accountId;
     private String email;
     private List<Role> roles = new ArrayList<>();
+    private List<UserGroup> userGroups = new ArrayList<>();
     private boolean completed;
     private List<String> emails = new ArrayList<>();
     private String uuid;
@@ -203,11 +214,17 @@ public class UserInvite extends Base {
       return this;
     }
 
+    public UserInviteBuilder withUserGroups(List<UserGroup> userGroups) {
+      this.userGroups = userGroups;
+      return this;
+    }
+
     public UserInvite build() {
       UserInvite userInvite = new UserInvite();
       userInvite.setAccountId(accountId);
       userInvite.setEmail(email);
       userInvite.setRoles(roles);
+      userInvite.setUserGroups(userGroups);
       userInvite.setCompleted(completed);
       userInvite.setEmails(emails);
       userInvite.setUuid(uuid);

@@ -55,7 +55,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
-  public PageResponse<UserGroup> list(String accountId, PageRequest<UserGroup> req) {
+  public PageResponse<UserGroup> list(String accountId, PageRequest<UserGroup> req, boolean loadUsers) {
     Validator.notNullCheck("accountId", accountId);
     Account account = accountService.get(accountId);
     Validator.notNullCheck("account", account);
@@ -65,7 +65,9 @@ public class UserGroupServiceImpl implements UserGroupService {
     // Using a custom comparator since our mongo apis don't support alphabetical sorting with case insensitivity.
     // Currently, it only supports ASC and DSC.
     Collections.sort(userGroupList, new UserGroupComparator());
-    userGroupList.forEach(userGroup -> loadUsers(userGroup, account));
+    if (loadUsers) {
+      userGroupList.forEach(userGroup -> loadUsers(userGroup, account));
+    }
     return res;
   }
 
@@ -196,7 +198,7 @@ public class UserGroupServiceImpl implements UserGroupService {
                                              .addFilter("accountId", Operator.EQ, accountId)
                                              .addFilter("memberIds", Operator.HAS, user.getUuid())
                                              .build();
-    PageResponse<UserGroup> pageResponse = list(accountId, pageRequest);
+    PageResponse<UserGroup> pageResponse = list(accountId, pageRequest, true);
     return pageResponse.getResponse();
   }
 }

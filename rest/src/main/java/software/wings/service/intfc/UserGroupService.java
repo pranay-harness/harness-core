@@ -29,7 +29,7 @@ public interface UserGroupService {
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserGroupService#list(software.wings.dl.PageRequest)
    */
-  PageResponse<UserGroup> list(@NotEmpty String accountId, PageRequest<UserGroup> req);
+  PageResponse<UserGroup> list(@NotEmpty String accountId, PageRequest<UserGroup> req, boolean loadUsers);
 
   /**
    * Find by uuid.

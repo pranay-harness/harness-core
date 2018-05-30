@@ -384,3 +384,12 @@ software.wings.beans.container.Label, 5345
 software.wings.api.ScriptStateExecutionSummary, 5346
 software.wings.service.impl.analysis.TimeSeriesMlAnalysisType, 5347
 software.wings.exception.WingsException$ReportTarget, 5348
+software.wings.beans.security.UserGroup, 5349
+software.wings.beans.security.AccountPermissions, 5350
+software.wings.beans.security.AppPermission, 5351
+software.wings.security.PermissionAttribute, 5352
+software.wings.security.PermissionAttribute$PermissionType, 5353
+software.wings.security.PermissionAttribute$Action, 5354
+software.wings.beans.User, 5355
+software.wings.beans.Account, 5356
+software.wings.security.authentication.AuthenticationMechanism, 5357
