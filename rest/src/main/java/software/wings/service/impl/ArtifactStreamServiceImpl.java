@@ -270,7 +270,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public Map<String, String> getSupportedBuildSourceTypes(String appId, String serviceId) {
-    Service service = serviceResourceService.get(appId, serviceId);
+    Service service = serviceResourceService.get(appId, serviceId, false);
     // Observed NPE in logs due to invalid service id provided by the ui due to a stale screen.
     if (service == null) {
       throw new InvalidRequestException("Service does not exist", USER);
