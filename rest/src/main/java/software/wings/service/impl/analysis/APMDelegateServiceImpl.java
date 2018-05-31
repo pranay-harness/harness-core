@@ -68,15 +68,17 @@ public class APMDelegateServiceImpl implements APMDelegateService {
   public String fetch(APMValidateCollectorConfig config) {
     config.getHeaders().put("Accept", "application/json");
 
-    char[] decryptedValue;
-    for (EncryptedDataDetail encryptedDataDetail : config.getEncryptedDataDetails()) {
-      try {
-        decryptedValue = encryptionService.getDecryptedValue(encryptedDataDetail);
-        if (decryptedValue != null) {
-          decryptedFields.put(encryptedDataDetail.getFieldName(), new String(decryptedValue));
+    if (config.getEncryptedDataDetails() != null) {
+      char[] decryptedValue;
+      for (EncryptedDataDetail encryptedDataDetail : config.getEncryptedDataDetails()) {
+        try {
+          decryptedValue = encryptionService.getDecryptedValue(encryptedDataDetail);
+          if (decryptedValue != null) {
+            decryptedFields.put(encryptedDataDetail.getFieldName(), new String(decryptedValue));
+          }
+        } catch (IOException e) {
+          throw new WingsException("APM fetch data : Unable to decrypt field " + encryptedDataDetail.getFieldName());
         }
-      } catch (IOException e) {
-        throw new WingsException("APM fetch data : Unable to decrypt field " + encryptedDataDetail.getFieldName());
       }
     }
 
