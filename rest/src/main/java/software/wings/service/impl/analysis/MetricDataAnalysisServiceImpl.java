@@ -351,13 +351,15 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
 
   @Override
   public List<NewRelicMetricHostAnalysisValue> getToolTip(String stateExecutionId, String workflowExecutionId,
-      int analysisMinute, String transactionName, String metricName) {
+      int analysisMinute, String transactionName, String metricName, String groupName) {
     /* Ignore analysisMinutue. Leaving it as a parameter since UI sends it.
        Fetch the latest */
+    groupName = isEmpty(groupName) ? NewRelicMetricDataRecord.DEFAULT_GROUP_NAME : groupName;
     TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
         wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
             .filter("stateExecutionId", stateExecutionId)
             .filter("workflowExecutionId", workflowExecutionId)
+            .filter("groupName", groupName)
             .order("-analysisMinute")
             .get();
     if (timeSeriesMLAnalysisRecord == null) {
