@@ -282,7 +282,7 @@ public class Misc {
    * @return replaced string
    */
   public static String replaceDotWithUnicode(String str) {
-    return str.replace(".", "\u2024");
+    return str.replaceAll("\\.", "\u2024");
   }
 
   /**
@@ -292,7 +292,7 @@ public class Misc {
    * @return replaced string
    */
   public static String replaceUnicodeWithDot(String str) {
-    return str.replace("\u2024", ".");
+    return str.replaceAll("\u2024", ".");
   }
 
   public static String generateSecretKey() {
