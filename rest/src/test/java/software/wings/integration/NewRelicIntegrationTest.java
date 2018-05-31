@@ -30,6 +30,8 @@ import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.Scheduler;
+import software.wings.APMFetchConfig;
+import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
@@ -75,6 +77,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 
@@ -413,6 +416,52 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     assertEquals(analysis5, analyses.get(2));
     assertEquals(analysis4, analyses.get(3));
     assertEquals(analysis3, analyses.get(4));
+  }
+
+  @Test
+  public void fetch() throws Exception {
+    APMVerificationConfig config = new APMVerificationConfig();
+    config.setAccountId(accountId);
+    config.setUrl("https://app.datadoghq.com/api/v1/");
+    List<APMVerificationConfig.KeyValues> optionsList = new ArrayList<>();
+    optionsList.add(APMVerificationConfig.KeyValues.builder()
+                        .key("api_key")
+                        .value("22b45f18642f11beeb4a3d9616accb1e")
+                        .encrypted(false)
+                        .build());
+    optionsList.add(APMVerificationConfig.KeyValues.builder()
+                        .key("application_key")
+                        .value("259bc21a9cf772968cf93f4ba84d70653d104bc0")
+                        .encrypted(false)
+                        .build());
+    config.setOptionsList(optionsList);
+
+    SettingAttribute settingAttribute =
+        wingsPersistence.createQuery(SettingAttribute.class).filter("name", "datadog_connector").get();
+
+    String serverConfigId;
+    if (settingAttribute == null) {
+      serverConfigId = wingsPersistence
+                           .saveIgnoringDuplicateKeys(Lists.newArrayList(SettingAttribute.Builder.aSettingAttribute()
+                                                                             .withAccountId(accountId)
+                                                                             .withName("datadog_connector")
+                                                                             .withValue(config)
+                                                                             .build()))
+                           .get(0);
+    } else {
+      serverConfigId = settingAttribute.getUuid();
+    }
+
+    WebTarget target =
+        client.target(API_BASE + "/timeseries/fetch?accountId=" + accountId + "&serverConfigId=" + serverConfigId);
+
+    RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
+        entity(APMFetchConfig.builder()
+                   .url("metrics?from=" + System.currentTimeMillis() / TimeUnit.SECONDS.toMillis(1))
+                   .build(),
+            APPLICATION_JSON),
+        new GenericType<RestResponse<String>>() {});
+    assertNotNull(restResponse.getResource());
   }
 
   @Test
