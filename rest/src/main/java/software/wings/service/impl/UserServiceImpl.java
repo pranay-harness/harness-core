@@ -426,7 +426,14 @@ public class UserServiceImpl implements UserService {
     }
 
     List<UserGroup> userGroups = userInvite.getUserGroups();
-    addUserToUserGroups(user, userGroups);
+    if (isNotEmpty(userGroups)) {
+      Set<String> userGroupIds = userGroups.stream().map(UserGroup::getUuid).collect(Collectors.toSet());
+      PageRequest<UserGroup> pageRequest =
+          aPageRequest().addFilter("accountId", EQ, accountId).addFilter("_id", IN, userGroupIds.toArray()).build();
+      PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest, true);
+      userGroups = pageResponse.getResponse();
+      addUserToUserGroups(user, userGroups);
+    }
     return wingsPersistence.get(UserInvite.class, userInvite.getAppId(), inviteId);
   }
 

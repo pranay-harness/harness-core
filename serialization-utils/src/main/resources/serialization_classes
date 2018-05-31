@@ -393,3 +393,4 @@ software.wings.security.PermissionAttribute$Action, 5354
 software.wings.beans.User, 5355
 software.wings.beans.Account, 5356
 software.wings.security.authentication.AuthenticationMechanism, 5357
+software.wings.security.authentication.TwoFactorAuthenticationMechanism, 5358
