@@ -1,6 +1,7 @@
 package software.wings.beans.command;
 
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.atteo.evo.inflector.English.plural;
@@ -16,6 +17,7 @@ import static software.wings.utils.KubernetesConvention.getServiceNameFromContro
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import lombok.Builder;
 import lombok.Data;
@@ -69,6 +71,16 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
     KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
     String controllerName = containerServiceData.getName();
+    HasMetadata controller =
+        kubernetesContainerService.getController(kubernetesConfig, encryptedDataDetails, controllerName);
+    if (controller == null) {
+      throw new WingsException(GENERAL_ERROR).addParam("message", "No controller with name: " + controllerName);
+    }
+    if ("StatefulSet".equals(controller.getKind()) || "DaemonSet".equals(controller.getKind())) {
+      executionLogCallback.saveExecutionLog(
+          "\nResize Containers does not apply to Stateful Sets or Daemon Sets.\n", LogLevel.WARN);
+      return emptyList();
+    }
 
     if (resizeParams.isUseAutoscaler() && resizeParams.isRollback()) {
       HorizontalPodAutoscaler autoscaler = kubernetesContainerService.getAutoscaler(

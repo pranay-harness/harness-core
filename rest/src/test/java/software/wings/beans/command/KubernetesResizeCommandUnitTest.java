@@ -14,6 +14,7 @@ import static software.wings.beans.command.CommandExecutionContext.Builder.aComm
 import static software.wings.beans.command.KubernetesResizeParams.KubernetesResizeParamsBuilder.aKubernetesResizeParams;
 import static software.wings.utils.WingsTestConstants.CLUSTER_NAME;
 
+import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -70,6 +71,8 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
     when(kubernetesContainerService.setControllerPodCount(
              eq(kubernetesConfig), any(), eq(CLUSTER_NAME), anyString(), anyInt(), anyInt(), anyInt(), any()))
         .thenAnswer(i -> buildContainerInfos((Integer) i.getArguments()[5]));
+    when(kubernetesContainerService.getController(any(), any(), any()))
+        .thenReturn(new ReplicationControllerBuilder().build());
   }
 
   private List<ContainerInfo> buildContainerInfos(int count) {
