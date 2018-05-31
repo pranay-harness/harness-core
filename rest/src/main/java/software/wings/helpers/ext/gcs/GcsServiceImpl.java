@@ -204,6 +204,10 @@ public class GcsServiceImpl implements GcsService {
     Storage.Buckets bucketsObj;
     Buckets listOfBuckets;
     Map<String, String> bucketList = new HashMap<>();
+    if (isNotEmpty(encryptedDataDetails)) {
+      encryptionService.decrypt(gcpConfig, encryptedDataDetails);
+    }
+
     String projectId = getProject(gcpConfig.getServiceAccountKeyFileContent());
 
     try {
@@ -225,53 +229,5 @@ public class GcsServiceImpl implements GcsService {
       }
     }
     return bucketList;
-  }
-
-  @Override
-  public void createBucket(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails, String bucketName) {
-    Storage.Buckets bucketsObj;
-
-    try {
-      Storage gcsStorageService = gcpHelperService.getGcsStorageService(gcpConfig, encryptedDataDetails);
-      bucketsObj = gcsStorageService.buckets();
-
-      // Return if bucket already exists
-      Map<String, String> bucketList;
-      bucketList = listBuckets(gcpConfig, encryptedDataDetails);
-      if (bucketList.containsKey(bucketName)) {
-        return;
-      }
-
-      String projectId = getProject(gcpConfig.getServiceAccountKeyFileContent());
-      Storage.Buckets.Insert request = bucketsObj.insert(projectId, new Bucket().setName(bucketName));
-      request.execute();
-    } catch (Exception e) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
-          .addParam("message", "Could not create Bucket in Google Cloud Storage for bucket :" + bucketName);
-    }
-  }
-
-  @Override
-  public void deleteBucket(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails, String bucketName) {
-    Storage.Buckets bucketsObj;
-
-    try {
-      Storage gcsStorageService = gcpHelperService.getGcsStorageService(gcpConfig, encryptedDataDetails);
-      bucketsObj = gcsStorageService.buckets();
-
-      // Return if bucket not found
-      Map<String, String> bucketList;
-      bucketList = listBuckets(gcpConfig, encryptedDataDetails);
-      if (!bucketList.containsKey(bucketName)) {
-        return;
-      }
-
-      // Delete the bucket
-      Storage.Buckets.Delete delRequest = bucketsObj.delete(bucketName);
-      delRequest.execute();
-    } catch (Exception e) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
-          .addParam("message", "Could not delete Bucket in Google Cloud Storage for bucket :" + bucketName);
-    }
   }
 }

@@ -16,30 +16,6 @@ public interface GcsService {
    */
   GcpConfig validateAndGetCredentials(SettingAttribute settingAttribute);
 
-  /**
-   * Create Bucket
-   * @param gcpConfig  GCS config
-   * @param encryptedDataDetails Encryption details
-   * @param bucketName Bucket to create
-   * @return none
-   */
-  void createBucket(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails, String bucketName);
-
-  /**
-   * Delete Bucket
-   * @param gcpConfig  GCS config
-   * @param encryptedDataDetails Encryption details
-   * @param bucketName Bucket to delete
-   * @return none
-   */
-  void deleteBucket(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails, String bucketName);
-
-  /**
-   * List Buckets
-   * @param gcpConfig  GCS config
-   * @param encryptedDataDetails Encryption details
-   * @return map bucket name and Id
-   */
   Map<String, String> listBuckets(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails);
 
   /**
