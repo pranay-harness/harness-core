@@ -154,9 +154,9 @@ public class TimeSeriesResource {
       @QueryParam("stateExecutionId") String stateExecutionId,
       @QueryParam("workFlowExecutionId") String workFlowExecutionId,
       @QueryParam("analysisMinute") Integer analysisMinute, @QueryParam("transactionName") String transactionName,
-      @QueryParam("metricName") String metricName) throws IOException {
+      @QueryParam("metricName") String metricName, @QueryParam("groupName") String groupName) throws IOException {
     return new RestResponse<>(metricDataAnalysisService.getToolTip(
-        stateExecutionId, workFlowExecutionId, analysisMinute, transactionName, metricName));
+        stateExecutionId, workFlowExecutionId, analysisMinute, transactionName, metricName, groupName));
   }
 
   @Produces({"application/json", "application/v1+json"})

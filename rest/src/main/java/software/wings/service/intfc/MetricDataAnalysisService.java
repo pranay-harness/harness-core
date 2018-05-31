@@ -69,7 +69,7 @@ public interface MetricDataAnalysisService {
       StateType stateType, String appId, String workflowId, String serviceId);
 
   List<NewRelicMetricHostAnalysisValue> getToolTip(String stateExecutionId, String workflowExecutionId,
-      int analysisMinute, String transactionName, String metricName);
+      int analysisMinute, String transactionName, String metricName, String groupName);
 
   Map<String, TimeSeriesMetricDefinition> getMetricTemplate(StateType stateType, String stateExecutionId);
 
