@@ -347,8 +347,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         serviceClusterIP = service.getSpec().getClusterIP();
 
         if (service.getSpec().getType().equals(LOAD_BALANCER)) {
-          serviceLoadBalancerEndpoint = waitForLoadBalancerEndpoint(
-              kubernetesConfig, encryptedDataDetails, service, setupParams.getLoadBalancerIP(), executionLogCallback);
+          serviceLoadBalancerEndpoint = waitForLoadBalancerEndpoint(kubernetesConfig, encryptedDataDetails, service,
+              setupParams.getLoadBalancerIP(), setupParams.getServiceSteadyStateTimeout(), executionLogCallback);
         } else if (service.getSpec().getType().equals(NODE_PORT)) {
           nodePort = Joiner.on(',').join(
               service.getSpec().getPorts().stream().map(ServicePort::getNodePort).collect(toList()));
@@ -1088,7 +1088,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   }
 
   private String waitForLoadBalancerEndpoint(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, Service service, String loadBalancerIP,
+      List<EncryptedDataDetail> encryptedDataDetails, Service service, String loadBalancerIP, int timeoutInMinutes,
       ExecutionLogCallback executionLogCallback) {
     String serviceName = service.getMetadata().getName();
     LoadBalancerStatus loadBalancer = service.getStatus().getLoadBalancer();
@@ -1109,7 +1109,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             }
             sleep(ofSeconds(1));
           }
-        }, 5L, TimeUnit.MINUTES, true);
+        }, timeoutInMinutes, TimeUnit.MINUTES, true);
       } catch (UncheckedTimeoutException e) {
         executionLogCallback.saveExecutionLog(
             format("Timed out waiting for service [%s] load balancer to be ready", serviceName), LogLevel.ERROR);
