@@ -931,14 +931,13 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  public void processDelegateResponse(DelegateTaskResponse response) {
-    DelegateTask task = response.getTask();
-    logger.info(
-        "Delegate [{}], response received for task [{}, {}]", task.getDelegateId(), task.getUuid(), task.getTaskType());
+  public void processDelegateResponse(
+      String accountId, String delegateId, String taskId, DelegateTaskResponse response) {
+    logger.info("Delegate [{}], response received for taskId [{}]", delegateId, taskId);
 
     DelegateTask delegateTask = wingsPersistence.createQuery(DelegateTask.class)
                                     .filter("accountId", response.getAccountId())
-                                    .filter(ID_KEY, task.getUuid())
+                                    .filter(ID_KEY, taskId)
                                     .get();
 
     if (delegateTask != null) {
@@ -947,7 +946,7 @@ public class DelegateServiceImpl implements DelegateService {
         if (waitId != null) {
           waitNotifyEngine.notify(waitId, response.getResponse());
         } else {
-          logger.error("Async task {} with type {} has no wait ID", task.getUuid(), task.getTaskType());
+          logger.error("Async task {} has no wait ID", taskId);
         }
         wingsPersistence.delete(wingsPersistence.createQuery(DelegateTask.class)
                                     .filter("accountId", response.getAccountId())
@@ -958,7 +957,7 @@ public class DelegateServiceImpl implements DelegateService {
         wingsPersistence.save(delegateTask);
       }
     } else {
-      logger.warn("No delegate task found: {}", task.getUuid());
+      logger.warn("No delegate task found: {}", taskId);
     }
   }
 

@@ -221,10 +221,9 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .withTags(new ArrayList<>())
                                     .build();
     wingsPersistence.save(delegateTask);
-    delegateService.processDelegateResponse(
+    delegateService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
         aDelegateTaskResponse()
             .withAccountId(ACCOUNT_ID)
-            .withTask(delegateTask)
             .withResponse(anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build())
             .build());
     assertThat(delegateService.getDelegateTasks(ACCOUNT_ID, generateUuid())).isEmpty();
@@ -242,10 +241,9 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .withTags(new ArrayList<>())
                                     .build();
     wingsPersistence.save(delegateTask);
-    delegateService.processDelegateResponse(
+    delegateService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
         aDelegateTaskResponse()
             .withAccountId(ACCOUNT_ID)
-            .withTask(delegateTask)
             .withResponse(anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build())
             .build());
     assertThat(delegateService.getDelegateTasks(ACCOUNT_ID, generateUuid())).isEmpty();
@@ -262,13 +260,11 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .withAsync(false)
                                     .build();
     wingsPersistence.save(delegateTask);
-    delegateService.processDelegateResponse(
+    delegateService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
         aDelegateTaskResponse()
             .withAccountId(ACCOUNT_ID)
-            .withTask(delegateTask)
             .withResponse(anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build())
             .build());
-
     delegateTask = wingsPersistence.get(DelegateTask.class, delegateTask.getUuid());
     assertThat(delegateTask.getStatus()).isEqualTo(DelegateTask.Status.FINISHED);
   }
