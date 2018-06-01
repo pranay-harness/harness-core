@@ -140,7 +140,7 @@ public class APMVerificationConfig extends SettingValue implements Encryptable {
               .filter(entry -> entry.encrypted)
               .map(entry
                   -> secretManager.encryptedDataDetails(accountId, entry.key, entry.encryptedValue)
-                         .orElseThrow(() -> new WingsException("Unable to decrypt field " + entry.key)))
+                         .<WingsException>orElseThrow(() -> new WingsException("Unable to decrypt field " + entry.key)))
               .collect(Collectors.toList()));
     }
     if (optionsList != null) {
@@ -149,7 +149,7 @@ public class APMVerificationConfig extends SettingValue implements Encryptable {
               .filter(entry -> entry.encrypted)
               .map(entry
                   -> secretManager.encryptedDataDetails(accountId, entry.key, entry.encryptedValue)
-                         .orElseThrow(() -> new WingsException("Unable to decrypt field " + entry.key)))
+                         .<WingsException>orElseThrow(() -> new WingsException("Unable to decrypt field " + entry.key)))
               .collect(Collectors.toList()));
     }
 
