@@ -20,13 +20,13 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Idempotent;
 import software.wings.common.MongoIdempotentRegistry;
 import software.wings.dl.WingsPersistence;
-import software.wings.rules.Integration;
+import software.wings.rules.RealMongo;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
 
-@Integration
-public class MongoIdempotentRegistryIntegrationTest extends WingsBaseTest {
+@RealMongo
+public class MongoIdempotentRegistryTest extends WingsBaseTest {
   @Inject WingsPersistence wingsPersistence;
   @Inject MongoIdempotentRegistry<String> idempotentRegistry;
 

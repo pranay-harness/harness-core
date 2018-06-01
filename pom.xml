@@ -1320,9 +1320,6 @@
                         <exclude>**/IntegrationTest*.java</exclude>
                         <exclude>${datagen.exclude}</exclude>
                         <exclude>**/integration/*</exclude>
-                        <exclude>**/integration/appdynamics/*</exclude>
-                        <exclude>**/integration/common/*</exclude>
-                        <exclude>**/integration/dl/*</exclude>
                         <exclude>**/JenkinsSettingOverWriteTest.java</exclude>
                     </excludes>
                 </configuration>
