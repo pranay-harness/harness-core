@@ -915,15 +915,12 @@ public class DelegateServiceImpl implements DelegateService {
       Response<ResponseBody> response = null;
       try {
         logger.info("Sending response for task {} to manager", delegateTask.getUuid());
-        response = timeLimiter.callWithTimeout(()
-                                                   -> managerClient
-                                                          .sendTaskStatus(delegateId, delegateTask.getUuid(), accountId,
-                                                              aDelegateTaskResponse()
-                                                                  .withTask(delegateTask)
-                                                                  .withAccountId(accountId)
-                                                                  .withResponse(notifyResponseData)
-                                                                  .build())
-                                                          .execute(),
+        response = timeLimiter.callWithTimeout(
+            ()
+                -> managerClient
+                       .sendTaskStatus(delegateId, delegateTask.getUuid(), accountId,
+                           aDelegateTaskResponse().withAccountId(accountId).withResponse(notifyResponseData).build())
+                       .execute(),
             30L, TimeUnit.SECONDS, true);
         logger.info("Task {} response sent to manager", delegateTask.getUuid());
       } catch (UncheckedTimeoutException ex) {

@@ -16,6 +16,7 @@ import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskResponse;
 import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 
 import com.google.common.collect.Lists;
 
@@ -269,7 +270,7 @@ public class DelegateResourceTest {
                              .post(entity(response, "application/x-kryo"), Response.class);
     logger.info(response1.toString());
 
-    verify(DELEGATE_SERVICE, atLeastOnce()).processDelegateResponse(response);
+    verify(DELEGATE_SERVICE, atLeastOnce()).processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, "1", response);
   }
 
   @Test

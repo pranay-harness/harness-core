@@ -68,7 +68,8 @@ public interface DelegateService {
 
   void clearCache(String delegateId);
 
-  void processDelegateResponse(@Valid DelegateTaskResponse response);
+  void processDelegateResponse(
+      String accountId, String delegateId, String taskId, @Valid DelegateTaskResponse response);
 
   boolean filter(String delegateId, DelegateTask task);
 

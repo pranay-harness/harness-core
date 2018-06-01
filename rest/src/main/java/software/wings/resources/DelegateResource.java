@@ -317,7 +317,7 @@ public class DelegateResource {
   @ExceptionMetered
   public void updateTaskResponse(@PathParam("delegateId") String delegateId, @PathParam("taskId") String taskId,
       @QueryParam("accountId") @NotEmpty String accountId, DelegateTaskResponse delegateTaskResponse) {
-    delegateService.processDelegateResponse(delegateTaskResponse);
+    delegateService.processDelegateResponse(accountId, delegateId, taskId, delegateTaskResponse);
   }
 
   @DelegateAuth
