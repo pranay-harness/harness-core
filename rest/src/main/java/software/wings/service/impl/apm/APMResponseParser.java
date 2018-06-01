@@ -131,6 +131,8 @@ public class APMResponseParser {
     if (field.equals("timestamp")) {
       if (val instanceof Double) {
         return ((Double) val).longValue();
+      } else if (val instanceof Integer) {
+        return ((Integer) val).longValue();
       } else {
         return val;
       }

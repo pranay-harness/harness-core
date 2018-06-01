@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 
@@ -31,6 +32,7 @@ import java.util.stream.Collectors;
 @ToString(exclude = {"headers", "options"})
 public class APMVerificationConfig extends SettingValue implements Encryptable {
   @Transient @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(APMVerificationConfig.class);
+  @Transient @SchemaIgnore private static final String MASKED_STRING = "*****";
 
   @Attributes(title = "Base Url") private String url;
 
@@ -80,27 +82,44 @@ public class APMVerificationConfig extends SettingValue implements Encryptable {
     return params;
   }
 
-  public APMValidateCollectorConfig createAPMValidateCollectorConfig() {
-    Map<String, String> headers = new HashMap<>();
-    if (!isEmpty(headersList)) {
-      for (KeyValues keyValue : headersList) {
-        headers.put(keyValue.getKey(), keyValue.getValue());
+  public APMValidateCollectorConfig createAPMValidateCollectorConfig(
+      SecretManager secretManager, EncryptionService encryptionService) {
+    try {
+      Map<String, String> headers = new HashMap<>();
+      if (!isEmpty(headersList)) {
+        for (KeyValues keyValue : headersList) {
+          if (keyValue.encrypted && MASKED_STRING.equals(keyValue.value)) {
+            headers.put(keyValue.getKey(),
+                new String(encryptionService.getDecryptedValue(
+                    secretManager.encryptedDataDetails(accountId, keyValue.key, keyValue.encryptedValue).get())));
+          } else {
+            headers.put(keyValue.getKey(), keyValue.getValue());
+          }
+        }
       }
-    }
 
-    Map<String, String> options = new HashMap<>();
-    if (!isEmpty(optionsList)) {
-      for (KeyValues keyValue : optionsList) {
-        options.put(keyValue.getKey(), keyValue.getValue());
+      Map<String, String> options = new HashMap<>();
+      if (!isEmpty(optionsList)) {
+        for (KeyValues keyValue : optionsList) {
+          if (keyValue.encrypted && MASKED_STRING.equals(keyValue.value)) {
+            options.put(keyValue.getKey(),
+                new String(encryptionService.getDecryptedValue(
+                    secretManager.encryptedDataDetails(accountId, keyValue.key, keyValue.encryptedValue).get())));
+          } else {
+            options.put(keyValue.getKey(), keyValue.getValue());
+          }
+        }
       }
-    }
 
-    return APMValidateCollectorConfig.builder()
-        .baseUrl(url)
-        .url(validationUrl)
-        .headers(headers)
-        .options(options)
-        .build();
+      return APMValidateCollectorConfig.builder()
+          .baseUrl(url)
+          .url(validationUrl)
+          .headers(headers)
+          .options(options)
+          .build();
+    } catch (Exception ex) {
+      throw new WingsException("Unable to validate connector ", ex);
+    }
   }
 
   @Data
@@ -109,6 +128,7 @@ public class APMVerificationConfig extends SettingValue implements Encryptable {
     private String key;
     private String value;
     private boolean encrypted;
+    private String encryptedValue;
   }
 
   public List<EncryptedDataDetail> encryptedDataDetails(SecretManager secretManager) {
@@ -119,7 +139,7 @@ public class APMVerificationConfig extends SettingValue implements Encryptable {
           headersList.stream()
               .filter(entry -> entry.encrypted)
               .map(entry
-                  -> secretManager.encryptedDataDetails(accountId, entry.key, entry.value)
+                  -> secretManager.encryptedDataDetails(accountId, entry.key, entry.encryptedValue)
                          .orElseThrow(() -> new WingsException("Unable to decrypt field " + entry.key)))
               .collect(Collectors.toList()));
     }
@@ -128,7 +148,7 @@ public class APMVerificationConfig extends SettingValue implements Encryptable {
           optionsList.stream()
               .filter(entry -> entry.encrypted)
               .map(entry
-                  -> secretManager.encryptedDataDetails(accountId, entry.key, entry.value)
+                  -> secretManager.encryptedDataDetails(accountId, entry.key, entry.encryptedValue)
                          .orElseThrow(() -> new WingsException("Unable to decrypt field " + entry.key)))
               .collect(Collectors.toList()));
     }
@@ -141,13 +161,21 @@ public class APMVerificationConfig extends SettingValue implements Encryptable {
     if (headersList != null) {
       headersList.stream()
           .filter(header -> header.encrypted)
-          .forEach(header -> header.value = secretManager.encrypt(accountId, header.value));
+          .filter(header -> !header.value.equals(MASKED_STRING))
+          .forEach(header -> {
+            header.encryptedValue = secretManager.encrypt(accountId, header.value);
+            header.value = MASKED_STRING;
+          });
     }
 
     if (optionsList != null) {
       optionsList.stream()
           .filter(option -> option.encrypted)
-          .forEach(option -> option.value = secretManager.encrypt(accountId, option.value));
+          .filter(option -> !option.value.equals(MASKED_STRING))
+          .forEach(option -> {
+            option.encryptedValue = secretManager.encrypt(accountId, option.value);
+            option.value = MASKED_STRING;
+          });
     }
   }
 }
