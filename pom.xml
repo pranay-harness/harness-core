@@ -1319,7 +1319,7 @@
                         <exclude>**/*IntegrationTest.java</exclude>
                         <exclude>**/IntegrationTest*.java</exclude>
                         <exclude>${datagen.exclude}</exclude>
-                        <exclude>**/integration/*</exclude>
+                        <exclude>**/integration/**</exclude>
                         <exclude>**/JenkinsSettingOverWriteTest.java</exclude>
                     </excludes>
                 </configuration>
