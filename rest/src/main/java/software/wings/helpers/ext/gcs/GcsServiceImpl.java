@@ -65,7 +65,7 @@ public class GcsServiceImpl implements GcsService {
 
     // Get objects for the bucket
     List<StorageObject> items;
-    if (listOfObjects != null && listOfObjects.getItems().size() > 0) {
+    if (listOfObjects != null && listOfObjects.getItems() != null && listOfObjects.getItems().size() > 0) {
       items = listOfObjects.getItems();
       for (StorageObject storageObject : items) {
         objectNameList.add(storageObject.getName());
