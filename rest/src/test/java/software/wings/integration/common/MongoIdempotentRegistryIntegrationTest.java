@@ -26,7 +26,7 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 
 @Integration
-public class MongoIdempotentRegistryTest extends WingsBaseTest {
+public class MongoIdempotentRegistryIntegrationTest extends WingsBaseTest {
   @Inject WingsPersistence wingsPersistence;
   @Inject MongoIdempotentRegistry<String> idempotentRegistry;
 
