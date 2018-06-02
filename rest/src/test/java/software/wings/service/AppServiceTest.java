@@ -26,6 +26,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.NOTIFICATION_ID;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
@@ -222,6 +223,23 @@ public class AppServiceTest extends WingsBaseTest {
     assertThat(application.getNotifications())
         .hasSize(1)
         .containsExactly(anApprovalNotification().withAppId(APP_ID).withUuid(NOTIFICATION_ID).build());
+  }
+
+  /**
+   * Should get application.
+   */
+  @Test
+  public void shouldGetApplicationWithDefaults() {
+    when(wingsPersistence.get(Application.class, APP_ID))
+        .thenReturn(anApplication()
+                        .withUuid(APP_ID)
+                        .withAccountId(ACCOUNT_ID)
+                        .withDefaults(ImmutableMap.of("Param1", "Value1"))
+                        .build());
+    Application application = appService.getApplicationWithDefaults(APP_ID);
+    assertThat(application).isNotNull();
+    verify(wingsPersistence).get(Application.class, APP_ID);
+    verify(settingsService).listApplicationDefaults(ACCOUNT_ID, APP_ID);
   }
 
   @Test

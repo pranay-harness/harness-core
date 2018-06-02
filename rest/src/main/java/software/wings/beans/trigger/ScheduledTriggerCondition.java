@@ -18,7 +18,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class ScheduledTriggerCondition extends TriggerCondition {
   @NotEmpty private String cronExpression;
   private String cronDescription;
-  private boolean onNewArtifactOnly = true;
+  @Builder.Default private boolean onNewArtifactOnly = true;
 
   public ScheduledTriggerCondition() {
     super(SCHEDULED);

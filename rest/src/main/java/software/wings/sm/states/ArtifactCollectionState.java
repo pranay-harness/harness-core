@@ -96,7 +96,7 @@ public class ArtifactCollectionState extends State {
         (ArtifactCollectionExecutionData) response.values().iterator().next();
 
     ArtifactStream artifactStream = artifactStreamService.get(context.getAppId(), artifactStreamId);
-    notNullCheck("ArtifactStream", artifactStream);
+    notNullCheck("ArtifactStream was deleted", artifactStream);
 
     String evaluatedBuildNo = getEvaluatedBuildNo(context);
     Artifact lastCollectedArtifact =
@@ -170,6 +170,9 @@ public class ArtifactCollectionState extends State {
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {
+    if (context == null || context.getStateExecutionData() == null) {
+      return;
+    }
     logger.info("Action aborted either due to timeout or manual user abort");
     ArtifactCollectionExecutionData artifactCollectionExecutionData =
         (ArtifactCollectionExecutionData) context.getStateExecutionData();

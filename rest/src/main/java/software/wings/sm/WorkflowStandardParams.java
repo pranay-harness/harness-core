@@ -419,7 +419,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
    */
   public Application getApp() {
     if (app == null && appId != null) {
-      app = appService.get(appId);
+      app = appService.getApplicationWithDefaults(appId);
     }
     return app;
   }

@@ -57,7 +57,10 @@ public class ArtifactCollectionExecutionData extends StateExecutionData implemen
 
     if (isNotEmpty(metadata)) {
       putNotNull(executionDetails, "metadata",
-          ExecutionDataValue.builder().displayName("Meta-Data").value(removeNullValues(metadata)).build());
+          ExecutionDataValue.builder()
+              .displayName("Meta-Data")
+              .value(String.valueOf(removeNullValues(metadata)))
+              .build());
     }
     putNotNull(executionDetails, "message", ExecutionDataValue.builder().displayName("Message").value(message).build());
     return executionDetails;

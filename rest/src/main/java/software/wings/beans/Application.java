@@ -19,7 +19,9 @@ import software.wings.beans.stats.AppKeyStatistics;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -46,6 +48,15 @@ public class Application extends Base {
   @Transient private List<Notification> notifications;
   @Transient private long nextDeploymentOn;
   @Transient private AppKeyStatistics appKeyStatistics;
+  private transient Map<String, String> defaults = new HashMap<>();
+
+  public Map<String, String> getDefaults() {
+    return defaults;
+  }
+
+  public void setDefaults(Map<String, String> defaults) {
+    this.defaults = defaults;
+  }
 
   /**
    * Gets name.
@@ -278,6 +289,7 @@ public class Application extends Base {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
+    private Map<String, String> defaults;
 
     private Builder() {}
 
@@ -360,6 +372,11 @@ public class Application extends Base {
       return this;
     }
 
+    public Builder withDefaults(Map<String, String> defaults) {
+      this.defaults = defaults;
+      return this;
+    }
+
     public Builder but() {
       return anApplication()
           .withName(name)
@@ -396,6 +413,7 @@ public class Application extends Base {
       application.setCreatedAt(createdAt);
       application.setLastUpdatedBy(lastUpdatedBy);
       application.setLastUpdatedAt(lastUpdatedAt);
+      application.setDefaults(defaults);
       return application;
     }
   }

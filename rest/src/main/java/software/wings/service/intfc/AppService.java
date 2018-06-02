@@ -63,6 +63,13 @@ public interface AppService extends OwnedByAccount, Exterminator {
   Application get(@NotEmpty String uuid);
 
   /**
+   * Retrieves the application with defaults
+   * @param uuid
+   * @return
+   */
+  Application getApplicationWithDefaults(@NotEmpty String uuid);
+
+  /**
    * Get application.
    *
    * @param appId        the app id

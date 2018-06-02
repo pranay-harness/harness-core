@@ -84,4 +84,6 @@ public interface SettingsService extends OwnedByAccount {
   ValidationResult validate(SettingAttribute settingAttribute);
 
   ValidationResult validate(String varId);
+
+  List<SettingAttribute> listApplicationDefaults(String accountId, String appId);
 }

@@ -202,6 +202,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
   @Before
   public void setup() {
     when(appService.get(APP_ID)).thenReturn(app);
+    when(appService.getApplicationWithDefaults(APP_ID)).thenReturn(app);
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(service);
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(env);
 

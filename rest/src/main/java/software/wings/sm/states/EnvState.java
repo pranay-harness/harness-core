@@ -154,6 +154,9 @@ public class EnvState extends State {
    */
   @Override
   public void handleAbortEvent(ExecutionContext context) {
+    if (context == null || context.getStateExecutionData() == null) {
+      return;
+    }
     context.getStateExecutionData().setErrorMsg(
         "Workflow not completed within " + Misc.getDurationString(getTimeoutMillis()));
   }

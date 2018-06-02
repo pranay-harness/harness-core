@@ -110,6 +110,9 @@ public class ArtifactCollectionStateTest {
     when(appService.get(APP_ID))
         .thenReturn(
             Application.Builder.anApplication().withAppId(APP_ID).withUuid(APP_ID).withAccountId(ACCOUNT_ID).build());
+    when(appService.getApplicationWithDefaults(APP_ID))
+        .thenReturn(
+            Application.Builder.anApplication().withAppId(APP_ID).withUuid(APP_ID).withAccountId(ACCOUNT_ID).build());
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
     when(artifactService.fetchLastCollectedArtifactForArtifactStream(APP_ID, ARTIFACT_STREAM_ID, ARTIFACT_SOURCE_NAME))
         .thenReturn(anArtifact().withAppId(APP_ID).withStatus(Status.APPROVED).build());
