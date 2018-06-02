@@ -44,6 +44,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
           if (idempotent.alreadyExecuted()) {
             return;
           }
+
           integers.add(1);
           idempotent.succeeded("foo");
         } catch (UnableToRegisterIdempotentOperationException e) {

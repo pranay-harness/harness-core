@@ -259,7 +259,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     runMigrations(injector);
 
     logger.info("Leaving startup maintenance mode");
-    MaintenanceController.unforceMaintenance();
+    MaintenanceController.resetForceMaintenance();
 
     logger.info("Starting app done");
   }
