@@ -1142,7 +1142,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     notNullCheck("service", newService, USER);
     if (oldService.getArtifactType() != null && !oldService.getArtifactType().equals(newService.getArtifactType())) {
       throw new InvalidRequestException(
-          "Service [" + newService.getName() + "] is not compatible with the service [" + oldService.getName() + "]");
+          "Service [" + newService.getName() + "] is not compatible with the service [" + oldService.getName() + "]",
+          USER);
     }
   }
 
@@ -1426,15 +1427,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
     Service service = serviceResourceService.get(appId, serviceId, false);
     if (service == null) {
-      throw new InvalidRequestException("Service [" + serviceId + "] does not exist");
+      throw new InvalidRequestException("Service [" + serviceId + "] does not exist", USER);
     }
     InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, inframappingId);
     if (infrastructureMapping == null) {
-      throw new InvalidRequestException("Service Infrastructure [" + inframappingId + "] does not exist");
+      throw new InvalidRequestException("Service Infrastructure [" + inframappingId + "] does not exist", USER);
     }
     if (!service.getUuid().equals(infrastructureMapping.getServiceId())) {
       throw new InvalidRequestException("Service Infrastructure [" + infrastructureMapping.getName()
-          + "] not mapped to Service [" + service.getName() + "]");
+              + "] not mapped to Service [" + service.getName() + "]",
+          USER);
     }
   }
 
@@ -1763,7 +1765,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     if (!found) {
-      throw new InvalidRequestException("node not found");
+      throw new InvalidRequestException("node not found", USER);
     }
 
     orchestrationWorkflow =
