@@ -64,7 +64,7 @@ import javax.ws.rs.QueryParam;
 @Produces(APPLICATION_JSON)
 @Scope(ResourceType.SETTING)
 public class SettingResource {
-  @Inject private SettingsService attributeService;
+  @Inject private SettingsService settingsService;
   @Inject private SecretManager secretManager;
 
   /**
@@ -93,7 +93,7 @@ public class SettingResource {
       pageRequest.addFilter("value.type", EQ, SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES.name());
     }
 
-    PageResponse<SettingAttribute> result = attributeService.list(pageRequest, currentAppId, currentEnvId);
+    PageResponse<SettingAttribute> result = settingsService.list(pageRequest, currentAppId, currentEnvId);
     if (gitSshConfigOnly) {
       List<SettingAttribute> filteredResponse =
           result.stream()
@@ -140,7 +140,7 @@ public class SettingResource {
   public RestResponse<SettingAttribute> save(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, SettingAttribute variable) {
     prePruneSettingAttribute(appId, accountId, variable);
-    return new RestResponse<>(attributeService.save(variable));
+    return new RestResponse<>(settingsService.save(variable));
   }
 
   /**
@@ -157,7 +157,7 @@ public class SettingResource {
   public RestResponse<ValidationResult> validate(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, SettingAttribute variable) {
     prePruneSettingAttribute(appId, accountId, variable);
-    return new RestResponse<>(attributeService.validate(variable));
+    return new RestResponse<>(settingsService.validate(variable));
   }
 
   /**
@@ -192,13 +192,13 @@ public class SettingResource {
       }
     }
     return new RestResponse<>(
-        attributeService.save(aSettingAttribute()
-                                  .withAccountId(accountId)
-                                  .withAppId(appId)
-                                  .withName(name)
-                                  .withValue(value)
-                                  .withCategory(Category.getCategory(SettingVariableTypes.valueOf(value.getType())))
-                                  .build()));
+        settingsService.save(aSettingAttribute()
+                                 .withAccountId(accountId)
+                                 .withAppId(appId)
+                                 .withName(name)
+                                 .withValue(value)
+                                 .withCategory(Category.getCategory(SettingVariableTypes.valueOf(value.getType())))
+                                 .build()));
   }
 
   /**
@@ -214,7 +214,7 @@ public class SettingResource {
   @ExceptionMetered
   public RestResponse<SettingAttribute> get(
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @PathParam("attrId") String attrId) {
-    SettingAttribute result = attributeService.get(appId, attrId);
+    SettingAttribute result = settingsService.get(appId, attrId);
     maskEncryptedFields(result);
     return new RestResponse<>(result);
   }
@@ -240,7 +240,7 @@ public class SettingResource {
         ((Encryptable) variable.getValue()).setAccountId(variable.getAccountId());
       }
     }
-    return new RestResponse<>(attributeService.update(variable));
+    return new RestResponse<>(settingsService.update(variable));
   }
 
   /**
@@ -277,7 +277,7 @@ public class SettingResource {
       }
       settingAttribute.withValue(value);
     }
-    return new RestResponse<>(attributeService.update(settingAttribute.build()));
+    return new RestResponse<>(settingsService.update(settingAttribute.build()));
   }
 
   /**
@@ -293,7 +293,7 @@ public class SettingResource {
   @ExceptionMetered
   public RestResponse delete(
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @PathParam("attrId") String attrId) {
-    attributeService.delete(appId, attrId);
+    settingsService.delete(appId, attrId);
     return new RestResponse();
   }
 }

@@ -15,6 +15,8 @@ import static software.wings.beans.RoleType.PROD_SUPPORT;
 import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
 import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.utils.Validator.duplicateCheck;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -37,6 +39,7 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.SortOrder.OrderType;
+import software.wings.beans.StringValue;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.stats.AppKeyStatistics;
 import software.wings.beans.yaml.Change.ChangeType;
@@ -71,13 +74,13 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.ownership.OwnedByApplication;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
-import software.wings.utils.Validator;
 
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -125,11 +128,11 @@ public class AppServiceImpl implements AppService {
    */
   @Override
   public Application save(Application app) {
-    Validator.notNullCheck("accountId", app.getAccountId());
+    notNullCheck("accountId", app.getAccountId());
     validateAppName(app);
     app.setKeywords(trimList(app.generateKeywords()));
     Application application =
-        Validator.duplicateCheck(() -> wingsPersistence.saveAndGet(Application.class, app), "name", app.getName());
+        duplicateCheck(() -> wingsPersistence.saveAndGet(Application.class, app), "name", app.getName());
     createDefaultRoles(app);
     settingsService.createDefaultApplicationSettings(application.getUuid(), application.getAccountId());
     notificationService.sendNotificationAsync(
@@ -271,6 +274,20 @@ public class AppServiceImpl implements AppService {
     if (application == null) {
       throw new WingsException(INVALID_ARGUMENT).addParam("args", "Application " + uuid + " doesn't exist");
     }
+    return application;
+  }
+
+  @Override
+  public Application getApplicationWithDefaults(String uuid) {
+    Application application = get(uuid);
+
+    List<SettingAttribute> settingAttributes =
+        settingsService.listApplicationDefaults(application.getAccountId(), application.getUuid());
+    application.setDefaults(
+        settingAttributes.stream()
+            .filter(settingAttribute -> settingAttribute.getValue() instanceof StringValue)
+            .collect(Collectors.toMap(SettingAttribute::getName,
+                settingAttribute -> ((StringValue) settingAttribute.getValue()).getValue(), (a, b) -> b)));
     return application;
   }
 

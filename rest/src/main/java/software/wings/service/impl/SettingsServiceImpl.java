@@ -7,6 +7,8 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.atteo.evo.inflector.English.plural;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.Base.ACCOUNT_ID_KEY;
+import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
@@ -29,6 +31,9 @@ import static software.wings.dl.HQuery.excludeValidate;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.exception.WingsException.USER;
+import static software.wings.utils.Validator.duplicateCheck;
+import static software.wings.utils.Validator.equalCheck;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.HashMultimap;
@@ -80,7 +85,6 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.settings.UsageRestrictions.AppEnvRestriction;
-import software.wings.utils.Validator;
 import software.wings.utils.validation.Create;
 
 import java.util.Collection;
@@ -266,8 +270,8 @@ public class SettingsServiceImpl implements SettingsService {
       }
     }
 
-    return Validator.duplicateCheck(()
-                                        -> wingsPersistence.saveAndGet(SettingAttribute.class, settingAttribute),
+    return duplicateCheck(()
+                              -> wingsPersistence.saveAndGet(SettingAttribute.class, settingAttribute),
         "name", settingAttribute.getName());
   }
 
@@ -292,6 +296,14 @@ public class SettingsServiceImpl implements SettingsService {
     } else {
       return new ValidationResult(false, format("Setting Attribute with id: %s does not exist.", varId));
     }
+  }
+
+  @Override
+  public List<SettingAttribute> listApplicationDefaults(String accountId, String appId) {
+    return wingsPersistence.createQuery(SettingAttribute.class)
+        .filter(ACCOUNT_ID_KEY, accountId)
+        .filter(APP_ID_KEY, appId)
+        .asList();
   }
 
   @Override
@@ -364,9 +376,9 @@ public class SettingsServiceImpl implements SettingsService {
   public SettingAttribute update(SettingAttribute settingAttribute, boolean pushToGit) {
     SettingAttribute existingSetting = get(settingAttribute.getAppId(), settingAttribute.getUuid());
 
-    Validator.notNullCheck("Setting", existingSetting);
-    Validator.notNullCheck("settingValue", settingAttribute.getValue());
-    Validator.equalCheck(existingSetting.getValue().getType(), settingAttribute.getValue().getType());
+    notNullCheck("Setting Attribute was deleted", existingSetting, USER);
+    notNullCheck("SettingValue not associated", settingAttribute.getValue(), USER);
+    equalCheck(existingSetting.getValue().getType(), settingAttribute.getValue().getType());
 
     settingAttribute.setAccountId(existingSetting.getAccountId());
     settingAttribute.setAppId(existingSetting.getAppId());
@@ -431,7 +443,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Override
   public void delete(String appId, String varId, boolean pushToGit) {
     SettingAttribute settingAttribute = get(varId);
-    Validator.notNullCheck("Setting Value", settingAttribute);
+    notNullCheck("Setting Value", settingAttribute);
     ensureSettingAttributeSafeToDelete(settingAttribute);
     boolean deleted = wingsPersistence.delete(settingAttribute);
     if (deleted && shouldBeSynced(settingAttribute, pushToGit)) {

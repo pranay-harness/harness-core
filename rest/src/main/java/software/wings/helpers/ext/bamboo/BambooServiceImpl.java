@@ -3,6 +3,11 @@ package software.wings.helpers.ext.bamboo;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.ErrorCode.ARTIFACT_SERVER_ERROR;
+import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
+import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
+import static software.wings.exception.WingsException.SRE;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.common.base.Joiner;
@@ -25,7 +30,6 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.BambooConfig;
-import software.wings.beans.ErrorCode;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -70,7 +74,7 @@ public class BambooServiceImpl implements BambooService {
                               .build();
       return retrofit.create(BambooRestClient.class);
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
           .addParam("message",
               "Could not reach Bamboo Server at :" + bambooConfig.getBambooUrl()
                   + "Reason: " + ExceptionUtils.getRootCauseMessage(e));
@@ -95,7 +99,7 @@ public class BambooServiceImpl implements BambooService {
       if (response != null && !response.isSuccessful()) {
         IOUtils.closeQuietly(response.errorBody());
       }
-      throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR).addParam("message", ex.getMessage());
+      throw new WingsException(ARTIFACT_SERVER_ERROR, USER).addParam("message", ex.getMessage());
     }
   }
 
@@ -122,8 +126,7 @@ public class BambooServiceImpl implements BambooService {
         IOUtils.closeQuietly(response.errorBody());
       }
       logger.error("Failed to get the last successful build for plan key {}", e);
-      throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR)
-          .addParam("message", ExceptionUtils.getRootCauseMessage(e));
+      throw new WingsException(ARTIFACT_SERVER_ERROR, SRE).addParam("message", ExceptionUtils.getRootCauseMessage(e));
     }
     return null;
   }
@@ -170,7 +173,7 @@ public class BambooServiceImpl implements BambooService {
             IOUtils.closeQuietly(response.errorBody());
           }
           logger.error("Failed to fetch project plans from bamboo server {}", bambooConfig.getBambooUrl(), e);
-          throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR)
+          throw new WingsException(ARTIFACT_SERVER_ERROR, USER)
               .addParam("message", "Failed to load plans:" + ExceptionUtils.getRootCauseMessage(e));
         }
         logger.info("Retrieving plan keys for bamboo server {} success", bambooConfig);
@@ -178,12 +181,12 @@ public class BambooServiceImpl implements BambooService {
       }, 20L, TimeUnit.SECONDS, true);
     } catch (UncheckedTimeoutException e) {
       logger.warn("Bamboo server request did not succeed within 20 secs");
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
           .addParam("message", "Bamboo server took too long to respond");
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.UNKNOWN_ERROR, e.getMessage(), e);
+      throw new WingsException(UNKNOWN_ERROR, e.getMessage(), e);
     }
   }
 
@@ -198,12 +201,12 @@ public class BambooServiceImpl implements BambooService {
       return;
     }
     if (response.code() == 401) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER).addParam("message", "Invalid Bamboo credentials");
+      throw new WingsException(INVALID_ARTIFACT_SERVER).addParam("message", "Invalid Bamboo credentials");
     }
     if (response.errorBody() == null) {
-      throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR).addParam("message", response.message());
+      throw new WingsException(ARTIFACT_SERVER_ERROR).addParam("message", response.message());
     }
-    throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR).addParam("message", response.errorBody().string());
+    throw new WingsException(ARTIFACT_SERVER_ERROR).addParam("message", response.errorBody().string());
   }
 
   @Override
@@ -235,19 +238,18 @@ public class BambooServiceImpl implements BambooService {
             IOUtils.closeQuietly(response.errorBody());
           }
           logger.error("BambooService job keys fetch failed with exception", e);
-          throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR)
+          throw new WingsException(ARTIFACT_SERVER_ERROR)
               .addParam("message",
                   "Error in fetching builds from bamboo server. Reason:" + ExceptionUtils.getRootCauseMessage(e));
         }
       }, 20L, TimeUnit.SECONDS, true);
     } catch (UncheckedTimeoutException e) {
       logger.warn("Bamboo server request did not succeed within 20 secs");
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
-          .addParam("message", "Bamboo server took too long to respond");
+      throw new WingsException(INVALID_ARTIFACT_SERVER).addParam("message", "Bamboo server took too long to respond");
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.UNKNOWN_ERROR, e.getMessage(), e);
+      throw new WingsException(UNKNOWN_ERROR, e.getMessage(), e);
     }
   }
 
@@ -270,12 +272,11 @@ public class BambooServiceImpl implements BambooService {
       }, 20L, TimeUnit.SECONDS, true);
     } catch (UncheckedTimeoutException e) {
       logger.warn("Bamboo server request did not succeed within 20 secs");
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
-          .addParam("message", "Bamboo server took too long to respond");
+      throw new WingsException(INVALID_ARTIFACT_SERVER).addParam("message", "Bamboo server took too long to respond");
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.UNKNOWN_ERROR, e.getMessage(), e);
+      throw new WingsException(UNKNOWN_ERROR, e.getMessage(), e);
     }
   }
 
@@ -300,7 +301,7 @@ public class BambooServiceImpl implements BambooService {
         }
       }
       if (buildResultKey == null) {
-        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
+        throw new WingsException(INVALID_ARTIFACT_SERVER)
             .addParam("message",
                 "Failed to trigger bamboo plan [" + planKey + "]. Reason: buildResultKey does not exist in response");
       }
@@ -309,7 +310,7 @@ public class BambooServiceImpl implements BambooService {
         IOUtils.closeQuietly(response.errorBody());
       }
       logger.error("Failed to trigger bamboo plan [" + planKey + "]", e);
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
+      throw new WingsException(INVALID_ARTIFACT_SERVER)
           .addParam("message",
               "Failed to trigger bamboo plan [" + planKey + "]. Reason:" + ExceptionUtils.getRootCauseMessage(e));
     }
@@ -344,7 +345,7 @@ public class BambooServiceImpl implements BambooService {
         IOUtils.closeQuietly(response.errorBody());
       }
       logger.error("BambooService job keys fetch failed with exception", e);
-      throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR)
+      throw new WingsException(ARTIFACT_SERVER_ERROR)
           .addParam("message",
               "Failed to retrieve build status for [ " + buildResultKey
                   + "]. Reason:" + ExceptionUtils.getRootCauseMessage(e));
@@ -372,7 +373,7 @@ public class BambooServiceImpl implements BambooService {
         IOUtils.closeQuietly(response.errorBody());
       }
       logger.error("BambooService job keys fetch failed with exception", e);
-      throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR, e)
+      throw new WingsException(ARTIFACT_SERVER_ERROR, e)
           .addParam("message", "Failed to trigger bamboo plan " + buildResultKey);
     }
   }
@@ -421,7 +422,7 @@ public class BambooServiceImpl implements BambooService {
       } catch (IOException e) {
         String msg = "Failed to download the artifact from url [" + link + "]";
         logger.error(msg, e);
-        throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR, e)
+        throw new WingsException(ARTIFACT_SERVER_ERROR, e)
             .addParam("message", msg + "Reason:" + ExceptionUtils.getRootCauseMessage(e));
       }
     } else {
@@ -459,11 +460,11 @@ public class BambooServiceImpl implements BambooService {
           return ImmutablePair.of(artifactSourcePath, uc.getInputStream());
         } catch (IOException e) {
           logger.error("Failed to download the artifact from url {}", artifactUrl, e);
-          throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR, e)
+          throw new WingsException(ARTIFACT_SERVER_ERROR, e)
               .addParam("message", msg + "Reason:" + ExceptionUtils.getRootCauseMessage(e));
         }
       } else {
-        throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR).addParam("message", msg);
+        throw new WingsException(ARTIFACT_SERVER_ERROR).addParam("message", msg);
       }
     }
   }
@@ -522,7 +523,7 @@ public class BambooServiceImpl implements BambooService {
       logger.info("Retrieving artifacts from plan {} and build number {} success", planKey, buildNumber);
       return artifactPathMap;
     } catch (IOException e) {
-      throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR,
+      throw new WingsException(ARTIFACT_SERVER_ERROR,
           format("Retrieving artifacts from plan %s and build number %s failed", planKey, buildNumber), e);
     }
   }

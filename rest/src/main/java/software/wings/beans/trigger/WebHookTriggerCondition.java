@@ -23,7 +23,7 @@ import java.util.Map;
 public class WebHookTriggerCondition extends TriggerCondition {
   private WebHookToken webHookToken;
   private String artifactStreamId;
-  private Map<String, String> parameters = new HashMap<>();
+  @Builder.Default private Map<String, String> parameters = new HashMap<>();
   private WebhookSource webhookSource;
   private List<WebhookEventType> eventTypes;
 

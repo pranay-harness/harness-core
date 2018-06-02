@@ -8,6 +8,7 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
+import static software.wings.beans.EntityType.APPLICATION;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.SERVICE_TEMPLATE;
@@ -30,6 +31,7 @@ import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.sm.StateType.AWS_CODEDEPLOY_STATE;
 import static software.wings.sm.StateType.COMMAND;
 import static software.wings.sm.StateType.HTTP;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -40,6 +42,7 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import org.junit.Before;
@@ -66,9 +69,6 @@ import software.wings.service.intfc.expression.ExpressionBuilderService;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Created by sgurubelli on 8/8/17.
- */
 public class ExpressionBuilderServiceTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private WorkflowService workflowService;
@@ -138,6 +138,13 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   @Before
   public void setUp() {
     when(appService.get(APP_ID)).thenReturn(anApplication().withName(APP_NAME).build());
+    when(appService.getApplicationWithDefaults(APP_ID))
+        .thenReturn(anApplication()
+                        .withName(APP_NAME)
+                        .withAccountId(ACCOUNT_ID)
+                        .withDescription("Awesome app")
+                        .withDefaults(ImmutableMap.of("Param1", "Value1"))
+                        .build());
     when(serviceVariableService.list(serviceVariablePageRequest, true)).thenReturn(serviceVariables);
     when(serviceTemplateService.list(serviceTemplatePageRequest, false, false)).thenReturn(aPageResponse().build());
     when(serviceVariableService.list(envServiceVariablePageRequest, true)).thenReturn(serviceVariables);
@@ -151,6 +158,19 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
     Set<String> expressions = builderService.listExpressions(APP_ID, SERVICE_ID, SERVICE);
     assertThat(expressions).isNotNull();
     assertThat(expressions).contains("service.name");
+  }
+
+  @Test
+  public void shouldGetApplDefaultsExpressions() {
+    Set<String> expressions = builderService.listExpressions(APP_ID, APP_ID, APPLICATION);
+    assertThat(expressions).isNotNull();
+    assertThat(expressions).contains("app.name");
+    assertThat(expressions).contains("app.defaults.Param1");
+    assertThat(expressions).contains("app.description");
+    assertThat(expressions).contains("service.name");
+    assertThat(expressions).contains("service.description");
+    assertThat(expressions).contains("workflow.name");
+    assertThat(expressions).contains("workflow.description");
   }
 
   @Test

@@ -4,6 +4,8 @@ import static software.wings.beans.EntityType.APPLICATION;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
+import static software.wings.exception.WingsException.USER;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -13,10 +15,11 @@ import software.wings.beans.EntityType;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.expression.ExpressionBuilderService;
 import software.wings.sm.StateType;
-import software.wings.utils.Validator;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 /**
  * Created by sgurubelli on 8/7/17.
@@ -42,11 +45,15 @@ public class ExpressionBuilderServiceImpl implements ExpressionBuilderService {
   @Override
   public Set<String> listExpressions(
       String appId, String entityId, EntityType entityType, String serviceId, StateType stateType) {
-    Application application = appService.get(appId);
-    Validator.notNullCheck("application", application);
-    Validator.notNullCheck("entityId", entityId);
-    Validator.notNullCheck("entityType", entityId);
     Set<String> expressions = new TreeSet<>();
+    Application application = appService.getApplicationWithDefaults(appId);
+    notNullCheck("Application does not exist. May be deleted", application, USER);
+    notNullCheck("EntityId is mandatory", entityId, USER);
+    notNullCheck("EntityType is mandatory", entityType, USER);
+    Map<String, String> defaults = application.getDefaults();
+    if (defaults != null) {
+      expressions.addAll(defaults.keySet().stream().map(s -> "app.defaults." + s).collect(Collectors.toSet()));
+    }
     if (entityType.equals(SERVICE)) {
       expressions.addAll(serviceExpressionsBuilder.getExpressions(appId, entityId, stateType));
     } else if (entityType.equals(ENVIRONMENT)) {

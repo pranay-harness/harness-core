@@ -11,8 +11,6 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.beans.Application;
 import software.wings.beans.alert.ApprovalNeededAlert;
@@ -34,8 +32,6 @@ import java.util.Map;
  * @author Rishi
  */
 public class ApprovalState extends State {
-  private static final Logger logger = LoggerFactory.getLogger(ApprovalState.class);
-
   @Attributes(required = true, title = "Group Name") private String groupName;
 
   @Inject private AlertService alertService;
@@ -105,6 +101,9 @@ public class ApprovalState extends State {
    */
   @Override
   public void handleAbortEvent(ExecutionContext context) {
+    if (context == null || context.getStateExecutionData() == null) {
+      return;
+    }
     context.getStateExecutionData().setErrorMsg(
         "Pipeline was not approved within " + Misc.getDurationString(getTimeoutMillis()));
   }
