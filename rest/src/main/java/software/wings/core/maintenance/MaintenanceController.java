@@ -32,13 +32,19 @@ public class MaintenanceController implements Managed {
   private static final AtomicBoolean shutdown = new AtomicBoolean(false);
 
   public static void forceMaintenance(boolean force) {
-    logger.info("Setting forced maintenance {}", force);
-    forceMaintenance = force;
+    synchronized (logger) {
+      if (forceMaintenance == null || forceMaintenance != force) {
+        logger.info("Setting forced maintenance {}", force);
+        forceMaintenance = force;
+      }
+    }
   }
 
-  public static void unforceMaintenance() {
-    logger.info("Unsetting forced maintenance");
-    forceMaintenance = null;
+  public static void resetForceMaintenance() {
+    synchronized (logger) {
+      logger.info("Un-setting forced maintenance");
+      forceMaintenance = null;
+    }
   }
 
   public static boolean isMaintenance() {

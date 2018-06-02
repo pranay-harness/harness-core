@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.security.UserThreadLocal.userGuard;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
@@ -36,10 +37,12 @@ import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.SortOrder;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.common.Constants;
+import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManager;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -559,34 +562,36 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * A couple of tests to check on encrypted behavior.
    */
   @Test
-  public void shouldStoreAndRetrieveEncryptedPassword() {
-    String rand = String.valueOf(Math.random());
-    String password = "06b13aea6f5f13ec69577689a899bbaad69eeb2f";
-    JenkinsConfig jenkinsConfig = JenkinsConfig.builder()
-                                      .jenkinsUrl("https://jenkins.wings.software")
-                                      .accountId("kmpySmUISimoRrJL6NL73w")
-                                      .username("wingsbuild")
-                                      .authMechanism(Constants.USERNAME_PASSWORD_FIELD)
-                                      .password(password.toCharArray())
-                                      .build();
-    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId("kmpySmUISimoRrJL6NL73w")
-                                            .withCategory(Category.CONNECTOR)
-                                            .withName("Jenkins Config" + rand)
-                                            .withValue(jenkinsConfig)
-                                            .build();
-    wingsPersistence.save(settingAttribute);
-    SettingAttribute result = wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
-    assertThat(result).isNotNull().isEqualToComparingFieldByFieldRecursively(settingAttribute);
-    SettingAttribute undecryptedResult = wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
-    assertThat(undecryptedResult).isNotNull();
-    assertThat(Arrays.equals(password.toCharArray(), ((JenkinsConfig) undecryptedResult.getValue()).getPassword()))
-        .isFalse();
+  public void shouldStoreAndRetrieveEncryptedPassword() throws IOException {
+    try (UserThreadLocal.Guard guard = userGuard(null)) {
+      String rand = String.valueOf(Math.random());
+      String password = "06b13aea6f5f13ec69577689a899bbaad69eeb2f";
+      JenkinsConfig jenkinsConfig = JenkinsConfig.builder()
+                                        .jenkinsUrl("https://jenkins.wings.software")
+                                        .accountId("kmpySmUISimoRrJL6NL73w")
+                                        .username("wingsbuild")
+                                        .authMechanism(Constants.USERNAME_PASSWORD_FIELD)
+                                        .password(password.toCharArray())
+                                        .build();
+      SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                              .withAccountId("kmpySmUISimoRrJL6NL73w")
+                                              .withCategory(Category.CONNECTOR)
+                                              .withName("Jenkins Config" + rand)
+                                              .withValue(jenkinsConfig)
+                                              .build();
+      wingsPersistence.save(settingAttribute);
+      SettingAttribute result = wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
+      assertThat(result).isNotNull().isEqualToComparingFieldByFieldRecursively(settingAttribute);
+      SettingAttribute undecryptedResult = wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
+      assertThat(undecryptedResult).isNotNull();
+      assertThat(Arrays.equals(password.toCharArray(), ((JenkinsConfig) undecryptedResult.getValue()).getPassword()))
+          .isFalse();
 
-    // decrypt and compare
-    encryptionService.decrypt((Encryptable) result.getValue(),
-        secretManager.getEncryptionDetails((Encryptable) result.getValue(), null, null));
-    assertEquals(password, new String(((JenkinsConfig) result.getValue()).getPassword()));
+      // decrypt and compare
+      encryptionService.decrypt((Encryptable) result.getValue(),
+          secretManager.getEncryptionDetails((Encryptable) result.getValue(), null, null));
+      assertEquals(password, new String(((JenkinsConfig) result.getValue()).getPassword()));
+    }
   }
 
   @Test
