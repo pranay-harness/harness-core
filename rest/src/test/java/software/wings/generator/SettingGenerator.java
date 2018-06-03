@@ -29,7 +29,11 @@ import software.wings.service.intfc.SettingsService;
 
 @Singleton
 public class SettingGenerator {
+  protected static final String awsPlaygroundSecretKey =
+      "59bed5bda16ca8e58bf8c185089627e862e1610cf83019d610bfb8bb4b38e980b3f61ba3ab87c35fdc02028b14f5212c";
+
   @Inject AccountGenerator accountGenerator;
+  @Inject SecretGenerator secretGenerator;
 
   @Inject SettingsService settingsService;
   @Inject WingsPersistence wingsPersistence;
@@ -71,8 +75,8 @@ public class SettingGenerator {
             .withEnvId(GLOBAL_ENV_ID)
             .withAccountId(account.getUuid())
             .withValue(AwsConfig.builder()
-                           .accessKey("AKIAJJUEMEKQBYHZCQSA")
-                           .secretKey("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".toCharArray())
+                           .accessKey("AKIAIQHVMR7P5UESAUJQ")
+                           .secretKey(secretGenerator.decryptToCharArray(awsPlaygroundSecretKey))
                            .accountId(account.getUuid())
                            .build())
             .build();
