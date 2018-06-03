@@ -34,6 +34,7 @@ public class InfrastructureProvisionerGenerator {
   @Inject private ApplicationGenerator applicationGenerator;
   @Inject private ServiceGenerator serviceGenerator;
   @Inject private SettingGenerator settingGenerator;
+  @Inject SecretGenerator secretGenerator;
 
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
@@ -73,10 +74,10 @@ public class InfrastructureProvisionerGenerator {
             .name("Harness Terraform Test")
             .sourceRepoSettingId(gitSourceSettingAttribute.getUuid())
             .variables(asList(
-                NameValuePair.builder().name("access_key").value("AKIAJJUEMEKQBYHZCQSA").valueType("TEXT").build(),
+                NameValuePair.builder().name("access_key").value("AKIAIQHVMR7P5UESAUJQ").valueType("TEXT").build(),
                 NameValuePair.builder()
                     .name("secret_key")
-                    .value("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")
+                    .value(secretGenerator.decryptToString(SettingGenerator.awsPlaygroundSecretKey))
                     .valueType("TEXT")
                     .build()))
             .mappingBlueprints(asList(
