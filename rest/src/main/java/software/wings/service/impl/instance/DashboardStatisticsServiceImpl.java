@@ -509,10 +509,6 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         ArtifactSummary artifactSummary = null;
         List<Artifact> artifacts = workflowExecution.getExecutionArgs().getArtifacts();
         if (artifacts != null) {
-          if (logger.isDebugEnabled()) {
-            logger.debug("artifacts is null for workflowExecution:" + workflowExecution.getName());
-          }
-
           Artifact artifact = workflowExecution.getExecutionArgs()
                                   .getArtifacts()
                                   .stream()

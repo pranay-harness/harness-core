@@ -5,7 +5,6 @@ import static software.wings.beans.InfrastructureMappingType.AWS_AWS_LAMBDA;
 import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM;
-import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
 import static software.wings.exception.WingsException.USER_SRE;
 import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.utils.Validator.notNullCheck;
@@ -128,16 +127,11 @@ public class InstanceHelper {
       Artifact artifact = workflowStandardParams.getArtifactForService(phaseExecutionData.getServiceId());
 
       if (artifact == null) {
-        if (logger.isDebugEnabled()) {
-          logger.debug("artifact is null for stateExecutionInstance:" + stateExecutionInstanceId);
-        }
+        logger.info("artifact is null for stateExecutionInstance:" + stateExecutionInstanceId);
       }
 
       if (phaseExecutionData.getInfraMappingId() == null) {
-        if (logger.isDebugEnabled()) {
-          logger.debug(
-              "infraMappingId is null for appId:{}, WorkflowExecutionId:{}", appId, workflowExecution.getUuid());
-        }
+        logger.info("infraMappingId is null for appId:{}, WorkflowExecutionId:{}", appId, workflowExecution.getUuid());
         return;
       }
 
@@ -197,8 +191,8 @@ public class InstanceHelper {
             logger.error(msg);
             throw new WingsException(msg);
           } else {
-            logger.debug(
-                "Instance handler not supported for inframappingType: {}", infrastructureMapping.getInfraMappingType());
+            logger.info("Instance handler not supported for infra mapping type: {}",
+                infrastructureMapping.getInfraMappingType());
             return;
           }
         }
@@ -468,13 +462,21 @@ public class InstanceHelper {
   public void handleDeploymentEvent(DeploymentEvent deploymentEvent) {
     DeploymentInfo deploymentInfo = deploymentEvent.getDeploymentInfo();
     if (deploymentInfo == null) {
-      throw new WingsException("Deployment info can not be null: " + deploymentInfo, USER_SRE);
+      logger.error("Deployment info cannot be null");
+      return;
     }
 
     String infraMappingId = deploymentInfo.getInfraMappingId();
     String appId = deploymentInfo.getAppId();
     try (AcquiredLock lock =
-             persistentLocker.acquireLock(InfrastructureMapping.class, infraMappingId, Duration.ofSeconds(120))) {
+             persistentLocker.tryToAcquireLock(InfrastructureMapping.class, infraMappingId, Duration.ofSeconds(180))) {
+      if (lock == null) {
+        logger.warn("Unable to acquire lock for infraMappingId [{}] of appId [{}]", infraMappingId, appId);
+        return;
+      }
+
+      logger.info("Handling deployment event for infraMappingId [{}] of appId [{}]", infraMappingId, appId);
+
       InfrastructureMapping infraMapping = infraMappingService.get(appId, infraMappingId);
       Validator.notNullCheck("Infra mapping is null for the given id: " + infraMappingId, infraMapping);
 
@@ -483,13 +485,16 @@ public class InstanceHelper {
       if (isSupported(infrastructureMappingType)) {
         InstanceHandler instanceHandler = instanceHandlerFactory.getInstanceHandler(infrastructureMappingType);
         instanceHandler.handleNewDeployment(deploymentInfo);
+        logger.info(
+            "Handled deployment event for infraMappingId [{}] of appId [{}] successfully", infraMappingId, appId);
+      } else {
+        logger.info("Skipping deployment event for infraMappingId [{}] of appId [{}]", infraMappingId, appId);
       }
-    } catch (WingsException exception) {
-      exception.logProcessedMessages(MANAGER, logger);
     } catch (Exception ex) {
       // We have to catch all kinds of runtime exceptions, log it and move on, otherwise the queue impl keeps retrying
       // forever in case of exception
-      logger.error("Exception while processing phase completion event.", ex);
+      logger.error(
+          "Exception while handling deployment event for infraMappingId [{}] of appId [{}]", infraMappingId, appId, ex);
     }
   }
 
