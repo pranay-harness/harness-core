@@ -9,7 +9,6 @@ import static software.wings.service.impl.apm.APMMetricInfo.ResponseMapper;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.time.Timestamp;
@@ -42,7 +41,6 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
-import software.wings.utils.YamlUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -61,8 +59,6 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
   @EnumData(enumDataProvider = APMSettingProvider.class)
   @Attributes(required = true, title = "APM Server")
   private String analysisServerConfigId;
-
-  @Attributes(required = true, title = "APM Config") private String metricInfoList;
 
   private List<MetricCollectionInfo> metricCollectionInfos;
 
@@ -198,16 +194,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     return delegateService.queueTask(delegateTask);
   }
 
-  public String getMetricInfoList() {
-    return metricInfoList;
-  }
-
-  public void setMetricInfoList(String metricInfoList) {
-    this.metricInfoList = metricInfoList;
-  }
-
   public Map<String, List<APMMetricInfo>> apmMetricInfos() {
-    metricCollectionInfos = metricCollectionInfos();
     Map<String, List<APMMetricInfo>> metricInfoMap = new HashMap<>();
     for (MetricCollectionInfo metricCollectionInfo : metricCollectionInfos) {
       if (!metricInfoMap.containsKey(metricCollectionInfo.getCollectionUrl())) {
@@ -248,15 +235,6 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
         ResponseMapper.builder().fieldName("value").jsonPath(responseMapping.getMetricValueJsonPath()).build());
 
     return responseMappers;
-  }
-  private List<MetricCollectionInfo> metricCollectionInfos() {
-    YamlUtils yamlUtils = new YamlUtils();
-    String yaml = metricInfoList;
-    try {
-      return yamlUtils.read(yaml, new TypeReference<List<MetricCollectionInfo>>() {});
-    } catch (Exception ex) {
-      throw new WingsException("Unable to parse config", ex);
-    }
   }
 
   @Data
