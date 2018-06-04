@@ -2,8 +2,15 @@ package software.wings.service.impl.analysis;
 
 import com.google.inject.Inject;
 
+import io.harness.data.structure.EmptyPredicate;
 import org.mongodb.morphia.query.Query;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
+import software.wings.security.AppPermissionSummary;
+import software.wings.security.PermissionAttribute.Action;
+import software.wings.service.intfc.AuthService;
 import software.wings.sm.ExecutionStatus;
 
 import java.text.ParseException;
@@ -14,11 +21,14 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.validation.executable.ValidateOnExecution;
 
 @ValidateOnExecution
 public class ContinuousVerificationServiceImpl implements ContinuousVerificationService {
   @Inject protected WingsPersistence wingsPersistence;
+  @Inject protected AuthService authService;
+  private static final Logger logger = LoggerFactory.getLogger(ContinuousVerificationServiceImpl.class);
 
   @Override
   public void saveCVExecutionMetaData(ContinuousVerificationExecutionMetaData continuousVerificationExecutionMetaData) {
@@ -41,7 +51,17 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       LinkedHashMap<String,
           LinkedHashMap<String,
               LinkedHashMap<String, LinkedHashMap<String, List<ContinuousVerificationExecutionMetaData>>>>>>
-  getCVExecutionMetaData(String accountId, long beginEpochTs, long endEpochTs) throws ParseException {
+  getCVExecutionMetaData(String accountId, long beginEpochTs, long endEpochTs, final User user) throws ParseException {
+    LinkedHashMap<Long,
+        LinkedHashMap<String,
+            LinkedHashMap<String,
+                LinkedHashMap<String, LinkedHashMap<String, List<ContinuousVerificationExecutionMetaData>>>>>> results =
+        new LinkedHashMap<>();
+    if (user == null) {
+      // user is null, we can't validate permissions. Returning empty.
+      logger.warn("Returning empty results from getCVExecutionMetaData since user was null");
+      return results;
+    }
     List<ContinuousVerificationExecutionMetaData> continuousVerificationExecutionMetaData =
         wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class)
             .filter("accountId", accountId)
@@ -49,6 +69,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .greaterThanOrEq(beginEpochTs)
             .field("workflowStartTs")
             .lessThan(endEpochTs)
+            .field("applicationId")
+            .in(getAllowedApplicationsForUser(user, accountId))
             .order("-workflowStartTs, stateStartTs")
             .asList();
 
@@ -65,12 +87,10 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       }
     }
 
-    LinkedHashMap<Long,
-        LinkedHashMap<String,
-            LinkedHashMap<String,
-                LinkedHashMap<String, LinkedHashMap<String, List<ContinuousVerificationExecutionMetaData>>>>>> results =
-        new LinkedHashMap<>();
     long startTimeTs;
+
+    continuousVerificationExecutionMetaData =
+        validatePermissionsAndGetAllowedExecutionList(user, accountId, continuousVerificationExecutionMetaData);
     for (ContinuousVerificationExecutionMetaData executionMetaData : continuousVerificationExecutionMetaData) {
       if (executionMetaData.getPipelineId() != null) {
         startTimeTs = pipelineTimeStampMap.get(executionMetaData.getPipelineId());
@@ -123,5 +143,80 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     }
 
     return results;
+  }
+
+  /**
+   * Check if the user has permissions to view the executionData.
+   * @param user
+   * @param accountId
+   * @param executionMetaDataList
+   * @return true if user has all the required permissions, false otherwise.
+   */
+  private List<ContinuousVerificationExecutionMetaData> validatePermissionsAndGetAllowedExecutionList(final User user,
+      final String accountId, final List<ContinuousVerificationExecutionMetaData> executionMetaDataList) {
+    List<ContinuousVerificationExecutionMetaData> finalList = new ArrayList<>();
+    Map<String, AppPermissionSummary> userAppPermissions =
+        authService.getUserPermissionInfo(accountId, user).getAppPermissionMapInternal();
+    //"Cache" it by applicationId.
+    Map<String, Set<String>> servicePermissionsByApp = new HashMap<>();
+    Map<String, Set<String>> pipelinePermissionsByApp = new HashMap<>();
+    Map<String, Set<String>> workflowPermissionsByApp = new HashMap<>();
+    Map<String, Set<String>> envPermissionsByApp = new HashMap<>();
+
+    for (ContinuousVerificationExecutionMetaData executionMetaData : executionMetaDataList) {
+      final String applicationId = executionMetaData.getApplicationId();
+      Set<String> servicePermissions, pipelinePermissions, wfPermissions, envPermissions;
+
+      if (!servicePermissionsByApp.containsKey(applicationId)) {
+        // If it's  not present for servicePermissions,it's not present for anything. So fill up the map.
+        servicePermissionsByApp.put(
+            applicationId, userAppPermissions.get(applicationId).getServicePermissions().get(Action.READ));
+        pipelinePermissionsByApp.put(
+            applicationId, userAppPermissions.get(applicationId).getPipelinePermissions().get(Action.READ));
+        envPermissionsByApp.put(
+            applicationId, userAppPermissions.get(applicationId).getEnvPermissions().get(Action.READ));
+        workflowPermissionsByApp.put(
+            applicationId, userAppPermissions.get(applicationId).getWorkflowPermissions().get(Action.READ));
+      }
+      servicePermissions = servicePermissionsByApp.get(applicationId);
+      pipelinePermissions = pipelinePermissionsByApp.get(applicationId);
+      envPermissions = envPermissionsByApp.get(applicationId);
+      wfPermissions = workflowPermissionsByApp.get(applicationId);
+
+      if (!checkEmptyOrNotContains(servicePermissions, executionMetaData.getServiceId())
+          && !checkEmptyOrNotContains(pipelinePermissions, executionMetaData.getPipelineId())
+          && !checkEmptyOrNotContains(wfPermissions, executionMetaData.getWorkflowId())
+          && !checkEmptyOrNotContains(envPermissions, executionMetaData.getEnvId())) {
+        logger.info("User {} has permissions to view the execution data {} and {} and {}", user.getName(),
+            executionMetaData.getServiceName(), executionMetaData.getWorkflowName(), executionMetaData.getEnvName());
+        finalList.add(executionMetaData);
+      } else {
+        logger.info("User {} does not have permissions to view the execution data {} and {} and {}", user.getName(),
+            executionMetaData.getServiceName(), executionMetaData.getWorkflowName(), executionMetaData.getEnvName());
+      }
+    }
+    return finalList;
+  }
+  /**
+   *
+   * @param setToCheck
+   * @param value
+   * @return True if set is either empty or it does not contain value. False otherwise.
+   */
+  private boolean checkEmptyOrNotContains(final Set<String> setToCheck, final String value) {
+    if (EmptyPredicate.isEmpty(value)) {
+      return false;
+    }
+
+    if (EmptyPredicate.isEmpty(setToCheck) || !setToCheck.contains(value)) {
+      return true;
+    }
+    return false;
+  }
+
+  private List<String> getAllowedApplicationsForUser(final User user, final String accountId) {
+    Map<String, AppPermissionSummary> userApps =
+        authService.getUserPermissionInfo(accountId, user).getAppPermissionMapInternal();
+    return new ArrayList<>(userApps.keySet());
   }
 }
