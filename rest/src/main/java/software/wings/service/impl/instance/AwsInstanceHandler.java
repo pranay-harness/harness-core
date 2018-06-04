@@ -168,7 +168,7 @@ public class AwsInstanceHandler extends InstanceHandler {
         // Find the instances that were yet to be added to db
         SetView<String> instancesToBeAdded = Sets.difference(latestEc2InstanceMap.keySet(), instancesInDBMap.keySet());
 
-        if (newDeploymentInfo != null) {
+        if (newDeploymentInfo != null && !isAmi) {
           instancesToBeUpdated.stream().forEach(ec2InstanceId -> {
             Instance instance = instancesInDBMap.get(ec2InstanceId);
             String uuid = null;

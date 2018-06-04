@@ -131,23 +131,12 @@ public class ContainerInstanceHandler extends InstanceHandler {
           });
         }
 
-        SetView<String> instancesToBeUpdated =
-            Sets.intersection(latestContainerInfoMap.keySet(), instancesInDBMap.keySet());
-
         // Find the instances that were yet to be added to db
         SetView<String> instancesToBeAdded =
             Sets.difference(latestContainerInfoMap.keySet(), instancesInDBMap.keySet());
 
         SetView<String> instancesToBeDeleted =
             Sets.difference(instancesInDBMap.keySet(), latestContainerInfoMap.keySet());
-
-        if (newDeploymentInfo != null) {
-          instancesToBeUpdated.stream().forEach(containerId -> {
-            ContainerInfo containerInfo = latestContainerInfoMap.get(containerId);
-            Instance instance = buildInstanceFromContainerInfo(containerInfraMapping, containerInfo, newDeploymentInfo);
-            instanceService.saveOrUpdate(instance);
-          });
-        }
 
         Set<String> instanceIdsToBeDeleted = new HashSet<>();
         instancesToBeDeleted.stream().forEach(ec2InstanceId -> {
@@ -158,10 +147,10 @@ public class ContainerInstanceHandler extends InstanceHandler {
         });
 
         logger.info("Total no of Container instances found in DB for InfraMappingId: {} and AppId: {}, "
-                + "No of instances in DB: {}, No of Running instances: {}, No of instances updated: {}, "
+                + "No of instances in DB: {}, No of Running instances: {}, "
                 + "No of instances to be Added: {}, No of instances to be deleted: {}",
             infraMappingId, appId, instancesInDB.size(), latestContainerInfoMap.keySet().size(),
-            instancesToBeUpdated.size(), instancesToBeAdded.size(), instanceIdsToBeDeleted.size());
+            instancesToBeAdded.size(), instanceIdsToBeDeleted.size());
         if (isNotEmpty(instanceIdsToBeDeleted)) {
           instanceService.delete(instanceIdsToBeDeleted);
         }
