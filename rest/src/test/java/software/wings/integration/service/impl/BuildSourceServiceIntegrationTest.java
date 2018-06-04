@@ -36,7 +36,6 @@ import software.wings.beans.BambooConfig;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.JenkinsConfig;
-import software.wings.beans.KmsConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
@@ -64,9 +63,7 @@ import software.wings.service.intfc.DockerBuildService;
 import software.wings.service.intfc.EcrBuildService;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.NexusBuildService;
-import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
-import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.ArtifactType;
 
@@ -84,21 +81,19 @@ import java.util.UUID;
 @RunWith(Parameterized.class)
 public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
   public static final String TEST_JENKINS_URL = "http://ec2-34-207-79-21.compute-1.amazonaws.com:8080/";
-  @Parameter public boolean isKmsEnabled;
-  @Parameter(1) public SettingVariableTypes type;
-  @Parameter(2) public ArtifactStreamType streamType;
-  @Parameter(3) public String repositoryType;
-  @Parameter(4) public String jobName;
-  @Parameter(5) public String groupId;
-  @Parameter(6) public String artifactPath;
-  @Parameter(7) public ArtifactType artifactType;
+  @Parameter(0) public SettingVariableTypes type;
+  @Parameter(1) public ArtifactStreamType streamType;
+  @Parameter(2) public String repositoryType;
+  @Parameter(3) public String jobName;
+  @Parameter(4) public String groupId;
+  @Parameter(5) public String artifactPath;
+  @Parameter(6) public ArtifactType artifactType;
 
   private String accountId;
   private String appId;
   private SettingAttribute settingAttribute;
   private ArtifactStream artifactStream;
   @Mock private DelegateProxyFactory delegateProxyFactory;
-  @Mock private DelegateProxyFactory kmsDelegateProxyFactory;
   @Inject private BuildSourceService buildSourceService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private JenkinsBuildService jenkinsBuildService;
@@ -107,8 +102,6 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
   @Inject private DockerBuildService dockerBuildService;
   @Inject private ArtifactoryBuildService artifactoryBuildService;
   @Inject private EcrBuildService ecrBuildService;
-  @Inject private KmsService kmsService;
-  @Inject private SecretManager secretManager;
   @Inject private SecretManagementDelegateService secretManagementDelegateService;
   private final String userEmail = "rsingh@harness.io";
   private final String userName = "raghu";
@@ -116,58 +109,31 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
 
   @Parameters
   public static Collection<Object[]> data() {
-    return asList(new Object[][] {{true, SettingVariableTypes.JENKINS, ArtifactStreamType.JENKINS, "", "todolist_war",
-                                      "", "target/todolist.war", WAR},
-        {false, SettingVariableTypes.JENKINS, ArtifactStreamType.JENKINS, "", "todolist_war", "", "target/todolist.war",
-            WAR},
-        {true, SettingVariableTypes.BAMBOO, ArtifactStreamType.BAMBOO, "", "TOD-TOD", "", "artifacts/todolist.war",
-            WAR},
-        {false, SettingVariableTypes.BAMBOO, ArtifactStreamType.BAMBOO, "", "TOD-TOD", "", "artifacts/todolist.war",
-            WAR},
-        {true, SettingVariableTypes.NEXUS, ArtifactStreamType.NEXUS, "", "releases", "io.harness.test", "todolist",
-            WAR},
-        {false, SettingVariableTypes.NEXUS, ArtifactStreamType.NEXUS, "", "releases", "io.harness.test", "todolist",
-            WAR},
-        {true, SettingVariableTypes.DOCKER, ArtifactStreamType.DOCKER, "", "xyz", "", "wingsplugins/todolist", WAR},
-        {false, SettingVariableTypes.DOCKER, ArtifactStreamType.DOCKER, "", "xyz", "", "wingsplugins/todolist", WAR},
-        {true, SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "any", "generic-repo",
+    return asList(new Object[][] {
+        {SettingVariableTypes.JENKINS, ArtifactStreamType.JENKINS, "", "todolist_war", "", "target/todolist.war", WAR},
+
+        {SettingVariableTypes.BAMBOO, ArtifactStreamType.BAMBOO, "", "TOD-TOD", "", "artifacts/todolist.war", WAR},
+
+        {SettingVariableTypes.NEXUS, ArtifactStreamType.NEXUS, "", "releases", "io.harness.test", "todolist", WAR},
+        {SettingVariableTypes.DOCKER, ArtifactStreamType.DOCKER, "", "xyz", "", "wingsplugins/todolist", WAR},
+        {SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "any", "generic-repo",
             "io/harness/todolist/todolist*", "", WAR},
-        {false, SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "any", "generic-repo",
-            "io/harness/todolist/todolist*", "", WAR},
-        {true, SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "any", "harness-rpm", "todolist*", "",
-            RPM},
-        {false, SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "any", "harness-rpm", "todolist*", "",
-            RPM},
-        {true, SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "maven", "harness-maven",
+        {SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "any", "harness-rpm", "todolist*", "", RPM},
+        {SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "maven", "harness-maven",
             "io/harness/todolist/todolist/*/todolist*", "", WAR},
-        {false, SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "maven", "harness-maven",
-            "io/harness/todolist/todolist/*/todolist*", "", WAR},
-        {true, SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "docker", "docker",
-            "wingsplugins/todolist", "", DOCKER},
-        {false, SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "docker", "docker",
-            "wingsplugins/todolist", "", DOCKER},
-        {true, SettingVariableTypes.ECR, ArtifactStreamType.ECR, "docker", Regions.US_EAST_1.getName(), "todolist",
-            "todolist", DOCKER},
-        {false, SettingVariableTypes.ECR, ArtifactStreamType.ECR, "docker", Regions.US_EAST_1.getName(), "todolist",
+        {SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "docker", "docker", "wingsplugins/todolist",
+            "", DOCKER},
+        {SettingVariableTypes.ECR, ArtifactStreamType.ECR, "docker", Regions.US_EAST_1.getName(), "todolist",
             "todolist", DOCKER}});
   }
 
   @Before
   public void setUp() {
     initMocks(this);
-    when(kmsDelegateProxyFactory.get(anyObject(), any(SyncTaskContext.class)))
-        .thenReturn(secretManagementDelegateService);
-    setInternalState(kmsService, "delegateProxyFactory", kmsDelegateProxyFactory);
-    setInternalState(wingsPersistence, "secretManager", secretManager);
-    setInternalState(secretManager, "kmsService", kmsService);
     accountId = UUID.randomUUID().toString();
     appId = UUID.randomUUID().toString();
     wingsPersistence.save(user);
     UserThreadLocal.set(user);
-    if (isKmsEnabled) {
-      final KmsConfig kmsConfig = getKmsConfig();
-      kmsService.saveKmsConfig(accountId, kmsConfig);
-    }
     Service service = Service.builder().appId(appId).artifactType(artifactType).name("Some service").build();
     wingsPersistence.save(service);
     switch (type) {
@@ -466,15 +432,5 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
       default:
         throw new IllegalArgumentException("invalid type: " + type);
     }
-  }
-
-  private KmsConfig getKmsConfig() {
-    final KmsConfig kmsConfig = new KmsConfig();
-    kmsConfig.setName("myKms");
-    kmsConfig.setDefault(true);
-    kmsConfig.setKmsArn("arn:aws:kms:us-east-1:830767422336:key/6b64906a-b7ab-4f69-8159-e20fef1f204d");
-    kmsConfig.setAccessKey("AKIAIKL7FYYF2TIYHCLQ");
-    kmsConfig.setSecretKey("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");
-    return kmsConfig;
   }
 }

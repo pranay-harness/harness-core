@@ -71,7 +71,6 @@ import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
-import software.wings.beans.KmsConfig;
 import software.wings.beans.License;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.Pipeline;
@@ -252,7 +251,6 @@ public class DataGenUtil extends BaseIntegrationTest {
           addServices(application.getAccountId(), application.getUuid(), containers.get(GLOBAL_APP_ID)));
     }
     featureFlagService.initializeFeatureFlags();
-    addAndEnableKms();
     enableRbac();
     learningEngineService.initializeServiceSecretKeys();
 
@@ -919,18 +917,6 @@ public class DataGenUtil extends BaseIntegrationTest {
     String name = names.get(nameIdx);
     names.remove(nameIdx);
     return name;
-  }
-
-  private void addAndEnableKms() {
-    kmsService.saveKmsConfig(accountId,
-        KmsConfig.builder()
-            .isDefault(true)
-            .accountId(accountId)
-            .name("Account_kms")
-            .accessKey("AKIAIKL7FYYF2TIYHCLQ")
-            .secretKey("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")
-            .kmsArn("arn:aws:kms:us-east-1:830767422336:key/6b64906a-b7ab-4f69-8159-e20fef1f204d")
-            .build());
   }
 
   /**

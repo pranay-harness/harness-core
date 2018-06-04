@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -115,6 +116,9 @@ import java.util.concurrent.TimeUnit;
 public class KmsTest extends WingsBaseTest {
   private static final Logger logger = LoggerFactory.getLogger(KmsTest.class);
 
+  private static final String accessKey = generateUuid();
+  private static final String secretKey = generateUuid();
+  private static final String arn = generateUuid();
   @Inject private KmsResource kmsResource;
   @Inject private SecretManagementResource secretManagementResource;
   @Inject private KmsService kmsService;
@@ -3170,9 +3174,9 @@ public class KmsTest extends WingsBaseTest {
   public static KmsConfig getKmsConfig() {
     final KmsConfig kmsConfig = new KmsConfig();
     kmsConfig.setName("myKms");
-    kmsConfig.setKmsArn("arn:aws:kms:us-east-1:830767422336:key/6b64906a-b7ab-4f69-8159-e20fef1f204d");
-    kmsConfig.setAccessKey("AKIAJLEKM45P4PO5QUFQ");
-    kmsConfig.setSecretKey("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");
+    kmsConfig.setKmsArn(accessKey);
+    kmsConfig.setAccessKey(secretKey);
+    kmsConfig.setSecretKey(arn);
     return kmsConfig;
   }
 
