@@ -61,9 +61,6 @@ public class MaintenanceController implements Managed {
     maintenanceListeners.add(listener);
   }
 
-  /* (non-Javadoc)
-   * @see io.dropwizard.lifecycle.Managed#start()
-   */
   @Override
   public void start() {
     executorService.submit(() -> {
