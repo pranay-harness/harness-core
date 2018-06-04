@@ -1978,8 +1978,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       if (infrastructureMapping != null && infrastructureMapping.getHostConnectionAttrs() != null) {
         SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getHostConnectionAttrs());
         if (settingAttribute != null) {
-          HostConnectionAttributes connectionAttributes = (HostConnectionAttributes) settingAttribute.getValue();
-          populateRequiredEntityTypesByAccessType(requiredEntityTypes, connectionAttributes.getAccessType());
+          if (settingAttribute.getValue() instanceof HostConnectionAttributes) {
+            HostConnectionAttributes connectionAttributes = (HostConnectionAttributes) settingAttribute.getValue();
+            populateRequiredEntityTypesByAccessType(requiredEntityTypes, connectionAttributes.getAccessType());
+          }
         }
       }
     }
