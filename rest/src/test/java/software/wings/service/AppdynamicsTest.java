@@ -12,7 +12,6 @@ import com.google.inject.Inject;
 
 import io.harness.rule.RepeatRule.Repeat;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -38,7 +37,6 @@ import java.util.UUID;
 /**
  * Created by rsingh on 10/10/17.
  */
-@Ignore
 public class AppdynamicsTest extends WingsBaseTest {
   @Inject private AppdynamicsService appdynamicsService;
   @Inject private WingsPersistence wingsPersistence;
