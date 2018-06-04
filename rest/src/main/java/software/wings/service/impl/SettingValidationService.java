@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static java.util.Collections.emptyList;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
-import static software.wings.beans.FeatureName.AZURE_SUPPORT;
 import static software.wings.beans.FeatureName.PIVOTAL_CLOUD_FOUNDRY_SUPPORT;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.WingsReflectionUtils.getEncryptedRefField;
@@ -107,9 +106,6 @@ public class SettingValidationService {
     if (settingValue instanceof GcpConfig) {
       gcpHelperService.validateCredential((GcpConfig) settingValue);
     } else if (settingValue instanceof AzureConfig) {
-      if (!featureFlagService.isEnabled(AZURE_SUPPORT, settingAttribute.getAccountId())) {
-        throw new InvalidRequestException("Adding Azure as Cloud Provider is not supported yet.");
-      }
       azureHelperService.validateAzureAccountCredential(((AzureConfig) settingValue).getClientId(),
           ((AzureConfig) settingValue).getTenantId(), new String(((AzureConfig) settingValue).getKey()));
     } else if (settingValue instanceof PcfConfig) {

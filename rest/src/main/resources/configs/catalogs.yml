@@ -27,6 +27,12 @@ ARTIFACT_TYPE:
       value: ZIP
     - name: Pivotal Cloud Foundry
       value: PCF
+    - name: IIS Website
+      value: IIS
+    - name: IIS Application
+      value: IIS_APP
+    - name: IIS Virtual Directory
+      value: IIS_VirtualDirectory
     - name: Other
       value: OTHER
 
