@@ -85,12 +85,12 @@ public class InstanceSyncJob implements Job {
         if (lock == null) {
           return;
         }
+        executorService.submit(() -> executeInternal(appIdFinal));
       }
-      executorService.submit(() -> executeInternal(appIdFinal));
     } catch (WingsException exception) {
       exception.logProcessedMessages(MANAGER, logger);
     } catch (Exception ex) {
-      logger.error("Error while looking up appId instances for app: {}", appId, ex);
+      logger.warn("Error while looking up appId instances for app: {}", appId, ex);
     }
   }
 
@@ -111,26 +111,28 @@ public class InstanceSyncJob implements Job {
         try (AcquiredLock lock = persistentLocker.tryToAcquireLock(
                  InfrastructureMapping.class, infraMappingId, Duration.ofSeconds(180))) {
           if (lock == null) {
+            logger.warn("Couldn't acquire infra lock for infraMappingId [{}] of appId [{}]", infraMappingId, appId);
             return;
           }
 
           try {
             InstanceHandler instanceHandler = instanceHandlerFactory.getInstanceHandler(infraMappingType);
             if (instanceHandler == null) {
+              logger.warn("Instance handler null for infraMappingId [{}] of appId [{}]", infraMappingId, appId);
               return;
             }
-            logger.info("Instance sync started for infraMapping [{}]", infraMappingId);
+            logger.info("Instance sync job started for infraMapping [{}]", infraMappingId);
             instanceHandler.syncInstances(appIdFinal, infraMappingId);
-            logger.info("Instance sync completed for infraMapping [{}]", infraMappingId);
+            logger.info("Instance sync job completed for infraMapping [{}]", infraMappingId);
           } catch (Exception ex) {
-            logger.warn("Instance sync failed for infraMappingId [{}]", infraMappingId, ex);
+            logger.warn("Instance sync job failed for infraMappingId [{}]", infraMappingId, ex);
           }
         } catch (Exception e) {
           logger.warn("Failed to acquire lock for infraMappingId [{}] of appId [{}]", infraMappingId, appId);
         }
       });
 
-      logger.info("Instance sync done for appId:" + appId);
+      logger.info("Instance sync job done for appId:" + appId);
     } catch (WingsException exception) {
       exception.logProcessedMessages(MANAGER, logger);
     } catch (Exception ex) {
