@@ -25,8 +25,10 @@ import com.amazonaws.services.ecs.model.AmazonECSException;
 import com.amazonaws.services.ecs.model.ListClustersRequest;
 import com.amazonaws.services.ecs.model.ListClustersResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.DeploymentType;
 import software.wings.api.HostElement;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AwsConfig;
@@ -86,7 +88,14 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
                          .withEc2Instance(instance)
                          .withAppId(awsInfrastructureMapping.getAppId())
                          .withEnvId(awsInfrastructureMapping.getEnvId())
-                         .withHostConnAttr(awsInfrastructureMapping.getHostConnectionAttrs())
+                         .withHostConnAttr(StringUtils.equals(awsInfrastructureMapping.getDeploymentType(),
+                                               DeploymentType.SSH.toString())
+                                 ? awsInfrastructureMapping.getHostConnectionAttrs()
+                                 : null)
+                         .withWinrmConnAttr(StringUtils.equals(awsInfrastructureMapping.getDeploymentType(),
+                                                DeploymentType.WINRM.toString())
+                                 ? awsInfrastructureMapping.getHostConnectionAttrs()
+                                 : null)
                          .withInfraMappingId(awsInfrastructureMapping.getUuid())
                          .withServiceTemplateId(awsInfrastructureMapping.getServiceTemplateId())
                          .build())

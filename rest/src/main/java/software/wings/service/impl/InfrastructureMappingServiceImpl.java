@@ -1513,7 +1513,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       infraTypes.put(AMI, asList(SettingVariableTypes.AWS));
     } else if (artifactType == ArtifactType.IIS || artifactType == ArtifactType.IIS_APP
         || artifactType == ArtifactType.IIS_VirtualDirectory) {
-      infraTypes.put(WINRM, asList(SettingVariableTypes.PHYSICAL_DATA_CENTER));
+      infraTypes.put(WINRM, asList(SettingVariableTypes.PHYSICAL_DATA_CENTER, SettingVariableTypes.AWS));
     } else if (artifactType == ArtifactType.PCF) {
       String accountId = appService.getAccountIdByAppId(appId);
       if (featureFlagService.isEnabled(PIVOTAL_CLOUD_FOUNDRY_SUPPORT, accountId)) {
