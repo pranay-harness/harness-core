@@ -487,44 +487,22 @@ public class AnalysisServiceImpl implements AnalysisService {
 
     // replace dots in test cluster
     if (mlAnalysisResponse.getControl_clusters() != null) {
-      Map<String, Map<String, SplunkAnalysisCluster>> controlClustersMap = new HashMap<>();
-      for (Entry<String, Map<String, SplunkAnalysisCluster>> clusterEntry :
-          mlAnalysisResponse.getControl_clusters().entrySet()) {
-        controlClustersMap.put(clusterEntry.getKey(), new HashMap<>());
-        for (Entry<String, SplunkAnalysisCluster> hostEntry : clusterEntry.getValue().entrySet()) {
-          controlClustersMap.get(clusterEntry.getKey())
-              .put(Misc.replaceDotWithUnicode(hostEntry.getKey()), hostEntry.getValue());
-        }
-      }
-      mlAnalysisResponse.setControl_clusters(controlClustersMap);
+      mlAnalysisResponse.setControl_clusters(getClustersWithDotsReplaced(mlAnalysisResponse.getControl_clusters()));
     }
 
     // replace dots in test cluster
     if (mlAnalysisResponse.getTest_clusters() != null) {
-      Map<String, Map<String, SplunkAnalysisCluster>> testClustersMap = new HashMap<>();
-      for (Entry<String, Map<String, SplunkAnalysisCluster>> clusterEntry :
-          mlAnalysisResponse.getTest_clusters().entrySet()) {
-        testClustersMap.put(clusterEntry.getKey(), new HashMap<>());
-        for (Entry<String, SplunkAnalysisCluster> hostEntry : clusterEntry.getValue().entrySet()) {
-          testClustersMap.get(clusterEntry.getKey())
-              .put(Misc.replaceDotWithUnicode(hostEntry.getKey()), hostEntry.getValue());
-        }
-      }
-      mlAnalysisResponse.setTest_clusters(testClustersMap);
+      mlAnalysisResponse.setTest_clusters(getClustersWithDotsReplaced(mlAnalysisResponse.getTest_clusters()));
     }
 
-    // replace dots in test cluster
+    // replace dots in unknown cluster
     if (mlAnalysisResponse.getUnknown_clusters() != null) {
-      Map<String, Map<String, SplunkAnalysisCluster>> unknownClustersMap = new HashMap<>();
-      for (Entry<String, Map<String, SplunkAnalysisCluster>> clusterEntry :
-          mlAnalysisResponse.getUnknown_clusters().entrySet()) {
-        unknownClustersMap.put(clusterEntry.getKey(), new HashMap<>());
-        for (Entry<String, SplunkAnalysisCluster> hostEntry : clusterEntry.getValue().entrySet()) {
-          unknownClustersMap.get(clusterEntry.getKey())
-              .put(Misc.replaceDotWithUnicode(hostEntry.getKey()), hostEntry.getValue());
-        }
-      }
-      mlAnalysisResponse.setUnknown_clusters(unknownClustersMap);
+      mlAnalysisResponse.setUnknown_clusters(getClustersWithDotsReplaced(mlAnalysisResponse.getUnknown_clusters()));
+    }
+
+    // replace dots in ignored cluster
+    if (mlAnalysisResponse.getIgnore_clusters() != null) {
+      mlAnalysisResponse.setIgnore_clusters(getClustersWithDotsReplaced(mlAnalysisResponse.getIgnore_clusters()));
     }
 
     if (mlAnalysisResponse.getLogCollectionMinute() == -1 || !isEmpty(mlAnalysisResponse.getControl_events())
@@ -551,44 +529,22 @@ public class AnalysisServiceImpl implements AnalysisService {
 
     // replace dots in test cluster
     if (mlAnalysisResponse.getControl_clusters() != null) {
-      Map<String, Map<String, SplunkAnalysisCluster>> controlClustersMap = new HashMap<>();
-      for (Entry<String, Map<String, SplunkAnalysisCluster>> clusterEntry :
-          mlAnalysisResponse.getControl_clusters().entrySet()) {
-        controlClustersMap.put(clusterEntry.getKey(), new HashMap<>());
-        for (Entry<String, SplunkAnalysisCluster> hostEntry : clusterEntry.getValue().entrySet()) {
-          controlClustersMap.get(clusterEntry.getKey())
-              .put(Misc.replaceDotWithUnicode(hostEntry.getKey()), hostEntry.getValue());
-        }
-      }
-      mlAnalysisResponse.setControl_clusters(controlClustersMap);
+      mlAnalysisResponse.setControl_clusters(getClustersWithDotsReplaced(mlAnalysisResponse.getControl_clusters()));
     }
 
     // replace dots in test cluster
     if (mlAnalysisResponse.getTest_clusters() != null) {
-      Map<String, Map<String, SplunkAnalysisCluster>> testClustersMap = new HashMap<>();
-      for (Entry<String, Map<String, SplunkAnalysisCluster>> clusterEntry :
-          mlAnalysisResponse.getTest_clusters().entrySet()) {
-        testClustersMap.put(clusterEntry.getKey(), new HashMap<>());
-        for (Entry<String, SplunkAnalysisCluster> hostEntry : clusterEntry.getValue().entrySet()) {
-          testClustersMap.get(clusterEntry.getKey())
-              .put(Misc.replaceDotWithUnicode(hostEntry.getKey()), hostEntry.getValue());
-        }
-      }
-      mlAnalysisResponse.setTest_clusters(testClustersMap);
+      mlAnalysisResponse.setTest_clusters(getClustersWithDotsReplaced(mlAnalysisResponse.getTest_clusters()));
     }
 
     // replace dots in test cluster
     if (mlAnalysisResponse.getUnknown_clusters() != null) {
-      Map<String, Map<String, SplunkAnalysisCluster>> unknownClustersMap = new HashMap<>();
-      for (Entry<String, Map<String, SplunkAnalysisCluster>> clusterEntry :
-          mlAnalysisResponse.getUnknown_clusters().entrySet()) {
-        unknownClustersMap.put(clusterEntry.getKey(), new HashMap<>());
-        for (Entry<String, SplunkAnalysisCluster> hostEntry : clusterEntry.getValue().entrySet()) {
-          unknownClustersMap.get(clusterEntry.getKey())
-              .put(Misc.replaceDotWithUnicode(hostEntry.getKey()), hostEntry.getValue());
-        }
-      }
-      mlAnalysisResponse.setUnknown_clusters(unknownClustersMap);
+      mlAnalysisResponse.setUnknown_clusters(getClustersWithDotsReplaced(mlAnalysisResponse.getUnknown_clusters()));
+    }
+
+    // replace dots in ignored cluster
+    if (mlAnalysisResponse.getIgnore_clusters() != null) {
+      mlAnalysisResponse.setIgnore_clusters(getClustersWithDotsReplaced(mlAnalysisResponse.getIgnore_clusters()));
     }
 
     if (mlAnalysisResponse.getLogCollectionMinute() == -1 || !isEmpty(mlAnalysisResponse.getControl_events())
@@ -606,6 +562,18 @@ public class AnalysisServiceImpl implements AnalysisService {
       learningEngineService.markExpTaskCompleted(taskId.get());
     }
     return true;
+  }
+
+  private Map<String, Map<String, SplunkAnalysisCluster>> getClustersWithDotsReplaced(
+      Map<String, Map<String, SplunkAnalysisCluster>> inputCluster) {
+    Map<String, Map<String, SplunkAnalysisCluster>> rv = new HashMap<>();
+    for (Entry<String, Map<String, SplunkAnalysisCluster>> clusterEntry : inputCluster.entrySet()) {
+      rv.put(clusterEntry.getKey(), new HashMap<>());
+      for (Entry<String, SplunkAnalysisCluster> hostEntry : clusterEntry.getValue().entrySet()) {
+        rv.get(clusterEntry.getKey()).put(Misc.replaceDotWithUnicode(hostEntry.getKey()), hostEntry.getValue());
+      }
+    }
+    return rv;
   }
 
   @Override

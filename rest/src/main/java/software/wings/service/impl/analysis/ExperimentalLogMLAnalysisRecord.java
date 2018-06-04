@@ -1,5 +1,6 @@
 package software.wings.service.impl.analysis;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -26,6 +27,7 @@ import java.util.Map;
     options = @IndexOptions(unique = true, name = "explogAnalysisUniqueIdx")))
 @Data
 @EqualsAndHashCode(callSuper = false)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ExperimentalLogMLAnalysisRecord extends Base {
   @NotEmpty @Indexed private String stateExecutionId;
 
@@ -48,5 +50,6 @@ public class ExperimentalLogMLAnalysisRecord extends Base {
   private Map<String, Map<String, SplunkAnalysisCluster>> control_clusters;
   private Map<String, Map<String, SplunkAnalysisCluster>> unknown_clusters;
   private Map<String, Map<String, SplunkAnalysisCluster>> test_clusters;
+  private Map<String, Map<String, SplunkAnalysisCluster>> ignore_clusters;
   private LogMLClusterScores cluster_scores;
 }

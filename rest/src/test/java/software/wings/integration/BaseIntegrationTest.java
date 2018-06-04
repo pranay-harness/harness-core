@@ -1,22 +1,30 @@
 package software.wings.integration;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.network.Localhost.getLocalHostName;
 import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
+import static software.wings.beans.User.Builder.anUser;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
 import static software.wings.integration.SeedData.randomSeedString;
 
 import com.google.inject.Inject;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTCreationException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
@@ -43,10 +51,14 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.RestResponse;
+import software.wings.beans.Role;
+import software.wings.beans.RoleType;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.User;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
@@ -58,6 +70,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.JsonSubtypeResolver;
 import software.wings.utils.WingsIntegrationTestConstants;
 
+import java.io.UnsupportedEncodingException;
 import java.net.UnknownHostException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
@@ -94,8 +107,8 @@ public abstract class BaseIntegrationTest extends WingsBaseTest implements Wings
   @Inject protected AuthHandler authHandler;
   @Mock private DelegateProxyFactory delegateProxyFactory;
 
-  protected static String accountId = "INVALID_ID";
-  protected static String userToken = "INVALID_TOKEN";
+  protected String accountId = "INVALID_ID";
+  protected String userToken = "INVALID_TOKEN";
 
   //  @Rule public ThreadDumpRule threadDumpRule = new ThreadDumpRule();
 
@@ -164,6 +177,10 @@ public abstract class BaseIntegrationTest extends WingsBaseTest implements Wings
 
   protected Builder getDelegateRequestBuilderWithAuthHeader(WebTarget target) throws UnknownHostException {
     return target.request().header("Authorization", "Delegate " + getDelegateToken());
+  }
+
+  protected Builder getRequestBuilderWithLearningAuthHeader(WebTarget target) throws UnknownHostException {
+    return target.request().header("Authorization", "LearningEngine " + getLearningToken());
   }
 
   protected Builder getRequestBuilder(WebTarget target) {
@@ -253,5 +270,48 @@ public abstract class BaseIntegrationTest extends WingsBaseTest implements Wings
     }
 
     return jwt.serialize();
+  }
+
+  protected void signupAndLogin(String email, String pwd) throws InterruptedException {
+    final String name = generateUuid();
+    final String accountName = generateUuid();
+    final String companyName = generateUuid();
+    logger.info("signing up with email {} pwd {} name {} accounName {} companyName {}", email, pwd, name, accountName,
+        companyName);
+    WebTarget target = client.target(API_BASE + "/users");
+    RestResponse<User> response = target.request().post(
+        entity(anUser()
+                   .withName(name)
+                   .withEmail(email)
+                   .withPassword(pwd.toCharArray())
+                   .withRoles(wingsPersistence
+                                  .query(Role.class,
+                                      aPageRequest().addFilter("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN).build())
+                                  .getResponse())
+                   .withAccountName(accountName)
+                   .withCompanyName(companyName)
+                   .build(),
+            APPLICATION_JSON),
+        new GenericType<RestResponse<User>>() {});
+    assertEquals(0, response.getResponseMessages().size());
+    wingsPersistence.update(wingsPersistence.createQuery(User.class).filter("email", email),
+        wingsPersistence.createUpdateOperations(User.class).set("emailVerified", true));
+    Thread.sleep(2000);
+    loginUser(email, pwd);
+  }
+
+  private String getLearningToken() {
+    try {
+      String learningServiceSecret = System.getenv("LEARNING_SERVICE_SECRET");
+      logger.info("learningServiceSecret: " + learningServiceSecret);
+      Algorithm algorithm = Algorithm.HMAC256(learningServiceSecret);
+      return JWT.create()
+          .withIssuer("Harness Inc")
+          .withIssuedAt(new Date())
+          .withExpiresAt(new Date(System.currentTimeMillis() + 4 * 60 * 60 * 1000)) // 4 hrs
+          .sign(algorithm);
+    } catch (UnsupportedEncodingException | JWTCreationException exception) {
+      throw new WingsException(UNKNOWN_ERROR).addParam("message", "reset password link could not be generated");
+    }
   }
 }

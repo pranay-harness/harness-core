@@ -1,7 +1,10 @@
 #!/bin/bash
 
 #run all integration tests
-export SPLUNKML_ROOT=$(pwd)/python/splunk_intelligence
+echo 'running integration tests'
+serviceSecret=`mongo harness --eval "db.serviceSecrets.find({ }, { serviceSecret: 1, _id: 0})"| grep serviceSecret | awk '{print $4}' | tr -d '"'`
+echo $serviceSecret
+export LEARNING_SERVICE_SECRET=$serviceSecret
 mvn -B failsafe:integration-test -DskipITs=false -P integration-coverage jacoco:report
 test_status=$?
 

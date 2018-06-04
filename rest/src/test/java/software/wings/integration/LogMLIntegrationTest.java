@@ -1,5 +1,6 @@
 package software.wings.integration;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.junit.Assert.assertEquals;
@@ -15,12 +16,13 @@ import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aW
 import static software.wings.dl.HQuery.excludeAuthority;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.common.collect.TreeBasedTable;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 
-import org.assertj.core.util.Sets;
+import org.apache.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -34,6 +36,7 @@ import software.wings.api.PhaseElement.PhaseElementBuilder;
 import software.wings.api.ServiceElement;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.FeatureFlag;
+import software.wings.beans.FeatureName;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
@@ -91,6 +94,7 @@ import java.util.concurrent.TimeUnit;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.Response;
 
 /**
  * Created by rsingh on 8/17/17.
@@ -156,11 +160,69 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  public void testFeatureflagDemoSuccess() throws Exception {
-    wingsPersistence.delete(
-        wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", "CV_DEMO"));
+  public void saveAnalysisSummaryControlClusters() throws Exception {
+    signupAndLogin(System.currentTimeMillis() + "@harness.io", generateUuid());
+    int numOfControlClusters = 1 + r.nextInt(10);
+    int numOfClusters = 4;
+    List<Map<String, Map<String, SplunkAnalysisCluster>>> clusters = new ArrayList<>();
+    Set<String> hosts = new HashSet<>();
+    Map<String, List<SplunkAnalysisCluster>> controlEvents = new HashMap<>();
+    controlEvents.put("xyz", Lists.newArrayList(getRandomClusterEvent()));
+    for (int i = 0; i < numOfControlClusters; i++) {
+      for (int j = 0; j < numOfClusters; j++) {
+        List<SplunkAnalysisCluster> clusterEvents = new ArrayList<>();
+        Map<String, Map<String, SplunkAnalysisCluster>> controlClusters = new HashMap<>();
+        SplunkAnalysisCluster cluster = getRandomClusterEvent();
+        clusterEvents.add(cluster);
+        Map<String, SplunkAnalysisCluster> hostMap = new HashMap<>();
+        String host = UUID.randomUUID().toString() + ".harness.com";
+        hostMap.put(host, cluster);
+        hosts.add(host);
+        controlClusters.put(UUID.randomUUID().toString(), hostMap);
+        clusters.add(controlClusters);
+      }
+    }
 
-    wingsPersistence.save(FeatureFlag.builder().name("CV_DEMO").build());
+    LogMLAnalysisRecord record = new LogMLAnalysisRecord();
+    record.setStateExecutionId(stateExecutionId);
+    record.setAppId(appId);
+    record.setStateType(StateType.SPLUNKV2);
+    record.setLogCollectionMinute(0);
+    record.setQuery(UUID.randomUUID().toString());
+    record.setControl_events(controlEvents);
+    record.setControl_clusters(clusters.get(0));
+    record.setTest_clusters(clusters.get(1));
+    record.setUnknown_clusters(clusters.get(2));
+    record.setIgnore_clusters(clusters.get(3));
+
+    WebTarget target = client.target(API_BASE + "/" + LogAnalysisResource.LOG_ANALYSIS
+        + LogAnalysisResource.ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL + "?accountId=" + accountId
+        + "&applicationId=" + appId + "&stateExecutionId=" + stateExecutionId + "&logCollectionMinute=" + 0
+        + "&isBaselineCreated=" + true + "&taskId=" + generateUuid() + "&stateType=" + StateType.SPLUNKV2);
+    Response restResponse = getRequestBuilderWithLearningAuthHeader(target).post(entity(record, APPLICATION_JSON));
+    assertEquals(restResponse.getStatus(), HttpStatus.SC_OK);
+
+    target = client.target(API_BASE + "/" + LogAnalysisResource.LOG_ANALYSIS
+        + LogAnalysisResource.ANALYSIS_STATE_GET_ANALYSIS_SUMMARY_URL + "?accountId=" + accountId
+        + "&applicationId=" + appId + "&stateExecutionId=" + stateExecutionId + "&stateType=" + StateType.SPLUNKV2);
+
+    RestResponse<LogMLAnalysisSummary> analysisResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<LogMLAnalysisSummary>>() {});
+
+    assertNotNull(analysisResponse.getResource());
+    assertNotNull(analysisResponse.getResource().getControlClusters());
+    assertNotNull(analysisResponse.getResource().getTestClusters());
+    assertNotNull(analysisResponse.getResource().getIgnoreClusters());
+    assertNotNull(analysisResponse.getResource().getIgnoreClusters());
+  }
+
+  @Test
+  public void testFeatureflagDemoSuccess() throws Exception {
+    signupAndLogin(System.currentTimeMillis() + "@harness.io", generateUuid());
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", FeatureName.CV_DEMO.name()));
+
+    wingsPersistence.save(FeatureFlag.builder().name(FeatureName.CV_DEMO.name()).enabled(false).build());
 
     wingsPersistence.update(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", "CV_DEMO"),
         wingsPersistence.createUpdateOperations(FeatureFlag.class).addToSet("accountIds", "xyz"));
@@ -226,10 +288,11 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
 
   @Test
   public void testFeatureflagDemoFail() throws Exception {
+    signupAndLogin(System.currentTimeMillis() + "@harness.io", generateUuid());
     wingsPersistence.delete(
-        wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", "CV_DEMO"));
+        wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", FeatureName.CV_DEMO.name()));
 
-    wingsPersistence.save(FeatureFlag.builder().name("CV_DEMO").build());
+    wingsPersistence.save(FeatureFlag.builder().name(FeatureName.CV_DEMO.name()).enabled(false).build());
 
     wingsPersistence.update(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", "CV_DEMO"),
         wingsPersistence.createUpdateOperations(FeatureFlag.class).addToSet("accountIds", "xyz"));
@@ -291,6 +354,7 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
     LogMLAnalysisSummary summary = restResponse.getResource();
     assertEquals("cv-demo-query", summary.getQuery());
   }
+
   @Test
   public void testFirstLevelClustering() throws Exception {
     for (String host : hosts) {
