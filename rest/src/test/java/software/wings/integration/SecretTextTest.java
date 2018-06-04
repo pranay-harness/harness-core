@@ -1300,9 +1300,9 @@ public class SecretTextTest extends WingsBaseTest {
     final KmsConfig kmsConfig = new KmsConfig();
     kmsConfig.setName("myKms");
     kmsConfig.setDefault(true);
-    kmsConfig.setKmsArn("arn:aws:kms:us-east-1:830767422336:key/6b64906a-b7ab-4f69-8159-e20fef1f204d");
-    kmsConfig.setAccessKey("AKIAJLEKM45P4PO5QUFQ");
-    kmsConfig.setSecretKey("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");
+    kmsConfig.setKmsArn(generateUuid());
+    kmsConfig.setAccessKey(generateUuid());
+    kmsConfig.setSecretKey(generateUuid());
     return kmsConfig;
   }
 }

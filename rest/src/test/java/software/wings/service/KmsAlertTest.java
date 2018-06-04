@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
@@ -11,9 +12,7 @@ import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.inject.Inject;
 
-import org.apache.commons.io.FileUtils;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.slf4j.Logger;
@@ -38,16 +37,12 @@ import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.UUID;
 
 /**
  * Created by rsingh on 11/3/17.
  */
-@Ignore
 public class KmsAlertTest extends WingsBaseTest {
   private static final Logger logger = LoggerFactory.getLogger(KmsAlertTest.class);
 
@@ -140,21 +135,9 @@ public class KmsAlertTest extends WingsBaseTest {
   }
 
   private VaultConfig getVaultConfig() throws IOException {
-    URL resource = getClass().getClassLoader().getResource("vault_token.txt");
-
-    if (resource == null) {
-      logger.info("reading vault token from environment variable");
-    } else {
-      logger.info("reading vault token from file");
-      VAULT_TOKEN = FileUtils.readFileToString(new File(resource.getFile()), Charset.defaultCharset());
-    }
-    if (VAULT_TOKEN.endsWith("\n")) {
-      VAULT_TOKEN = VAULT_TOKEN.replaceAll("\n", "");
-    }
-    logger.info("VAULT_TOKEN: " + VAULT_TOKEN);
     return VaultConfig.builder()
         .vaultUrl("http://127.0.0.1:8200")
-        .authToken(VAULT_TOKEN)
+        .authToken(generateUuid())
         .name("myVault")
         .isDefault(true)
         .build();
@@ -164,9 +147,9 @@ public class KmsAlertTest extends WingsBaseTest {
     final KmsConfig kmsConfig = new KmsConfig();
     kmsConfig.setName("myKms");
     kmsConfig.setDefault(true);
-    kmsConfig.setKmsArn("arn:aws:kms:us-east-1:830767422336:key/6b64906a-b7ab-4f69-8159-e20fef1f204d");
-    kmsConfig.setAccessKey("AKIAJLEKM45P4PO5QUFQ");
-    kmsConfig.setSecretKey("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");
+    kmsConfig.setKmsArn(generateUuid());
+    kmsConfig.setAccessKey(generateUuid());
+    kmsConfig.setSecretKey(generateUuid());
     return kmsConfig;
   }
 }
