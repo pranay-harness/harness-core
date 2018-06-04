@@ -10,6 +10,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.swagger.annotations.Api;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.RestResponse;
+import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
@@ -39,7 +40,7 @@ public class ContinuousVerificationDashboardResource {
               LinkedHashMap<String, LinkedHashMap<String, List<ContinuousVerificationExecutionMetaData>>>>>>>
   getCVExecutionRecords(@QueryParam("accountId") String accountId, @QueryParam("beginEpochTs") long beginEpochTs,
       @QueryParam("endEpochTs") long endEpochTs) throws ParseException {
-    return new RestResponse<>(
-        continuousVerificationService.getCVExecutionMetaData(accountId, beginEpochTs, endEpochTs));
+    return new RestResponse<>(continuousVerificationService.getCVExecutionMetaData(
+        accountId, beginEpochTs, endEpochTs, UserThreadLocal.get().getPublicUser()));
   }
 }

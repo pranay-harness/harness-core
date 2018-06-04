@@ -1,5 +1,6 @@
 package software.wings.service.impl.analysis;
 
+import software.wings.beans.User;
 import software.wings.sm.ExecutionStatus;
 
 import java.text.ParseException;
@@ -12,7 +13,7 @@ public interface ContinuousVerificationService {
       LinkedHashMap<String,
           LinkedHashMap<String,
               LinkedHashMap<String, LinkedHashMap<String, List<ContinuousVerificationExecutionMetaData>>>>>>
-  getCVExecutionMetaData(String accountId, long beginEpochTs, long endEpochTs) throws ParseException;
+  getCVExecutionMetaData(String accountId, long beginEpochTs, long endEpochTs, User user) throws ParseException;
 
   void setMetaDataExecutionStatus(String stateExecutionId, ExecutionStatus status);
 }
