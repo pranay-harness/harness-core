@@ -6,7 +6,6 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.AccountPlugin.Builder.anAccountPlugin;
-import static software.wings.beans.FeatureName.AZURE_SUPPORT;
 import static software.wings.beans.FeatureName.PIVOTAL_CLOUD_FOUNDRY_SUPPORT;
 import static software.wings.beans.PluginCategory.Artifact;
 import static software.wings.beans.PluginCategory.CloudProvider;
@@ -60,7 +59,6 @@ public class PluginServiceTest {
   private PluginService pluginService = new PluginServiceImpl();
 
   private String accountId = "ACCOUNT_ID";
-  private String azureEnabledAccountId = "AZURE_ENABLED_ACCOUNT_ID";
   private String pcfEnabledAccountId = "PCF_ENABLED_ACCOUNT_ID";
 
   //  @Inject private FeatureFlagService featureFlagService;
@@ -70,19 +68,16 @@ public class PluginServiceTest {
   public void setup() throws IOException {
     initMocks(this);
     setInternalState(pluginService, "featureFlagService", mockFeatureFlagService);
-    when(mockFeatureFlagService.isEnabled(AZURE_SUPPORT, accountId)).thenReturn(false);
-    when(mockFeatureFlagService.isEnabled(AZURE_SUPPORT, azureEnabledAccountId)).thenReturn(true);
-    when(mockFeatureFlagService.isEnabled(PIVOTAL_CLOUD_FOUNDRY_SUPPORT, azureEnabledAccountId)).thenReturn(false);
+    when(mockFeatureFlagService.isEnabled(PIVOTAL_CLOUD_FOUNDRY_SUPPORT, pcfEnabledAccountId)).thenReturn(false);
 
     when(mockFeatureFlagService.isEnabled(PIVOTAL_CLOUD_FOUNDRY_SUPPORT, accountId)).thenReturn(false);
     when(mockFeatureFlagService.isEnabled(PIVOTAL_CLOUD_FOUNDRY_SUPPORT, pcfEnabledAccountId)).thenReturn(true);
-    when(mockFeatureFlagService.isEnabled(AZURE_SUPPORT, pcfEnabledAccountId)).thenReturn(true);
   }
 
   @Test
   public void shouldGetInstalledPlugins() throws Exception {
     assertThat(pluginService.getInstalledPlugins(accountId))
-        .hasSize(25)
+        .hasSize(26)
         .containsExactly(anAccountPlugin()
                              .withSettingClass(JenkinsConfig.class)
                              .withAccountId(accountId)
@@ -260,6 +255,14 @@ public class PluginServiceTest {
                 .withPluginCategories(asList(CloudProvider))
                 .build(),
             anAccountPlugin()
+                .withSettingClass(AzureConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName("Microsoft Azure")
+                .withType("AZURE")
+                .withPluginCategories(asList(CloudProvider))
+                .build(),
+            anAccountPlugin()
                 .withSettingClass(HostConnectionAttributes.class)
                 .withAccountId(accountId)
                 .withIsEnabled(false)
@@ -284,17 +287,6 @@ public class PluginServiceTest {
                 .withPluginCategories(asList(SourceRepo))
                 .build());
 
-    assertThat(pluginService.getInstalledPlugins(azureEnabledAccountId))
-        .hasSize(26)
-        .contains(anAccountPlugin()
-                      .withSettingClass(AzureConfig.class)
-                      .withAccountId(azureEnabledAccountId)
-                      .withIsEnabled(true)
-                      .withDisplayName("Microsoft Azure")
-                      .withType("AZURE")
-                      .withPluginCategories(asList(CloudProvider))
-                      .build());
-
     assertThat(pluginService.getInstalledPlugins(pcfEnabledAccountId))
         .hasSize(27)
         .contains(anAccountPlugin()
@@ -310,13 +302,6 @@ public class PluginServiceTest {
   @Test
   public void shouldGetPluginSettingSchema() throws Exception {
     assertThat(pluginService.getPluginSettingSchema(accountId))
-        .hasSize(25)
-        .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "PROMETHEUS", "APM_VERIFICATION", "DATA_DOG",
-            "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "ELK", "LOGZ", "SUMO", "AWS", "GCP", "GCS",
-            "PHYSICAL_DATA_CENTER", "KUBERNETES_CLUSTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS",
-            "ARTIFACTORY", "GIT");
-
-    assertThat(pluginService.getPluginSettingSchema(azureEnabledAccountId))
         .hasSize(26)
         .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "PROMETHEUS", "APM_VERIFICATION", "DATA_DOG",
             "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "ELK", "LOGZ", "SUMO", "AWS", "GCP", "GCS", "AZURE",

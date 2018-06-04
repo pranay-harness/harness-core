@@ -21,7 +21,6 @@ import static software.wings.api.DeploymentType.SSH;
 import static software.wings.api.DeploymentType.WINRM;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
-import static software.wings.beans.FeatureName.AZURE_SUPPORT;
 import static software.wings.beans.FeatureName.PIVOTAL_CLOUD_FOUNDRY_SUPPORT;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
@@ -1500,18 +1499,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (artifactType == ArtifactType.DOCKER) {
       infraTypes.put(ECS, asList(SettingVariableTypes.AWS));
       String accountId = appService.getAccountIdByAppId(appId);
-      if (featureFlagService.isEnabled(AZURE_SUPPORT, accountId)) {
-        infraTypes.put(KUBERNETES,
+      infraTypes.put(KUBERNETES,
+          asList(SettingVariableTypes.GCP, SettingVariableTypes.AZURE, SettingVariableTypes.KUBERNETES_CLUSTER));
+      if (featureFlagService.isEnabled(FeatureName.HELM, accountId)) {
+        infraTypes.put(HELM,
             asList(SettingVariableTypes.GCP, SettingVariableTypes.AZURE, SettingVariableTypes.KUBERNETES_CLUSTER));
-        if (featureFlagService.isEnabled(FeatureName.HELM, accountId)) {
-          infraTypes.put(HELM,
-              asList(SettingVariableTypes.GCP, SettingVariableTypes.AZURE, SettingVariableTypes.KUBERNETES_CLUSTER));
-        }
-      } else {
-        infraTypes.put(KUBERNETES, asList(SettingVariableTypes.GCP, SettingVariableTypes.KUBERNETES_CLUSTER));
-        if (featureFlagService.isEnabled(FeatureName.HELM, accountId)) {
-          infraTypes.put(HELM, asList(SettingVariableTypes.GCP, SettingVariableTypes.KUBERNETES_CLUSTER));
-        }
       }
     } else if (artifactType == ArtifactType.AWS_CODEDEPLOY) {
       infraTypes.put(AWS_CODEDEPLOY, asList(SettingVariableTypes.AWS));

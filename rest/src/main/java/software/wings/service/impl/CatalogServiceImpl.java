@@ -5,9 +5,6 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
-import static software.wings.beans.CatalogItem.Builder.aCatalogItem;
-import static software.wings.beans.FeatureName.WINRM_SUPPORT;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
@@ -39,11 +36,6 @@ import java.util.Map;
 public class CatalogServiceImpl implements CatalogService {
   private static final Logger logger = LoggerFactory.getLogger(CatalogServiceImpl.class);
   private Map<String, List<CatalogItem>> catalogs;
-  private static final CatalogItem iisSiteCatalogItem = aCatalogItem().withName("IIS Website").withValue("IIS").build();
-  private static final CatalogItem iisAppCatalogItem =
-      aCatalogItem().withName("IIS Application").withValue("IIS_APP").build();
-  private static final CatalogItem iisVirtualDirectoryCatalogItem =
-      aCatalogItem().withName("IIS Virtual Directory").withValue("IIS_VirtualDirectory").build();
 
   /**
    * Instantiates a new catalog service impl.
@@ -56,12 +48,6 @@ public class CatalogServiceImpl implements CatalogService {
       URL url = this.getClass().getResource(Constants.STATIC_CATALOG_URL);
       String yaml = Resources.toString(url, Charsets.UTF_8);
       catalogs = yamlUtils.read(yaml, new TypeReference<Map<String, List<CatalogItem>>>() {});
-
-      if (featureFlagService.isEnabled(WINRM_SUPPORT, GLOBAL_ACCOUNT_ID)) {
-        catalogs.get("ARTIFACT_TYPE").add(iisSiteCatalogItem);
-        catalogs.get("ARTIFACT_TYPE").add(iisAppCatalogItem);
-        catalogs.get("ARTIFACT_TYPE").add(iisVirtualDirectoryCatalogItem);
-      }
 
       for (List<CatalogItem> catalogItems : catalogs.values()) {
         Collections.sort(catalogItems, CatalogItem.displayOrderComparator);

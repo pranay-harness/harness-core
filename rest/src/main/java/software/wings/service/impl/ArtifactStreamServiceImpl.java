@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
-import static software.wings.beans.FeatureName.AZURE_SUPPORT;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.STARTS_WITH;
 import static software.wings.beans.SortOrder.OrderType.ASC;
@@ -277,18 +276,13 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       throw new InvalidRequestException("Service does not exist", USER);
     }
     if (service.getArtifactType().equals(ArtifactType.DOCKER)) {
-      String accountId = appService.getAccountIdByAppId(appId);
       ImmutableMap.Builder<String, String> builder = new ImmutableMap.Builder<String, String>()
                                                          .put(DOCKER.name(), DOCKER.name())
                                                          .put(ECR.name(), ECR.name())
+                                                         .put(ACR.name(), ACR.name())
                                                          .put(GCR.name(), GCR.name())
                                                          .put(ARTIFACTORY.name(), ARTIFACTORY.name())
                                                          .put(NEXUS.name(), NEXUS.name());
-
-      if (featureFlagService.isEnabled(AZURE_SUPPORT, accountId)) {
-        builder.put(ACR.name(), ACR.name());
-      }
-
       return builder.build();
     } else if (service.getArtifactType().equals(ArtifactType.AWS_LAMBDA)) {
       return ImmutableMap.of(AMAZON_S3.name(), AMAZON_S3.name());

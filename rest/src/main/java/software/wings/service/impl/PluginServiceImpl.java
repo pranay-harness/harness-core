@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.AccountPlugin.Builder.anAccountPlugin;
-import static software.wings.beans.FeatureName.AZURE_SUPPORT;
 import static software.wings.beans.FeatureName.PIVOTAL_CLOUD_FOUNDRY_SUPPORT;
 import static software.wings.beans.PluginCategory.Artifact;
 import static software.wings.beans.PluginCategory.CloudProvider;
@@ -279,6 +278,15 @@ public class PluginServiceImpl implements PluginService {
             .withUiSchema(readUiSchema("KUBERNETES_CLUSTER"))
             .build(),
         anAccountPlugin()
+            .withSettingClass(AzureConfig.class)
+            .withAccountId(accountId)
+            .withIsEnabled(true)
+            .withDisplayName("Microsoft Azure")
+            .withType("AZURE")
+            .withPluginCategories(asList(CloudProvider))
+            .withUiSchema(readUiSchema("AZURE"))
+            .build(),
+        anAccountPlugin()
             .withSettingClass(HostConnectionAttributes.class)
             .withAccountId(accountId)
             .withIsEnabled(false)
@@ -296,18 +304,6 @@ public class PluginServiceImpl implements PluginService {
             .withPluginCategories(asList(LoadBalancer))
             .withUiSchema(readUiSchema("ELB"))
             .build());
-
-    if (featureFlagService.isEnabled(AZURE_SUPPORT, accountId)) {
-      pluginList.add(anAccountPlugin()
-                         .withSettingClass(AzureConfig.class)
-                         .withAccountId(accountId)
-                         .withIsEnabled(true)
-                         .withDisplayName("Microsoft Azure")
-                         .withType("AZURE")
-                         .withPluginCategories(asList(CloudProvider))
-                         .withUiSchema(readUiSchema("AZURE"))
-                         .build());
-    }
 
     if (featureFlagService.isEnabled(PIVOTAL_CLOUD_FOUNDRY_SUPPORT, accountId)) {
       pluginList.add(anAccountPlugin()
