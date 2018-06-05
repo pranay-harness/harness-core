@@ -187,8 +187,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           && !checkEmptyOrNotContains(pipelinePermissions, executionMetaData.getPipelineId())
           && !checkEmptyOrNotContains(wfPermissions, executionMetaData.getWorkflowId())
           && !checkEmptyOrNotContains(envPermissions, executionMetaData.getEnvId())) {
-        logger.info("User {} has permissions to view the execution data {} and {} and {}", user.getName(),
-            executionMetaData.getServiceName(), executionMetaData.getWorkflowName(), executionMetaData.getEnvName());
         finalList.add(executionMetaData);
       } else {
         logger.info("User {} does not have permissions to view the execution data {} and {} and {}", user.getName(),

@@ -26,6 +26,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.metrics.RiskLevel;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.DelegateServiceImpl;
@@ -419,9 +420,10 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       case PROMETHEUS:
       case CLOUD_WATCH:
       case DATA_DOG:
+      case APM_VERIFICATION:
         return getMetricTemplates(stateType, stateExecutionId);
       default:
-        return null;
+        throw new WingsException("Invalid Verification StateType.");
     }
   }
 
