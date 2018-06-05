@@ -254,17 +254,19 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   @Override
   public int getMaxControlMinuteWithData(StateType stateType, String appId, String serviceId, String workflowId,
       String workflowExecutionId, String groupName) {
-    NewRelicMetricDataRecord newRelicMetricDataRecord = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
-                                                            .filter("stateType", stateType)
-                                                            .filter("appId", appId)
-                                                            .filter("workflowId", workflowId)
-                                                            .filter("workflowExecutionId", workflowExecutionId)
-                                                            .filter("serviceId", serviceId)
-                                                            .filter("groupName", groupName)
-                                                            .field("level")
-                                                            .notIn(asList(ClusterLevel.H0, ClusterLevel.HF))
-                                                            .order("-dataCollectionMinute")
-                                                            .get();
+    NewRelicMetricDataRecord newRelicMetricDataRecord =
+        wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
+            .filter("stateType", stateType)
+            .filter("appId", appId)
+            .filter("workflowId", workflowId)
+            .filter("workflowExecutionId", workflowExecutionId)
+            .filter("serviceId", serviceId)
+            .field("groupName")
+            .in(asList(groupName, NewRelicMetricDataRecord.DEFAULT_GROUP_NAME))
+            .field("level")
+            .notIn(asList(ClusterLevel.H0, ClusterLevel.HF))
+            .order("-dataCollectionMinute")
+            .get();
 
     return newRelicMetricDataRecord == null ? -1 : newRelicMetricDataRecord.getDataCollectionMinute();
   }
