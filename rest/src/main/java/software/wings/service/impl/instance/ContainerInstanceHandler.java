@@ -109,7 +109,9 @@ public class ContainerInstanceHandler extends InstanceHandler {
         // ECS it is taskDefinition)
         ContainerSyncResponse instanceSyncResponse =
             containerSync.getInstances(containerInfraMapping, asList(containerSvcName));
-        Validator.notNullCheck("InstanceSyncResponse", instanceSyncResponse);
+        Validator.notNullCheck("InstanceSyncResponse is null for containerSvcName: " + containerSvcName
+                + " for infraMappingId: " + infraMappingId,
+            instanceSyncResponse);
 
         List<ContainerInfo> latestContainerInfoList = instanceSyncResponse.getContainerInfoList();
 
@@ -146,10 +148,11 @@ public class ContainerInstanceHandler extends InstanceHandler {
           }
         });
 
-        logger.info("Total no of Container instances found in DB for InfraMappingId: {} and AppId: {}, "
+        logger.info(
+            "Total no of Container instances found in DB for ContainerSvcName: {} and InfraMappingId: {} and AppId: {}, "
                 + "No of instances in DB: {}, No of Running instances: {}, "
                 + "No of instances to be Added: {}, No of instances to be deleted: {}",
-            infraMappingId, appId, instancesInDB.size(), latestContainerInfoMap.keySet().size(),
+            containerSvcName, infraMappingId, appId, instancesInDB.size(), latestContainerInfoMap.keySet().size(),
             instancesToBeAdded.size(), instanceIdsToBeDeleted.size());
         if (isNotEmpty(instanceIdsToBeDeleted)) {
           instanceService.delete(instanceIdsToBeDeleted);
@@ -201,7 +204,8 @@ public class ContainerInstanceHandler extends InstanceHandler {
   @Override
   public void handleNewDeployment(DeploymentInfo deploymentInfo) throws HarnessException {
     Multimap<String, Instance> containerSvcNameInstanceMap = ArrayListMultimap.create();
-
+    logger.info("Handling new container deployment for executionId [{}], inframappingId [{}], appId [{}]",
+        deploymentInfo.getWorkflowExecutionId(), deploymentInfo.getAppId(), deploymentInfo.getInfraMappingId());
     if (deploymentInfo instanceof ContainerDeploymentInfoWithLabels) {
       ContainerDeploymentInfoWithLabels containerDeploymentInfo = (ContainerDeploymentInfoWithLabels) deploymentInfo;
 
@@ -210,6 +214,10 @@ public class ContainerInstanceHandler extends InstanceHandler {
       Set<String> controllerNames = containerSync.getControllerNames(containerInfraMapping,
           containerDeploymentInfo.getLabels().stream().collect(
               Collectors.toMap(label -> label.getName(), label -> label.getValue())));
+      logger.info(
+          "Number of controllers returned for executionId [{}], inframappingId [{}], appId [{}] from labels: {}",
+          deploymentInfo.getWorkflowExecutionId(), deploymentInfo.getAppId(), deploymentInfo.getInfraMappingId(),
+          controllerNames.size());
       controllerNames.stream().forEach(containerSvcName -> containerSvcNameInstanceMap.put(containerSvcName, null));
 
     } else if (deploymentInfo instanceof ContainerDeploymentInfoWithNames) {
