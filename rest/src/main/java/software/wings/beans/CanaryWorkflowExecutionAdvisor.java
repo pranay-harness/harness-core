@@ -11,7 +11,6 @@ import static software.wings.common.Constants.ROLLING_PHASE_PREFIX;
 import static software.wings.sm.ExecutionEventAdvice.ExecutionEventAdviceBuilder.anExecutionEventAdvice;
 import static software.wings.sm.ExecutionInterruptType.ABORT_ALL;
 import static software.wings.sm.ExecutionInterruptType.ROLLBACK;
-import static software.wings.sm.ExecutionStatus.ABORTED;
 import static software.wings.sm.ExecutionStatus.ERROR;
 import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
@@ -42,6 +41,7 @@ import software.wings.sm.ExecutionEventAdvisor;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterruptManager;
 import software.wings.sm.ExecutionInterruptType;
+import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
@@ -166,8 +166,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         }
 
         // nothing to do for regular phase with non-error
-        if (!phaseSubWorkflow.isRollback() && executionEvent.getExecutionStatus() != FAILED
-            && executionEvent.getExecutionStatus() != ERROR && executionEvent.getExecutionStatus() != ABORTED) {
+        if (!phaseSubWorkflow.isRollback() && !ExecutionStatus.isFailStatus(executionEvent.getExecutionStatus())) {
           return null;
         }
 
