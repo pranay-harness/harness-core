@@ -209,7 +209,8 @@ public class InstanceHelper {
       }
     } catch (Exception ex) {
       // we deliberately don't throw back the exception since we don't want the workflow to be affected
-      logger.error("Error while updating instance change information", ex);
+      logger.error(
+          "Error while updating instance change information for executionId [{}], ", workflowExecution.getUuid(), ex);
     }
   }
 
@@ -448,14 +449,17 @@ public class InstanceHelper {
 
     String infraMappingId = deploymentInfo.getInfraMappingId();
     String appId = deploymentInfo.getAppId();
+    String workflowExecutionId = deploymentInfo.getWorkflowExecutionId();
     try (AcquiredLock lock =
              persistentLocker.tryToAcquireLock(InfrastructureMapping.class, infraMappingId, Duration.ofSeconds(180))) {
       if (lock == null) {
-        logger.warn("Unable to acquire lock for infraMappingId [{}] of appId [{}]", infraMappingId, appId);
+        logger.warn("Unable to acquire lock for executionId [{}], infraMappingId [{}], appId [{}]", workflowExecutionId,
+            infraMappingId, appId);
         return;
       }
 
-      logger.info("Handling deployment event for infraMappingId [{}] of appId [{}]", infraMappingId, appId);
+      logger.info("Handling deployment event for executionId [{}], infraMappingId [{}] of appId [{}]",
+          workflowExecutionId, infraMappingId, appId);
 
       InfrastructureMapping infraMapping = infraMappingService.get(appId, infraMappingId);
       Validator.notNullCheck("Infra mapping is null for the given id: " + infraMappingId, infraMapping);
@@ -465,16 +469,17 @@ public class InstanceHelper {
       if (isSupported(infrastructureMappingType)) {
         InstanceHandler instanceHandler = instanceHandlerFactory.getInstanceHandler(infrastructureMappingType);
         instanceHandler.handleNewDeployment(deploymentInfo);
-        logger.info(
-            "Handled deployment event for infraMappingId [{}] of appId [{}] successfully", infraMappingId, appId);
+        logger.info("Handled deployment event for executionId [{}], infraMappingId [{}] of appId [{}] successfully",
+            workflowExecutionId, infraMappingId, appId);
       } else {
-        logger.info("Skipping deployment event for infraMappingId [{}] of appId [{}]", infraMappingId, appId);
+        logger.info("Skipping deployment event for executionId [{}], infraMappingId [{}] of appId [{}]",
+            workflowExecutionId, infraMappingId, appId);
       }
     } catch (Exception ex) {
       // We have to catch all kinds of runtime exceptions, log it and move on, otherwise the queue impl keeps retrying
       // forever in case of exception
-      logger.error(
-          "Exception while handling deployment event for infraMappingId [{}] of appId [{}]", infraMappingId, appId, ex);
+      logger.error("Exception while handling deployment event for executionId [{}], infraMappingId [{}] of appId [{}]",
+          workflowExecutionId, infraMappingId, appId, ex);
     }
   }
 
