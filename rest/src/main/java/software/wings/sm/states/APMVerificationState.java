@@ -12,8 +12,10 @@ import com.google.common.collect.Sets;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.time.Timestamp;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,6 +63,10 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
   private String analysisServerConfigId;
 
   private List<MetricCollectionInfo> metricCollectionInfos;
+
+  public void setMetricCollectionInfos(List<MetricCollectionInfo> metricCollectionInfos) {
+    this.metricCollectionInfos = metricCollectionInfos;
+  }
 
   @Attributes(title = "Expression for Host/Container name")
   @DefaultValue("")
@@ -212,12 +218,11 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
   }
 
   private Map<String, ResponseMapper> getResponseMappers(MetricCollectionInfo metricCollectionInfo) {
-    ResponseMapping responseMapping = metricCollectionInfo.getResponseMappings();
+    ResponseMapping responseMapping = metricCollectionInfo.getResponseMapping();
     Map<String, ResponseMapper> responseMappers = new HashMap<>();
-    ResponseMapper txnNameResponseMapper = ResponseMapper.builder()
-                                               .fieldName("txnName")
-                                               .regexs(Lists.newArrayList(responseMapping.getTxnNameRegex()))
-                                               .build();
+    List<String> txnRegex =
+        responseMapping.getTxnNameRegex() == null ? null : Lists.newArrayList(responseMapping.getTxnNameRegex());
+    ResponseMapper txnNameResponseMapper = ResponseMapper.builder().fieldName("txnName").regexs(txnRegex).build();
     if (!isEmpty(responseMapping.getTxnNameFieldValue())) {
       txnNameResponseMapper.setFieldValue(responseMapping.getTxnNameFieldValue());
     } else {
@@ -239,18 +244,22 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
 
   @Data
   @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
   public static class MetricCollectionInfo {
     private String metricName;
     private MetricType metricType;
     private String tag;
     private String collectionUrl;
     private ResponseType responseType;
-    private ResponseMapping responseMappings;
+    private ResponseMapping responseMapping;
     private Method method;
   }
 
   @Data
   @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
   public static class ResponseMapping {
     private String txnNameFieldValue;
     private String txnNameJsonPath;
