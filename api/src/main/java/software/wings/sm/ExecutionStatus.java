@@ -55,4 +55,12 @@ public enum ExecutionStatus {
   public static Set<ExecutionStatus> activeStatuses() {
     return activeStatuses;
   }
+
+  public static Set<ExecutionStatus> failStatuses() {
+    return failStatuses;
+  }
+
+  public static boolean isSuccessStatus(ExecutionStatus status) {
+    return status != null && status == SUCCESS;
+  }
 }

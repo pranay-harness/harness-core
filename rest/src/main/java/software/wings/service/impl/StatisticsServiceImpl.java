@@ -28,7 +28,6 @@ import static software.wings.sm.ExecutionStatus.SUCCESS;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.common.collect.Streams;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -93,9 +92,6 @@ public class StatisticsServiceImpl implements StatisticsService {
   @Inject private NotificationService notificationService;
   @Inject private ActivityService activityService;
   @Inject private WorkflowExecutionService workflowExecutionService;
-
-  private static final Set<ExecutionStatus> failedExecutionStatuses =
-      Sets.newHashSet(ExecutionStatus.ABORTED, ExecutionStatus.FAILED, ExecutionStatus.ERROR);
 
   @Override
   public WingsStatistics getTopConsumerServices(String accountId, List<String> appIds) {
@@ -399,7 +395,7 @@ public class StatisticsServiceImpl implements StatisticsService {
         totalCount = wflExecutions.size();
         failureCount = (int) wflExecutions.stream()
                            .map(WorkflowExecution::getStatus)
-                           .filter(failedExecutionStatuses::contains)
+                           .filter(ExecutionStatus.failStatuses()::contains)
                            .count();
         for (WorkflowExecution workflowExecution : wflExecutions) {
           if ((workflowExecution.getWorkflowType() == ORCHESTRATION || workflowExecution.getWorkflowType() == SIMPLE)

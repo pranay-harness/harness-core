@@ -173,7 +173,7 @@ public class InstanceHelper {
           }
 
           for (InstanceStatusSummary instanceStatusSummary : instanceStatusSummaries) {
-            if (shouldCaptureInstance(instanceStatusSummary.getStatus())) {
+            if (ExecutionStatus.isSuccessStatus(instanceStatusSummary.getStatus())) {
               Instance instance = buildInstanceUsingHostInfo(workflowExecution, artifact, instanceStatusSummary,
                   phaseExecutionData, phaseStepExecutionData, infrastructureMapping);
               if (instance != null) {
@@ -269,26 +269,6 @@ public class InstanceHelper {
   private boolean checkIfAnyStepsFailed(PhaseStepExecutionSummary phaseStepExecutionSummary) {
     return phaseStepExecutionSummary.getStepExecutionSummaryList().stream().anyMatch(
         stepExecutionSummary -> stepExecutionSummary.getStatus() == FAILED);
-  }
-
-  /**
-   * At the end of the phase, the instance can only be in one of the following states.
-   */
-  private boolean shouldCaptureInstance(ExecutionStatus instanceExecutionStatus) {
-    // Instance would have a status but just in case.
-    if (instanceExecutionStatus == null) {
-      return false;
-    }
-
-    switch (instanceExecutionStatus) {
-      case SUCCESS:
-        return true;
-      case FAILED:
-      case ERROR:
-      case ABORTED:
-      default:
-        return false;
-    }
   }
 
   public Instance buildInstanceUsingHostInfo(WorkflowExecution workflowExecution, Artifact artifact,
