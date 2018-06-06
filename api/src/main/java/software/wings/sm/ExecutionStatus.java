@@ -8,7 +8,7 @@ import java.util.Set;
  */
 public enum ExecutionStatus {
   ABORTED,
-  ABORTING,
+  DISCONTINUING,
   ERROR,
   FAILED,
   NEW,
@@ -24,11 +24,11 @@ public enum ExecutionStatus {
 
   private static Set<ExecutionStatus> finalStatuses = EnumSet.<ExecutionStatus>of(ABORTED, ERROR, FAILED, SUCCESS);
   private static Set<ExecutionStatus> brokeStatuses = EnumSet.<ExecutionStatus>of(ERROR, FAILED);
-  private static Set<ExecutionStatus> failStatuses = EnumSet.<ExecutionStatus>of(ABORTED, ABORTING, ERROR, FAILED);
+  private static Set<ExecutionStatus> failStatuses = EnumSet.<ExecutionStatus>of(ABORTED, DISCONTINUING, ERROR, FAILED);
   private static Set<ExecutionStatus> runningStatuses =
-      EnumSet.<ExecutionStatus>of(ABORTING, NEW, RUNNING, STARTING, QUEUED);
+      EnumSet.<ExecutionStatus>of(DISCONTINUING, NEW, RUNNING, STARTING, QUEUED);
   private static Set<ExecutionStatus> activeStatuses =
-      EnumSet.<ExecutionStatus>of(ABORTING, NEW, PAUSED, RUNNING, STARTING, QUEUED, WAITING);
+      EnumSet.<ExecutionStatus>of(DISCONTINUING, NEW, PAUSED, RUNNING, STARTING, QUEUED, WAITING);
 
   ExecutionStatus() {}
 

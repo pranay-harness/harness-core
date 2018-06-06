@@ -174,7 +174,7 @@ public class StateExecutionData {
       case FAILED:
       case ERROR:
       case ABORTED:
-      case ABORTING:
+      case DISCONTINUING:
       case WAITING:
         breakDown.setFailed(1);
         break;

@@ -25,7 +25,7 @@ import static software.wings.sm.ExecutionInterruptType.RESUME_ALL;
 import static software.wings.sm.ExecutionInterruptType.RETRY;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.ExecutionStatus.ABORTED;
-import static software.wings.sm.ExecutionStatus.ABORTING;
+import static software.wings.sm.ExecutionStatus.DISCONTINUING;
 import static software.wings.sm.ExecutionStatus.ERROR;
 import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.NEW;
@@ -790,11 +790,11 @@ public class StateMachineExecutor {
 
     final List<ExecutionStatus> executionStatuses = asList(NEW, QUEUED, STARTING, RUNNING, PAUSED, WAITING);
 
-    boolean updated = updateStatus(stateExecutionInstance, ABORTING, executionStatuses, null);
+    boolean updated = updateStatus(stateExecutionInstance, DISCONTINUING, executionStatuses, null);
     if (!updated) {
       throw new WingsException(STATE_NOT_FOR_TYPE)
           .addParam("displayName", stateExecutionInstance.getDisplayName())
-          .addParam("type", ABORTING.name())
+          .addParam("type", DISCONTINUING.name())
           .addParam(StateExecutionInstance.STATUS_KEY, stateExecutionInstance.getStatus().name())
           .addParam("statuses", executionStatuses);
     }
@@ -816,13 +816,13 @@ public class StateMachineExecutor {
         MapperUtils.mapObject(stateExecutionInstance.getStateParams(), currentState);
       }
       currentState.handleAbortEvent(context);
-      updated =
-          updateStateExecutionData(stateExecutionInstance, null, ABORTED, null, asList(ABORTING), null, null, null);
+      updated = updateStateExecutionData(
+          stateExecutionInstance, null, ABORTED, null, asList(DISCONTINUING), null, null, null);
       invokeAdvisors(context, currentState);
 
       endTransition(context, stateExecutionInstance, ABORTED, null);
     } catch (Exception e) {
-      logger.error("Error in aborting", e);
+      logger.error("Error in discontinuing", e);
     }
     if (!updated) {
       throw new WingsException(ErrorCode.STATE_ABORT_FAILED)
@@ -1099,8 +1099,8 @@ public class StateMachineExecutor {
       stateExecutionInstance = getStateExecutionInstance(appId, executionUuid, stateExecutionInstanceId);
     }
     if (stateExecutionInstance.getStatus() != RUNNING && stateExecutionInstance.getStatus() != PAUSED
-        && stateExecutionInstance.getStatus() != ABORTING) {
-      logger.warn("stateExecutionInstance: {} status {} is no longer in RUNNING/PAUSED/ABORTING state",
+        && stateExecutionInstance.getStatus() != DISCONTINUING) {
+      logger.warn("stateExecutionInstance: {} status {} is no longer in RUNNING/PAUSED/DISCONTINUING state",
           stateExecutionInstance.getUuid(), stateExecutionInstance.getStatus());
       return;
     }
@@ -1243,7 +1243,7 @@ public class StateMachineExecutor {
         wingsPersistence.createQuery(StateExecutionInstance.class)
             .filter(StateExecutionInstance.APP_ID_KEY, workflowExecutionInterrupt.getAppId())
             .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflowExecutionInterrupt.getExecutionUuid())
-            .filter(StateExecutionInstance.STATUS_KEY, ABORTING)
+            .filter(StateExecutionInstance.STATUS_KEY, DISCONTINUING)
             .field(StateExecutionInstance.CREATED_AT_KEY)
             .greaterThanOrEq(workflowExecution.getCreatedAt())
             .asList();
@@ -1342,7 +1342,7 @@ public class StateMachineExecutor {
   @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE") // TODO
   private boolean markAbortingState(ExecutionInterrupt workflowExecutionInterrupt, WorkflowExecution workflowExecution,
       Collection<ExecutionStatus> statuses) {
-    // Get all that are eligible for aborting
+    // Get all that are eligible for discontinuing
 
     List<StateExecutionInstance> allStateExecutionInstances =
         wingsPersistence.createQuery(StateExecutionInstance.class)
@@ -1357,7 +1357,7 @@ public class StateMachineExecutor {
             .asList();
 
     if (isEmpty(allStateExecutionInstances)) {
-      logger.warn("No stateExecutionInstance could be marked as ABORTING - appId: {}, executionUuid: {}",
+      logger.warn("No stateExecutionInstance could be marked as DISCONTINUING - appId: {}, executionUuid: {}",
           workflowExecutionInterrupt.getAppId(), workflowExecutionInterrupt.getExecutionUuid());
       return false;
     }
@@ -1366,7 +1366,7 @@ public class StateMachineExecutor {
 
     UpdateOperations<StateExecutionInstance> ops =
         wingsPersistence.createUpdateOperations(StateExecutionInstance.class);
-    ops.set(StateExecutionInstance.STATUS_KEY, ABORTING);
+    ops.set(StateExecutionInstance.STATUS_KEY, DISCONTINUING);
 
     if (workflowExecutionInterrupt != null) {
       ops.addToSet("interruptHistory",
@@ -1381,10 +1381,10 @@ public class StateMachineExecutor {
                                               .filter("executionUuid", workflowExecutionInterrupt.getExecutionUuid())
                                               .field("uuid")
                                               .in(leafInstanceIds);
-    // Set the status to ABORTING
+    // Set the status to DISCONTINUING
     UpdateResults updateResult = wingsPersistence.update(query, ops);
     if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() == 0) {
-      logger.warn("No stateExecutionInstance could be marked as ABORTING - appId: {}, executionUuid: {}",
+      logger.warn("No stateExecutionInstance could be marked as DISCONTINUING - appId: {}, executionUuid: {}",
           workflowExecutionInterrupt.getAppId(), workflowExecutionInterrupt.getExecutionUuid());
       return false;
     }

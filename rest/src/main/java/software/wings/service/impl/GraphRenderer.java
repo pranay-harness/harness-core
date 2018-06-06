@@ -528,8 +528,8 @@ public class GraphRenderer {
         return "Still running";
       case SUCCESS:
         return "Succeeded";
-      case ABORTING:
-        return "About to abort";
+      case DISCONTINUING:
+        return "About to discontinue";
       case ABORTED:
         return "Aborted";
       case FAILED:
