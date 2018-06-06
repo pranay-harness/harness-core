@@ -75,6 +75,8 @@ public interface YamlGitService {
    */
   List<GitFileChange> performFullSyncDryRun(String accountId);
 
+  void performFullSyncDryRunOnAllAccounts();
+
   /**
    * Handle change set boolean.
    *
