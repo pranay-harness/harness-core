@@ -13,4 +13,8 @@ public interface AzureManagementRestClient {
       @Path(value = "subscriptionId", encoded = true) String subscriptionId,
       @Path(value = "resourceGroup", encoded = true) String resourceGroup,
       @Path(value = "clusterName", encoded = true) String clusterName);
+
+  @GET("subscriptions/{subscriptionId}/tagNames?api-version=2016-09-01")
+  Call<AzureListTagsResponse> listTags(
+      @Header("Authorization") String bearerAuthHeader, @Path("subscriptionId") String subscriptionId);
 }
