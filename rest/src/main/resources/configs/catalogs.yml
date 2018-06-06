@@ -411,8 +411,8 @@ TASK_TYPES:
 EXECUTION_STATUS:
     - name: Aborted
       value: ABORTED
-    - name: Aborting
-      value: ABORTING
+    - name: Discontinuing
+      value: DISCONTINUING
     - name: Error
       valeu: ERROR
     - name: Failed

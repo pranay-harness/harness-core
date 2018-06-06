@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.sm.ExecutionStatus.ABORTED;
-import static software.wings.sm.ExecutionStatus.ABORTING;
+import static software.wings.sm.ExecutionStatus.DISCONTINUING;
 import static software.wings.sm.ExecutionStatus.ERROR;
 import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.NEW;
@@ -234,7 +234,8 @@ public class GraphRendererTest extends WingsBaseTest {
     assertThat(GraphRenderer.aggregateStatus(asList(STARTING, STARTING, STARTING))).isEqualTo(STARTING);
     assertThat(GraphRenderer.aggregateStatus(asList(RUNNING, RUNNING, RUNNING))).isEqualTo(RUNNING);
     assertThat(GraphRenderer.aggregateStatus(asList(SUCCESS, SUCCESS, SUCCESS))).isEqualTo(SUCCESS);
-    assertThat(GraphRenderer.aggregateStatus(asList(ABORTING, ABORTING, ABORTING))).isEqualTo(ABORTING);
+    assertThat(GraphRenderer.aggregateStatus(asList(DISCONTINUING, DISCONTINUING, DISCONTINUING)))
+        .isEqualTo(DISCONTINUING);
     assertThat(GraphRenderer.aggregateStatus(asList(ABORTED, ABORTED, ABORTED))).isEqualTo(ABORTED);
     assertThat(GraphRenderer.aggregateStatus(asList(FAILED, FAILED, FAILED))).isEqualTo(FAILED);
     assertThat(GraphRenderer.aggregateStatus(asList(QUEUED, QUEUED, QUEUED))).isEqualTo(QUEUED);
@@ -245,21 +246,21 @@ public class GraphRendererTest extends WingsBaseTest {
     assertThat(GraphRenderer.aggregateStatus(asList(PAUSED, PAUSED, PAUSED))).isEqualTo(PAUSED);
     assertThat(GraphRenderer.aggregateStatus(asList(RESUMED, RESUMED, RESUMED))).isEqualTo(RESUMED);
 
-    assertThat(GraphRenderer.aggregateStatus(asList(NEW, STARTING, RUNNING, SUCCESS, ABORTING, ABORTED, FAILED, QUEUED,
-                   SCHEDULED, ERROR, WAITING, PAUSING, PAUSED, RESUMED)))
+    assertThat(GraphRenderer.aggregateStatus(asList(NEW, STARTING, RUNNING, SUCCESS, DISCONTINUING, ABORTED, FAILED,
+                   QUEUED, SCHEDULED, ERROR, WAITING, PAUSING, PAUSED, RESUMED)))
         .isEqualTo(WAITING);
-    assertThat(GraphRenderer.aggregateStatus(asList(NEW, STARTING, RUNNING, SUCCESS, ABORTING, ABORTED, FAILED, QUEUED,
-                   SCHEDULED, ERROR, PAUSING, PAUSED, RESUMED)))
+    assertThat(GraphRenderer.aggregateStatus(asList(NEW, STARTING, RUNNING, SUCCESS, DISCONTINUING, ABORTED, FAILED,
+                   QUEUED, SCHEDULED, ERROR, PAUSING, PAUSED, RESUMED)))
         .isEqualTo(PAUSED);
-    assertThat(GraphRenderer.aggregateStatus(asList(NEW, STARTING, RUNNING, SUCCESS, ABORTING, ABORTED, FAILED, QUEUED,
-                   SCHEDULED, ERROR, PAUSING, RESUMED)))
+    assertThat(GraphRenderer.aggregateStatus(asList(NEW, STARTING, RUNNING, SUCCESS, DISCONTINUING, ABORTED, FAILED,
+                   QUEUED, SCHEDULED, ERROR, PAUSING, RESUMED)))
         .isEqualTo(PAUSING);
     assertThat(GraphRenderer.aggregateStatus(asList(
-                   NEW, STARTING, RUNNING, SUCCESS, ABORTING, ABORTED, FAILED, QUEUED, SCHEDULED, ERROR, RESUMED)))
+                   NEW, STARTING, RUNNING, SUCCESS, DISCONTINUING, ABORTED, FAILED, QUEUED, SCHEDULED, ERROR, RESUMED)))
         .isEqualTo(RUNNING);
     assertThat(GraphRenderer.aggregateStatus(
-                   asList(NEW, STARTING, SUCCESS, ABORTING, ABORTED, FAILED, QUEUED, SCHEDULED, ERROR, RESUMED)))
-        .isIn(STARTING, ABORTING, QUEUED, SCHEDULED, RESUMED);
+                   asList(NEW, STARTING, SUCCESS, DISCONTINUING, ABORTED, FAILED, QUEUED, SCHEDULED, ERROR, RESUMED)))
+        .isIn(STARTING, DISCONTINUING, QUEUED, SCHEDULED, RESUMED);
     assertThat(GraphRenderer.aggregateStatus(asList(NEW, SUCCESS, ABORTED, FAILED, ERROR))).isEqualTo(NEW);
 
     assertThat(GraphRenderer.aggregateStatus(asList(SUCCESS, ABORTED, FAILED, ERROR))).isEqualTo(ABORTED);
