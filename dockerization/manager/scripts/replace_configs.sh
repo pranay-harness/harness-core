@@ -36,11 +36,11 @@ elif [[ -v "LOGDNA_KEY" ]]; then
 fi
 
 if [[ -v "WATCHER_METADATA_URL" ]]; then
-    sed -i "s|watcherMetadataUrl: http://wingswatchers.s3-website-us-east-1.amazonaws.com/watcherci.txt|watcherMetadataUrl: ${WATCHER_METADATA_URL}|" /opt/harness/config.yml
+    sed -i "s|watcherMetadataUrl: https://ci.harness.io/storage/wingswatchers/watcherci.txt|watcherMetadataUrl: ${WATCHER_METADATA_URL}|" /opt/harness/config.yml
 fi
 
 if [[ -v "DELEGATE_METADATA_URL" ]]; then
-    sed -i "s|delegateMetadataUrl: http://wingsdelegates.s3-website-us-east-1.amazonaws.com/delegateci.txt|delegateMetadataUrl: ${DELEGATE_METADATA_URL}|" /opt/harness/config.yml
+    sed -i "s|delegateMetadataUrl: https://ci.harness.io/storage/wingsdelegates/delegateci.txt|delegateMetadataUrl: ${DELEGATE_METADATA_URL}|" /opt/harness/config.yml
 fi
 
 if [[ -v "API_URL" ]]; then

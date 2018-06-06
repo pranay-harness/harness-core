@@ -37,8 +37,8 @@ function test() {
 #
 # Start testing connectivity
 #
-test " - Test connecting to [Harness API server]...                   " "https://api.harness.io/api/version"
-test " - Test connecting to [Harness Delegate download repository]... " "http://wingswatchers.s3-website-us-east-1.amazonaws.com/watcherprod.txt"
+test " - Test connecting to [Harness API server]...                   " "https://app.harness.io/api/version"
+test " - Test connecting to [Harness Delegate download repository]... " "https://app.harness.io/storage/wingswatchers/watcherprod.txt"
 
 # add more `test` checks here, following the format above
 

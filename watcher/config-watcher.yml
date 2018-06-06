@@ -1,4 +1,4 @@
 accountId: kmpySmUISimoRrJL6NL73w
 doUpgrade: false
-upgradeCheckLocation: http://wingswatchers.s3-website-us-east-1.amazonaws.com/watcherci.txt
+upgradeCheckLocation: https://ci.harness.io/storage/wingswatchers/watcherci.txt
 upgradeCheckIntervalSeconds: 60

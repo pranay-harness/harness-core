@@ -165,7 +165,7 @@ public void shouldRunDelegate() throws IOException, JSONException, TimeoutExcept
 
   new ProcessExecutor()
       .command("/bin/sh", "-c",
-          "cd harness-delegate && rm delegate.jar config-delegate.yml && sed -i'' 's/REMOTE_DELEGATE_URL=.*/REMOTE_DELEGATE_URL=https:\\/\\/s3.amazonaws.com\\/wingsdelegates\\/jobs\\/test-delegate\\/delegate.jar/' start.sh && sed -i'' 's/doUpgrade: false/doUpgrade: true/' start.sh")
+          "cd harness-delegate && rm delegate.jar config-delegate.yml && sed -i'' 's|REMOTE_DELEGATE_URL=.*|REMOTE_DELEGATE_URL=https://ci.harness.io/storage/wingsdelegates/latest/delegate.jar|' start.sh && sed -i'' 's|doUpgrade: false|doUpgrade: true|' start.sh")
       .readOutput(true)
       .execute()
       .getOutput()

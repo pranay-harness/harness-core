@@ -63,8 +63,8 @@ logging:
 mongo:
   uri: mongodb://localhost:27017/harness
 
-watcherMetadataUrl: http://wingswatchers.s3-website-us-east-1.amazonaws.com/watcherci.txt
-delegateMetadataUrl: http://wingsdelegates.s3-website-us-east-1.amazonaws.com/delegateci.txt
+watcherMetadataUrl: https://ci.harness.io/storage/wingswatchers/watcherci.txt
+delegateMetadataUrl: https://ci.harness.io/storage/wingsdelegates/delegateci.txt
 apiUrl:
 deployMode: AWS
 

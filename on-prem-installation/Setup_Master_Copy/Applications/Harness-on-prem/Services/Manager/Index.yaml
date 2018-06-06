@@ -24,7 +24,7 @@ configVariables:
     value: docker-manager-test
     valueType: TEXT
   - name: DELEGATE_METADATA_URL
-    value: http://wingsdelegates.s3-website-us-east-1.amazonaws.com/delegateci.txt
+    value: https://ci.harness.io/storage/wingsdelegates/delegateci.txt
     valueType: TEXT
   - name: NEWRELIC_ENV
     value: development
@@ -39,7 +39,7 @@ configVariables:
     value: <NEWRELIC_LICENSE_KEY_PLACEHOLDER>
     valueType: ENCRYPTED_TEXT
   - name: WATCHER_METADATA_URL
-    value: http://wingswatchers.s3-website-us-east-1.amazonaws.com/watcherci.txt
+    value: https://ci.harness.io/storage/wingswatchers/watcherci.txt
     valueType: TEXT
   - name: MEMORY
     value: '4096'
