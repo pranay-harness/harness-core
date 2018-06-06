@@ -48,7 +48,7 @@ import javax.ws.rs.QueryParam;
 @Scope(APPLICATION)
 @AuthRule(permissionType = ENV)
 public class EnvironmentResource {
-  @Inject private EnvironmentService envService;
+  @Inject private EnvironmentService environmentService;
 
   /**
    * List.
@@ -66,7 +66,7 @@ public class EnvironmentResource {
     if (appId != null) {
       pageRequest.addFilter("appId", EQ, appId);
     }
-    return new RestResponse<>(envService.list(pageRequest, true));
+    return new RestResponse<>(environmentService.list(pageRequest, true));
   }
 
   /**
@@ -81,7 +81,7 @@ public class EnvironmentResource {
   @ExceptionMetered
   public RestResponse<Environment> save(@QueryParam("appId") String appId, Environment environment) {
     environment.setAppId(appId);
-    return new RestResponse<>(envService.save(environment));
+    return new RestResponse<>(environmentService.save(environment));
   }
 
   /**
@@ -101,7 +101,7 @@ public class EnvironmentResource {
     if (status == null) {
       status = SetupStatus.COMPLETE;
     }
-    return new RestResponse<>(envService.get(appId, envId, status));
+    return new RestResponse<>(environmentService.get(appId, envId, status));
   }
 
   /**
@@ -117,7 +117,7 @@ public class EnvironmentResource {
   @ExceptionMetered
   public RestResponse<List<Service>> getServicesWithOverrides(
       @QueryParam("appId") String appId, @PathParam("envId") String envId) {
-    return new RestResponse(envService.getServicesWithOverrides(appId, envId));
+    return new RestResponse(environmentService.getServicesWithOverrides(appId, envId));
   }
 
   /**
@@ -136,7 +136,7 @@ public class EnvironmentResource {
       @QueryParam("appId") String appId, @PathParam("envId") String envId, Environment environment) {
     environment.setUuid(envId);
     environment.setAppId(appId);
-    return new RestResponse<>(envService.update(environment));
+    return new RestResponse<>(environmentService.update(environment));
   }
 
   /**
@@ -151,7 +151,7 @@ public class EnvironmentResource {
   @Timed
   @ExceptionMetered
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("envId") String envId) {
-    envService.delete(appId, envId);
+    environmentService.delete(appId, envId);
     return new RestResponse();
   }
 
@@ -169,7 +169,7 @@ public class EnvironmentResource {
   @ExceptionMetered
   public RestResponse<Environment> cloneEnvironment(
       @QueryParam("appId") String appId, @PathParam("envId") String envId, CloneMetadata cloneMetadata) {
-    return new RestResponse<>(envService.cloneEnvironment(appId, envId, cloneMetadata));
+    return new RestResponse<>(environmentService.cloneEnvironment(appId, envId, cloneMetadata));
   }
 
   @POST
@@ -181,7 +181,7 @@ public class EnvironmentResource {
       @ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
       @ApiParam(name = "envId", required = true) @PathParam("envId") String envId,
       KubernetesPayload kubernetesPayload) {
-    return new RestResponse<>(envService.setConfigMapYaml(appId, envId, kubernetesPayload));
+    return new RestResponse<>(environmentService.setConfigMapYaml(appId, envId, kubernetesPayload));
   }
 
   @PUT
@@ -192,7 +192,7 @@ public class EnvironmentResource {
       @ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
       @ApiParam(name = "envId", required = true) @PathParam("envId") String envId,
       KubernetesPayload kubernetesPayload) {
-    return new RestResponse<>(envService.setConfigMapYaml(appId, envId, kubernetesPayload));
+    return new RestResponse<>(environmentService.setConfigMapYaml(appId, envId, kubernetesPayload));
   }
 
   @DELETE
@@ -202,7 +202,7 @@ public class EnvironmentResource {
   public RestResponse<Environment> deleteConfigMapYaml(
       @ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
       @ApiParam(name = "envId", required = true) @PathParam("envId") String envId) {
-    return new RestResponse<>(envService.setConfigMapYaml(appId, envId, new KubernetesPayload()));
+    return new RestResponse<>(environmentService.setConfigMapYaml(appId, envId, new KubernetesPayload()));
   }
 
   @POST
@@ -215,7 +215,8 @@ public class EnvironmentResource {
       @ApiParam(name = "envId", required = true) @PathParam("envId") String envId,
       @ApiParam(name = "templateId", required = true) @PathParam("templateId") String templateId,
       KubernetesPayload kubernetesPayload) {
-    return new RestResponse<>(envService.setConfigMapYamlForService(appId, envId, templateId, kubernetesPayload));
+    return new RestResponse<>(
+        environmentService.setConfigMapYamlForService(appId, envId, templateId, kubernetesPayload));
   }
 
   @PUT
@@ -227,7 +228,8 @@ public class EnvironmentResource {
       @ApiParam(name = "envId", required = true) @PathParam("envId") String envId,
       @ApiParam(name = "templateId", required = true) @PathParam("templateId") String templateId,
       KubernetesPayload kubernetesPayload) {
-    return new RestResponse<>(envService.setConfigMapYamlForService(appId, envId, templateId, kubernetesPayload));
+    return new RestResponse<>(
+        environmentService.setConfigMapYamlForService(appId, envId, templateId, kubernetesPayload));
   }
 
   @DELETE
@@ -238,7 +240,8 @@ public class EnvironmentResource {
       @ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
       @ApiParam(name = "envId", required = true) @PathParam("envId") String envId,
       @ApiParam(name = "templateId", required = true) @PathParam("templateId") String templateId) {
-    return new RestResponse<>(envService.setConfigMapYamlForService(appId, envId, templateId, new KubernetesPayload()));
+    return new RestResponse<>(
+        environmentService.setConfigMapYamlForService(appId, envId, templateId, new KubernetesPayload()));
   }
   @POST
   @Path("{envId}/helm-value-yaml")
@@ -249,7 +252,7 @@ public class EnvironmentResource {
       @ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
       @ApiParam(name = "envId", required = true) @PathParam("envId") String envId,
       KubernetesPayload kubernetesPayload) {
-    return new RestResponse<>(envService.setHelmValueYaml(appId, envId, kubernetesPayload));
+    return new RestResponse<>(environmentService.setHelmValueYaml(appId, envId, kubernetesPayload));
   }
 
   @PUT
@@ -260,7 +263,7 @@ public class EnvironmentResource {
       @ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
       @ApiParam(name = "envId", required = true) @PathParam("envId") String envId,
       KubernetesPayload kubernetesPayload) {
-    return new RestResponse<>(envService.setHelmValueYaml(appId, envId, kubernetesPayload));
+    return new RestResponse<>(environmentService.setHelmValueYaml(appId, envId, kubernetesPayload));
   }
 
   @DELETE
@@ -270,7 +273,7 @@ public class EnvironmentResource {
   public RestResponse<Environment> deleteHelmValueYaml(
       @ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
       @ApiParam(name = "envId", required = true) @PathParam("envId") String envId) {
-    return new RestResponse<>(envService.setHelmValueYaml(appId, envId, new KubernetesPayload()));
+    return new RestResponse<>(environmentService.setHelmValueYaml(appId, envId, new KubernetesPayload()));
   }
 
   @POST
@@ -283,7 +286,8 @@ public class EnvironmentResource {
       @ApiParam(name = "envId", required = true) @PathParam("envId") String envId,
       @ApiParam(name = "templateId", required = true) @PathParam("templateId") String templateId,
       KubernetesPayload kubernetesPayload) {
-    return new RestResponse<>(envService.setHelmValueYamlForService(appId, envId, templateId, kubernetesPayload));
+    return new RestResponse<>(
+        environmentService.setHelmValueYamlForService(appId, envId, templateId, kubernetesPayload));
   }
 
   @PUT
@@ -295,7 +299,8 @@ public class EnvironmentResource {
       @ApiParam(name = "envId", required = true) @PathParam("envId") String envId,
       @ApiParam(name = "templateId", required = true) @PathParam("templateId") String templateId,
       KubernetesPayload kubernetesPayload) {
-    return new RestResponse<>(envService.setHelmValueYamlForService(appId, envId, templateId, kubernetesPayload));
+    return new RestResponse<>(
+        environmentService.setHelmValueYamlForService(appId, envId, templateId, kubernetesPayload));
   }
 
   @DELETE
@@ -306,6 +311,7 @@ public class EnvironmentResource {
       @ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
       @ApiParam(name = "envId", required = true) @PathParam("envId") String envId,
       @ApiParam(name = "templateId", required = true) @PathParam("templateId") String templateId) {
-    return new RestResponse<>(envService.setHelmValueYamlForService(appId, envId, templateId, new KubernetesPayload()));
+    return new RestResponse<>(
+        environmentService.setHelmValueYamlForService(appId, envId, templateId, new KubernetesPayload()));
   }
 }
