@@ -29,7 +29,5 @@ public interface AlertService extends OwnedByAccount, OwnedByApplication {
 
   void deleteByAccountId(String accountId);
 
-  void deleteOldAlerts(long retentionMillis);
-
   Optional<Alert> findExistingAlert(String accountId, String appId, AlertType alertType, AlertData alertData);
 }

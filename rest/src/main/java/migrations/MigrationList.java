@@ -3,6 +3,7 @@ package migrations;
 import com.google.common.collect.ImmutableList;
 
 import migrations.all.AddUsersToAdminUserGroup;
+import migrations.all.AddValidUntilToAlert;
 import migrations.all.FixInstanceData;
 import migrations.all.FixInstanceDataForAwsSSH;
 import migrations.all.GitSyncToAllAccounts;
@@ -46,6 +47,7 @@ public class MigrationList {
         .add(Pair.of(143, MetricAnalysisRecordGroupNameMigration.class))
         .add(Pair.of(144, MetricMLAnalysisRecordGroupNameMigration.class))
         .add(Pair.of(145, LearningEngineTaskGroupNameMigration.class))
+        .add(Pair.of(146, AddValidUntilToAlert.class))
         .build();
   }
 }

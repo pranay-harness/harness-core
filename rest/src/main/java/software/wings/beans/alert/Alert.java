@@ -1,13 +1,19 @@
 package software.wings.beans.alert;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.alerts.AlertCategory;
 import software.wings.alerts.AlertSeverity;
 import software.wings.alerts.AlertStatus;
 import software.wings.beans.Base;
+
+import java.time.OffsetDateTime;
+import java.util.Date;
 
 /**
  * Created by brett on 10/18/17
@@ -16,6 +22,10 @@ import software.wings.beans.Base;
 @EqualsAndHashCode(callSuper = true)
 @Entity(value = "alerts")
 public class Alert extends Base {
+  public static final String CLOSED_AT_KEY = "closedAt";
+  public static final String STATUS_KEY = "status";
+  public static final String VALID_UNTIL_KEY = "validUntil";
+
   @Indexed private String accountId;
   @Indexed private AlertType type;
   @Indexed private AlertStatus status;
@@ -24,6 +34,11 @@ public class Alert extends Base {
   private AlertSeverity severity;
   private AlertData alertData;
   private long closedAt;
+
+  @SchemaIgnore
+  @JsonIgnore
+  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
+  private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
 
   public static final class AlertBuilder {
     private Alert alert;

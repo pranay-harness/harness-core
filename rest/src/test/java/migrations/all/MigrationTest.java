@@ -10,7 +10,7 @@ import software.wings.rules.Integration;
 @Integration
 @Ignore
 public class MigrationTest extends WingsBaseTest {
-  @Inject private AddValidUntilToWaitInstance migration;
+  @Inject private AddValidUntilToAlert migration;
 
   @Test
   public void shouldMigrate() {

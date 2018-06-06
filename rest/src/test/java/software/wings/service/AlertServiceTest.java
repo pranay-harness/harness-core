@@ -24,7 +24,6 @@ import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 
 import com.google.inject.Inject;
 
-import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,7 +31,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
-import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -198,20 +196,5 @@ public class AlertServiceTest extends WingsBaseTest {
     alertService.deploymentCompleted(APP_ID, "executionId");
 
     verify(wingsPersistence, times(2)).update(any(Query.class), any(UpdateOperations.class));
-  }
-
-  @Test
-  public void shouldDeleteOldAlerts() {
-    when(query.asKeyList(any()))
-        .thenReturn(asList(new Key<>(Alert.class, "alerts", "ID1"), new Key<>(Alert.class, "alerts", "ID2")));
-    when(wingsPersistence.getCollection("alerts")).thenReturn(alertsCollection);
-
-    alertService.deleteOldAlerts(0);
-
-    ArgumentCaptor<BasicDBObject> captor = ArgumentCaptor.forClass(BasicDBObject.class);
-    verify(alertsCollection).remove(captor.capture());
-    BasicDBObject dbObject = (BasicDBObject) captor.getValue().get("_id");
-    Object[] alertIds = (Object[]) dbObject.get("$in");
-    assertThat(alertIds.length).isEqualTo(2);
   }
 }
