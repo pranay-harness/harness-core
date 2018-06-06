@@ -20,7 +20,8 @@ public enum ExecutionStatus {
   SCHEDULED,
   STARTING,
   SUCCESS,
-  WAITING;
+  WAITING,
+  @Deprecated ABORTING;
 
   private static Set<ExecutionStatus> finalStatuses = EnumSet.<ExecutionStatus>of(ABORTED, ERROR, FAILED, SUCCESS);
   private static Set<ExecutionStatus> brokeStatuses = EnumSet.<ExecutionStatus>of(ERROR, FAILED);
