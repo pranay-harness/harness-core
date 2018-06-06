@@ -32,66 +32,18 @@ import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
-/**
- * The Interface WorkflowService.
- *
- * @author Rishi
- */
 public interface WorkflowExecutionService {
-  /**
-   * /**
-   * Trigger.
-   *
-   * @param appId          the app id
-   * @param stateMachineId the state machine id
-   * @param executionUuid  the execution uuid
-   * @param executionName  the execution name
-   */
   void trigger(
       @NotNull String appId, @NotNull String stateMachineId, @NotNull String executionUuid, String executionName);
 
-  /**
-   * List executions.
-   *
-   * @param pageRequest  the page request
-   * @param includeGraph the include graph
-   * @return the page response
-   */
   PageResponse<WorkflowExecution> listExecutions(PageRequest<WorkflowExecution> pageRequest, boolean includeGraph);
 
-  /**
-   * List executions page response.
-   *
-   * @param pageRequest             the page request
-   * @param includeGraph            the include graph
-   * @param runningOnly             the running only
-   * @param withBreakdownAndSummary the with breakdown and summary
-   * @param includeStatus           the workflow status
-   * @return the page response
-   */
   PageResponse<WorkflowExecution> listExecutions(PageRequest<WorkflowExecution> pageRequest, boolean includeGraph,
       boolean runningOnly, boolean withBreakdownAndSummary, boolean includeStatus);
 
-  /**
-   * Trigger pipeline execution.
-   *
-   * @param appId         the app id
-   * @param pipelineId    the pipeline id
-   * @param executionArgs the execution args
-   * @return the workflow execution
-   */
   WorkflowExecution triggerPipelineExecution(
       @NotNull String appId, @NotNull String pipelineId, ExecutionArgs executionArgs);
 
-  /**
-   * Trigger orchestration execution.
-   *
-   * @param appId           the app id
-   * @param envId           the env id
-   * @param orchestrationId the orchestration id
-   * @param executionArgs   the execution args
-   * @return the workflow execution
-   */
   WorkflowExecution triggerOrchestrationExecution(
       @NotNull String appId, String envId, @NotNull String orchestrationId, @NotNull ExecutionArgs executionArgs);
 
@@ -102,162 +54,42 @@ public interface WorkflowExecutionService {
       String pipelineExecutionId, @NotNull ExecutionArgs executionArgs,
       WorkflowExecutionUpdate workflowExecutionUpdate);
 
-  /**
-   * Gets the execution details.
-   *
-   * @param appId               the app id
-   * @param workflowExecutionId the workflow execution id
-   * @return the execution details
-   */
   WorkflowExecution getExecutionDetails(
       @NotNull String appId, @NotNull String workflowExecutionId, Set<String> excludeFromAggregation);
 
-  /**
-   * Gets the execution details.
-   *
-   * @param appId               the app id
-   * @param workflowExecutionId the workflow execution id
-   * @return the execution details
-   */
   WorkflowExecution getExecutionWithoutSummary(@NotNull String appId, @NotNull String workflowExecutionId);
 
-  /**
-   * Gets the execution details.
-   *
-   * @param appId               the app id
-   * @param workflowExecutionId the workflow execution id
-   * @return the execution details
-   */
   WorkflowExecution getWorkflowExecution(@NotNull String appId, @NotNull String workflowExecutionId);
 
-  /**
-   * Gets execution details without graph.
-   *
-   * @param appId               the app id
-   * @param workflowExecutionId the workflow execution id
-   * @return the execution details without graph
-   */
   WorkflowExecution getExecutionDetailsWithoutGraph(String appId, String workflowExecutionId);
 
   void startQueuedExecution(String appId, String workflowId);
 
-  /**
-   * Trigger env execution workflow execution.
-   *
-   * @param appId         the app id
-   * @param envId         the env id
-   * @param executionArgs the execution args
-   * @return the workflow execution
-   */
   WorkflowExecution triggerEnvExecution(String appId, String envId, ExecutionArgs executionArgs);
 
-  /**
-   * Trigger execution event
-   *
-   * @param executionInterrupt the workflow execution event
-   * @return execution event
-   */
   ExecutionInterrupt triggerExecutionInterrupt(@Valid ExecutionInterrupt executionInterrupt);
 
-  /**
-   * Increment in progress count.
-   *
-   * @param appId               the app id
-   * @param workflowExecutionId the workflow execution id
-   * @param inc                 the inc
-   */
   void incrementInProgressCount(String appId, String workflowExecutionId, int inc);
 
-  /**
-   * Increment success.
-   *
-   * @param appId               the app id
-   * @param workflowExecutionId the workflow execution id
-   * @param inc                 the inc
-   */
   void incrementSuccess(String appId, String workflowExecutionId, int inc);
 
-  /**
-   * Increment failed.
-   *
-   * @param appId               the app id
-   * @param workflowExecutionId the workflow execution id
-   * @param inc                 the inc
-   */
   void incrementFailed(String appId, String workflowExecutionId, Integer inc);
 
-  /**
-   * Gets required execution args.
-   *
-   * @param appId         the app id
-   * @param envId         the env id
-   * @param executionArgs the execution args
-   * @return the required execution args
-   */
   RequiredExecutionArgs getRequiredExecutionArgs(String appId, String envId, ExecutionArgs executionArgs);
 
-  /**
-   * Gets breakdown.
-   *
-   * @param appId               the app id
-   * @param workflowExecutionId the workflow execution id
-   * @return the breakdown
-   */
   CountsByStatuses getBreakdown(String appId, String workflowExecutionId);
 
-  /**
-   * Gets execution details for node.
-   *
-   * @param appId                    the app id
-   * @param workflowExecutionId      the workflow execution id
-   * @param stateExecutionInstanceId the state execution instance id
-   * @return the execution details for node
-   */
   GraphNode getExecutionDetailsForNode(String appId, String workflowExecutionId, String stateExecutionInstanceId);
 
-  /**
-   * Gets execution history.
-   *
-   * @param appId                    the app id
-   * @param workflowExecutionId      the workflow execution id
-   * @param stateExecutionInstanceId the state execution instance id
-   * @return the execution history
-   */
   List<StateExecutionData> getExecutionHistory(
       String appId, String workflowExecutionId, String stateExecutionInstanceId);
 
-  /**
-   * Gets execution interrupts.
-   *
-   * @param appId                    the app id
-   * @param stateExecutionInstanceId the state execution instance id
-   * @return the execution history
-   */
   List<StateExecutionInterrupt> getExecutionInterrupts(String appId, String stateExecutionInstanceId);
 
-  /**
-   * Gets execution history.
-   *
-   * @param appId                    the app id
-   * @param stateExecutionInstanceId the state execution instance id
-   * @return the elements
-   */
   List<StateExecutionElement> getExecutionElements(String appId, String stateExecutionInstanceId);
 
-  /**
-   * Gets recorded per execution instance interrupts.
-   *
-   * @param stateExecutionInstanceId the state execution instance id
-   * @return the execution history
-   */
-  long getExecutionInterruptCount(String stateExecutionInstanceId);
+  int getExecutionInterruptCount(String stateExecutionInstanceId);
 
-  /**
-   * Returns the details of the state execution for give id
-   * @param appId
-   * @param stateExecutionInstanceId
-   * @return
-   */
   StateExecutionInstance getStateExecutionData(String appId, String stateExecutionInstanceId);
 
   List<StateExecutionInstance> getStateExecutionData(String appId, String executionUuid, String serviceId,

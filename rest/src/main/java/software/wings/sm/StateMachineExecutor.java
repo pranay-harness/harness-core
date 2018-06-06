@@ -72,6 +72,7 @@ import software.wings.scheduler.NotifyJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionEvent.ExecutionEventBuilder;
 import software.wings.sm.states.BarrierState;
 import software.wings.sm.states.EnvState;
@@ -109,6 +110,7 @@ public class StateMachineExecutor {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private Injector injector;
+  @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ExecutionInterruptManager executionInterruptManager;
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
   @Inject private DelegateService delegateService;
@@ -554,7 +556,7 @@ public class StateMachineExecutor {
       case PAUSE: {
         UpdateOperations<StateExecutionInstance> ops =
             wingsPersistence.createUpdateOperations(StateExecutionInstance.class);
-        ops.set("status", WAITING);
+        ops.set(StateExecutionInstance.STATUS_KEY, WAITING);
 
         if (executionEventAdvice.getStateParams() != null) {
           ops.set("stateParams", executionEventAdvice.getStateParams());
@@ -563,7 +565,7 @@ public class StateMachineExecutor {
         Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
                                                   .filter("appId", stateExecutionInstance.getAppId())
                                                   .filter(ID_KEY, stateExecutionInstance.getUuid())
-                                                  .field("status")
+                                                  .field(StateExecutionInstance.STATUS_KEY)
                                                   .in(ExecutionStatus.brokeStatuses());
         UpdateResults updateResult = wingsPersistence.update(query, ops);
         if (updateResult == null || updateResult.getWriteResult() == null
@@ -793,7 +795,7 @@ public class StateMachineExecutor {
       throw new WingsException(STATE_NOT_FOR_TYPE)
           .addParam("displayName", stateExecutionInstance.getDisplayName())
           .addParam("type", ABORTING.name())
-          .addParam("status", stateExecutionInstance.getStatus().name())
+          .addParam(StateExecutionInstance.STATUS_KEY, stateExecutionInstance.getStatus().name())
           .addParam("statuses", executionStatuses);
     }
 
@@ -886,6 +888,7 @@ public class StateMachineExecutor {
     StateExecutionInstance cloned = KryoUtils.clone(stateExecutionInstance);
     cloned.setInterruptHistory(null);
     cloned.setStateExecutionDataHistory(null);
+    cloned.setDedicatedInterruptCount(null);
     cloned.setUuid(null);
     cloned.setStateParams(null);
     cloned.setDisplayName(nextState.getName());
@@ -922,11 +925,11 @@ public class StateMachineExecutor {
 
   private boolean updateStatus(StateExecutionInstance stateExecutionInstance, String tsField, Long tsValue,
       ExecutionStatus status, List<ExecutionStatus> existingExecutionStatus, ExecutionInterrupt reason) {
-    stateExecutionInstance.setStatus(status);
-
     UpdateOperations<StateExecutionInstance> ops =
         wingsPersistence.createUpdateOperations(StateExecutionInstance.class);
-    ops.set("status", stateExecutionInstance.getStatus());
+
+    statusUpdateOperation(stateExecutionInstance, status, ops);
+
     if (tsField != null) {
       ops.set(tsField, tsValue);
     }
@@ -942,11 +945,12 @@ public class StateMachineExecutor {
       }
     }
 
-    Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
-                                              .filter("appId", stateExecutionInstance.getAppId())
-                                              .filter(ID_KEY, stateExecutionInstance.getUuid())
-                                              .field("status")
-                                              .in(existingExecutionStatus);
+    Query<StateExecutionInstance> query =
+        wingsPersistence.createQuery(StateExecutionInstance.class)
+            .filter(StateExecutionInstance.APP_ID_KEY, stateExecutionInstance.getAppId())
+            .filter(StateExecutionInstance.ID_KEY, stateExecutionInstance.getUuid())
+            .field(StateExecutionInstance.STATUS_KEY)
+            .in(existingExecutionStatus);
     UpdateResults updateResult = wingsPersistence.update(query, ops);
     if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() != 1) {
       logger.warn("StateExecutionInstance status could not be updated - "
@@ -955,6 +959,25 @@ public class StateMachineExecutor {
       return false;
     }
     return true;
+  }
+
+  private void statusUpdateOperation(StateExecutionInstance stateExecutionInstance, ExecutionStatus status,
+      UpdateOperations<StateExecutionInstance> ops) {
+    stateExecutionInstance.setStatus(status);
+    ops.set(StateExecutionInstance.STATUS_KEY, stateExecutionInstance.getStatus());
+
+    if (ExecutionStatus.isFinalStatus(status)) {
+      stateExecutionInstance.setEndTs(System.currentTimeMillis());
+      ops.set("endTs", stateExecutionInstance.getEndTs());
+
+      stateExecutionInstance.setDedicatedInterruptCount(
+          workflowExecutionService.getExecutionInterruptCount(stateExecutionInstance.getUuid()));
+      ops.set(
+          StateExecutionInstance.DEDICATED_INTERRUPT_COUNT_KEY, stateExecutionInstance.getDedicatedInterruptCount());
+    } else {
+      stateExecutionInstance.setDedicatedInterruptCount(null);
+      ops.unset(StateExecutionInstance.DEDICATED_INTERRUPT_COUNT_KEY);
+    }
   }
 
   private boolean updateStateExecutionData(StateExecutionInstance stateExecutionInstance,
@@ -995,13 +1018,7 @@ public class StateMachineExecutor {
     UpdateOperations<StateExecutionInstance> ops =
         wingsPersistence.createUpdateOperations(StateExecutionInstance.class);
 
-    stateExecutionInstance.setStatus(status);
-    ops.set("status", stateExecutionInstance.getStatus());
-
-    if (ExecutionStatus.isFinalStatus(status)) {
-      stateExecutionInstance.setEndTs(System.currentTimeMillis());
-      ops.set("endTs", stateExecutionInstance.getEndTs());
-    }
+    statusUpdateOperation(stateExecutionInstance, status, ops);
 
     if (isNotEmpty(contextElements)) {
       contextElements.forEach(contextElement -> stateExecutionInstance.getContextElements().push(contextElement));
@@ -1038,7 +1055,7 @@ public class StateMachineExecutor {
     Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
                                               .filter("appId", stateExecutionInstance.getAppId())
                                               .filter(ID_KEY, stateExecutionInstance.getUuid())
-                                              .field("status")
+                                              .field(StateExecutionInstance.STATUS_KEY)
                                               .in(runningStatusLists);
 
     ops.set("stateExecutionMap", stateExecutionInstance.getStateExecutionMap());
@@ -1308,12 +1325,12 @@ public class StateMachineExecutor {
       stateExecutionInstance.setEndTs(null);
       ops.unset("endTs");
     }
-    ops.set("status", NEW);
+    ops.set(StateExecutionInstance.STATUS_KEY, NEW);
 
     Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
                                               .filter("appId", stateExecutionInstance.getAppId())
                                               .filter(ID_KEY, stateExecutionInstance.getUuid())
-                                              .field("status")
+                                              .field(StateExecutionInstance.STATUS_KEY)
                                               .in(asList(WAITING, FAILED, ERROR));
 
     UpdateResults updateResult = wingsPersistence.update(query, ops);
@@ -1349,7 +1366,7 @@ public class StateMachineExecutor {
 
     UpdateOperations<StateExecutionInstance> ops =
         wingsPersistence.createUpdateOperations(StateExecutionInstance.class);
-    ops.set("status", ABORTING);
+    ops.set(StateExecutionInstance.STATUS_KEY, ABORTING);
 
     if (workflowExecutionInterrupt != null) {
       ops.addToSet("interruptHistory",

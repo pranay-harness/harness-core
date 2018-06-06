@@ -62,7 +62,9 @@ public class WaitNotifyEngine {
   public String waitForAll(long timeoutMsec, NotifyCallback callback, String... correlationIds) {
     Preconditions.checkArgument(isNotEmpty(correlationIds), "correlationIds are null or empty");
 
-    log().debug("Received waitForAll on - correlationIds : {}", Arrays.toString(correlationIds));
+    if (logger.isDebugEnabled()) {
+      logger.debug("Received waitForAll on - correlationIds : {}", Arrays.toString(correlationIds));
+    }
 
     String waitInstanceId = wingsPersistence.save(new WaitInstance(callback, correlationIds));
 
@@ -71,10 +73,6 @@ public class WaitNotifyEngine {
         .forEach(correlationId -> wingsPersistence.save(new WaitQueue(waitInstanceId, correlationId)));
 
     return waitInstanceId;
-  }
-
-  private Logger log() {
-    return LoggerFactory.getLogger(WaitNotifyEngine.class);
   }
 
   /**
@@ -97,7 +95,9 @@ public class WaitNotifyEngine {
   private <T extends NotifyResponseData> String notify(String correlationId, T response, boolean error) {
     Preconditions.checkArgument(isNotBlank(correlationId), "correlationId is null or empty");
 
-    log().debug("notify request received for the correlationId : {}", correlationId);
+    if (logger.isDebugEnabled()) {
+      logger.debug("notify request received for the correlationId : {}", correlationId);
+    }
 
     try {
       String notificationId = wingsPersistence.save(new NotifyResponse(correlationId, response, error));

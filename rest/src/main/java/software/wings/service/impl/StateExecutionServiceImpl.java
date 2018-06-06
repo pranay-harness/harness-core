@@ -36,6 +36,7 @@ public class StateExecutionServiceImpl implements StateExecutionService {
                                  .project(StateExecutionInstance.INTERRUPT_HISTORY_KEY, true)
                                  .project(StateExecutionInstance.PARENT_INSTANCE_ID_KEY, true)
                                  .project(StateExecutionInstance.PREV_INSTANCE_ID_KEY, true)
+                                 .project(StateExecutionInstance.DEDICATED_INTERRUPT_COUNT_KEY, true)
                                  .project(StateExecutionInstance.STATE_EXECUTION_DATA_HISTORY_KEY, true)
                                  .project(StateExecutionInstance.STATE_EXECUTION_MAP_KEY, true)
                                  .project(StateExecutionInstance.STATE_NAME_KEY, true)
