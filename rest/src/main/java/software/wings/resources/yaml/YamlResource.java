@@ -25,17 +25,21 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.YamlProcessingException;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
+import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.PublicApi;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.yaml.YamlWebHookPayload;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
 import software.wings.service.intfc.yaml.YamlArtifactStreamService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
@@ -81,6 +85,7 @@ public class YamlResource {
   private YamlDirectoryService yamlDirectoryService;
   private YamlGitService yamlGitService;
   private AuthService authService;
+  private HarnessUserGroupService harnessUserGroupService;
   @Inject private MainConfiguration configuration;
 
   /**
@@ -96,7 +101,8 @@ public class YamlResource {
   @Inject
   public YamlResource(YamlResourceService yamlResourceService, AppYamlResourceService appYamlResourceService,
       YamlDirectoryService yamlDirectoryService, YamlArtifactStreamService yamlArtifactStreamService,
-      YamlService yamlService, YamlGitService yamlGitSyncService, AuthService authService) {
+      YamlService yamlService, YamlGitService yamlGitSyncService, AuthService authService,
+      HarnessUserGroupService harnessUserGroupService) {
     this.yamlResourceService = yamlResourceService;
     this.appYamlResourceService = appYamlResourceService;
     this.yamlDirectoryService = yamlDirectoryService;
@@ -104,6 +110,7 @@ public class YamlResource {
     this.yamlService = yamlService;
     this.yamlGitService = yamlGitSyncService;
     this.authService = authService;
+    this.harnessUserGroupService = harnessUserGroupService;
   }
 
   /**
@@ -798,11 +805,22 @@ public class YamlResource {
   @GET
   @Path("full-sync-dry-run")
   @Timed
-  @PublicApi
   @ExceptionMetered
-  public RestResponse fullSyncDryRun(@QueryParam("accountId") String accountId, @QueryParam("token") String token) {
+  public RestResponse fullSyncDryRun(@QueryParam("accountId") String accountId, @QueryParam("token") String token,
+      @QueryParam("queryAllAccounts") @DefaultValue("false") boolean queryAllAccounts) {
     authService.validateToken(token);
-    yamlGitService.performFullSyncDryRun(accountId);
+    User existingUser = UserThreadLocal.get();
+    if (existingUser == null) {
+      throw new InvalidRequestException("Invalid User");
+    }
+    if (!harnessUserGroupService.isHarnessSupportUser(existingUser.getUuid())) {
+      throw new InvalidRequestException("User needs to be a harness support user for this action");
+    }
+    if (queryAllAccounts) {
+      yamlGitService.performFullSyncDryRunOnAllAccounts();
+    } else {
+      yamlGitService.performFullSyncDryRun(accountId);
+    }
     return new RestResponse();
   }
 

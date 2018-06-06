@@ -6,8 +6,10 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.exception.WingsException.USER;
 
 import com.google.common.collect.Lists;
@@ -18,13 +20,13 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Account;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.GitCommit;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.RestResponse;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.TaskType;
@@ -51,6 +53,7 @@ import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.exception.YamlProcessingException;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
@@ -91,6 +94,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   public static final String SETUP_ENTITY_ID = "setup";
 
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private AccountService accountService;
   @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private YamlService yamlService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
@@ -261,6 +265,17 @@ public class YamlGitServiceImpl implements YamlGitService {
       logger.error("Failed to perform full-sync dry-run for account {}", accountId, ex);
     }
     return new ArrayList<>();
+  }
+
+  @Override
+  public void performFullSyncDryRunOnAllAccounts() {
+    PageRequest<Account> request = aPageRequest()
+                                       .withLimit(UNLIMITED)
+                                       .addFieldsIncluded("uuid")
+                                       .addFilter("appId", EQ, "__GLOBAL_APP_ID__")
+                                       .build();
+    List<Account> accounts = accountService.list(request);
+    accounts.forEach(account -> performFullSyncDryRun(account.getUuid()));
   }
 
   @Override
@@ -479,7 +494,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   @Override
   public RestResponse<List<GitSyncError>> listGitSyncErrors(String accountId) {
     PageRequest<GitSyncError> pageRequest = aPageRequest()
-                                                .addFilter("accountId", Operator.EQ, accountId)
+                                                .addFilter("accountId", EQ, accountId)
                                                 .withLimit("500")
                                                 .addOrder("lastUpdatedAt", OrderType.ASC)
                                                 .build();
@@ -489,7 +504,7 @@ public class YamlGitServiceImpl implements YamlGitService {
 
   @Override
   public long getGitSyncErrorCount(String accountId) {
-    PageRequest<GitSyncError> pageRequest = aPageRequest().addFilter("accountId", Operator.EQ, accountId).build();
+    PageRequest<GitSyncError> pageRequest = aPageRequest().addFilter("accountId", EQ, accountId).build();
     return wingsPersistence.getCount(GitSyncError.class, pageRequest);
   }
 
