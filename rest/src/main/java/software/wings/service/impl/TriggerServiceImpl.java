@@ -38,6 +38,9 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.distribution.idempotence.IdempotentId;
+import io.harness.distribution.idempotence.IdempotentLock;
+import io.harness.distribution.idempotence.UnableToRegisterIdempotentOperationException;
 import net.redhogs.cronparser.DescriptionTypeEnum;
 import net.redhogs.cronparser.I18nMessages;
 import net.redhogs.cronparser.Options;
@@ -73,13 +76,12 @@ import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.TriggerConditionType;
 import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.beans.trigger.WebhookParameters;
+import software.wings.common.MongoIdempotentRegistry;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
-import software.wings.lock.AcquiredLock;
-import software.wings.lock.PersistentLocker;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.scheduler.ScheduledTriggerJob;
 import software.wings.service.intfc.ArtifactService;
@@ -96,6 +98,7 @@ import software.wings.utils.Validator;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -122,8 +125,8 @@ public class TriggerServiceImpl implements TriggerService {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private WorkflowService workflowService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
-  @Inject private PersistentLocker persistentLocker;
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Inject private MongoIdempotentRegistry<String> idempotentRegistry;
 
   @Override
   public PageResponse<Trigger> list(PageRequest<Trigger> pageRequest) {
@@ -311,8 +314,8 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   @Override
-  public void triggerScheduledExecutionAsync(Trigger trigger) {
-    executorService.submit(() -> triggerScheduledExecution(trigger));
+  public void triggerScheduledExecutionAsync(Trigger trigger, Date scheduledFireTime) {
+    executorService.submit(() -> triggerScheduledExecution(trigger, scheduledFireTime));
   }
 
   @Override
@@ -530,8 +533,14 @@ public class TriggerServiceImpl implements TriggerService {
         });
   }
 
-  private void triggerScheduledExecution(Trigger trigger) {
-    try (AcquiredLock lock = persistentLocker.acquireLock(Trigger.class, trigger.getUuid(), timeout)) {
+  private void triggerScheduledExecution(Trigger trigger, Date scheduledFireTime) {
+    IdempotentId idempotentid = new IdempotentId(trigger.getUuid() + ":" + scheduledFireTime.getTime());
+
+    try (IdempotentLock<String> idempotent = idempotentRegistry.create(idempotentid)) {
+      if (idempotent.alreadyExecuted()) {
+        return;
+      }
+
       logger.info("Received scheduled trigger for appId {} and Trigger Id {}", trigger.getAppId(), trigger.getUuid());
       List<Artifact> lastDeployedArtifacts =
           getLastDeployedArtifacts(trigger.getAppId(), trigger.getWorkflowId(), null);
@@ -571,6 +580,9 @@ public class TriggerServiceImpl implements TriggerService {
         }
       }
       logger.info("Scheduled trigger for appId {} and Trigger Id {} complete", trigger.getAppId(), trigger.getUuid());
+      idempotent.succeeded(trigger.getUuid());
+    } catch (UnableToRegisterIdempotentOperationException e) {
+      logger.error("Failed to trigger scheduled trigger {}", trigger.getName(), e);
     }
   }
 

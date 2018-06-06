@@ -17,6 +17,7 @@ import software.wings.service.intfc.ownership.OwnedByWorkflow;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import javax.validation.Valid;
@@ -94,8 +95,9 @@ public interface TriggerService extends OwnedByApplication, OwnedByPipeline, Own
   /***
    * Trigger
    * @param trigger
+   * @param scheduledFireTime
    */
-  void triggerScheduledExecutionAsync(Trigger trigger);
+  void triggerScheduledExecutionAsync(Trigger trigger, Date scheduledFireTime);
 
   /**
    * Trigger execution by webhook with the given service build numbers

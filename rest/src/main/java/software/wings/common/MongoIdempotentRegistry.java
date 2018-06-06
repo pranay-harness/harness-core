@@ -9,11 +9,13 @@ import static software.wings.beans.Idempotent.SUCCEEDED;
 import static software.wings.beans.Idempotent.TENTATIVE;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import com.mongodb.ErrorCategory;
 import com.mongodb.MongoCommandException;
 import com.mongodb.WriteConcern;
 import io.harness.distribution.idempotence.IdempotentId;
+import io.harness.distribution.idempotence.IdempotentLock;
 import io.harness.distribution.idempotence.IdempotentRegistry;
 import io.harness.distribution.idempotence.UnableToRegisterIdempotentOperationException;
 import org.mongodb.morphia.FindAndModifyOptions;
@@ -22,6 +24,9 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Idempotent;
 import software.wings.dl.WingsPersistence;
 
+import java.time.Duration;
+
+@Singleton
 public class MongoIdempotentRegistry<T> implements IdempotentRegistry<T> {
   public static final FindAndModifyOptions registerOptions =
       new FindAndModifyOptions().returnNew(false).upsert(true).writeConcern(new WriteConcern("majority"));
@@ -36,6 +41,16 @@ public class MongoIdempotentRegistry<T> implements IdempotentRegistry<T> {
 
   public UpdateOperations<Idempotent> unregisterUpdateOperation() {
     return wingsPersistence.createUpdateOperations(Idempotent.class);
+  }
+
+  @Override
+  public IdempotentLock create(IdempotentId id) throws UnableToRegisterIdempotentOperationException {
+    return IdempotentLock.create(id, this);
+  }
+
+  @Override
+  public IdempotentLock create(IdempotentId id, Duration timeout) throws UnableToRegisterIdempotentOperationException {
+    return IdempotentLock.create(id, this, timeout);
   }
 
   public Query<Idempotent> query(IdempotentId id) {

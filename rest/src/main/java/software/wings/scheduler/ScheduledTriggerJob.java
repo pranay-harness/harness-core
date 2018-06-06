@@ -57,6 +57,7 @@ public class ScheduledTriggerJob implements Job {
     String triggerId = jobExecutionContext.getMergedJobDataMap().getString(TRIGGER_ID_KEY);
     String appId = jobExecutionContext.getMergedJobDataMap().getString(APP_ID_KEY);
 
+    logger.info("Triggering scheduled job for appId {} and triggerId {}", appId, triggerId);
     Trigger trigger = wingsPersistence.get(Trigger.class, appId, triggerId);
     if (trigger == null || !trigger.getCondition().getConditionType().equals(SCHEDULED)) {
       logger.info("Trigger not found or wrong type. Deleting job associated to it");
@@ -64,6 +65,6 @@ public class ScheduledTriggerJob implements Job {
       return;
     }
 
-    triggerService.triggerScheduledExecutionAsync(trigger);
+    triggerService.triggerScheduledExecutionAsync(trigger, jobExecutionContext.getScheduledFireTime());
   }
 }
