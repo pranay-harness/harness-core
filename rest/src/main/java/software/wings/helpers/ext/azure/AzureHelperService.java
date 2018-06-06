@@ -2,9 +2,9 @@ package software.wings.helpers.ext.azure;
 
 import static io.harness.network.Http.getOkHttpClientBuilder;
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.beans.AzureKubernetesCluster.Builder.anAzureKubernetesCluster;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -30,8 +30,11 @@ import org.slf4j.LoggerFactory;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
+import software.wings.beans.AzureAvailabilitySet;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureKubernetesCluster;
+import software.wings.beans.AzureTagDetails;
+import software.wings.beans.AzureVirtualMachineScaleSet;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.KubernetesConfig;
 import software.wings.exception.WingsException;
@@ -82,6 +85,68 @@ public class AzureHelperService {
                .filter(subscription -> subscription.subscriptionId().equalsIgnoreCase(subscriptionId))
                .count()
         != 0;
+  }
+
+  public List<AzureAvailabilitySet> listAvailabilitySets(
+      AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails, String subscriptionId) {
+    encryptionService.decrypt(azureConfig, encryptionDetails);
+    Azure azure = getAzureClient(azureConfig, subscriptionId);
+    return azure.availabilitySets()
+        .list()
+        .stream()
+        .map(as
+            -> AzureAvailabilitySet.builder()
+                   .name(as.name())
+                   .resourceGroup(as.resourceGroupName())
+                   .type(as.type())
+                   .id(as.id())
+                   .build())
+        .collect(toList());
+  }
+
+  public List<AzureVirtualMachineScaleSet> listVirtualMachineScaleSets(
+      AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails, String subscriptionId) {
+    encryptionService.decrypt(azureConfig, encryptionDetails);
+    Azure azure = getAzureClient(azureConfig, subscriptionId);
+    return azure.virtualMachineScaleSets()
+        .list()
+        .stream()
+        .map(as
+            -> AzureVirtualMachineScaleSet.builder()
+                   .name(as.name())
+                   .resourceGroup(as.resourceGroupName())
+                   .type(as.type())
+                   .id(as.id())
+                   .build())
+        .collect(toList());
+  }
+
+  public List<AzureTagDetails> listTags(
+      AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails, String subscriptionId) {
+    encryptionService.decrypt(azureConfig, encryptionDetails);
+    try {
+      Response<AzureListTagsResponse> response =
+          getAzureManagementRestClient().listTags(getAzureBearerAuthToken(azureConfig), subscriptionId).execute();
+
+      if (response.isSuccessful()) {
+        return response.body()
+            .getValue()
+            .stream()
+            .map(tagDetails
+                -> AzureTagDetails.builder()
+                       .tagName(tagDetails.getTagName())
+                       .values(tagDetails.getValues().stream().map(value -> value.getTagValue()).collect(toList()))
+                       .build())
+            .collect(toList());
+      } else {
+        logger.error("Error occurred while getting Tags from subscriptionId : " + subscriptionId
+            + " Response: " + response.raw());
+        throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE).addParam("message", response.message());
+      }
+    } catch (Exception e) {
+      HandleAzureAuthenticationException(e);
+      return null;
+    }
   }
 
   public List<String> listContainerRegistries(
@@ -176,17 +241,19 @@ public class AzureHelperService {
   public List<AzureKubernetesCluster> listKubernetesClusters(
       AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails, String subscriptionId) {
     encryptionService.decrypt(azureConfig, encryptionDetails);
-    List<AzureKubernetesCluster> clusters = new ArrayList<>();
 
-    getAzureClient(azureConfig, subscriptionId)
+    return getAzureClient(azureConfig, subscriptionId)
         .kubernetesClusters()
         .list()
-        .forEach(cluster
-            -> clusters.add(anAzureKubernetesCluster()
-                                .withName(cluster.name())
-                                .withResourceGroup(cluster.resourceGroupName())
-                                .build()));
-    return clusters;
+        .stream()
+        .map(cluster
+            -> AzureKubernetesCluster.builder()
+                   .name(cluster.name())
+                   .resourceGroup(cluster.resourceGroupName())
+                   .type(cluster.type())
+                   .id(cluster.id())
+                   .build())
+        .collect(toList());
   }
 
   public boolean isValidKubernetesCluster(AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails,

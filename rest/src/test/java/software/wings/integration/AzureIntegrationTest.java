@@ -5,8 +5,11 @@ import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import org.junit.Ignore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.AzureAvailabilitySet;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureKubernetesCluster;
+import software.wings.beans.AzureTagDetails;
+import software.wings.beans.AzureVirtualMachineScaleSet;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.rules.Integration;
 import software.wings.service.impl.security.EncryptionServiceImpl;
@@ -44,6 +47,9 @@ public class AzureIntegrationTest {
     getRepositoryTags();
     getKubernetesClusters();
     getKubernetesClusterConfig();
+    getAvailableTags();
+    getVirtualMachineScaleSets();
+    getAvailabilitySets();
     logger.info("AzureIntegrationTest: Done.");
   }
 
@@ -67,6 +73,51 @@ public class AzureIntegrationTest {
           azureHelperService.listContainerRegistries(config, Collections.emptyList(), subscriptionId);
       for (String registry : registries) {
         logger.info("Details: " + subscriptionId + " " + registry);
+      }
+    }
+  }
+
+  private static void getVirtualMachineScaleSets() {
+    AzureConfig config = getAzureConfig();
+    Map<String, String> subscriptions = azureHelperService.listSubscriptions(config, Collections.emptyList());
+    subscriptions.forEach((subId, Desc) -> logger.info(subId + Desc));
+    for (Map.Entry<String, String> entry : subscriptions.entrySet()) {
+      String subscriptionId = entry.getKey();
+      List<AzureVirtualMachineScaleSet> virtualMachineScaleSets =
+          azureHelperService.listVirtualMachineScaleSets(config, Collections.emptyList(), subscriptionId);
+      for (AzureVirtualMachineScaleSet vmss : virtualMachineScaleSets) {
+        logger.info("Details: " + subscriptionId + " " + vmss.getResourceId());
+      }
+    }
+  }
+
+  private static void getAvailabilitySets() {
+    AzureConfig config = getAzureConfig();
+    Map<String, String> subscriptions = azureHelperService.listSubscriptions(config, Collections.emptyList());
+    subscriptions.forEach((subId, Desc) -> logger.info(subId + Desc));
+    for (Map.Entry<String, String> entry : subscriptions.entrySet()) {
+      String subscriptionId = entry.getKey();
+      List<AzureAvailabilitySet> availabilitySets =
+          azureHelperService.listAvailabilitySets(config, Collections.emptyList(), subscriptionId);
+      for (AzureAvailabilitySet as : availabilitySets) {
+        logger.info("Details: " + subscriptionId + " " + as.getResourceId());
+      }
+    }
+  }
+
+  private static void getAvailableTags() {
+    AzureConfig config = getAzureConfig();
+    Map<String, String> subscriptions = azureHelperService.listSubscriptions(config, Collections.emptyList());
+    subscriptions.forEach((subId, Desc) -> logger.info(subId + Desc));
+    for (Map.Entry<String, String> entry : subscriptions.entrySet()) {
+      String subscriptionId = entry.getKey();
+      logger.info("Subscription: " + subscriptionId);
+      List<AzureTagDetails> tags = azureHelperService.listTags(config, Collections.emptyList(), subscriptionId);
+      for (AzureTagDetails tag : tags) {
+        logger.info("Tag: " + tag.getTagName());
+        for (String value : tag.getValues()) {
+          logger.info("Value: " + value);
+        }
       }
     }
   }
