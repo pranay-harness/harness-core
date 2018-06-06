@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
@@ -217,6 +218,7 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
+import software.wings.api.DeploymentType;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInstanceFilter;
@@ -2073,6 +2075,9 @@ public class AwsHelperService {
         Multimap<String, String> tags = ArrayListMultimap.create();
         instanceFilter.getTags().forEach(tag -> tags.put(tag.getKey(), tag.getValue()));
         tags.keySet().forEach(key -> filters.add(new Filter("tag:" + key, new ArrayList<>(tags.get(key)))));
+      }
+      if (StringUtils.equals(awsInfrastructureMapping.getDeploymentType(), DeploymentType.WINRM.toString())) {
+        filters.add(new Filter("platform", asList("windows")));
       }
     }
     return filters;
