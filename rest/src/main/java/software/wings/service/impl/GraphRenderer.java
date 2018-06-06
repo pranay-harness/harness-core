@@ -426,8 +426,10 @@ public class GraphRenderer {
     if (instance.getStateExecutionDataHistory() != null) {
       builder.withExecutionHistoryCount(instance.getStateExecutionDataHistory().size());
     }
+    int interrupts = instance.getDedicatedInterruptCount() == null
+        ? (int) workflowExecutionService.getExecutionInterruptCount(instance.getUuid())
+        : instance.getDedicatedInterruptCount();
 
-    int interrupts = (int) workflowExecutionService.getExecutionInterruptCount(instance.getUuid());
     if (instance.getInterruptHistory() != null) {
       interrupts += instance.getInterruptHistory().size();
     }

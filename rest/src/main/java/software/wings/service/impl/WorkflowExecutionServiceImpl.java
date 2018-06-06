@@ -1522,8 +1522,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
-  public long getExecutionInterruptCount(String stateExecutionInstanceId) {
-    return wingsPersistence.createQuery(ExecutionInterrupt.class)
+  public int getExecutionInterruptCount(String stateExecutionInstanceId) {
+    return (int) wingsPersistence.createQuery(ExecutionInterrupt.class)
         .filter("stateExecutionInstanceId", stateExecutionInstanceId)
         .count();
   }

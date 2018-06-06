@@ -37,6 +37,7 @@ public class StateExecutionInstance extends Base {
   public static final String CONTEXT_ELEMENT_KEY = "contextElement";
   public static final String CONTEXT_ELEMENTS_KEY = "contextElements";
   public static final String CONTEXT_TRANSITION_KEY = "contextTransition";
+  public static final String DEDICATED_INTERRUPT_COUNT_KEY = "dedicatedInterruptCount";
   public static final String DISPLAY_NAME_KEY = "displayName";
   public static final String EXECUTION_UUID_KEY = "executionUuid";
   public static final String EXECUTION_TYPE_KEY = "executionType";
@@ -69,6 +70,8 @@ public class StateExecutionInstance extends Base {
   @Embedded private WingsDeque<ContextElement> contextElements = new WingsDeque<>();
   private Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
   private List<StateExecutionData> stateExecutionDataHistory = new ArrayList<>();
+
+  private Integer dedicatedInterruptCount;
   private List<ExecutionInterruptEffect> interruptHistory = new ArrayList<>();
 
   private List<ExecutionEventAdvisor> executionEventAdvisors;

@@ -311,7 +311,7 @@ public class PhaseStep {
     List<GraphNode> clonedSteps = new ArrayList<>();
     if (steps != null) {
       for (GraphNode step : steps) {
-        GraphNode clonedStep = step.cloneIntenal();
+        GraphNode clonedStep = step.cloneInternal();
         if (INFRASTRUCTURE_NODE.equals(clonedPhaseStep.getPhaseStepType())
             && (clonedStep.getType().equals(StateType.DC_NODE_SELECT.name())
                    || clonedStep.getType().equals(StateType.AWS_NODE_SELECT.name()))) {
