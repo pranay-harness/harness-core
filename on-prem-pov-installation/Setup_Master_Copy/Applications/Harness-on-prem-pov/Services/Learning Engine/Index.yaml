@@ -9,7 +9,7 @@ configVariables:
   value: '10800'
   valueType: TEXT
 - name: server_url
-  value: https://qa-api.harness.io
+  value: https://qa.harness.io
   valueType: TEXT
 - name: service_secret
   value: <LEARNING_ENGINE_SECRET_KEY_PLACEHOLDER>

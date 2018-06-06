@@ -32,18 +32,18 @@ commandUnits:
   - command: |+
         sudo mkdir -p ${STORAGE_DIR}/wingsdelegates/jre/${serviceVariable.jre_version}/
 
-        curl https://api.harness.io/storage/wingsdelegates/jre/8u131/jre-8u131-solaris-x64.tar.gz > jre-8u131-solaris-x64.tar.gz
+        curl https://app.harness.io/storage/wingsdelegates/jre/8u131/jre-8u131-solaris-x64.tar.gz > jre-8u131-solaris-x64.tar.gz
 
-        curl https://api.harness.io/storage/wingsdelegates/jre/8u131/jre-8u131-macosx-x64.tar.gz > jre-8u131-macosx-x64.tar.gz
+        curl https://app.harness.io/storage/wingsdelegates/jre/8u131/jre-8u131-macosx-x64.tar.gz > jre-8u131-macosx-x64.tar.gz
 
-        curl https://api.harness.io/storage/wingsdelegates/jre/8u131/jre-8u131-linux-x64.tar.gz > jre-8u131-linux-x64.tar.gz
+        curl https://app.harness.io/storage/wingsdelegates/jre/8u131/jre-8u131-linux-x64.tar.gz > jre-8u131-linux-x64.tar.gz
 
         sudo mv *.gz ${STORAGE_DIR}/wingsdelegates/jre/${serviceVariable.jre_version}/
 
 
         sudo mkdir -p  ${STORAGE_DIR}/wingsdelegates/jobs/deploy-prod-delegate/${workflow.variables.DELEGATE_VERSION}
 
-        curl https://api.harness.io/storage/wingsdelegates/jobs/deploy-prod-delegate/${workflow.variables.DELEGATE_VERSION}/delegate.jar -o delegate.jar
+        curl https://app.harness.io/storage/wingsdelegates/jobs/deploy-prod-delegate/${workflow.variables.DELEGATE_VERSION}/delegate.jar -o delegate.jar
 
         sudo mv *.jar ${STORAGE_DIR}/wingsdelegates/jobs/deploy-prod-delegate/${workflow.variables.DELEGATE_VERSION}/
 
@@ -53,7 +53,7 @@ commandUnits:
 
         sudo mkdir -p  ${STORAGE_DIR}/wingswatchers/jobs/deploy-prod-watcher/${workflow.variables.WATCHER_VERSION}
 
-        curl https://api.harness.io/storage/wingswatchers/jobs/deploy-prod-watcher/${workflow.variables.WATCHER_VERSION}/watcher.jar -o watcher.jar
+        curl https://app.harness.io/storage/wingswatchers/jobs/deploy-prod-watcher/${workflow.variables.WATCHER_VERSION}/watcher.jar -o watcher.jar
 
         sudo mv *.jar ${STORAGE_DIR}/wingswatchers/jobs/deploy-prod-watcher/${workflow.variables.WATCHER_VERSION}/
 

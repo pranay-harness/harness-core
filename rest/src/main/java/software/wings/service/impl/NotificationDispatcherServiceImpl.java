@@ -193,7 +193,7 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
         .replaceAll("<<paused-color>>", PAUSED_COLOR + ";\">")
         .replaceAll("<<resumed-color>>", RESUMED_COLOR + ";\">")
         .replaceAll("<<aborted-color>>", ABORTED_COLOR + ";\">")
-        .replaceAll("<<img-path>>", "<div><span><img src=\"https://api.harness.io/storage/wings-assets/slackicons/")
+        .replaceAll("<<img-path>>", "<div><span><img src=\"https://s3.amazonaws.com/wings-assets/slackicons/")
         .replaceAll("<<img-suffix>>",
             ".png\" height=\"13\" width=\"13\" style=\"padding-right:5px; padding-top:5px;\"></span>"
                 + "<span style=\"color:gray; display:inline-block; vertical-align:top; margin-top:4px;\">");

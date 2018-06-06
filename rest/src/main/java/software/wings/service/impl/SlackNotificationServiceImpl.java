@@ -42,7 +42,7 @@ public class SlackNotificationServiceImpl implements SlackNotificationService {
       attachment.setText(processText(parts[1]));
       attachment.setFooter(processText(parts[2]));
       attachment.setColor(getColor(parts[3]));
-      attachment.setFooter_icon(format("https://api.harness.io/storage/wings-assets/slackicons/%s.png", parts[3]));
+      attachment.setFooter_icon(format("https://s3.amazonaws.com/wings-assets/slackicons/%s.png", parts[3]));
       attachment.setMrkdwn_in(ImmutableList.of("text"));
       payload.setAttachments(ImmutableList.of(attachment));
     } else {
@@ -56,7 +56,7 @@ public class SlackNotificationServiceImpl implements SlackNotificationService {
       payload.setChannel(slackChannel);
     }
     payload.setUsername(senderName);
-    payload.setIcon_url("https://api.harness.io/storage/wings-assets/slackicons/logo-slack.png");
+    payload.setIcon_url("https://s3.amazonaws.com/wings-assets/slackicons/logo-slack.png");
 
     SlackWebhookClient webhookClient = getWebhookClient(webhookUrl);
     webhookClient.post(payload);
