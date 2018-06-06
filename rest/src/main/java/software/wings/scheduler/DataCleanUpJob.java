@@ -45,7 +45,6 @@ public class DataCleanUpJob implements Job {
     // Not purging audit and activity logs any more
     // deleteAuditRecords();
     // deleteActivityLogs();
-    deleteAlerts();
     deleteDelegateTasks();
     logger.info("Running Data Cleanup Job complete");
   }
@@ -67,16 +66,6 @@ public class DataCleanUpJob implements Job {
       logger.info("Deleting audit records success");
     } catch (Exception e) {
       logger.warn("Deleting audit records failed.", e);
-    }
-  }
-
-  private void deleteAlerts() {
-    try {
-      logger.info("Deleting alerts");
-      alertService.deleteOldAlerts(ALERT_RETENTION_TIME);
-      logger.info("Deleting alerts success");
-    } catch (Exception e) {
-      logger.warn("Deleting alerts failed.", e);
     }
   }
 

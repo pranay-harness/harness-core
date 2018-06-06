@@ -1,9 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
-import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.alerts.AlertStatus.Closed;
@@ -14,15 +11,11 @@ import static software.wings.beans.alert.AlertType.ApprovalNeeded;
 import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 import static software.wings.beans.alert.AlertType.NoActiveDelegates;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
-import static software.wings.dl.HQuery.excludeAuthority;
 
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
-import com.mongodb.BasicDBObject;
-import org.mongodb.morphia.Key;
-import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -45,12 +38,12 @@ import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AssignDelegateService;
 
 import java.time.Duration;
-import java.util.ArrayList;
+import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 public class AlertServiceImpl implements AlertService {
   private static final Logger logger = LoggerFactory.getLogger(AlertServiceImpl.class);
@@ -194,8 +187,9 @@ public class AlertServiceImpl implements AlertService {
 
   private void close(Alert alert) {
     UpdateOperations<Alert> alertUpdateOperations = wingsPersistence.createUpdateOperations(Alert.class);
-    alertUpdateOperations.set("status", Closed);
-    alertUpdateOperations.set("closedAt", System.currentTimeMillis());
+    alertUpdateOperations.set(Alert.STATUS_KEY, Closed);
+    alertUpdateOperations.set(Alert.CLOSED_AT_KEY, System.currentTimeMillis());
+    alertUpdateOperations.set(Alert.VALID_UNTIL_KEY, Date.from(OffsetDateTime.now().plusDays(7).toInstant()));
     wingsPersistence.update(wingsPersistence.createQuery(Alert.class)
                                 .filter("accountId", alert.getAccountId())
                                 .filter(ID_KEY, alert.getUuid()),
@@ -213,44 +207,5 @@ public class AlertServiceImpl implements AlertService {
   public void pruneByApplication(String appId) {
     List<Alert> alerts = wingsPersistence.createQuery(Alert.class).filter(Alert.APP_ID_KEY, appId).asList();
     alerts.forEach(alert -> wingsPersistence.delete(alert));
-  }
-
-  @Override
-  public void deleteOldAlerts(long retentionMillis) {
-    final int batchSize = 1000;
-    final int limit = 5000;
-    final long days = TimeUnit.DAYS.convert(retentionMillis, TimeUnit.MILLISECONDS);
-    try {
-      logger.info("Start: Deleting alerts older than {} days", days);
-      timeLimiter.callWithTimeout(() -> {
-        while (true) {
-          List<Key<Alert>> alertKeys = new ArrayList<>();
-          try {
-            alertKeys.addAll(wingsPersistence.createQuery(Alert.class, excludeAuthority)
-                                 .filter("status", Closed)
-                                 .field("createdAt")
-                                 .lessThan(System.currentTimeMillis() - retentionMillis)
-                                 .asKeyList(new FindOptions().limit(limit).batchSize(batchSize)));
-            if (isEmpty(alertKeys)) {
-              logger.info("No more alerts older than {} days", days);
-              return true;
-            }
-            logger.info("Deleting {} alerts", alertKeys.size());
-            wingsPersistence.getCollection("alerts").remove(new BasicDBObject(
-                ID_KEY, new BasicDBObject("$in", alertKeys.stream().map(key -> key.getId().toString()).toArray())));
-          } catch (Exception ex) {
-            logger.warn("Failed to delete {} alerts", alertKeys.size(), ex);
-          }
-          logger.info("Successfully deleted {} alerts", alertKeys.size());
-          if (alertKeys.size() < limit) {
-            return true;
-          }
-          sleep(ofSeconds(2L));
-        }
-      }, 10L, TimeUnit.MINUTES, true);
-    } catch (Exception ex) {
-      logger.warn("Failed to delete alerts older than {} days within 10 minutes.", days, ex);
-    }
-    logger.info("Deleted alerts older than {} days", days);
   }
 }
