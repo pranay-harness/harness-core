@@ -1,5 +1,4 @@
-
-  {
+[{
     "target": "igg.nginx.production-web-01.code_rate_sec_50X",
     "datapoints": [
       [
@@ -247,4 +246,4 @@
         1527796740
       ]
     ]
-  }
+  }]

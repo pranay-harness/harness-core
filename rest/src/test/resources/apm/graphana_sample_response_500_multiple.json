@@ -1,0 +1,26 @@
+[{
+  "target": "igg.nginx.production-web-01.code_rate_sec_50X",
+  "datapoints": [
+    [
+      0.0,
+      1527793140
+    ],
+    [
+      0.0,
+      1527793200
+    ]
+  ]
+},
+  {
+    "target": "igg.nginx.production-web-01.code_rate_sec_50X",
+    "datapoints": [
+      [
+        0.0,
+        1527793260
+      ],
+      [
+        0.0,
+        1527793320
+      ]
+    ]
+  }]
