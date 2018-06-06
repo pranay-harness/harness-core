@@ -8,6 +8,8 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
@@ -20,7 +22,10 @@ import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.TemplateExpression;
+import software.wings.beans.WorkflowExecution;
+import software.wings.beans.artifact.Artifact;
 import software.wings.common.TemplateExpressionProcessor;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -54,6 +59,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
   }
 
   @Transient @Inject private transient WorkflowExecutionService workflowExecutionService;
+  private static final Logger logger = LoggerFactory.getLogger(PhaseSubWorkflow.class);
 
   private String uuid;
   private String serviceId;
@@ -108,7 +114,8 @@ public class PhaseSubWorkflow extends SubWorkflowState {
       }
     }
 
-    ExecutionResponse response = getSpawningExecutionResponse(context, service, infrastructureMapping);
+    ExecutionResponse response =
+        getSpawningExecutionResponse(context, workflowStandardParams, service, infrastructureMapping);
 
     PhaseExecutionDataBuilder phaseExecutionDataBuilder = aPhaseExecutionData();
     if (infrastructureMapping != null) {
@@ -144,8 +151,8 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     return response;
   }
 
-  private ExecutionResponse getSpawningExecutionResponse(
-      ExecutionContext context, Service service, InfrastructureMapping infrastructureMapping) {
+  private ExecutionResponse getSpawningExecutionResponse(ExecutionContext context,
+      WorkflowStandardParams workflowStandardParams, Service service, InfrastructureMapping infrastructureMapping) {
     ExecutionContextImpl contextImpl = (ExecutionContextImpl) context;
     StateExecutionInstance stateExecutionInstance = contextImpl.getStateExecutionInstance();
     List<String> correlationIds = new ArrayList<>();
@@ -153,7 +160,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     SpawningExecutionResponse executionResponse = new SpawningExecutionResponse();
 
     StateExecutionInstance childStateExecutionInstance =
-        getSpawningInstance(stateExecutionInstance, service, infrastructureMapping);
+        getSpawningInstance(workflowStandardParams, stateExecutionInstance, service, infrastructureMapping);
     executionResponse.add(childStateExecutionInstance);
     correlationIds.add(stateExecutionInstance.getUuid());
 
@@ -162,7 +169,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     return executionResponse;
   }
 
-  private StateExecutionInstance getSpawningInstance(
+  private StateExecutionInstance getSpawningInstance(WorkflowStandardParams workflowStandardParams,
       StateExecutionInstance stateExecutionInstance, Service service, InfrastructureMapping infrastructureMapping) {
     StateExecutionInstance spawningInstance = super.getSpawningInstance(stateExecutionInstance);
 
@@ -176,6 +183,35 @@ public class PhaseSubWorkflow extends SubWorkflowState {
       ServiceElement serviceElement = new ServiceElement();
       MapperUtils.mapObject(service, serviceElement);
       phaseElementBuilder.withServiceElement(serviceElement);
+    }
+
+    if (isRollback() && workflowStandardParams.getWorkflowElement() != null
+        && workflowStandardParams.getWorkflowElement().getLastGoodDeploymentUuid() != null) {
+      WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(
+          workflowStandardParams.getAppId(), workflowStandardParams.getWorkflowElement().getLastGoodDeploymentUuid());
+
+      if (workflowExecution == null) {
+        logger.error("ERROR: Last Good Deployment ID is not found - lastGoodDeploymentUuid: {}",
+            workflowStandardParams.getWorkflowElement().getLastGoodDeploymentUuid());
+        throw new InvalidRequestException("Last Good Deployment ID is not found");
+      }
+      if (workflowExecution.getExecutionArgs() != null && workflowExecution.getExecutionArgs().getArtifacts() != null) {
+        String rollbackArtifactId = null;
+        if (service != null) {
+          for (Artifact artifact : workflowExecution.getExecutionArgs().getArtifacts()) {
+            if (artifact.getServiceIds().contains(service.getUuid())) {
+              rollbackArtifactId = artifact.getUuid();
+              break;
+            }
+          }
+        }
+
+        if (rollbackArtifactId == null) {
+          // This can happen in case of build workflow
+          rollbackArtifactId = workflowExecution.getExecutionArgs().getArtifacts().get(0).getUuid();
+        }
+        phaseElementBuilder.withRollbackArtifactId(rollbackArtifactId);
+      }
     }
 
     if (infrastructureMapping != null) {
