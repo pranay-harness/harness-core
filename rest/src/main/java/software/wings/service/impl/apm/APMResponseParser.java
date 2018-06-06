@@ -95,7 +95,8 @@ public class APMResponseParser {
   }
 
   private List<Multimap<String, Object>> extract(String text) {
-    JSONObject jsonObject = new JSONObject(text);
+    Object jsonObject =
+        text.charAt(0) == '[' && text.charAt(text.length() - 1) == ']' ? new JSONArray(text) : new JSONObject(text);
     List<Multimap<String, Object>> output = new ArrayList<>();
     /*
      * Pass in the root as level 1. There are 2 secnarios.
@@ -170,6 +171,7 @@ public class APMResponseParser {
           resultMap.get(key).setName(txnName);
           resultMap.get(key).setHost(hostName);
           resultMap.get(key).setTag(tag);
+          resultMap.get(key).setGroupName(tag);
         }
 
         Object val = values.next();
@@ -223,11 +225,11 @@ public class APMResponseParser {
         Matcher matcher = p.matcher(field);
         matcher.find();
         String group = matcher.group(1);
+        if (group.equals("*")) {
+          return jsonObject;
+        }
         Object val = ((JSONArray) jsonObject).get(Integer.valueOf(group));
         if (val instanceof JSONArray) {
-          if (group.equals("*")) {
-            return val;
-          }
           return ((JSONArray) jsonObject).getJSONArray(Integer.valueOf(group));
         }
         return val;

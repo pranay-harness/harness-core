@@ -52,11 +52,12 @@ public class APMParserTest extends WingsBaseTest {
         Resources.toString(APMParserTest.class.getResource("/apm/graphana_sample_response_500.json"), Charsets.UTF_8);
 
     Map<String, APMMetricInfo.ResponseMapper> responseMapperMap = new HashMap<>();
-    responseMapperMap.put("host", APMMetricInfo.ResponseMapper.builder().fieldName("host").jsonPath("target").build());
-    responseMapperMap.put("timestamp",
-        APMMetricInfo.ResponseMapper.builder().fieldName("timestamp").jsonPath("datapoints[*].[1]").build());
     responseMapperMap.put(
-        "value", APMMetricInfo.ResponseMapper.builder().fieldName("value").jsonPath("datapoints[*].[0]").build());
+        "host", APMMetricInfo.ResponseMapper.builder().fieldName("host").jsonPath("[*].target").build());
+    responseMapperMap.put("timestamp",
+        APMMetricInfo.ResponseMapper.builder().fieldName("timestamp").jsonPath("[*].datapoints[*].[1]").build());
+    responseMapperMap.put(
+        "value", APMMetricInfo.ResponseMapper.builder().fieldName("value").jsonPath("[*].datapoints[*].[0]").build());
     responseMapperMap.put(
         "txnName", APMMetricInfo.ResponseMapper.builder().fieldName("txnName").fieldValue("500X").build());
 
@@ -73,6 +74,70 @@ public class APMParserTest extends WingsBaseTest {
     assertEquals(61, records.size());
     String output = Resources.toString(
         APMParserTest.class.getResource("/apm/graphana_sample_collected_response_500.json"), Charsets.UTF_8);
+
+    assertEquals(output, JsonUtils.asJson(records));
+  }
+
+  @Test
+  public void testJsonParserGraphanaMapping2() throws IOException {
+    String text500 =
+        Resources.toString(APMParserTest.class.getResource("/apm/graphana_sample_response_500.json"), Charsets.UTF_8);
+
+    Map<String, APMMetricInfo.ResponseMapper> responseMapperMap = new HashMap<>();
+    responseMapperMap.put(
+        "host", APMMetricInfo.ResponseMapper.builder().fieldName("host").jsonPath("[0].target").build());
+    responseMapperMap.put("timestamp",
+        APMMetricInfo.ResponseMapper.builder().fieldName("timestamp").jsonPath("[0].datapoints[*].[1]").build());
+    responseMapperMap.put(
+        "value", APMMetricInfo.ResponseMapper.builder().fieldName("value").jsonPath("[0].datapoints[*].[0]").build());
+    responseMapperMap.put(
+        "txnName", APMMetricInfo.ResponseMapper.builder().fieldName("txnName").fieldValue("500X").build());
+
+    List<APMMetricInfo> metricInfos = Lists.newArrayList(APMMetricInfo.builder()
+                                                             .metricName("500")
+                                                             .metricType(MetricType.ERROR)
+                                                             .tag("nginix")
+                                                             .responseMappers(responseMapperMap)
+                                                             .build());
+
+    Collection<NewRelicMetricDataRecord> records = APMResponseParser.extract(
+        Lists.newArrayList(APMResponseParser.APMResponseData.builder().text(text500).metricInfos(metricInfos).build()));
+
+    assertEquals(61, records.size());
+    String output = Resources.toString(
+        APMParserTest.class.getResource("/apm/graphana_sample_collected_response_500.json"), Charsets.UTF_8);
+
+    assertEquals(output, JsonUtils.asJson(records));
+  }
+
+  @Test
+  public void testJsonParserGraphanaMappingArray() throws IOException {
+    String text500 = Resources.toString(
+        APMParserTest.class.getResource("/apm/graphana_sample_response_500_multiple.json"), Charsets.UTF_8);
+
+    Map<String, APMMetricInfo.ResponseMapper> responseMapperMap = new HashMap<>();
+    responseMapperMap.put(
+        "host", APMMetricInfo.ResponseMapper.builder().fieldName("host").jsonPath("[*].target").build());
+    responseMapperMap.put("timestamp",
+        APMMetricInfo.ResponseMapper.builder().fieldName("timestamp").jsonPath("[*].datapoints[*].[1]").build());
+    responseMapperMap.put(
+        "value", APMMetricInfo.ResponseMapper.builder().fieldName("value").jsonPath("[*].datapoints[*].[0]").build());
+    responseMapperMap.put(
+        "txnName", APMMetricInfo.ResponseMapper.builder().fieldName("txnName").fieldValue("500X").build());
+
+    List<APMMetricInfo> metricInfos = Lists.newArrayList(APMMetricInfo.builder()
+                                                             .metricName("500")
+                                                             .metricType(MetricType.ERROR)
+                                                             .tag("nginix")
+                                                             .responseMappers(responseMapperMap)
+                                                             .build());
+
+    Collection<NewRelicMetricDataRecord> records = APMResponseParser.extract(
+        Lists.newArrayList(APMResponseParser.APMResponseData.builder().text(text500).metricInfos(metricInfos).build()));
+
+    assertEquals(4, records.size());
+    String output = Resources.toString(
+        APMParserTest.class.getResource("/apm/graphana_sample_collected_response_500_multiple.json"), Charsets.UTF_8);
 
     assertEquals(output, JsonUtils.asJson(records));
   }
