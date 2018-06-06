@@ -52,6 +52,8 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import io.harness.distribution.idempotence.IdempotentLock;
+import io.harness.distribution.idempotence.UnableToRegisterIdempotentOperationException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -82,6 +84,7 @@ import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.beans.trigger.WebhookParameters;
 import software.wings.common.Constants;
+import software.wings.common.MongoIdempotentRegistry;
 import software.wings.dl.HQuery;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -99,9 +102,11 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Created by sgurubelli on 10/26/17.
@@ -119,6 +124,7 @@ public class TriggerServiceTest extends WingsBaseTest {
   @Mock private WorkflowService workflowService;
   @Mock private InfrastructureMappingService infrastructureMappingService;
   @Mock private WorkflowExecution workflowExecution;
+  @Mock private MongoIdempotentRegistry<String> idempotentRegistry;
 
   @Inject @InjectMocks private TriggerService triggerService;
 
@@ -145,7 +151,7 @@ public class TriggerServiceTest extends WingsBaseTest {
   private JenkinsArtifactStream jenkinsArtifactStream = buildJenkinsArtifactStream();
 
   @Before
-  public void setUp() {
+  public void setUp() throws UnableToRegisterIdempotentOperationException {
     when(wingsPersistence.createQuery(Trigger.class)).thenReturn(query);
     when(wingsPersistence.createQuery(WorkflowExecution.class)).thenReturn(query);
     when(query.filter(any(), any())).thenReturn(query);
@@ -160,6 +166,8 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
         .thenReturn(Service.builder().uuid(SERVICE_ID).name("Catalog").build());
+    when(idempotentRegistry.create(any()))
+        .thenReturn(IdempotentLock.<String>builder().registry(idempotentRegistry).resultData(Optional.empty()).build());
   }
 
   @Test
@@ -950,7 +958,7 @@ public class TriggerServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldTriggerScheduledExecution() {
+  public void shouldTriggerScheduledExecution() throws UnableToRegisterIdempotentOperationException {
     Artifact artifact = anArtifact()
                             .withAppId(APP_ID)
                             .withUuid(ARTIFACT_ID)
@@ -972,13 +980,15 @@ public class TriggerServiceTest extends WingsBaseTest {
                             aWorkflowExecution().withAppId(APP_ID).withExecutionArgs(executionArgs).build()))
                         .build());
 
-    triggerService.triggerScheduledExecutionAsync(scheduledConditionTrigger);
+    triggerService.triggerScheduledExecutionAsync(scheduledConditionTrigger, new Date());
+    verify(idempotentRegistry).create(any());
     verify(workflowExecutionService, times(1))
         .triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class));
   }
 
   @Test
-  public void shouldTriggerScheduledExecutionWithArtifactSelections() {
+  public void shouldTriggerScheduledExecutionWithArtifactSelections()
+      throws UnableToRegisterIdempotentOperationException {
     Artifact artifact = anArtifact()
                             .withAppId(APP_ID)
                             .withUuid(ARTIFACT_ID)
@@ -1007,11 +1017,12 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(workflowExecutionService.triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class)))
         .thenReturn(aWorkflowExecution().withAppId(APP_ID).withStatus(SUCCESS).build());
 
-    triggerService.triggerScheduledExecutionAsync(scheduledConditionTrigger);
+    triggerService.triggerScheduledExecutionAsync(scheduledConditionTrigger, new Date());
     verify(workflowExecutionService).triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class));
     verify(artifactStreamService).get(APP_ID, ARTIFACT_STREAM_ID);
     verify(artifactService)
         .fetchLastCollectedArtifactForArtifactStream(APP_ID, ARTIFACT_STREAM_ID, jenkinsArtifactStream.getSourceName());
+    verify(idempotentRegistry).create(any());
   }
 
   @Test

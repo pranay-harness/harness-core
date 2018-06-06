@@ -12,6 +12,7 @@ import lombok.Builder;
 import lombok.Value;
 import org.apache.commons.collections.map.LRUMap;
 
+import java.time.Duration;
 import java.util.Map;
 
 @Value
@@ -41,6 +42,16 @@ class Record<T> {
  */
 public class InprocIdempotentRegistry<T> implements IdempotentRegistry<T> {
   @SuppressWarnings("unchecked") private Map<IdempotentId, Record<T>> map = synchronizedMap(new LRUMap(1000));
+
+  @Override
+  public IdempotentLock create(IdempotentId id) throws UnableToRegisterIdempotentOperationException {
+    return IdempotentLock.create(id, this);
+  }
+
+  @Override
+  public IdempotentLock create(IdempotentId id, Duration timeout) throws UnableToRegisterIdempotentOperationException {
+    return IdempotentLock.create(id, this, timeout);
+  }
 
   @Override
   public Response register(IdempotentId id) throws UnableToRegisterIdempotentOperationException {

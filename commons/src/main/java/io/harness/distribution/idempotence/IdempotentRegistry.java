@@ -3,6 +3,8 @@ package io.harness.distribution.idempotence;
 import lombok.Builder;
 import lombok.Value;
 
+import java.time.Duration;
+
 public interface IdempotentRegistry<T> {
   enum State {
     /*
@@ -40,4 +42,14 @@ public interface IdempotentRegistry<T> {
    * Unregister the idempotent operation.
    */
   void unregister(IdempotentId id);
+
+  /*
+   * Creates idempotent lock object for particular id
+   */
+  IdempotentLock create(IdempotentId id) throws UnableToRegisterIdempotentOperationException;
+
+  /*
+   * Creates idempotent lock object for particular id and timeout
+   */
+  IdempotentLock create(IdempotentId id, Duration timeout) throws UnableToRegisterIdempotentOperationException;
 }

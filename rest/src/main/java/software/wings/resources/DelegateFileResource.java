@@ -83,7 +83,6 @@ public class DelegateFileResource {
       if (idempotent.alreadyExecuted()) {
         return new RestResponse<>(idempotent.getResult());
       }
-
       FileMetadata fileMetadata = new FileMetadata();
       fileMetadata.setFileName(new File(fileDetail.getFileName()).getName());
       String fileId = fileService.saveFile(fileMetadata,
