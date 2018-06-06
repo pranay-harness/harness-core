@@ -76,7 +76,6 @@ import software.wings.service.intfc.ownership.OwnedByApplication;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -377,23 +376,23 @@ public class AppServiceImpl implements AppService {
 
   @Override
   public List<String> getAppIdsByAccountId(String accountId) {
-    List<String> appIdList = new ArrayList<>();
-    wingsPersistence.createQuery(Application.class)
+    return wingsPersistence.createQuery(Application.class)
         .filter("accountId", accountId)
         .asKeyList()
-        .forEach(applicationKey -> appIdList.add(applicationKey.getId().toString()));
-    return appIdList;
+        .stream()
+        .map(applicationKey -> applicationKey.getId().toString())
+        .collect(toList());
   }
 
   @Override
   public List<String> getAppNamesByAccountId(String accountId) {
-    List<String> appIdList = new ArrayList<>();
-
-    wingsPersistence.createQuery(Application.class)
+    return wingsPersistence.createQuery(Application.class)
+        .project(Application.NAME_KEY, true)
         .filter("accountId", accountId)
         .asList()
-        .forEach(application -> appIdList.add(application.getName().toString()));
-    return appIdList;
+        .stream()
+        .map(Application::getName)
+        .collect(toList());
   }
 
   @Override

@@ -1,11 +1,8 @@
 package software.wings.resources;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE;
 import static software.wings.security.PermissionAttribute.Action.READ;
 import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
@@ -15,7 +12,6 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
-import software.wings.beans.Application;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.GraphNode;
@@ -105,18 +101,9 @@ public class ExecutionResource {
       @DefaultValue("false") @QueryParam("includeIndirectExecutions") boolean includeIndirectExecutions) {
     List<String> authorizedAppIds = null;
     if (isNotEmpty(appIds)) {
-      authorizedAppIds = appIds; //(List<String>) CollectionUtils.intersection(authorizedAppIds, appIds);
+      authorizedAppIds = appIds;
     } else {
-      PageRequest<Application> applicationPageRequest = aPageRequest()
-                                                            .addFieldsIncluded("uuid")
-                                                            .addFilter("accountId", Operator.EQ, accountId)
-                                                            .withLimit(PageRequest.UNLIMITED)
-                                                            .build();
-      PageResponse<Application> res = appService.list(applicationPageRequest, false, 0, 0);
-      if (isEmpty(res)) {
-        return new RestResponse<>(new PageResponse<>());
-      }
-      authorizedAppIds = res.stream().map(Application::getUuid).collect(toList());
+      authorizedAppIds = appService.getAppIdsByAccountId(accountId);
     }
 
     pageRequest.addFilter("appId", Operator.IN, authorizedAppIds.toArray());
