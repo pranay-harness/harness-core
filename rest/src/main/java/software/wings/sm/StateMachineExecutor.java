@@ -966,17 +966,13 @@ public class StateMachineExecutor {
     stateExecutionInstance.setStatus(status);
     ops.set(StateExecutionInstance.STATUS_KEY, stateExecutionInstance.getStatus());
 
+    stateExecutionInstance.setDedicatedInterruptCount(
+        workflowExecutionService.getExecutionInterruptCount(stateExecutionInstance.getUuid()));
+    ops.set(StateExecutionInstance.DEDICATED_INTERRUPT_COUNT_KEY, stateExecutionInstance.getDedicatedInterruptCount());
+
     if (ExecutionStatus.isFinalStatus(status)) {
       stateExecutionInstance.setEndTs(System.currentTimeMillis());
       ops.set("endTs", stateExecutionInstance.getEndTs());
-
-      stateExecutionInstance.setDedicatedInterruptCount(
-          workflowExecutionService.getExecutionInterruptCount(stateExecutionInstance.getUuid()));
-      ops.set(
-          StateExecutionInstance.DEDICATED_INTERRUPT_COUNT_KEY, stateExecutionInstance.getDedicatedInterruptCount());
-    } else {
-      stateExecutionInstance.setDedicatedInterruptCount(null);
-      ops.unset(StateExecutionInstance.DEDICATED_INTERRUPT_COUNT_KEY);
     }
   }
 
