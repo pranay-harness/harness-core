@@ -1992,19 +1992,37 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       if (phaseStep.getSteps() == null) {
         continue;
       }
+      boolean artifactNeeded = false;
       for (GraphNode step : phaseStep.getSteps()) {
         if ("COMMAND".equals(step.getType())) {
           ServiceCommand command = serviceResourceService.getCommandByName(
               appId, serviceId, (String) step.getProperties().get("commandName"));
           if (command != null && command.getCommand() != null && command.getCommand().isArtifactNeeded()) {
-            requiredEntityTypes.add(ARTIFACT);
-            phaseStep.setArtifactNeeded(true);
+            artifactNeeded = true;
             break;
           }
+        } else if (StateType.HTTP.name().equals(step.getType())
+            && (isArtifactNeeded(step.getProperties().get("url"), step.getProperties().get("body"),
+                   step.getProperties().get("assertion")))) {
+          artifactNeeded = true;
+          break;
+        } else if (StateType.SHELL_SCRIPT.name().equals(step.getType())
+            && (isArtifactNeeded(step.getProperties().get("scriptString")))) {
+          artifactNeeded = true;
+          break;
         }
+      }
+      if (artifactNeeded) {
+        requiredEntityTypes.add(ARTIFACT);
+        phaseStep.setArtifactNeeded(true);
       }
     }
     return requiredEntityTypes;
+  }
+
+  private boolean isArtifactNeeded(Object... args) {
+    return Arrays.stream(args).anyMatch(arg
+        -> arg != null && (((String) arg).contains("${artifact.") || ((String) arg).contains("${ARTIFACT_FILE_NAME}")));
   }
 
   private void generateNewWorkflowPhaseSteps(String appId, String envId, WorkflowPhase workflowPhase,

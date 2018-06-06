@@ -15,7 +15,9 @@ import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.NameValuePair;
+import software.wings.beans.artifact.Artifact;
 import software.wings.common.Constants;
+import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
@@ -32,7 +34,8 @@ import java.util.Map;
  * @author Rishi
  */
 public class PhaseElement implements ContextElement {
-  @Transient @Inject private transient InfrastructureMappingService infrastructureMappingService;
+  @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
+  @Inject @Transient private transient ArtifactService artifactService;
 
   private String uuid;
   private String phaseName;
@@ -42,6 +45,7 @@ public class PhaseElement implements ContextElement {
   private String deploymentType;
   private String phaseNameForRollback;
   private List<NameValuePair> variableOverrides = new ArrayList<>();
+  private String rollbackArtifactId;
 
   @Override
   public ContextElementType getElementType() {
@@ -110,6 +114,10 @@ public class PhaseElement implements ContextElement {
       kubernetesMap.put(KUBERNETES, namespaceMap);
       map.put(INFRA, kubernetesMap);
     }
+    if (rollbackArtifactId != null) {
+      Artifact artifact = artifactService.get(appId, rollbackArtifactId);
+      map.put(ARTIFACT, artifact);
+    }
     return map;
   }
 
@@ -153,6 +161,14 @@ public class PhaseElement implements ContextElement {
     this.variableOverrides = variableOverrides;
   }
 
+  public String getRollbackArtifactId() {
+    return rollbackArtifactId;
+  }
+
+  public void setRollbackArtifactId(String rollbackArtifactId) {
+    this.rollbackArtifactId = rollbackArtifactId;
+  }
+
   public static final class PhaseElementBuilder {
     private String uuid;
     private ServiceElement serviceElement;
@@ -162,6 +178,7 @@ public class PhaseElement implements ContextElement {
     private String phaseNameForRollback;
     private String phaseName;
     private List<NameValuePair> variableOverrides = new ArrayList<>();
+    private String rollbackArtifactId;
 
     private PhaseElementBuilder() {}
 
@@ -209,6 +226,11 @@ public class PhaseElement implements ContextElement {
       return this;
     }
 
+    public PhaseElementBuilder withRollbackArtifactId(String rollbackArtifactId) {
+      this.rollbackArtifactId = rollbackArtifactId;
+      return this;
+    }
+
     public PhaseElementBuilder but() {
       return aPhaseElement()
           .withUuid(uuid)
@@ -218,7 +240,8 @@ public class PhaseElement implements ContextElement {
           .withDeploymentType(deploymentType)
           .withPhaseNameForRollback(phaseNameForRollback)
           .withPhaseName(phaseName)
-          .withVariableOverrides(variableOverrides);
+          .withVariableOverrides(variableOverrides)
+          .withRollbackArtifactId(rollbackArtifactId);
     }
 
     public PhaseElement build() {
@@ -231,6 +254,7 @@ public class PhaseElement implements ContextElement {
       phaseElement.setPhaseNameForRollback(phaseNameForRollback);
       phaseElement.setPhaseName(phaseName);
       phaseElement.setVariableOverrides(variableOverrides);
+      phaseElement.setRollbackArtifactId(rollbackArtifactId);
       return phaseElement;
     }
   }
