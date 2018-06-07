@@ -11,7 +11,6 @@ import software.wings.delegatetasks.MetricDataStoreService;
 import software.wings.managerclient.ManagerClient;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -33,7 +32,7 @@ public class MetricDataStoreServiceImpl implements MetricDataStoreService {
       return execute(
           managerClient.saveNewRelicMetrics(accountId, applicationId, stateExecutionId, delegateTaskId, metricData))
           .getResource();
-    } catch (IOException e) {
+    } catch (Exception e) {
       logger.error("error saving new relic metrics", e);
       return false;
     }
