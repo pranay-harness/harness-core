@@ -2,23 +2,52 @@ package software.wings.sm;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.RandomUtils.nextInt;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
+import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
+import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
+import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
+import static software.wings.common.NotificationMessageResolver.NotificationMessageType.MANUAL_INTERVENTION_NEEDED_NOTIFICATION;
 import static software.wings.sm.ExecutionEventAdvice.ExecutionEventAdviceBuilder.anExecutionEventAdvice;
 import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.NEW;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.NOTIFICATION_GROUP_ID;
+import static software.wings.utils.WingsTestConstants.PIPELINE_WORKFLOW_EXECUTION_ID;
+import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import com.google.inject.Inject;
 
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
+import software.wings.beans.CanaryOrchestrationWorkflow;
+import software.wings.beans.EmbeddedUser;
+import software.wings.beans.Notification;
+import software.wings.beans.NotificationRule;
+import software.wings.beans.Workflow;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
+import software.wings.common.NotificationMessageResolver;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
 import software.wings.service.StaticMap;
+import software.wings.service.impl.WorkflowNotificationHelper;
+import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateMachineTest.StateAsync;
 import software.wings.sm.StateMachineTest.StateSync;
@@ -26,8 +55,10 @@ import software.wings.sm.states.ForkState;
 import software.wings.waitnotify.NotifyEventListener;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by rishi on 2/25/17.
@@ -40,6 +71,17 @@ public class StateMachineExecutorTest extends WingsBaseTest {
   @Inject StateMachineExecutor stateMachineExecutor;
 
   @Inject private WorkflowService workflowService;
+
+  @Mock private Workflow workflow;
+  @Mock private ExecutionContextImpl context;
+  @Mock private WorkflowService mockWorkflowService;
+  @Mock private NotificationService notificationService;
+  @Mock private WorkflowExecutionService workflowExecutionService;
+  @Mock private NotificationMessageResolver notificationMessageResolver;
+  @Mock private WorkflowNotificationHelper workflowNotificationHelper;
+  @InjectMocks private StateMachineExecutor injectStateMachineExecutor;
+
+  @Captor private ArgumentCaptor<List<NotificationRule>> notificationRuleArgumentCaptor;
 
   /**
    * Should trigger.
@@ -807,5 +849,50 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     // TODO: add more checks
     assertThat(stateExecutionInstance.getStatus()).isEqualTo(NEW);
     assertThat(stateExecutionInstance.getNotifyElements()).isEqualTo(originalNotifyElements);
+  }
+
+  @Test
+  public void testSendManualInterventionNeededNotification() {
+    NotificationRule notificationRule = aNotificationRule()
+                                            .withNotificationGroups(Arrays.asList(aNotificationGroup()
+                                                                                      .withName(USER_NAME)
+                                                                                      .withUuid(NOTIFICATION_GROUP_ID)
+                                                                                      .withAccountId(ACCOUNT_ID)
+                                                                                      .build()))
+                                            .build();
+
+    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+        aCanaryOrchestrationWorkflow().withNotificationRules(singletonList(notificationRule)).build();
+
+    when(context.getApp()).thenReturn(anApplication().withAccountId(ACCOUNT_ID).withUuid(APP_ID).build());
+    when(context.getWorkflowExecutionId()).thenReturn(PIPELINE_WORKFLOW_EXECUTION_ID);
+    when(mockWorkflowService.readWorkflow(any(), any())).thenReturn(workflow);
+    when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
+    when(workflowExecutionService.getExecutionDetails(eq(APP_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any()))
+        .thenReturn(WorkflowExecutionBuilder.aWorkflowExecution()
+                        .withTriggeredBy(EmbeddedUser.builder().name(USER_NAME).uuid(USER_NAME).build())
+                        .withStartTs(70L)
+                        .build());
+
+    Map<String, String> placeholders = new HashMap<>();
+    when(notificationMessageResolver.getPlaceholderValues(
+             any(), any(), any(Long.class), any(Long.class), any(), any(), any(), any(), any()))
+        .thenReturn(placeholders);
+    when(workflowNotificationHelper.getArtifactsMessage(any(), any(), any(), any())).thenReturn("");
+
+    injectStateMachineExecutor.sendManualInterventionNeededNotification(context);
+    verify(notificationService).sendNotificationAsync(any(Notification.class), singletonList(any()));
+
+    ArgumentCaptor<Notification> notificationArgumentCaptor = ArgumentCaptor.forClass(Notification.class);
+    verify(notificationService)
+        .sendNotificationAsync(notificationArgumentCaptor.capture(), notificationRuleArgumentCaptor.capture());
+    Notification notification = notificationArgumentCaptor.getAllValues().get(0);
+    assertThat(notification.getNotificationTemplateId()).isEqualTo(MANUAL_INTERVENTION_NEEDED_NOTIFICATION.name());
+    assertThat(notification.getAccountId()).isEqualTo(ACCOUNT_ID);
+
+    notificationRule = notificationRuleArgumentCaptor.getValue().get(0);
+    assertThat(notificationRule.getNotificationGroups().get(0).getName()).isEqualTo(USER_NAME);
+    assertThat(notificationRule.getNotificationGroups().get(0).getUuid()).isEqualTo(NOTIFICATION_GROUP_ID);
+    assertThat(notificationRule.getNotificationGroups().get(0).getAccountId()).isEqualTo(ACCOUNT_ID);
   }
 }

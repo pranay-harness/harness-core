@@ -7,15 +7,19 @@ import static io.harness.govern.Switch.unhandled;
 import static io.harness.threading.Morpheus.quietSleep;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.STATE_NOT_FOR_TYPE;
+import static software.wings.beans.ExecutionScope.WORKFLOW;
+import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.ReadPref.CRITICAL;
 import static software.wings.beans.ReadPref.NORMAL;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
+import static software.wings.common.NotificationMessageResolver.NotificationMessageType.MANUAL_INTERVENTION_NEEDED_NOTIFICATION;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
 import static software.wings.sm.ElementNotifyResponseData.Builder.anElementNotifyResponseData;
@@ -57,12 +61,17 @@ import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
+import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ErrorStrategy;
+import software.wings.beans.NotificationRule;
+import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.common.Constants;
+import software.wings.common.NotificationMessageResolver;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsDeque;
 import software.wings.dl.WingsPersistence;
@@ -70,9 +79,12 @@ import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.scheduler.NotifyJob;
 import software.wings.scheduler.QuartzScheduler;
+import software.wings.service.impl.WorkflowNotificationHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionEvent.ExecutionEventBuilder;
 import software.wings.sm.states.BarrierState;
 import software.wings.sm.states.EnvState;
@@ -115,6 +127,10 @@ public class StateMachineExecutor {
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
   @Inject private DelegateService delegateService;
   @Inject private AlertService alertService;
+  @Inject private WorkflowService workflowService;
+  @Inject private NotificationService notificationService;
+  @Inject private NotificationMessageResolver notificationMessageResolver;
+  @Inject private WorkflowNotificationHelper workflowNotificationHelper;
 
   /**
    * Execute.
@@ -577,7 +593,7 @@ public class StateMachineExecutor {
         }
         // Open an alert
         openAnAlert(context, stateExecutionInstance);
-
+        sendManualInterventionNeededNotification(context);
         break;
       }
       case NEXT_STEP:
@@ -628,6 +644,36 @@ public class StateMachineExecutor {
     return stateExecutionInstance;
   }
 
+  private Map<String, String> getManualInterventionPlaceholderValues(ExecutionContextImpl context) {
+    WorkflowExecution workflowExecution = workflowExecutionService.getExecutionDetails(
+        context.getApp().getUuid(), context.getWorkflowExecutionId(), emptySet());
+    String artifactsMessage =
+        workflowNotificationHelper.getArtifactsMessage(context, workflowExecution, WORKFLOW, null);
+
+    return notificationMessageResolver.getPlaceholderValues(context, workflowExecution.getTriggeredBy().getName(),
+        workflowExecution.getStartTs(), System.currentTimeMillis(), "", "", artifactsMessage, ExecutionStatus.PAUSED,
+        AlertType.ManualInterventionNeeded);
+  }
+
+  protected void sendManualInterventionNeededNotification(ExecutionContextImpl context) {
+    Application app = context.getApp();
+
+    Workflow workflow = workflowService.readWorkflow(app.getAppId(), context.getWorkflowId());
+    CanaryOrchestrationWorkflow orchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+    List<NotificationRule> notificationRules = orchestrationWorkflow.getNotificationRules();
+
+    Map<String, String> placeholderValues = getManualInterventionPlaceholderValues(context);
+    notificationService.sendNotificationAsync(
+        anInformationNotification()
+            .withAppId(app.getName())
+            .withAccountId(app.getAccountId())
+            .withNotificationTemplateId(MANUAL_INTERVENTION_NEEDED_NOTIFICATION.name())
+            .withNotificationTemplateVariables(placeholderValues)
+            .build(),
+        notificationRules);
+  }
+
   private void openAnAlert(ExecutionContextImpl context, StateExecutionInstance stateExecutionInstance) {
     try {
       Application app = context.getApp();
@@ -641,7 +687,6 @@ public class StateMachineExecutor {
               .build();
       alertService.openAlert(
           app.getAccountId(), app.getUuid(), ManualInterventionNeeded, manualInterventionNeededAlert);
-
     } catch (Exception e) {
       logger.warn("Failed to open ManualInterventionNeeded alarm for executionId {} and name {}",
           context.getWorkflowExecutionId(), context.getWorkflowExecutionName(), e);
