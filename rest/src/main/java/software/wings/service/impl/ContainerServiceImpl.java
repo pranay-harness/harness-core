@@ -102,23 +102,30 @@ public class ContainerServiceImpl implements ContainerService {
 
   @Override
   public List<ContainerInfo> getContainerInfos(ContainerServiceParams containerServiceParams) {
+    logger.info("Getting container infos for account {}, controller: {}",
+        containerServiceParams.getSettingAttribute().getAccountId(), containerServiceParams.getContainerServiceName());
     List<ContainerInfo> result = new ArrayList<>();
     SettingValue value = containerServiceParams.getSettingAttribute().getValue();
     String containerServiceName = containerServiceParams.getContainerServiceName();
     if (isKubernetesClusterConfig(value)) {
+      logger.info("Kubernetes cluster config");
       KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
       Validator.notNullCheck("KubernetesConfig", kubernetesConfig);
       HasMetadata controller = kubernetesContainerService.getController(
           kubernetesConfig, containerServiceParams.getEncryptionDetails(), containerServiceName);
 
       if (controller != null) {
+        logger.info("Got controller: {}", controller.getMetadata().getName());
         Map<String, String> labels = controller.getMetadata().getLabels();
         List<io.fabric8.kubernetes.api.model.Service> services = kubernetesContainerService.getServices(
             kubernetesConfig, containerServiceParams.getEncryptionDetails(), labels);
         String serviceName = services.isEmpty() ? "None" : services.get(0).getMetadata().getName();
+        logger.info("Service name: {}", serviceName);
         for (Pod pod : kubernetesContainerService.getPods(
                  kubernetesConfig, containerServiceParams.getEncryptionDetails(), labels)) {
-          if (pod.getStatus().getPhase().equals("Running")) {
+          String phase = pod.getStatus().getPhase();
+          logger.info("Phase: {}", phase);
+          if ("Running".equals(phase)) {
             result.add(KubernetesContainerInfo.builder()
                            .clusterName(containerServiceParams.getClusterName())
                            .podName(pod.getMetadata().getName())
