@@ -3,11 +3,15 @@ package software.wings.beans;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.common.Constants.DEFAULT_SYNC_CALL_TIMEOUT;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Converters;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.mongodb.morphia.mapping.MappedField;
@@ -16,8 +20,10 @@ import software.wings.delegatetasks.DelegateRunnableTask;
 import software.wings.utils.KryoUtils;
 import software.wings.waitnotify.NotifyResponseData;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -49,6 +55,11 @@ public class DelegateTask extends Base {
 
   @Transient private transient NotifyResponseData notifyResponse;
   @Transient private transient DelegateRunnableTask delegateRunnableTask;
+
+  @SchemaIgnore
+  @JsonIgnore
+  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
+  private Date validUntil = Date.from(OffsetDateTime.now().plusDays(2).toInstant());
 
   public boolean isTimedOut() {
     return getLastUpdatedAt() + timeout <= System.currentTimeMillis();

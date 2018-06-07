@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
-import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.Comparator.naturalOrder;
@@ -54,7 +53,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.github.zafarkhaja.semver.Version;
-import com.mongodb.BasicDBObject;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
@@ -67,9 +65,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.http.client.fluent.Request;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.atteo.evo.inflector.English;
-import org.mongodb.morphia.Key;
 import org.mongodb.morphia.mapping.Mapper;
-import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -1058,45 +1054,6 @@ public class DelegateServiceImpl implements DelegateService {
                    .withSync(false)
                    .build())
         .collect(toList());
-  }
-
-  @Override
-  public void deleteOldTasks(long retentionMillis) {
-    final int batchSize = 1000;
-    final int limit = 5000;
-    final long hours = TimeUnit.HOURS.convert(retentionMillis, TimeUnit.MILLISECONDS);
-    try {
-      logger.info("Start: Deleting delegate tasks older than {} hours", hours);
-      timeLimiter.callWithTimeout(() -> {
-        while (true) {
-          List<Key<DelegateTask>> delegateTaskKeys = new ArrayList<>();
-          try {
-            Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
-                                            .field("createdAt")
-                                            .lessThan(clock.millis() - retentionMillis);
-            delegateTaskKeys.addAll(query.asKeyList(new FindOptions().limit(limit).batchSize(batchSize)));
-            if (isEmpty(delegateTaskKeys)) {
-              logger.info("No more delegate tasks older than {} hours", hours);
-              return true;
-            }
-            logger.info("Deleting {} delegate tasks", delegateTaskKeys.size());
-            wingsPersistence.getCollection("delegateTasks")
-                .remove(new BasicDBObject(ID_KEY,
-                    new BasicDBObject("$in", delegateTaskKeys.stream().map(key -> key.getId().toString()).toArray())));
-          } catch (Exception ex) {
-            logger.warn("Failed to delete {} delegate tasks", delegateTaskKeys.size(), ex);
-          }
-          logger.info("Successfully deleted {} delegate tasks", delegateTaskKeys.size());
-          if (delegateTaskKeys.size() < limit) {
-            return true;
-          }
-          sleep(ofSeconds(2L));
-        }
-      }, 10L, TimeUnit.MINUTES, true);
-    } catch (Exception ex) {
-      logger.warn("Failed to delete delegate tasks older than {} hours within 10 minutes.", hours, ex);
-    }
-    logger.info("Deleted delegate tasks older than {} hours", hours);
   }
 
   @Override
