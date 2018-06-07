@@ -21,7 +21,6 @@ import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.common.Constants.DELEGATE_DIR;
 import static software.wings.common.Constants.DOCKER_DELEGATE;
 import static software.wings.common.Constants.KUBERNETES_DELEGATE;
-import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.sm.ExecutionStatusData.Builder.anExecutionStatusData;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -71,7 +70,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by peeyushaggarwal on 11/28/16.
@@ -507,19 +505,5 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetLatestVersion() {
     assertThat(delegateService.getLatestDelegateVersion(ACCOUNT_ID)).isEqualTo("9.9.9");
-  }
-
-  @Test
-  public void shouldDeleteOldDelegateTasks() {
-    wingsPersistence.save(aDelegateTask().withUuid("ID1").withStatus(DelegateTask.Status.ABORTED).build());
-    wingsPersistence.save(aDelegateTask().withUuid("ID2").withStatus(DelegateTask.Status.ERROR).build());
-    wingsPersistence.save(aDelegateTask().withUuid("ID3").withStatus(DelegateTask.Status.QUEUED).build());
-    wingsPersistence.save(aDelegateTask().withUuid("ID4").withStatus(DelegateTask.Status.STARTED).build());
-    assertThat(wingsPersistence.createQuery(DelegateTask.class).count()).isEqualTo(4);
-
-    delegateService.deleteOldTasks(0);
-
-    List<DelegateTask> delegateTasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).asList();
-    assertThat(delegateTasks.size()).isEqualTo(0);
   }
 }
