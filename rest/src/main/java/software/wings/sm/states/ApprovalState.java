@@ -2,9 +2,17 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptySet;
+import static java.util.Collections.singletonList;
 import static software.wings.api.ApprovalStateExecutionData.Builder.anApprovalStateExecutionData;
+import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
+import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.alert.AlertType.ApprovalNeeded;
 import static software.wings.common.Constants.DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS;
+import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_NEEDED_NOTIFICATION;
+import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_STATE_CHANGE_NOTIFICATION;
+import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_TIMEOUT_NOTIFICATION;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
@@ -13,8 +21,19 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.beans.Application;
+import software.wings.beans.NotificationGroup;
+import software.wings.beans.NotificationRule;
+import software.wings.beans.User;
+import software.wings.beans.WorkflowExecution;
+import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.ApprovalNeededAlert;
+import software.wings.common.NotificationMessageResolver;
+import software.wings.common.NotificationMessageResolver.NotificationMessageType;
+import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AlertService;
+import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.NotificationSetupService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -24,6 +43,7 @@ import software.wings.sm.StateType;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -35,6 +55,10 @@ public class ApprovalState extends State {
   @Attributes(required = true, title = "Group Name") private String groupName;
 
   @Inject private AlertService alertService;
+  @Inject private NotificationService notificationService;
+  @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private NotificationSetupService notificationSetupService;
+  @Inject private NotificationMessageResolver notificationMessageResolver;
 
   /**
    * Creates pause state with given name.
@@ -62,6 +86,9 @@ public class ApprovalState extends State {
                                                   .build();
     alertService.openAlert(app.getAccountId(), app.getUuid(), ApprovalNeeded, approvalNeededAlert);
 
+    Map<String, String> placeholderValues = getPlaceholderValues(context, "", ExecutionStatus.PAUSED);
+    sendApprovalNotification(app.getAccountId(), APPROVAL_NEEDED_NOTIFICATION, placeholderValues);
+
     return anExecutionResponse()
         .withAsync(true)
         .withExecutionStatus(ExecutionStatus.PAUSED)
@@ -88,6 +115,10 @@ public class ApprovalState extends State {
             .approvalId(approvalNotifyResponse.getApprovalId())
             .build());
 
+    Map<String, String> placeholderValues = getPlaceholderValues(
+        context, approvalNotifyResponse.getApprovedBy().getName(), approvalNotifyResponse.getStatus());
+    sendApprovalNotification(app.getAccountId(), APPROVAL_STATE_CHANGE_NOTIFICATION, placeholderValues);
+
     return anExecutionResponse()
         .withStateExecutionData(executionData)
         .withExecutionStatus(approvalNotifyResponse.getStatus())
@@ -104,8 +135,26 @@ public class ApprovalState extends State {
     if (context == null || context.getStateExecutionData() == null) {
       return;
     }
-    context.getStateExecutionData().setErrorMsg(
-        "Pipeline was not approved within " + Misc.getDurationString(getTimeoutMillis()));
+
+    Application app = ((ExecutionContextImpl) context).getApp();
+    Integer timeout = getTimeoutMillis();
+    Long startTimeMillis = context.getStateExecutionData().getStartTs();
+    Long currentTimeMillis = System.currentTimeMillis();
+
+    String errorMsg;
+    if (currentTimeMillis >= (timeout + startTimeMillis)) {
+      errorMsg = "Pipeline was not approved within " + Misc.getDurationString(getTimeoutMillis());
+      Map<String, String> placeholderValues = getPlaceholderValues(context, errorMsg);
+      sendApprovalNotification(app.getAccountId(), APPROVAL_TIMEOUT_NOTIFICATION, placeholderValues);
+    } else {
+      errorMsg = "Pipeline was aborted";
+      User user = UserThreadLocal.get();
+      String userName = (user != null && user.getName() != null) ? user.getName() : "System";
+      Map<String, String> placeholderValues = getPlaceholderValues(context, userName, ExecutionStatus.ABORTED);
+      sendApprovalNotification(app.getAccountId(), APPROVAL_STATE_CHANGE_NOTIFICATION, placeholderValues);
+    }
+
+    context.getStateExecutionData().setErrorMsg(errorMsg);
   }
 
   @SchemaIgnore
@@ -133,5 +182,40 @@ public class ApprovalState extends State {
    */
   public void setGroupName(String groupName) {
     this.groupName = groupName;
+  }
+
+  private void sendApprovalNotification(
+      String accountId, NotificationMessageType notificationMessageType, Map<String, String> placeHolderValues) {
+    List<NotificationGroup> notificationGroups = notificationSetupService.listDefaultNotificationGroup(accountId);
+    NotificationRule notificationRule = aNotificationRule().withNotificationGroups(notificationGroups).build();
+
+    notificationService.sendNotificationAsync(anInformationNotification()
+                                                  .withAppId(GLOBAL_APP_ID)
+                                                  .withAccountId(accountId)
+                                                  .withNotificationTemplateId(notificationMessageType.name())
+                                                  .withNotificationTemplateVariables(placeHolderValues)
+                                                  .build(),
+        singletonList(notificationRule));
+  }
+
+  protected Map<String, String> getPlaceholderValues(
+      ExecutionContext context, String userName, ExecutionStatus status) {
+    WorkflowExecution workflowExecution = workflowExecutionService.getExecutionDetails(
+        ((ExecutionContextImpl) context).getApp().getUuid(), context.getWorkflowExecutionId(), emptySet());
+
+    String statusMsg = (status == ExecutionStatus.ABORTED) ? "aborted" : "approved";
+    long startTs = (status == ExecutionStatus.PAUSED) ? workflowExecution.getCreatedAt()
+                                                      : context.getStateExecutionData().getStartTs();
+    if (status == ExecutionStatus.PAUSED) {
+      userName = workflowExecution.getTriggeredBy().getName();
+    }
+
+    return notificationMessageResolver.getPlaceholderValues(
+        context, userName, startTs, System.currentTimeMillis(), "", statusMsg, "", status, AlertType.ApprovalNeeded);
+  }
+
+  private Map<String, String> getPlaceholderValues(ExecutionContext context, String timeout) {
+    return notificationMessageResolver.getPlaceholderValues(
+        context, "", 0, 0, timeout, "", "", ExecutionStatus.ABORTED, AlertType.ApprovalNeeded);
   }
 }

@@ -1,5 +1,9 @@
 package software.wings.common;
 
+import static io.harness.govern.Switch.unhandled;
+import static java.lang.String.format;
+import static software.wings.utils.Misc.getDurationString;
+
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
@@ -7,14 +11,27 @@ import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.text.StrSubstitutor;
+import org.apache.http.client.utils.URIBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.app.MainConfiguration;
+import software.wings.beans.Application;
+import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.alert.AlertType;
 import software.wings.common.NotificationMessageResolver.ChannelTemplate.EmailTemplate;
 import software.wings.exception.WingsException;
+import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionContextImpl;
+import software.wings.sm.ExecutionStatus;
 import software.wings.utils.YamlUtils;
 
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -26,6 +43,10 @@ public class NotificationMessageResolver {
   private Map<String, ChannelTemplate> templateMap;
   private static final Logger logger = LoggerFactory.getLogger(NotificationMessageResolver.class);
 
+  @Inject private MainConfiguration configuration;
+  private final DateFormat dateFormat = new SimpleDateFormat("MMM d");
+  private final DateFormat timeFormat = new SimpleDateFormat("HH:mm z");
+
   /**
    * The enum Notification message type.
    */
@@ -35,7 +56,11 @@ public class NotificationMessageResolver {
     ARTIFACT_APPROVAL_NOTIFICATION,
     ARTIFACT_APPROVAL_NOTIFICATION_STATUS,
     WORKFLOW_NOTIFICATION,
-    DELEGATE_STATE_NOTIFICATION
+    DELEGATE_STATE_NOTIFICATION,
+    APPROVAL_NEEDED_NOTIFICATION,
+    APPROVAL_STATE_CHANGE_NOTIFICATION,
+    APPROVAL_TIMEOUT_NOTIFICATION,
+    MANUAL_INTERVENTION_NEEDED_NOTIFICATION
   }
 
   private static Pattern placeHolderPattern = Pattern.compile("\\$\\{.+?}");
@@ -213,5 +238,82 @@ public class NotificationMessageResolver {
         this.body = body;
       }
     }
+  }
+
+  private static String getStatusVerb(ExecutionStatus status) {
+    switch (status) {
+      case SUCCESS:
+        return "completed";
+      case FAILED:
+      case ERROR:
+        return "failed";
+      case PAUSED:
+        return "paused";
+      case RESUMED:
+        return "resumed";
+      case ABORTED:
+        return "aborted";
+      default:
+        unhandled(status);
+        return "failed";
+    }
+  }
+
+  private String buildAbsoluteUrl(String fragment) {
+    String baseUrl = configuration.getPortal().getUrl().trim();
+    if (!baseUrl.endsWith("/")) {
+      baseUrl += "/";
+    }
+    try {
+      URIBuilder uriBuilder = new URIBuilder(baseUrl);
+      uriBuilder.setFragment(fragment);
+      return uriBuilder.toString();
+    } catch (URISyntaxException e) {
+      logger.error("Bad URI syntax", e);
+      return baseUrl;
+    }
+  }
+
+  private String generateUrl(Application app, ExecutionContext context, AlertType alertType) {
+    if (alertType.equals(AlertType.ApprovalNeeded)) {
+      return buildAbsoluteUrl(format("/account/%s/app/%s/pipeline-execution/%s/workflow-execution/undefined/details",
+          app.getAccountId(), app.getUuid(), context.getWorkflowExecutionId()));
+    } else if (alertType.equals(AlertType.ManualInterventionNeeded)) {
+      return buildAbsoluteUrl(format("/account/%s/app/%s/env/%s/executions/%s/details", app.getAccountId(),
+          app.getUuid(), ((ExecutionContextImpl) context).getEnv().getUuid(), context.getWorkflowExecutionId()));
+    } else {
+      logger.warn("Unhandled case. No URL can be generated for alertType ", alertType.name());
+      return "";
+    }
+  }
+
+  public Map<String, String> getPlaceholderValues(ExecutionContext context, String userName, long startTs, long endTs,
+      String timeout, String statusMsg, String artifactsMessage, ExecutionStatus status, AlertType alertType) {
+    Application app = ((ExecutionContextImpl) context).getApp();
+    String workflowUrl = generateUrl(app, context, alertType);
+    String startTime = format("%s at %s", dateFormat.format(new Date(startTs)), timeFormat.format(new Date(startTs)));
+    String endTime = timeFormat.format(new Date(endTs));
+
+    Environment env = ((ExecutionContextImpl) context).getEnv();
+    String envName = (env != null) ? env.getName() : "";
+
+    Map<String, String> placeHolderValues = new HashMap<>();
+    placeHolderValues.put("START_TS_SECS", Long.toString(startTs / 1000L));
+    placeHolderValues.put("END_TS_SECS", Long.toString(endTs / 1000L));
+    placeHolderValues.put("START_DATE", startTime);
+    placeHolderValues.put("END_DATE", endTime);
+    placeHolderValues.put("DURATION", getDurationString(startTs, endTs));
+    placeHolderValues.put("VERB", getStatusVerb(status));
+    placeHolderValues.put("STATUS_UPPERCASE", getStatusVerb(status).toUpperCase());
+    placeHolderValues.put("WORKFLOW_NAME", context.getWorkflowExecutionName());
+    placeHolderValues.put("WORKFLOW_URL", workflowUrl);
+    placeHolderValues.put("TIMEOUT", timeout);
+    placeHolderValues.put("APP_NAME", app.getName());
+    placeHolderValues.put("USER_NAME", userName);
+    placeHolderValues.put("STATUS", statusMsg);
+    placeHolderValues.put("ENV", envName);
+    placeHolderValues.put("ARTIFACT", artifactsMessage);
+
+    return placeHolderValues;
   }
 }

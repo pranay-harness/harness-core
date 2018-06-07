@@ -288,8 +288,8 @@ public class WorkflowNotificationHelper {
     }
   }
 
-  private String getArtifactsMessage(ExecutionContext context, WorkflowExecution workflowExecution,
-      ExecutionScope scope, PhaseSubWorkflow phaseSubWorkflow) {
+  public String getArtifactsMessage(ExecutionContext context, WorkflowExecution workflowExecution, ExecutionScope scope,
+      PhaseSubWorkflow phaseSubWorkflow) {
     List<String> serviceIds = new ArrayList<>();
     if (scope == WORKFLOW_PHASE) {
       serviceIds.add(phaseSubWorkflow.getServiceId());
