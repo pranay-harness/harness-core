@@ -348,7 +348,6 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
             List<Optional<Boolean>> results = executeParrallel(callables);
             for (Optional<Boolean> result : results) {
               if (!result.isPresent() || !result.get()) {
-                retry = RETRIES;
                 throw new WingsException("Cannot save new relic metric records. Server returned error");
               }
             }
