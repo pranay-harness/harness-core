@@ -149,7 +149,6 @@ public class TimeSeriesResource {
   @Path("/get-tooltip")
   @Timed
   @ExceptionMetered
-  @LearningEngineAuth
   public RestResponse<List<NewRelicMetricHostAnalysisValue>> getTooltip(@QueryParam("accountId") String accountId,
       @QueryParam("stateExecutionId") String stateExecutionId,
       @QueryParam("workFlowExecutionId") String workFlowExecutionId,
