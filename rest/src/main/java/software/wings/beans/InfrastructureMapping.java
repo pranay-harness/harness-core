@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -51,6 +52,7 @@ import javax.annotation.Nullable;
 @Entity(value = "infrastructureMapping")
 @Indexes(@Index(fields = { @Field("appId")
                            , @Field("envId"), @Field("name") }, options = @IndexOptions(unique = true)))
+@JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class InfrastructureMapping extends Base {
   public static final String ENV_ID_KEY = "envId";
   public static final String NAME_KEY = "name";
