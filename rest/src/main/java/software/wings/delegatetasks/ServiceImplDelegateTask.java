@@ -58,6 +58,7 @@ public class ServiceImplDelegateTask extends AbstractDelegateRunnableTask {
           exception = exception.getCause();
         }
       }
+      logger.error("Task error", exception);
     }
     return aRemoteMethodReturnValueData().withReturnValue(methodReturnValue).withException(exception).build();
   }
