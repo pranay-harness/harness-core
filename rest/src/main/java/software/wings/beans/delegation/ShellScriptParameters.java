@@ -94,7 +94,7 @@ public class ShellScriptParameters {
 
   public ShellExecutorConfig processExecutorConfig(
       ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper) {
-    String kubeConfigContent = (containerServiceParams != null)
+    String kubeConfigContent = (containerServiceParams != null) && containerServiceParams.isKubernetesClusterConfig()
         ? containerDeploymentDelegateHelper.getKubeConfigFileContent(containerServiceParams)
         : "";
     return ShellExecutorConfig.builder()
