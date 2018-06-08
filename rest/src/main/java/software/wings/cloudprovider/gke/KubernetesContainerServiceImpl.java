@@ -98,6 +98,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -155,23 +156,52 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Override
   public HasMetadata getController(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
-    HasMetadata controller = null;
-    if (isNotBlank(name)) {
-      controller = rcOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
-      if (controller == null) {
-        controller = deploymentOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
-      }
-      if (controller == null) {
-        controller = replicaOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
-      }
-      if (controller == null) {
-        controller = statefulOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
-      }
-      if (controller == null) {
-        controller = daemonOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
-      }
+    try {
+      return timeLimiter.callWithTimeout(
+          getControllerInternal(kubernetesConfig, encryptedDataDetails, name), 10, TimeUnit.SECONDS, true);
+    } catch (UncheckedTimeoutException e) {
+      logger.error("Timed out getting controller", e);
+    } catch (Exception e) {
+      throw new WingsException(ErrorCode.UNKNOWN_ERROR, e).addParam("message", "Error while getting controller");
     }
-    return controller;
+    return null;
+  }
+
+  private Callable<HasMetadata> getControllerInternal(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
+    return () -> {
+      HasMetadata controller = null;
+      if (isNotBlank(name)) {
+        boolean success = false;
+        while (!success) {
+          try {
+            controller = rcOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
+            if (controller == null) {
+              controller = deploymentOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
+            }
+            if (controller == null) {
+              controller = replicaOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
+            }
+            if (controller == null) {
+              controller = statefulOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
+            }
+            if (controller == null) {
+              controller = daemonOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
+            }
+            success = true;
+          } catch (Exception e) {
+            logger.warn(
+                "Exception while getting controller {}: {}:{}", name, e.getClass().getSimpleName(), e.getMessage());
+            if (e.getCause() != null) {
+              logger.warn("Caused by: {}:{}", e.getCause().getClass().getSimpleName(), e.getCause().getMessage());
+            }
+            sleep(ofSeconds(1));
+            logger.info("Retrying getController {} ...", name);
+          }
+        }
+      }
+      return controller;
+    };
   }
 
   @Override
