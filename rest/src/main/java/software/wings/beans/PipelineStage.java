@@ -25,8 +25,8 @@ public class PipelineStage {
   private String name;
   private boolean parallel;
   private List<PipelineStageElement> pipelineStageElements = new ArrayList<>();
-  private boolean valid = true;
-  private String validationMessage;
+  private transient boolean valid = true;
+  private transient String validationMessage;
 
   @Data
   @AllArgsConstructor
@@ -38,9 +38,10 @@ public class PipelineStage {
     private String type;
     private Map<String, Object> properties = new HashMap<>();
     private Map<String, String> workflowVariables = new HashMap<>();
+    private boolean disable;
 
-    private boolean valid = true;
-    private String validationMessage;
+    private transient boolean valid = true;
+    private transient String validationMessage;
   }
 
   @Data

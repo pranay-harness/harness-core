@@ -21,15 +21,19 @@ public enum ExecutionStatus {
   STARTING,
   SUCCESS,
   WAITING,
+  SKIPPED,
   @Deprecated ABORTING;
 
-  private static Set<ExecutionStatus> finalStatuses = EnumSet.<ExecutionStatus>of(ABORTED, ERROR, FAILED, SUCCESS);
+  private static Set<ExecutionStatus> finalStatuses =
+      EnumSet.<ExecutionStatus>of(ABORTED, ERROR, FAILED, SUCCESS, SKIPPED);
   private static Set<ExecutionStatus> brokeStatuses = EnumSet.<ExecutionStatus>of(ERROR, FAILED);
-  private static Set<ExecutionStatus> failStatuses = EnumSet.<ExecutionStatus>of(ABORTED, DISCONTINUING, ERROR, FAILED);
+  private static Set<ExecutionStatus> negativeStatuses =
+      EnumSet.<ExecutionStatus>of(ABORTED, DISCONTINUING, ERROR, FAILED);
   private static Set<ExecutionStatus> runningStatuses =
       EnumSet.<ExecutionStatus>of(DISCONTINUING, NEW, RUNNING, STARTING, QUEUED);
   private static Set<ExecutionStatus> activeStatuses =
       EnumSet.<ExecutionStatus>of(DISCONTINUING, NEW, PAUSED, RUNNING, STARTING, QUEUED, WAITING);
+  private static Set<ExecutionStatus> positiveStatuses = EnumSet.<ExecutionStatus>of(SUCCESS, SKIPPED);
 
   ExecutionStatus() {}
 
@@ -45,8 +49,8 @@ public enum ExecutionStatus {
     return status != null && brokeStatuses.contains(status);
   }
 
-  public static boolean isFailStatus(ExecutionStatus status) {
-    return status != null && failStatuses.contains(status);
+  public static boolean isNegativeStatus(ExecutionStatus status) {
+    return status != null && negativeStatuses.contains(status);
   }
 
   public static boolean isRunningStatus(ExecutionStatus status) {
@@ -57,11 +61,11 @@ public enum ExecutionStatus {
     return activeStatuses;
   }
 
-  public static Set<ExecutionStatus> failStatuses() {
-    return failStatuses;
+  public static Set<ExecutionStatus> negativeStatuses() {
+    return negativeStatuses;
   }
 
-  public static boolean isSuccessStatus(ExecutionStatus status) {
-    return status != null && status == SUCCESS;
+  public static boolean isPositiveStatus(ExecutionStatus status) {
+    return status != null && positiveStatuses.contains(status);
   }
 }

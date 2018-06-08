@@ -166,7 +166,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         }
 
         // nothing to do for regular phase with non-error
-        if (!phaseSubWorkflow.isRollback() && !ExecutionStatus.isFailStatus(executionEvent.getExecutionStatus())) {
+        if (!phaseSubWorkflow.isRollback() && !ExecutionStatus.isNegativeStatus(executionEvent.getExecutionStatus())) {
           return null;
         }
 

@@ -162,7 +162,7 @@ public class WorkflowNotificationHelper {
 
   private List<NotificationRule> getNotificationApplicableToScope(
       ExecutionContextImpl context, ExecutionScope executionScope, ExecutionStatus status) {
-    if (ExecutionStatus.isFailStatus(status)) {
+    if (ExecutionStatus.isNegativeStatus(status)) {
       status = FAILED;
     } else if (status == RESUMED) {
       status = PAUSED;

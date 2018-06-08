@@ -173,7 +173,7 @@ public class InstanceHelper {
           }
 
           for (InstanceStatusSummary instanceStatusSummary : instanceStatusSummaries) {
-            if (ExecutionStatus.isSuccessStatus(instanceStatusSummary.getStatus())) {
+            if (ExecutionStatus.isPositiveStatus(instanceStatusSummary.getStatus())) {
               Instance instance = buildInstanceUsingHostInfo(workflowExecution, artifact, instanceStatusSummary,
                   phaseExecutionData, phaseStepExecutionData, infrastructureMapping);
               if (instance != null) {

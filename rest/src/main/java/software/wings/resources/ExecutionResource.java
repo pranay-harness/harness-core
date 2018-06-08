@@ -230,7 +230,7 @@ public class ExecutionResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
-  public RestResponse<Boolean> approveOrRejectExecution(@QueryParam("appId") String appId,
+  public RestResponse<Boolean> updateNotes(@QueryParam("appId") String appId,
       @PathParam("workflowExecutionId") String workflowExecutionId, ExecutionArgs executionArgs) {
     authorize(appId, workflowExecutionId, EXECUTE);
     return new RestResponse<>(workflowExecutionService.updateNotes(appId, workflowExecutionId, executionArgs));
