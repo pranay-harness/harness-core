@@ -6,6 +6,7 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.api.ApprovalStateExecutionData.Builder.anApprovalStateExecutionData;
@@ -15,6 +16,9 @@ import static software.wings.common.Constants.DEFAULT_APPROVAL_STATE_TIMEOUT_MIL
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_NEEDED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_STATE_CHANGE_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_TIMEOUT_NOTIFICATION;
+import static software.wings.sm.ExecutionStatus.ABORTED;
+import static software.wings.sm.ExecutionStatus.PAUSED;
+import static software.wings.sm.ExecutionStatus.SKIPPED;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -48,7 +52,6 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.WorkflowStandardParams;
 
 import java.util.HashMap;
@@ -110,9 +113,22 @@ public class ApprovalStateTest extends WingsBaseTest {
     verify(alertService)
         .openAlert(eq(ACCOUNT_ID), eq(APP_ID), eq(AlertType.ApprovalNeeded), any(ApprovalNeededAlert.class));
     assertThat(executionResponse.isAsync()).isTrue();
-    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.PAUSED);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(PAUSED);
 
     verifyNotificationArguments(APPROVAL_NEEDED_NOTIFICATION);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(PAUSED);
+  }
+
+  @Test
+  public void shouldSkipDisabledStep() {
+    PageResponse pageResponse = new PageResponse();
+    pageResponse.setResponse(asList(User.Builder.anUser().build()));
+    approvalState.setDisable(true);
+    ExecutionResponse executionResponse = approvalState.execute(context);
+    verify(alertService, times(0))
+        .openAlert(eq(ACCOUNT_ID), eq(APP_ID), eq(AlertType.ApprovalNeeded), any(ApprovalNeededAlert.class));
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(SKIPPED);
+    assertThat(executionResponse.getErrorMessage()).isNotEmpty();
   }
 
   @Test
@@ -162,15 +178,15 @@ public class ApprovalStateTest extends WingsBaseTest {
   public void testGetPlaceholderValues() {
     when(context.getStateExecutionData()).thenReturn(anApprovalStateExecutionData().withStartTs(100L).build());
 
-    approvalState.getPlaceholderValues(context, USER_NAME_1_KEY, ExecutionStatus.ABORTED);
+    approvalState.getPlaceholderValues(context, USER_NAME_1_KEY, ABORTED);
     verify(notificationMessageResolver)
         .getPlaceholderValues(any(), eq(USER_NAME_1_KEY), eq(100L), any(Long.class), eq(""), eq("aborted"), any(),
-            eq(ExecutionStatus.ABORTED), eq(AlertType.ApprovalNeeded));
+            eq(ABORTED), eq(AlertType.ApprovalNeeded));
 
-    approvalState.getPlaceholderValues(context, USER_NAME_1_KEY, ExecutionStatus.PAUSED);
+    approvalState.getPlaceholderValues(context, USER_NAME_1_KEY, PAUSED);
     verify(notificationMessageResolver)
-        .getPlaceholderValues(any(), eq(USER_NAME), eq(70L), any(Long.class), eq(""), eq("approved"), any(),
-            eq(ExecutionStatus.PAUSED), eq(AlertType.ApprovalNeeded));
+        .getPlaceholderValues(any(), eq(USER_NAME), eq(70L), any(Long.class), eq(""), eq("approved"), any(), eq(PAUSED),
+            eq(AlertType.ApprovalNeeded));
   }
 
   private void verifyNotificationArguments(NotificationMessageType notificationMessageType) {

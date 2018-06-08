@@ -40,6 +40,11 @@ import static software.wings.sm.ExecutionStatus.RUNNING;
 import static software.wings.sm.ExecutionStatus.STARTING;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.ExecutionStatus.WAITING;
+import static software.wings.sm.ExecutionStatus.activeStatuses;
+import static software.wings.sm.ExecutionStatus.brokeStatuses;
+import static software.wings.sm.ExecutionStatus.isBrokeStatus;
+import static software.wings.sm.ExecutionStatus.isFinalStatus;
+import static software.wings.sm.ExecutionStatus.isPositiveStatus;
 import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -522,9 +527,9 @@ public class StateMachineExecutor {
       ExecutionEventAdvice executionEventAdvice = invokeAdvisors(context, currentState);
       if (executionEventAdvice != null) {
         return handleExecutionEventAdvice(context, stateExecutionInstance, status, executionEventAdvice);
-      } else if (status == SUCCESS) {
+      } else if (isPositiveStatus(status)) {
         return successTransition(context);
-      } else if (ExecutionStatus.isBrokeStatus(status)) {
+      } else if (isBrokeStatus(status)) {
         return failedTransition(context, null);
       } else if (status == ABORTED) {
         endTransition(context, stateExecutionInstance, ABORTED, null);
@@ -538,7 +543,7 @@ public class StateMachineExecutor {
     String stateExecutionInstanceId = stateExecutionInstance.getUuid();
     stateExecutionInstance = getStateExecutionInstance(
         stateExecutionInstance.getAppId(), stateExecutionInstance.getExecutionUuid(), stateExecutionInstanceId);
-    if (ExecutionStatus.isFinalStatus(stateExecutionInstance.getStatus())) {
+    if (isFinalStatus(stateExecutionInstance.getStatus())) {
       if (logger.isDebugEnabled()) {
         logger.debug("StateExecutionInstance already reached the final status. Skipping the update for "
             + stateExecutionInstanceId);
@@ -582,14 +587,13 @@ public class StateMachineExecutor {
                                                   .filter("appId", stateExecutionInstance.getAppId())
                                                   .filter(ID_KEY, stateExecutionInstance.getUuid())
                                                   .field(StateExecutionInstance.STATUS_KEY)
-                                                  .in(ExecutionStatus.brokeStatuses());
+                                                  .in(brokeStatuses());
         UpdateResults updateResult = wingsPersistence.update(query, ops);
         if (updateResult == null || updateResult.getWriteResult() == null
             || updateResult.getWriteResult().getN() != 1) {
           logger.error(
               "StateExecutionInstance status could not be updated- stateExecutionInstance: {}, status: {}, existingExecutionStatus: {}, stateParams: {}",
-              stateExecutionInstance.getUuid(), status, ExecutionStatus.brokeStatuses(),
-              executionEventAdvice.getStateParams());
+              stateExecutionInstance.getUuid(), status, brokeStatuses(), executionEventAdvice.getStateParams());
         }
         // Open an alert
         openAnAlert(context, stateExecutionInstance);
@@ -628,7 +632,7 @@ public class StateMachineExecutor {
         break;
       }
       case END_EXECUTION: {
-        if (!ExecutionStatus.isFinalStatus(status)) {
+        if (!isFinalStatus(status)) {
           status = ABORTED;
         }
         endTransition(context, stateExecutionInstance, status, null);
@@ -1015,7 +1019,7 @@ public class StateMachineExecutor {
         workflowExecutionService.getExecutionInterruptCount(stateExecutionInstance.getUuid()));
     ops.set(StateExecutionInstance.DEDICATED_INTERRUPT_COUNT_KEY, stateExecutionInstance.getDedicatedInterruptCount());
 
-    if (ExecutionStatus.isFinalStatus(status)) {
+    if (isFinalStatus(status)) {
       stateExecutionInstance.setEndTs(System.currentTimeMillis());
       ops.set("endTs", stateExecutionInstance.getEndTs());
     }
@@ -1086,7 +1090,7 @@ public class StateMachineExecutor {
     stateExecutionData.setStateParams(stateExecutionInstance.getStateParams());
 
     if (isEmpty(runningStatusLists)) {
-      runningStatusLists = ExecutionStatus.activeStatuses();
+      runningStatusLists = activeStatuses();
     }
 
     if (isNotBlank(delegateTaskId)) {

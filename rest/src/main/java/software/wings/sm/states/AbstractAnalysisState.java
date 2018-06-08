@@ -7,6 +7,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.sm.ExecutionStatus.SUCCESS;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -265,7 +266,7 @@ public abstract class AbstractAnalysisState extends State {
             .addFilter("appId", Operator.EQ, context.getAppId())
             .addFilter("workflowId", Operator.EQ, getWorkflowId(context))
             .addFilter("_id", Operator.NOT_EQ, context.getWorkflowExecutionId())
-            .addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS)
+            .addFilter("status", Operator.EQ, SUCCESS)
             .addOrder("createdAt", OrderType.DESC)
             .withOffset(String.valueOf(offSet))
             .withLimit(String.valueOf(PageRequest.DEFAULT_PAGE_SIZE))

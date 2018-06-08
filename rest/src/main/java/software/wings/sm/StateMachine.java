@@ -246,6 +246,7 @@ public class StateMachine extends Base {
 
     properties.put("pipelineId", pipeline.getUuid());
     properties.put("pipelineStateElementId", pipelineStageElement.getUuid());
+    properties.put("disable", pipelineStageElement.isDisable());
 
     if (pipelineStageElement.getWorkflowVariables() != null) {
       properties.put("workflowVariables", pipelineStageElement.getWorkflowVariables());

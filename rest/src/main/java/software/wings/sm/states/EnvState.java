@@ -9,9 +9,13 @@ import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.common.Constants.ENV_STATE_TIMEOUT_MILLIS;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+import static software.wings.sm.ExecutionStatus.FAILED;
+import static software.wings.sm.ExecutionStatus.SKIPPED;
+import static software.wings.sm.ExecutionStatus.SUCCESS;
 
 import com.google.inject.Inject;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
@@ -63,17 +67,22 @@ public class EnvState extends State {
   @SchemaIgnore private String pipelineId;
   @SchemaIgnore private String pipelineStateElementId;
 
-  @SchemaIgnore private Map<String, String> workflowVariables;
+  @SchemaIgnore @JsonIgnore private Map<String, String> workflowVariables;
 
   @Transient @Inject private WorkflowService workflowService;
 
   @Transient @Inject private WorkflowExecutionService executionService;
 
-  /**
-   * Creates env state with given name.
-   *
-   * @param name name of the state.
-   */
+  @JsonIgnore private boolean disable;
+
+  public boolean isDisable() {
+    return disable;
+  }
+
+  public void setDisable(boolean disable) {
+    this.disable = disable;
+  }
+
   public EnvState(String name) {
     super(name, StateType.ENV_STATE.name());
   }
@@ -105,8 +114,16 @@ public class EnvState extends State {
         anEnvStateExecutionData().withWorkflowId(workflowId).withEnvId(envId).build();
     if (workflow == null || workflow.getOrchestrationWorkflow() == null) {
       return anExecutionResponse()
-          .withExecutionStatus(ExecutionStatus.FAILED)
+          .withExecutionStatus(FAILED)
           .withErrorMessage("Workflow does not exist")
+          .withStateExecutionData(envStateExecutionData)
+          .build();
+    }
+
+    if (disable) {
+      return anExecutionResponse()
+          .withExecutionStatus(SKIPPED)
+          .withErrorMessage("Workflow [" + workflow.getName() + "] disabled. Execution is skipped.")
           .withStateExecutionData(envStateExecutionData)
           .build();
     }
@@ -125,7 +142,7 @@ public class EnvState extends State {
     } catch (Exception e) {
       String message = Misc.getMessage(e);
       return anExecutionResponse()
-          .withExecutionStatus(ExecutionStatus.FAILED)
+          .withExecutionStatus(FAILED)
           .withErrorMessage(message)
           .withStateExecutionData(envStateExecutionData)
           .build();
@@ -165,7 +182,7 @@ public class EnvState extends State {
     EnvExecutionResponseData responseData = (EnvExecutionResponseData) response.values().iterator().next();
     ExecutionResponse executionResponse = anExecutionResponse().withExecutionStatus(responseData.getStatus()).build();
 
-    if (responseData.getStatus() != ExecutionStatus.SUCCESS) {
+    if (responseData.getStatus() != SUCCESS) {
       return executionResponse;
     }
 

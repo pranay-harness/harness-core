@@ -188,6 +188,7 @@ public class StateExecutionData {
         breakDown.setQueued(1);
         break;
       case SUCCESS:
+      case SKIPPED:
         breakDown.setSuccess(1);
         break;
       default:

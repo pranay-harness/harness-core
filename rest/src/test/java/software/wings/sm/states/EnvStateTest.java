@@ -4,12 +4,16 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.api.EnvStateExecutionData.Builder.anEnvStateExecutionData;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.common.Constants.ENV_STATE_TIMEOUT_MILLIS;
+import static software.wings.sm.ExecutionStatus.FAILED;
+import static software.wings.sm.ExecutionStatus.SKIPPED;
+import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
@@ -32,7 +36,6 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.WorkflowStandardParams;
 
 import java.util.concurrent.TimeUnit;
@@ -73,7 +76,7 @@ public class EnvStateTest extends WingsBaseTest {
         .triggerOrchestrationExecution(
             eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any());
     assertThat(executionResponse.getCorrelationIds()).hasSameElementsAs(asList(WORKFLOW_EXECUTION_ID));
-    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(SUCCESS);
     assertThat(executionResponse.isAsync()).isTrue();
     EnvStateExecutionData stateExecutionData = (EnvStateExecutionData) executionResponse.getStateExecutionData();
     assertThat(stateExecutionData.getWorkflowId()).isEqualTo(WORKFLOW_ID);
@@ -82,9 +85,20 @@ public class EnvStateTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldSkipDisabledStep() {
+    when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
+    envState.setDisable(true);
+    ExecutionResponse executionResponse = envState.execute(context);
+    verify(workflowExecutionService, times(0))
+        .triggerOrchestrationExecution(
+            eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any());
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(SKIPPED);
+    assertThat(executionResponse.getErrorMessage()).isNotEmpty();
+  }
+  @Test
   public void shouldExecuteWhenNoWorkflow() {
     ExecutionResponse executionResponse = envState.execute(context);
-    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(FAILED);
     assertThat(executionResponse.getErrorMessage()).isNotEmpty();
   }
 
@@ -98,7 +112,7 @@ public class EnvStateTest extends WingsBaseTest {
     verify(workflowExecutionService)
         .triggerOrchestrationExecution(
             eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any());
-    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(FAILED);
     assertThat(executionResponse.getErrorMessage())
         .isNotEmpty()
         .isEqualTo("Invalid request: Workflow variable [test] is mandatory for execution");

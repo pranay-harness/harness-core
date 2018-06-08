@@ -14,6 +14,9 @@ import static software.wings.common.NotificationMessageResolver.NotificationMess
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_STATE_CHANGE_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_TIMEOUT_NOTIFICATION;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+import static software.wings.sm.ExecutionStatus.ABORTED;
+import static software.wings.sm.ExecutionStatus.PAUSED;
+import static software.wings.sm.ExecutionStatus.SKIPPED;
 
 import com.google.inject.Inject;
 
@@ -25,7 +28,6 @@ import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
@@ -60,11 +62,16 @@ public class ApprovalState extends State {
   @Inject private NotificationSetupService notificationSetupService;
   @Inject private NotificationMessageResolver notificationMessageResolver;
 
-  /**
-   * Creates pause state with given name.
-   *
-   * @param name name of the state.
-   */
+  private boolean disable;
+
+  public boolean isDisable() {
+    return disable;
+  }
+
+  public void setDisable(boolean disable) {
+    this.disable = disable;
+  }
+
   public ApprovalState(String name) {
     super(name, StateType.APPROVAL.name());
   }
@@ -77,6 +84,14 @@ public class ApprovalState extends State {
     String approvalId = generateUuid();
     ApprovalStateExecutionData executionData = anApprovalStateExecutionData().withApprovalId(approvalId).build();
 
+    if (disable) {
+      return anExecutionResponse()
+          .withExecutionStatus(SKIPPED)
+          .withErrorMessage("Approval step is disabled. Approval is skipped.")
+          .withStateExecutionData(executionData)
+          .build();
+    }
+
     // Open an alert
     Application app = ((ExecutionContextImpl) context).getApp();
     ApprovalNeededAlert approvalNeededAlert = ApprovalNeededAlert.builder()
@@ -86,12 +101,12 @@ public class ApprovalState extends State {
                                                   .build();
     alertService.openAlert(app.getAccountId(), app.getUuid(), ApprovalNeeded, approvalNeededAlert);
 
-    Map<String, String> placeholderValues = getPlaceholderValues(context, "", ExecutionStatus.PAUSED);
+    Map<String, String> placeholderValues = getPlaceholderValues(context, "", PAUSED);
     sendApprovalNotification(app.getAccountId(), APPROVAL_NEEDED_NOTIFICATION, placeholderValues);
 
     return anExecutionResponse()
         .withAsync(true)
-        .withExecutionStatus(ExecutionStatus.PAUSED)
+        .withExecutionStatus(PAUSED)
         .withCorrelationIds(asList(approvalId))
         .withStateExecutionData(executionData)
         .build();
@@ -150,7 +165,7 @@ public class ApprovalState extends State {
       errorMsg = "Pipeline was aborted";
       User user = UserThreadLocal.get();
       String userName = (user != null && user.getName() != null) ? user.getName() : "System";
-      Map<String, String> placeholderValues = getPlaceholderValues(context, userName, ExecutionStatus.ABORTED);
+      Map<String, String> placeholderValues = getPlaceholderValues(context, userName, ABORTED);
       sendApprovalNotification(app.getAccountId(), APPROVAL_STATE_CHANGE_NOTIFICATION, placeholderValues);
     }
 
@@ -203,19 +218,18 @@ public class ApprovalState extends State {
     WorkflowExecution workflowExecution = workflowExecutionService.getExecutionDetails(
         ((ExecutionContextImpl) context).getApp().getUuid(), context.getWorkflowExecutionId(), emptySet());
 
-    String statusMsg = (status == ExecutionStatus.ABORTED) ? "aborted" : "approved";
-    long startTs = (status == ExecutionStatus.PAUSED) ? workflowExecution.getCreatedAt()
-                                                      : context.getStateExecutionData().getStartTs();
-    if (status == ExecutionStatus.PAUSED) {
+    String statusMsg = (status == ABORTED) ? "aborted" : "approved";
+    long startTs = (status == PAUSED) ? workflowExecution.getCreatedAt() : context.getStateExecutionData().getStartTs();
+    if (status == PAUSED) {
       userName = workflowExecution.getTriggeredBy().getName();
     }
 
     return notificationMessageResolver.getPlaceholderValues(
-        context, userName, startTs, System.currentTimeMillis(), "", statusMsg, "", status, AlertType.ApprovalNeeded);
+        context, userName, startTs, System.currentTimeMillis(), "", statusMsg, "", status, ApprovalNeeded);
   }
 
   private Map<String, String> getPlaceholderValues(ExecutionContext context, String timeout) {
     return notificationMessageResolver.getPlaceholderValues(
-        context, "", 0, 0, timeout, "", "", ExecutionStatus.ABORTED, AlertType.ApprovalNeeded);
+        context, "", 0, 0, timeout, "", "", ABORTED, ApprovalNeeded);
   }
 }
