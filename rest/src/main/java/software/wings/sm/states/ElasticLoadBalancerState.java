@@ -23,7 +23,7 @@ import software.wings.exception.InvalidRequestException;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -51,7 +51,7 @@ public class ElasticLoadBalancerState extends State {
 
   @Transient @Inject private transient SecretManager secretManager;
 
-  @Transient @Inject private transient EncryptionService encryptionService;
+  @Transient @Inject private transient ManagerDecryptionService managerDecryptionService;
 
   public ElasticLoadBalancerState(String name) {
     super(name, StateType.ELASTIC_LOAD_BALANCER.name());
@@ -75,20 +75,22 @@ public class ElasticLoadBalancerState extends State {
       region = ((AwsInfrastructureMapping) infrastructureMapping).getRegion();
       SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
       AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
-      encryptionService.decrypt(awsConfig,
+      AwsConfig decryptedAwsConfig = (AwsConfig) managerDecryptionService.decrypt(awsConfig,
           secretManager.getEncryptionDetails(awsConfig, context.getAppId(), context.getWorkflowExecutionId()));
-      return execute(
-          context, loadBalancerName, Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      return execute(context, loadBalancerName, Regions.fromName(region), decryptedAwsConfig.getAccessKey(),
+          decryptedAwsConfig.getSecretKey());
     } else if (infrastructureMapping instanceof PhysicalInfrastructureMappingBase) {
       SettingAttribute elbSetting =
           settingsService.get(((PhysicalInfrastructureMappingBase) infrastructureMapping).getLoadBalancerId());
       ElasticLoadBalancerConfig loadBalancerConfig = (ElasticLoadBalancerConfig) elbSetting.getValue();
-      encryptionService.decrypt(loadBalancerConfig,
-          secretManager.getEncryptionDetails(loadBalancerConfig, context.getAppId(), context.getWorkflowExecutionId()));
+      ElasticLoadBalancerConfig decryptedLoadBalancerConfig =
+          (ElasticLoadBalancerConfig) managerDecryptionService.decrypt(loadBalancerConfig,
+              secretManager.getEncryptionDetails(
+                  loadBalancerConfig, context.getAppId(), context.getWorkflowExecutionId()));
       loadBalancerName = loadBalancerConfig.getLoadBalancerName();
       region = loadBalancerConfig.getRegion().name();
-      return execute(context, loadBalancerName, Regions.valueOf(region), loadBalancerConfig.getAccessKey(),
-          loadBalancerConfig.getSecretKey());
+      return execute(context, loadBalancerName, Regions.valueOf(region), decryptedLoadBalancerConfig.getAccessKey(),
+          decryptedLoadBalancerConfig.getSecretKey());
     } else {
       throw new InvalidRequestException("ELB operations not supported");
     }

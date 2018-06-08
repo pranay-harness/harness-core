@@ -29,9 +29,9 @@ public class EncryptionServiceImpl implements EncryptionService {
   @Inject private SecretManagementDelegateService secretManagementDelegateService;
 
   @Override
-  public void decrypt(Encryptable object, List<EncryptedDataDetail> encryptedDataDetails) {
+  public Encryptable decrypt(Encryptable object, List<EncryptedDataDetail> encryptedDataDetails) {
     if (isEmpty(encryptedDataDetails)) {
-      return;
+      return object;
     }
 
     for (EncryptedDataDetail encryptedDataDetail : encryptedDataDetails) {
@@ -53,6 +53,7 @@ public class EncryptionServiceImpl implements EncryptionService {
       }
     }
     object.setDecrypted(true);
+    return object;
   }
 
   @Override

@@ -11,7 +11,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
@@ -216,7 +216,7 @@ public class PcfDeployStateTest extends WingsBaseTest {
     when(artifactService.get(any(), any())).thenReturn(anArtifact().build());
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
     when(evaluator.substitute(any(), any(), any())).thenAnswer(i -> i.getArguments()[0]);
-    doNothing().when(encryptionService).decrypt(any(), any());
+    doReturn(null).when(encryptionService).decrypt(any(), any());
   }
 
   @Test
