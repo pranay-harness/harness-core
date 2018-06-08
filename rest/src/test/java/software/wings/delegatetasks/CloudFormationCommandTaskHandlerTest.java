@@ -6,7 +6,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -72,7 +71,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
             .data(templateBody)
             .stackNameSuffix(stackNameSuffix)
             .build();
-    doNothing().when(mockEncryptionService).decrypt(any(), any());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), any());
     CreateStackRequest createStackRequest =
         new CreateStackRequest().withStackName("HarnessStack-" + stackNameSuffix).withTemplateBody(templateBody);
     String stackId = "Stack Id 00";
@@ -132,7 +131,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
             .data(templateBody)
             .stackNameSuffix(stackNameSuffix)
             .build();
-    doNothing().when(mockEncryptionService).decrypt(any(), any());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), any());
     List<Stack> exitingList = Collections.singletonList(
         new Stack().withStackStatus("CREATE_COMPLETE").withStackName("HarnessStack-" + stackNameSuffix));
     List<Stack> updateProgressList = Collections.singletonList(new Stack().withStackStatus("UPDATE_IN_PROGRESS"));
@@ -167,7 +166,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
             .timeoutInMs(10 * 60 * 1000)
             .stackNameSuffix(stackNameSuffix)
             .build();
-    doNothing().when(mockEncryptionService).decrypt(any(), any());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), any());
     String stackId = "Stack Id 01";
 
     List<Stack> existingStackList =
@@ -201,7 +200,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
             .awsConfig(AwsConfig.builder().accessKey(accessKey).accountId(ACCOUNT_ID).secretKey(secretKey).build())
             .timeoutInMs(10 * 60 * 1000)
             .build();
-    doNothing().when(mockEncryptionService).decrypt(any(), any());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), any());
     DescribeStacksRequest describeStacksRequest = new DescribeStacksRequest();
     List<Stack> stacks = Arrays.asList(new Stack()
                                            .withStackId("sId1")

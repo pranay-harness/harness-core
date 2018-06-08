@@ -52,15 +52,18 @@ import software.wings.delegatetasks.validation.HelmCommandValidation;
 import software.wings.delegatetasks.validation.HostValidationValidation;
 import software.wings.delegatetasks.validation.HttpValidation;
 import software.wings.delegatetasks.validation.JenkinsValidation;
+import software.wings.delegatetasks.validation.KmsValidation;
 import software.wings.delegatetasks.validation.KubernetesSteadyStateCheckValidation;
 import software.wings.delegatetasks.validation.LogzValidation;
 import software.wings.delegatetasks.validation.NewRelicValidation;
 import software.wings.delegatetasks.validation.NexusValidation;
 import software.wings.delegatetasks.validation.PrometheusValidation;
+import software.wings.delegatetasks.validation.SecretManagerValidation;
 import software.wings.delegatetasks.validation.ShellScriptValidation;
 import software.wings.delegatetasks.validation.SplunkValidation;
 import software.wings.delegatetasks.validation.SumoValidation;
 import software.wings.delegatetasks.validation.TerraformValidation;
+import software.wings.delegatetasks.validation.VaultValidation;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
@@ -161,11 +164,11 @@ public enum TaskType {
       TaskGroup.ARTIFACTORY, ServiceImplDelegateTask.class, ArtifactoryValidation.class),
   ARTIFACTORY_VALIDATE_ARTIFACT_STREAM(
       TaskGroup.ARTIFACTORY, ServiceImplDelegateTask.class, ArtifactoryValidation.class),
-  KMS_ENCRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
-  KMS_DECRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
+  KMS_ENCRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, KmsValidation.class),
+  KMS_DECRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, KmsValidation.class),
   GIT_COMMAND(TaskGroup.GIT, GitCommandTask.class, GitValidation.class),
-  VAULT_ENCRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
-  VAULT_DECRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
+  VAULT_ENCRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, VaultValidation.class),
+  VAULT_DECRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, VaultValidation.class),
   HOST_VALIDATION(TaskGroup.HOST_VALIDATION, ServiceImplDelegateTask.class, HostValidationValidation.class),
   CONTAINER_ACTIVE_SERVICE_COUNTS(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
   CONTAINER_INFO(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
@@ -191,7 +194,8 @@ public enum TaskType {
       TaskGroup.CLOUD_WATCH, CloudWatchDataCollectionTask.class, AlwaysTrueValidation.class),
   APM_METRIC_DATA_COLLECTION_TASK(TaskGroup.APM, APMDataCollectionTask.class, APMValidation.class),
   CLOUD_FORMATION_TASK(TaskGroup.CLOUD_FORMATION, CloudFormationCommandTask.class, AlwaysTrueValidation.class),
-  TERRAFORM_PROVISION_TASK(TaskGroup.TERRAFORM, TerraformProvisionTask.class, TerraformValidation.class);
+  TERRAFORM_PROVISION_TASK(TaskGroup.TERRAFORM, TerraformProvisionTask.class, TerraformValidation.class),
+  SECRET_DECRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;

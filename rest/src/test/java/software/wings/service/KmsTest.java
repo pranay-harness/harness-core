@@ -88,6 +88,7 @@ import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.service.intfc.security.EncryptionConfig;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -127,6 +128,7 @@ public class KmsTest extends WingsBaseTest {
   @Inject private Queue<KmsTransitionEvent> transitionKmsQueue;
   @Inject private ConfigService configService;
   @Inject private EncryptionService encryptionService;
+  @Inject private ManagerDecryptionService managerDecryptionService;
   @Inject private SettingsService settingsService;
   @Inject private SettingValidationService settingValidationService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
@@ -163,10 +165,13 @@ public class KmsTest extends WingsBaseTest {
     });
     when(delegateProxyFactory.get(eq(SecretManagementDelegateService.class), any(SyncTaskContext.class)))
         .thenReturn(secretManagementDelegateService);
+    when(delegateProxyFactory.get(eq(EncryptionService.class), any(SyncTaskContext.class)))
+        .thenReturn(encryptionService);
     when(delegateProxyFactory.get(eq(ContainerService.class), any(SyncTaskContext.class))).thenReturn(containerService);
     when(containerService.validate(any(ContainerServiceParams.class))).thenReturn(true);
     doNothing().when(newRelicService).validateConfig(anyObject(), anyObject());
     setInternalState(kmsService, "delegateProxyFactory", delegateProxyFactory);
+    setInternalState(managerDecryptionService, "delegateProxyFactory", delegateProxyFactory);
     setInternalState(secretManager, "kmsService", kmsService);
     setInternalState(wingsPersistence, "secretManager", secretManager);
     setInternalState(configService, "secretManager", secretManager);
@@ -1378,6 +1383,12 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(user.getEmail(), secretChangeLog.getUser().getEmail());
     assertEquals(user.getName(), secretChangeLog.getUser().getName());
     assertEquals("Created", secretChangeLog.getDescription());
+
+    // decrypt at manager side and test
+    savedVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
+    ServiceVariable decryptedVariable = (ServiceVariable) managerDecryptionService.decrypt(
+        serviceVariable, secretManager.getEncryptionDetails(savedVariable, workflowExecutionId, appId));
+    assertEquals(secretValue, String.valueOf(decryptedVariable.getValue()));
   }
 
   @Test

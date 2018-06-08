@@ -44,7 +44,7 @@ import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
-import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.Validator;
@@ -74,7 +74,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Inject private HostService hostService;
   @Transient @Inject private transient SecretManager secretManager;
 
-  @Transient @Inject private transient EncryptionService encryptionService;
+  @Transient @Inject private transient ManagerDecryptionService managerDecryptionService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ServiceTemplateService#list(software.wings.dl.PageRequest)
@@ -489,8 +489,9 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     if (!maskEncryptedFields) {
       mergedServiceSettings.forEach(serviceVariable -> {
         if (serviceVariable.getType() == Type.ENCRYPTED_TEXT) {
-          encryptionService.decrypt(
+          ServiceVariable decryptedVariable = (ServiceVariable) managerDecryptionService.decrypt(
               serviceVariable, secretManager.getEncryptionDetails(serviceVariable, appId, workflowExecutionId));
+          serviceVariable.setValue(decryptedVariable.getValue());
         }
       });
     }

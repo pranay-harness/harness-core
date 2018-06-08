@@ -394,3 +394,7 @@ software.wings.beans.User, 5355
 software.wings.beans.Account, 5356
 software.wings.security.authentication.AuthenticationMechanism, 5357
 software.wings.security.authentication.TwoFactorAuthenticationMechanism, 5358
+software.wings.beans.ServiceVariable, 5359
+software.wings.beans.EntityType, 5360
+software.wings.beans.ServiceVariable$OverrideType, 5361
+software.wings.beans.ServiceVariable$Type, 5362
