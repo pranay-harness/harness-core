@@ -4,7 +4,6 @@ import static java.util.Collections.singletonList;
 
 import software.wings.beans.DelegateTask;
 import software.wings.beans.VaultConfig;
-import software.wings.exception.WingsException;
 import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionConfig;
@@ -28,21 +27,10 @@ public class SecretManagerValidation extends AbstractDelegateValidateTask {
                              .filter(o -> o instanceof List)
                              .map(obj -> {
                                List<EncryptedDataDetail> encryptedDataDetails = (List<EncryptedDataDetail>) obj;
-                               String secretManagerUrl = null;
+                               String secretManagerUrl = "https://aws.amazon.com/";
                                for (EncryptedDataDetail encryptedDataDetail : encryptedDataDetails) {
                                  EncryptionConfig encryptionConfig = encryptedDataDetail.getEncryptionConfig();
-                                 switch (encryptedDataDetail.getEncryptionType()) {
-                                   case KMS:
-                                     secretManagerUrl = "https://aws.amazon.com/";
-                                     break;
-                                   case VAULT:
-                                     secretManagerUrl = ((VaultConfig) encryptionConfig).getVaultUrl();
-                                     break;
-
-                                   default:
-                                     throw new WingsException("Invalid type " + encryptionConfig.getEncryptionType());
-                                 }
-                                 if (encryptionConfig.getEncryptionType() == EncryptionType.VAULT) {
+                                 if (encryptedDataDetail.getEncryptionType().equals(EncryptionType.VAULT)) {
                                    secretManagerUrl = ((VaultConfig) encryptionConfig).getVaultUrl();
                                  }
                                }

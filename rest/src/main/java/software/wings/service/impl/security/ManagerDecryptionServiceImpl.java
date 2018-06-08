@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 
 import com.google.inject.Inject;
@@ -23,6 +24,9 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
   @Inject protected DelegateProxyFactory delegateProxyFactory;
   @Override
   public Encryptable decrypt(Encryptable object, List<EncryptedDataDetail> encryptedDataDetails) {
+    if (isEmpty(encryptedDataDetails)) {
+      return object;
+    }
     SyncTaskContext syncTaskContext =
         aContext().withAccountId(object.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
     try {
