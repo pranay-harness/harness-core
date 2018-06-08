@@ -167,7 +167,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   public void testTimeout() throws InterruptedException, UnableToRegisterIdempotentOperationException {
     wingsPersistence.delete(Idempotent.class, id.getValue());
     IdempotentLock<String> idempotentLock = IdempotentLock.create(id, idempotentRegistry);
-    assertThatThrownBy(() -> IdempotentLock.create(id, idempotentRegistry, ofMillis(200)));
+    assertThatThrownBy(() -> IdempotentLock.create(id, idempotentRegistry, ofMillis(200), ofMillis(100)));
     idempotentLock.close();
   }
 }

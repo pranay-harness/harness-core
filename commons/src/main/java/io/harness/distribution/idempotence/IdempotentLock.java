@@ -18,19 +18,19 @@ import java.util.Optional;
 
 @Builder
 public class IdempotentLock<T> implements AutoCloseable {
-  private static Duration pollingInterval = ofMillis(100);
-  private static Duration timeout = ofMinutes(3);
+  private static Duration defaultPollingInterval = ofMillis(100);
+  private static Duration defaultTimeout = ofMinutes(3);
   private IdempotentId id;
   private IdempotentRegistry registry;
   private Optional<T> resultData;
 
   public static IdempotentLock create(IdempotentId id, IdempotentRegistry registry)
       throws UnableToRegisterIdempotentOperationException {
-    return create(id, registry, timeout);
+    return create(id, registry, defaultTimeout, defaultPollingInterval);
   }
 
-  public static IdempotentLock create(IdempotentId id, IdempotentRegistry registry, Duration timeout)
-      throws UnableToRegisterIdempotentOperationException {
+  public static IdempotentLock create(IdempotentId id, IdempotentRegistry registry, Duration timeout,
+      Duration pollingInterval) throws UnableToRegisterIdempotentOperationException {
     long systemTimeMillis = System.currentTimeMillis();
 
     do {
