@@ -51,5 +51,6 @@ public interface IdempotentRegistry<T> {
   /*
    * Creates idempotent lock object for particular id and timeout
    */
-  IdempotentLock create(IdempotentId id, Duration timeout) throws UnableToRegisterIdempotentOperationException;
+  IdempotentLock create(IdempotentId id, Duration timeout, Duration pollingInterval)
+      throws UnableToRegisterIdempotentOperationException;
 }

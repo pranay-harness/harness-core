@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.time.Duration.ofSeconds;
 import static java.util.regex.Pattern.compile;
 import static java.util.stream.Collectors.toList;
 import static net.redhogs.cronparser.CronExpressionDescriptor.getDescription;
@@ -114,7 +115,7 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 public class TriggerServiceImpl implements TriggerService {
   private static final Logger logger = LoggerFactory.getLogger(TriggerServiceImpl.class);
-  public static final Duration timeout = Duration.ofSeconds(60);
+  public static final Duration timeout = ofSeconds(60);
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutorService executorService;
@@ -536,7 +537,7 @@ public class TriggerServiceImpl implements TriggerService {
   private void triggerScheduledExecution(Trigger trigger, Date scheduledFireTime) {
     IdempotentId idempotentid = new IdempotentId(trigger.getUuid() + ":" + scheduledFireTime.getTime());
 
-    try (IdempotentLock<String> idempotent = idempotentRegistry.create(idempotentid)) {
+    try (IdempotentLock<String> idempotent = idempotentRegistry.create(idempotentid, ofSeconds(10), ofSeconds(1))) {
       if (idempotent.alreadyExecuted()) {
         return;
       }

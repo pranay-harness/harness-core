@@ -166,7 +166,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
         .thenReturn(Service.builder().uuid(SERVICE_ID).name("Catalog").build());
-    when(idempotentRegistry.create(any()))
+    when(idempotentRegistry.create(any(), any(), any()))
         .thenReturn(IdempotentLock.<String>builder().registry(idempotentRegistry).resultData(Optional.empty()).build());
   }
 
@@ -981,7 +981,7 @@ public class TriggerServiceTest extends WingsBaseTest {
                         .build());
 
     triggerService.triggerScheduledExecutionAsync(scheduledConditionTrigger, new Date());
-    verify(idempotentRegistry).create(any());
+    verify(idempotentRegistry).create(any(), any(), any());
     verify(workflowExecutionService, times(1))
         .triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class));
   }
@@ -1022,7 +1022,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     verify(artifactStreamService).get(APP_ID, ARTIFACT_STREAM_ID);
     verify(artifactService)
         .fetchLastCollectedArtifactForArtifactStream(APP_ID, ARTIFACT_STREAM_ID, jenkinsArtifactStream.getSourceName());
-    verify(idempotentRegistry).create(any());
+    verify(idempotentRegistry).create(any(), any(), any());
   }
 
   @Test

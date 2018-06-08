@@ -49,8 +49,9 @@ public class InprocIdempotentRegistry<T> implements IdempotentRegistry<T> {
   }
 
   @Override
-  public IdempotentLock create(IdempotentId id, Duration timeout) throws UnableToRegisterIdempotentOperationException {
-    return IdempotentLock.create(id, this, timeout);
+  public IdempotentLock create(IdempotentId id, Duration timeout, Duration pollingInterval)
+      throws UnableToRegisterIdempotentOperationException {
+    return IdempotentLock.create(id, this, timeout, pollingInterval);
   }
 
   @Override
