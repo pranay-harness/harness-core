@@ -1,7 +1,6 @@
 package software.wings.sm.states;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -84,7 +83,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     when(context.getWorkflowExecutionId()).thenReturn(PIPELINE_WORKFLOW_EXECUTION_ID);
     when(context.getWorkflowExecutionName()).thenReturn(BUILD_JOB_NAME);
 
-    when(workflowExecutionService.getExecutionDetails(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID, emptySet()))
+    when(workflowExecutionService.getWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID))
         .thenReturn(WorkflowExecutionBuilder.aWorkflowExecution()
                         .withAppId(APP_ID)
                         .withTriggeredBy(EmbeddedUser.builder().name(USER_NAME).uuid(USER_NAME).build())
