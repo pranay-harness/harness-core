@@ -1,6 +1,8 @@
 package software.wings.service.impl.security;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static software.wings.utils.WingsReflectionUtils.getEncryptedRefField;
+import static software.wings.utils.WingsReflectionUtils.getFieldByName;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -15,7 +17,6 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
-import software.wings.utils.WingsReflectionUtils;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -38,7 +39,7 @@ public class EncryptionServiceImpl implements EncryptionService {
       try {
         char[] decryptedValue;
 
-        Field f = WingsReflectionUtils.getFieldByName(object.getClass(), encryptedDataDetail.getFieldName());
+        Field f = getFieldByName(object.getClass(), encryptedDataDetail.getFieldName());
         if (f == null) {
           logger.warn("Could not find field {} in class {}", encryptedDataDetail.getFieldName(), object.getClass());
           continue;
@@ -48,6 +49,9 @@ public class EncryptionServiceImpl implements EncryptionService {
 
         decryptedValue = getDecryptedValue(encryptedDataDetail);
         f.set(object, decryptedValue);
+        Field encryptedRefField = getEncryptedRefField(f, object);
+        encryptedRefField.setAccessible(true);
+        encryptedRefField.set(object, null);
       } catch (Exception e) {
         throw new WingsException(e);
       }
