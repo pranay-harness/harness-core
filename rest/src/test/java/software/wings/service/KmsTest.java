@@ -1388,10 +1388,11 @@ public class KmsTest extends WingsBaseTest {
 
     // decrypt at manager side and test
     savedVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
-    ServiceVariable decryptedVariable = (ServiceVariable) managerDecryptionService.decrypt(
-        serviceVariable, secretManager.getEncryptionDetails(savedVariable, workflowExecutionId, appId));
-    assertEquals(secretValue, String.valueOf(decryptedVariable.getValue()));
-    assertNull(decryptedVariable.getEncryptedValue());
+    assertNull(savedVariable.getValue());
+    managerDecryptionService.decrypt(
+        savedVariable, secretManager.getEncryptionDetails(savedVariable, workflowExecutionId, appId));
+    assertEquals(secretValue, String.valueOf(savedVariable.getValue()));
+    assertNull(savedVariable.getEncryptedValue());
   }
 
   @Test

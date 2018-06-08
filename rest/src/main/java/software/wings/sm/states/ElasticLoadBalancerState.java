@@ -75,22 +75,20 @@ public class ElasticLoadBalancerState extends State {
       region = ((AwsInfrastructureMapping) infrastructureMapping).getRegion();
       SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
       AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
-      AwsConfig decryptedAwsConfig = (AwsConfig) managerDecryptionService.decrypt(awsConfig,
+      managerDecryptionService.decrypt(awsConfig,
           secretManager.getEncryptionDetails(awsConfig, context.getAppId(), context.getWorkflowExecutionId()));
-      return execute(context, loadBalancerName, Regions.fromName(region), decryptedAwsConfig.getAccessKey(),
-          decryptedAwsConfig.getSecretKey());
+      return execute(
+          context, loadBalancerName, Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
     } else if (infrastructureMapping instanceof PhysicalInfrastructureMappingBase) {
       SettingAttribute elbSetting =
           settingsService.get(((PhysicalInfrastructureMappingBase) infrastructureMapping).getLoadBalancerId());
       ElasticLoadBalancerConfig loadBalancerConfig = (ElasticLoadBalancerConfig) elbSetting.getValue();
-      ElasticLoadBalancerConfig decryptedLoadBalancerConfig =
-          (ElasticLoadBalancerConfig) managerDecryptionService.decrypt(loadBalancerConfig,
-              secretManager.getEncryptionDetails(
-                  loadBalancerConfig, context.getAppId(), context.getWorkflowExecutionId()));
+      managerDecryptionService.decrypt(loadBalancerConfig,
+          secretManager.getEncryptionDetails(loadBalancerConfig, context.getAppId(), context.getWorkflowExecutionId()));
       loadBalancerName = loadBalancerConfig.getLoadBalancerName();
       region = loadBalancerConfig.getRegion().name();
-      return execute(context, loadBalancerName, Regions.valueOf(region), decryptedLoadBalancerConfig.getAccessKey(),
-          decryptedLoadBalancerConfig.getSecretKey());
+      return execute(context, loadBalancerName, Regions.valueOf(region), loadBalancerConfig.getAccessKey(),
+          loadBalancerConfig.getSecretKey());
     } else {
       throw new InvalidRequestException("ELB operations not supported");
     }
