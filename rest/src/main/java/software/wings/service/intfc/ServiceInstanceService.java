@@ -14,6 +14,7 @@ import software.wings.service.intfc.ownership.OwnedByInfrastructureMapping;
 import software.wings.utils.validation.Create;
 
 import java.util.List;
+import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -97,4 +98,6 @@ public interface ServiceInstanceService extends OwnedByHost, OwnedByInfrastructu
    * @param hostId the host id
    */
   void pruneByHost(String appId, String hostId);
+
+  List<ServiceInstance> fetchServiceInstances(String appId, Set<String> uuids);
 }

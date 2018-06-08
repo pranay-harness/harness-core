@@ -11,6 +11,7 @@ import software.wings.service.intfc.ownership.OwnedByApplication;
 
 import java.io.File;
 import java.util.List;
+import java.util.Set;
 import javax.validation.Valid;
 
 /**
@@ -199,4 +200,6 @@ public interface ArtifactService extends OwnedByApplication {
    * Delete by artifact files.
    */
   void deleteArtifactFiles();
+
+  List<Artifact> fetchArtifacts(String appId, Set<String> artifactUuids);
 }

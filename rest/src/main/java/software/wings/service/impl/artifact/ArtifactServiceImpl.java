@@ -84,6 +84,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
@@ -521,5 +522,14 @@ public class ArtifactServiceImpl implements ArtifactService {
     } catch (Exception ex) {
       logger.warn("Failed to purge (delete) the artifact files", ex);
     }
+  }
+
+  @Override
+  public List<Artifact> fetchArtifacts(String appId, Set<String> artifactUuids) {
+    return wingsPersistence.createQuery(Artifact.class)
+        .filter(APP_ID_KEY, appId)
+        .field(ID_KEY)
+        .in(artifactUuids)
+        .asList();
   }
 }

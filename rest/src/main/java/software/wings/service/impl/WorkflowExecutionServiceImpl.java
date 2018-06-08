@@ -600,25 +600,16 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     WorkflowExecution workflowExecution = getWorkflowExecution(appId, workflowExecutionId);
     notNullCheck("WorkflowExecution", workflowExecution, USER);
 
-    if (workflowExecution.getExecutionArgs() != null) {
-      if (workflowExecution.getExecutionArgs().getServiceInstanceIdNames() != null) {
-        PageRequest<ServiceInstance> pageRequest =
-            aPageRequest()
-                .addFilter("appId", EQ, appId)
-                .addFilter("uuid", Operator.IN,
-                    workflowExecution.getExecutionArgs().getServiceInstanceIdNames().keySet().toArray())
-                .build();
-        workflowExecution.getExecutionArgs().setServiceInstances(
-            serviceInstanceService.list(pageRequest).getResponse());
+    ExecutionArgs executionArgs = workflowExecution.getExecutionArgs();
+    if (executionArgs != null) {
+      if (executionArgs.getServiceInstanceIdNames() != null) {
+        executionArgs.setServiceInstances(
+            serviceInstanceService.fetchServiceInstances(appId, executionArgs.getServiceInstanceIdNames().keySet()));
       }
-      if (workflowExecution.getExecutionArgs().getArtifactIdNames() != null) {
-        PageRequest<Artifact> pageRequest =
-            aPageRequest()
-                .addFilter("appId", EQ, appId)
-                .addFilter(
-                    "uuid", Operator.IN, workflowExecution.getExecutionArgs().getArtifactIdNames().keySet().toArray())
-                .build();
-        workflowExecution.getExecutionArgs().setArtifacts(artifactService.list(pageRequest, false).getResponse());
+      // TODO: This is being called mutiple times during execution. We can optimize it by not fetching the artifacts
+      // details again if fetched already
+      if (executionArgs.getArtifactIdNames() != null) {
+        executionArgs.setArtifacts(artifactService.fetchArtifacts(appId, executionArgs.getArtifactIdNames().keySet()));
       }
     }
     return workflowExecution;
