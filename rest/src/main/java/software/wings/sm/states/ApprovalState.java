@@ -2,7 +2,6 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
 import static software.wings.api.ApprovalStateExecutionData.Builder.anApprovalStateExecutionData;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
@@ -215,8 +214,8 @@ public class ApprovalState extends State {
 
   protected Map<String, String> getPlaceholderValues(
       ExecutionContext context, String userName, ExecutionStatus status) {
-    WorkflowExecution workflowExecution = workflowExecutionService.getExecutionDetails(
-        ((ExecutionContextImpl) context).getApp().getUuid(), context.getWorkflowExecutionId(), emptySet());
+    WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(
+        ((ExecutionContextImpl) context).getApp().getUuid(), context.getWorkflowExecutionId());
 
     String statusMsg = (status == ABORTED) ? "aborted" : "approved";
     long startTs = (status == PAUSED) ? workflowExecution.getCreatedAt() : context.getStateExecutionData().getStartTs();
