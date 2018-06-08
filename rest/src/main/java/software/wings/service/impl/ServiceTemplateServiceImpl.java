@@ -492,6 +492,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
           ServiceVariable decryptedVariable = (ServiceVariable) managerDecryptionService.decrypt(
               serviceVariable, secretManager.getEncryptionDetails(serviceVariable, appId, workflowExecutionId));
           serviceVariable.setValue(decryptedVariable.getValue());
+          serviceVariable.setDecrypted(true);
         }
       });
     }
