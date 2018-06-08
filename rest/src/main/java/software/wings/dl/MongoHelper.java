@@ -56,20 +56,22 @@ public class MongoHelper {
 
     PageResponse<T> response = new PageResponse<>(req);
 
-    if (req.getOptions() == null || req.getOptions().contains(PageRequest.Option.COUNT)) {
-      long total = q.count();
-      response.setTotal(total);
-    }
-
     if (req.getOptions() == null || req.getOptions().contains(PageRequest.Option.LIST)) {
       q.offset(req.getStart());
-      if (PageRequest.UNLIMITED.equals(req.getLimit())) {
-        q.limit(PageRequest.DEFAULT_UNLIMITED);
-      } else {
-        q.limit(req.getPageSize());
-      }
+
+      int limit = PageRequest.UNLIMITED.equals(req.getLimit()) ? PageRequest.DEFAULT_UNLIMITED : req.getPageSize();
+      q.limit(limit);
+
       List<T> list = q.asList();
       response.setResponse(list);
+
+      if (req.getOptions() == null || req.getOptions().contains(PageRequest.Option.COUNT)) {
+        // if the size list is less than the limit we know the the total count. There is no need
+        // to query for it.
+        response.setTotal((list.size() < limit) ? (long) req.getStart() + list.size() : q.count());
+      }
+    } else if (req.getOptions() == null || req.getOptions().contains(PageRequest.Option.COUNT)) {
+      response.setTotal(q.count());
     }
 
     return response;
