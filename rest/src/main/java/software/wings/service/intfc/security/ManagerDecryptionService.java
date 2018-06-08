@@ -9,5 +9,5 @@ import java.util.List;
  * Created by rsingh on 6/7/18.
  */
 public interface ManagerDecryptionService {
-  Encryptable decrypt(Encryptable object, List<EncryptedDataDetail> encryptedDataDetails);
+  void decrypt(Encryptable object, List<EncryptedDataDetail> encryptedDataDetails);
 }

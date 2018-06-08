@@ -489,10 +489,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     if (!maskEncryptedFields) {
       mergedServiceSettings.forEach(serviceVariable -> {
         if (serviceVariable.getType() == Type.ENCRYPTED_TEXT) {
-          ServiceVariable decryptedVariable = (ServiceVariable) managerDecryptionService.decrypt(
+          managerDecryptionService.decrypt(
               serviceVariable, secretManager.getEncryptionDetails(serviceVariable, appId, workflowExecutionId));
-          serviceVariable.setValue(decryptedVariable.getValue());
-          serviceVariable.setDecrypted(true);
         }
       });
     }
