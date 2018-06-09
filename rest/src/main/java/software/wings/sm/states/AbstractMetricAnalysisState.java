@@ -141,6 +141,8 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
             .canaryNewHostNames(canaryNewHostNames)
             .lastExecutionNodes(lastExecutionNodes == null ? new HashSet<>() : new HashSet<>(lastExecutionNodes))
             .correlationId(analysisContext.getCorrelationId())
+            .canaryNewHostNames(analysisContext.getTestNodes())
+            .lastExecutionNodes(analysisContext.getControlNodes())
             .build();
     executionData.setErrorMsg(responseMessage);
     executionData.setStatus(ExecutionStatus.RUNNING);

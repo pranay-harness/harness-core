@@ -82,7 +82,8 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
         }
       } catch (IOException e) {
         throw new WingsException(dataCollectionInfo.getStateType().getName()
-            + ": APM data collection : Unable to decrypt field " + encryptedDataDetail.getFieldName());
+                + ": APM data collection : Unable to decrypt field " + encryptedDataDetail.getFieldName(),
+            e);
       }
     }
     return DataCollectionTaskResult.builder()
@@ -196,11 +197,12 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
         if (response.isSuccessful()) {
           return JsonUtils.asJson(response.body());
         } else {
-          logger.error(dataCollectionInfo.getStateType() + ": Request not successful. Reason: {}", response);
+          logger.error(dataCollectionInfo.getStateType() + ": Request not successful. Reason: {}, {}", response.code(),
+              response.message());
           throw new WingsException(response.errorBody().string());
         }
       } catch (Exception e) {
-        throw new WingsException(e);
+        throw new WingsException("Unable to collect data " + e.getMessage(), e);
       }
     }
 

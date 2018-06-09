@@ -75,6 +75,10 @@ public class MetricAnalysisExecutionData extends StateExecutionData {
         executionDetails, "breakdown", ExecutionDataValue.builder().displayName("breakdown").value(breakdown).build());
     putNotNull(executionDetails, "timeDuration",
         ExecutionDataValue.builder().displayName("Analysis duration").value(timeDuration).build());
+    putNotNull(executionDetails, "newVersionNodes",
+        ExecutionDataValue.builder().displayName("New version nodes").value(canaryNewHostNames).build());
+    putNotNull(executionDetails, "previousVersionNodes",
+        ExecutionDataValue.builder().displayName("Previous version nodes").value(lastExecutionNodes).build());
     return executionDetails;
   }
 }
