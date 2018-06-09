@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -32,14 +33,7 @@ public class DataCollectionExecutorService {
     CompletionService<T> completionService = new ExecutorCompletionService<>(dataCollectionService);
     logger.info("Parallelizing callables {} ", callables.size());
     for (Callable<T> callable : callables) {
-      completionService.submit(() -> {
-        try {
-          return callable.call();
-        } catch (Exception exception) {
-          logger.error("Error in executing parallel callable ", exception);
-          return null;
-        }
-      });
+      completionService.submit(() -> callable.call());
     }
 
     List<Optional<T>> rv = new ArrayList<>();
@@ -53,8 +47,10 @@ public class DataCollectionExecutorService {
           logger.info("Timeout. Execution took longer than 3 minutes {}", callables);
           throw new TimeoutException("Timeout. Execution took longer than 3 minutes ");
         }
+      } catch (ExecutionException ee) {
+        throw new IOException("error executing parallel task " + ee.getCause().getMessage(), ee.getCause());
       } catch (Exception e) {
-        throw new IOException(e);
+        throw new IOException("error executing parallel task " + e.getMessage(), e);
       }
     }
     logger.info("Done parallelizing callables {} ", callables.size());

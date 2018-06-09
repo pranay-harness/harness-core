@@ -8,8 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
+import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.sm.ExecutionStatus;
-import software.wings.sm.StateExecutionData.StateExecutionDataBuilder;
 import software.wings.waitnotify.NotifyCallback;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -51,13 +51,11 @@ public class DataCollectionCallback implements NotifyCallback {
                 .withExecutionStatus(ExecutionStatus.ERROR)
                 .build());
       } else {
+        MetricAnalysisExecutionData analysisExecutionData = MetricAnalysisExecutionData.builder().build();
+        analysisExecutionData.setStatus(ExecutionStatus.ERROR);
+        analysisExecutionData.setErrorMsg(result.getErrorMessage());
         MetricDataAnalysisResponse metricDataAnalysisResponse =
-            MetricDataAnalysisResponse.builder()
-                .stateExecutionData(StateExecutionDataBuilder.aStateExecutionData()
-                                        .withStatus(ExecutionStatus.ERROR)
-                                        .withErrorMsg(result.getErrorMessage())
-                                        .build())
-                .build();
+            MetricDataAnalysisResponse.builder().stateExecutionData(analysisExecutionData).build();
         metricDataAnalysisResponse.setExecutionStatus(ExecutionStatus.ERROR);
         waitNotifyEngine.notify(correlationId, metricDataAnalysisResponse);
       }
