@@ -3,9 +3,7 @@ package software.wings.delegatetasks.validation;
 import static java.util.Collections.singletonList;
 
 import software.wings.beans.DelegateTask;
-import software.wings.beans.KmsConfig;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -20,10 +18,6 @@ public class KmsValidation extends AbstractDelegateValidateTask {
 
   @Override
   public List<String> getCriteria() {
-    return singletonList(Arrays.stream(getParameters())
-                             .filter(o -> o instanceof KmsConfig)
-                             .map(obj -> "https://aws.amazon.com/")
-                             .findFirst()
-                             .orElse(null));
+    return singletonList("https://aws.amazon.com/");
   }
 }

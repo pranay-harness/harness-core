@@ -26,7 +26,7 @@ public class SecretManagerValidation extends AbstractDelegateValidateTask {
     return singletonList(Arrays.stream(getParameters())
                              .filter(o -> o instanceof List)
                              .map(obj -> {
-                               List<EncryptedDataDetail> encryptedDataDetails = (List<EncryptedDataDetail>) obj;
+                               List<EncryptedDataDetail> encryptedDataDetails = (List) obj;
                                String secretManagerUrl = "https://aws.amazon.com/";
                                for (EncryptedDataDetail encryptedDataDetail : encryptedDataDetails) {
                                  EncryptionConfig encryptionConfig = encryptedDataDetail.getEncryptionConfig();
