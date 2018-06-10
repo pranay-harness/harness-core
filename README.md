@@ -105,11 +105,6 @@ helper shell scripts:
 3. Install ClangFormatIJ Plugin: https://plugins.jetbrains.com/plugin/8396-clangformatij
    (use `Ctrl/Cmd-Alt-K` to format current statement or the selection)
 
-   **NOTE:** The original version does not allow for reformatting the whole file without selecting it first.
-   Since we are planning to commit to the new format fully, such feature make a lot more sence.
-   If you would like to have it, please use install from disk feature to install the version that
-   I modified that is in: `toolset/code_style/ClangFormatJ`
-
    **WARNING:** For unclear reason in some environments the plugin causes IntelliJ to hang. If you are unlucky
    to be one of those cases there is alternative. Please use the external 3rd-party tool integration as
    described here: https://www.jetbrains.com/help/idea/configuring-third-party-tools.html.
@@ -226,9 +221,9 @@ The admin username and password are in BaseIntegrationTest.java.
 
    `mvn clean compile exec:java`
 
-### Common problems: 
+### Common problems:
 * If you get an error about missing build.properties when you start the server, do a mvn clean install.
-* If you get a SupportedEllipticCurvesExtension NoClassDefFoundError, Its likely that jsse.jar in /Library/Java/JavaVirtualMachines/<JDK Version>/Contents/Home/jre/lib folder does not have this class definition. Copy this file from a Team member. 
+* If you get a SupportedEllipticCurvesExtension NoClassDefFoundError, Its likely that jsse.jar in /Library/Java/JavaVirtualMachines/<JDK Version>/Contents/Home/jre/lib folder does not have this class definition. Copy this file from a Team member.
 * If you go to https://localhost:8000/#/login and don't see content, go to https://localhost:8181/#/login to enable the certificate then try again.
 * If still face not able to login then got to https://localhost:9090/api/version and enable certificate and try again.
 
