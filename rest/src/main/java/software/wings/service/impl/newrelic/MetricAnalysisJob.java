@@ -393,8 +393,9 @@ public class MetricAnalysisJob implements Job {
                     context.getPrevWorkflowExecutionId(), groupName);
 
                 if (analysisMinute > maxControlMinute) {
-                  logger.warn("Not enough control data. analysis minute = " + analysisMinute
-                      + " , max control minute = " + maxControlMinute);
+                  logger.warn(
+                      "Not enough control data. analysis minute = {} , max control minute = {} analysisContext = {}",
+                      analysisMinute, maxControlMinute, context);
                   // Do nothing. Don't run any analysis.
                   taskQueued = true;
                   analysisService.bumpCollectionMinuteToProcess(context.getStateType(), context.getAppId(),
