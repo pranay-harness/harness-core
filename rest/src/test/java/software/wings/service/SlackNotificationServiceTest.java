@@ -63,7 +63,7 @@ public class SlackNotificationServiceTest extends WingsBaseTest {
   @Test
   @Ignore
   public void shouldAddNotificationRulesForAllApplication() {
-    List<Application> applications = appService.list(new PageRequest<>(), false, 0, 0).getResponse();
+    List<Application> applications = appService.list(new PageRequest<>()).getResponse();
     applications.forEach(application -> {
       NotificationGroup notificationGroup =
           aNotificationGroup()

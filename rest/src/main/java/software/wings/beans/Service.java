@@ -38,6 +38,7 @@ import java.util.List;
 @NoArgsConstructor
 public class Service extends Base {
   public static final String NAME_KEY = "name";
+  public static final String ARTIFACT_TYPE = "artifactType";
 
   @EntityName private String name;
   private String description;

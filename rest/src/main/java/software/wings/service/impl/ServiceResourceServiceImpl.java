@@ -15,10 +15,13 @@ import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.Service.ARTIFACT_TYPE;
+import static software.wings.beans.Service.NAME_KEY;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
 import static software.wings.beans.command.Command.Builder.aCommand;
@@ -647,8 +650,25 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public List<Service> findServicesByApp(String appId) {
-    PageRequest<Service> pageRequest = aPageRequest().addFilter("appId", EQ, appId).build();
-    return wingsPersistence.query(Service.class, pageRequest).getResponse();
+    return wingsPersistence.createQuery(Service.class).filter(APP_ID_KEY, appId).asList();
+  }
+
+  @Override
+  public List<Service> findServiceNamesByAppIds(List<String> appIds) {
+    List<Service> services = new ArrayList<>();
+    try (HIterator<Service> iterator =
+             new HIterator<>(wingsPersistence.createQuery(Service.class)
+                                 .project(NAME_KEY, true)
+                                 .project(APP_ID_KEY, true)
+                                 .project(ARTIFACT_TYPE, true) // Do not remove this as UI dependent
+                                 .field(APP_ID_KEY)
+                                 .in(appIds)
+                                 .fetch())) {
+      while (iterator.hasNext()) {
+        services.add(iterator.next());
+      }
+    }
+    return services;
   }
 
   @Override

@@ -109,6 +109,10 @@ public class Application extends Base {
    * @param services the services
    */
   public void setServices(List<Service> services) {
+    if (services == null) {
+      this.services = new ArrayList<>();
+      return;
+    }
     this.services = services;
   }
 
@@ -127,6 +131,10 @@ public class Application extends Base {
    * @param environments the environments
    */
   public void setEnvironments(List<Environment> environments) {
+    if (environments == null) {
+      this.environments = new ArrayList<>();
+      return;
+    }
     this.environments = environments;
   }
 

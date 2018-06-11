@@ -34,6 +34,7 @@ import javax.validation.constraints.NotNull;
                            , @Field("name") }, options = @IndexOptions(unique = true)))
 public class Environment extends Base {
   public static final String NAME_KEY = "name";
+  public static final String ENVIRONMENT_TYPE_KEY = "environmentType";
 
   @NotEmpty @EntityName private String name;
   private String description;
