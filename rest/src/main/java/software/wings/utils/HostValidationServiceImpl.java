@@ -134,7 +134,7 @@ public class HostValidationServiceImpl implements HostValidationService {
                                     .environment(Collections.emptyMap())
                                     .build();
 
-    try (WinRmSession session = new WinRmSession(config)) {
+    try (WinRmSession ignore = new WinRmSession(config)) {
     } catch (Exception e) {
       ResponseMessage details = GetErrorDetailsFromWinRmClientException(e);
       response.setStatus(ExecutionStatus.FAILED.name());

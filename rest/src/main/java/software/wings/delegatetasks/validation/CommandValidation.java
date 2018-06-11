@@ -3,18 +3,13 @@ package software.wings.delegatetasks.validation;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.network.Http.connectableHttpUrl;
 import static java.util.Collections.singletonList;
-import static software.wings.beans.ErrorCode.INVALID_CREDENTIAL;
-import static software.wings.beans.ErrorCode.SSL_HANDSHAKE_FAILED;
 import static software.wings.common.Constants.ALWAYS_TRUE_CRITERIA;
 import static software.wings.common.Constants.WINDOWS_HOME_DIR;
 import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
 import static software.wings.utils.SshHelperUtil.getSshSessionConfig;
-import static software.wings.utils.WinRmHelperUtil.GetErrorDetailsFromWinRmClientException;
 
 import com.google.inject.Inject;
 
-import com.jcraft.jsch.JSchException;
-import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +21,6 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesConfig;
-import software.wings.beans.ResponseMessage;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.EcsResizeParams;
@@ -99,9 +93,8 @@ public class CommandValidation extends AbstractDelegateValidateTask {
     try {
       getSSHSession(getSshSessionConfig(hostName, "HOST_CONNECTION_TEST", context, 20)).disconnect();
       resultBuilder.validated(true);
-    } catch (JSchException jschEx) {
-      // Invalid credentials error is still a valid connection
-      resultBuilder.validated(StringUtils.contains(jschEx.getMessage(), "Auth"));
+    } catch (Exception e) {
+      resultBuilder.validated(false);
     }
     return resultBuilder.build();
   }
@@ -109,11 +102,10 @@ public class CommandValidation extends AbstractDelegateValidateTask {
   private DelegateConnectionResult validateHostWinRm(CommandExecutionContext context) {
     DelegateConnectionResultBuilder resultBuilder = DelegateConnectionResult.builder().criteria(getCriteria(context));
     WinRmSessionConfig config = context.winrmSessionConfig("HOST_CONNECTION_TEST", WINDOWS_HOME_DIR);
-    try (WinRmSession session = new WinRmSession(config)) {
+    try (WinRmSession ignore = new WinRmSession(config)) {
       resultBuilder.validated(true);
     } catch (Exception e) {
-      ResponseMessage details = GetErrorDetailsFromWinRmClientException(e);
-      resultBuilder.validated(details.getCode() == SSL_HANDSHAKE_FAILED || details.getCode() == INVALID_CREDENTIAL);
+      resultBuilder.validated(false);
     }
     return resultBuilder.build();
   }
