@@ -127,13 +127,15 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
                 analysisContext.getAppId(), analysisContext.getServiceId(), analysisContext.getWorkflowId());
       } else {
         responseMessage = "Baseline is pinned for the workflow. Analyzing against pinned baseline.";
-        getLogger().info(
-            "Baseline execution for {} is {}", analysisContext.getStateExecutionId(), baselineWorkflowExecutionId);
+        getLogger().info("Baseline is pinned for stateExecution: {}, baselineId: ",
+            analysisContext.getStateExecutionId(), baselineWorkflowExecutionId);
       }
       if (baselineWorkflowExecutionId == null) {
         responseMessage += " No previous execution found. This will be the baseline run.";
         getLogger().warn("No previous execution found. This will be the baseline run");
       }
+      getLogger().info(
+          "Baseline execution for {} is {}", analysisContext.getStateExecutionId(), baselineWorkflowExecutionId);
       analysisContext.setPrevWorkflowExecutionId(baselineWorkflowExecutionId);
     }
 
