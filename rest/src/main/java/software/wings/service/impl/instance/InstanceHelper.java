@@ -411,9 +411,10 @@ public class InstanceHelper {
   @SuppressFBWarnings("NP_LOAD_OF_KNOWN_NULL_VALUE")
   public void processDeploymentEvent(DeploymentEvent deploymentEvent) {
     List<DeploymentSummary> deploymentSummaries = deploymentEvent.getDeploymentSummaries();
-    // @TODO rama
+
     if (isEmpty(deploymentSummaries)) {
-      throw new WingsException("Deployment Summaries can not be empty or null: ", USER_SRE);
+      logger.error("Deployment Summaries can not be empty or null");
+      return;
     }
 
     if (!deploymentEvent.isRollback()) {
