@@ -24,7 +24,7 @@ import java.util.Map;
 public class Util {
   private static final Logger logger = LoggerFactory.getLogger(Util.class);
 
-  private static final String FIRST_REVISION = ".1";
+  private static final String FIRST_REVISION = "-1";
 
   public static String generatePath(String delimiter, boolean endsWithDelimiter, String... elements) {
     StringBuilder builder = new StringBuilder();
@@ -112,7 +112,7 @@ public class Util {
       return name;
     }
 
-    int index = existingName.lastIndexOf('.');
+    int index = existingName.lastIndexOf('-');
     if (index == -1) {
       name = name + FIRST_REVISION;
     } else {
@@ -127,7 +127,7 @@ public class Util {
 
         if (revision != -1) {
           revision++;
-          name = name + "." + revision;
+          name = name + "-" + revision;
         } else {
           name = name + FIRST_REVISION;
         }

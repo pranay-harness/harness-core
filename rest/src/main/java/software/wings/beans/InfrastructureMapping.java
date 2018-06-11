@@ -32,7 +32,6 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.stencils.DataProvider;
-import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 import software.wings.yaml.BaseEntityYaml;
 
@@ -70,7 +69,7 @@ public abstract class InfrastructureMapping extends Base {
   @Attributes(title = "Deployment type", required = true) @NotEmpty private String deploymentType;
   @SchemaIgnore private String computeProviderName;
 
-  @EntityName(groups = Create.class) @Attributes(title = "Name") private String name;
+  @EntityName @Attributes(title = "Name") private String name;
 
   // auto populate name
   @SchemaIgnore private boolean autoPopulate = true;

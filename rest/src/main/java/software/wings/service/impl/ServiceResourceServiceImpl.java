@@ -920,6 +920,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         entityVersionService.lastEntityVersion(appId, EntityType.COMMAND, serviceCommand.getUuid(), serviceId);
 
     if (serviceCommand.getCommand() != null) {
+      validateCommandName(serviceCommand.getCommand());
       updateCommandInternal(appId, serviceId, serviceCommand, lastEntityVersion, false);
     }
 

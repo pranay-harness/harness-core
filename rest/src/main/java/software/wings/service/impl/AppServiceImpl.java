@@ -300,6 +300,7 @@ public class AppServiceImpl implements AppService {
    */
   @Override
   public Application update(Application app) {
+    validateAppName(app);
     Application savedApp = get(app.getUuid());
     Query<Application> query = wingsPersistence.createQuery(Application.class).filter(ID_KEY, app.getUuid());
     UpdateOperations<Application> operations =
