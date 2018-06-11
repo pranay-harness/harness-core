@@ -2,16 +2,12 @@ package software.wings.delegatetasks.validation;
 
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Collections.singletonList;
-import static software.wings.beans.ErrorCode.INVALID_CREDENTIAL;
-import static software.wings.beans.ErrorCode.SSL_HANDSHAKE_FAILED;
 import static software.wings.common.Constants.HARNESS_KUBE_CONFIG_PATH;
 import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
-import static software.wings.utils.WinRmHelperUtil.GetErrorDetailsFromWinRmClientException;
 
 import com.google.inject.Inject;
 
-import com.jcraft.jsch.JSchException;
-import org.apache.commons.lang3.StringUtils;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AzureConfig;
@@ -19,7 +15,6 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesConfig;
-import software.wings.beans.ResponseMessage;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.core.ssh.executors.SshSessionConfig;
@@ -50,6 +45,7 @@ public class ShellScriptValidation extends AbstractDelegateValidateTask {
     return singletonList(validate((ShellScriptParameters) parameters[0]));
   }
 
+  @SuppressFBWarnings("REC_CATCH_EXCEPTION")
   private DelegateConnectionResult validate(ShellScriptParameters parameters) {
     DelegateConnectionResultBuilder resultBuilder = DelegateConnectionResult.builder().criteria(getCriteria().get(0));
 
@@ -79,9 +75,6 @@ public class ShellScriptValidation extends AbstractDelegateValidateTask {
           getSSHSession(expectedSshConfig).disconnect();
 
           resultBuilder.validated(true);
-        } catch (JSchException jschEx) {
-          // Invalid credentials error is still a valid connection
-          resultBuilder.validated(StringUtils.contains(jschEx.getMessage(), "Auth"));
         } catch (Exception ex) {
           resultBuilder.validated(false);
         }
@@ -94,9 +87,7 @@ public class ShellScriptValidation extends AbstractDelegateValidateTask {
             resultBuilder.validated(true);
           }
         } catch (Exception e) {
-          ResponseMessage details = GetErrorDetailsFromWinRmClientException(e);
-          logger.error(details.getMessage(), e);
-          resultBuilder.validated(details.getCode() == SSL_HANDSHAKE_FAILED || details.getCode() == INVALID_CREDENTIAL);
+          resultBuilder.validated(false);
         }
         break;
 
