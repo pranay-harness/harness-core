@@ -205,6 +205,7 @@ public class PcfCommandTaskHelper {
 
         PcfServiceData pcfServiceData = PcfServiceData.builder()
                                             .name(applicationSummary.getName())
+                                            .id(applicationSummary.getId())
                                             .previousCount(applicationSummary.getInstances())
                                             .desiredCount(newCount)
                                             .build();
@@ -421,6 +422,7 @@ public class PcfCommandTaskHelper {
                                   .previousCount(detailsBeforeUpsize.getInstances())
                                   .desiredCount(pcfRequestConfig.getDesiredCount())
                                   .name(pcfRequestConfig.getApplicationName())
+                                  .id(detailsBeforeUpsize.getId())
                                   .build());
 
     // upsize application

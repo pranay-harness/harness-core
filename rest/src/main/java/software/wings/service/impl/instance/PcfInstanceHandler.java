@@ -1,7 +1,7 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.stream.Collectors.toList;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Maps;
@@ -11,7 +11,9 @@ import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.data.structure.EmptyPredicate;
 import software.wings.api.DeploymentInfo;
+import software.wings.api.DeploymentSummary;
 import software.wings.api.PcfDeploymentInfo;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseStepExecutionData;
@@ -28,6 +30,8 @@ import software.wings.beans.infrastructure.instance.Instance.InstanceBuilder;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.PcfInstanceInfo;
 import software.wings.beans.infrastructure.instance.key.PcfInstanceKey;
+import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
+import software.wings.beans.infrastructure.instance.key.deployment.PcfDeploymentKey;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.pcf.PcfAppNotFoundException;
@@ -39,6 +43,8 @@ import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -54,7 +60,7 @@ public class PcfInstanceHandler extends InstanceHandler {
   @Override
   public void syncInstances(String appId, String infraMappingId) throws HarnessException {
     Multimap<String, Instance> pcfAppNameInstanceMap = ArrayListMultimap.create();
-    syncInstancesInternal(appId, infraMappingId, pcfAppNameInstanceMap, null);
+    syncInstancesInternal(appId, infraMappingId, pcfAppNameInstanceMap, null, false);
   }
 
   /**
@@ -65,7 +71,8 @@ public class PcfInstanceHandler extends InstanceHandler {
    * @throws HarnessException
    */
   private void syncInstancesInternal(String appId, String infraMappingId,
-      Multimap<String, Instance> pcfAppNameInstanceMap, DeploymentInfo newDeploymentInfo) throws HarnessException {
+      Multimap<String, Instance> pcfAppNameInstanceMap, List<DeploymentSummary> newDeploymentSummaries,
+      boolean rollback) throws HarnessException {
     logger.info("# Performing PCF Instance sync");
     InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
     Validator.notNullCheck("Infra mapping is null for id:" + infraMappingId, infrastructureMapping);
@@ -76,6 +83,8 @@ public class PcfInstanceHandler extends InstanceHandler {
       logger.error(msg);
       throw new HarnessException(msg);
     }
+
+    Map<String, DeploymentSummary> pcfAppNamesNewDeploymentSummaryMap = getDeploymentSummaryMap(newDeploymentSummaries);
 
     loadPcfAppNameInstanceMap(appId, infraMappingId, pcfAppNameInstanceMap);
 
@@ -149,27 +158,32 @@ public class PcfInstanceHandler extends InstanceHandler {
             instanceService.delete(instanceIdsToBeDeleted);
           }
 
-          DeploymentInfo deploymentInfo;
+          DeploymentSummary deploymentSummary;
           if (isNotEmpty(instancesToBeAdded)) {
             // newDeploymentInfo would be null in case of sync job.
-            if (newDeploymentInfo == null && isNotEmpty(instancesInDB)) {
+            if ((newDeploymentSummaries == null || !pcfAppNamesNewDeploymentSummaryMap.containsKey(pcfApplicationName))
+                && isNotEmpty(instancesInDB)) {
               Optional<Instance> instanceWithExecutionInfoOptional = getInstanceWithExecutionInfo(instancesInDB);
               if (!instanceWithExecutionInfoOptional.isPresent()) {
                 logger.warn("Couldn't find an instance from a previous deployment for inframapping {}",
                     infrastructureMapping.getUuid());
                 return;
               }
-
-              DeploymentInfo deploymentInfoFromPrevious = PcfDeploymentInfo.builder().build();
-              generateDeploymentInfoFromInstance(instanceWithExecutionInfoOptional.get(), deploymentInfoFromPrevious);
-              deploymentInfo = deploymentInfoFromPrevious;
+              DeploymentSummary deploymentSummaryFromPrevious =
+                  DeploymentSummary.builder().deploymentInfo(PcfDeploymentInfo.builder().build()).build();
+              generateDeploymentSummaryFromInstance(
+                  instanceWithExecutionInfoOptional.get(), deploymentSummaryFromPrevious);
+              deploymentSummary = deploymentSummaryFromPrevious;
             } else {
-              deploymentInfo = newDeploymentInfo;
+              deploymentSummary = getDeploymentSummaryForInstanceCreation(
+                  pcfAppNamesNewDeploymentSummaryMap.get(pcfApplicationName), rollback);
             }
 
             instancesToBeAdded.forEach(containerId -> {
               PcfInstanceInfo pcfInstanceInfo = latestPcfInstanceInfoMap.get(containerId);
-              Instance instance = buildInstanceFromPCFInfo(pcfInfrastructureMapping, pcfInstanceInfo, deploymentInfo);
+              // For rollback fetch existing data from deployment summary table
+              Instance instance =
+                  buildInstanceFromPCFInfo(pcfInfrastructureMapping, pcfInstanceInfo, deploymentSummary);
               instanceService.saveOrUpdate(instance);
             });
           }
@@ -178,15 +192,28 @@ public class PcfInstanceHandler extends InstanceHandler {
     }
   }
 
+  private Map<String, DeploymentSummary> getDeploymentSummaryMap(List<DeploymentSummary> newDeploymentSummaries) {
+    if (EmptyPredicate.isEmpty(newDeploymentSummaries)) {
+      return Collections.EMPTY_MAP;
+    }
+
+    Map<String, DeploymentSummary> deploymentSummaryMap = new HashMap<>();
+    newDeploymentSummaries.stream().forEach(deploymentSummary
+        -> deploymentSummaryMap.put(
+            ((PcfDeploymentInfo) deploymentSummary.getDeploymentInfo()).getApplicationName(), deploymentSummary));
+
+    return deploymentSummaryMap;
+  }
+
   // application GUIDs should match, means belong to same pcf app
   private boolean matchPcfApplicationGuid(Instance instance, PcfInstanceInfo pcfInstanceInfo) {
     return pcfInstanceInfo.getPcfApplicationGuid().equals(
         ((PcfInstanceInfo) instance.getInstanceInfo()).getPcfApplicationGuid());
   }
 
-  private Instance buildInstanceFromPCFInfo(
-      InfrastructureMapping infrastructureMapping, PcfInstanceInfo pcfInstanceInfo, DeploymentInfo newDeploymentInfo) {
-    InstanceBuilder builder = buildInstanceBase(null, infrastructureMapping, newDeploymentInfo);
+  private Instance buildInstanceFromPCFInfo(InfrastructureMapping infrastructureMapping,
+      PcfInstanceInfo pcfInstanceInfo, DeploymentSummary deploymentSummary) {
+    InstanceBuilder builder = buildInstanceBase(null, infrastructureMapping, deploymentSummary);
     builder.pcfInstanceKey(PcfInstanceKey.builder().id(pcfInstanceInfo.getId()).build());
     builder.instanceInfo(pcfInstanceInfo);
 
@@ -209,18 +236,21 @@ public class PcfInstanceHandler extends InstanceHandler {
   }
 
   @Override
-  public void handleNewDeployment(DeploymentInfo deploymentInfo) throws HarnessException {
-    PcfDeploymentInfo pcfDeploymentInfo = (PcfDeploymentInfo) deploymentInfo;
+  public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback)
+      throws HarnessException {
     Multimap<String, Instance> pcfApplicationNameInstanceMap = ArrayListMultimap.create();
-    pcfDeploymentInfo.getPcfApplicationNameSet().stream().forEach(
-        pcfApplicationName -> pcfApplicationNameInstanceMap.put(pcfApplicationName, null));
+    deploymentSummaries.stream().forEach(deploymentSummary -> {
+      PcfDeploymentInfo pcfDeploymentInfo = (PcfDeploymentInfo) deploymentSummary.getDeploymentInfo();
+      pcfApplicationNameInstanceMap.put(pcfDeploymentInfo.getApplicationName(), null);
+    });
 
-    syncInstancesInternal(
-        deploymentInfo.getAppId(), deploymentInfo.getInfraMappingId(), pcfApplicationNameInstanceMap, deploymentInfo);
+    syncInstancesInternal(deploymentSummaries.iterator().next().getAppId(),
+        deploymentSummaries.iterator().next().getInfraMappingId(), pcfApplicationNameInstanceMap, deploymentSummaries,
+        rollback);
   }
 
   @Override
-  public Optional<DeploymentInfo> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
+  public Optional<List<DeploymentInfo>> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
       PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,
       InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact)
       throws HarnessException {
@@ -231,6 +261,7 @@ public class PcfInstanceHandler extends InstanceHandler {
       }
       return Optional.empty();
     }
+
     List<StepExecutionSummary> stepExecutionSummaryList = phaseStepExecutionSummary.getStepExecutionSummaryList();
     // This was observed when the "deploy containers" step was executed in rollback and no commands were
     // executed since setup failed.
@@ -245,33 +276,40 @@ public class PcfInstanceHandler extends InstanceHandler {
       if (stepExecutionSummary != null && stepExecutionSummary instanceof PcfDeployExecutionSummary) {
         PcfDeployExecutionSummary pcfDeployExecutionSummary = (PcfDeployExecutionSummary) stepExecutionSummary;
 
-        Set<String> pcfSvcNameSet = Sets.newHashSet();
+        List<PcfServiceData> pcfServiceDatas = pcfDeployExecutionSummary.getInstaceData();
 
-        if (pcfDeployExecutionSummary.getInstaceData() != null) {
-          pcfSvcNameSet.addAll(
-              pcfDeployExecutionSummary.getInstaceData().stream().map(PcfServiceData::getName).collect(toList()));
-        }
-
-        if (pcfSvcNameSet.isEmpty()) {
+        if (isEmpty(pcfServiceDatas)) {
           logger.warn(
               "Both old and new app resize details are empty. Cannot proceed for phase step for state execution instance: {}",
               stateExecutionInstanceId);
           return Optional.empty();
         }
 
-        Validator.notNullCheck(
-            "pcfSvcNameSet is null for workflow execution: " + workflowExecution.getUuid(), pcfSvcNameSet);
-
-        if (pcfSvcNameSet.isEmpty()) {
-          String msg = "No pcf service names processed by the event for workflow execution {}";
-          logger.error(msg, workflowExecution.getUuid());
-          throw new WingsException(msg);
-        }
-
-        PcfDeploymentInfo pcfDeploymentInfo = PcfDeploymentInfo.builder().pcfApplicationNameSet(pcfSvcNameSet).build();
+        List<DeploymentInfo> pcfDeploymentInfo = new ArrayList<>();
+        pcfServiceDatas.stream().forEach(pcfServiceData
+            -> pcfDeploymentInfo.add(PcfDeploymentInfo.builder()
+                                         .applicationName(pcfServiceData.getName())
+                                         .applicationGuild(pcfServiceData.getId())
+                                         .build()));
         return Optional.of(pcfDeploymentInfo);
       }
     }
     return Optional.empty();
+  }
+
+  @Override
+  public DeploymentKey generateDeploymentKey(DeploymentInfo deploymentInfo) {
+    return PcfDeploymentKey.builder()
+        .applicationName(((PcfDeploymentInfo) deploymentInfo).getApplicationName())
+        .build();
+  }
+
+  @Override
+  protected void setDeploymentKey(DeploymentSummary deploymentSummary, DeploymentKey deploymentKey) {
+    if (deploymentKey instanceof PcfDeploymentKey) {
+      deploymentSummary.setPcfDeploymentKey((PcfDeploymentKey) deploymentKey);
+    } else {
+      throw new WingsException("Invalid deploymentKey passed for PcfDeploymentKey" + deploymentKey);
+    }
   }
 }

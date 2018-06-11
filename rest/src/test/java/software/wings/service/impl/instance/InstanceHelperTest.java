@@ -31,6 +31,7 @@ import software.wings.api.ContainerDeploymentInfoWithLabels;
 import software.wings.api.ContainerDeploymentInfoWithNames;
 import software.wings.api.DeploymentEvent;
 import software.wings.api.DeploymentInfo;
+import software.wings.api.DeploymentSummary;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseStepExecutionData;
@@ -47,14 +48,17 @@ import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
 import software.wings.beans.artifact.Artifact;
-import software.wings.beans.container.Label;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.beans.infrastructure.instance.info.Ec2InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.PhysicalHostInstanceInfo;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
+import software.wings.beans.infrastructure.instance.key.deployment.AwsAmiDeploymentKey;
+import software.wings.beans.infrastructure.instance.key.deployment.AwsCodeDeployDeploymentKey;
+import software.wings.beans.infrastructure.instance.key.deployment.ContainerDeploymentKey;
 import software.wings.common.Constants;
 import software.wings.core.queue.Queue;
+import software.wings.service.impl.instance.sync.ContainerSync;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.HostService;
@@ -63,9 +67,11 @@ import software.wings.service.intfc.instance.InstanceService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.PhaseStepSubWorkflow;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -73,6 +79,9 @@ import java.util.Set;
 public class InstanceHelperTest extends WingsBaseTest {
   public static final String INFRA_MAP_ID = "infraMap_1";
   public static final String CODE_DEPLOY_DEPLOYMENT_ID = "codeDeployment_id";
+  public static final String CODE_DEPLOY_APP_NAME = "codeDeployment_app";
+  public static final String CODE_DEPLOY_GROUP_NAME = "codeDeployment_group";
+  public static final String CODE_DEPLOY_key = "codeDeployment_key";
   public static final String APP_ID = "app_1";
   public static final String ACCOUNT_ID = "ACCOUNT_ID";
   public static final String SERVICE_ID = "SERVICE_ID";
@@ -86,7 +95,11 @@ public class InstanceHelperTest extends WingsBaseTest {
   @Mock private ArtifactService artifactService;
   @Mock private Queue<DeploymentEvent> deploymentEventQueue;
   @Mock private ExecutionContext context;
+  @Mock private ContainerSync containerSync;
   @InjectMocks @Spy WorkflowStandardParams workflowStandardParams;
+
+  @InjectMocks @Inject private AwsCodeDeployInstanceHandler awsCodeDeployInstanceHandler;
+  @InjectMocks @Inject private AwsAmiInstanceHandler awsAmiInstanceHandler;
   @InjectMocks @Inject private ContainerInstanceHandler containerInstanceHandler;
   @InjectMocks @Inject private InstanceHelper instanceHelper;
   private WorkflowExecution workflowExecution;
@@ -158,6 +171,11 @@ public class InstanceHelperTest extends WingsBaseTest {
     instance2 = new com.amazonaws.services.ec2.model.Instance();
     instance2.setPrivateDnsName(PRIVATE_DNS_2);
     instance2.setPublicDnsName(PUBLIC_DNS_2);
+
+    Set<String> names = new HashSet<>();
+    names.add("name1");
+    names.add("name2");
+    doReturn(names).when(containerSync).getControllerNames(any(), any());
   }
 
   @Test
@@ -178,8 +196,11 @@ public class InstanceHelperTest extends WingsBaseTest {
         .when(hostService)
         .get(anyString(), anyString(), anyString());
 
+    PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("Name");
+    phaseStepSubWorkflow.setRollback(false);
+
     instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
-        phaseStepExecutionData, workflowStandardParams, APP_ID, workflowExecution);
+        phaseStepExecutionData, workflowStandardParams, APP_ID, workflowExecution, phaseStepSubWorkflow, null);
 
     // Capture the argument of the doSomething function
     ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
@@ -215,8 +236,10 @@ public class InstanceHelperTest extends WingsBaseTest {
         .when(infraMappingService)
         .get(anyString(), anyString());
 
+    PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("Name");
+    phaseStepSubWorkflow.setRollback(false);
     instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
-        phaseStepExecutionData, workflowStandardParams, APP_ID, workflowExecution);
+        phaseStepExecutionData, workflowStandardParams, APP_ID, workflowExecution, phaseStepSubWorkflow, null);
 
     // Capture the argument of the doSomething function
     ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
@@ -251,8 +274,10 @@ public class InstanceHelperTest extends WingsBaseTest {
         .when(infraMappingService)
         .get(anyString(), anyString());
 
+    PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("Name");
+    phaseStepSubWorkflow.setRollback(false);
     instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
-        phaseStepExecutionData, workflowStandardParams, "app_1", workflowExecution);
+        phaseStepExecutionData, workflowStandardParams, "app_1", workflowExecution, phaseStepSubWorkflow, null);
 
     // Capture the argument of the doSomething function
     ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
@@ -287,8 +312,10 @@ public class InstanceHelperTest extends WingsBaseTest {
         .when(infraMappingService)
         .get(anyString(), anyString());
 
+    PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("Name");
+    phaseStepSubWorkflow.setRollback(false);
     instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
-        phaseStepExecutionData, workflowStandardParams, "app_1", workflowExecution);
+        phaseStepExecutionData, workflowStandardParams, "app_1", workflowExecution, phaseStepSubWorkflow, null);
 
     // Capture the argument of the doSomething function
     ArgumentCaptor<DeploymentEvent> captor = ArgumentCaptor.forClass(DeploymentEvent.class);
@@ -303,11 +330,21 @@ public class InstanceHelperTest extends WingsBaseTest {
     DeploymentEvent event = captor.getValue();
     assertNotNull(event);
     assertEquals(0, event.getRetries());
-    DeploymentInfo deploymentInfo = event.getDeploymentInfo();
-    assertTrue(deploymentInfo instanceof AwsAutoScalingGroupDeploymentInfo);
-    assertDeploymentInfoObject(deploymentInfo);
-    assertEquals(
-        asList("asgNew", "asgOld"), ((AwsAutoScalingGroupDeploymentInfo) deploymentInfo).getAutoScalingGroupNameList());
+    assertNotNull(event);
+    assertNotNull(event.getDeploymentSummaries());
+    assertEquals(2, event.getDeploymentSummaries().size());
+    DeploymentInfo deploymentInfo1 = event.getDeploymentSummaries().get(0).getDeploymentInfo();
+    DeploymentInfo deploymentInfo2 = event.getDeploymentSummaries().get(1).getDeploymentInfo();
+    assertTrue(deploymentInfo1 instanceof AwsAutoScalingGroupDeploymentInfo);
+    assertTrue(deploymentInfo2 instanceof AwsAutoScalingGroupDeploymentInfo);
+    assertDeploymentSummaryObject(event.getDeploymentSummaries().get(0));
+    assertDeploymentSummaryObject(event.getDeploymentSummaries().get(1));
+    assertTrue(asList("asgNew", "asgOld")
+                   .contains(((AwsAmiDeploymentKey) event.getDeploymentSummaries().get(0).getAwsAmiDeploymentKey())
+                                 .getAutoScalingGroupName()));
+    assertTrue(asList("asgNew", "asgOld")
+                   .contains(((AwsAmiDeploymentKey) event.getDeploymentSummaries().get(1).getAwsAmiDeploymentKey())
+                                 .getAutoScalingGroupName()));
   }
 
   private PhaseStepExecutionData getPhaseStepExecutionData(PhaseExecutionData phaseExecutionData) {
@@ -327,7 +364,11 @@ public class InstanceHelperTest extends WingsBaseTest {
     endsAtTime = System.currentTimeMillis();
     phaseExecutionData = instaceHelperTestHelper.initExecutionSummary(InfrastructureMappingType.AWS_AWS_CODEDEPLOY,
         Constants.DEPLOY_SERVICE, endsAtTime, DeploymentType.AWS_CODEDEPLOY.getDisplayName());
+
     phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionData);
+
+    phaseStepExecutionData.getPhaseStepExecutionSummary();
+
     doReturn(CodeDeployInfrastructureMappingBuilder.aCodeDeployInfrastructureMapping()
                  .withUuid(INFRA_MAP_ID)
                  .withInfraMappingType(InfrastructureMappingType.AWS_AWS_CODEDEPLOY.getName())
@@ -336,8 +377,10 @@ public class InstanceHelperTest extends WingsBaseTest {
         .when(infraMappingService)
         .get(anyString(), anyString());
 
+    PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("Name");
+    phaseStepSubWorkflow.setRollback(false);
     instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
-        phaseStepExecutionData, workflowStandardParams, "app_1", workflowExecution);
+        phaseStepExecutionData, workflowStandardParams, "app_1", workflowExecution, phaseStepSubWorkflow, null);
 
     // Capture the argument of the doSomething function
     ArgumentCaptor<DeploymentEvent> captor = ArgumentCaptor.forClass(DeploymentEvent.class);
@@ -352,11 +395,18 @@ public class InstanceHelperTest extends WingsBaseTest {
     DeploymentEvent event = captor.getValue();
     assertNotNull(event);
     assertEquals(0, event.getRetries());
-    DeploymentInfo deploymentInfo = event.getDeploymentInfo();
+
+    assertNotNull(event);
+    assertNotNull(event.getDeploymentSummaries());
+    assertEquals(1, event.getDeploymentSummaries().size());
+    DeploymentInfo deploymentInfo = event.getDeploymentSummaries().get(0).getDeploymentInfo();
     assertTrue(deploymentInfo instanceof AwsCodeDeployDeploymentInfo);
-    assertDeploymentInfoObject(deploymentInfo);
-    assertEquals(
-        CODE_DEPLOY_DEPLOYMENT_ID, ((AwsCodeDeployDeploymentInfo) event.getDeploymentInfo()).getDeploymentId());
+    assertDeploymentSummaryObject(event.getDeploymentSummaries().get(0));
+
+    assertTrue(event.getDeploymentSummaries().get(0).getDeploymentInfo() instanceof AwsCodeDeployDeploymentInfo);
+    assertDeploymentSummaryObject(event.getDeploymentSummaries().get(0));
+    assertEquals(CODE_DEPLOY_key,
+        ((AwsCodeDeployDeploymentKey) event.getDeploymentSummaries().get(0).getAwsCodeDeployDeploymentKey()).getKey());
   }
 
   @Test
@@ -373,8 +423,10 @@ public class InstanceHelperTest extends WingsBaseTest {
         .when(infraMappingService)
         .get(anyString(), anyString());
 
+    PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("Name");
+    phaseStepSubWorkflow.setRollback(false);
     instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
-        phaseStepExecutionData, workflowStandardParams, APP_ID, workflowExecution);
+        phaseStepExecutionData, workflowStandardParams, APP_ID, workflowExecution, phaseStepSubWorkflow, null);
 
     // Capture the argument of the doSomething function
     ArgumentCaptor<DeploymentEvent> captor = ArgumentCaptor.forClass(DeploymentEvent.class);
@@ -389,15 +441,31 @@ public class InstanceHelperTest extends WingsBaseTest {
     DeploymentEvent event = captor.getValue();
     assertNotNull(event);
     assertEquals(0, event.getRetries());
-    DeploymentInfo deploymentInfo = event.getDeploymentInfo();
-    assertTrue(deploymentInfo instanceof ContainerDeploymentInfoWithNames);
-    assertDeploymentInfoObject(deploymentInfo);
-    assertEquals(CLUSTER_NAME, ((ContainerDeploymentInfoWithNames) event.getDeploymentInfo()).getClusterName());
-    Set<String> containerServiceNameSet =
-        ((ContainerDeploymentInfoWithNames) event.getDeploymentInfo()).getContainerSvcNameSet();
-    assertEquals(2, containerServiceNameSet.size());
-    assertTrue(containerServiceNameSet.contains("ecsNew"));
-    assertTrue(containerServiceNameSet.contains("ecsOld"));
+
+    DeploymentInfo deploymentInfo1 = event.getDeploymentSummaries().get(0).getDeploymentInfo();
+    DeploymentInfo deploymentInfo2 = event.getDeploymentSummaries().get(1).getDeploymentInfo();
+    assertDeploymentSummaryObject(event.getDeploymentSummaries().get(0));
+    assertDeploymentSummaryObject(event.getDeploymentSummaries().get(1));
+    assertTrue(deploymentInfo1 instanceof ContainerDeploymentInfoWithNames);
+    assertTrue(deploymentInfo2 instanceof ContainerDeploymentInfoWithNames);
+
+    assertEquals(CLUSTER_NAME,
+        ((ContainerDeploymentInfoWithNames) event.getDeploymentSummaries().get(0).getDeploymentInfo())
+            .getClusterName());
+    assertEquals(CLUSTER_NAME,
+        ((ContainerDeploymentInfoWithNames) event.getDeploymentSummaries().get(1).getDeploymentInfo())
+            .getClusterName());
+
+    Set<String> serviceNames = new HashSet<>();
+    serviceNames.add("ecsNew");
+    serviceNames.add("ecsOld");
+
+    assertTrue(serviceNames.contains(
+        ((ContainerDeploymentKey) event.getDeploymentSummaries().get(0).getContainerDeploymentKey())
+            .getContainerServiceName()));
+    assertTrue(serviceNames.contains(
+        ((ContainerDeploymentKey) event.getDeploymentSummaries().get(1).getContainerDeploymentKey())
+            .getContainerServiceName()));
   }
 
   @Test
@@ -415,8 +483,10 @@ public class InstanceHelperTest extends WingsBaseTest {
         .when(infraMappingService)
         .get(anyString(), anyString());
 
+    PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("Name");
+    phaseStepSubWorkflow.setRollback(false);
     instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
-        phaseStepExecutionData, workflowStandardParams, APP_ID, workflowExecution);
+        phaseStepExecutionData, workflowStandardParams, APP_ID, workflowExecution, phaseStepSubWorkflow, null);
 
     // Capture the argument of the doSomething function
     ArgumentCaptor<DeploymentEvent> captor = ArgumentCaptor.forClass(DeploymentEvent.class);
@@ -431,15 +501,34 @@ public class InstanceHelperTest extends WingsBaseTest {
     DeploymentEvent event = captor.getValue();
     assertNotNull(event);
     assertEquals(0, event.getRetries());
-    DeploymentInfo deploymentInfo = event.getDeploymentInfo();
-    assertTrue(deploymentInfo instanceof ContainerDeploymentInfoWithNames);
-    assertDeploymentInfoObject(deploymentInfo);
-    assertEquals(CLUSTER_NAME, ((ContainerDeploymentInfoWithNames) event.getDeploymentInfo()).getClusterName());
-    Set<String> containerServiceNameSet =
-        ((ContainerDeploymentInfoWithNames) event.getDeploymentInfo()).getContainerSvcNameSet();
-    assertEquals(2, containerServiceNameSet.size());
-    assertTrue(containerServiceNameSet.contains("kubernetesNew"));
-    assertTrue(containerServiceNameSet.contains("kubernetesOld"));
+
+    DeploymentInfo deploymentInfo1 = event.getDeploymentSummaries().get(0).getDeploymentInfo();
+    DeploymentInfo deploymentInfo2 = event.getDeploymentSummaries().get(1).getDeploymentInfo();
+    assertDeploymentSummaryObject(event.getDeploymentSummaries().get(0));
+    assertDeploymentSummaryObject(event.getDeploymentSummaries().get(1));
+    assertTrue(deploymentInfo1 instanceof ContainerDeploymentInfoWithNames);
+    assertTrue(deploymentInfo2 instanceof ContainerDeploymentInfoWithNames);
+
+    assertDeploymentSummaryObject(event.getDeploymentSummaries().get(0));
+    assertDeploymentSummaryObject(event.getDeploymentSummaries().get(1));
+
+    assertEquals(CLUSTER_NAME,
+        ((ContainerDeploymentInfoWithNames) event.getDeploymentSummaries().get(0).getDeploymentInfo())
+            .getClusterName());
+    assertEquals(CLUSTER_NAME,
+        ((ContainerDeploymentInfoWithNames) event.getDeploymentSummaries().get(1).getDeploymentInfo())
+            .getClusterName());
+
+    Set<String> serviceNames = new HashSet<>();
+    serviceNames.add("kubernetesNew");
+    serviceNames.add("kubernetesOld");
+
+    assertTrue(serviceNames.contains(
+        ((ContainerDeploymentKey) event.getDeploymentSummaries().get(0).getContainerDeploymentKey())
+            .getContainerServiceName()));
+    assertTrue(serviceNames.contains(
+        ((ContainerDeploymentKey) event.getDeploymentSummaries().get(1).getContainerDeploymentKey())
+            .getContainerServiceName()));
   }
 
   @Test
@@ -453,12 +542,15 @@ public class InstanceHelperTest extends WingsBaseTest {
                  .withUuid(INFRA_MAP_ID)
                  .withInfraMappingType(InfrastructureMappingType.GCP_KUBERNETES.getName())
                  .withAppId(APP_ID)
+                 .withClusterName(CLUSTER_NAME)
                  .build())
         .when(infraMappingService)
         .get(anyString(), anyString());
 
+    PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("Name");
+    phaseStepSubWorkflow.setRollback(false);
     instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
-        phaseStepExecutionData, workflowStandardParams, APP_ID, workflowExecution);
+        phaseStepExecutionData, workflowStandardParams, APP_ID, workflowExecution, phaseStepSubWorkflow, null);
 
     // Capture the argument of the doSomething function
     ArgumentCaptor<DeploymentEvent> captor = ArgumentCaptor.forClass(DeploymentEvent.class);
@@ -473,13 +565,31 @@ public class InstanceHelperTest extends WingsBaseTest {
     DeploymentEvent event = captor.getValue();
     assertNotNull(event);
     assertEquals(0, event.getRetries());
-    DeploymentInfo deploymentInfo = event.getDeploymentInfo();
+
+    assertNotNull(event.getDeploymentSummaries());
+    assertEquals(1, event.getDeploymentSummaries().size());
+
+    DeploymentSummary deploymentSummary = event.getDeploymentSummaries().get(0);
+    DeploymentInfo deploymentInfo = event.getDeploymentSummaries().get(0).getDeploymentInfo();
+
+    assertDeploymentSummaryObject(event.getDeploymentSummaries().get(0));
     assertTrue(deploymentInfo instanceof ContainerDeploymentInfoWithLabels);
-    assertDeploymentInfoObject(deploymentInfo);
-    List<Label> labels = ((ContainerDeploymentInfoWithLabels) event.getDeploymentInfo()).getLabels();
-    assertEquals(1, labels.size());
-    assertEquals("release", labels.get(0).getName());
-    assertEquals("version1", labels.get(0).getValue());
+    assertDeploymentSummaryObject(event.getDeploymentSummaries().get(0));
+
+    ContainerDeploymentInfoWithLabels containerDeploymentInfoWithLabels =
+        (ContainerDeploymentInfoWithLabels) deploymentInfo;
+    assertEquals(CLUSTER_NAME, containerDeploymentInfoWithLabels.getClusterName());
+    assertNotNull(containerDeploymentInfoWithLabels.getLabels());
+    assertEquals(1, containerDeploymentInfoWithLabels.getLabels().size());
+    assertEquals("release", containerDeploymentInfoWithLabels.getLabels().get(0).getName());
+    assertEquals("version1", containerDeploymentInfoWithLabels.getLabels().get(0).getValue());
+
+    assertNotNull(deploymentSummary.getContainerDeploymentKey().getLabels());
+    assertEquals("release", deploymentSummary.getContainerDeploymentKey().getLabels().get(0).getName());
+    assertEquals("version1", deploymentSummary.getContainerDeploymentKey().getLabels().get(0).getValue());
+
+    assertEquals("release", containerDeploymentInfoWithLabels.getLabels().get(0).getName());
+    assertEquals("version1", containerDeploymentInfoWithLabels.getLabels().get(0).getValue());
   }
 
   @Test
@@ -532,11 +642,11 @@ public class InstanceHelperTest extends WingsBaseTest {
     assertEquals(StringUtils.EMPTY, name);
   }
 
-  private void assertDeploymentInfoObject(DeploymentInfo deploymentInfo) {
-    assertEquals(APP_ID, deploymentInfo.getAppId());
-    assertEquals(ACCOUNT_ID, deploymentInfo.getAccountId());
-    assertEquals(INFRA_MAP_ID, deploymentInfo.getInfraMappingId());
-    assertEquals(WORKFLOW_EXECUTION_ID, deploymentInfo.getWorkflowExecutionId());
-    assertEquals(STATE_EXECUTION_INSTANCE_ID, deploymentInfo.getStateExecutionInstanceId());
+  private void assertDeploymentSummaryObject(DeploymentSummary deploymentSummary) {
+    assertEquals(APP_ID, deploymentSummary.getAppId());
+    assertEquals(ACCOUNT_ID, deploymentSummary.getAccountId());
+    assertEquals(INFRA_MAP_ID, deploymentSummary.getInfraMappingId());
+    assertEquals(WORKFLOW_EXECUTION_ID, deploymentSummary.getWorkflowExecutionId());
+    assertEquals(STATE_EXECUTION_INSTANCE_ID, deploymentSummary.getStateExecutionInstanceId());
   }
 }

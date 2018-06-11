@@ -42,6 +42,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.api.DeploymentSummary;
 import software.wings.api.PcfDeploymentInfo;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -62,11 +63,13 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.instance.DeploymentService;
 import software.wings.service.intfc.instance.InstanceService;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public class PcfInstanceHandlerTest extends WingsBaseTest {
@@ -77,6 +80,7 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
   @Mock EnvironmentService environmentService;
   @Mock ServiceResourceService serviceResourceService;
+  @Mock DeploymentService deploymentService;
   @InjectMocks @Inject private InstanceHelper instanceHelper;
   @InjectMocks @Inject PcfInstanceHandler pcfInstanceHandler;
 
@@ -243,14 +247,18 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
         .when(pcfHelperService)
         .getApplicationDetails(anyString(), anyString(), anyString(), any());
 
-    pcfInstanceHandler.handleNewDeployment(PcfDeploymentInfo.builder()
-                                               .pcfApplicationNameSet(new HashSet<>(Arrays.asList(APP_NAME_2)))
-                                               .accountId(ACCOUNT_ID)
-                                               .infraMappingId(INFRA_MAPPING_ID)
-
-                                               .workflowExecutionId("workfloeExecution_1")
-                                               .stateExecutionInstanceId("stateExecutionInstanceId")
-                                               .build());
+    pcfInstanceHandler.handleNewDeployment(
+        Arrays.asList(DeploymentSummary.builder()
+                          .deploymentInfo(
+                              PcfDeploymentInfo.builder().applicationGuild("GUID").applicationName(APP_NAME_2).build())
+                          .accountId(ACCOUNT_ID)
+                          .infraMappingId(INFRA_MAPPING_ID)
+                          .workflowExecutionId("workfloeExecution_1")
+                          .stateExecutionInstanceId("stateExecutionInstanceId")
+                          .artifactName("new")
+                          .artifactBuildNum("1")
+                          .build()),
+        false);
 
     ArgumentCaptor<Instance> captorInstance = ArgumentCaptor.forClass(Instance.class);
     verify(instanceService, times(3)).saveOrUpdate(captorInstance.capture());
@@ -262,11 +270,104 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
 
     assertTrue(expectedKeys.contains(capturedInstances.get(0).getPcfInstanceKey().getId()));
     assertEquals(InstanceType.PCF_INSTANCE, capturedInstances.get(0).getInstanceType());
+    assertEquals("1", capturedInstances.get(0).getLastArtifactBuildNum());
+    assertEquals("new", capturedInstances.get(0).getLastArtifactName());
 
     assertTrue(expectedKeys.contains(capturedInstances.get(1).getPcfInstanceKey().getId()));
     assertEquals(InstanceType.PCF_INSTANCE, capturedInstances.get(1).getInstanceType());
+    assertEquals("1", capturedInstances.get(1).getLastArtifactBuildNum());
+    assertEquals("new", capturedInstances.get(0).getLastArtifactName());
 
     assertTrue(expectedKeys.contains(capturedInstances.get(2).getPcfInstanceKey().getId()));
     assertEquals(InstanceType.PCF_INSTANCE, capturedInstances.get(2).getInstanceType());
+    assertEquals("1", capturedInstances.get(2).getLastArtifactBuildNum());
+    assertEquals("new", capturedInstances.get(0).getLastArtifactName());
+  }
+
+  @Test
+  public void testSyncInstances_rollback() throws Exception {
+    PageResponse<Instance> pageResponse = new PageResponse<>();
+    pageResponse.setResponse(asList());
+
+    doReturn(pageResponse).when(instanceService).list(any());
+
+    List<PcfInstanceInfo> pcfInstanceInfos = Arrays.asList(PcfInstanceInfo.builder()
+                                                               .organization(ORGANIZATION)
+                                                               .space(SPACE)
+                                                               .pcfApplicationName(APP_NAME_2)
+                                                               .pcfApplicationGuid(PCF_APP_GUID_2)
+                                                               .instanceIndex(PCF_INSTANCE_INDEX_0)
+                                                               .id(PCF_APP_GUID_2 + ":" + PCF_INSTANCE_INDEX_0)
+                                                               .build(),
+        PcfInstanceInfo.builder()
+            .organization(ORGANIZATION)
+            .space(SPACE)
+            .pcfApplicationName(APP_NAME_2)
+            .pcfApplicationGuid(PCF_APP_GUID_2)
+            .instanceIndex(PCF_INSTANCE_INDEX_1)
+            .id(PCF_APP_GUID_2 + ":" + PCF_INSTANCE_INDEX_1)
+            .build(),
+        PcfInstanceInfo.builder()
+            .organization(ORGANIZATION)
+            .space(SPACE)
+            .pcfApplicationName(APP_NAME_2)
+            .pcfApplicationGuid(PCF_APP_GUID_2)
+            .instanceIndex(PCF_INSTANCE_INDEX_2)
+            .id(PCF_APP_GUID_2 + ":" + PCF_INSTANCE_INDEX_2)
+            .build());
+
+    doReturn(pcfInstanceInfos)
+        .when(pcfHelperService)
+        .getApplicationDetails(anyString(), anyString(), anyString(), any());
+
+    doReturn(
+        Optional.of(DeploymentSummary.builder()
+                        .deploymentInfo(
+                            PcfDeploymentInfo.builder().applicationGuild("GUID").applicationName(APP_NAME_2).build())
+                        .accountId(ACCOUNT_ID)
+                        .infraMappingId(INFRA_MAPPING_ID)
+                        .workflowExecutionId("workfloeExecution_1")
+                        .stateExecutionInstanceId("stateExecutionInstanceId")
+                        .artifactBuildNum("1")
+                        .artifactName("old")
+                        .build()))
+        .when(deploymentService)
+        .get(any(DeploymentSummary.class));
+
+    pcfInstanceHandler.handleNewDeployment(
+        Arrays.asList(DeploymentSummary.builder()
+                          .deploymentInfo(
+                              PcfDeploymentInfo.builder().applicationGuild("GUID").applicationName(APP_NAME_2).build())
+                          .accountId(ACCOUNT_ID)
+                          .infraMappingId(INFRA_MAPPING_ID)
+                          .workflowExecutionId("workfloeExecution_1")
+                          .stateExecutionInstanceId("stateExecutionInstanceId")
+                          .artifactBuildNum("2")
+                          .artifactName("new")
+                          .build()),
+        true);
+
+    ArgumentCaptor<Instance> captorInstance = ArgumentCaptor.forClass(Instance.class);
+    verify(instanceService, times(3)).saveOrUpdate(captorInstance.capture());
+
+    List<Instance> capturedInstances = captorInstance.getAllValues();
+    Set<String> expectedKeys = new HashSet<>();
+    expectedKeys.addAll(Arrays.asList(PCF_APP_GUID_2 + ":" + PCF_INSTANCE_INDEX_0,
+        PCF_APP_GUID_2 + ":" + PCF_INSTANCE_INDEX_1, PCF_APP_GUID_2 + ":" + PCF_INSTANCE_INDEX_2));
+
+    assertTrue(expectedKeys.contains(capturedInstances.get(0).getPcfInstanceKey().getId()));
+    assertEquals(InstanceType.PCF_INSTANCE, capturedInstances.get(0).getInstanceType());
+    assertEquals("1", capturedInstances.get(0).getLastArtifactBuildNum());
+    assertEquals("old", capturedInstances.get(0).getLastArtifactName());
+
+    assertTrue(expectedKeys.contains(capturedInstances.get(1).getPcfInstanceKey().getId()));
+    assertEquals(InstanceType.PCF_INSTANCE, capturedInstances.get(1).getInstanceType());
+    assertEquals("1", capturedInstances.get(1).getLastArtifactBuildNum());
+    assertEquals("old", capturedInstances.get(1).getLastArtifactName());
+
+    assertTrue(expectedKeys.contains(capturedInstances.get(2).getPcfInstanceKey().getId()));
+    assertEquals(InstanceType.PCF_INSTANCE, capturedInstances.get(2).getInstanceType());
+    assertEquals("1", capturedInstances.get(2).getLastArtifactBuildNum());
+    assertEquals("old", capturedInstances.get(2).getLastArtifactName());
   }
 }

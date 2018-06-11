@@ -12,19 +12,12 @@ import lombok.EqualsAndHashCode;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
+@Builder
 @EqualsAndHashCode(callSuper = true)
 public class AwsCodeDeployDeploymentInfo extends DeploymentInfo {
+  private String deploymentGroupName;
+  private String applicationName;
   private String deploymentId;
-
-  @Builder
-  public AwsCodeDeployDeploymentInfo(String appId, String accountId, String infraMappingId, String workflowId,
-      String workflowExecutionId, String workflowExecutionName, String pipelineExecutionId,
-      String pipelineExecutionName, String stateExecutionInstanceId, String artifactStreamId, String artifactId,
-      String artifactName, String artifactSourceName, String artifactBuildNum, String deployedById,
-      String deployedByName, long deployedAt, String deploymentId) {
-    super(appId, accountId, infraMappingId, workflowId, workflowExecutionId, workflowExecutionName, pipelineExecutionId,
-        pipelineExecutionName, stateExecutionInstanceId, artifactStreamId, artifactId, artifactName, artifactSourceName,
-        artifactBuildNum, deployedById, deployedByName, deployedAt);
-    this.deploymentId = deploymentId;
-  }
+  // This is Revision Localtion, S3 artifact link
+  private String key;
 }

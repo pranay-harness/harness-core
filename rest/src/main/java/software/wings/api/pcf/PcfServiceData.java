@@ -7,6 +7,7 @@ import lombok.Data;
 @Builder
 public class PcfServiceData {
   private String name;
+  private String id;
   private int previousCount;
   private int desiredCount;
 }

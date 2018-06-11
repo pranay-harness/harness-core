@@ -52,6 +52,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import software.wings.WingsBaseTest;
 import software.wings.api.AwsCodeDeployDeploymentInfo;
+import software.wings.api.DeploymentSummary;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.CodeDeployInfrastructureMapping.CodeDeployInfrastructureMappingBuilder;
@@ -75,13 +76,16 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.instance.DeploymentService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.security.SecretManager;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
@@ -93,6 +97,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
   @Mock private AwsHelperService awsHelperService;
   @Mock private AwsCodeDeployService awsCodeDeployService;
   @Mock private AppService appService;
+  @Mock private DeploymentService deploymentService;
   @Mock EnvironmentService environmentService;
   @Mock ServiceResourceService serviceResourceService;
   @InjectMocks @Inject AwsCodeDeployInstanceHandler awsCodeDeployInstanceHandler;
@@ -290,11 +295,12 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
     result.setReservations(reservations);
     doReturn(result).when(awsHelperService).describeEc2Instances(any(), any(), any(), any());
 
-    awsCodeDeployInstanceHandler.handleNewDeployment(AwsCodeDeployDeploymentInfo.builder()
-                                                         .appId(APP_ID)
-                                                         .infraMappingId(INFRA_MAPPING_ID)
-                                                         .deploymentId(DEPLOYMENT_ID)
-                                                         .build());
+    awsCodeDeployInstanceHandler.handleNewDeployment(
+        Arrays.asList(DeploymentSummary.builder()
+                          .deploymentInfo(AwsCodeDeployDeploymentInfo.builder().deploymentId(DEPLOYMENT_ID).build())
+                          .infraMappingId(INFRA_MAPPING_ID)
+                          .build()),
+        false);
     ArgumentCaptor<Set> captor = ArgumentCaptor.forClass(Set.class);
     verify(instanceService).delete(captor.capture());
     Set idTobeDeleted = captor.getValue();
@@ -307,6 +313,98 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
     List<Instance> capturedInstances = captorInstance.getAllValues();
     assertEquals(1, capturedInstances.size());
     Set<String> hostNames = new HashSet<>(asList(HOST_NAME_IP3));
+    assertTrue(hostNames.contains(capturedInstances.get(0).getHostInstanceKey().getHostName()));
+  }
+
+  // 3 existing instances
+  // expected 1 delete 2 update
+  @Test
+  public void testSyncInstances_NewDeployment_Rollback() throws Exception {
+    doReturn(Optional.of(DeploymentSummary.builder()
+                             .deploymentInfo(AwsCodeDeployDeploymentInfo.builder().deploymentId(DEPLOYMENT_ID).build())
+                             .accountId(ACCOUNT_ID)
+                             .infraMappingId(INFRA_MAPPING_ID)
+                             .workflowExecutionId("workfloeExecution_1")
+                             .stateExecutionInstanceId("stateExecutionInstanceId")
+                             .artifactBuildNum("1")
+                             .artifactName("old")
+                             .build()))
+        .when(deploymentService)
+        .get(any(DeploymentSummary.class));
+
+    PageResponse<Instance> pageResponse = new PageResponse<>();
+    pageResponse.setResponse(asList(
+        Instance.builder()
+            .uuid(INSTANCE_1_ID)
+            .accountId(ACCOUNT_ID)
+            .appId(APP_ID)
+            .computeProviderId(COMPUTE_PROVIDER_NAME)
+            .appName(APP_NAME)
+            .envId(ENV_ID)
+            .envName(ENV_NAME)
+            .envType(EnvironmentType.PROD)
+            .infraMappingId(INFRA_MAPPING_ID)
+            .infraMappingType(InfrastructureMappingType.AWS_AWS_CODEDEPLOY.getName())
+            .hostInstanceKey(HostInstanceKey.builder().infraMappingId(INFRA_MAPPING_ID).hostName(HOST_NAME_IP1).build())
+            .instanceType(InstanceType.EC2_CLOUD_INSTANCE)
+            .containerInstanceKey(ContainerInstanceKey.builder().containerId(CONTAINER_ID).build())
+            .instanceInfo(Ec2InstanceInfo.builder().ec2Instance(instance1).hostPublicDns(PUBLIC_DNS_1).build())
+            .build(),
+        Instance.builder()
+            .uuid(INSTANCE_2_ID)
+            .accountId(ACCOUNT_ID)
+            .appId(APP_ID)
+            .computeProviderId(COMPUTE_PROVIDER_NAME)
+            .appName(APP_NAME)
+            .envId(ENV_ID)
+            .envName(ENV_NAME)
+            .envType(EnvironmentType.PROD)
+            .infraMappingId(INFRA_MAPPING_ID)
+            .infraMappingType(InfrastructureMappingType.AWS_AWS_CODEDEPLOY.getName())
+            .hostInstanceKey(HostInstanceKey.builder().infraMappingId(INFRA_MAPPING_ID).hostName(HOST_NAME_IP2).build())
+            .instanceType(InstanceType.EC2_CLOUD_INSTANCE)
+            .containerInstanceKey(ContainerInstanceKey.builder().containerId(CONTAINER_ID).build())
+            .instanceInfo(Ec2InstanceInfo.builder().ec2Instance(instance2).hostPublicDns(PUBLIC_DNS_2).build())
+            .build()));
+
+    doReturn(pageResponse).when(instanceService).list(any());
+    com.amazonaws.services.ec2.model.Instance ec2Instance2 = new com.amazonaws.services.ec2.model.Instance();
+    ec2Instance2.setPrivateDnsName(PRIVATE_DNS_3);
+    ec2Instance2.setInstanceId(INSTANCE_3_ID);
+    ec2Instance2.setPublicDnsName(PUBLIC_DNS_3);
+
+    doReturn(asList(ec2Instance2)).when(awsCodeDeployService).listDeploymentInstances(any(), any(), any(), any());
+    doReturn(HOST_NAME_IP3).when(awsHelperService).getHostnameFromPrivateDnsName(PRIVATE_DNS_3);
+
+    DescribeInstancesResult result = new DescribeInstancesResult();
+    Collection<Reservation> reservations = new ArrayList<>();
+    reservations.add(
+        new Reservation().withInstances(new com.amazonaws.services.ec2.model.Instance[] {instance1, instance3}));
+    result.setReservations(reservations);
+    doReturn(result).when(awsHelperService).describeEc2Instances(any(), any(), any(), any());
+
+    awsCodeDeployInstanceHandler.handleNewDeployment(
+        Arrays.asList(DeploymentSummary.builder()
+                          .deploymentInfo(AwsCodeDeployDeploymentInfo.builder().deploymentId(DEPLOYMENT_ID).build())
+                          .infraMappingId(INFRA_MAPPING_ID)
+                          .artifactBuildNum("2")
+                          .artifactName("new")
+                          .build()),
+        true);
+    ArgumentCaptor<Set> captor = ArgumentCaptor.forClass(Set.class);
+    verify(instanceService).delete(captor.capture());
+    Set idTobeDeleted = captor.getValue();
+    assertEquals(1, idTobeDeleted.size());
+    assertTrue(idTobeDeleted.contains(instance2.getInstanceId()));
+
+    ArgumentCaptor<Instance> captorInstance = ArgumentCaptor.forClass(Instance.class);
+    verify(instanceService, times(1)).saveOrUpdate(captorInstance.capture());
+
+    List<Instance> capturedInstances = captorInstance.getAllValues();
+    assertEquals(1, capturedInstances.size());
+    Set<String> hostNames = new HashSet<>(asList(HOST_NAME_IP3));
+    assertEquals("1", capturedInstances.get(0).getLastArtifactBuildNum());
+    assertEquals("old", capturedInstances.get(0).getLastArtifactName());
     assertTrue(hostNames.contains(capturedInstances.get(0).getHostInstanceKey().getHostName()));
   }
 }

@@ -2,12 +2,14 @@ package software.wings.service.impl.instance;
 
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACCOUNT_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_ID;
@@ -51,6 +53,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import software.wings.WingsBaseTest;
+import software.wings.api.AwsAutoScalingGroupDeploymentInfo;
+import software.wings.api.DeploymentSummary;
 import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
@@ -75,9 +79,13 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.instance.DeploymentService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.security.SecretManager;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
@@ -91,6 +99,7 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock EnvironmentService environmentService;
   @Mock ServiceResourceService serviceResourceService;
+  @Mock DeploymentService deploymentService;
   @InjectMocks @Inject AwsAmiInstanceHandler awsAmiInstanceHandler;
   @InjectMocks @Spy InstanceHelper instanceHelper;
   @InjectMocks @Spy AwsInfrastructureProvider awsInfrastructureProvider;
@@ -265,5 +274,152 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
     Set idTobeDeleted = captor.getValue();
     assertEquals(1, idTobeDeleted.size());
     assertTrue(idTobeDeleted.contains(instance3.getInstanceId()));
+  }
+
+  // 3 existing instances, 1 EC2, 2 AMI,
+  // expected EC2 Delete, 2 AMI Update
+  @Test
+  public void testSyncInstances_Rollback() throws Exception {
+    PageResponse<Instance> pageResponse = new PageResponse<>();
+
+    doReturn(Optional.of(
+                 DeploymentSummary.builder()
+                     .deploymentInfo(
+                         AwsAutoScalingGroupDeploymentInfo.builder().autoScalingGroupName("autoScalingGroup").build())
+                     .accountId(ACCOUNT_ID)
+                     .infraMappingId(INFRA_MAPPING_ID)
+                     .workflowExecutionId("workfloeExecution_1")
+                     .stateExecutionInstanceId("stateExecutionInstanceId")
+                     .artifactBuildNum("1")
+                     .artifactName("old")
+                     .build()))
+        .when(deploymentService)
+        .get(any(DeploymentSummary.class));
+
+    pageResponse.setResponse(asList(
+        Instance.builder()
+            .uuid(INSTANCE_1_ID)
+            .accountId(ACCOUNT_ID)
+            .appId(APP_ID)
+            .computeProviderId(COMPUTE_PROVIDER_NAME)
+            .appName(APP_NAME)
+            .envId(ENV_ID)
+            .envName(ENV_NAME)
+            .envType(EnvironmentType.PROD)
+            .infraMappingId(INFRA_MAPPING_ID)
+            .infraMappingType(InfrastructureMappingType.AWS_AMI.getName())
+            .hostInstanceKey(HostInstanceKey.builder().infraMappingId(INFRA_MAPPING_ID).hostName(HOST_NAME_IP1).build())
+            .instanceType(InstanceType.EC2_CLOUD_INSTANCE)
+            .containerInstanceKey(ContainerInstanceKey.builder().containerId(CONTAINER_ID).build())
+            .instanceInfo(AutoScalingGroupInstanceInfo.builder()
+                              .autoScalingGroupName(ASG_1)
+                              .hostId(HOST_NAME_IP1)
+                              .ec2Instance(instance1)
+                              .hostPublicDns(PUBLIC_DNS_1)
+                              .build())
+            .build(),
+        Instance.builder()
+            .uuid(INSTANCE_2_ID)
+            .accountId(ACCOUNT_ID)
+            .appId(APP_ID)
+            .computeProviderId(COMPUTE_PROVIDER_NAME)
+            .appName(APP_NAME)
+            .envId(ENV_ID)
+            .envName(ENV_NAME)
+            .envType(EnvironmentType.PROD)
+            .infraMappingId(INFRA_MAPPING_ID)
+            .infraMappingType(InfrastructureMappingType.AWS_AMI.getName())
+            .hostInstanceKey(HostInstanceKey.builder().infraMappingId(INFRA_MAPPING_ID).hostName(HOST_NAME_IP2).build())
+            .instanceType(InstanceType.EC2_CLOUD_INSTANCE)
+            .containerInstanceKey(ContainerInstanceKey.builder().containerId(CONTAINER_ID).build())
+            .instanceInfo(AutoScalingGroupInstanceInfo.builder()
+                              .autoScalingGroupName(ASG_1)
+                              .hostId(HOST_NAME_IP2)
+                              .ec2Instance(instance2)
+                              .hostPublicDns(PUBLIC_DNS_2)
+                              .build())
+            .build(),
+        Instance.builder()
+            .uuid(INSTANCE_3_ID)
+            .accountId(ACCOUNT_ID)
+            .appId(APP_ID)
+            .computeProviderId(COMPUTE_PROVIDER_NAME)
+            .appName(APP_NAME)
+            .envId(ENV_ID)
+            .envName(ENV_NAME)
+            .envType(EnvironmentType.PROD)
+            .infraMappingId(INFRA_MAPPING_ID)
+            .infraMappingType(InfrastructureMappingType.AWS_AMI.getName())
+            .hostInstanceKey(HostInstanceKey.builder().infraMappingId(INFRA_MAPPING_ID).hostName(HOST_NAME_IP3).build())
+            .instanceType(InstanceType.EC2_CLOUD_INSTANCE)
+            .containerInstanceKey(ContainerInstanceKey.builder().containerId(CONTAINER_ID).build())
+            .instanceInfo(Ec2InstanceInfo.builder().ec2Instance(instance3).hostPublicDns(PUBLIC_DNS_3).build())
+            .build(),
+        Instance.builder()
+            .uuid(INSTANCE_4_ID)
+            .accountId(ACCOUNT_ID)
+            .appId(APP_ID)
+            .computeProviderId(COMPUTE_PROVIDER_NAME)
+            .appName(APP_NAME)
+            .envId(ENV_ID)
+            .envName(ENV_NAME)
+            .envType(EnvironmentType.PROD)
+            .infraMappingId(INFRA_MAPPING_ID)
+            .infraMappingType(InfrastructureMappingType.AWS_AMI.getName())
+            .hostInstanceKey(HostInstanceKey.builder().infraMappingId(INFRA_MAPPING_ID).hostName(HOST_NAME_IP4).build())
+            .instanceType(InstanceType.EC2_CLOUD_INSTANCE)
+            .containerInstanceKey(ContainerInstanceKey.builder().containerId(CONTAINER_ID).build())
+            .instanceInfo(Ec2InstanceInfo.builder()
+                              .ec2Instance(null /*for NPE issue we saw in prod*/)
+                              .hostPublicDns(PUBLIC_DNS_4)
+                              .build())
+            .build()));
+
+    doReturn(pageResponse).when(instanceService).list(any());
+    doReturn(new DescribeInstancesResult()).when(awsHelperService).describeEc2Instances(any(), any(), any(), any());
+
+    com.amazonaws.services.ec2.model.Instance ec2Instance1 = new com.amazonaws.services.ec2.model.Instance();
+    ec2Instance1.setPrivateDnsName(PRIVATE_DNS_1);
+    ec2Instance1.setPublicDnsName(PUBLIC_DNS_1);
+    ec2Instance1.setInstanceId(INSTANCE_1_ID);
+
+    // ec2Instance with empty privateDnsName
+    com.amazonaws.services.ec2.model.Instance ec2Instance2 = new com.amazonaws.services.ec2.model.Instance();
+    ec2Instance2.setInstanceId(INSTANCE_2_ID);
+
+    doReturn(asList(ec2Instance1, ec2Instance2))
+        .when(awsHelperService)
+        .listAutoScalingGroupInstances(any(), any(), any(), any());
+
+    awsAmiInstanceHandler.handleNewDeployment(
+        Arrays.asList(
+            DeploymentSummary.builder()
+                .deploymentInfo(
+                    AwsAutoScalingGroupDeploymentInfo.builder().autoScalingGroupName("autoScalingGroup").build())
+                .infraMappingId(INFRA_MAPPING_ID)
+                .accountId(ACCOUNT_ID)
+                .artifactName("New")
+                .artifactBuildNum("2")
+                .stateExecutionInstanceId("stateExecutionInstanceId")
+                .workflowExecutionId("workflowExecutionId")
+                .workflowId("workflowId")
+                .build()),
+        true);
+
+    ArgumentCaptor<Set> captor = ArgumentCaptor.forClass(Set.class);
+    verify(instanceService).delete(captor.capture());
+    Set idTobeDeleted = captor.getValue();
+    assertEquals(1, idTobeDeleted.size());
+    assertTrue(idTobeDeleted.contains(instance3.getInstanceId()));
+
+    ArgumentCaptor<Instance> captorInstance = ArgumentCaptor.forClass(Instance.class);
+    verify(instanceService, times(2)).save(captorInstance.capture());
+    List<Instance> instanceList = captorInstance.getAllValues();
+    assertNotNull(instanceList.get(0));
+    assertEquals("1", instanceList.get(0).getLastArtifactBuildNum());
+    assertEquals("old", instanceList.get(0).getLastArtifactName());
+    assertNotNull(instanceList.get(1));
+    assertEquals("1", instanceList.get(1).getLastArtifactBuildNum());
+    assertEquals("old", instanceList.get(1).getLastArtifactName());
   }
 }
