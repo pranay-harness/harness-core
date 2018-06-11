@@ -55,7 +55,6 @@ import software.wings.security.EncryptionType;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
-import software.wings.utils.validation.Create;
 import software.wings.yaml.BaseYaml;
 
 import java.util.List;
@@ -78,7 +77,7 @@ public class SettingAttribute extends Base {
 
   @NotEmpty private String envId = GLOBAL_ENV_ID;
   @NotEmpty private String accountId;
-  @NotEmpty @EntityName(groups = Create.class) @Trimmed private String name;
+  @NotEmpty @EntityName @Trimmed private String name;
   @Valid private SettingValue value;
   private Category category = Category.SETTING;
   private List<String> appIds;

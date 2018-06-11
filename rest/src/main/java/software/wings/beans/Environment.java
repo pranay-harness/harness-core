@@ -16,7 +16,6 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.utils.validation.Create;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.util.ArrayList;
@@ -36,7 +35,7 @@ import javax.validation.constraints.NotNull;
 public class Environment extends Base {
   public static final String NAME_KEY = "name";
 
-  @NotEmpty @EntityName(groups = Create.class) private String name;
+  @NotEmpty @EntityName private String name;
   private String description;
   private String configMapYaml;
   private String helmValueYaml;

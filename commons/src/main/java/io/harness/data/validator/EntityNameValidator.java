@@ -21,18 +21,12 @@ public class EntityNameValidator implements ConstraintValidator<EntityName, Stri
     return isValid(value);
   }
 
-  /**
-   * A static method added in case we need to do the same validation on some string w/o the annotation.
-   * Used only for Applications right now
-   */
+  // A static method added in case we need to do the same validation on some string w/o the annotation.
   public static boolean isValid(String value) {
-    return true;
-    /*
     if (isEmpty(value)) {
       return true;
     }
     return ALLOWED_CHARS_SET.containsAll(Sets.newHashSet(Lists.charactersOf(value)));
-    */
   }
 
   /**

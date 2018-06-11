@@ -19,7 +19,6 @@ import org.mongodb.morphia.annotations.Version;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.utils.ArtifactType;
-import software.wings.utils.validation.Create;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.util.ArrayList;
@@ -40,7 +39,7 @@ import java.util.List;
 public class Service extends Base {
   public static final String NAME_KEY = "name";
 
-  @EntityName(groups = Create.class) private String name;
+  @EntityName private String name;
   private String description;
   private ArtifactType artifactType;
   private String configMapYaml;

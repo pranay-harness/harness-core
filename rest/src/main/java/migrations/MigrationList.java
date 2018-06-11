@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import migrations.all.AddUsersToAdminUserGroup;
 import migrations.all.AddValidUntilToAlert;
 import migrations.all.AddValidUntilToDelegateTask;
+import migrations.all.EntityNameValidationMigration_All_00;
 import migrations.all.FixInstanceData;
 import migrations.all.FixInstanceDataForAwsSSH;
 import migrations.all.GitSyncToAllAccounts;
@@ -50,6 +51,7 @@ public class MigrationList {
         .add(Pair.of(145, LearningEngineTaskGroupNameMigration.class))
         .add(Pair.of(146, AddValidUntilToAlert.class))
         .add(Pair.of(147, AddValidUntilToDelegateTask.class))
+        .add(Pair.of(148, EntityNameValidationMigration_All_00.class))
         .build();
   }
 }
