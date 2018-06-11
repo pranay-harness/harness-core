@@ -19,7 +19,6 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotification;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.Setup.Builder.aSetup;
 import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -47,7 +46,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.Notification;
 import software.wings.beans.Service;
-import software.wings.beans.Setup.SetupStatus;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -177,35 +175,24 @@ public class AppServiceTest extends WingsBaseTest {
    * Should list.
    */
   @Test
-  public void shouldListApplicationWithSummary() {
-    Application application = anApplication().build();
-    PageResponse<Application> pageResponse = new PageResponse<>();
-    PageRequest<Application> pageRequest = new PageRequest<>();
-    pageResponse.setResponse(asList(application));
-    when(wingsPersistence.query(Application.class, pageRequest)).thenReturn(pageResponse);
-    when(workflowExecutionService.listExecutions(any(PageRequest.class), eq(false))).thenReturn(new PageResponse<>());
-    PageResponse<Notification> notificationPageResponse = new PageResponse<>();
-    notificationPageResponse.add(anApprovalNotification().withAppId(APP_ID).withUuid(NOTIFICATION_ID).build());
-    when(notificationService.list(any(PageRequest.class))).thenReturn(notificationPageResponse);
-    PageResponse<Application> applications = appService.list(pageRequest, true, 5, 0);
-    assertThat(applications).containsAll(asList(application));
-    assertThat(application.getRecentExecutions()).isNotNull();
-    assertThat(application.getNotifications())
-        .hasSize(1)
-        .containsExactly(anApprovalNotification().withAppId(APP_ID).withUuid(NOTIFICATION_ID).build());
-  }
-
-  /**
-   * Should list.
-   */
-  @Test
   public void shouldListApplication() {
     Application application = anApplication().build();
     PageResponse<Application> pageResponse = new PageResponse<>();
     PageRequest<Application> pageRequest = new PageRequest<>();
     pageResponse.setResponse(asList(application));
     when(wingsPersistence.query(Application.class, pageRequest)).thenReturn(pageResponse);
-    PageResponse<Application> applications = appService.list(pageRequest, false, 5, 0);
+    PageResponse<Application> applications = appService.list(pageRequest);
+    assertThat(applications).containsAll(asList(application));
+  }
+
+  @Test
+  public void shouldListApplicationWithDetails() {
+    Application application = anApplication().build();
+    PageResponse<Application> pageResponse = new PageResponse<>();
+    PageRequest<Application> pageRequest = new PageRequest<>();
+    pageResponse.setResponse(asList(application));
+    when(wingsPersistence.query(Application.class, pageRequest)).thenReturn(pageResponse);
+    PageResponse<Application> applications = appService.list(pageRequest);
     assertThat(applications).containsAll(asList(application));
   }
 
@@ -213,16 +200,13 @@ public class AppServiceTest extends WingsBaseTest {
    * Should get application.
    */
   @Test
-  public void shouldGetApplication() {
+  public void shouldGetApplicationWithDetails() {
     PageResponse<Notification> notificationPageResponse = new PageResponse<>();
     notificationPageResponse.add(anApprovalNotification().withAppId(APP_ID).withUuid(NOTIFICATION_ID).build());
-    when(notificationService.list(any(PageRequest.class))).thenReturn(notificationPageResponse);
     when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(anApplication().withUuid(APP_ID).build());
-    Application application = appService.get(APP_ID, SetupStatus.COMPLETE, true, 0);
+    Application application = appService.get(APP_ID, true);
     verify(wingsPersistence).get(Application.class, APP_ID);
-    assertThat(application.getNotifications())
-        .hasSize(1)
-        .containsExactly(anApprovalNotification().withAppId(APP_ID).withUuid(NOTIFICATION_ID).build());
+    assertThat(application).isNotNull();
   }
 
   /**
@@ -247,20 +231,6 @@ public class AppServiceTest extends WingsBaseTest {
     when(query.getKey()).thenReturn(new Key<>(Application.class, "applications", APP_ID));
     assertThat(appService.exist(APP_ID)).isTrue();
     verify(query).filter(ID_KEY, APP_ID);
-  }
-
-  @Test
-  public void shouldAddSetupSuggestionForIncompleteApplicationGet() {
-    PageResponse<Notification> notificationPageResponse = new PageResponse<>();
-    notificationPageResponse.add(anApprovalNotification().withAppId(APP_ID).withUuid(NOTIFICATION_ID).build());
-    when(notificationService.list(any(PageRequest.class))).thenReturn(notificationPageResponse);
-    when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(anApplication().withUuid(APP_ID).build());
-    when(setupService.getApplicationSetupStatus(anApplication().withUuid(APP_ID).build())).thenReturn(aSetup().build());
-    Application application = appService.get(APP_ID, SetupStatus.INCOMPLETE, false, 0);
-
-    verify(wingsPersistence).get(Application.class, APP_ID);
-    verify(setupService).getApplicationSetupStatus(anApplication().withUuid(APP_ID).build());
-    assertThat(application.getSetup()).isNotNull();
   }
 
   @Test

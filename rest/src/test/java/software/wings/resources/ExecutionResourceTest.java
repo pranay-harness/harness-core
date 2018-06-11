@@ -9,7 +9,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 
 import org.junit.After;
@@ -19,7 +18,6 @@ import org.junit.Test;
 import software.wings.beans.Application;
 import software.wings.beans.RestResponse;
 import software.wings.beans.WorkflowExecution;
-import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AppService;
@@ -63,12 +61,9 @@ public class ExecutionResourceTest {
   public void testListExecutions() {
     String appId = generateUuid();
 
-    PageRequest<Application> applicationPageRequest = aPageRequest().build();
-    PageRequest<WorkflowExecution> workflowExecutionPageRequest = aPageRequest().build();
-
     PageResponse<Application> applicationPageResponse =
         aPageResponse().withResponse(newArrayList(anApplication().withUuid(appId).build())).build();
-    when(appService.list(anyObject(), eq(false), eq(0), eq(0))).thenReturn(applicationPageResponse);
+    when(appService.list(anyObject())).thenReturn(applicationPageResponse);
 
     PageResponse<WorkflowExecution> workflowExecutionPageResponse = aPageResponse().build();
     when(workflowExecutionService.listExecutions(anyObject(), eq(true), eq(true), eq(true), eq(true)))

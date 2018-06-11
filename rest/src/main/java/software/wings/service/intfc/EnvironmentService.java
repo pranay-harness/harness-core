@@ -119,6 +119,14 @@ public interface EnvironmentService extends OwnedByApplication {
   List<Environment> getEnvByApp(@NotEmpty String appId);
 
   /**
+   * Gets env by app.
+   *
+   * @param appId the app id
+   * @return the env by app
+   */
+  List<Environment> findEnvNamesByAppIds(@NotEmpty List<String> appId);
+
+  /**
    * Clones Environment along with Service Infrastructure
    *
    * @param appId

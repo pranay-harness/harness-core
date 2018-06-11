@@ -112,8 +112,7 @@ public class StatisticsServiceImpl implements StatisticsService {
     if (isEmpty(appIds)) {
       applications = appService.getAppsByAccountId(accountId);
     } else {
-      applications =
-          appService.list(aPageRequest().addFilter("appId", IN, appIds.toArray()).build(), false, 0, 0).getResponse();
+      applications = appService.list(aPageRequest().addFilter("appId", IN, appIds.toArray()).build()).getResponse();
     }
     appIdMap = Maps.uniqueIndex(applications, Application::getUuid);
     topConsumers = getTopConsumerForPastXDays(30, appIdMap.keySet())

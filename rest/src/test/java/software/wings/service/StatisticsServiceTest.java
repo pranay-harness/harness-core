@@ -8,7 +8,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
@@ -111,7 +110,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetTopConsumers() {
-    when(appService.list(any(PageRequest.class), eq(false), eq(0), eq(0)))
+    when(appService.list(any(PageRequest.class)))
         .thenReturn(aPageResponse().withResponse(asList(anApplication().withUuid(APP_ID).build())).build());
     when(aggregationPipeline.aggregate(ActivityStatusAggregation.class))
         .thenReturn(
@@ -133,7 +132,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetTopConsumersMultipleAppIds() {
-    when(appService.list(any(PageRequest.class), eq(false), eq(0), eq(0)))
+    when(appService.list(any(PageRequest.class)))
         .thenReturn(aPageResponse().withResponse(asList(anApplication().withUuid(APP_ID).build())).build());
 
     when(aggregationPipeline.aggregate(ActivityStatusAggregation.class))
@@ -169,7 +168,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
                           .toInstant()
                           .toEpochMilli();
 
-    when(appService.list(any(PageRequest.class), eq(false), eq(0), eq(0)))
+    when(appService.list(any(PageRequest.class)))
         .thenReturn(
             aPageResponse().withResponse(asList(anApplication().withUuid(APP_ID).withName(APP_NAME).build())).build());
 
@@ -278,7 +277,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
                           .toInstant()
                           .toEpochMilli();
 
-    when(appService.list(any(PageRequest.class), eq(false), eq(0), eq(0)))
+    when(appService.list(any(PageRequest.class)))
         .thenReturn(
             aPageResponse().withResponse(asList(anApplication().withUuid(APP_ID).withName(APP_NAME).build())).build());
 
@@ -402,7 +401,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
                           .toInstant()
                           .toEpochMilli();
 
-    when(appService.list(any(PageRequest.class), eq(false), eq(0), eq(0)))
+    when(appService.list(any(PageRequest.class)))
         .thenReturn(
             aPageResponse().withResponse(asList(anApplication().withUuid(APP_ID).withName(APP_NAME).build())).build());
 
@@ -552,7 +551,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
 
     when(workflowExecutionService.obtainWorkflowExecutions(anyList(), anyLong())).thenReturn(executions);
 
-    when(appService.list(any(PageRequest.class), eq(false), eq(0), eq(0)))
+    when(appService.list(any(PageRequest.class)))
         .thenReturn(aPageResponse().withResponse(asList(anApplication().withUuid(APP_ID).build())).build());
 
     UserStatistics userStats = statisticsService.getUserStats(ACCOUNT_ID, null);
@@ -586,7 +585,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
 
     when(workflowExecutionService.obtainWorkflowExecutions(anyList(), anyLong())).thenReturn(executions);
 
-    when(appService.list(any(PageRequest.class), eq(false), eq(0), eq(0)))
+    when(appService.list(any(PageRequest.class)))
         .thenReturn(aPageResponse().withResponse(asList(anApplication().withUuid(APP_ID).build())).build());
 
     UserStatistics userStats = statisticsService.getUserStats(ACCOUNT_ID, asList(APP_ID));

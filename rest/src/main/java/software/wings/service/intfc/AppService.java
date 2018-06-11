@@ -2,7 +2,6 @@ package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Application;
-import software.wings.beans.Setup.SetupStatus;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ownership.OwnedByAccount;
@@ -23,28 +22,9 @@ public interface AppService extends OwnedByAccount, Exterminator {
    */
   Application save(Application app);
 
-  /**
-   * List page response.
-   *
-   * @param req the req
-   * @return the page response
-   */
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.AppService#list(software.wings.dl.PageRequest)
-   */
-  PageResponse<Application> list(PageRequest<Application> req);
+  PageResponse<Application> list(PageRequest<Application> req, boolean details);
 
-  /**
-   * List.
-   *
-   * @param req                the req
-   * @param overview           the summary
-   * @param numberOfExecutions the number of executions
-   * @param overviewDays       the overview days
-   * @return the page response
-   */
-  PageResponse<Application> list(
-      PageRequest<Application> req, boolean overview, int numberOfExecutions, int overviewDays);
+  PageResponse<Application> list(PageRequest<Application> req);
 
   /**
    * Exist boolean.
@@ -73,12 +53,10 @@ public interface AppService extends OwnedByAccount, Exterminator {
    * Get application.
    *
    * @param appId        the app id
-   * @param status       the status
-   * @param overview     the overview
-   * @param overviewDays the overview days
+   * @param details the details
    * @return the application
    */
-  Application get(@NotEmpty String appId, SetupStatus status, boolean overview, int overviewDays);
+  Application get(@NotEmpty String appId, boolean details);
 
   Application getAppByName(String accountId, String appName);
 

@@ -12,9 +12,7 @@ import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.RoleType.APPLICATION_ADMIN;
 import static software.wings.beans.RoleType.NON_PROD_SUPPORT;
 import static software.wings.beans.RoleType.PROD_SUPPORT;
-import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
 import static software.wings.dl.HQuery.excludeAuthority;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.utils.Validator.duplicateCheck;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -33,15 +31,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
-import software.wings.beans.Notification;
+import software.wings.beans.Environment;
 import software.wings.beans.Role;
-import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.Setup.SetupStatus;
-import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.StringValue;
-import software.wings.beans.WorkflowExecution;
-import software.wings.beans.stats.AppKeyStatistics;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.PageRequest;
@@ -134,19 +128,22 @@ public class AppServiceImpl implements AppService {
         duplicateCheck(() -> wingsPersistence.saveAndGet(Application.class, app), "name", app.getName());
     createDefaultRoles(app);
     settingsService.createDefaultApplicationSettings(application.getUuid(), application.getAccountId());
-    notificationService.sendNotificationAsync(
-        anInformationNotification()
-            .withAppId(application.getUuid())
-            .withAccountId(application.getAccountId())
-            .withNotificationTemplateId(NotificationMessageType.ENTITY_CREATE_NOTIFICATION.name())
-            .withNotificationTemplateVariables(
-                ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName()))
-            .build());
+    sendNotification(application, NotificationMessageType.ENTITY_CREATE_NOTIFICATION);
     InstanceSyncJob.add(jobScheduler, application.getUuid());
 
     yamlChangeSetHelper.applicationYamlChangeAsync(application, ChangeType.ADD);
 
-    return get(application.getUuid(), INCOMPLETE, true, 0);
+    return get(application.getUuid());
+  }
+
+  private void sendNotification(Application application, NotificationMessageType entityCreateNotification) {
+    notificationService.sendNotificationAsync(anInformationNotification()
+                                                  .withAppId(application.getUuid())
+                                                  .withAccountId(application.getAccountId())
+                                                  .withNotificationTemplateId(entityCreateNotification.name())
+                                                  .withNotificationTemplateVariables(ImmutableMap.of("ENTITY_TYPE",
+                                                      "Application", "ENTITY_NAME", application.getName()))
+                                                  .build());
   }
 
   List<Role> createDefaultRoles(Application app) {
@@ -183,29 +180,12 @@ public class AppServiceImpl implements AppService {
    * @see software.wings.service.intfc.AppService#list(software.wings.dl.PageRequest)
    */
   @Override
-  public PageResponse<Application> list(PageRequest<Application> req) {
-    return list(req, false, 0, 0);
-  }
-
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.AppService#list(software.wings.dl.PageRequest)
-   */
-  @Override
-  public PageResponse<Application> list(
-      PageRequest<Application> req, boolean overview, int numberOfExecutions, int overviewDays) {
+  public PageResponse<Application> list(PageRequest<Application> req, boolean details) {
     PageResponse<Application> response = wingsPersistence.query(Application.class, req);
 
     List<Application> applicationList = response.getResponse();
     List<String> appIdList =
         applicationList.parallelStream().map(application -> application.getUuid()).collect(toList());
-
-    if (overview) { // TODO: merge both overview block make service/env population part of overview option
-      Map<String, AppKeyStatistics> applicationKeyStats =
-          statisticsService.getApplicationKeyStats(appIdList, overviewDays);
-      applicationList.forEach(application
-          -> application.setAppKeyStatistics(
-              applicationKeyStats.computeIfAbsent(application.getUuid(), s -> new AppKeyStatistics())));
-    }
 
     PermissionAttribute svcPermissionAttribute = new PermissionAttribute(PermissionType.SERVICE, Action.READ);
     authHandler.setEntityIdFilterIfUserAction(asList(svcPermissionAttribute), appIdList);
@@ -213,55 +193,30 @@ public class AppServiceImpl implements AppService {
     PermissionAttribute envPermissionAttribute = new PermissionAttribute(PermissionType.ENV, Action.READ);
     authHandler.setEntityIdFilterIfUserAction(asList(envPermissionAttribute), appIdList);
 
-    // Had to change the parallel stream to normal stream since we want
-    applicationList.stream().forEach(application -> {
-      try {
-        application.setEnvironments(environmentService.getEnvByApp(application.getUuid()));
-      } catch (Exception e) {
-        logger.error("Failed to fetch environments for app {} ", application, e);
-      }
-      try {
-        application.setServices(serviceResourceService.findServicesByApp(application.getUuid()));
-      } catch (Exception e) {
-        logger.error("Failed to fetch services for app {} ", application, e);
-      }
-      if (overview) {
-        try {
-          application.setRecentExecutions(
-              workflowExecutionService
-                  .listExecutions(aPageRequest()
-                                      .withLimit(Integer.toString(numberOfExecutions))
-                                      .addFilter(WorkflowExecution.APP_ID_KEY, Operator.EQ, application.getUuid())
-                                      .addOrder("createdAt", OrderType.DESC)
-                                      .build(),
-                      false)
-                  .getResponse());
-        } catch (Exception e) {
-          logger.error("Failed to fetch recent executions for app {} ", application, e);
-        }
-        try {
-          application.setNotifications(getIncompleteActionableApplicationNotifications(application.getUuid()));
-        } catch (Exception e) {
-          logger.error("Failed to fetch notifications for app {} ", application, e);
-        }
-      }
-    });
+    if (details) {
+      List<Environment> appEnvs = environmentService.findEnvNamesByAppIds(appIdList);
+      Map<String, List<Environment>> appIdEnvs = appEnvs.stream().collect(Collectors.groupingBy(Environment::getAppId));
+
+      List<Service> appServices = serviceResourceService.findServiceNamesByAppIds(appIdList);
+      Map<String, List<Service>> appIdServices = appServices.stream().collect(Collectors.groupingBy(Service::getAppId));
+
+      applicationList.stream().forEach(application -> {
+        application.setEnvironments(appIdEnvs.get(application.getUuid()));
+        application.setServices(appIdServices.get(application.getUuid()));
+      });
+    }
+
     return response;
+  }
+
+  @Override
+  public PageResponse<Application> list(PageRequest<Application> req) {
+    return list(req, false);
   }
 
   @Override
   public boolean exist(String appId) {
     return wingsPersistence.createQuery(Application.class, excludeAuthority).filter(ID_KEY, appId).getKey() != null;
-  }
-
-  private List<Notification> getIncompleteActionableApplicationNotifications(String appId) {
-    return notificationService
-        .list(aPageRequest()
-                  .addFilter(Notification.APP_ID_KEY, Operator.EQ, appId)
-                  .addFilter("complete", Operator.EQ, false)
-                  .addFilter("actionable", Operator.EQ, true)
-                  .build())
-        .getResponse();
   }
 
   /* (non-Javadoc)
@@ -342,14 +297,7 @@ public class AppServiceImpl implements AppService {
 
     // Now we are ready to delete the object.
     if (wingsPersistence.delete(Application.class, appId)) {
-      notificationService.sendNotificationAsync(
-          anInformationNotification()
-              .withAppId(application.getUuid())
-              .withAccountId(application.getAccountId())
-              .withNotificationTemplateId(NotificationMessageType.ENTITY_DELETE_NOTIFICATION.name())
-              .withNotificationTemplateVariables(
-                  ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName()))
-              .build());
+      sendNotification(application, NotificationMessageType.ENTITY_DELETE_NOTIFICATION);
     }
 
     // Note that if we failed to delete the object we left without the yaml. Likely the users
@@ -405,7 +353,7 @@ public class AppServiceImpl implements AppService {
   }
 
   @Override
-  public Application get(String appId, SetupStatus status, boolean overview, int overviewDays) {
+  public Application get(String appId, boolean details) {
     Application application = get(appId);
 
     List<String> appIdAsList = asList(appId);
@@ -415,16 +363,9 @@ public class AppServiceImpl implements AppService {
     PermissionAttribute envPermissionAttribute = new PermissionAttribute(PermissionType.ENV, Action.READ);
     authHandler.setEntityIdFilterIfUserAction(asList(envPermissionAttribute), appIdAsList);
 
-    application.setEnvironments(environmentService.getEnvByApp(application.getUuid()));
-    application.setServices(serviceResourceService.findServicesByApp(application.getUuid()));
-
-    if (overview) {
-      application.setNotifications(getIncompleteActionableApplicationNotifications(appId));
-      application.setAppKeyStatistics(statisticsService.getApplicationKeyStats(asList(appId), overviewDays).get(appId));
-    }
-
-    if (status == INCOMPLETE) {
-      application.setSetup(setupService.getApplicationSetupStatus(application));
+    if (details) {
+      application.setEnvironments(environmentService.findEnvNamesByAppIds(asList(application.getUuid())));
+      application.setServices(serviceResourceService.findServiceNamesByAppIds(asList(application.getUuid())));
     }
     return application;
   }
