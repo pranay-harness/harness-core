@@ -455,7 +455,8 @@ public class CommandState extends State {
 
   private Artifact findArtifact(String serviceId, ExecutionContext context) {
     if (isRollback()) {
-      final Artifact previousArtifact = serviceResourceService.findPreviousArtifact(serviceId, context);
+      final Artifact previousArtifact = serviceResourceService.findPreviousArtifact(
+          context.getAppId(), context.getWorkflowExecutionId(), context.getContextElement(ContextElementType.INSTANCE));
       if (previousArtifact != null) {
         return previousArtifact;
       }

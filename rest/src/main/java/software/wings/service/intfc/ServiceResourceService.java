@@ -17,7 +17,7 @@ import software.wings.beans.container.UserDataSpecification;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ownership.OwnedByApplication;
-import software.wings.sm.ExecutionContext;
+import software.wings.sm.ContextElement;
 import software.wings.stencils.Stencil;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
@@ -246,7 +246,7 @@ public interface ServiceResourceService extends OwnedByApplication {
    */
   List<Service> findServicesByApp(String appId);
 
-  Artifact findPreviousArtifact(String serviceId, ExecutionContext context);
+  Artifact findPreviousArtifact(String appId, String workflowExecutionId, ContextElement instanceElement);
 
   /**
    * Get service.

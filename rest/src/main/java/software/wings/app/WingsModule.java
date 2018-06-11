@@ -149,6 +149,7 @@ import software.wings.service.impl.artifact.ArtifactServiceImpl;
 import software.wings.service.impl.elk.ElkAnalysisServiceImpl;
 import software.wings.service.impl.expression.ExpressionBuilderServiceImpl;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl;
+import software.wings.service.impl.instance.DeploymentServiceImpl;
 import software.wings.service.impl.instance.InstanceServiceImpl;
 import software.wings.service.impl.instance.sync.ContainerSync;
 import software.wings.service.impl.instance.sync.ContainerSyncImpl;
@@ -250,6 +251,7 @@ import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.service.intfc.expression.ExpressionBuilderService;
 import software.wings.service.intfc.instance.DashboardStatisticsService;
+import software.wings.service.intfc.instance.DeploymentService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -454,5 +456,6 @@ public class WingsModule extends AbstractModule {
     bind(AwsLambdaService.class).to(AwsLambdaServiceImpl.class);
     bind(SSOSettingService.class).to(SSOSettingServiceImpl.class);
     bind(SSOService.class).to(SSOServiceImpl.class);
+    bind(DeploymentService.class).to(DeploymentServiceImpl.class);
   }
 }

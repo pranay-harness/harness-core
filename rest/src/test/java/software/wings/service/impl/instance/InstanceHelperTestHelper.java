@@ -18,6 +18,7 @@ import software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuild
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.InstanceUnitType;
+import software.wings.beans.command.CodeDeployParams;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
@@ -173,6 +174,12 @@ public class InstanceHelperTestHelper {
     } else if (InfrastructureMappingType.AWS_AWS_CODEDEPLOY.equals(infrastructureMappingType)) {
       CommandStepExecutionSummary commandStepExecutionSummary = new CommandStepExecutionSummary();
       commandStepExecutionSummary.setCodeDeployDeploymentId(InstanceHelperTest.CODE_DEPLOY_DEPLOYMENT_ID);
+      commandStepExecutionSummary.setCodeDeployParams(
+          CodeDeployParams.builder()
+              .applicationName(InstanceHelperTest.CODE_DEPLOY_APP_NAME)
+              .deploymentGroupName(InstanceHelperTest.CODE_DEPLOY_GROUP_NAME)
+              .key(InstanceHelperTest.CODE_DEPLOY_key)
+              .build());
 
       stepExecutionSummaries =
           asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),

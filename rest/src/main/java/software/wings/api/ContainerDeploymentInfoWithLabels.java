@@ -20,14 +20,8 @@ public class ContainerDeploymentInfoWithLabels extends BaseContainerDeploymentIn
   private List<Label> labels;
 
   @Builder
-  public ContainerDeploymentInfoWithLabels(String appId, String accountId, String infraMappingId, String workflowId,
-      String workflowExecutionId, String workflowExecutionName, String pipelineExecutionId,
-      String pipelineExecutionName, String stateExecutionInstanceId, String artifactStreamId, String artifactId,
-      String artifactName, String artifactSourceName, String artifactBuildNum, String deployedById,
-      String deployedByName, long deployedAt, String clusterName, List<Label> labels) {
-    super(appId, accountId, infraMappingId, workflowId, workflowExecutionId, workflowExecutionName, pipelineExecutionId,
-        pipelineExecutionName, stateExecutionInstanceId, artifactStreamId, artifactId, artifactName, artifactSourceName,
-        artifactBuildNum, deployedById, deployedByName, deployedAt, clusterName);
+  public ContainerDeploymentInfoWithLabels(String clusterName, List<Label> labels) {
+    super(clusterName);
     this.labels = labels;
   }
 }

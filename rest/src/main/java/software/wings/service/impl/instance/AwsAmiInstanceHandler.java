@@ -9,11 +9,13 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.inject.Singleton;
 
+import io.harness.data.structure.EmptyPredicate;
 import software.wings.annotation.Encryptable;
 import software.wings.api.AmiStepExecutionSummary;
 import software.wings.api.AwsAutoScalingGroupDeploymentInfo;
 import software.wings.api.ContainerServiceData;
 import software.wings.api.DeploymentInfo;
+import software.wings.api.DeploymentSummary;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseStepExecutionData;
 import software.wings.beans.AwsAmiInfrastructureMapping;
@@ -23,12 +25,18 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.instance.Instance;
+import software.wings.beans.infrastructure.instance.key.deployment.AwsAmiDeploymentKey;
+import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
 import software.wings.exception.HarnessException;
+import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StepExecutionSummary;
 import software.wings.utils.Validator;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -42,11 +50,13 @@ public class AwsAmiInstanceHandler extends AwsInstanceHandler {
   public void syncInstances(String appId, String infraMappingId) throws HarnessException {
     // Key - Auto scaling group with revision, Value - Instance
     Multimap<String, Instance> asgInstanceMap = ArrayListMultimap.create();
-    syncInstancesInternal(appId, infraMappingId, asgInstanceMap, null);
+    syncInstancesInternal(appId, infraMappingId, asgInstanceMap, null, false);
   }
 
   private void syncInstancesInternal(String appId, String infraMappingId, Multimap<String, Instance> asgInstanceMap,
-      DeploymentInfo newDeploymentInfo) throws HarnessException {
+      List<DeploymentSummary> newDeploymentSummaries, boolean rollbak) throws HarnessException {
+    Map<String, DeploymentSummary> asgNamesDeploymentSummaryMap = getDeploymentSummaryMap(newDeploymentSummaries);
+
     InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
     Validator.notNullCheck("Infra mapping is null for id:" + infraMappingId, infrastructureMapping);
     if (!(infrastructureMapping instanceof AwsAmiInfrastructureMapping)) {
@@ -71,24 +81,40 @@ public class AwsAmiInstanceHandler extends AwsInstanceHandler {
 
     handleEc2InstanceSync(ec2InstanceIdInstanceMap, awsConfig, encryptedDataDetails, region);
 
-    handleAsgInstanceSync(
-        region, asgInstanceMap, awsConfig, encryptedDataDetails, infrastructureMapping, newDeploymentInfo, true);
+    handleAsgInstanceSync(region, asgInstanceMap, awsConfig, encryptedDataDetails, infrastructureMapping,
+        asgNamesDeploymentSummaryMap, true, rollbak);
+  }
+
+  private Map<String, DeploymentSummary> getDeploymentSummaryMap(List<DeploymentSummary> newDeploymentSummaries) {
+    if (EmptyPredicate.isEmpty(newDeploymentSummaries)) {
+      return Collections.EMPTY_MAP;
+    }
+
+    Map<String, DeploymentSummary> deploymentSummaryMap = new HashMap<>();
+    newDeploymentSummaries.stream().forEach(deploymentSummary
+        -> deploymentSummaryMap.put(
+            ((AwsAutoScalingGroupDeploymentInfo) deploymentSummary.getDeploymentInfo()).getAutoScalingGroupName(),
+            deploymentSummary));
+
+    return deploymentSummaryMap;
   }
 
   @Override
-  public void handleNewDeployment(DeploymentInfo deploymentInfo) throws HarnessException {
-    if (!(deploymentInfo instanceof AwsAutoScalingGroupDeploymentInfo)) {
+  public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback)
+      throws HarnessException {
+    if (!(deploymentSummaries.iterator().next().getDeploymentInfo() instanceof AwsAutoScalingGroupDeploymentInfo)) {
       throw new HarnessException("Incompatible deployment type.");
     }
 
-    AwsAutoScalingGroupDeploymentInfo asgDeploymentEvent = (AwsAutoScalingGroupDeploymentInfo) deploymentInfo;
     Multimap<String, Instance> asgInstanceMap = ArrayListMultimap.create();
 
-    asgDeploymentEvent.getAutoScalingGroupNameList().stream().forEach(
-        autoScalingGroupName -> asgInstanceMap.put(autoScalingGroupName, null));
+    deploymentSummaries.stream().forEach(deploymentSummary
+        -> asgInstanceMap.put(
+            ((AwsAutoScalingGroupDeploymentInfo) deploymentSummary.getDeploymentInfo()).getAutoScalingGroupName(),
+            null));
 
-    syncInstancesInternal(
-        deploymentInfo.getAppId(), deploymentInfo.getInfraMappingId(), asgInstanceMap, deploymentInfo);
+    syncInstancesInternal(deploymentSummaries.iterator().next().getAppId(),
+        deploymentSummaries.iterator().next().getInfraMappingId(), asgInstanceMap, deploymentSummaries, rollback);
   }
 
   /**
@@ -148,13 +174,32 @@ public class AwsAmiInstanceHandler extends AwsInstanceHandler {
   }
 
   @Override
-  public Optional<DeploymentInfo> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
+  public Optional<List<DeploymentInfo>> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
       PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,
       InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact)
       throws HarnessException {
     List<String> autoScalingGroupNames =
         getASGFromAMIDeployment(phaseExecutionData, phaseStepExecutionData, workflowExecution);
-    return Optional.of(
-        AwsAutoScalingGroupDeploymentInfo.builder().autoScalingGroupNameList(autoScalingGroupNames).build());
+    List<DeploymentInfo> deploymentInfos = new ArrayList<>();
+    autoScalingGroupNames.stream().forEach(autoScalingGroupName
+        -> deploymentInfos.add(
+            AwsAutoScalingGroupDeploymentInfo.builder().autoScalingGroupName(autoScalingGroupName).build()));
+    return Optional.of(deploymentInfos);
+  }
+
+  @Override
+  public DeploymentKey generateDeploymentKey(DeploymentInfo deploymentInfo) {
+    return AwsAmiDeploymentKey.builder()
+        .autoScalingGroupName(((AwsAutoScalingGroupDeploymentInfo) deploymentInfo).getAutoScalingGroupName())
+        .build();
+  }
+
+  @Override
+  protected void setDeploymentKey(DeploymentSummary deploymentSummary, DeploymentKey deploymentKey) {
+    if (deploymentKey instanceof AwsAmiDeploymentKey) {
+      deploymentSummary.setAwsAmiDeploymentKey((AwsAmiDeploymentKey) deploymentKey);
+    } else {
+      throw new WingsException("Invalid deploymentKey passed for AwsAmiDeploymentKey" + deploymentKey);
+    }
   }
 }

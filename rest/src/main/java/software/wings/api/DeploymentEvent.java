@@ -8,6 +8,8 @@ import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.core.queue.Queuable;
 
+import java.util.List;
+
 /**
  * This is used as request for capturing deployment and instance information.
  * @author rktummala on 02/04/18
@@ -16,12 +18,9 @@ import software.wings.core.queue.Queuable;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "deploymentEventQueue", noClassnameStored = true)
 @Data
+@Builder
 @EqualsAndHashCode(callSuper = true)
 public class DeploymentEvent extends Queuable {
-  @Embedded private DeploymentInfo deploymentInfo;
-
-  @Builder
-  public DeploymentEvent(DeploymentInfo deploymentInfo) {
-    this.deploymentInfo = deploymentInfo;
-  }
+  private boolean isRollback;
+  @Embedded private List<DeploymentSummary> deploymentSummaries;
 }

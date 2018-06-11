@@ -21,6 +21,6 @@ public class DeploymentEventListener extends AbstractQueueListener<DeploymentEve
    */
   @Override
   protected void onMessage(DeploymentEvent deploymentEvent) {
-    instanceHelper.handleDeploymentEvent(deploymentEvent);
+    instanceHelper.processDeploymentEvent(deploymentEvent);
   }
 }

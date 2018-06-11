@@ -15,6 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 import software.wings.annotation.Encryptable;
 import software.wings.api.AwsAutoScalingGroupDeploymentInfo;
 import software.wings.api.DeploymentInfo;
+import software.wings.api.DeploymentSummary;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseStepExecutionData;
 import software.wings.beans.AwsConfig;
@@ -29,6 +30,7 @@ import software.wings.beans.infrastructure.instance.info.AutoScalingGroupInstanc
 import software.wings.beans.infrastructure.instance.info.Ec2InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
+import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
 import software.wings.exception.HarnessException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
@@ -91,24 +93,36 @@ public class AwsInstanceHandler extends InstanceHandler {
       }
     }
 
-    handleAsgInstanceSync(region, asgInstanceMap, awsConfig, encryptedDataDetails, infrastructureMapping, null, false);
+    handleAsgInstanceSync(
+        region, asgInstanceMap, awsConfig, encryptedDataDetails, infrastructureMapping, null, true, false);
   }
 
   @Override
-  public void handleNewDeployment(DeploymentInfo deploymentInfo) throws HarnessException {
+  public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback)
+      throws HarnessException {
     // All the new deployments are either handled at ASGInstanceHandler(for Aws ssh with asg) or InstanceHelper (for Aws
     // ssh with or without filter)
     throw new HarnessException("Deployments should be handled at InstanceHelper for aws ssh type except for with ASG.");
   }
 
   @Override
-  public Optional<DeploymentInfo> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
+  public Optional<List<DeploymentInfo>> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
       PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,
       InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact)
       throws HarnessException {
     // All the new deployments are either handled at ASGInstanceHandler(for Aws ssh with asg) or InstanceHelper (for Aws
     // ssh with or without filter)
     throw new HarnessException("Deployments should be handled at InstanceHelper for aws ssh type except for with ASG.");
+  }
+
+  @Override
+  public DeploymentKey generateDeploymentKey(DeploymentInfo deploymentInfo) {
+    return null;
+  }
+
+  @Override
+  protected void setDeploymentKey(DeploymentSummary deploymentSummary, DeploymentKey deploymentKey) {
+    // Do Nothing
   }
 
   protected void loadInstanceMapBasedOnType(String appId, String infraMappingId,
@@ -132,14 +146,7 @@ public class AwsInstanceHandler extends InstanceHandler {
 
   protected void handleAsgInstanceSync(String region, Multimap<String, Instance> asgInstanceMap, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, InfrastructureMapping infrastructureMapping,
-      DeploymentInfo newDeploymentInfo, boolean isAmi) {
-    Map<String, DeploymentInfo> asgDeploymentInfoMap = Maps.newHashMap();
-    if (newDeploymentInfo != null) {
-      AwsAutoScalingGroupDeploymentInfo asgDeploymentInfo = (AwsAutoScalingGroupDeploymentInfo) newDeploymentInfo;
-      asgDeploymentInfo.getAutoScalingGroupNameList().stream().forEach(
-          autoScalingGroupName -> asgDeploymentInfoMap.put(autoScalingGroupName, asgDeploymentInfo));
-    }
-
+      Map<String, DeploymentSummary> asgNameDeploymentSummaryMap, boolean isAmi, boolean rollback) {
     // This is to handle the case of the instances stored in the new schema.
     if (asgInstanceMap.size() > 0) {
       asgInstanceMap.keySet().stream().forEach(autoScalingGroupName -> {
@@ -168,7 +175,7 @@ public class AwsInstanceHandler extends InstanceHandler {
         // Find the instances that were yet to be added to db
         SetView<String> instancesToBeAdded = Sets.difference(latestEc2InstanceMap.keySet(), instancesInDBMap.keySet());
 
-        if (newDeploymentInfo != null && !isAmi) {
+        if (asgNameDeploymentSummaryMap != null && !isAmi) {
           instancesToBeUpdated.stream().forEach(ec2InstanceId -> {
             Instance instance = instancesInDBMap.get(ec2InstanceId);
             String uuid = null;
@@ -177,18 +184,19 @@ public class AwsInstanceHandler extends InstanceHandler {
             }
             com.amazonaws.services.ec2.model.Instance ec2Instance = latestEc2InstanceMap.get(ec2InstanceId);
             instance = buildInstanceUsingEc2InstanceAndASG(uuid, ec2Instance, infrastructureMapping,
-                autoScalingGroupName, asgDeploymentInfoMap.get(autoScalingGroupName));
+                autoScalingGroupName, asgNameDeploymentSummaryMap.get(autoScalingGroupName));
             instanceService.saveOrUpdate(instance);
           });
         }
 
         handleEc2InstanceDelete(instancesInDBMap, latestEc2InstanceMap);
 
-        DeploymentInfo deploymentInfo;
+        DeploymentSummary deploymentSummary;
         if (isNotEmpty(instancesToBeAdded)) {
           if (isAmi) {
             // newDeploymentInfo would be null in case of sync job.
-            if (newDeploymentInfo == null && isNotEmpty(instancesInDB)) {
+            if ((asgNameDeploymentSummaryMap == null || !asgNameDeploymentSummaryMap.containsKey(autoScalingGroupName))
+                && isNotEmpty(instancesInDB)) {
               Optional<Instance> instanceWithExecutionInfoOptional = getInstanceWithExecutionInfo(instancesInDB);
               if (!instanceWithExecutionInfoOptional.isPresent()) {
                 logger.warn("Couldn't find an instance from a previous deployment for inframapping {}",
@@ -196,18 +204,23 @@ public class AwsInstanceHandler extends InstanceHandler {
                 return;
               }
 
-              DeploymentInfo deploymentInfoFromPrevious = AwsAutoScalingGroupDeploymentInfo.builder().build();
-              generateDeploymentInfoFromInstance(instanceWithExecutionInfoOptional.get(), deploymentInfoFromPrevious);
-              deploymentInfo = deploymentInfoFromPrevious;
+              DeploymentSummary deploymentSummaryFromPrevious =
+                  DeploymentSummary.builder()
+                      .deploymentInfo(AwsAutoScalingGroupDeploymentInfo.builder().build())
+                      .build();
+              generateDeploymentSummaryFromInstance(
+                  instanceWithExecutionInfoOptional.get(), deploymentSummaryFromPrevious);
+              deploymentSummary = deploymentSummaryFromPrevious;
             } else {
-              deploymentInfo = newDeploymentInfo;
+              deploymentSummary = getDeploymentSummaryForInstanceCreation(
+                  asgNameDeploymentSummaryMap.get(autoScalingGroupName), rollback);
             }
 
             instancesToBeAdded.stream().forEach(ec2InstanceId -> {
               com.amazonaws.services.ec2.model.Instance ec2Instance = latestEc2InstanceMap.get(ec2InstanceId);
               // change to asg based instance builder
               Instance instance = buildInstanceUsingEc2InstanceAndASG(
-                  null, ec2Instance, infrastructureMapping, autoScalingGroupName, deploymentInfo);
+                  null, ec2Instance, infrastructureMapping, autoScalingGroupName, deploymentSummary);
               instanceService.save(instance);
             });
           } else {
@@ -226,8 +239,8 @@ public class AwsInstanceHandler extends InstanceHandler {
 
   protected Instance buildInstanceUsingEc2InstanceAndASG(String instanceId,
       com.amazonaws.services.ec2.model.Instance ec2Instance, InfrastructureMapping infraMapping,
-      String autoScalingGroupName, DeploymentInfo newDeploymentInfo) {
-    InstanceBuilder builder = buildInstanceBase(instanceId, infraMapping, newDeploymentInfo);
+      String autoScalingGroupName, DeploymentSummary newDeploymentSummary) {
+    InstanceBuilder builder = buildInstanceBase(instanceId, infraMapping, newDeploymentSummary);
     setASGInstanceInfoAndKey(builder, ec2Instance, infraMapping.getUuid(), autoScalingGroupName);
     return builder.build();
   }

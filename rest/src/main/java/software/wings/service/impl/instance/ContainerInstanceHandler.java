@@ -1,5 +1,6 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -14,11 +15,13 @@ import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.data.structure.EmptyPredicate;
 import software.wings.api.CommandStepExecutionSummary;
 import software.wings.api.ContainerDeploymentInfoWithLabels;
 import software.wings.api.ContainerDeploymentInfoWithNames;
 import software.wings.api.ContainerServiceData;
 import software.wings.api.DeploymentInfo;
+import software.wings.api.DeploymentSummary;
 import software.wings.api.HelmSetupExecutionSummary;
 import software.wings.api.KubernetesSteadyStateCheckExecutionSummary;
 import software.wings.api.PhaseExecutionData;
@@ -36,6 +39,8 @@ import software.wings.beans.infrastructure.instance.info.EcsContainerInfo;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
 import software.wings.beans.infrastructure.instance.key.ContainerInstanceKey;
+import software.wings.beans.infrastructure.instance.key.deployment.ContainerDeploymentKey;
+import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
 import software.wings.common.Constants;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
@@ -52,7 +57,10 @@ import software.wings.sm.StepExecutionSummary;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -71,7 +79,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
   public void syncInstances(String appId, String infraMappingId) throws HarnessException {
     // Key - containerSvcName, Value - Instances
     Multimap<String, Instance> containerSvcNameInstanceMap = ArrayListMultimap.create();
-    syncInstancesInternal(appId, infraMappingId, containerSvcNameInstanceMap, null);
+    syncInstancesInternal(appId, infraMappingId, containerSvcNameInstanceMap, null, false);
   }
 
   protected ContainerInfrastructureMapping getContainerInfraMapping(String appId, String inframappingId)
@@ -96,11 +104,14 @@ public class ContainerInstanceHandler extends InstanceHandler {
    * @throws HarnessException
    */
   protected void syncInstancesInternal(String appId, String infraMappingId,
-      Multimap<String, Instance> containerSvcNameInstanceMap, DeploymentInfo newDeploymentInfo)
-      throws HarnessException {
-    loadContainerSvcNameInstanceMap(appId, infraMappingId, containerSvcNameInstanceMap);
-
+      Multimap<String, Instance> containerSvcNameInstanceMap, List<DeploymentSummary> newDeploymentSummaries,
+      boolean rollback) throws HarnessException {
     ContainerInfrastructureMapping containerInfraMapping = getContainerInfraMapping(appId, infraMappingId);
+
+    Map<String, DeploymentSummary> serviceNamesNewDeploymentSummaryMap =
+        getDeploymentSummaryMap(newDeploymentSummaries, containerSvcNameInstanceMap, containerInfraMapping);
+
+    loadContainerSvcNameInstanceMap(appId, infraMappingId, containerSvcNameInstanceMap);
 
     // This is to handle the case of the instances stored in the new schema.
     if (containerSvcNameInstanceMap.size() > 0) {
@@ -158,27 +169,32 @@ public class ContainerInstanceHandler extends InstanceHandler {
           instanceService.delete(instanceIdsToBeDeleted);
         }
 
-        DeploymentInfo deploymentInfo;
+        DeploymentSummary deploymentSummary;
         if (isNotEmpty(instancesToBeAdded)) {
           // newDeploymentInfo would be null in case of sync job.
-          if (newDeploymentInfo == null && isNotEmpty(instancesInDB)) {
+          if ((containerSvcNameInstanceMap == null
+                  || !serviceNamesNewDeploymentSummaryMap.containsKey(containerSvcName))
+              && isNotEmpty(instancesInDB)) {
             Optional<Instance> instanceWithExecutionInfoOptional = getInstanceWithExecutionInfo(instancesInDB);
             if (!instanceWithExecutionInfoOptional.isPresent()) {
               logger.warn("Couldn't find an instance from a previous deployment for inframapping {}", infraMappingId);
               return;
             }
 
-            DeploymentInfo deploymentInfoFromPrevious = ContainerDeploymentInfoWithNames.builder().build();
+            DeploymentSummary deploymentSummaryFromPrevious =
+                DeploymentSummary.builder().deploymentInfo(ContainerDeploymentInfoWithNames.builder().build()).build();
             // We pick one of the existing instances from db for the same controller / task definition
-            generateDeploymentInfoFromInstance(instanceWithExecutionInfoOptional.get(), deploymentInfoFromPrevious);
-            deploymentInfo = deploymentInfoFromPrevious;
+            generateDeploymentSummaryFromInstance(
+                instanceWithExecutionInfoOptional.get(), deploymentSummaryFromPrevious);
+            deploymentSummary = deploymentSummaryFromPrevious;
           } else {
-            deploymentInfo = newDeploymentInfo;
+            deploymentSummary = getDeploymentSummaryForInstanceCreation(
+                serviceNamesNewDeploymentSummaryMap.get(containerSvcName), rollback);
           }
 
           instancesToBeAdded.forEach(containerId -> {
             ContainerInfo containerInfo = latestContainerInfoMap.get(containerId);
-            Instance instance = buildInstanceFromContainerInfo(containerInfraMapping, containerInfo, deploymentInfo);
+            Instance instance = buildInstanceFromContainerInfo(containerInfraMapping, containerInfo, deploymentSummary);
             instanceService.saveOrUpdate(instance);
           });
         }
@@ -186,6 +202,45 @@ public class ContainerInstanceHandler extends InstanceHandler {
     }
   }
 
+  private Map<String, DeploymentSummary> getDeploymentSummaryMap(List<DeploymentSummary> newDeploymentSummaries,
+      Multimap<String, Instance> containerSvcNameInstanceMap, ContainerInfrastructureMapping containerInfraMapping) {
+    if (EmptyPredicate.isEmpty(newDeploymentSummaries)) {
+      return Collections.EMPTY_MAP;
+    }
+
+    Map<String, DeploymentSummary> deploymentSummaryMap = new HashMap<>();
+
+    if (newDeploymentSummaries.stream().iterator().next().getDeploymentInfo()
+            instanceof ContainerDeploymentInfoWithLabels) {
+      Map<String, String> labelMap = new HashMap<>();
+      for (DeploymentSummary deploymentSummary : newDeploymentSummaries) {
+        ((ContainerDeploymentInfoWithLabels) deploymentSummary.getDeploymentInfo())
+            .getLabels()
+            .stream()
+            .forEach(labelEntry -> labelMap.put(labelEntry.getName(), labelEntry.getValue()));
+
+        Set<String> controllerNames = containerSync.getControllerNames(containerInfraMapping, labelMap);
+
+        logger.info(
+            "Number of controllers returned for executionId [{}], inframappingId [{}], appId [{}] from labels: {}",
+            newDeploymentSummaries.iterator().next().getWorkflowExecutionId(), containerInfraMapping.getUuid(),
+            newDeploymentSummaries.iterator().next().getAppId(), controllerNames.size());
+
+        controllerNames.stream().forEach(controllerName -> {
+          deploymentSummaryMap.put(controllerName, deploymentSummary);
+          containerSvcNameInstanceMap.put(controllerName, null);
+        });
+      }
+    } else {
+      newDeploymentSummaries.stream().forEach(deploymentSummary
+          -> deploymentSummaryMap.put(
+
+              ((ContainerDeploymentInfoWithNames) deploymentSummary.getDeploymentInfo()).getContainerSvcName(),
+              deploymentSummary));
+    }
+
+    return deploymentSummaryMap;
+  }
   private void loadContainerSvcNameInstanceMap(String appId, String infraMappingId,
       Multimap<String, Instance> containerSvcNameInstanceMap) throws HarnessException {
     List<Instance> instanceListInDBForInfraMapping = getInstances(appId, infraMappingId);
@@ -202,33 +257,40 @@ public class ContainerInstanceHandler extends InstanceHandler {
   }
 
   @Override
-  public void handleNewDeployment(DeploymentInfo deploymentInfo) throws HarnessException {
+  public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback)
+      throws HarnessException {
     Multimap<String, Instance> containerSvcNameInstanceMap = ArrayListMultimap.create();
-    logger.info("Handling new container deployment for executionId [{}], inframappingId [{}], appId [{}]",
-        deploymentInfo.getWorkflowExecutionId(), deploymentInfo.getAppId(), deploymentInfo.getInfraMappingId());
-    if (deploymentInfo instanceof ContainerDeploymentInfoWithLabels) {
-      ContainerDeploymentInfoWithLabels containerDeploymentInfo = (ContainerDeploymentInfoWithLabels) deploymentInfo;
 
-      ContainerInfrastructureMapping containerInfraMapping =
-          getContainerInfraMapping(deploymentInfo.getAppId(), deploymentInfo.getInfraMappingId());
-      Set<String> controllerNames = containerSync.getControllerNames(containerInfraMapping,
-          containerDeploymentInfo.getLabels().stream().collect(
-              Collectors.toMap(label -> label.getName(), label -> label.getValue())));
-      logger.info(
-          "Number of controllers returned for executionId [{}], inframappingId [{}], appId [{}] from labels: {}",
-          deploymentInfo.getWorkflowExecutionId(), deploymentInfo.getAppId(), deploymentInfo.getInfraMappingId(),
-          controllerNames.size());
-      controllerNames.stream().forEach(containerSvcName -> containerSvcNameInstanceMap.put(containerSvcName, null));
-
-    } else if (deploymentInfo instanceof ContainerDeploymentInfoWithNames) {
-      ContainerDeploymentInfoWithNames containerDeploymentInfo = (ContainerDeploymentInfoWithNames) deploymentInfo;
-      containerDeploymentInfo.getContainerSvcNameSet().stream().forEach(
-          containerSvcName -> containerSvcNameInstanceMap.put(containerSvcName, null));
-    } else {
-      throw new HarnessException("Incompatible deployment info type: " + deploymentInfo.getClass().getName());
+    if (isEmpty(deploymentSummaries)) {
+      return;
     }
-    syncInstancesInternal(
-        deploymentInfo.getAppId(), deploymentInfo.getInfraMappingId(), containerSvcNameInstanceMap, deploymentInfo);
+
+    String infraMappingId = deploymentSummaries.iterator().next().getInfraMappingId();
+    String appId = deploymentSummaries.iterator().next().getAppId();
+    String workflowExecutionId = deploymentSummaries.iterator().next().getWorkflowExecutionId();
+    logger.info("Handling new container deployment for executionId [{}], inframappingId [{}], appId [{}]",
+        workflowExecutionId, infraMappingId, appId);
+    validateDeploymentInfos(deploymentSummaries);
+
+    if (deploymentSummaries.iterator().next().getDeploymentInfo() instanceof ContainerDeploymentInfoWithNames) {
+      deploymentSummaries.stream().forEach(deploymentSummary -> {
+        ContainerDeploymentInfoWithNames containerDeploymentInfo =
+            (ContainerDeploymentInfoWithNames) deploymentSummary.getDeploymentInfo();
+        containerSvcNameInstanceMap.put(containerDeploymentInfo.getContainerSvcName(), null);
+      });
+    }
+
+    syncInstancesInternal(appId, infraMappingId, containerSvcNameInstanceMap, deploymentSummaries, rollback);
+  }
+
+  private void validateDeploymentInfos(List<DeploymentSummary> deploymentSummaries) throws HarnessException {
+    for (DeploymentSummary deploymentSummary : deploymentSummaries) {
+      DeploymentInfo deploymentInfo = deploymentSummary.getDeploymentInfo();
+      if (!(deploymentInfo instanceof ContainerDeploymentInfoWithNames)
+          && !(deploymentInfo instanceof ContainerDeploymentInfoWithLabels)) {
+        throw new HarnessException("Incompatible deployment info type: " + deploymentInfo);
+      }
+    }
   }
 
   public boolean isContainerDeployment(InfrastructureMapping infrastructureMapping) {
@@ -236,7 +298,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
   }
 
   @Override
-  public Optional<DeploymentInfo> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
+  public Optional<List<DeploymentInfo>> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
       PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,
       InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact)
       throws HarnessException {
@@ -287,12 +349,10 @@ public class ContainerInstanceHandler extends InstanceHandler {
             return Optional.empty();
           }
 
-          ContainerDeploymentInfoWithNames containerDeploymentInfo = ContainerDeploymentInfoWithNames.builder()
-                                                                         .containerSvcNameSet(containerSvcNameSet)
-                                                                         .clusterName(clusterName)
-                                                                         .build();
+          List<DeploymentInfo> containerDeploymentInfoWithNames =
+              getContainerDeploymentInfos(clusterName, containerSvcNameSet);
 
-          return Optional.of(containerDeploymentInfo);
+          return Optional.of(containerDeploymentInfoWithNames);
 
         } else if (stepExecutionSummary instanceof HelmSetupExecutionSummary
             || stepExecutionSummary instanceof KubernetesSteadyStateCheckExecutionSummary) {
@@ -315,14 +375,26 @@ public class ContainerInstanceHandler extends InstanceHandler {
             labels.addAll(kubernetesSteadyStateCheckExecutionSummary.getLabels());
           }
 
-          ContainerDeploymentInfoWithLabels containerDeploymentInfo =
-              ContainerDeploymentInfoWithLabels.builder().labels(labels).clusterName(clusterName).build();
-
-          return Optional.of(containerDeploymentInfo);
+          ContainerInfrastructureMapping containerInfraMapping = (ContainerInfrastructureMapping) infrastructureMapping;
+          return Optional.of(Arrays.asList(getContainerDeploymentInfosWithLables(clusterName, labels)));
         }
       }
     }
     return Optional.empty();
+  }
+
+  private DeploymentInfo getContainerDeploymentInfosWithLables(String clusterName, List<Label> labels) {
+    return ContainerDeploymentInfoWithLabels.builder().clusterName(clusterName).labels(labels).build();
+  }
+
+  private List<DeploymentInfo> getContainerDeploymentInfos(String clusterName, Set<String> containerSvcNameSet) {
+    List<DeploymentInfo> containerDeploymentInfoWithNames = new ArrayList<>();
+    containerSvcNameSet.stream().forEach(containerSvcName
+        -> containerDeploymentInfoWithNames.add(ContainerDeploymentInfoWithNames.builder()
+                                                    .containerSvcName(containerSvcName)
+                                                    .clusterName(clusterName)
+                                                    .build()));
+    return containerDeploymentInfoWithNames;
   }
 
   private String getContainerId(ContainerInfo containerInfo) {
@@ -340,8 +412,8 @@ public class ContainerInstanceHandler extends InstanceHandler {
   }
 
   public Instance buildInstanceFromContainerInfo(
-      InfrastructureMapping infraMapping, ContainerInfo containerInfo, DeploymentInfo newDeploymentInfo) {
-    InstanceBuilder builder = buildInstanceBase(null, infraMapping, newDeploymentInfo);
+      InfrastructureMapping infraMapping, ContainerInfo containerInfo, DeploymentSummary deploymentSummary) {
+    InstanceBuilder builder = buildInstanceBase(null, infraMapping, deploymentSummary);
     builder.containerInstanceKey(generateInstanceKeyForContainer(containerInfo));
     builder.instanceInfo(containerInfo);
 
@@ -510,5 +582,29 @@ public class ContainerInstanceHandler extends InstanceHandler {
       return containerSvcName;
     }
     return containerSvcName.substring(0, index);
+  }
+
+  @Override
+  public DeploymentKey generateDeploymentKey(DeploymentInfo deploymentInfo) {
+    if (deploymentInfo instanceof ContainerDeploymentInfoWithNames) {
+      return ContainerDeploymentKey.builder()
+          .containerServiceName(((ContainerDeploymentInfoWithNames) deploymentInfo).getContainerSvcName())
+          .build();
+    } else if (deploymentInfo instanceof ContainerDeploymentInfoWithLabels) {
+      return ContainerDeploymentKey.builder()
+          .labels(((ContainerDeploymentInfoWithLabels) deploymentInfo).getLabels())
+          .build();
+    } else {
+      throw new WingsException("Unsupported DeploymentINfo type for Container: " + deploymentInfo);
+    }
+  }
+
+  @Override
+  protected void setDeploymentKey(DeploymentSummary deploymentSummary, DeploymentKey deploymentKey) {
+    if (deploymentKey instanceof ContainerDeploymentKey) {
+      deploymentSummary.setContainerDeploymentKey((ContainerDeploymentKey) deploymentKey);
+    } else {
+      throw new WingsException("Invalid deploymentKey passed for ContainerDeploymentKey" + deploymentKey);
+    }
   }
 }

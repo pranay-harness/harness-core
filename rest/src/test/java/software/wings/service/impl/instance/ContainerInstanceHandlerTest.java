@@ -6,13 +6,11 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
-import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static software.wings.beans.container.Label.Builder.aLabel;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACCOUNT_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_NAME;
@@ -31,10 +29,8 @@ import static software.wings.service.impl.instance.InstanceSyncTestConstants.SER
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_NAME;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.US_EAST;
 
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
-import de.danielbechler.util.Collections;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -43,8 +39,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import software.wings.WingsBaseTest;
-import software.wings.api.ContainerDeploymentInfoWithLabels;
 import software.wings.api.ContainerDeploymentInfoWithNames;
+import software.wings.api.DeploymentSummary;
 import software.wings.beans.Application;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
@@ -53,7 +49,6 @@ import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.Service;
-import software.wings.beans.container.Label;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.beans.infrastructure.instance.info.EcsContainerInfo;
@@ -72,12 +67,13 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.instance.DeploymentService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.security.SecretManager;
 
-import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public class ContainerInstanceHandlerTest extends WingsBaseTest {
@@ -92,6 +88,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
   @Mock EnvironmentService environmentService;
   @Mock ServiceResourceService serviceResourceService;
   @Mock private ContainerSync containerSync;
+  @Mock private DeploymentService deploymentService;
   @InjectMocks @Spy InstanceHelper instanceHelper;
   @Spy InstanceUtil instanceUtil;
   @InjectMocks @Inject ContainerInstanceHandler containerInstanceHandler;
@@ -246,6 +243,26 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     }
   }
 
+  private void assertions_rollback(String containerId, InstanceType instanceType, boolean checkSaveOrUpdate)
+      throws Exception {
+    ArgumentCaptor<Set> captor = ArgumentCaptor.forClass(Set.class);
+    verify(instanceService).delete(captor.capture());
+    Set idTobeDeleted = captor.getValue();
+    assertEquals(1, idTobeDeleted.size());
+    assertTrue(idTobeDeleted.contains(INSTANCE_1_ID));
+
+    if (checkSaveOrUpdate) {
+      ArgumentCaptor<Instance> captorInstance = ArgumentCaptor.forClass(Instance.class);
+      verify(instanceService, times(1)).saveOrUpdate(captorInstance.capture());
+
+      List<Instance> capturedInstances = captorInstance.getAllValues();
+      assertEquals(containerId, capturedInstances.get(0).getContainerInstanceKey().getContainerId());
+      assertEquals(instanceType, capturedInstances.get(0).getInstanceType());
+      assertEquals("old", capturedInstances.get(0).getLastArtifactName());
+      assertEquals("1", capturedInstances.get(0).getLastArtifactBuildNum());
+    }
+  }
+
   @Test
   public void testNewDeployment_ECS() throws Exception {
     doReturn(getInframapping(InfrastructureMappingType.AWS_ECS.name()))
@@ -294,14 +311,27 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
         .getInstances(any(), anyList());
 
     containerInstanceHandler.handleNewDeployment(
-        ContainerDeploymentInfoWithNames.builder()
-            .clusterName(ECS_CLUSTER)
-            .containerSvcNameSet(Collections.setOf(asList("service_b_1", "service_b_2")))
-            .accountId(ACCOUNT_ID)
-            .infraMappingId(INFRA_MAPPING_ID)
-            .workflowExecutionId("workfloeExecution_1")
-            .stateExecutionInstanceId("stateExecutionInstanceId")
-            .build());
+        Arrays.asList(DeploymentSummary.builder()
+                          .deploymentInfo(ContainerDeploymentInfoWithNames.builder()
+                                              .clusterName(ECS_CLUSTER)
+                                              .containerSvcName("service_b_1")
+                                              .build())
+                          .accountId(ACCOUNT_ID)
+                          .infraMappingId(INFRA_MAPPING_ID)
+                          .workflowExecutionId("workfloeExecution_1")
+                          .stateExecutionInstanceId("stateExecutionInstanceId")
+                          .build(),
+            DeploymentSummary.builder()
+                .deploymentInfo(ContainerDeploymentInfoWithNames.builder()
+                                    .clusterName(ECS_CLUSTER)
+                                    .containerSvcName("service_b_2")
+                                    .build())
+                .accountId(ACCOUNT_ID)
+                .infraMappingId(INFRA_MAPPING_ID)
+                .workflowExecutionId("workfloeExecution_1")
+                .stateExecutionInstanceId("stateExecutionInstanceId")
+                .build()),
+        false);
 
     assertions("taskARN:2", InstanceType.ECS_CONTAINER_INSTANCE, true);
   }
@@ -416,20 +446,46 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
         .getInstances(any(), anyList());
 
     containerInstanceHandler.handleNewDeployment(
-        ContainerDeploymentInfoWithNames.builder()
-            .clusterName(KUBE_CLUSTER)
-            .containerSvcNameSet(Collections.setOf(asList("controllerName:0", "controllerName:1")))
-            .accountId(ACCOUNT_ID)
-            .infraMappingId(INFRA_MAPPING_ID)
-            .workflowExecutionId("workfloeExecution_1")
-            .stateExecutionInstanceId("stateExecutionInstanceId")
-            .build());
+        Arrays.asList(DeploymentSummary.builder()
+                          .deploymentInfo(ContainerDeploymentInfoWithNames.builder()
+                                              .clusterName(KUBE_CLUSTER)
+                                              .containerSvcName("controllerName:0")
+                                              .build())
+                          .accountId(ACCOUNT_ID)
+                          .infraMappingId(INFRA_MAPPING_ID)
+                          .workflowExecutionId("workfloeExecution_1")
+                          .stateExecutionInstanceId("stateExecutionInstanceId")
+                          .build(),
+            DeploymentSummary.builder()
+                .deploymentInfo(ContainerDeploymentInfoWithNames.builder()
+                                    .clusterName(KUBE_CLUSTER)
+                                    .containerSvcName("controllerName:1")
+                                    .build())
+                .accountId(ACCOUNT_ID)
+                .infraMappingId(INFRA_MAPPING_ID)
+                .workflowExecutionId("workfloeExecution_1")
+                .stateExecutionInstanceId("stateExecutionInstanceId")
+                .build()),
+        false);
 
     assertions("pod:1", InstanceType.KUBERNETES_CONTAINER_INSTANCE, true);
   }
 
   @Test
-  public void testNewDeployment_Helm_Kubernetes() throws Exception {
+  public void testNewDeployment_Kubernetes_Rollback() throws Exception {
+    doReturn(Optional.of(
+                 DeploymentSummary.builder()
+                     .deploymentInfo(ContainerDeploymentInfoWithNames.builder().containerSvcName("service_a_1").build())
+                     .accountId(ACCOUNT_ID)
+                     .infraMappingId(INFRA_MAPPING_ID)
+                     .workflowExecutionId("workfloeExecution_1")
+                     .stateExecutionInstanceId("stateExecutionInstanceId")
+                     .artifactBuildNum("1")
+                     .artifactName("old")
+                     .build()))
+        .when(deploymentService)
+        .get(any(DeploymentSummary.class));
+
     doReturn(getInframapping(InfrastructureMappingType.GCP_KUBERNETES.name()))
         .when(infraMappingService)
         .get(anyString(), anyString());
@@ -460,10 +516,6 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
 
     doReturn(pageResponse).when(instanceService).list(any());
 
-    HashSet<Object> hashSet = Sets.newHashSet();
-    hashSet.add("controllerName:1");
-    doReturn(hashSet).when(containerSync).getControllerNames(any(), anyMap());
-
     doReturn(ContainerSyncResponse.builder().containerInfoList(asList()).build())
         .doReturn(ContainerSyncResponse.builder()
                       .containerInfoList(asList(KubernetesContainerInfo.builder()
@@ -476,17 +528,29 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
         .when(containerSync)
         .getInstances(any(), anyList());
 
-    List<Label> labels = new ArrayList<>();
-    labels.add(aLabel().withName("release").withValue("version").build());
-    containerInstanceHandler.handleNewDeployment(ContainerDeploymentInfoWithLabels.builder()
-                                                     .clusterName(KUBE_CLUSTER)
-                                                     .labels(labels)
-                                                     .accountId(ACCOUNT_ID)
-                                                     .infraMappingId(INFRA_MAPPING_ID)
-                                                     .workflowExecutionId("workfloeExecution_1")
-                                                     .stateExecutionInstanceId("stateExecutionInstanceId")
-                                                     .build());
+    containerInstanceHandler.handleNewDeployment(
+        Arrays.asList(DeploymentSummary.builder()
+                          .deploymentInfo(ContainerDeploymentInfoWithNames.builder()
+                                              .clusterName(KUBE_CLUSTER)
+                                              .containerSvcName("controllerName:0")
+                                              .build())
+                          .accountId(ACCOUNT_ID)
+                          .infraMappingId(INFRA_MAPPING_ID)
+                          .workflowExecutionId("workfloeExecution_1")
+                          .stateExecutionInstanceId("stateExecutionInstanceId")
+                          .build(),
+            DeploymentSummary.builder()
+                .deploymentInfo(ContainerDeploymentInfoWithNames.builder()
+                                    .clusterName(KUBE_CLUSTER)
+                                    .containerSvcName("controllerName:1")
+                                    .build())
+                .accountId(ACCOUNT_ID)
+                .infraMappingId(INFRA_MAPPING_ID)
+                .workflowExecutionId("workfloeExecution_1")
+                .stateExecutionInstanceId("stateExecutionInstanceId")
+                .build()),
+        true);
 
-    assertions("pod:1", InstanceType.KUBERNETES_CONTAINER_INSTANCE, true);
+    assertions_rollback("pod:1", InstanceType.KUBERNETES_CONTAINER_INSTANCE, true);
   }
 }

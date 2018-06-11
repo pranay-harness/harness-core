@@ -1,6 +1,7 @@
 package software.wings.service.impl.instance;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.InfrastructureMappingType.AWS_AWS_LAMBDA;
 import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
@@ -21,7 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
 import software.wings.api.DeploymentEvent;
-import software.wings.api.DeploymentInfo;
+import software.wings.api.DeploymentSummary;
 import software.wings.api.HostElement;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseStepExecutionData;
@@ -40,7 +41,6 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.Instance.InstanceBuilder;
-import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.beans.infrastructure.instance.info.Ec2InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.PhysicalHostInstanceInfo;
@@ -54,8 +54,10 @@ import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.instance.DeploymentService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElementType;
@@ -100,6 +102,8 @@ public class InstanceHelper {
   @Inject private PersistentLocker persistentLocker;
   @Inject private InstanceHandlerFactory instanceHandlerFactory;
   @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private ServiceResourceService serviceResourceService;
+  @Inject private DeploymentService deploymentService;
 
   /**
    * The phaseExecutionData is used to process the instance information that is used by the service and infra
@@ -107,7 +111,8 @@ public class InstanceHelper {
    */
   public void extractInstanceOrDeploymentInfoBaseOnType(String stateExecutionInstanceId,
       PhaseExecutionData phaseExecutionData, PhaseStepExecutionData phaseStepExecutionData,
-      WorkflowStandardParams workflowStandardParams, String appId, WorkflowExecution workflowExecution) {
+      WorkflowStandardParams workflowStandardParams, String appId, WorkflowExecution workflowExecution,
+      PhaseStepSubWorkflow phaseStepSubWorkflow, ExecutionContext context) {
     try {
       if (phaseExecutionData == null) {
         logger.error("phaseExecutionData is null for state execution {}", stateExecutionInstanceId);
@@ -174,6 +179,15 @@ public class InstanceHelper {
 
           for (InstanceStatusSummary instanceStatusSummary : instanceStatusSummaries) {
             if (ExecutionStatus.isPositiveStatus(instanceStatusSummary.getStatus())) {
+              if (phaseStepSubWorkflow.isRollback()) {
+                // this is same way, workflow get artifact for rollback
+                // reference in CommandState.java
+                Artifact rollbackArtifact = serviceResourceService.findPreviousArtifact(
+                    appId, context.getWorkflowExecutionId(), instanceStatusSummary.getInstanceElement());
+                if (rollbackArtifact != null) {
+                  artifact = rollbackArtifact;
+                }
+              }
               Instance instance = buildInstanceUsingHostInfo(workflowExecution, artifact, instanceStatusSummary,
                   phaseExecutionData, phaseStepExecutionData, infrastructureMapping);
               if (instance != null) {
@@ -198,13 +212,14 @@ public class InstanceHelper {
         }
 
         InstanceHandler instanceHandler = instanceHandlerOptional.get();
-        Optional<DeploymentInfo> deploymentInfo = instanceHandler.getDeploymentInfo(phaseExecutionData,
+        List<DeploymentSummary> deploymentSummaries = instanceHandler.getDeploymentSummariesForEvent(phaseExecutionData,
             phaseStepExecutionData, workflowExecution, infrastructureMapping, stateExecutionInstanceId, artifact);
 
-        if (deploymentInfo.isPresent()) {
-          DeploymentEvent deploymentEvent = setValuesToDeploymentEvent(stateExecutionInstanceId, workflowExecution,
-              phaseExecutionData, phaseStepExecutionData, infrastructureMapping, artifact, deploymentInfo.get());
-          deploymentEventQueue.send(deploymentEvent);
+        if (isNotEmpty(deploymentSummaries)) {
+          deploymentEventQueue.send(DeploymentEvent.builder()
+                                        .deploymentSummaries(deploymentSummaries)
+                                        .isRollback(phaseStepSubWorkflow.isRollback())
+                                        .build());
         }
       }
     } catch (Exception ex) {
@@ -219,52 +234,6 @@ public class InstanceHelper {
       return true;
     }
     return false;
-  }
-
-  private DeploymentEvent setValuesToDeploymentEvent(String stateExecutionInstanceId,
-      WorkflowExecution workflowExecution, PhaseExecutionData phaseExecutionData,
-      PhaseStepExecutionData phaseStepExecutionData, InfrastructureMapping infrastructureMapping, Artifact artifact,
-      DeploymentInfo deploymentInfo) {
-    PipelineSummary pipelineSummary = workflowExecution.getPipelineSummary();
-    Application application = appService.get(workflowExecution.getAppId());
-    Validator.notNullCheck("Application", application);
-    EmbeddedUser triggeredBy = workflowExecution.getTriggeredBy();
-    Validator.notNullCheck("triggeredBy", triggeredBy);
-    String infraMappingType = infrastructureMapping.getInfraMappingType();
-
-    String workflowName = instanceUtil.getWorkflowName(workflowExecution.getName());
-    Validator.notNullCheck("WorkflowName", workflowName);
-
-    InstanceType instanceType = instanceUtil.getInstanceType(infraMappingType);
-    Validator.notNullCheck("InstanceType", instanceType);
-
-    deploymentInfo.setAppId(workflowExecution.getAppId());
-    deploymentInfo.setAccountId(application.getAccountId());
-    deploymentInfo.setInfraMappingId(phaseExecutionData.getInfraMappingId());
-    deploymentInfo.setStateExecutionInstanceId(stateExecutionInstanceId);
-    deploymentInfo.setWorkflowExecutionId(workflowExecution.getUuid());
-    deploymentInfo.setWorkflowExecutionName(workflowExecution.getName());
-    deploymentInfo.setWorkflowId(workflowExecution.getWorkflowId());
-
-    if (artifact != null) {
-      deploymentInfo.setArtifactId(artifact.getUuid());
-      deploymentInfo.setArtifactName(artifact.getDisplayName());
-      deploymentInfo.setArtifactStreamId(artifact.getArtifactStreamId());
-      deploymentInfo.setArtifactSourceName(artifact.getArtifactSourceName());
-      deploymentInfo.setArtifactBuildNum(artifact.getBuildNo());
-    }
-
-    if (pipelineSummary != null) {
-      deploymentInfo.setPipelineExecutionId(pipelineSummary.getPipelineId());
-      deploymentInfo.setPipelineExecutionName(pipelineSummary.getPipelineName());
-    }
-
-    deploymentInfo.setDeployedById(triggeredBy.getUuid());
-    deploymentInfo.setDeployedByName(triggeredBy.getName());
-    deploymentInfo.setDeployedAt(
-        phaseStepExecutionData.getEndTs() == null ? System.currentTimeMillis() : phaseStepExecutionData.getEndTs());
-
-    return DeploymentEvent.builder().deploymentInfo(deploymentInfo).build();
   }
 
   private boolean checkIfAnyStepsFailed(PhaseStepExecutionSummary phaseStepExecutionSummary) {
@@ -440,24 +409,39 @@ public class InstanceHelper {
   }
 
   @SuppressFBWarnings("NP_LOAD_OF_KNOWN_NULL_VALUE")
-  public void handleDeploymentEvent(DeploymentEvent deploymentEvent) {
-    DeploymentInfo deploymentInfo = deploymentEvent.getDeploymentInfo();
-    if (deploymentInfo == null) {
-      logger.error("Deployment info cannot be null");
+  public void processDeploymentEvent(DeploymentEvent deploymentEvent) {
+    List<DeploymentSummary> deploymentSummaries = deploymentEvent.getDeploymentSummaries();
+    // @TODO rama
+    if (isEmpty(deploymentSummaries)) {
+      throw new WingsException("Deployment Summaries can not be empty or null: ", USER_SRE);
+    }
+
+    if (!deploymentEvent.isRollback()) {
+      deploymentSummaries.stream().forEach(
+          deploymentSummary -> saveDeploymentSummary(deploymentSummary, deploymentEvent.isRollback()));
+    }
+
+    processDeploymentSummaries(deploymentSummaries, deploymentEvent.isRollback());
+  }
+
+  private DeploymentSummary saveDeploymentSummary(DeploymentSummary deploymentSummary, boolean rollback) {
+    if (rollback) {
+      return deploymentSummary;
+    }
+
+    return deploymentService.save(deploymentSummary);
+  }
+
+  private void processDeploymentSummaries(List<DeploymentSummary> deploymentSummaries, boolean isRollback) {
+    if (isEmpty(deploymentSummaries)) {
       return;
     }
 
-    String infraMappingId = deploymentInfo.getInfraMappingId();
-    String appId = deploymentInfo.getAppId();
-    String workflowExecutionId = deploymentInfo.getWorkflowExecutionId();
+    String infraMappingId = deploymentSummaries.iterator().next().getInfraMappingId();
+    String appId = deploymentSummaries.iterator().next().getAppId();
+    String workflowExecutionId = deploymentSummaries.iterator().next().getWorkflowExecutionId();
     try (AcquiredLock lock =
-             persistentLocker.tryToAcquireLock(InfrastructureMapping.class, infraMappingId, Duration.ofSeconds(180))) {
-      if (lock == null) {
-        logger.warn("Unable to acquire lock for executionId [{}], infraMappingId [{}], appId [{}]", workflowExecutionId,
-            infraMappingId, appId);
-        return;
-      }
-
+             persistentLocker.acquireLock(InfrastructureMapping.class, infraMappingId, Duration.ofSeconds(130))) {
       logger.info("Handling deployment event for executionId [{}], infraMappingId [{}] of appId [{}]",
           workflowExecutionId, infraMappingId, appId);
 
@@ -468,7 +452,7 @@ public class InstanceHelper {
           Util.getEnumFromString(InfrastructureMappingType.class, infraMapping.getInfraMappingType());
       if (isSupported(infrastructureMappingType)) {
         InstanceHandler instanceHandler = instanceHandlerFactory.getInstanceHandler(infrastructureMappingType);
-        instanceHandler.handleNewDeployment(deploymentInfo);
+        instanceHandler.handleNewDeployment(deploymentSummaries, isRollback);
         logger.info("Handled deployment event for executionId [{}], infraMappingId [{}] of appId [{}] successfully",
             workflowExecutionId, infraMappingId, appId);
       } else {
@@ -539,7 +523,7 @@ public class InstanceHelper {
         if (stateExecutionData instanceof PhaseExecutionData) {
           extractInstanceOrDeploymentInfoBaseOnType(context.getStateExecutionInstanceId(),
               (PhaseExecutionData) stateExecutionData, phaseStepExecutionData, workflowStandardParams,
-              context.getAppId(), workflowExecution);
+              context.getAppId(), workflowExecution, phaseStepSubWorkflow, context);
         } else {
           logger.warn("Fetched execution data is not of type phase for phase step {}", phaseStepSubWorkflow.getId());
         }

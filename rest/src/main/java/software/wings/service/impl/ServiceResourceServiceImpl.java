@@ -114,8 +114,6 @@ import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.ownership.OwnedByService;
 import software.wings.sm.ContextElement;
-import software.wings.sm.ContextElementType;
-import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
@@ -1393,18 +1391,13 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
-  public Artifact findPreviousArtifact(String serviceId, ExecutionContext context) {
-    ContextElement instanceElement = context.getContextElement(ContextElementType.INSTANCE);
-    if (instanceElement == null) {
-      return null;
-    }
-
+  public Artifact findPreviousArtifact(String appId, String workflowExecutionId, ContextElement instanceElement) {
     final Activity activity = wingsPersistence.createQuery(Activity.class)
-                                  .filter(Activity.APP_ID_KEY, context.getAppId())
+                                  .filter(Activity.APP_ID_KEY, appId)
                                   .filter(Activity.SERVICE_INSTANCE_ID_KEY, instanceElement.getUuid())
                                   .filter(Activity.STATUS_KEY, ExecutionStatus.SUCCESS)
                                   .field(Activity.WORKFLOW_EXECUTION_ID_KEY)
-                                  .notEqual(context.getWorkflowExecutionId())
+                                  .notEqual(workflowExecutionId)
                                   .field(Activity.ARTIFACT_ID_KEY)
                                   .exists()
                                   .order(Sort.descending(Activity.CREATED_AT_KEY))
@@ -1413,7 +1406,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     if (activity == null) {
       return null;
     }
-    return artifactService.get(context.getAppId(), activity.getArtifactId());
+    return artifactService.get(appId, activity.getArtifactId());
   }
 
   private boolean isCommandUnitsOrderChanged(List<CommandUnit> commandUnits, List<CommandUnit> oldCommandUnits) {
