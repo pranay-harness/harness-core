@@ -7,10 +7,18 @@ import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.SettingAttribute.Category.CLOUD_PROVIDER;
+import static software.wings.beans.SettingAttribute.Category.CONNECTOR;
+import static software.wings.beans.SettingAttribute.Category.SETTING;
 import static software.wings.generator.SettingGenerator.Settings.AWS_TEST_CLOUD_PROVIDER;
 import static software.wings.generator.SettingGenerator.Settings.DEV_TEST_CONNECTOR;
 import static software.wings.generator.SettingGenerator.Settings.GITHUB_TEST_CONNECTOR;
 import static software.wings.generator.SettingGenerator.Settings.TERRAFORM_TEST_GIT_REPO;
+import static software.wings.utils.WingsTestConstants.HARNESS_ARTIFACTORY;
+import static software.wings.utils.WingsTestConstants.HARNESS_DOCKER_REGISTRY;
+import static software.wings.utils.WingsTestConstants.HARNESS_JENKINS;
+import static software.wings.utils.WingsTestConstants.HARNESS_NEXUS;
+import static software.wings.utils.WingsTestConstants.HARNESS_NEXUS_THREE;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -18,20 +26,23 @@ import com.google.inject.Singleton;
 import io.github.benas.randombeans.api.EnhancedRandom;
 import software.wings.beans.Account;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.BambooConfig;
+import software.wings.beans.DockerConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.beans.config.NexusConfig;
 import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.generator.AccountGenerator.Accounts;
+import software.wings.generator.SecretGenerator.SecretName;
 import software.wings.service.intfc.SettingsService;
+import software.wings.utils.WingsTestConstants;
 
 @Singleton
 public class SettingGenerator {
-  protected static final String awsPlaygroundSecretKey =
-      "59bed5bda16ca8e58bf8c185089627e862e1610cf83019d610bfb8bb4b38e980b3f61ba3ab87c35fdc02028b14f5212c";
-
   @Inject AccountGenerator accountGenerator;
   @Inject SecretGenerator secretGenerator;
 
@@ -44,6 +55,11 @@ public class SettingGenerator {
     HARNESS_JENKINS_CONNECTOR,
     GITHUB_TEST_CONNECTOR,
     TERRAFORM_TEST_GIT_REPO,
+    HARNESS_BAMBOO_CONNECTOR,
+    HARNESS_NEXUS_CONNECTOR,
+    HARNESS_NEXU3_CONNECTOR,
+    HARNESS_ARTIFACTORY_CONNECTOR,
+    HARNESS_DOCKER_REGISTRY
   }
 
   public SettingAttribute ensurePredefined(Randomizer.Seed seed, Settings predefined) {
@@ -58,6 +74,16 @@ public class SettingGenerator {
         return ensureGithubTest(seed);
       case TERRAFORM_TEST_GIT_REPO:
         return ensureTerraformTestGitRepo(seed);
+      case HARNESS_BAMBOO_CONNECTOR:
+        return ensureHarnessBamboo(seed);
+      case HARNESS_NEXUS_CONNECTOR:
+        return ensureHarnessNexus(seed);
+      case HARNESS_NEXU3_CONNECTOR:
+        return ensureHarnessNexus3(seed);
+      case HARNESS_ARTIFACTORY_CONNECTOR:
+        return ensureHarnessArtifactory(seed);
+      case HARNESS_DOCKER_REGISTRY:
+        return ensureHarnessDocker(seed);
       default:
         unhandled(predefined);
     }
@@ -69,14 +95,14 @@ public class SettingGenerator {
     final Account account = accountGenerator.ensurePredefined(seed, Accounts.GENERIC_TEST);
     SettingAttribute settingAttribute =
         aSettingAttribute()
-            .withCategory(Category.CLOUD_PROVIDER)
+            .withCategory(CLOUD_PROVIDER)
             .withName(AWS_TEST_CLOUD_PROVIDER.name())
             .withAppId(GLOBAL_APP_ID)
             .withEnvId(GLOBAL_ENV_ID)
             .withAccountId(account.getUuid())
             .withValue(AwsConfig.builder()
                            .accessKey("AKIAIQHVMR7P5UESAUJQ")
-                           .secretKey(secretGenerator.decryptToCharArray(awsPlaygroundSecretKey))
+                           .secretKey(secretGenerator.decryptToCharArray(new SecretName("aws_playground_secret_key")))
                            .accountId(account.getUuid())
                            .build())
             .build();
@@ -88,7 +114,7 @@ public class SettingGenerator {
 
     final SettingAttribute settingAttribute =
         aSettingAttribute()
-            .withCategory(Category.SETTING)
+            .withCategory(SETTING)
             .withAccountId(account.getUuid())
             .withAppId(GLOBAL_APP_ID)
             .withEnvId(GLOBAL_ENV_ID)
@@ -136,7 +162,7 @@ public class SettingGenerator {
 
     final SettingAttribute settingAttribute =
         aSettingAttribute()
-            .withCategory(Category.CONNECTOR)
+            .withCategory(CONNECTOR)
             .withAccountId(account.getUuid())
             .withAppId(GLOBAL_APP_ID)
             .withEnvId(GLOBAL_ENV_ID)
@@ -208,7 +234,7 @@ public class SettingGenerator {
 
     SettingAttribute settingAttribute =
         aSettingAttribute()
-            .withCategory(Category.CONNECTOR)
+            .withCategory(CONNECTOR)
             .withName(TERRAFORM_TEST_GIT_REPO.name())
             .withAppId(githubKey.getAppId())
             .withEnvId(githubKey.getEnvId())
@@ -230,18 +256,103 @@ public class SettingGenerator {
 
     SettingAttribute settingAttribute =
         aSettingAttribute()
-            .withName("Harness Jenkins")
-            .withCategory(Category.CONNECTOR)
+            .withName(HARNESS_JENKINS)
+            .withCategory(CONNECTOR)
             .withAccountId(account.getUuid())
             .withValue(JenkinsConfig.builder()
                            .accountId(account.getUuid())
                            .jenkinsUrl("https://jenkins.wings.software")
                            .username("wingsbuild")
-                           .password("06b13aea6f5f13ec69577689a899bbaad69eeb2f".toCharArray())
+                           .password(secretGenerator.decryptToCharArray(new SecretName("harness_jenkins")))
                            .authMechanism(Constants.USERNAME_PASSWORD_FIELD)
                            .build())
             .build();
     return ensureSettingAttribute(seed, settingAttribute);
+  }
+
+  private SettingAttribute ensureHarnessBamboo(Randomizer.Seed seed) {
+    final Account account = accountGenerator.ensurePredefined(seed, Accounts.GENERIC_TEST);
+    SettingAttribute bambooSettingAttribute =
+        aSettingAttribute()
+            .withName(WingsTestConstants.HARNESS_BAMBOO)
+            .withCategory(Category.CONNECTOR)
+            .withAccountId(account.getUuid())
+            .withValue(BambooConfig.builder()
+                           .accountId(account.getUuid())
+                           .bambooUrl("http://ec2-18-208-86-222.compute-1.amazonaws.com:8085/")
+                           .username("wingsbuild")
+                           .password(secretGenerator.decryptToCharArray(new SecretName("harness_bamboo")))
+                           .build())
+            .build();
+    return ensureSettingAttribute(seed, bambooSettingAttribute);
+  }
+
+  private SettingAttribute ensureHarnessNexus(Randomizer.Seed seed) {
+    final Account account = accountGenerator.ensurePredefined(seed, Accounts.GENERIC_TEST);
+    SettingAttribute nexusSettingAttribute =
+        aSettingAttribute()
+            .withName(HARNESS_NEXUS)
+            .withCategory(Category.CONNECTOR)
+            .withAccountId(account.getUuid())
+            .withValue(NexusConfig.builder()
+                           .accountId(account.getUuid())
+                           .nexusUrl("https://nexus2.harness.io")
+                           .username("admin")
+                           .password(secretGenerator.decryptToCharArray(new SecretName("harness_nexus")))
+                           .build())
+            .build();
+    return ensureSettingAttribute(seed, nexusSettingAttribute);
+  }
+
+  private SettingAttribute ensureHarnessNexus3(Randomizer.Seed seed) {
+    final Account account = accountGenerator.ensurePredefined(seed, Accounts.GENERIC_TEST);
+    SettingAttribute nexus3SettingAttribute =
+        aSettingAttribute()
+            .withName(HARNESS_NEXUS_THREE)
+            .withCategory(Category.CONNECTOR)
+            .withAccountId(account.getUuid())
+            .withValue(NexusConfig.builder()
+                           .accountId(account.getUuid())
+                           .nexusUrl("https://nexus3.harness.io")
+                           .username("admin")
+                           .password(secretGenerator.decryptToCharArray(new SecretName("harness_nexus")))
+                           .build())
+            .build();
+    return ensureSettingAttribute(seed, nexus3SettingAttribute);
+  }
+
+  private SettingAttribute ensureHarnessArtifactory(Randomizer.Seed seed) {
+    final Account account = accountGenerator.ensurePredefined(seed, Accounts.GENERIC_TEST);
+    SettingAttribute artifactorySettingAttribute =
+        aSettingAttribute()
+            .withName(HARNESS_ARTIFACTORY)
+            .withCategory(Category.CONNECTOR)
+            .withAccountId(account.getUuid())
+            .withValue(ArtifactoryConfig.builder()
+                           .accountId(account.getUuid())
+                           .artifactoryUrl("https://harness.jfrog.io/harness")
+                           .username("admin")
+                           .password(secretGenerator.decryptToCharArray(new SecretName("harness_artifactory")))
+                           .build())
+            .build();
+    return ensureSettingAttribute(seed, artifactorySettingAttribute);
+  }
+
+  private SettingAttribute ensureHarnessDocker(Randomizer.Seed seed) {
+    final Account account = accountGenerator.ensurePredefined(seed, Accounts.GENERIC_TEST);
+    SettingAttribute dockerSettingAttribute =
+        aSettingAttribute()
+            .withName(HARNESS_DOCKER_REGISTRY)
+            .withCategory(Category.CONNECTOR)
+            .withAccountId(account.getUuid())
+            .withValue(DockerConfig.builder()
+                           .accountId(account.getUuid())
+                           .dockerRegistryUrl("https://registry.hub.docker.com/v2/")
+                           .username("wingsplugins")
+                           .password(secretGenerator.decryptToCharArray(new SecretName("harness_docker_hub")))
+                           .build())
+            .build();
+    return ensureSettingAttribute(seed, dockerSettingAttribute);
   }
 
   public SettingAttribute exists(SettingAttribute settingAttribute) {

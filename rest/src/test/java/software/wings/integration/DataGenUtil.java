@@ -27,6 +27,11 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.common.Constants.HARNESS_NAME;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.generator.InfrastructureMappingGenerator.InfrastructureMappings.AWS_SSH_TEST;
+import static software.wings.generator.SettingGenerator.Settings.HARNESS_ARTIFACTORY_CONNECTOR;
+import static software.wings.generator.SettingGenerator.Settings.HARNESS_BAMBOO_CONNECTOR;
+import static software.wings.generator.SettingGenerator.Settings.HARNESS_DOCKER_REGISTRY;
+import static software.wings.generator.SettingGenerator.Settings.HARNESS_NEXU3_CONNECTOR;
+import static software.wings.generator.SettingGenerator.Settings.HARNESS_NEXUS_CONNECTOR;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
 import static software.wings.integration.SeedData.containerNames;
 import static software.wings.integration.SeedData.envNames;
@@ -62,9 +67,7 @@ import software.wings.beans.AppContainer;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
-import software.wings.beans.BambooConfig;
 import software.wings.beans.Base;
-import software.wings.beans.DockerConfig;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.FeatureFlag;
@@ -88,8 +91,6 @@ import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.config.ArtifactoryConfig;
-import software.wings.beans.config.NexusConfig;
 import software.wings.beans.security.UserGroup;
 import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
@@ -113,6 +114,7 @@ import software.wings.generator.Randomizer.Seed;
 import software.wings.generator.ServiceGenerator;
 import software.wings.generator.ServiceGenerator.Services;
 import software.wings.generator.ServiceTemplateGenerator;
+import software.wings.generator.SettingGenerator;
 import software.wings.generator.WorkflowGenerator;
 import software.wings.generator.WorkflowGenerator.PostProcessInfo;
 import software.wings.helpers.ext.mail.SmtpConfig;
@@ -158,12 +160,6 @@ public class DataGenUtil extends BaseIntegrationTest {
   private static final int NUM_ENV_PER_APP = 0; /* Max 6. 4 are created by default */
   private static final int NUM_TAG_GROUPS_PER_ENV = 3; /* Max 10   */
   private static final int TAG_HIERARCHY_DEPTH = 3; /* Max 10   */
-  public static final String HARNESS_NEXUS = "Harness Nexus";
-  public static final String HARNESS_NEXUS_THREE = "Harness Nexus 3";
-  public static final String HARNESS_ARTIFACTORY = "Harness Artifactory";
-  public static final String HARNESS_BAMBOO_SERVICE = "Harness BambooService";
-  public static final String HARNESS_DOCKER_REGISTRY = "Harness Docker Registry";
-  public static final String TESTING_ENVIRONMENT = "Testing Environment";
   public static final String AWS_NON_PROD = "Aws non-prod";
   public static final String WINGS_KEY = "Wings Key";
 
@@ -200,6 +196,7 @@ public class DataGenUtil extends BaseIntegrationTest {
   @Inject private ServiceGenerator serviceGenerator;
   @Inject private ServiceTemplateGenerator serviceTemplateGenerator;
   @Inject private WorkflowGenerator workflowGenerator;
+  @Inject private SettingGenerator settingGenerator;
 
   @Inject private AppResourceRestClient appResourceRestClient;
   @Inject private ServiceResourceRestClient serviceResourceRestClient;
@@ -270,7 +267,7 @@ public class DataGenUtil extends BaseIntegrationTest {
     workflowResourceRestClient.getSeedBasicWorkflow(client);
   }
 
-  protected void dropDBAndEnsureIndexes() throws IOException, ClassNotFoundException {
+  protected void dropDBAndEnsureIndexes() {
     wingsPersistence.getDatastore().getDB().dropDatabase();
     Morphia morphia = new Morphia();
     morphia.getMapper().getOptions().setMapSubPackages(true);
@@ -425,60 +422,13 @@ public class DataGenUtil extends BaseIntegrationTest {
   }
 
   private void createGlobalSettings() {
-    SettingAttribute nexusSettingAttribute = aSettingAttribute()
-                                                 .withName(HARNESS_NEXUS)
-                                                 .withCategory(Category.CONNECTOR)
-                                                 .withAccountId(accountId)
-                                                 .withValue(NexusConfig.builder()
-                                                                .accountId(accountId)
-                                                                .nexusUrl("https://nexus.wings.software")
-                                                                .username("admin")
-                                                                .password("wings123!".toCharArray())
-                                                                .build())
-                                                 .build();
-    wingsPersistence.save(nexusSettingAttribute);
+    final Seed seed = new Seed(0);
 
-    SettingAttribute artifactorySettingAttribute =
-        aSettingAttribute()
-            .withName(HARNESS_ARTIFACTORY)
-            .withCategory(Category.CONNECTOR)
-            .withAccountId(accountId)
-            .withValue(ArtifactoryConfig.builder()
-                           .accountId(accountId)
-                           .artifactoryUrl("https://harness.jfrog.io/harness")
-                           .username("admin")
-                           .password("harness123!".toCharArray())
-                           .build())
-            .build();
-    wingsPersistence.save(artifactorySettingAttribute);
-
-    SettingAttribute bambooSettingAttribute =
-        aSettingAttribute()
-            .withName(HARNESS_BAMBOO_SERVICE)
-            .withCategory(Category.CONNECTOR)
-            .withAccountId(accountId)
-            .withValue(BambooConfig.builder()
-                           .accountId(accountId)
-                           .bambooUrl("http://ec2-34-205-16-35.compute-1.amazonaws.com:8085/")
-                           .username("wingsbuild")
-                           .password("0db28aa0f4fc0685df9a216fc7af0ca96254b7c2".toCharArray())
-                           .build())
-            .build();
-    wingsPersistence.save(bambooSettingAttribute);
-
-    SettingAttribute dockerSettingAttribute =
-        aSettingAttribute()
-            .withName(HARNESS_DOCKER_REGISTRY)
-            .withCategory(Category.CONNECTOR)
-            .withAccountId(accountId)
-            .withValue(DockerConfig.builder()
-                           .accountId(accountId)
-                           .dockerRegistryUrl("https://registry.hub.docker.com/v2/")
-                           .username("wingsplugins")
-                           .password("W!ngs@DockerHub".toCharArray())
-                           .build())
-            .build();
-    wingsPersistence.save(dockerSettingAttribute);
+    settingGenerator.ensurePredefined(seed, HARNESS_BAMBOO_CONNECTOR);
+    settingGenerator.ensurePredefined(seed, HARNESS_NEXUS_CONNECTOR);
+    settingGenerator.ensurePredefined(seed, HARNESS_NEXU3_CONNECTOR);
+    settingGenerator.ensurePredefined(seed, HARNESS_ARTIFACTORY_CONNECTOR);
+    settingGenerator.ensurePredefined(seed, HARNESS_DOCKER_REGISTRY);
 
     SettingAttribute smtpSettingAttribute = aSettingAttribute()
                                                 .withCategory(Category.CONNECTOR)

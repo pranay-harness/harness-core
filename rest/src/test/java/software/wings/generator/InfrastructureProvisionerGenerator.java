@@ -22,6 +22,7 @@ import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.TerraformInfrastructureProvisioner.TerraformInfrastructureProvisionerBuilder;
 import software.wings.dl.WingsPersistence;
 import software.wings.generator.OwnerManager.Owners;
+import software.wings.generator.SecretGenerator.SecretName;
 import software.wings.generator.SettingGenerator.Settings;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -77,7 +78,7 @@ public class InfrastructureProvisionerGenerator {
                 NameValuePair.builder().name("access_key").value("AKIAIQHVMR7P5UESAUJQ").valueType("TEXT").build(),
                 NameValuePair.builder()
                     .name("secret_key")
-                    .value(secretGenerator.decryptToString(SettingGenerator.awsPlaygroundSecretKey))
+                    .value(secretGenerator.decryptToString(new SecretName("aws_playground_secret_key")))
                     .valueType("TEXT")
                     .build()))
             .mappingBlueprints(asList(

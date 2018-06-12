@@ -213,4 +213,11 @@ public interface WingsTestConstants {
   float FLOAT_DEFAULT_VALUE = Float.MAX_VALUE;
 
   double DOUBLE_DEFAULT_VALUE = Double.MAX_VALUE;
+
+  String HARNESS_NEXUS = "Harness Nexus";
+  String HARNESS_JENKINS = "Harness Jenkins";
+  String HARNESS_NEXUS_THREE = "Harness Nexus 3";
+  String HARNESS_ARTIFACTORY = "Harness Artifactory";
+  String HARNESS_BAMBOO = "Harness Bamboo";
+  String HARNESS_DOCKER_REGISTRY = "Harness Docker Registry";
 }
