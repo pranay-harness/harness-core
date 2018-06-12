@@ -47,10 +47,6 @@ docker save harness/learning-engine:${learning_engine_version} > harness_install
 docker save harness/ui:${ui_version} > harness_installer/harness_disconnected_on_prem_pov_final/images/ui.tar
 docker save harness/proxy:${proxy_version} > harness_installer/harness_disconnected_on_prem_pov_final/images/proxy.tar
 
-curl https://app.harness.io/storage/wingsdelegates/jobs/deploy-prod-delegate/${delegate_version}/delegate.jar -o delegate.jar
-
-curl https://app.harness.io/storage/wingswatchers/jobs/deploy-prod-watcher/${watcher_version}/watcher.jar -o watcher.jar
-
 curl https://app.harness.io/storage/wingsdelegates/jre/8u131/jre-8u131-solaris-x64.tar.gz > jre-8u131-solaris-x64.tar.gz
 
 curl https://app.harness.io/storage/wingsdelegates/jre/8u131/jre-8u131-macosx-x64.tar.gz > jre-8u131-macosx-x64.tar.gz
