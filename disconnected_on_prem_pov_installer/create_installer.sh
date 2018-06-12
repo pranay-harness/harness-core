@@ -34,7 +34,8 @@ else
     sed -i "s|MONGO_VERSION|${mongo_version}|g" harness_installer/first_time_install.sh
 fi
 
-cp -r ././../harness_disconnected_on_prem_pov_final harness_installer/
+cp -r ../harness_disconnected_on_prem_pov_final harness_installer/
+mkdir -p harness_installer/harness_disconnected_on_prem_pov_final/images
 cp version.properties harness_installer/harness_disconnected_on_prem_pov_final/
 
 docker pull harness/manager:${manager_version}
