@@ -216,11 +216,6 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
     return null;
   }
 
-  public static void main(String... args) {
-    long l = TimeUnit.SECONDS.toMillis(5);
-    System.out.println("args = " + l);
-  }
-
   private boolean isSuccessful(Response<?> response) {
     int code = response.code();
     switch (code) {
