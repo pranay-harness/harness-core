@@ -2,6 +2,8 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+import static software.wings.sm.states.DynatraceState.CONTROL_HOST_NAME;
+import static software.wings.sm.states.DynatraceState.TEST_HOST_NAME;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -51,6 +53,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
   protected static final int MIN_REQUESTS_PER_MINUTE = 10;
   protected static final int COMPARISON_WINDOW = 1;
   protected static final int PARALLEL_PROCESSES = 7;
+  private static final int CANARY_DAYS_TO_COLLECT = 7;
 
   @Inject @Named("VerificationJobScheduler") private QuartzScheduler jobScheduler;
 
@@ -130,14 +133,14 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       }
       analysisContext.setPrevWorkflowExecutionId(baselineWorkflowExecutionId);
     }
-
+    int timeDurationInt = Integer.parseInt(timeDuration);
     final MetricAnalysisExecutionData executionData =
         MetricAnalysisExecutionData.builder()
             .appId(context.getAppId())
             .workflowExecutionId(context.getWorkflowExecutionId())
             .stateExecutionInstanceId(context.getStateExecutionInstanceId())
             .serverConfigId(getAnalysisServerConfigId())
-            .timeDuration(Integer.parseInt(timeDuration))
+            .timeDuration(timeDurationInt)
             .canaryNewHostNames(canaryNewHostNames)
             .lastExecutionNodes(lastExecutionNodes == null ? new HashSet<>() : new HashSet<>(lastExecutionNodes))
             .correlationId(analysisContext.getCorrelationId())
@@ -156,6 +159,19 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
 
     try {
       String delegateTaskId = triggerAnalysisDataCollection(context, executionData.getCorrelationId(), hostsToCollect);
+      switch (StateType.valueOf(getStateType())) {
+        case CLOUD_WATCH:
+        case APM_VERIFICATION:
+          if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
+            analysisContext.getTestNodes().add(TEST_HOST_NAME);
+            for (int i = 1; i <= CANARY_DAYS_TO_COLLECT; ++i) {
+              analysisContext.getControlNodes().add(CONTROL_HOST_NAME + "-" + i);
+            }
+          }
+          break;
+        default:
+          // no op
+      }
 
       final MetricDataAnalysisResponse response =
           MetricDataAnalysisResponse.builder().stateExecutionData(executionData).build();
@@ -285,6 +301,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           : getLastExecutionNodes(context);
       Set<String> testNodes = getCanaryNewHostNames(context);
       controlNodes.removeAll(testNodes);
+      int timeDurationInt = Integer.parseInt(timeDuration);
       return AnalysisContext.builder()
           .accountId(this.appService.get(context.getAppId()).getAccountId())
           .appId(context.getAppId())
@@ -297,7 +314,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           .isSSL(this.configuration.isSslEnabled())
           .appPort(this.configuration.getApplicationPort())
           .comparisonStrategy(getComparisonStrategy())
-          .timeDuration(Integer.parseInt(timeDuration))
+          .timeDuration(timeDurationInt)
           .stateType(StateType.valueOf(getStateType()))
           .authToken(generateAuthToken())
           .analysisServerConfigId(getAnalysisServerConfigId())

@@ -34,6 +34,8 @@ import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
+import software.wings.service.impl.analysis.TimeSeriesMetricGroup;
+import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
 import software.wings.service.impl.apm.APMMetricInfo;
 import software.wings.service.impl.apm.APMMetricInfo.APMMetricInfoBuilder;
@@ -62,6 +64,7 @@ public class
 
     DatadogState extends AbstractMetricAnalysisState {
   @Transient @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(DatadogState.class);
+  private static final int DATA_COLLECTION_RATE_MINS = 5;
 
   public DatadogState(String name) {
     super(name, StateType.DATA_DOG);
@@ -76,7 +79,7 @@ public class
   @Attributes(required = true, title = "Datadog Server")
   private String analysisServerConfigId;
 
-  @Attributes(required = true, title = "Service Name") private String serviceName;
+  @Attributes(required = false, title = "Datadog Service Name") private String datadogServiceName;
 
   @Attributes(required = true, title = "Metrics") private String metrics;
 
@@ -90,6 +93,28 @@ public class
     return AnalysisTolerance.valueOf(tolerance);
   }
 
+  public static Map<String, TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo> metricGroup(
+      Map<String, List<APMMetricInfo>> metricInfos) {
+    Set<String> groups = new HashSet<>();
+    for (List<APMMetricInfo> metricInfoList : metricInfos.values()) {
+      for (APMMetricInfo metricInfo : metricInfoList) {
+        groups.add(metricInfo.getTag());
+      }
+    }
+    Map<String, TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo> groupInfoMap = new HashMap<>();
+    for (String group : groups) {
+      groupInfoMap.put(group,
+          TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo.builder()
+              .groupName(group)
+              .mlAnalysisType(TimeSeriesMlAnalysisType.COMPARATIVE)
+              .build());
+    }
+    if (groupInfoMap.size() == 0) {
+      throw new WingsException("No Metric Group Names found. This is a required field");
+    }
+    return groupInfoMap;
+  }
+
   @Override
   protected String triggerAnalysisDataCollection(ExecutionContext context, String correlationId, Set<String> hosts) {
     List<String> metricNames = Arrays.asList(metrics.split(","));
@@ -99,7 +124,7 @@ public class
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
     SettingAttribute settingAttribute = null;
     String serverConfigId = analysisServerConfigId;
-    String serviceName = this.serviceName;
+    String serviceName = this.datadogServiceName;
     if (!isEmpty(getTemplateExpressions())) {
       TemplateExpression configIdExpression =
           templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "analysisServerConfigId");
@@ -108,7 +133,7 @@ public class
         serverConfigId = settingAttribute.getUuid();
       }
       TemplateExpression serviceNameExpression =
-          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "serviceName");
+          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "datadogServiceName");
       if (serviceNameExpression != null) {
         serviceName = templateExpressionProcessor.resolveTemplateExpression(context, serviceNameExpression);
       }
@@ -123,6 +148,7 @@ public class
     final DatadogConfig datadogConfig = (DatadogConfig) settingAttribute.getValue();
     final long dataCollectionStartTimeStamp = Timestamp.minuteBoundary(System.currentTimeMillis());
     String accountId = appService.get(context.getAppId()).getAccountId();
+    int timeDurationInInteger = Integer.parseInt(timeDuration);
     final APMDataCollectionInfo dataCollectionInfo =
         APMDataCollectionInfo.builder()
             .baseUrl(datadogConfig.getUrl())
@@ -139,6 +165,9 @@ public class
             .dataCollectionMinute(0)
             .metricEndpoints(metricEndpointsInfo(serviceName, metricNames))
             .accountId(accountId)
+            .strategy(getComparisonStrategy())
+            .dataCollectionFrequency(DATA_COLLECTION_RATE_MINS)
+            .dataCollectionTotalTime(timeDurationInInteger)
             .build();
 
     String waitId = generateUuid();
@@ -152,9 +181,10 @@ public class
                                     .withParameters(new Object[] {dataCollectionInfo})
                                     .withEnvId(envId)
                                     .withInfrastructureMappingId(infrastructureMappingId)
-                                    .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))
+                                    .withTimeout(TimeUnit.MINUTES.toMillis(timeDurationInInteger + 120))
                                     .build();
     waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId, false), waitId);
+
     return delegateService.queueTask(delegateTask);
   }
 
@@ -193,12 +223,12 @@ public class
     this.analysisServerConfigId = analysisServerConfigId;
   }
 
-  public String getServiceName() {
-    return serviceName;
+  public String getDatadogServiceName() {
+    return datadogServiceName;
   }
 
-  public void setServiceName(String serviceName) {
-    this.serviceName = serviceName;
+  public void setDatadogServiceName(String datadogServiceName) {
+    this.datadogServiceName = datadogServiceName;
   }
 
   @SuppressFBWarnings("REC_CATCH_EXCEPTION")
@@ -235,7 +265,8 @@ public class
           }
           result.get(metricUrl).add(newMetricInfoBuilder.build());
         } else if (metric.getDatadogMetricType().equals("Servlet")) {
-          metricUrl = metricUrl.replace("${serviceName}", serviceName).replace("${query}", metric.getMetricName());
+          metricUrl =
+              metricUrl.replace("${datadogServiceName}", serviceName).replace("${query}", metric.getMetricName());
           if (!result.containsKey(metricUrl)) {
             result.put(metricUrl, new ArrayList<>());
           }

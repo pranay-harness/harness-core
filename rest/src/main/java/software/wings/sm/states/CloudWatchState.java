@@ -3,8 +3,6 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
-import static software.wings.sm.states.DynatraceState.CONTROL_HOST_NAME;
-import static software.wings.sm.states.DynatraceState.TEST_HOST_NAME;
 
 import com.google.inject.Inject;
 
@@ -181,14 +179,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
                                     .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))
                                     .build();
     waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId, false), waitId);
-    String taskId = delegateService.queueTask(delegateTask);
-
-    if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
-      analysisContext.getControlNodes().add(CONTROL_HOST_NAME);
-      analysisContext.getTestNodes().add(TEST_HOST_NAME);
-    }
-
-    return taskId;
+    return delegateService.queueTask(delegateTask);
   }
 
   private Map<String, TimeSeriesMetricDefinition> getMetricTemplates(

@@ -171,7 +171,7 @@ public class APMResponseParser {
           resultMap.get(key).setName(txnName);
           resultMap.get(key).setHost(hostName);
           resultMap.get(key).setTag(tag);
-          resultMap.get(key).setGroupName(tag);
+          resultMap.get(key).setGroupName(NewRelicMetricDataRecord.DEFAULT_GROUP_NAME);
         }
 
         Object val = values.next();

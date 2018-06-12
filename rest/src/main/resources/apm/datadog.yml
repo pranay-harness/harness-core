@@ -1,5 +1,5 @@
 Servlet:
-  url: query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=${query}{service:${serviceName}, host:${host}}by{resource_name, host}.rollup(avg,60)
+  url: query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=${query}{service:${datadogServiceName}, $harness_batch{host:${host}, '|'}}by{resource_name, host}.rollup(avg,60)
   responseMappers:
         -
             fieldName: txnName
@@ -20,7 +20,7 @@ Servlet:
             jsonPath: series[*].pointlist[*].[1]
 
 System:
-  url: query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=${query}{host:${host}}by{host}.rollup(avg,60)
+  url: query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=${query}{$harness_batch{host:${host}, '|'}}by{host}.rollup(avg,60)
   responseMappers:
         -
             fieldName: txnName
@@ -35,10 +35,10 @@ System:
             fieldName: host
             jsonPath: series[*].scope
             regexs:
-              - ((?<=host:)(.*))
+              - ((?<=host:)([^,]*))
 
 Kubernetes:
-  url: query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=${query}{pod_name:${host}}by{pod_name}.rollup(avg,60)
+  url: query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=${query}{$harness_batch{pod_name:${host}, '|'}}by{pod_name}.rollup(avg,60)
   responseMappers:
         -
             fieldName: txnName
@@ -53,4 +53,4 @@ Kubernetes:
             fieldName: host
             jsonPath: series[*].scope
             regexs:
-              - ((?<=pod_name:)(.*))
+              - ((?<=pod_name:)([^,]*))

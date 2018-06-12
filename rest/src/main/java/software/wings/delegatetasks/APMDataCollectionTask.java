@@ -3,13 +3,15 @@ package software.wings.delegatetasks;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
-import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
+import static software.wings.sm.states.DynatraceState.CONTROL_HOST_NAME;
+import static software.wings.sm.states.DynatraceState.TEST_HOST_NAME;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.network.Http;
 import io.harness.time.Timestamp;
 import org.slf4j.Logger;
@@ -22,6 +24,7 @@ import software.wings.beans.DelegateTask;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.apm.APMRestClient;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
 import software.wings.service.impl.apm.APMMetricInfo;
@@ -37,24 +40,35 @@ import software.wings.waitnotify.NotifyResponseData;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.IntStream;
 
 public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
   private static final Logger logger = LoggerFactory.getLogger(APMDataCollectionTask.class);
-  private static final int INITIAL_DELYA_MINS = 2;
-  private static final int COLLECT_WINDOW = 1;
+  private static final int CANARY_DAYS_TO_COLLECT = 7;
+
+  private static final String BATCH_REGEX = "\\$harness_batch\\{([^,]*),([^}]*)\\}";
+  private static final String BATCH_TEXT = "$harness_batch";
+  private static final int MAX_HOSTS_PER_BATCH = 50;
   private static Pattern pattern = Pattern.compile("\\$\\{(.*?)\\}");
 
   @Inject private NewRelicDelegateService newRelicDelegateService;
   @Inject private MetricDataStoreService metricStoreService;
   @Inject private EncryptionService encryptionService;
+  private int initialDelayMins = 2;
+  private int collectionWindow = 1;
 
   private APMDataCollectionInfo dataCollectionInfo;
   private Map<String, String> decryptedFields = new HashMap<>();
@@ -66,12 +80,20 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
 
   @Override
   protected int getInitialDelayMinutes() {
-    return INITIAL_DELYA_MINS;
+    return initialDelayMins;
+  }
+
+  @Override
+  protected int getPeriodMinutes() {
+    return collectionWindow;
   }
 
   @Override
   protected DataCollectionTaskResult initDataCollection(Object[] parameters) {
     dataCollectionInfo = (APMDataCollectionInfo) parameters[0];
+    collectionWindow =
+        dataCollectionInfo.getDataCollectionFrequency() != 0 ? dataCollectionInfo.getDataCollectionFrequency() : 1;
+    initialDelayMins = collectionWindow <= 1 ? 2 : collectionWindow;
     logger.info("apm collection - dataCollectionInfo: {}", dataCollectionInfo);
     char[] decryptedValue;
     for (EncryptedDataDetail encryptedDataDetail : dataCollectionInfo.getEncryptedDataDetails()) {
@@ -112,12 +134,21 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
     private final DataCollectionTaskResult taskResult;
     private long collectionStartTime;
     private int dataCollectionMinute;
+    private final long collectionStartMinute;
+    private long lastEndTime;
+    private long currentEndTime;
+    private int currentElapsedTime;
+    Map<String, Long> hostStartMinuteMap;
 
     private APMMetricCollector(APMDataCollectionInfo dataCollectionInfo, DataCollectionTaskResult taskResult) {
       this.dataCollectionInfo = dataCollectionInfo;
       this.taskResult = taskResult;
+      this.collectionStartMinute = Timestamp.currentMinuteBoundary();
       this.collectionStartTime = Timestamp.minuteBoundary(dataCollectionInfo.getStartTime());
       this.dataCollectionMinute = dataCollectionInfo.getDataCollectionMinute();
+      this.lastEndTime = dataCollectionInfo.getStartTime();
+      this.currentElapsedTime = 0;
+      hostStartMinuteMap = new HashMap<>();
     }
 
     private APMRestClient getAPMRestClient(final String baseUrl) {
@@ -130,24 +161,19 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
       return retrofit.create(APMRestClient.class);
     }
 
-    private String resolveDollarReferences(String url, String host) {
-      if (isEmpty(url)) {
-        return url;
-      }
+    private String resolvedUrl(String url, String host, long startTime, long endTime) {
       String result = url;
       if (result.contains("${start_time}")) {
-        result = result.replace("${start_time}", String.valueOf(collectionStartTime));
+        result = result.replace("${start_time}", String.valueOf(startTime));
       }
       if (result.contains("${end_time}")) {
-        result = result.replace(
-            "${end_time}", String.valueOf(collectionStartTime + TimeUnit.MINUTES.toMillis(COLLECT_WINDOW)));
+        result = result.replace("${end_time}", String.valueOf(endTime));
       }
       if (result.contains("${start_time_seconds}")) {
-        result = result.replace("${start_time_seconds}", String.valueOf(collectionStartTime / 1000L));
+        result = result.replace("${start_time_seconds}", String.valueOf(startTime / 1000L));
       }
       if (result.contains("${end_time_seconds}")) {
-        result = result.replace("${end_time_seconds}",
-            String.valueOf((collectionStartTime + TimeUnit.MINUTES.toMillis(COLLECT_WINDOW)) / 1000L));
+        result = result.replace("${end_time_seconds}", String.valueOf(endTime / 1000L));
       }
 
       if (result.contains("${host}")) {
@@ -163,24 +189,43 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
       return result;
     }
 
+    private List<String> resolveDollarReferences(String url, String host, AnalysisComparisonStrategy strategy) {
+      if (isEmpty(url)) {
+        return Collections.EMPTY_LIST;
+      }
+      // TODO: Come back and clean up the time variables.
+      List<String> result = new ArrayList<>();
+      long startTime = lastEndTime;
+      long endTime = Timestamp.currentMinuteBoundary();
+      currentEndTime = endTime;
+      if (TEST_HOST_NAME.equals(host) && strategy == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
+        for (int i = 0; i <= CANARY_DAYS_TO_COLLECT; i++) {
+          String hostName = getHostNameForTestControl(i);
+          long thisEndTime = endTime - TimeUnit.DAYS.toMillis(i);
+          long thisStartTime = startTime - TimeUnit.DAYS.toMillis(i);
+          if (!hostStartMinuteMap.containsKey(hostName)) {
+            hostStartMinuteMap.put(hostName, thisStartTime);
+          }
+          result.add(resolvedUrl(url, hostName, thisStartTime, thisEndTime));
+        }
+      } else {
+        result.add(resolvedUrl(url, host, startTime, endTime));
+      }
+      logger.info("Start and end times for minute {} were {} and {}", dataCollectionMinute, startTime, endTime);
+      return result;
+    }
+
+    private String getHostNameForTestControl(int i) {
+      return i == 0 ? TEST_HOST_NAME : CONTROL_HOST_NAME + "-" + i;
+    }
+
     private BiMap<String, Object> resolveDollarReferences(Map<String, String> input) {
       BiMap<String, Object> output = HashBiMap.create();
       if (input == null) {
         return output;
       }
       for (Map.Entry<String, String> entry : input.entrySet()) {
-        if (entry.getValue().equals("${start_time}")) {
-          output.put(entry.getKey(), collectionStartTime);
-        } else if (entry.getValue().equals("${end_time}")) {
-          output.put(entry.getKey(), collectionStartTime + TimeUnit.MINUTES.toMillis(COLLECT_WINDOW));
-        }
-        if (entry.getValue().equals("${start_time_seconds}")) {
-          output.put(entry.getKey(), collectionStartTime / 1000L);
-        } else if (entry.getValue().equals("${end_time_seconds}")) {
-          output.put(entry.getKey(), (collectionStartTime + TimeUnit.MINUTES.toMillis(COLLECT_WINDOW)) / 1000L);
-        } else if (entry.getValue().equals("${host}")) {
-          output.put(entry.getKey(), entry.getValue());
-        } else if (entry.getValue().startsWith("${")) {
+        if (entry.getValue().startsWith("${")) {
           output.put(entry.getKey(), decryptedFields.get(entry.getValue().substring(2, entry.getValue().length() - 1)));
         } else {
           output.put(entry.getKey(), entry.getValue());
@@ -218,49 +263,109 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
     }
 
     private List<APMResponseParser.APMResponseData> collect(String baseUrl, Map<String, String> headers,
-        Map<String, String> options, final String url, List<APMMetricInfo> metricInfos) {
+        Map<String, String> options, final String initialUrl, List<APMMetricInfo> metricInfos,
+        AnalysisComparisonStrategy strategy) throws IOException {
       List<APMResponseParser.APMResponseData> responses = new ArrayList<>();
-
-      //      /**
-      //       * Headers and options are special fields.
-      //       * See {@APMVerificationConfig.inputMap} for format details.
-      //       */
-      //      if (decryptedFields.containsKey("headers")) {
-      //        config.getHeaders().putAll(APMVerificationConfig.inputMap(decryptedFields.get("headers")));
-      //      }
-      //      if (decryptedFields.containsKey("options")) {
-      //        config.getOptions().putAll(APMVerificationConfig.inputMap(decryptedFields.get("options")));
-      //      }
 
       BiMap<String, Object> headersBiMap = resolveDollarReferences(headers);
       BiMap<String, Object> optionsBiMap = resolveDollarReferences(options);
-      // TODO Resolve dollar references for url
+
       String hostKey = fetchHostKey(optionsBiMap);
-      if (!isEmpty(hostKey) || url.contains("${host}")) {
-        for (String host : dataCollectionInfo.getHosts()) {
-          BiMap<String, Object> curOptionsBiMap = resolveDollarReferences(options);
-          if (!isEmpty(hostKey)) {
-            curOptionsBiMap.put(hostKey, ((String) curOptionsBiMap.get(hostKey)).replace("${host}", host));
+      List<Callable<APMResponseParser.APMResponseData>> callabels = new ArrayList<>();
+      if (!isEmpty(hostKey) || initialUrl.contains("${host}")) {
+        if (initialUrl.contains(BATCH_TEXT)) {
+          List<String> urlList = resolveBatchHosts(initialUrl);
+          for (String url : urlList) {
+            // host has already been resolved. So it's ok to pass null here.
+            List<String> curUrls = resolveDollarReferences(url, null, strategy);
+            curUrls.forEach(curUrl
+                -> callabels.add(()
+                                     -> new APMResponseParser.APMResponseData(null,
+                                         collect(getAPMRestClient(baseUrl).collect(curUrl, headersBiMap, optionsBiMap)),
+                                         metricInfos)));
           }
-          // This needs to be a new variable else it will overwrite url for next iteration
-          String curUrl = resolveDollarReferences(url, host);
-          responses.add(new APMResponseParser.APMResponseData(
-              host, collect(getAPMRestClient(baseUrl).collect(curUrl, headersBiMap, curOptionsBiMap)), metricInfos));
+        } else {
+          // This is not a batch query
+          for (String host : dataCollectionInfo.getHosts()) {
+            List<String> curUrls = resolveDollarReferences(initialUrl, host, strategy);
+            curUrls.forEach(curUrl
+                -> callabels.add(()
+                                     -> new APMResponseParser.APMResponseData(host,
+                                         collect(getAPMRestClient(baseUrl).collect(curUrl, headersBiMap, optionsBiMap)),
+                                         metricInfos)));
+          }
         }
+
       } else {
-        String curUrl = resolveDollarReferences(url, "");
-        responses.add(new APMResponseParser.APMResponseData(
-            "", collect(getAPMRestClient(baseUrl).collect(curUrl, headersBiMap, optionsBiMap)), metricInfos));
+        List<String> curUrls = resolveDollarReferences(initialUrl, TEST_HOST_NAME, strategy);
+        int i = 0;
+        IntStream.range(0, curUrls.size() - 1)
+            .forEach(index
+                -> callabels.add(
+                    ()
+                        -> new APMResponseParser.APMResponseData(getHostNameForTestControl(index),
+                            collect(getAPMRestClient(baseUrl).collect(curUrls.get(index), headersBiMap, optionsBiMap)),
+                            metricInfos)));
       }
 
+      executeParrallel(callabels)
+          .stream()
+          .filter(Optional::isPresent)
+          .forEach(response -> responses.add(response.get()));
       return responses;
     }
 
+    /**
+     *
+     * @param batchUrl urlData{$harness_batch{pod_name:${host},'|'}}
+     * @return urlData{pod_name:host1.pod1.com | pod_name:host2.pod3.com }
+     */
+    protected List<String> resolveBatchHosts(final String batchUrl) {
+      List<String> hostList = new ArrayList<>(dataCollectionInfo.getHosts());
+      List<String> batchResolvedUrls = new ArrayList<>();
+      Pattern batchPattern = Pattern.compile(BATCH_REGEX);
+      Matcher matcher = batchPattern.matcher(batchUrl);
+      while (matcher.find()) {
+        final String fullBatchToken = matcher.group();
+        final String hostString = matcher.group(1);
+        final String separator = matcher.group(2).replaceAll("'", "");
+        String batchedHosts = "";
+        for (int i = 0; i < hostList.size(); i++) {
+          batchedHosts += hostString.replace("${host}", hostList.get(i));
+          if (i == MAX_HOSTS_PER_BATCH - 1 || i == hostList.size() - 1) {
+            String curUrl = batchUrl.replace(fullBatchToken, batchedHosts);
+            batchResolvedUrls.add(curUrl);
+            batchedHosts = "";
+            continue;
+          }
+          batchedHosts += separator;
+        }
+      }
+      return batchResolvedUrls;
+    }
+
+    /**
+     * if it is time to collect data, return true. Else false.
+     * @return
+     */
+    private boolean shouldRunCollection() {
+      currentElapsedTime =
+          (int) ((Timestamp.currentMinuteBoundary() - collectionStartMinute) / TimeUnit.MINUTES.toMillis(1));
+      boolean shouldCollectData = false;
+      if (currentElapsedTime % collectionWindow == 0
+          || currentElapsedTime == dataCollectionInfo.getDataCollectionTotalTime()) {
+        shouldCollectData = true;
+      }
+      logger.info("ShouldCollectDataCollection is {} for minute {}", shouldCollectData, dataCollectionMinute);
+      return shouldCollectData;
+    }
+    @SuppressFBWarnings
     @Override
     public void run() {
       try {
         int retry = 0;
-        while (!completed.get() && retry < RETRIES) {
+        boolean shouldRunDataCollection = shouldRunCollection();
+        while (shouldRunDataCollection && !completed.get() && retry < RETRIES) {
           try {
             TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
 
@@ -268,8 +373,10 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
             for (Map.Entry<String, List<APMMetricInfo>> metricInfoEntry :
                 dataCollectionInfo.getMetricEndpoints().entrySet()) {
               apmResponseDataList.addAll(collect(dataCollectionInfo.getBaseUrl(), dataCollectionInfo.getHeaders(),
-                  dataCollectionInfo.getOptions(), metricInfoEntry.getKey(), metricInfoEntry.getValue()));
+                  dataCollectionInfo.getOptions(), metricInfoEntry.getKey(), metricInfoEntry.getValue(),
+                  dataCollectionInfo.getStrategy()));
             }
+            Set<String> groupNameSet = new HashSet<>();
             Collection<NewRelicMetricDataRecord> newRelicMetricDataRecords =
                 new APMResponseParser().extract(apmResponseDataList);
 
@@ -278,29 +385,41 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
               newRelicMetricDataRecord.setStateExecutionId(dataCollectionInfo.getStateExecutionId());
               newRelicMetricDataRecord.setWorkflowExecutionId(dataCollectionInfo.getWorkflowExecutionId());
               newRelicMetricDataRecord.setWorkflowId(dataCollectionInfo.getWorkflowId());
+              long startTimeMinForHost = collectionStartMinute;
+              if (hostStartMinuteMap.containsKey(newRelicMetricDataRecord.getHost())) {
+                startTimeMinForHost = hostStartMinuteMap.get(newRelicMetricDataRecord.getHost());
+              }
+              newRelicMetricDataRecord.setDataCollectionMinute(
+                  (int) ((Timestamp.minuteBoundary(newRelicMetricDataRecord.getTimeStamp()) - startTimeMinForHost)
+                      / TimeUnit.MINUTES.toMillis(1)));
+
               newRelicMetricDataRecord.setStateType(dataCollectionInfo.getStateType());
-              newRelicMetricDataRecord.setDataCollectionMinute(dataCollectionMinute);
+              groupNameSet.add(newRelicMetricDataRecord.getGroupName());
+
               newRelicMetricDataRecord.setAppId(dataCollectionInfo.getApplicationId());
               records.put(newRelicMetricDataRecord.getName() + newRelicMetricDataRecord.getHost(),
                   newRelicMetricDataRecord.getTimeStamp(), newRelicMetricDataRecord);
             });
 
-            // HeartBeat
-            records.put(HARNESS_HEARTBEAT_METRIC_NAME, 0L,
-                NewRelicMetricDataRecord.builder()
-                    .stateType(getStateType())
-                    .name(HARNESS_HEARTBEAT_METRIC_NAME)
-                    .workflowId(dataCollectionInfo.getWorkflowId())
-                    .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
-                    .serviceId(dataCollectionInfo.getServiceId())
-                    .stateExecutionId(dataCollectionInfo.getStateExecutionId())
-                    .appId(dataCollectionInfo.getApplicationId())
-                    .dataCollectionMinute(dataCollectionMinute)
-                    .timeStamp(collectionStartTime)
-                    .level(ClusterLevel.H0)
-                    .groupName(DEFAULT_GROUP_NAME)
-                    .build());
-
+            dataCollectionMinute = currentElapsedTime - 1;
+            int heartbeatCounter = 0;
+            for (String group : groupNameSet) {
+              // HeartBeat
+              records.put(HARNESS_HEARTBEAT_METRIC_NAME + group, (long) heartbeatCounter++,
+                  NewRelicMetricDataRecord.builder()
+                      .stateType(getStateType())
+                      .name(HARNESS_HEARTBEAT_METRIC_NAME)
+                      .workflowId(dataCollectionInfo.getWorkflowId())
+                      .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
+                      .serviceId(dataCollectionInfo.getServiceId())
+                      .stateExecutionId(dataCollectionInfo.getStateExecutionId())
+                      .appId(dataCollectionInfo.getApplicationId())
+                      .dataCollectionMinute(dataCollectionMinute)
+                      .timeStamp(collectionStartTime)
+                      .level(ClusterLevel.H0)
+                      .groupName(group)
+                      .build());
+            }
             List<NewRelicMetricDataRecord> allMetricRecords = getAllMetricRecords(records);
 
             if (!saveMetrics(dataCollectionInfo.getAccountId(), dataCollectionInfo.getApplicationId(),
@@ -313,8 +432,8 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
             logger.info(dataCollectionInfo.getStateType() + ": Sent {} metric records to the server for minute {}",
                 allMetricRecords.size(), dataCollectionMinute);
 
-            dataCollectionMinute++;
-            collectionStartTime += TimeUnit.MINUTES.toMillis(1);
+            lastEndTime = currentEndTime;
+            collectionStartTime += TimeUnit.MINUTES.toMillis(collectionWindow);
             break;
 
           } catch (Exception ex) {
