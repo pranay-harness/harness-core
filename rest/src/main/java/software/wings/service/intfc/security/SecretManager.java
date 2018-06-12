@@ -30,12 +30,13 @@ public interface SecretManager {
 
   void resetUnchangedEncryptedFields(Encryptable sourceObject, Encryptable destinationObject);
 
-  PageResponse<SecretUsageLog> getUsageLogs(PageRequest<SecretUsageLog> pageRequest, String entityId,
+  PageResponse<SecretUsageLog> getUsageLogs(PageRequest<SecretUsageLog> pageRequest, String accountId, String entityId,
       SettingVariableTypes variableType) throws IllegalAccessException;
 
   long getUsageLogsSize(String entityId, SettingVariableTypes variableType) throws IllegalAccessException;
 
-  List<SecretChangeLog> getChangeLogs(String entityId, SettingVariableTypes variableType) throws IllegalAccessException;
+  List<SecretChangeLog> getChangeLogs(String accountId, String entityId, SettingVariableTypes variableType)
+      throws IllegalAccessException;
 
   String encrypt(String accountId, String secret);
 

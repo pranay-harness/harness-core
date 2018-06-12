@@ -307,11 +307,12 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public PageResponse<SecretUsageLog> getUsageLogs(PageRequest<SecretUsageLog> pageRequest, String entityId,
-      SettingVariableTypes variableType) throws IllegalAccessException {
+  public PageResponse<SecretUsageLog> getUsageLogs(PageRequest<SecretUsageLog> pageRequest, String accountId,
+      String entityId, SettingVariableTypes variableType) throws IllegalAccessException {
     final List<String> secretIds = getSecretIds(entityId, variableType);
 
     pageRequest.addFilter("encryptedDataId", Operator.IN, secretIds.toArray());
+    pageRequest.addFilter("accountId", Operator.EQ, accountId);
     PageResponse<SecretUsageLog> response = wingsPersistence.query(SecretUsageLog.class, pageRequest);
     response.getResponse().forEach(secretUsageLog -> {
       if (isNotBlank(secretUsageLog.getWorkflowExecutionId())) {
@@ -334,10 +335,11 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public List<SecretChangeLog> getChangeLogs(String entityId, SettingVariableTypes variableType)
+  public List<SecretChangeLog> getChangeLogs(String accountId, String entityId, SettingVariableTypes variableType)
       throws IllegalAccessException {
     final List<String> secretIds = getSecretIds(entityId, variableType);
     return wingsPersistence.createQuery(SecretChangeLog.class, excludeCount)
+        .filter("accountId", accountId)
         .field("encryptedDataId")
         .hasAnyOf(secretIds)
         .order("-createdAt")
@@ -881,7 +883,8 @@ public class SecretManagerImpl implements SecretManager {
 
         encryptedData.setSetupUsage(getSecretUsage(accountId, encryptedData.getUuid()).size());
         encryptedData.setRunTimeUsage(getUsageLogsSize(encryptedData.getUuid(), SettingVariableTypes.SECRET_TEXT));
-        encryptedData.setChangeLog(getChangeLogs(encryptedData.getUuid(), SettingVariableTypes.SECRET_TEXT).size());
+        encryptedData.setChangeLog(
+            getChangeLogs(accountId, encryptedData.getUuid(), SettingVariableTypes.SECRET_TEXT).size());
         rv.add(encryptedData);
       }
     }

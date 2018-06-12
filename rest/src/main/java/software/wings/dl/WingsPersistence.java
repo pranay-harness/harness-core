@@ -224,6 +224,16 @@ public interface WingsPersistence {
   <T extends Base> boolean delete(Class<T> cls, String uuid);
 
   /**
+   * Delete with account id
+   * @param accountId
+   * @param cls
+   * @param uuid
+   * @param <T>
+   * @return
+   */
+  <T extends Base> boolean delete(String accountId, Class<T> cls, String uuid);
+
+  /**
    * Delete boolean.
    *
    * @param <T>   the type parameter

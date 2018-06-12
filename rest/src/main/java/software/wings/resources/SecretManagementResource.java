@@ -56,9 +56,9 @@ public class SecretManagementResource {
   @Timed
   @ExceptionMetered
   public RestResponse<PageResponse<SecretUsageLog>> getUsageLogs(@BeanParam PageRequest<SecretUsageLog> pageRequest,
-      @QueryParam("entityId") final String entityId, @QueryParam("type") final SettingVariableTypes variableType)
-      throws IllegalAccessException {
-    return new RestResponse<>(secretManager.getUsageLogs(pageRequest, entityId, variableType));
+      @QueryParam("accountId") final String accountId, @QueryParam("entityId") final String entityId,
+      @QueryParam("type") final SettingVariableTypes variableType) throws IllegalAccessException {
+    return new RestResponse<>(secretManager.getUsageLogs(pageRequest, accountId, entityId, variableType));
   }
 
   @GET
@@ -68,7 +68,7 @@ public class SecretManagementResource {
   public RestResponse<List<SecretChangeLog>> getChangeLogs(@QueryParam("accountId") final String accountId,
       @QueryParam("entityId") final String entityId, @QueryParam("type") final SettingVariableTypes variableType)
       throws IllegalAccessException {
-    return new RestResponse<>(secretManager.getChangeLogs(entityId, variableType));
+    return new RestResponse<>(secretManager.getChangeLogs(accountId, entityId, variableType));
   }
 
   @GET
