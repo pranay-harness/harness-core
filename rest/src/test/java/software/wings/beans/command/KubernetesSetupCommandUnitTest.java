@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -42,12 +43,16 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.KubernetesSetupParams.KubernetesSetupParamsBuilder;
 import software.wings.beans.container.ImageDetails;
+import software.wings.beans.container.KubernetesBlueGreenConfig;
 import software.wings.beans.container.KubernetesPortProtocol;
+import software.wings.beans.container.KubernetesServiceSpecification;
 import software.wings.beans.container.KubernetesServiceType;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
+import software.wings.exception.InvalidRequestException;
 import software.wings.utils.KubernetesConvention;
 
+import java.lang.reflect.InvocationTargetException;
 import java.time.Clock;
 import java.util.Date;
 import java.util.HashMap;
@@ -322,5 +327,84 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
     assertEquals(Integer.valueOf(2), horizontalPodAutoscaler.getSpec().getMinReplicas());
     assertEquals(Integer.valueOf(3), horizontalPodAutoscaler.getSpec().getMaxReplicas());
     assertEquals(Integer.valueOf(30), horizontalPodAutoscaler.getSpec().getTargetCPUUtilizationPercentage());
+  }
+
+  @Test
+  public void testBlueGreenValidationServiceNotAllowedWithBlueGreen() throws Exception {
+    ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(executionLogCallback).saveExecutionLog(anyString(), any());
+
+    KubernetesSetupParams setupParams = KubernetesSetupParamsBuilder.aKubernetesSetupParams()
+                                            .withBlueGreen(true)
+                                            .withServiceType(KubernetesServiceType.ClusterIP)
+                                            .build();
+
+    try {
+      MethodUtils.invokeMethod(kubernetesSetupCommandUnit, true, "validateBlueGreenConfig", new Object[] {setupParams});
+      fail("Exception expected");
+    } catch (Exception e) {
+      assertTrue(((InvocationTargetException) e).getTargetException() instanceof InvalidRequestException);
+    }
+  }
+
+  @Test
+  public void testBlueGreenValidationEmptyBlueGreenConfig() throws Exception {
+    ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(executionLogCallback).saveExecutionLog(anyString(), any());
+
+    KubernetesBlueGreenConfig blueGreenConfig = new KubernetesBlueGreenConfig();
+    setupParams = KubernetesSetupParamsBuilder.aKubernetesSetupParams()
+                      .withBlueGreen(true)
+                      .withBlueGreenConfig(blueGreenConfig)
+                      .build();
+
+    try {
+      MethodUtils.invokeMethod(kubernetesSetupCommandUnit, true, "validateBlueGreenConfig", new Object[] {setupParams});
+      fail("Exception expected");
+    } catch (Exception e) {
+      assertTrue(((InvocationTargetException) e).getTargetException() instanceof InvalidRequestException);
+    }
+  }
+
+  @Test
+  public void testBlueGreenValidationServiceNonePrimaryService() throws Exception {
+    ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(executionLogCallback).saveExecutionLog(anyString(), any());
+
+    KubernetesServiceSpecification serviceSpec = new KubernetesServiceSpecification();
+    serviceSpec.setServiceType(KubernetesServiceType.None);
+    KubernetesBlueGreenConfig blueGreenConfig = new KubernetesBlueGreenConfig();
+    blueGreenConfig.setPrimaryService(serviceSpec);
+
+    setupParams = KubernetesSetupParamsBuilder.aKubernetesSetupParams()
+                      .withBlueGreen(true)
+                      .withBlueGreenConfig(blueGreenConfig)
+                      .build();
+
+    try {
+      MethodUtils.invokeMethod(kubernetesSetupCommandUnit, true, "validateBlueGreenConfig", new Object[] {setupParams});
+      fail("Exception expected");
+    } catch (Exception e) {
+      assertTrue(((InvocationTargetException) e).getTargetException() instanceof InvalidRequestException);
+    }
+  }
+
+  @Test
+  public void testBlueGreenValidationSmokeTest() throws Exception {
+    ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(executionLogCallback).saveExecutionLog(anyString(), any());
+
+    KubernetesServiceSpecification serviceSpec = new KubernetesServiceSpecification();
+    serviceSpec.setServiceType(KubernetesServiceType.ClusterIP);
+    KubernetesBlueGreenConfig blueGreenConfig = new KubernetesBlueGreenConfig();
+    blueGreenConfig.setPrimaryService(serviceSpec);
+    blueGreenConfig.setStageService(serviceSpec);
+
+    setupParams = KubernetesSetupParamsBuilder.aKubernetesSetupParams()
+                      .withBlueGreen(true)
+                      .withBlueGreenConfig(blueGreenConfig)
+                      .build();
+
+    MethodUtils.invokeMethod(kubernetesSetupCommandUnit, true, "validateBlueGreenConfig", new Object[] {setupParams});
   }
 }

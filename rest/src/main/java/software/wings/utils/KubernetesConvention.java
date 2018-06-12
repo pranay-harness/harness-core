@@ -56,6 +56,18 @@ public class KubernetesConvention {
     return noDot(normalize(controllerNamePrefix));
   }
 
+  public static String getPrimaryServiceName(String baseServiceName) {
+    return baseServiceName + "-primary";
+  }
+
+  public static String getStageServiceName(String baseServiceName) {
+    return baseServiceName + "-stage";
+  }
+
+  public static String getBlueGreenIngressName(String baseServiceName) {
+    return baseServiceName + ".bluegreen";
+  }
+
   public static String getKubernetesRegistrySecretName(ImageDetails imageDetails) {
     String regName = imageDetails.getRegistryUrl().substring(imageDetails.getRegistryUrl().indexOf("://") + 3);
     if (regName.endsWith("/")) {
