@@ -34,6 +34,8 @@ import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
+import software.wings.service.impl.analysis.TimeSeriesMetricGroup;
+import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
 import software.wings.service.impl.apm.APMMetricInfo;
 import software.wings.service.impl.apm.APMSettingProvider;
@@ -46,6 +48,7 @@ import software.wings.stencils.EnumData;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -66,6 +69,16 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
 
   public void setMetricCollectionInfos(List<MetricCollectionInfo> metricCollectionInfos) {
     this.metricCollectionInfos = metricCollectionInfos;
+  }
+
+  @Attributes(required = false, title = "APM DataCollection Rate (mins)") private int dataCollectionRate;
+
+  public int getDataCollectionRate() {
+    return dataCollectionRate < 1 ? 1 : dataCollectionRate;
+  }
+
+  public void setDataCollectionRate(int dataCollectionRate) {
+    this.dataCollectionRate = dataCollectionRate;
   }
 
   @Attributes(title = "Expression for Host/Container name")
@@ -137,6 +150,29 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     }
     return metricTypeMap;
   }
+
+  public static Map<String, TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo> metricGroup(
+      Map<String, List<APMMetricInfo>> metricInfos) {
+    Set<String> groups = new HashSet<>();
+    for (List<APMMetricInfo> metricInfoList : metricInfos.values()) {
+      for (APMMetricInfo metricInfo : metricInfoList) {
+        groups.add(metricInfo.getTag());
+      }
+    }
+    Map<String, TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo> groupInfoMap = new HashMap<>();
+    for (String group : groups) {
+      groupInfoMap.put(group,
+          TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo.builder()
+              .groupName(group)
+              .mlAnalysisType(TimeSeriesMlAnalysisType.COMPARATIVE)
+              .build());
+    }
+    if (groupInfoMap.size() == 0) {
+      throw new WingsException("No Metric Group Names found. This is a required field");
+    }
+    return groupInfoMap;
+  }
+
   @Override
   protected String triggerAnalysisDataCollection(ExecutionContext context, String correlationId, Set<String> hosts) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
@@ -179,8 +215,11 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
             .serviceId(getPhaseServiceId(context))
             .startTime(dataCollectionStartTimeStamp)
             .dataCollectionMinute(0)
+            .dataCollectionFrequency(getDataCollectionRate())
+            .dataCollectionTotalTime(Integer.parseInt(timeDuration))
             .metricEndpoints(apmMetricInfos)
             .accountId(accountId)
+            .strategy(getComparisonStrategy())
             .build();
 
     String waitId = generateUuid();

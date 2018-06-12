@@ -3,6 +3,7 @@ package software.wings.service.impl.apm;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.sm.StateType;
 
 import java.util.List;
@@ -27,4 +28,7 @@ public class APMDataCollectionInfo {
   private String workflowExecutionId;
   private String serviceId;
   private String accountId;
+  private AnalysisComparisonStrategy strategy;
+  private int dataCollectionFrequency;
+  private int dataCollectionTotalTime;
 }

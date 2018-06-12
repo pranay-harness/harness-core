@@ -48,11 +48,16 @@ public class DatadogStateTest extends WingsBaseTest {
   @Test
   public void metricEndpointsInfo() {
     Map<String, List<APMMetricInfo>> metricEndpointsInfo = DatadogState.metricEndpointsInfo(
-        "todolist", Lists.newArrayList("trace.servlet.request.duration", "system.cpu.iowait"));
+        "todolist", Lists.newArrayList("system.cpu.iowait", "trace.servlet.request.duration"));
     assertEquals(2, metricEndpointsInfo.size());
     List<APMMetricInfo> apmMetricInfos = metricEndpointsInfo.values().iterator().next();
+    for (String query : metricEndpointsInfo.keySet()) {
+      if (query.contains("system.cpu.iowait")) {
+        apmMetricInfos = metricEndpointsInfo.get(query);
+      }
+    }
     assertEquals(
-        "[{\"metricName\":\"IO Wait\",\"responseMappers\":{\"host\":{\"fieldName\":\"host\",\"jsonPath\":\"series[*].scope\",\"regexs\":[\"((?<=host:)(.*))\"]},\"value\":{\"fieldName\":\"value\",\"jsonPath\":\"series[*].pointlist[*].[1]\"},\"txnName\":{\"fieldName\":\"txnName\",\"jsonPath\":\"series[*].metric\"},\"timestamp\":{\"fieldName\":\"timestamp\",\"jsonPath\":\"series[*].pointlist[*].[0]\"}},\"metricType\":{},\"tag\":\"System\"}]",
+        "[{\"metricName\":\"IO Wait\",\"responseMappers\":{\"host\":{\"fieldName\":\"host\",\"jsonPath\":\"series[*].scope\",\"regexs\":[\"((?<=host:)([^,]*))\"]},\"value\":{\"fieldName\":\"value\",\"jsonPath\":\"series[*].pointlist[*].[1]\"},\"txnName\":{\"fieldName\":\"txnName\",\"jsonPath\":\"series[*].metric\"},\"timestamp\":{\"fieldName\":\"timestamp\",\"jsonPath\":\"series[*].pointlist[*].[0]\"}},\"metricType\":{},\"tag\":\"System\"}]",
         JsonUtils.asJson(apmMetricInfos));
   }
 

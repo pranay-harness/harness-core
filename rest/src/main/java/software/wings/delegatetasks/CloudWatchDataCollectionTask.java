@@ -245,7 +245,7 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
               break;
             case ELB:
               for (int i = 0; i <= CANARY_DAYS_TO_COLLECT; i++) {
-                String hostName = i == 0 ? TEST_HOST_NAME : CONTROL_HOST_NAME;
+                String hostName = i == 0 ? TEST_HOST_NAME : CONTROL_HOST_NAME + "-" + i;
                 endTime = endTime - TimeUnit.DAYS.toMillis(i);
                 startTime = startTime - TimeUnit.DAYS.toMillis(i);
                 fetchMetrics(
