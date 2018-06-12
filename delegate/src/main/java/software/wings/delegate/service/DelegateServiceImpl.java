@@ -6,6 +6,7 @@ import static io.harness.network.Localhost.getLocalHostAddress;
 import static io.harness.network.Localhost.getLocalHostName;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
@@ -41,6 +42,7 @@ import static software.wings.utils.message.MessageConstants.WATCHER_VERSION;
 import static software.wings.utils.message.MessengerType.DELEGATE;
 import static software.wings.utils.message.MessengerType.WATCHER;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.TimeLimiter;
@@ -331,6 +333,8 @@ public class DelegateServiceImpl implements DelegateService {
 
       logger.info("Delegate started");
 
+      updateConfigs();
+
       synchronized (waiter) {
         waiter.wait();
       }
@@ -345,6 +349,33 @@ public class DelegateServiceImpl implements DelegateService {
 
     } catch (Exception e) {
       logger.error("Exception while starting/running delegate", e);
+    }
+  }
+
+  private void updateConfigs() {
+    String apiHarnessIo = "api.harness.io";
+    String appHarnessIo = "app.harness.io";
+    try {
+      List<String> configFileNames = ImmutableList.of("config-delegate.yml", "config-watcher.yml");
+      for (String configName : configFileNames) {
+        File config = new File(configName);
+        List<String> outLines = new ArrayList<>();
+        for (String line : FileUtils.readLines(config, UTF_8)) {
+          if (StringUtils.contains(line, apiHarnessIo)) {
+            outLines.add(line.replace(apiHarnessIo, appHarnessIo));
+          } else {
+            outLines.add(line);
+          }
+        }
+        FileUtils.forceDelete(config);
+        FileUtils.touch(config);
+        FileUtils.writeLines(config, outLines);
+        Files.setPosixFilePermissions(config.toPath(),
+            Sets.newHashSet(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE,
+                PosixFilePermission.GROUP_READ, PosixFilePermission.OTHERS_READ));
+      }
+    } catch (Exception e) {
+      logger.error("Error updating config.", e);
     }
   }
 
