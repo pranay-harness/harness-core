@@ -380,7 +380,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           approvalDetails.getApprovalId());
       executionData = anApprovalStateExecutionData()
                           .withApprovalId(approvalDetails.getApprovalId())
-                          .withStatus(ExecutionStatus.ABORTED)
+                          .withStatus(ExecutionStatus.REJECTED)
                           .withApprovedBy(approvalDetails.getApprovedBy())
                           .withComments(approvalDetails.getComments())
                           .build();

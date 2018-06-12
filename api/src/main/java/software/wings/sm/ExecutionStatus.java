@@ -22,18 +22,21 @@ public enum ExecutionStatus {
   SUCCESS,
   WAITING,
   SKIPPED,
-  @Deprecated ABORTING;
+  @Deprecated ABORTING,
+  REJECTED,
+  EXPIRED;
 
   private static Set<ExecutionStatus> finalStatuses =
-      EnumSet.<ExecutionStatus>of(ABORTED, ERROR, FAILED, SUCCESS, SKIPPED);
+      EnumSet.<ExecutionStatus>of(ABORTED, ERROR, FAILED, SUCCESS, REJECTED, EXPIRED, SKIPPED);
   private static Set<ExecutionStatus> brokeStatuses = EnumSet.<ExecutionStatus>of(ERROR, FAILED);
   private static Set<ExecutionStatus> negativeStatuses =
-      EnumSet.<ExecutionStatus>of(ABORTED, DISCONTINUING, ERROR, FAILED);
+      EnumSet.<ExecutionStatus>of(ABORTED, DISCONTINUING, ERROR, FAILED, REJECTED, EXPIRED);
   private static Set<ExecutionStatus> runningStatuses =
       EnumSet.<ExecutionStatus>of(DISCONTINUING, NEW, RUNNING, STARTING, QUEUED);
   private static Set<ExecutionStatus> activeStatuses =
       EnumSet.<ExecutionStatus>of(DISCONTINUING, NEW, PAUSED, RUNNING, STARTING, QUEUED, WAITING);
   private static Set<ExecutionStatus> positiveStatuses = EnumSet.<ExecutionStatus>of(SUCCESS, SKIPPED);
+  private static Set<ExecutionStatus> discontinueStatuses = EnumSet.<ExecutionStatus>of(ABORTED, REJECTED, EXPIRED);
 
   ExecutionStatus() {}
 
@@ -55,6 +58,10 @@ public enum ExecutionStatus {
 
   public static boolean isRunningStatus(ExecutionStatus status) {
     return status != null && runningStatuses.contains(status);
+  }
+
+  public static boolean isDiscontinueStatus(ExecutionStatus status) {
+    return status != null && discontinueStatuses.contains(status);
   }
 
   public static Set<ExecutionStatus> activeStatuses() {

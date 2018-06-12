@@ -164,6 +164,7 @@ public class ExecutionInterruptManager {
         break;
       case ABORT_ALL:
       case ABORT:
+      case MARK_EXPIRED:
       case PAUSE:
       case RESUME:
       case RETRY:
@@ -200,6 +201,7 @@ public class ExecutionInterruptManager {
         case IGNORE:
         case ROLLBACK:
         case ABORT:
+        case MARK_EXPIRED:
         case RESUME_ALL:
         case MARK_SUCCESS:
         case MARK_FAILED:

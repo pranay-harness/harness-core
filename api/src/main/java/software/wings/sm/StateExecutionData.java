@@ -176,6 +176,8 @@ public class StateExecutionData {
       case ABORTED:
       case DISCONTINUING:
       case WAITING:
+      case REJECTED:
+      case EXPIRED:
         breakDown.setFailed(1);
         break;
       case NEW:

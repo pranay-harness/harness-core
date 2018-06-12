@@ -282,6 +282,10 @@ public class WorkflowNotificationHelper {
         return "resumed";
       case ABORTED:
         return "aborted";
+      case REJECTED:
+        return "rejected";
+      case EXPIRED:
+        return "expired";
       default:
         unhandled(status);
         return "failed";

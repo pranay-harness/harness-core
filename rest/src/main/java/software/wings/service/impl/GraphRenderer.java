@@ -9,10 +9,12 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.sm.ExecutionStatus.ABORTED;
 import static software.wings.sm.ExecutionStatus.ERROR;
+import static software.wings.sm.ExecutionStatus.EXPIRED;
 import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.NEW;
 import static software.wings.sm.ExecutionStatus.PAUSED;
 import static software.wings.sm.ExecutionStatus.PAUSING;
+import static software.wings.sm.ExecutionStatus.REJECTED;
 import static software.wings.sm.ExecutionStatus.RUNNING;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.ExecutionStatus.WAITING;
@@ -111,6 +113,12 @@ public class GraphRenderer {
       return NEW;
     }
 
+    if (statuses.stream().anyMatch(status -> status == REJECTED)) {
+      return REJECTED;
+    }
+    if (statuses.stream().anyMatch(status -> status == EXPIRED)) {
+      return EXPIRED;
+    }
     if (statuses.stream().anyMatch(status -> status == ABORTED)) {
       return ABORTED;
     }
@@ -547,6 +555,10 @@ public class GraphRenderer {
         return "Paused";
       case RESUMED:
         return "Resumed";
+      case REJECTED:
+        return "Rejected";
+      case EXPIRED:
+        return "Expired";
       default:
         unhandled(status);
     }
