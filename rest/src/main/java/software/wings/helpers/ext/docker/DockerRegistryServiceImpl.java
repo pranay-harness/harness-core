@@ -163,9 +163,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       DockerRegistryToken dockerRegistryToken = fetchToken(registryRestClient, basicAuthHeader, authHeaderValue);
       if (dockerRegistryToken != null) {
         cachedBearerTokens.put(authHeaderValue, dockerRegistryToken.getToken(), ExpirationPolicy.CREATED,
-            dockerRegistryToken.getExpires_in() == null ? TimeUnit.MINUTES.toMillis(5)
-                                                        : dockerRegistryToken.getExpires_in(),
-            TimeUnit.SECONDS);
+            dockerRegistryToken.getExpires_in() == null ? 300 : dockerRegistryToken.getExpires_in(), TimeUnit.SECONDS);
       }
     }
     return cachedBearerTokens.get(authHeaderValue);
