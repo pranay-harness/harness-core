@@ -97,6 +97,8 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.SecretManager;
 import software.wings.security.UserThreadLocal;
+import software.wings.security.authentication.TwoFactorAuthenticationManager;
+import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
@@ -155,6 +157,7 @@ public class UserServiceImpl implements UserService {
   @Inject private CacheHelper cacheHelper;
   @Inject private AuthHandler authHandler;
   @Inject private SecretManager secretManager;
+  @Inject TwoFactorAuthenticationManager twoFactorAuthenticationManager;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#register(software.wings.beans.User)
@@ -668,6 +671,41 @@ public class UserServiceImpl implements UserService {
             .set("passwordHash", hashed)
             .set("passwordChangedAt", System.currentTimeMillis()));
     executorService.submit(() -> authService.invalidateAllTokensForUser(user.getUuid()));
+  }
+
+  @Override
+  public boolean isTwoFactorEnabledForAdmin(String accountId, String userId) {
+    // Check if admin has 2FA enabled
+    User user = wingsPersistence.get(User.class, userId);
+    if (user == null) {
+      throw new WingsException(USER_DOES_NOT_EXIST);
+    }
+    return user.isTwoFactorAuthenticationEnabled();
+  }
+
+  @Override
+  public boolean overrideTwoFactorforAccount(String accountId, User user, boolean adminOverrideTwoFactorEnabled) {
+    try {
+      Query<User> updateQuery = wingsPersistence.createQuery(User.class);
+      if (updateQuery != null && updateQuery.count() > 0) {
+        for (User u : updateQuery) {
+          // Look for user who has only 1 account
+          if (u.getAccounts() != null && u.getAccounts().size() == 1
+              && u.getAccounts().get(0).getUuid().equals(accountId)) {
+            if (!u.isTwoFactorAuthenticationEnabled()) {
+              u.setTwoFactorAuthenticationEnabled(true);
+              u.setTwoFactorAuthenticationMechanism(TwoFactorAuthenticationMechanism.TOTP);
+              update(u);
+              twoFactorAuthenticationManager.sendTwoFactorAuthenticationResetEmail(u.getUuid());
+            }
+          }
+        }
+      }
+    } catch (Exception ex) {
+      throw new WingsException(UNKNOWN_ERROR, USER)
+          .addParam("message", "Exception occurred while enforcing Two factor authentication for users");
+    }
+    return true;
   }
 
   private void sendResetPasswordEmail(User user, String token) {

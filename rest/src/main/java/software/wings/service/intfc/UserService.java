@@ -85,6 +85,15 @@ public interface UserService {
   void delete(@NotEmpty String accountId, @NotEmpty String userId);
 
   /**
+   * overrideTwoFactorforAccount
+   *
+   * @param accountId the account id
+   * @param adminOverrideTwoFactorEnabled boolean
+   */
+  boolean overrideTwoFactorforAccount(String accountId, User user, boolean adminOverrideTwoFactorEnabled);
+  boolean isTwoFactorEnabledForAdmin(String accountId, String usedId);
+
+  /**
    * Gets the.
    *
    * @param userId the user id
