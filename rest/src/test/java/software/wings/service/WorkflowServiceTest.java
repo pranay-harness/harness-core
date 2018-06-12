@@ -261,15 +261,15 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(service);
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(service);
+    when(serviceResourceService.fetchServicesByUuids(APP_ID, asList(SERVICE_ID))).thenReturn(asList(service));
   }
 
   /**
    * Should save and read.
    *
-   * @throws InterruptedException the interrupted exception
    */
   @Test
-  public void shouldSaveAndRead() throws InterruptedException {
+  public void shouldSaveAndRead() {
     StateMachine sm = new StateMachine();
     sm.setAppId(APP_ID);
     State stateA = new StateSync("stateA" + StaticMap.getUnique());
@@ -3567,7 +3567,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .extracting(variable -> variable.getEntityType())
         .containsSequence(SERVICE, INFRASTRUCTURE_MAPPING);
 
-    when(serviceResourceService.getServicesByUuids(APP_ID, asList(SERVICE_ID))).thenReturn(asList(service));
+    when(serviceResourceService.fetchServicesByUuids(APP_ID, asList(SERVICE_ID))).thenReturn(asList(service));
     List<Service> resolvedServices = workflowService.getResolvedServices(
         workflow3, ImmutableMap.of("Service", SERVICE_ID, "ServiceInfra_SSH", INFRA_MAPPING_ID));
     assertThat(resolvedServices).isNotEmpty().extracting(service1 -> service1.getName()).contains(SERVICE_NAME);
@@ -3668,7 +3668,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .extracting(variable -> variable.getEntityType())
         .containsSequence(SERVICE, INFRASTRUCTURE_MAPPING);
 
-    when(serviceResourceService.getServicesByUuids(APP_ID, asList(SERVICE_ID))).thenReturn(asList(service));
+    when(serviceResourceService.fetchServicesByUuids(APP_ID, asList(SERVICE_ID))).thenReturn(asList(service));
     List<InfrastructureMapping> resolvedInfraMappings = workflowService.getResolvedInfraMappings(
         workflow3, ImmutableMap.of("Service", SERVICE_ID, "ServiceInfra_SSH", INFRA_MAPPING_ID));
     assertThat(resolvedInfraMappings)

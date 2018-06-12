@@ -75,8 +75,6 @@ public interface WorkflowService extends OwnedByApplication, OwnedByEnvironment,
 
   StateMachine readStateMachine(String appId, String originId, Integer version);
 
-  StateMachine readStateMachine(String appId, String stateMachineId);
-
   Workflow readLatestSimpleWorkflow(String appId, String envId);
 
   Map<String, StateTypeDescriptor> stencilMap();

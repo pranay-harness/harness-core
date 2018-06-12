@@ -101,6 +101,7 @@ import io.harness.observer.Rejection;
 import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
+import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -217,7 +218,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -522,31 +522,19 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         workflow.getAppId(), workflow.getUuid(), version == null ? workflow.getDefaultVersion() : version);
     if (stateMachine != null) {
       workflow.setOrchestrationWorkflow(stateMachine.getOrchestrationWorkflow());
+      OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+      if (orchestrationWorkflow != null) {
+        orchestrationWorkflow.onLoad();
+        workflow.setTemplatized(orchestrationWorkflow.isTemplatized());
+        populateServices(workflow);
+      }
     }
-    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-    if (orchestrationWorkflow != null) {
-      orchestrationWorkflow.onLoad();
-      workflow.setTemplatized(orchestrationWorkflow.isTemplatized());
-    }
-    populateServices(workflow);
   }
 
   private void populateServices(Workflow workflow) {
-    if (workflow == null) {
-      return;
-    }
-
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-    if (orchestrationWorkflow == null || orchestrationWorkflow.getServiceIds() == null) {
-      return;
-    }
-    List<Service> services = orchestrationWorkflow.getServiceIds()
-                                 .stream()
-                                 .map(serviceId -> serviceResourceService.get(workflow.getAppId(), serviceId, false))
-                                 .filter(Objects::nonNull)
-                                 .collect(toList());
-
-    workflow.setServices(services);
+    workflow.setServices(
+        serviceResourceService.fetchServicesByUuids(workflow.getAppId(), orchestrationWorkflow.getServiceIds()));
     workflow.setTemplatizedServiceIds(orchestrationWorkflow.getTemplatizedServiceIds());
   }
 
@@ -1272,24 +1260,20 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
    */
   @Override
   public StateMachine readLatestStateMachine(String appId, String originId) {
-    PageRequest<StateMachine> req =
-        aPageRequest().addFilter("appId", EQ, appId).addFilter("originId", EQ, originId).build();
-    return wingsPersistence.get(StateMachine.class, req);
-  }
-
-  public StateMachine readStateMachine(String appId, String stateMachineId) {
-    PageRequest<StateMachine> req = aPageRequest().addFilter("appId", EQ, appId).build();
-    return wingsPersistence.get(StateMachine.class, req);
+    return wingsPersistence.createQuery(StateMachine.class)
+        .filter(StateMachine.APP_ID_KEY, appId)
+        .filter(StateMachine.ORIGIN_ID_KEY, originId)
+        .order(Sort.descending(StateMachine.CREATED_AT_KEY))
+        .get();
   }
 
   @Override
   public StateMachine readStateMachine(String appId, String originId, Integer version) {
-    PageRequest<StateMachine> req = aPageRequest()
-                                        .addFilter("appId", EQ, appId)
-                                        .addFilter("originId", EQ, originId)
-                                        .addFilter("originVersion", EQ, version)
-                                        .build();
-    return wingsPersistence.get(StateMachine.class, req);
+    return wingsPersistence.createQuery(StateMachine.class)
+        .filter(StateMachine.APP_ID_KEY, appId)
+        .filter(StateMachine.ORIGIN_ID_KEY, originId)
+        .filter(StateMachine.ORIGIN_VERSION_KEY, version)
+        .get();
   }
 
   /**

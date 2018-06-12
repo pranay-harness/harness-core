@@ -1399,7 +1399,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
-  public List<Service> getServicesByUuids(String appId, List<String> serviceUuids) {
+  public List<Service> fetchServicesByUuids(String appId, List<String> serviceUuids) {
     if (isNotEmpty(serviceUuids)) {
       return wingsPersistence.createQuery(Service.class)
           .project("appContainer", false)

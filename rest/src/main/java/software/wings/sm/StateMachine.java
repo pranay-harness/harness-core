@@ -59,6 +59,7 @@ public class StateMachine extends Base {
   private static final Logger logger = LoggerFactory.getLogger(StateMachine.class);
 
   public static final String ORIGIN_ID_KEY = "originId";
+  public static final String ORIGIN_VERSION_KEY = "originVersion";
 
   @Indexed private String originId;
 
