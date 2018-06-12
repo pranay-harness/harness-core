@@ -159,11 +159,12 @@ public class ContainerInstanceHandler extends InstanceHandler {
           }
         });
 
+        long instanceInDBCount = instancesInDB.stream().filter(instance -> instance != null).count();
         logger.info(
             "Total no of Container instances found in DB for ContainerSvcName: {} and InfraMappingId: {} and AppId: {}, "
                 + "No of instances in DB: {}, No of Running instances: {}, "
                 + "No of instances to be Added: {}, No of instances to be deleted: {}",
-            containerSvcName, infraMappingId, appId, instancesInDB.size(), latestContainerInfoMap.keySet().size(),
+            containerSvcName, infraMappingId, appId, instanceInDBCount, latestContainerInfoMap.keySet().size(),
             instancesToBeAdded.size(), instanceIdsToBeDeleted.size());
         if (isNotEmpty(instanceIdsToBeDeleted)) {
           instanceService.delete(instanceIdsToBeDeleted);

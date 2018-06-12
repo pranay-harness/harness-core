@@ -81,6 +81,9 @@ public class InstanceSyncJob implements Job {
         return;
       }
       final String appIdFinal = appId;
+      // The app level lock was a work around for the threading issue we observed in quartz scheduler. The execute() was
+      // getting called on all the managers. Its supposed to call it only on one manager. This is a way to stop that
+      // from happening.
       try (AcquiredLock lock = persistentLocker.tryToAcquireLock(Application.class, appId, Duration.ofSeconds(1))) {
         if (lock == null) {
           return;
@@ -88,7 +91,7 @@ public class InstanceSyncJob implements Job {
         executorService.submit(() -> executeInternal(appIdFinal));
       }
     } catch (WingsException exception) {
-      exception.logProcessedMessages(MANAGER, logger);
+      // do nothing. Only one manager should acquire the lock.
     } catch (Exception ex) {
       logger.warn("Error while looking up appId instances for app: {}", appId, ex);
     }
