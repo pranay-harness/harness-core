@@ -162,8 +162,12 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
     if (!cachedBearerTokens.containsKey(authHeaderValue)) {
       DockerRegistryToken dockerRegistryToken = fetchToken(registryRestClient, basicAuthHeader, authHeaderValue);
       if (dockerRegistryToken != null) {
-        cachedBearerTokens.put(authHeaderValue, dockerRegistryToken.getToken(), ExpirationPolicy.CREATED,
-            dockerRegistryToken.getExpires_in() == null ? 300 : dockerRegistryToken.getExpires_in(), TimeUnit.SECONDS);
+        if (dockerRegistryToken.getExpires_in() != null) {
+          cachedBearerTokens.put(authHeaderValue, dockerRegistryToken.getToken(), ExpirationPolicy.CREATED,
+              dockerRegistryToken.getExpires_in(), TimeUnit.SECONDS);
+        } else {
+          return dockerRegistryToken.getToken();
+        }
       }
     }
     return cachedBearerTokens.get(authHeaderValue);
@@ -210,6 +214,11 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       }
     }
     return null;
+  }
+
+  public static void main(String... args) {
+    long l = TimeUnit.SECONDS.toMillis(5);
+    System.out.println("args = " + l);
   }
 
   private boolean isSuccessful(Response<?> response) {
