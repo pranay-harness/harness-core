@@ -288,6 +288,19 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       return ImmutableMap.of(AMAZON_S3.name(), AMAZON_S3.name());
     } else if (service.getArtifactType().equals(ArtifactType.AMI)) {
       return ImmutableMap.of(AMI.name(), AMI.name());
+    } else if (service.getArtifactType().equals(ArtifactType.OTHER)) {
+      return new ImmutableMap.Builder<String, String>()
+          .put(DOCKER.name(), DOCKER.name())
+          .put(ECR.name(), ECR.name())
+          .put(ACR.name(), ACR.name())
+          .put(GCR.name(), GCR.name())
+          .put(ARTIFACTORY.name(), ARTIFACTORY.name())
+          .put(NEXUS.name(), NEXUS.name())
+          .put(ArtifactStreamType.JENKINS.name(), ArtifactStreamType.JENKINS.name())
+          .put(ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.BAMBOO.name())
+          .put(GCS.name(), GCS.name())
+          .put(AMAZON_S3.name(), AMAZON_S3.name())
+          .build();
     }
 
     return new ImmutableMap.Builder<String, String>()
