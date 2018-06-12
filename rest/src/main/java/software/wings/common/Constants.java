@@ -528,6 +528,11 @@ public interface Constants {
   String USER_CACHE = "userCache";
 
   /**
+   * The constant NEW_RELIC_APPLICATION_CACHE.
+   */
+  String NEW_RELIC_APPLICATION_CACHE = "nrApplicationCache";
+
+  /**
    * The constant USER_PERMISSION_CACHE.
    */
   String USER_PERMISSION_CACHE = "userPermissionCache";

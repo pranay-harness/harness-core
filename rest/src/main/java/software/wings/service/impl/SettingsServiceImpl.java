@@ -85,6 +85,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.settings.UsageRestrictions.AppEnvRestriction;
+import software.wings.utils.CacheHelper;
 import software.wings.utils.validation.Create;
 
 import java.util.Collection;
@@ -111,6 +112,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Transient @Inject private SecretManager secretManager;
   @Inject private EncryptionService encryptionService;
   @Getter private Subject<SettingsServiceManipulationObserver> manipulationSubject = new Subject<>();
+  @Inject private CacheHelper cacheHelper;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.SettingsService#list(software.wings.dl.PageRequest)
@@ -417,6 +419,7 @@ public class SettingsServiceImpl implements SettingsService {
     if (shouldBeSynced(updatedSettingAttribute, pushToGit)) {
       yamlChangeSetHelper.queueSettingUpdateYamlChangeAsync(savedSettingAttributes, updatedSettingAttribute);
     }
+    cacheHelper.getNewRelicApplicationCache().remove(updatedSettingAttribute.getUuid());
     return updatedSettingAttribute;
   }
 
@@ -448,6 +451,7 @@ public class SettingsServiceImpl implements SettingsService {
     boolean deleted = wingsPersistence.delete(settingAttribute);
     if (deleted && shouldBeSynced(settingAttribute, pushToGit)) {
       yamlChangeSetHelper.queueSettingYamlChangeAsync(settingAttribute, ChangeType.DELETE);
+      cacheHelper.getNewRelicApplicationCache().remove(settingAttribute.getUuid());
     }
   }
 

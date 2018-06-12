@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * Created by rsingh on 8/28/17.
  */
@@ -13,4 +15,10 @@ import lombok.Data;
 public class NewRelicApplication {
   private String name;
   private long id;
+
+  @Data
+  @Builder
+  public static class NewRelicApplications {
+    private List<NewRelicApplication> applications;
+  }
 }
