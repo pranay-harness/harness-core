@@ -57,7 +57,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     if (response.isSuccessful()) {
       return response.body();
     } else {
-      logger.error("Request not successful. Reason: {}", response);
+      logger.info("Request not successful. Reason: {}", response);
       throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
           .addParam("reason", "could not fetch Appdynamics applications");
     }

@@ -46,7 +46,7 @@ public interface MetricDataAnalysisService {
   List<NewRelicMetricDataRecord> getPreviousSuccessfulRecords(StateType stateType, String appId, String workflowId,
       String workflowExecutionID, String serviceId, String groupName, int analysisMinute, int analysisStartMinute);
 
-  List<String> getLastSuccessfulWorkflowExecutionIds(String workflowId);
+  List<String> getLastSuccessfulWorkflowExecutionIds(String appId, String workflowId);
 
   List<NewRelicMetricAnalysisRecord> getMetricsAnalysis(
       String appId, String stateExecutionId, String workflowExecutionId);
