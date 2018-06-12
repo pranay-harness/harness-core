@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.infrastructure.instance.info.EcsContainerInfo.Builder.anEcsContainerInfo;
+import static software.wings.common.Constants.HARNESS_REVISION;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.KubernetesConvention.DOT;
 
@@ -38,6 +39,7 @@ import software.wings.settings.SettingValue;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -116,9 +118,12 @@ public class ContainerServiceImpl implements ContainerService {
 
       if (controller != null) {
         logger.info("Got controller: {}", controller.getMetadata().getName());
-        Map<String, String> labels = controller.getMetadata().getLabels();
+        Map<String, String> labels =
+            kubernetesContainerService.getPodTemplateSpec(controller).getMetadata().getLabels();
+        Map<String, String> serviceLabels = new HashMap<>(labels);
+        serviceLabels.remove(HARNESS_REVISION);
         List<io.fabric8.kubernetes.api.model.Service> services = kubernetesContainerService.getServices(
-            kubernetesConfig, containerServiceParams.getEncryptionDetails(), labels);
+            kubernetesConfig, containerServiceParams.getEncryptionDetails(), serviceLabels);
         String serviceName = services.isEmpty() ? "None" : services.get(0).getMetadata().getName();
         logger.info("Service name: {}", serviceName);
         for (Pod pod : kubernetesContainerService.getPods(

@@ -13,11 +13,15 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.CLUSTER_NAME;
 import static software.wings.utils.WingsTestConstants.ECS_SERVICE_NAME;
 
+import com.google.common.collect.ImmutableMap;
+
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ecs.model.ListTasksResult;
 import com.amazonaws.services.ecs.model.Service;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodBuilder;
+import io.fabric8.kubernetes.api.model.PodTemplateSpec;
+import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
 import org.junit.Before;
@@ -128,6 +132,11 @@ public class ContainerServiceTest extends WingsBaseTest {
                   .addToLabels("app", "MyApp")
                   .endMetadata()
                   .build();
+    PodTemplateSpec podTemplateSpec = new PodTemplateSpecBuilder()
+                                          .withNewMetadata()
+                                          .withLabels(ImmutableMap.of("app", "MyApp"))
+                                          .endMetadata()
+                                          .build();
     when(gkeClusterService.getCluster(gcpParams.getSettingAttribute(), emptyList(), CLUSTER_NAME, "default"))
         .thenReturn(kubernetesConfig);
     when(kubernetesContainerService.listControllers(kubernetesConfig, emptyList()))
@@ -143,6 +152,7 @@ public class ContainerServiceTest extends WingsBaseTest {
     when(kubernetesContainerService.getControllerPodCount(eq(kubernetesConfig), anyObject(), anyString()))
         .thenReturn(Optional.of(2));
     when(kubernetesContainerService.getControllerPodCount(any(ReplicationController.class))).thenReturn(2);
+    when(kubernetesContainerService.getPodTemplateSpec(replicationController)).thenReturn(podTemplateSpec);
 
     Service ecsService = new Service();
     ecsService.setServiceName(ECS_SERVICE_NAME);
