@@ -36,6 +36,7 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -77,10 +78,13 @@ public class ServiceResource {
   @Timed
   @ExceptionMetered
   @ListAPI(ResourceType.SERVICE)
-  public RestResponse<PageResponse<Service>> list(
-      @QueryParam("appId") String appId, @BeanParam PageRequest<Service> pageRequest) {
+  public RestResponse<PageResponse<Service>> list(@QueryParam("appId") String appId,
+      @BeanParam PageRequest<Service> pageRequest, @QueryParam("details") @DefaultValue("true") boolean details) {
     if (appId != null) {
       pageRequest.addFilter("appId", EQ, appId);
+    }
+    if (!details) {
+      new RestResponse<>(serviceResourceService.list(pageRequest, false, false));
     }
     return new RestResponse<>(serviceResourceService.list(pageRequest, true, true));
   }

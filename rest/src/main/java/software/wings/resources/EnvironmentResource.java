@@ -30,6 +30,7 @@ import java.util.List;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -61,12 +62,12 @@ public class EnvironmentResource {
   @ListAPI(ENVIRONMENT)
   @Timed
   @ExceptionMetered
-  public RestResponse<PageResponse<Environment>> list(
-      @QueryParam("appId") String appId, @BeanParam PageRequest<Environment> pageRequest) {
+  public RestResponse<PageResponse<Environment>> list(@QueryParam("appId") String appId,
+      @BeanParam PageRequest<Environment> pageRequest, @QueryParam("details") @DefaultValue("true") boolean details) {
     if (appId != null) {
       pageRequest.addFilter("appId", EQ, appId);
     }
-    return new RestResponse<>(environmentService.list(pageRequest, true));
+    return new RestResponse<>(environmentService.list(pageRequest, details));
   }
 
   /**
