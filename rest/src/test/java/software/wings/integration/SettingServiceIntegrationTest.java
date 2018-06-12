@@ -30,7 +30,24 @@ import javax.ws.rs.core.Response;
 /**
  * Created by anubhaw on 5/3/17.
  */
+@Ignore // TODO: fix this test to use setting from settings generator
 public class SettingServiceIntegrationTest extends BaseIntegrationTest {
+  String JENKINS_URL = "http://jenkins.harness.io";
+  String JENKINS_USERNAME = "dummy";
+  char[] JENKINS_PASSWORD = "dummy-password".toCharArray();
+
+  String NEXUS_URL = "https://nexus.harness.io";
+  String NEXUS_USERNAME = "dummy";
+  char[] NEXUS_PASSWORD = "dummy-password".toCharArray();
+
+  String BAMBOO_URL = "http://bamboo.harness.io/";
+  String BAMBOO_USERNAME = "dummy";
+  char[] BAMBOO_PASSWORD = "dummy-password".toCharArray();
+
+  String DOCKER_REGISTRY_URL = "http://registry.harness.io";
+  String DOCKER_USERNAME = "dummy";
+  char[] DOCKER_PASSOWRD = "dummy-password".toCharArray();
+
   @Before
   public void setUp() throws Exception {
     super.setUp();

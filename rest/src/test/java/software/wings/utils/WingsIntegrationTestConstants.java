@@ -75,18 +75,6 @@ public interface WingsIntegrationTestConstants {
   String SEED_CANARY_WORKFLOW_NAME = "Seed Canary Workflow";
   String SEED_ROLLING_WORKFLOW_NAME = "Seed Rolling Workflow";
 
-  char[] JENKINS_PASSWORD = "admin".toCharArray();
-  String JENKINS_URL = "http://ec2-34-207-79-21.compute-1.amazonaws.com:8080/";
-  String JENKINS_USERNAME = "admin";
-  String NEXUS_URL = "https://nexus.wings.software";
-  String NEXUS_USERNAME = "admin";
-  char[] NEXUS_PASSWORD = "wings123!".toCharArray();
-  String BAMBOO_URL = "http://ec2-34-205-16-35.compute-1.amazonaws.com:8085/";
-  String BAMBOO_USERNAME = "wingsbuild";
-  char[] BAMBOO_PASSWORD = "0db28aa0f4fc0685df9a216fc7af0ca96254b7c2".toCharArray();
-  String DOCKER_REGISTRY_URL = "https://registry.hub.docker.com/v2/";
-  String DOCKER_USERNAME = "wingsplugins";
-  char[] DOCKER_PASSOWRD = "W!ngs@DockerHub".toCharArray();
   String HARNESS_KMS = "Harness KMS";
 
   String DEFAULT_USER_KEY = "DEFAULT_USER_KEY";
