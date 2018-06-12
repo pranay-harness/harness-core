@@ -12,6 +12,7 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -339,5 +340,11 @@ public class ShellScriptState extends State {
     Activity activity = activityBuilder.build();
     activity.setAppId(app.getUuid());
     return activityService.save(activity).getUuid();
+  }
+
+  @Override
+  @SchemaIgnore
+  public List<String> getPatternsForRequiredContextElementType() {
+    return asList(scriptString);
   }
 }
