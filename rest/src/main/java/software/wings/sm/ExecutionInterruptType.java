@@ -45,6 +45,7 @@ public enum ExecutionInterruptType {
   /**
    * Mark as success.
    */
+
   MARK_SUCCESS("Mark the node as success"),
 
   ROLLBACK("Rollback"),
@@ -53,7 +54,9 @@ public enum ExecutionInterruptType {
 
   END_EXECUTION("End Execution"),
 
-  ROLLBACK_DONE("Rollback Done");
+  ROLLBACK_DONE("Rollback Done"),
+
+  MARK_EXPIRED("Mark the node as expired");
 
   private String description;
 

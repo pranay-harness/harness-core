@@ -11,6 +11,7 @@ import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.text.StrSubstitutor;
+import org.apache.commons.text.WordUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,7 +60,7 @@ public class NotificationMessageResolver {
     DELEGATE_STATE_NOTIFICATION,
     APPROVAL_NEEDED_NOTIFICATION,
     APPROVAL_STATE_CHANGE_NOTIFICATION,
-    APPROVAL_TIMEOUT_NOTIFICATION,
+    APPROVAL_EXPIRED_NOTIFICATION,
     MANUAL_INTERVENTION_NEEDED_NOTIFICATION
   }
 
@@ -253,6 +254,10 @@ public class NotificationMessageResolver {
         return "resumed";
       case ABORTED:
         return "aborted";
+      case REJECTED:
+        return "rejected";
+      case EXPIRED:
+        return "expired";
       default:
         unhandled(status);
         return "failed";
@@ -287,6 +292,10 @@ public class NotificationMessageResolver {
     }
   }
 
+  private String toCamelCase(String input) {
+    return WordUtils.capitalizeFully(input);
+  }
+
   public Map<String, String> getPlaceholderValues(ExecutionContext context, String userName, long startTs, long endTs,
       String timeout, String statusMsg, String artifactsMessage, ExecutionStatus status, AlertType alertType) {
     Application app = ((ExecutionContextImpl) context).getApp();
@@ -296,6 +305,7 @@ public class NotificationMessageResolver {
 
     Environment env = ((ExecutionContextImpl) context).getEnv();
     String envName = (env != null) ? env.getName() : "";
+    String verb = getStatusVerb(status);
 
     Map<String, String> placeHolderValues = new HashMap<>();
     placeHolderValues.put("START_TS_SECS", Long.toString(startTs / 1000L));
@@ -303,8 +313,8 @@ public class NotificationMessageResolver {
     placeHolderValues.put("START_DATE", startTime);
     placeHolderValues.put("END_DATE", endTime);
     placeHolderValues.put("DURATION", getDurationString(startTs, endTs));
-    placeHolderValues.put("VERB", getStatusVerb(status));
-    placeHolderValues.put("STATUS_UPPERCASE", getStatusVerb(status).toUpperCase());
+    placeHolderValues.put("VERB", verb);
+    placeHolderValues.put("STATUS_CAMELCASE", toCamelCase(verb));
     placeHolderValues.put("WORKFLOW_NAME", context.getWorkflowExecutionName());
     placeHolderValues.put("WORKFLOW_URL", workflowUrl);
     placeHolderValues.put("TIMEOUT", timeout);

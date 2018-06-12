@@ -4,7 +4,7 @@ import static java.util.Arrays.asList;
 import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
-import static software.wings.sm.ExecutionInterruptType.ABORT;
+import static software.wings.sm.ExecutionInterruptType.MARK_EXPIRED;
 import static software.wings.sm.ExecutionStatus.NEW;
 import static software.wings.sm.ExecutionStatus.PAUSED;
 import static software.wings.sm.ExecutionStatus.RUNNING;
@@ -98,7 +98,7 @@ public class WorkflowExecutionMonitorJob implements Job {
 
             logger.info("Expired StateExecutionInstance found: {}", stateExecutionInstance.getUuid());
             ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
-                                                        .withExecutionInterruptType(ABORT)
+                                                        .withExecutionInterruptType(MARK_EXPIRED)
                                                         .withAppId(stateExecutionInstance.getAppId())
                                                         .withExecutionUuid(stateExecutionInstance.getExecutionUuid())
                                                         .withStateExecutionInstanceId(stateExecutionInstance.getUuid())

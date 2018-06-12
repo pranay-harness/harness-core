@@ -193,6 +193,8 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
         .replaceAll("<<paused-color>>", PAUSED_COLOR + ";\">")
         .replaceAll("<<resumed-color>>", RESUMED_COLOR + ";\">")
         .replaceAll("<<aborted-color>>", ABORTED_COLOR + ";\">")
+        .replaceAll("<<rejected-color>>", FAILED_COLOR + ";\">")
+        .replaceAll("<<expired-color>>", FAILED_COLOR + ";\">")
         .replaceAll("<<img-path>>", "<div><span><img src=\"https://s3.amazonaws.com/wings-assets/slackicons/")
         .replaceAll("<<img-suffix>>",
             ".png\" height=\"13\" width=\"13\" style=\"padding-right:5px; padding-top:5px;\"></span>"

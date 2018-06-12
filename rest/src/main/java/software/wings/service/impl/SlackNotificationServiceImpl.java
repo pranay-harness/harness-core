@@ -77,6 +77,8 @@ public class SlackNotificationServiceImpl implements SlackNotificationService {
     switch (status) {
       case "completed":
         return COMPLETED_COLOR;
+      case "expired":
+      case "rejected":
       case "failed":
         return FAILED_COLOR;
       case "paused":

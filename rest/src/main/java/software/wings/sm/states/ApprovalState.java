@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static software.wings.api.ApprovalStateExecutionData.Builder.anApprovalStateExecutionData;
@@ -9,11 +10,12 @@ import static software.wings.beans.InformationNotification.Builder.anInformation
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.alert.AlertType.ApprovalNeeded;
 import static software.wings.common.Constants.DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS;
+import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_EXPIRED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_NEEDED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_STATE_CHANGE_NOTIFICATION;
-import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_TIMEOUT_NOTIFICATION;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.ExecutionStatus.ABORTED;
+import static software.wings.sm.ExecutionStatus.EXPIRED;
 import static software.wings.sm.ExecutionStatus.PAUSED;
 import static software.wings.sm.ExecutionStatus.SKIPPED;
 
@@ -159,7 +161,7 @@ public class ApprovalState extends State {
     if (currentTimeMillis >= (timeout + startTimeMillis)) {
       errorMsg = "Pipeline was not approved within " + Misc.getDurationString(getTimeoutMillis());
       Map<String, String> placeholderValues = getPlaceholderValues(context, errorMsg);
-      sendApprovalNotification(app.getAccountId(), APPROVAL_TIMEOUT_NOTIFICATION, placeholderValues);
+      sendApprovalNotification(app.getAccountId(), APPROVAL_EXPIRED_NOTIFICATION, placeholderValues);
     } else {
       errorMsg = "Pipeline was aborted";
       User user = UserThreadLocal.get();
@@ -212,12 +214,30 @@ public class ApprovalState extends State {
         singletonList(notificationRule));
   }
 
+  private static String getStatusMessage(ExecutionStatus status) {
+    switch (status) {
+      case SUCCESS:
+        return "approved";
+      case ABORTED:
+        return "aborted";
+      case REJECTED:
+        return "rejected";
+      case EXPIRED:
+        return "expired";
+      case PAUSED:
+        return "paused";
+      default:
+        unhandled(status);
+        return "failed";
+    }
+  }
+
   protected Map<String, String> getPlaceholderValues(
       ExecutionContext context, String userName, ExecutionStatus status) {
     WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(
         ((ExecutionContextImpl) context).getApp().getUuid(), context.getWorkflowExecutionId());
 
-    String statusMsg = (status == ABORTED) ? "aborted" : "approved";
+    String statusMsg = getStatusMessage(status);
     long startTs = (status == PAUSED) ? workflowExecution.getCreatedAt() : context.getStateExecutionData().getStartTs();
     if (status == PAUSED) {
       userName = workflowExecution.getTriggeredBy().getName();
@@ -229,6 +249,6 @@ public class ApprovalState extends State {
 
   private Map<String, String> getPlaceholderValues(ExecutionContext context, String timeout) {
     return notificationMessageResolver.getPlaceholderValues(
-        context, "", 0, 0, timeout, "", "", ABORTED, ApprovalNeeded);
+        context, "", 0, 0, timeout, "", "", EXPIRED, ApprovalNeeded);
   }
 }

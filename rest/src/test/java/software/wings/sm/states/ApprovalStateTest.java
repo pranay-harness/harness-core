@@ -12,12 +12,13 @@ import static software.wings.api.ApprovalStateExecutionData.Builder.anApprovalSt
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.common.Constants.DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS;
+import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_EXPIRED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_NEEDED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_STATE_CHANGE_NOTIFICATION;
-import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_TIMEOUT_NOTIFICATION;
 import static software.wings.sm.ExecutionStatus.ABORTED;
 import static software.wings.sm.ExecutionStatus.PAUSED;
 import static software.wings.sm.ExecutionStatus.SKIPPED;
+import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -155,7 +156,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     assertThat(context.getStateExecutionData()).isNotNull();
     assertThat(context.getStateExecutionData().getErrorMsg()).contains("Pipeline was not approved within 36m");
 
-    verifyNotificationArguments(APPROVAL_TIMEOUT_NOTIFICATION);
+    verifyNotificationArguments(APPROVAL_EXPIRED_NOTIFICATION);
   }
 
   @Test
@@ -184,8 +185,13 @@ public class ApprovalStateTest extends WingsBaseTest {
 
     approvalState.getPlaceholderValues(context, USER_NAME_1_KEY, PAUSED);
     verify(notificationMessageResolver)
-        .getPlaceholderValues(any(), eq(USER_NAME), eq(70L), any(Long.class), eq(""), eq("approved"), any(), eq(PAUSED),
+        .getPlaceholderValues(any(), eq(USER_NAME), eq(70L), any(Long.class), eq(""), eq("paused"), any(), eq(PAUSED),
             eq(AlertType.ApprovalNeeded));
+
+    approvalState.getPlaceholderValues(context, USER_NAME_1_KEY, SUCCESS);
+    verify(notificationMessageResolver)
+        .getPlaceholderValues(any(), eq(USER_NAME_1_KEY), any(Long.class), any(Long.class), eq(""), eq("approved"),
+            any(), eq(SUCCESS), eq(AlertType.ApprovalNeeded));
   }
 
   private void verifyNotificationArguments(NotificationMessageType notificationMessageType) {

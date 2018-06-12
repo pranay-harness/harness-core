@@ -41,29 +41,29 @@ DELEGATE_STATE_NOTIFICATION:
           body: ${COUNT} ${ENTITY_AFFECTED} down with ${DESCRIPTION_FIELD} ${HOST_NAMES_HTML}
 
 APPROVAL_NEEDED_NOTIFICATION:
-      web: Approval REQUIRED - ${WORKFLOW_NAME} in ${APP_NAME} is waiting for approval.
-      slack: Approval REQUIRED - \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* triggered by \*${USER_NAME}\* is waiting for approval in \*${APP_NAME}\* application|| Pipeline _started<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and ${VERB} for approval at <!date^${END_TS_SECS}^{time}|${END_DATE}>_||||${VERB}
+      web: Approval Required - ${WORKFLOW_NAME} in ${APP_NAME} is waiting for approval.
+      slack: Approval Required - \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* triggered by \*${USER_NAME}\* is waiting for approval in \*${APP_NAME}\* application|| Pipeline _started<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and ${VERB} for approval at <!date^${END_TS_SECS}^{time}|${END_DATE}>_||||${VERB}
       email:
-          subject: Approval REQUIRED for ${WORKFLOW_NAME}
+          subject: Approval Required for ${WORKFLOW_NAME}
           body: <<top-div>><b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> triggered by <b>${USER_NAME}</b> is waiting for approval in <b>${APP_NAME}</b> application</div> <<bottom-div>><<${VERB}-color>><i> Pipeline started ${START_DATE} and ${VERB} for approval at ${END_DATE}</i></span></div></div>
 
 APPROVAL_STATE_CHANGE_NOTIFICATION:
-      web: ${WORKFLOW_NAME} in ${APP_NAME} is ${STATUS}
-      slack: Approval ${STATUS_UPPERCASE} - \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* is ${STATUS} by \*${USER_NAME}\* in \*${APP_NAME}\* application|| Pipeline _paused<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and ${STATUS} at <!date^${END_TS_SECS}^{time}|${END_DATE}>_||${DURATION}||${VERB}
+      web: Approval ${STATUS_CAMELCASE} - ${WORKFLOW_NAME} in ${APP_NAME} is ${STATUS}
+      slack: Approval ${STATUS_CAMELCASE} - \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* is ${STATUS} by \*${USER_NAME}\* in \*${APP_NAME}\* application|| Pipeline _paused<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and ${STATUS} at <!date^${END_TS_SECS}^{time}|${END_DATE}>_||${DURATION}||${VERB}
       email:
-          subject: Approval ${STATUS_UPPERCASE} for ${WORKFLOW_NAME}
+          subject: Approval ${STATUS_CAMELCASE} for ${WORKFLOW_NAME}
           body: <<top-div>><b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> is ${STATUS} by <b>${USER_NAME}</b> in <b>${APP_NAME}</b> application</div> <<bottom-div>><<${VERB}-color>><i>Pipeline paused ${START_DATE} and ${STATUS} at ${END_DATE}</i><<img-path>>${VERB}<<img-suffix>>${DURATION}</span></div></div>
 
-APPROVAL_TIMEOUT_NOTIFICATION:
-      web: ${WORKFLOW_NAME} in ${APP_NAME} timed out
-      slack: Approval TIMED OUT - \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* timed out in \*${APP_NAME}\* application ||${TIMEOUT} ||||${VERB}
+APPROVAL_EXPIRED_NOTIFICATION:
+      web: Approval ${STATUS_CAMELCASE} - ${WORKFLOW_NAME} in ${APP_NAME} ${VERB}
+      slack: Approval ${STATUS_CAMELCASE} - \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* ${VERB} in \*${APP_NAME}\* application ||${TIMEOUT} ||||${VERB}
       email:
-          subject: Approval TIMED OUT for ${WORKFLOW_NAME}
-          body: <<top-div>><b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> timed out in <b>${APP_NAME}</b> application</div> <<bottom-div>><<${VERB}-color>><i>${TIMEOUT}</i>
+          subject: Approval ${STATUS_CAMELCASE} for ${WORKFLOW_NAME}
+          body: <<top-div>><b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> ${VERB} in <b>${APP_NAME}</b> application</div> <<bottom-div>><<${VERB}-color>><i>${TIMEOUT}</i>
 
 MANUAL_INTERVENTION_NEEDED_NOTIFICATION:
-      web: Manual Intervention NEEDED - ${WORKFLOW_NAME} in ${APP_NAME} requires manual intervention
-      slack: Manual Intervention NEEDED - \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* requires manual intervention for \*${ARTIFACT}\* in \*${ENV}\*, triggered by \*${USER_NAME}\* in \*${APP_NAME}\* application||_Started<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and ${VERB} at <!date^${END_TS_SECS}^{time}|${END_DATE}>_||${DURATION}||${VERB}
+      web: Manual Intervention Needed - ${WORKFLOW_NAME} in ${APP_NAME} requires manual intervention
+      slack: Manual Intervention Needed - \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* requires manual intervention for \*${ARTIFACT}\* in \*${ENV}\*, triggered by \*${USER_NAME}\* in \*${APP_NAME}\* application||_Started<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and ${VERB} at <!date^${END_TS_SECS}^{time}|${END_DATE}>_||${DURATION}||${VERB}
       email:
-          subject: Manual intervention NEEDED for ${WORKFLOW_NAME}
+          subject: Manual Intervention Needed for ${WORKFLOW_NAME}
           body: <<top-div>><b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> requires manual intervention for <b>${ARTIFACT}</b> in <b>${ENV}</b>, triggered by <b>${USER_NAME}</b> in <b>${APP_NAME}</b> application</div> <<bottom-div>><<${VERB}-color>><i> Started ${START_DATE} and ${VERB} at ${END_DATE}</i><<img-path>>${VERB}<<img-suffix>>${DURATION}</span></div></div>

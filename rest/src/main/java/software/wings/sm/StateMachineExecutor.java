@@ -31,6 +31,7 @@ import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.ExecutionStatus.ABORTED;
 import static software.wings.sm.ExecutionStatus.DISCONTINUING;
 import static software.wings.sm.ExecutionStatus.ERROR;
+import static software.wings.sm.ExecutionStatus.EXPIRED;
 import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.NEW;
 import static software.wings.sm.ExecutionStatus.PAUSED;
@@ -531,8 +532,8 @@ public class StateMachineExecutor {
         return successTransition(context);
       } else if (isBrokeStatus(status)) {
         return failedTransition(context, null);
-      } else if (status == ABORTED) {
-        endTransition(context, stateExecutionInstance, ABORTED, null);
+      } else if (ExecutionStatus.isDiscontinueStatus(status)) {
+        endTransition(context, stateExecutionInstance, status, null);
       }
     }
     return stateExecutionInstance;
@@ -736,7 +737,7 @@ public class StateMachineExecutor {
    * Handle execute response exception state execution instance.
    *
    * @param context   the context
-   * @param e the exception
+   * @param exception the exception
    * @return the state execution instance
    */
   StateExecutionInstance handleExecuteResponseException(ExecutionContextImpl context, WingsException exception) {
@@ -834,7 +835,7 @@ public class StateMachineExecutor {
     }
   }
 
-  private void abortExecution(ExecutionContextImpl context) {
+  private void discontinueExecution(ExecutionContextImpl context, ExecutionInterruptType interruptType) {
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
 
     final List<ExecutionStatus> executionStatuses = asList(NEW, QUEUED, STARTING, RUNNING, PAUSED, WAITING);
@@ -848,10 +849,24 @@ public class StateMachineExecutor {
           .addParam("statuses", executionStatuses);
     }
 
-    abortMarkedInstance(context, stateExecutionInstance);
+    ExecutionStatus finalStatus = getFinalStatus(interruptType);
+    discontinueMarkedInstance(context, stateExecutionInstance, finalStatus);
   }
 
-  private void abortMarkedInstance(ExecutionContextImpl context, StateExecutionInstance stateExecutionInstance) {
+  private ExecutionStatus getFinalStatus(ExecutionInterruptType interruptType) {
+    switch (interruptType) {
+      case MARK_EXPIRED:
+        return EXPIRED;
+      case ABORT:
+        return ABORTED;
+      default:
+        unhandled(interruptType);
+    }
+    return ERROR;
+  }
+
+  private void discontinueMarkedInstance(
+      ExecutionContextImpl context, StateExecutionInstance stateExecutionInstance, ExecutionStatus finalStatus) {
     boolean updated = false;
     StateMachine sm = context.getStateMachine();
     try {
@@ -866,15 +881,15 @@ public class StateMachineExecutor {
       }
       currentState.handleAbortEvent(context);
       updated = updateStateExecutionData(
-          stateExecutionInstance, null, ABORTED, null, asList(DISCONTINUING), null, null, null);
+          stateExecutionInstance, null, finalStatus, null, asList(DISCONTINUING), null, null, null);
       invokeAdvisors(context, currentState);
 
-      endTransition(context, stateExecutionInstance, ABORTED, null);
+      endTransition(context, stateExecutionInstance, finalStatus, null);
     } catch (Exception e) {
       logger.error("Error in discontinuing", e);
     }
     if (!updated) {
-      throw new WingsException(ErrorCode.STATE_ABORT_FAILED)
+      throw new WingsException(ErrorCode.STATE_DISCONTINUE_FAILED)
           .addParam("displayName", stateExecutionInstance.getDisplayName());
     }
   }
@@ -1210,6 +1225,7 @@ public class StateMachineExecutor {
         break;
       }
 
+      case MARK_EXPIRED:
       case ABORT: {
         StateExecutionInstance stateExecutionInstance = getStateExecutionInstance(workflowExecutionInterrupt.getAppId(),
             workflowExecutionInterrupt.getExecutionUuid(), workflowExecutionInterrupt.getStateExecutionInstanceId());
@@ -1218,7 +1234,7 @@ public class StateMachineExecutor {
             stateExecutionInstance.getStateMachineId(), CRITICAL);
         ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
         injector.injectMembers(context);
-        abortExecution(context);
+        discontinueExecution(context, type);
         break;
       }
       case ABORT_ALL: {
@@ -1305,7 +1321,7 @@ public class StateMachineExecutor {
           stateExecutionInstance.getStateMachineId(), CRITICAL);
       ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
       injector.injectMembers(context);
-      abortMarkedInstance(context, stateExecutionInstance);
+      discontinueMarkedInstance(context, stateExecutionInstance, ABORTED);
     }
   }
 
