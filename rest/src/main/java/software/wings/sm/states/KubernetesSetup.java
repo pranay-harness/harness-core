@@ -37,6 +37,7 @@ import software.wings.beans.command.ContainerSetupParams;
 import software.wings.beans.command.KubernetesSetupParams;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ImageDetails;
+import software.wings.beans.container.KubernetesBlueGreenConfig;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.KubernetesPortProtocol;
 import software.wings.beans.container.KubernetesServiceType;
@@ -82,6 +83,9 @@ public class KubernetesSetup extends ContainerServiceSetup {
   private String ingressYaml;
   private String customMetricYamlConfig;
   private boolean useIstioRouteRule;
+
+  private boolean blueGreen;
+  private KubernetesBlueGreenConfig blueGreenConfig;
 
   private String commandName = "Setup Replication Controller";
 
@@ -210,6 +214,8 @@ public class KubernetesSetup extends ContainerServiceSetup {
         .withUseIngress(useIngress)
         .withIngressYaml(ingressYamlEvaluated)
         .withUseIstioRouteRule(useIstioRouteRule)
+        .withBlueGreen(blueGreen)
+        .withBlueGreenConfig(blueGreenConfig)
         .withPlainConfigFiles(plainConfigFiles)
         .withEncryptedConfigFiles(encryptedConfigFiles)
         .withConfigMapYaml(configMapYamlEvaluated)
@@ -493,5 +499,21 @@ public class KubernetesSetup extends ContainerServiceSetup {
 
   public void setUseIstioRouteRule(boolean useIstioRouteRule) {
     this.useIstioRouteRule = useIstioRouteRule;
+  }
+
+  public boolean isBlueGreen() {
+    return blueGreen;
+  }
+
+  public void setBlueGreen(boolean blueGreen) {
+    this.blueGreen = blueGreen;
+  }
+
+  public KubernetesBlueGreenConfig getBlueGreenConfig() {
+    return blueGreenConfig;
+  }
+
+  public void setBlueGreenConfig(KubernetesBlueGreenConfig blueGreenConfig) {
+    this.blueGreenConfig = blueGreenConfig;
   }
 }

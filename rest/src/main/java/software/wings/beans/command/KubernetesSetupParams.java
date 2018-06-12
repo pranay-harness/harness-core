@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ImageDetails;
+import software.wings.beans.container.KubernetesBlueGreenConfig;
 import software.wings.beans.container.KubernetesPortProtocol;
 import software.wings.beans.container.KubernetesServiceType;
 
@@ -44,6 +45,8 @@ public class KubernetesSetupParams extends ContainerSetupParams {
   private boolean useIngress;
   private String ingressYaml;
   private boolean useIstioRouteRule;
+  private boolean blueGreen;
+  private KubernetesBlueGreenConfig blueGreenConfig;
   private String configMapYaml;
   private List<String[]> plainConfigFiles;
   private List<String[]> encryptedConfigFiles;
@@ -86,6 +89,8 @@ public class KubernetesSetupParams extends ContainerSetupParams {
     private boolean useIngress;
     private String ingressYaml;
     private boolean useIstioRouteRule;
+    private boolean blueGreen;
+    private KubernetesBlueGreenConfig blueGreenConfig;
     private String configMapYaml;
     private List<String[]> plainConfigFiles;
     private List<String[]> encryptedConfigFiles;
@@ -281,6 +286,16 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       return this;
     }
 
+    public KubernetesSetupParamsBuilder withBlueGreen(boolean blueGreen) {
+      this.blueGreen = blueGreen;
+      return this;
+    }
+
+    public KubernetesSetupParamsBuilder withBlueGreenConfig(KubernetesBlueGreenConfig blueGreenConfig) {
+      this.blueGreenConfig = blueGreenConfig;
+      return this;
+    }
+
     public KubernetesSetupParamsBuilder withConfigMapYaml(String configMapYaml) {
       this.configMapYaml = configMapYaml;
       return this;
@@ -335,6 +350,8 @@ public class KubernetesSetupParams extends ContainerSetupParams {
           .withUseIngress(useIngress)
           .withIngressYaml(ingressYaml)
           .withUseIstioRouteRule(useIstioRouteRule)
+          .withBlueGreen(blueGreen)
+          .withBlueGreenConfig(blueGreenConfig)
           .withConfigMapYaml(configMapYaml)
           .withPlainConfigFiles(plainConfigFiles)
           .withEncryptedConfigFiles(encryptedConfigFiles);
@@ -379,6 +396,8 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       kubernetesSetupParams.setUseIngress(useIngress);
       kubernetesSetupParams.setIngressYaml(ingressYaml);
       kubernetesSetupParams.setUseIstioRouteRule(useIstioRouteRule);
+      kubernetesSetupParams.setBlueGreen(blueGreen);
+      kubernetesSetupParams.setBlueGreenConfig(blueGreenConfig);
       kubernetesSetupParams.setConfigMapYaml(configMapYaml);
       kubernetesSetupParams.setPlainConfigFiles(plainConfigFiles);
       kubernetesSetupParams.setEncryptedConfigFiles(encryptedConfigFiles);
