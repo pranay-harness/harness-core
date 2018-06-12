@@ -192,7 +192,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   @Override
   public List<TimeSeriesMLScores> getTimeSeriesMLScores(
       String appId, String workflowId, int analysisMinute, int limit) {
-    List<String> workflowExecutionIds = getLastSuccessfulWorkflowExecutionIds(workflowId);
+    List<String> workflowExecutionIds = getLastSuccessfulWorkflowExecutionIds(appId, workflowId);
     return wingsPersistence.createQuery(TimeSeriesMLScores.class)
         .filter("workflowId", workflowId)
         .filter("appId", appId)
@@ -293,7 +293,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   @Override
   public String getLastSuccessfulWorkflowExecutionIdWithData(
       StateType stateType, String appId, String workflowId, String serviceId) {
-    List<String> successfulExecutions = getLastSuccessfulWorkflowExecutionIds(workflowId);
+    List<String> successfulExecutions = getLastSuccessfulWorkflowExecutionIds(appId, workflowId);
     for (String successfulExecution : successfulExecutions) {
       if (wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
               .filter("stateType", stateType)
@@ -313,8 +313,9 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   }
 
   @Override
-  public List<String> getLastSuccessfulWorkflowExecutionIds(String workflowId) {
+  public List<String> getLastSuccessfulWorkflowExecutionIds(String appId, String workflowId) {
     final PageRequest<WorkflowExecution> pageRequest = aPageRequest()
+                                                           .addFilter("appId", Operator.EQ, appId)
                                                            .addFilter("workflowId", Operator.EQ, workflowId)
                                                            .addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS)
                                                            .addOrder("createdAt", OrderType.DESC)
