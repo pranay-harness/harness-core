@@ -22,6 +22,7 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.APMDelegateService;
+import software.wings.service.impl.newrelic.NewRelicApplication.NewRelicApplications;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.dynatrace.DynaTraceDelegateService;
@@ -30,8 +31,10 @@ import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.service.intfc.prometheus.PrometheusDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.StateType;
+import software.wings.utils.CacheHelper;
 
 import java.util.List;
+import javax.cache.Cache;
 
 /**
  * Created by rsingh on 8/28/17.
@@ -42,6 +45,7 @@ public class NewRelicServiceImpl implements NewRelicService {
   @Inject private SettingsService settingsService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private SecretManager secretManager;
+  @Inject private CacheHelper cacheHelper;
 
   @Override
   public void validateAPMConfig(SettingAttribute settingAttribute, APMValidateCollectorConfig config) {
@@ -122,9 +126,26 @@ public class NewRelicServiceImpl implements NewRelicService {
           aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
       switch (stateType) {
         case NEW_RELIC:
+          Cache<String, NewRelicApplications> newRelicApplicationCache = cacheHelper.getNewRelicApplicationCache();
+          String key = settingAttribute.getUuid();
+          NewRelicApplications applications;
+          try {
+            applications = newRelicApplicationCache.get(key);
+            if (applications != null) {
+              return applications.getApplications();
+            }
+          } catch (Exception ex) {
+            // If there was any exception, remove that entry from cache
+            newRelicApplicationCache.remove(key);
+          }
+
           errorCode = ErrorCode.NEWRELIC_ERROR;
-          return delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
-              .getAllApplications((NewRelicConfig) settingAttribute.getValue(), encryptionDetails);
+          List<NewRelicApplication> allApplications =
+              delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
+                  .getAllApplications((NewRelicConfig) settingAttribute.getValue(), encryptionDetails);
+          applications = NewRelicApplications.builder().applications(allApplications).build();
+          newRelicApplicationCache.put(key, applications);
+          return allApplications;
         case APP_DYNAMICS:
           errorCode = ErrorCode.APPDYNAMICS_ERROR;
           return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
