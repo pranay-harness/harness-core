@@ -228,7 +228,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     return byteArray;
   }
 
-  private VaultRestClient getVaultRestClient(final VaultConfig vaultConfig) {
+  public static VaultRestClient getVaultRestClient(final VaultConfig vaultConfig) {
     final Retrofit retrofit = new Retrofit.Builder()
                                   .baseUrl(vaultConfig.getVaultUrl())
                                   .addConverterFactory(JacksonConverterFactory.create())
