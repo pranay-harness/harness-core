@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Account;
+import software.wings.beans.User;
 import software.wings.dl.PageRequest;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
@@ -23,6 +24,10 @@ public interface AccountService {
   Account get(String accountId);
 
   void delete(String accountId);
+
+  boolean getTwoFactorEnforceInfo(String accountId);
+
+  void updateTwoFactorEnforceInfo(String accountId, User user, boolean enabled);
 
   //  Account findOrCreate(String companyName);
 

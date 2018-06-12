@@ -38,6 +38,7 @@ import software.wings.security.annotations.Scope;
 import software.wings.security.authentication.AuthenticationManager;
 import software.wings.security.authentication.LoginTypeResponse;
 import software.wings.security.authentication.SsoRedirectRequest;
+import software.wings.security.authentication.TwoFactorAdminOverrideSettings;
 import software.wings.security.authentication.TwoFactorAuthenticationManager;
 import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings;
@@ -412,6 +413,44 @@ public class UserResource {
       @PathParam("auth-mechanism") TwoFactorAuthenticationMechanism authMechanism) {
     return new RestResponse(
         twoFactorAuthenticationManager.createTwoFactorAuthenticationSettings(UserThreadLocal.get(), authMechanism));
+  }
+
+  @PUT
+  @Path("override-two-factor-auth/{accountId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+  public RestResponse<TwoFactorAdminOverrideSettings> overrideTwoFactorAuth(
+      @PathParam("accountId") @NotEmpty String accountId, TwoFactorAdminOverrideSettings settings) {
+    // Trying Override = true
+    if (settings.isAdminOverrideTwoFactorEnabled()) {
+      if (twoFactorAuthenticationManager.isTwoFactorEnabledForAdmin(accountId, UserThreadLocal.get())) {
+        return new RestResponse(
+            twoFactorAuthenticationManager.overrideTwoFactorAuthentication(accountId, UserThreadLocal.get(), settings));
+      } else {
+        return Builder.aRestResponse()
+            .withResponseMessages(
+                Lists.newArrayList(ResponseMessage.aResponseMessage()
+                                       .message("Admin has 2FA disabled. Please enable to enforce 2FA on users.")
+                                       .level(Level.ERROR)
+                                       .build()))
+            .build();
+      }
+    }
+    // Trying Override = false
+    else {
+      return new RestResponse(
+          twoFactorAuthenticationManager.overrideTwoFactorAuthentication(accountId, UserThreadLocal.get(), settings));
+    }
+  }
+
+  @GET
+  @Path("two-factor-auth-info/{accountId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  public RestResponse<Boolean> getTwoFactorAuthAdminEnforceInfo(@PathParam("accountId") @NotEmpty String accountId) {
+    return new RestResponse(twoFactorAuthenticationManager.getTwoFactorAuthAdminEnforceInfo(accountId));
   }
 
   @PUT

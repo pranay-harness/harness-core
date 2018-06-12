@@ -1,5 +1,6 @@
 package software.wings.security.authentication;
 
+import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
 import static software.wings.exception.WingsException.USER;
 
 import com.google.inject.Inject;
@@ -12,6 +13,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.User;
 import software.wings.exception.WingsException;
 import software.wings.security.SecretManager.JWT_CATEGORY;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
 
 import java.util.Base64;
@@ -22,6 +24,7 @@ public class TwoFactorAuthenticationManager {
 
   @Inject private TOTPAuthHandler totpHandler;
   @Inject private UserService userService;
+  @Inject private AccountService accountService;
   @Inject private AuthenticationUtil authenticationUtil;
 
   public TwoFactorAuthHandler getTwoFactorAuthHandler(TwoFactorAuthenticationMechanism mechanism) {
@@ -76,6 +79,38 @@ public class TwoFactorAuthenticationManager {
       user.setTwoFactorAuthenticationEnabled(false);
       return userService.update(user);
     }
+  }
+
+  public boolean getTwoFactorAuthAdminEnforceInfo(String accountId) {
+    return accountService.getTwoFactorEnforceInfo(accountId);
+  }
+
+  public boolean isTwoFactorEnabledForAdmin(String accountId, User user) {
+    boolean twoFactorEnabled = false;
+    if (accountId != null && user != null) {
+      twoFactorEnabled = userService.isTwoFactorEnabledForAdmin(accountId, user.getUuid());
+    }
+    return twoFactorEnabled;
+  }
+
+  public boolean overrideTwoFactorAuthentication(String accountId, User user, TwoFactorAdminOverrideSettings settings) {
+    try {
+      if (settings != null) {
+        // Enable 2FA for user if admin enforce is enabled
+        if (settings.isAdminOverrideTwoFactorEnabled()) {
+          logger.info("Enabling 2FA for all users in the account who have 2FA disabled ={}", accountId);
+          return userService.overrideTwoFactorforAccount(accountId, user, settings.isAdminOverrideTwoFactorEnabled());
+        } else {
+          // disable override
+          accountService.updateTwoFactorEnforceInfo(accountId, user, settings.isAdminOverrideTwoFactorEnabled());
+        }
+      }
+    } catch (Exception ex) {
+      throw new WingsException(UNKNOWN_ERROR, USER)
+          .addParam("message", "Exception occurred while enforcing Two factor authentication for users");
+    }
+
+    return false;
   }
 
   public boolean sendTwoFactorAuthenticationResetEmail(String userId) {

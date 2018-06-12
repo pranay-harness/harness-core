@@ -36,6 +36,15 @@ public class Account extends Base {
   private long licenseExpiryTime;
 
   @JsonIgnore private EncryptionInterface encryption;
+  private boolean twoFactorAdminEnforced;
+
+  public void setTwoFactorAdminEnforced(boolean twoFactorAdminEnforced) {
+    this.twoFactorAdminEnforced = twoFactorAdminEnforced;
+  }
+
+  public boolean isTwoFactorAdminEnforced() {
+    return twoFactorAdminEnforced;
+  }
 
   /**
    * Default mechanism is USER_PASSWORD
@@ -81,7 +90,6 @@ public class Account extends Base {
   public String getAccountName() {
     return accountName;
   }
-
   public void setAccountName(String accountName) {
     this.accountName = accountName;
   }

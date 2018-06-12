@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.Base.ID_KEY;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.RoleType.ACCOUNT_ADMIN;
@@ -21,6 +22,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
@@ -30,6 +32,7 @@ import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SystemCatalog;
+import software.wings.beans.User;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.licensing.LicenseManager;
@@ -161,6 +164,19 @@ public class AccountServiceImpl implements AccountService {
     }
   }
 
+  @Override
+  public boolean getTwoFactorEnforceInfo(String accountId) {
+    Query<Account> getQuery = wingsPersistence.createQuery(Account.class).filter(ID_KEY, accountId);
+    return getQuery.get().isTwoFactorAdminEnforced();
+  }
+
+  @Override
+  public void updateTwoFactorEnforceInfo(String accountId, User user, boolean enabled) {
+    Account account = get(accountId);
+    account.setTwoFactorAdminEnforced(enabled);
+    update(account);
+  }
+
   @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   @Override
   public String suggestAccountName(String accountName) {
@@ -189,6 +205,7 @@ public class AccountServiceImpl implements AccountService {
     wingsPersistence.update(account,
         wingsPersistence.createUpdateOperations(Account.class)
             .set("companyName", account.getCompanyName())
+            .set("twoFactorAdminEnforced", account.isTwoFactorAdminEnforced())
             .set("authenticationMechanism", account.getAuthenticationMechanism()));
     return wingsPersistence.get(Account.class, account.getUuid());
   }

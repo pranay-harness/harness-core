@@ -502,6 +502,18 @@ public class UserServiceTest extends WingsBaseTest {
   }
 
   /**
+   * Should Override 2FA on user
+   */
+  @Test
+  @Ignore
+  public void shouldOverrideTwoFactorForUser() {
+    when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.withUuid(USER_ID).build());
+    when(wingsPersistence.get(Account.class, ACCOUNT_ID))
+        .thenReturn(Account.Builder.anAccount().withUuid(ACCOUNT_ID).build());
+    // userService.overrideTwoFactorforAccount(ACCOUNT_ID, true);
+  }
+
+  /**
    * Should complete invite.
    */
   @Test
