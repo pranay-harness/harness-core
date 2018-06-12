@@ -1839,11 +1839,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (ExecutionStatus.isFinalStatus(workflowExecution.getStatus()) && workflowExecution.getBreakdown() != null) {
       return;
     }
-    CountsByStatuses breakdown = null;
+    CountsByStatuses breakdown;
     int total;
 
     if (workflowExecution.getOrchestrationType() == OrchestrationWorkflowType.ROLLING) {
-      breakdown = new CountsByStatuses();
       total = workflowExecution.getTotal();
       if (total == 0) {
         total = refreshTotal(workflowExecution);

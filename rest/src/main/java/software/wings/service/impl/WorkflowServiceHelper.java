@@ -90,18 +90,18 @@ public class WorkflowServiceHelper {
     if (orchestrationWorkflow.isServiceTemplatized()) {
       List<Variable> userVariables = orchestrationWorkflow.getUserVariables();
       List<String> serviceNames = new ArrayList<>();
-      if (userVariables != null) {
+      if (isNotEmpty(userVariables)) {
         serviceNames = getEntityNames(userVariables, SERVICE);
       }
       List<String> serviceIds = getTemplatizedIds(workflowVariables, serviceNames);
       List<String> templatizedServiceIds = orchestrationWorkflow.getTemplatizedServiceIds();
-      List<String> workflowServiceIds = workflow.getOrchestrationWorkflow().getServiceIds();
+      List<String> workflowServiceIds = orchestrationWorkflow.getServiceIds();
       if (workflowServiceIds != null) {
         workflowServiceIds.stream()
             .filter(serviceId -> !templatizedServiceIds.contains(serviceId))
             .forEach(serviceIds::add);
       }
-      return serviceResourceService.getServicesByUuids(workflow.getAppId(), serviceIds);
+      return serviceResourceService.fetchServicesByUuids(workflow.getAppId(), serviceIds);
     } else {
       return workflow.getServices();
     }

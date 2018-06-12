@@ -395,7 +395,7 @@ public interface ServiceResourceService extends OwnedByApplication {
   Service setHelmValueYaml(String appId, String serviceId, KubernetesPayload kubernetesPayload);
 
   // Get services excluding appContainer details
-  List<Service> getServicesByUuids(String appId, List<String> serviceUuids);
+  List<Service> fetchServicesByUuids(String appId, List<String> serviceUuids);
 
   PcfServiceSpecification getPcfServiceSpecification(String appId, String serviceId);
 
