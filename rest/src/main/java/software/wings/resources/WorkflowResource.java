@@ -47,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -93,12 +94,16 @@ public class WorkflowResource {
   public RestResponse<PageResponse<Workflow>> list(@QueryParam("appId") String appId,
       @BeanParam PageRequest<Workflow> pageRequest,
       @QueryParam("previousExecutionsCount") Integer previousExecutionsCount,
-      @QueryParam("workflowType") List<String> workflowTypes) {
+      @QueryParam("workflowType") List<String> workflowTypes,
+      @QueryParam("details") @DefaultValue("true") boolean details) {
     if ((isEmpty(workflowTypes))
         && (pageRequest.getFilters() == null
                || pageRequest.getFilters().stream().noneMatch(
                       searchFilter -> searchFilter.getFieldName().equals("workflowType")))) {
       pageRequest.addFilter("workflowType", Operator.EQ, WorkflowType.ORCHESTRATION);
+    }
+    if (!details) {
+      return new RestResponse<>(workflowService.listWorkflowsWithoutOrchestration(pageRequest));
     }
     return new RestResponse<>(workflowService.listWorkflows(pageRequest, previousExecutionsCount));
   }

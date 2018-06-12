@@ -31,6 +31,7 @@ import software.wings.stencils.Stencil;
 import java.util.List;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -77,8 +78,9 @@ public class PipelineResource {
   @ExceptionMetered
   public RestResponse<PageResponse<Pipeline>> list(@QueryParam("appId") List<String> appIds,
       @BeanParam PageRequest<Pipeline> pageRequest,
-      @QueryParam("previousExecutionsCount") Integer previousExecutionsCount) {
-    return new RestResponse<>(pipelineService.listPipelines(pageRequest, true, previousExecutionsCount));
+      @QueryParam("previousExecutionsCount") Integer previousExecutionsCount,
+      @QueryParam("details") @DefaultValue("true") boolean details) {
+    return new RestResponse<>(pipelineService.listPipelines(pageRequest, details, previousExecutionsCount));
   }
 
   /**
