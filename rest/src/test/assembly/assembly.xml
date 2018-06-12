@@ -22,6 +22,7 @@
             <includes>
                 <include>**/*.class</include>
                 <include>pipeline/*.json</include>
+                <include>secrets.properties</include>
             </includes>
             <useDefaultExcludes>true</useDefaultExcludes>
         </fileSet>
