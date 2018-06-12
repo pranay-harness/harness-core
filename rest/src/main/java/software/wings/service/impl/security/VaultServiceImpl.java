@@ -202,8 +202,9 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
                                                             .fetch())) {
       while (query.hasNext()) {
         VaultConfig vaultConfig = query.next();
-        Query<EncryptedData> encryptedDataQuery =
-            wingsPersistence.createQuery(EncryptedData.class).filter("kmsId", vaultConfig.getUuid());
+        Query<EncryptedData> encryptedDataQuery = wingsPersistence.createQuery(EncryptedData.class)
+                                                      .filter("kmsId", vaultConfig.getUuid())
+                                                      .filter("accountId", accountId);
         vaultConfig.setNumOfEncryptedValue(encryptedDataQuery.asKeyList().size());
         if (maskSecret) {
           vaultConfig.setAuthToken(SECRET_MASK);
