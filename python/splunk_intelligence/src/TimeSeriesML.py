@@ -843,8 +843,12 @@ def analyze_parallel(queue, options, metric_template, control_metrics_batch, tes
     """
     Method will be called in parallel. the result will be placed on 'queue'
     """
-    anomaly_detector = TSAnomlyDetector(options, metric_template, control_metrics_batch, test_metrics_batch)
-    queue.put(anomaly_detector.analyze())
+    try:
+        anomaly_detector = TSAnomlyDetector(options, metric_template, control_metrics_batch, test_metrics_batch)
+        queue.put(anomaly_detector.analyze())
+    except Exception as e:
+        logger.exception(e)
+        raise Exception('Analysis failed for one of the workers')
 
 
 @newrelic.agent.background_task()
