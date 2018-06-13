@@ -302,6 +302,9 @@ public class EcsSetupCommandUnitTest extends WingsBaseTest {
                     .withPortMappings(new PortMapping().withContainerPort(80).withProtocol("http"))
                     .withName(CONTAINER_NAME));
 
+    ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(executionLogCallback).saveExecutionLog(anyString(), any());
+
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
     TargetGroup targetGroup = new TargetGroup();
     targetGroup.setPort(80);
@@ -313,7 +316,8 @@ public class EcsSetupCommandUnitTest extends WingsBaseTest {
 
     CreateServiceRequest createServiceRequest =
         (CreateServiceRequest) MethodUtils.invokeMethod(ecsSetupCommandUnit, true, "getCreateServiceRequest",
-            new Object[] {computeProvider, encryptedDataDetails, setupParams, taskDefinition, CONTAINER_SERVICE_NAME});
+            new Object[] {computeProvider, encryptedDataDetails, setupParams, taskDefinition, CONTAINER_SERVICE_NAME,
+                executionLogCallback});
 
     assertNotNull(createServiceRequest);
 
@@ -366,6 +370,8 @@ public class EcsSetupCommandUnitTest extends WingsBaseTest {
             .withName(CONTAINER_NAME));
 
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
+    ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(executionLogCallback).saveExecutionLog(anyString(), any());
 
     TargetGroup targetGroup = new TargetGroup();
     targetGroup.setPort(80);
@@ -377,7 +383,8 @@ public class EcsSetupCommandUnitTest extends WingsBaseTest {
 
     CreateServiceRequest createServiceRequest =
         (CreateServiceRequest) MethodUtils.invokeMethod(ecsSetupCommandUnit, true, "getCreateServiceRequest",
-            new Object[] {computeProvider, encryptedDataDetails, setupParams, taskDefinition, CONTAINER_SERVICE_NAME});
+            new Object[] {computeProvider, encryptedDataDetails, setupParams, taskDefinition, CONTAINER_SERVICE_NAME,
+                executionLogCallback});
 
     assertNotNull(createServiceRequest);
 
@@ -423,9 +430,10 @@ public class EcsSetupCommandUnitTest extends WingsBaseTest {
                                      .build();
 
     ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(executionLogCallback).saveExecutionLog(anyString(), any());
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
     SettingAttribute settingAttribute = new SettingAttribute();
-    doNothing().when(executionLogCallback).saveExecutionLog(anyString(), any());
+
     TaskDefinition taskDefinition =
         (TaskDefinition) MethodUtils.invokeMethod(ecsSetupCommandUnit, true, "createTaskDefinition",
             new Object[] {ecsContainerTask, CONTAINER_NAME, DOCKER_IMG_NAME, setupParams, settingAttribute,
