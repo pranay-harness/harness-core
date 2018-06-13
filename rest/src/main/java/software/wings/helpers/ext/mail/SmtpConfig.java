@@ -61,7 +61,7 @@ public class SmtpConfig extends SettingValue implements Encryptable {
   }
 
   public boolean valid() {
-    return isNotEmpty(host) && isNotEmpty(username) && (isNotEmpty(password) || isNotEmpty(encryptedPassword));
+    return isNotEmpty(host);
   }
 
   @Data

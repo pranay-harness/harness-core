@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.external.comm.handlers;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
@@ -67,7 +69,9 @@ public class EmailHandler implements CollaborationHandler {
         try {
           Properties props = new Properties();
           props.put("mail.smtp.starttls.enable", "true");
-          props.setProperty("mail.smtp.auth", "true");
+          if (isNotEmpty(smtpConfig.getPassword())) {
+            props.setProperty("mail.smtp.auth", "true");
+          }
           SmtpConfig config = KryoUtils.clone(smtpConfig);
           encryptionService.decrypt(config, encryptionDetails);
           if (config.isUseSSL()) {
@@ -75,7 +79,8 @@ public class EmailHandler implements CollaborationHandler {
           }
           Session session = Session.getInstance(props, null);
           Transport transport = session.getTransport("smtp");
-          transport.connect(config.getHost(), config.getPort(), config.getUsername(), new String(config.getPassword()));
+          transport.connect(config.getHost(), config.getPort(), config.getUsername(),
+              isNotEmpty(config.getPassword()) ? new String(config.getPassword()) : null);
           transport.close();
           result = true;
 
