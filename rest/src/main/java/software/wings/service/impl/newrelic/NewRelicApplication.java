@@ -12,9 +12,14 @@ import java.util.List;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Builder
-public class NewRelicApplication {
+public class NewRelicApplication implements Comparable<NewRelicApplication> {
   private String name;
   private long id;
+
+  @Override
+  public int compareTo(NewRelicApplication o) {
+    return name.compareTo(o.name);
+  }
 
   @Data
   @Builder
