@@ -74,8 +74,10 @@ public interface YamlGitService {
    * @return the list
    */
   List<GitFileChange> performFullSyncDryRun(String accountId);
-
   void performFullSyncDryRunOnAllAccounts();
+
+  List<String> getAllYamlErrorsForAccount(String accountId);
+  List<String> getAllYamlErrorsForAllAccounts();
 
   /**
    * Handle change set boolean.

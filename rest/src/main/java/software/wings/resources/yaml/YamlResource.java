@@ -2,6 +2,7 @@ package software.wings.resources.yaml;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
+import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
 
 import com.google.inject.Inject;
@@ -29,6 +30,7 @@ import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.dl.PageResponse;
 import software.wings.exception.InvalidRequestException;
 import software.wings.exception.YamlProcessingException;
 import software.wings.security.PermissionAttribute.Action;
@@ -808,6 +810,16 @@ public class YamlResource {
   @ExceptionMetered
   public RestResponse fullSyncDryRun(@QueryParam("accountId") String accountId, @QueryParam("token") String token,
       @QueryParam("queryAllAccounts") @DefaultValue("false") boolean queryAllAccounts) {
+    validateUserAndToken(token);
+    if (queryAllAccounts) {
+      yamlGitService.performFullSyncDryRunOnAllAccounts();
+    } else {
+      yamlGitService.performFullSyncDryRun(accountId);
+    }
+    return new RestResponse();
+  }
+
+  private void validateUserAndToken(String token) {
     authService.validateToken(token);
     User existingUser = UserThreadLocal.get();
     if (existingUser == null) {
@@ -816,12 +828,20 @@ public class YamlResource {
     if (!harnessUserGroupService.isHarnessSupportUser(existingUser.getUuid())) {
       throw new InvalidRequestException("User needs to be a harness support user for this action");
     }
-    if (queryAllAccounts) {
-      yamlGitService.performFullSyncDryRunOnAllAccounts();
-    } else {
-      yamlGitService.performFullSyncDryRun(accountId);
-    }
-    return new RestResponse();
+  }
+
+  @GET
+  @Path("get-all-yaml-errors")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<String>> getAllYamlErrors(@QueryParam("accountId") String accountId,
+      @QueryParam("token") String token,
+      @QueryParam("queryAllAccounts") @DefaultValue("false") boolean queryAllAccounts) {
+    validateUserAndToken(token);
+    List<String> errorLog = queryAllAccounts ? yamlGitService.getAllYamlErrorsForAllAccounts()
+                                             : yamlGitService.getAllYamlErrorsForAccount(accountId);
+    PageResponse pageResponse = aPageResponse().withResponse(errorLog).build();
+    return RestResponse.Builder.aRestResponse().withResource(pageResponse.getResponse()).build();
   }
 
   @GET

@@ -113,6 +113,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -156,8 +157,9 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     return null;
   }
 
-  public List<GitFileChange> traverseDirectory(
-      List<GitFileChange> gitFileChanges, String accountId, FolderNode fn, String path, boolean includeFiles) {
+  @Override
+  public List<GitFileChange> traverseDirectory(List<GitFileChange> gitFileChanges, String accountId, FolderNode fn,
+      String path, boolean includeFiles, boolean failFast, Optional<List<String>> listOfYamlErrors) {
     path = path + "/" + fn.getName();
 
     for (DirectoryNode dn : fn.getChildren()) {
@@ -168,6 +170,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         String entityId = ((YamlNode) dn).getUuid();
         String yaml = "";
         String appId = "";
+        boolean exceptionThrown = false;
 
         try {
           switch (dn.getShortClassName()) {
@@ -261,6 +264,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
               logger.warn("No toYaml for entity[{}, {}]", dn.getShortClassName(), entityId);
           }
         } catch (Exception e) {
+          exceptionThrown = true;
           String fileName = dn.getName() == null ? dn.getName() : path + "/" + dn.getName();
           String message = "Failed in yaml conversion during Harness to Git full sync for file:" + fileName;
           logger.warn(GIT_YAML_LOG_PREFIX + message + ", " + e);
@@ -279,10 +283,15 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
           // createAlert of type HarnessToGitFullSyncError
           alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.GitSyncError,
               GitSyncErrorAlert.builder().accountId(accountId).message(message).gitToHarness(false).build());
-          throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("message", message);
+
+          if (failFast) {
+            throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("message", message);
+          } else {
+            listOfYamlErrors.ifPresent(strings -> strings.add(message));
+          }
         }
 
-        if (addToFileChangeList) {
+        if (addToFileChangeList && !exceptionThrown) {
           GitFileChange gitFileChange =
               Builder.aGitFileChange()
                   .withAccountId(accountId)
@@ -295,7 +304,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       }
 
       if (dn instanceof FolderNode) {
-        traverseDirectory(gitFileChanges, accountId, (FolderNode) dn, path, includeFiles);
+        traverseDirectory(gitFileChanges, accountId, (FolderNode) dn, path, includeFiles, failFast, listOfYamlErrors);
       }
     }
 

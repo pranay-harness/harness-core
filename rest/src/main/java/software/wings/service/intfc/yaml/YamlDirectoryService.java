@@ -25,6 +25,7 @@ import software.wings.yaml.directory.FolderNode;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Yaml Directory Service.
@@ -55,8 +56,8 @@ public interface YamlDirectoryService {
 
   YamlGitConfig weNeedToPushChanges(String accountId);
 
-  List<GitFileChange> traverseDirectory(
-      List<GitFileChange> gitFileChanges, String accountId, FolderNode fn, String path, boolean includeFiles);
+  List<GitFileChange> traverseDirectory(List<GitFileChange> gitFileChanges, String accountId, FolderNode fn,
+      String path, boolean includeFiles, boolean failFast, Optional<List<String>> listOfYamlErrors);
 
   String getRootPath();
 
