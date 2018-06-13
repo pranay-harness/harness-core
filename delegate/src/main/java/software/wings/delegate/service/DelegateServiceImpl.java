@@ -359,20 +359,25 @@ public class DelegateServiceImpl implements DelegateService {
       List<String> configFileNames = ImmutableList.of("config-delegate.yml", "config-watcher.yml");
       for (String configName : configFileNames) {
         File config = new File(configName);
-        List<String> outLines = new ArrayList<>();
-        for (String line : FileUtils.readLines(config, UTF_8)) {
-          if (StringUtils.contains(line, apiHarnessIo)) {
-            outLines.add(line.replace(apiHarnessIo, appHarnessIo));
-          } else {
-            outLines.add(line);
+        if (config.exists()) {
+          String fileContents = FileUtils.readFileToString(config, UTF_8);
+          if (StringUtils.contains(fileContents, apiHarnessIo)) {
+            List<String> outLines = new ArrayList<>();
+            for (String line : FileUtils.readLines(config, UTF_8)) {
+              if (StringUtils.contains(line, apiHarnessIo)) {
+                outLines.add(line.replace(apiHarnessIo, appHarnessIo));
+              } else {
+                outLines.add(line);
+              }
+            }
+            FileUtils.forceDelete(config);
+            FileUtils.touch(config);
+            FileUtils.writeLines(config, outLines);
+            Files.setPosixFilePermissions(config.toPath(),
+                Sets.newHashSet(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE,
+                    PosixFilePermission.GROUP_READ, PosixFilePermission.OTHERS_READ));
           }
         }
-        FileUtils.forceDelete(config);
-        FileUtils.touch(config);
-        FileUtils.writeLines(config, outLines);
-        Files.setPosixFilePermissions(config.toPath(),
-            Sets.newHashSet(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE,
-                PosixFilePermission.GROUP_READ, PosixFilePermission.OTHERS_READ));
       }
     } catch (Exception e) {
       logger.error("Error updating config.", e);
