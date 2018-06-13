@@ -3,11 +3,16 @@ package software.wings.service.impl;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static software.wings.beans.Account.Builder.anAccount;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.MethodUtils;
@@ -16,18 +21,22 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import software.wings.beans.Account;
 import software.wings.beans.GitConfig;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.YamlGitServiceImpl;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.yaml.YamlDirectoryService;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class YamlGitServiceImplTest {
@@ -35,6 +44,8 @@ public class YamlGitServiceImplTest {
   private @Mock DelegateService delegateService;
   private @Mock AlertService alertService;
   private @Mock SecretManager secretManager;
+  private @Mock AccountService mockAccountService;
+  private @Mock YamlDirectoryService mockYamlDirectoryService;
 
   private static final String TEST_GIT_REPO_URL = "https://github.com/rathn/SyncTest";
   private static final String TEST_GIT_REPO_USER = "user";
@@ -117,5 +128,21 @@ public class YamlGitServiceImplTest {
                           .password(TEST_GIT_REPO_PASSWORD.toCharArray())
                           .build()});
     verify(alertService).closeAlert(any(), any(), any(), any());
+  }
+
+  @Test
+  public void getAllYamlErrorsForAccount() {
+    yamlGitService.getAllYamlErrorsForAccount(ACCOUNT_ID);
+    verify(mockYamlDirectoryService)
+        .traverseDirectory(anyList(), eq(ACCOUNT_ID), any(), anyString(), eq(false), eq(false), any());
+  }
+
+  @Test
+  public void getAllYamlErrorsForAllAccounts() {
+    List<Account> accounts = Arrays.asList(anAccount().withAccountName("Name1").withUuid("AccId1").build(),
+        anAccount().withAccountName("Name2").withUuid("AccId2").build());
+    doReturn(accounts).when(mockAccountService).list(any());
+    yamlGitService.getAllYamlErrorsForAllAccounts();
+    verify(yamlGitService, times(2)).getAllYamlErrorsForAccount(anyString());
   }
 }

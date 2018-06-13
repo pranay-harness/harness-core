@@ -77,6 +77,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -212,7 +213,8 @@ public class YamlGitServiceImpl implements YamlGitService {
       try {
         FolderNode top = yamlDirectoryService.getDirectory(accountId, SETUP_ENTITY_ID, false, null);
         List<GitFileChange> gitFileChanges = new ArrayList<>();
-        gitFileChanges = yamlDirectoryService.traverseDirectory(gitFileChanges, accountId, top, "", true);
+        gitFileChanges =
+            yamlDirectoryService.traverseDirectory(gitFileChanges, accountId, top, "", true, true, Optional.empty());
         discardGitSyncErrorForFullSync(accountId);
 
         if (gitFileChanges.size() > 0 && forcePush) {
@@ -258,7 +260,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       logger.info("Performing full-sync dry-run for account {}", accountId);
       FolderNode top = yamlDirectoryService.getDirectory(accountId, SETUP_ENTITY_ID, false, null);
       List<GitFileChange> gitFileChanges = new ArrayList<>();
-      yamlDirectoryService.traverseDirectory(gitFileChanges, accountId, top, "", false);
+      yamlDirectoryService.traverseDirectory(gitFileChanges, accountId, top, "", false, true, Optional.empty());
       logger.info("Performed full-sync dry-run for account {}", accountId);
       return gitFileChanges;
     } catch (Exception ex) {
@@ -268,14 +270,42 @@ public class YamlGitServiceImpl implements YamlGitService {
   }
 
   @Override
-  public void performFullSyncDryRunOnAllAccounts() {
+  public List<String> getAllYamlErrorsForAccount(String accountId) {
+    try {
+      logger.info("Getting all Yaml errors for account {}", accountId);
+      FolderNode top = yamlDirectoryService.getDirectory(accountId, SETUP_ENTITY_ID, false, null);
+      List<GitFileChange> gitFileChanges = new ArrayList<>();
+      List<String> errorLog = new ArrayList<>();
+      yamlDirectoryService.traverseDirectory(gitFileChanges, accountId, top, "", false, false, Optional.of(errorLog));
+      logger.info("Got all Yaml errors for account {}", accountId);
+      return errorLog;
+    } catch (Exception ex) {
+      logger.error("Failed to get all Yaml errors for account {}", accountId, ex);
+    }
+    return new ArrayList<>();
+  }
+
+  private List<Account> getAllAccounts() {
     PageRequest<Account> request = aPageRequest()
                                        .withLimit(UNLIMITED)
                                        .addFieldsIncluded("uuid")
                                        .addFilter("appId", EQ, "__GLOBAL_APP_ID__")
                                        .build();
-    List<Account> accounts = accountService.list(request);
+    return accountService.list(request);
+  }
+
+  @Override
+  public void performFullSyncDryRunOnAllAccounts() {
+    List<Account> accounts = getAllAccounts();
     accounts.forEach(account -> performFullSyncDryRun(account.getUuid()));
+  }
+
+  @Override
+  public List<String> getAllYamlErrorsForAllAccounts() {
+    List<Account> accounts = getAllAccounts();
+    List<String> allErrors = new ArrayList<>();
+    accounts.forEach(account -> allErrors.addAll(getAllYamlErrorsForAccount(account.getUuid())));
+    return allErrors;
   }
 
   @Override
