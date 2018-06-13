@@ -67,6 +67,7 @@ import java.util.stream.Collectors;
  */
 public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
   @Transient private static final Logger logger = LoggerFactory.getLogger(EcsSetupCommandUnit.class);
+  public static final String ERROR = "Error: ";
 
   @Inject @Transient private transient AwsClusterService awsClusterService;
 
@@ -108,8 +109,8 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
       commandExecutionDataBuilder.containerServiceName(containerServiceName)
           .activeServiceCounts(integerMapToListOfStringArray(activeServiceCounts));
 
-      CreateServiceRequest createServiceRequest = getCreateServiceRequest(
-          cloudProviderSetting, encryptedDataDetails, setupParams, taskDefinition, containerServiceName);
+      CreateServiceRequest createServiceRequest = getCreateServiceRequest(cloudProviderSetting, encryptedDataDetails,
+          setupParams, taskDefinition, containerServiceName, executionLogCallback);
 
       executionLogCallback.saveExecutionLog(
           format("Creating ECS service %s in cluster %s ", containerServiceName, setupParams.getClusterName()),
@@ -133,6 +134,7 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
       }
       return CommandExecutionStatus.SUCCESS;
     } catch (Exception ex) {
+      executionLogCallback.saveExecutionLog(ERROR + ex.getMessage());
       logger.error(ex.getMessage(), ex);
       Misc.logAllMessages(ex, executionLogCallback);
       return CommandExecutionStatus.FAILURE;
@@ -143,7 +145,7 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
 
   private CreateServiceRequest getCreateServiceRequest(SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, EcsSetupParams setupParams, TaskDefinition taskDefinition,
-      String containerServiceName) {
+      String containerServiceName, ExecutionLogCallback executionLogCallback) {
     boolean isFargateTaskType = isFargateTaskLauchType(setupParams);
     CreateServiceRequest createServiceRequest =
         new CreateServiceRequest()
@@ -155,8 +157,9 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
             .withTaskDefinition(taskDefinition.getFamily() + ":" + taskDefinition.getRevision());
 
     if (setupParams.isUseLoadBalancer()) {
-      setLoadBalancerToService(
-          setupParams, cloudProviderSetting, encryptedDataDetails, taskDefinition, createServiceRequest);
+      executionLogCallback.saveExecutionLog("Setting load balancer to service");
+      setLoadBalancerToService(setupParams, cloudProviderSetting, encryptedDataDetails, taskDefinition,
+          createServiceRequest, executionLogCallback);
     }
 
     // for Fargate, where network mode is "awsvpc", setting taskRole causes error.
@@ -181,7 +184,7 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
 
   private void setLoadBalancerToService(EcsSetupParams setupParams, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, TaskDefinition taskDefinition,
-      CreateServiceRequest createServiceRequest) {
+      CreateServiceRequest createServiceRequest, ExecutionLogCallback executionLogCallback) {
     Integer containerPort = null;
     String containerName = null;
 
@@ -192,7 +195,10 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
       containerName = targetContainerName;
 
       if (!StringUtils.isNumeric(targetPort.trim())) {
-        throw new WingsException("Invalid port : " + targetPort + ". It should be a number");
+        StringBuilder builder =
+            new StringBuilder().append("Invalid port : ").append(targetPort).append(". It should be a number");
+        executionLogCallback.saveExecutionLog(ERROR + builder.toString());
+        throw new WingsException(builder.toString());
       }
 
       containerPort = Integer.parseInt(targetPort);
@@ -202,13 +208,21 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
           setupParams.getRegion(), cloudProviderSetting, encryptedDataDetails, setupParams.getTargetGroupArn());
 
       if (targetGroup == null) {
-        throw new WingsException("Target group is null for the given ARN: " + setupParams.getTargetGroupArn());
+        StringBuilder builder = new StringBuilder()
+                                    .append("Target group is null for the given ARN: ")
+                                    .append(setupParams.getTargetGroupArn());
+        executionLogCallback.saveExecutionLog(ERROR + builder.toString());
+        throw new WingsException(builder.toString());
       }
 
       final Integer targetGroupPort = targetGroup.getPort();
 
       if (targetGroupPort == null) {
-        throw new WingsException("Target group port is null for the given ARN: " + setupParams.getTargetGroupArn());
+        StringBuilder builder = new StringBuilder()
+                                    .append("Target group port is null for the given ARN: ")
+                                    .append(setupParams.getTargetGroupArn());
+        executionLogCallback.saveExecutionLog(ERROR + builder.toString());
+        throw new WingsException(builder.toString());
       }
 
       List<ContainerDefinition> containerDefinitionList = taskDefinition.getContainerDefinitions();
@@ -232,14 +246,24 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
 
       Set<ContainerDefinition> containerDefinitionSet = portMappingListWithTargetPort.keySet();
       if (isEmpty(containerDefinitionSet)) {
-        throw new WingsException("No container definition has port mapping that matches the target port: "
-            + targetGroupPort + " for target group: " + setupParams.getTargetGroupArn());
+        StringBuilder builder = new StringBuilder()
+                                    .append("No container definition has port mapping that matches the target port: ")
+                                    .append(targetGroupPort)
+                                    .append(" for target group: ")
+                                    .append(setupParams.getTargetGroupArn());
+        executionLogCallback.saveExecutionLog(ERROR + builder.toString());
+        throw new WingsException(builder.toString());
       }
 
       int portMatchCount = containerDefinitionSet.size();
       if (portMatchCount > 1) {
-        throw new WingsException("Only one port mapping should match the target port: " + targetGroupPort
-            + " for target group: " + setupParams.getTargetGroupArn());
+        StringBuilder builder = new StringBuilder()
+                                    .append("Only one port mapping should match the target port: ")
+                                    .append(targetGroupPort)
+                                    .append(" for target group: ")
+                                    .append(setupParams.getTargetGroupArn());
+        executionLogCallback.saveExecutionLog(ERROR + builder.toString());
+        throw new WingsException(builder.toString());
       }
 
       ContainerDefinition containerDefinition = containerDefinitionSet.iterator().next();
@@ -248,13 +272,23 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
       Collection<PortMapping> portMappings = portMappingListWithTargetPort.get(containerDefinition);
 
       if (isEmpty(portMappings)) {
-        throw new WingsException("No container definition has port mapping that match the target port: "
-            + targetGroupPort + " for target group: " + setupParams.getTargetGroupArn());
+        StringBuilder builder = new StringBuilder()
+                                    .append("No container definition has port mapping that match the target port: ")
+                                    .append(targetGroupPort)
+                                    .append(" for target group: ")
+                                    .append(setupParams.getTargetGroupArn());
+        executionLogCallback.saveExecutionLog(ERROR + builder.toString());
+        throw new WingsException(builder.toString());
       }
 
       if (portMappings.size() > 1) {
-        throw new WingsException("Only one port mapping should match the target port: " + targetGroupPort
-            + " for target group: " + setupParams.getTargetGroupArn());
+        StringBuilder builder = new StringBuilder()
+                                    .append("Only one port mapping should match the target port: ")
+                                    .append(targetGroupPort)
+                                    .append(" for target group: ")
+                                    .append(setupParams.getTargetGroupArn());
+        executionLogCallback.saveExecutionLog(ERROR + builder.toString());
+        throw new WingsException(builder.toString());
       }
 
       PortMapping portMapping = portMappings.iterator().next();
@@ -271,8 +305,12 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
                                  .withTargetGroupArn(setupParams.getTargetGroupArn()));
       createServiceRequest.withLoadBalancers(loadBalancers);
     } else {
-      throw new WingsException("Could not obtain container name and port to set to the target"
-          + " for target group: " + setupParams.getTargetGroupArn());
+      StringBuilder builder =
+          new StringBuilder()
+              .append("Could not obtain container name and port to set to the target for target group: ")
+              .append(setupParams.getTargetGroupArn());
+      executionLogCallback.saveExecutionLog(ERROR + builder.toString());
+      throw new WingsException(builder.toString());
     }
   }
 
@@ -316,7 +354,10 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
     // For Fargate we need to make sure NetworkConfiguration is provided
     String validationMessage = isValidateSetupParamasForECS(taskDefinition, ecsSetupParams);
     if (!isEmptyOrBlank(validationMessage)) {
-      throw new WingsException("Invalid setup params for ECS deployment: " + validationMessage);
+      StringBuilder builder =
+          new StringBuilder().append("Invalid setup params for ECS deployment: ").append(validationMessage);
+      executionLogCallback.saveExecutionLog(ERROR + builder.toString());
+      throw new WingsException(builder.toString());
     }
 
     taskDefinition.setFamily(ecsSetupParams.getTaskFamily());
