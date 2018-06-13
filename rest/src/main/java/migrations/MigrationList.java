@@ -15,6 +15,7 @@ import migrations.all.MetricAnalysisRecordGroupNameMigration;
 import migrations.all.MetricDataRecordGroupNameMigration;
 import migrations.all.MetricMLAnalysisRecordGroupNameMigration;
 import migrations.all.NewRelicMetricAnalysisRecordsMigration;
+import migrations.all.NewRelicMetricDataGroupNameMigration;
 import migrations.all.NewRelicMetricDataRecordsMigration;
 import migrations.all.RemoveResizeFromStatefulSetWorkflows;
 import migrations.all.RenameProvisionNodeToInfrastructureNodeWorkflows;
@@ -52,6 +53,7 @@ public class MigrationList {
         .add(Pair.of(146, AddValidUntilToAlert.class))
         .add(Pair.of(147, AddValidUntilToDelegateTask.class))
         .add(Pair.of(148, EntityNameValidationMigration_All_00.class))
+        .add(Pair.of(149, NewRelicMetricDataGroupNameMigration.class))
         .build();
   }
 }
