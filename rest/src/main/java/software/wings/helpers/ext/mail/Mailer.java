@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.mail;
 
 import static freemarker.template.Configuration.VERSION_2_3_23;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.common.Constants.HARNESS_NAME;
 
@@ -60,7 +61,10 @@ public class Mailer {
       Email email = emailData.isHasHtml() ? new HtmlEmail() : new SimpleEmail();
       email.setHostName(smtpConfig.getHost());
       email.setSmtpPort(smtpConfig.getPort());
-      email.setAuthenticator(new DefaultAuthenticator(smtpConfig.getUsername(), new String(smtpConfig.getPassword())));
+      if (isNotEmpty(smtpConfig.getPassword())) {
+        email.setAuthenticator(
+            new DefaultAuthenticator(smtpConfig.getUsername(), new String(smtpConfig.getPassword())));
+      }
       email.setSSLOnConnect(smtpConfig.isUseSSL());
       if (smtpConfig.isUseSSL()) {
         email.setSslSmtpPort(Integer.toString(smtpConfig.getPort()));
