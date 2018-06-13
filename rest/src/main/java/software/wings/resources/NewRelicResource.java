@@ -1,5 +1,7 @@
 package software.wings.resources;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -17,6 +19,7 @@ import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.sm.StateType;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -89,7 +92,11 @@ public class NewRelicResource {
   @ExceptionMetered
   public RestResponse<List<NewRelicApplication>> getAllApplications(
       @QueryParam("accountId") String accountId, @QueryParam("settingId") final String settingId) throws IOException {
-    return new RestResponse<>(newRelicService.getApplications(settingId, StateType.NEW_RELIC));
+    List<NewRelicApplication> applications = newRelicService.getApplications(settingId, StateType.NEW_RELIC);
+    if (!isEmpty(applications)) {
+      Collections.sort(applications);
+    }
+    return new RestResponse<>(applications);
   }
 
   @POST
