@@ -294,18 +294,24 @@ public class WingsRule implements MethodRule {
     // There is no good way to eliminate the race, since the port must be free mongo to be able to grab it.
     //
     // Lets retry a number of times to reduce the likelihood almost to zero.
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 20; i++) {
       int port = Network.getFreeServerPort();
       IMongodConfig mongodConfig = new MongodConfigBuilder()
                                        .version(Main.V3_4)
                                        .net(new Net("127.0.0.1", port, Network.localhostIsIPv6()))
                                        .build();
       try {
-        mongodExecutable = starter.prepare(mongodConfig);
+        // It seems that the starter is not thread safe. We still have a likelihood for multiprocessor problems
+        // but lets at least do what is cheap to have.
+        synchronized (starter) {
+          mongodExecutable = starter.prepare(mongodConfig);
+        }
+
         mongodExecutable.start();
         return new MongoClient("localhost", port);
       } catch (Exception e) {
-        Thread.sleep(100);
+        // Note this handles race int the port, but also in the starter prepare
+        Thread.sleep(250);
         persistent = e;
       }
     }
