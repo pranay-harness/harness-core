@@ -19,6 +19,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.Api;
+import software.wings.api.InstanceElement;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.GraphNode;
 import software.wings.beans.NotificationRule;
@@ -498,5 +499,14 @@ public class WorkflowResource {
   public RestResponse<Boolean> workflowHasSSHInfraMapping(
       @QueryParam("appId") String appId, @PathParam("workflowId") String workflowId) {
     return new RestResponse(workflowService.workflowHasSshInfraMapping(appId, workflowId));
+  }
+
+  @GET
+  @Path("{workflowId}/deployed-nodes")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<InstanceElement>> getDeployedNodes(
+      @QueryParam("appId") String appId, @PathParam("workflowId") String workflowId) {
+    return new RestResponse<>(workflowService.getDeployedNodes(appId, workflowId));
   }
 }

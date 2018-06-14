@@ -7,6 +7,7 @@ import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -62,6 +63,7 @@ import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.exception.HintException.MOVE_TO_THE_PARENT_OBJECT;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.exception.WingsException.USER_SRE;
+import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.StateMachineExecutionSimulator.populateRequiredEntityTypesByAccessType;
 import static software.wings.sm.StateType.ARTIFACT_CHECK;
 import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
@@ -108,6 +110,7 @@ import org.slf4j.LoggerFactory;
 import ro.fortsoft.pf4j.PluginManager;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.DeploymentType;
+import software.wings.api.InstanceElement;
 import software.wings.app.StaticConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
@@ -117,6 +120,7 @@ import software.wings.beans.BasicOrchestrationWorkflow;
 import software.wings.beans.BuildWorkflow;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CustomOrchestrationWorkflow;
+import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.ExecutionScope;
@@ -145,6 +149,7 @@ import software.wings.beans.RoleType;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
@@ -158,6 +163,7 @@ import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.KubernetesContainerTask;
+import software.wings.beans.infrastructure.Host;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.Change.ChangeType;
@@ -179,6 +185,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.NotificationSetupService;
@@ -194,6 +201,7 @@ import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
@@ -273,6 +281,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private TriggerService triggerService;
   @Inject private EnvironmentService environmentService;
   @Inject private WorkflowServiceHelper workflowServiceHelper;
+  @Inject private HostService hostService;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
@@ -2913,5 +2922,63 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     final String msg = format("Connector [%s] is referenced by %s [%s]", settingAttribute.getName(),
         plural("workflow", count), sb.toString());
     return (Rejection) () -> msg;
+  }
+
+  @Override
+  public List<InstanceElement> getDeployedNodes(String appId, String workflowId) {
+    int offSet = 0;
+    final PageRequest<WorkflowExecution> pageRequest = aPageRequest()
+                                                           .addFilter("appId", Operator.EQ, appId)
+                                                           .addFilter("workflowId", Operator.EQ, workflowId)
+                                                           .addFilter("status", Operator.EQ, SUCCESS)
+                                                           .addOrder("createdAt", OrderType.DESC)
+                                                           .withOffset(String.valueOf(offSet))
+                                                           .withLimit(String.valueOf(PageRequest.DEFAULT_PAGE_SIZE))
+                                                           .build();
+
+    PageResponse<WorkflowExecution> workflowExecutions;
+    List<InstanceElement> instanceElements = new ArrayList<>();
+    do {
+      workflowExecutions = workflowExecutionService.listExecutions(pageRequest, false);
+
+      if (isEmpty(workflowExecutions)) {
+        logger.info("Did not find a successful execution for {}. ", workflowId);
+        return singletonList(
+            InstanceElement.Builder.anInstanceElement()
+                .withHostName(
+                    "No succesful workflow execution found for this workflow. Please run the workflow to get deployed nodes")
+                .build());
+      }
+
+      for (WorkflowExecution workflowExecution : workflowExecutions) {
+        String envId = workflowExecution.getEnvId();
+        for (ElementExecutionSummary executionSummary : workflowExecution.getServiceExecutionSummaries()) {
+          for (InstanceStatusSummary instanceStatusSummary : executionSummary.getInstanceStatusSummaries()) {
+            InstanceElement instanceElement = instanceStatusSummary.getInstanceElement();
+            instanceElement.setServiceTemplateElement(null);
+            if (instanceElement.getHost() != null) {
+              String hostUuid = instanceElement.getHost().getUuid();
+              if (!isEmpty(hostUuid)) {
+                Host host = hostService.get(appId, envId, hostUuid);
+                instanceElement.getHost().setEc2Instance(host.getEc2Instance());
+              }
+            }
+            instanceElements.add(instanceElement);
+          }
+        }
+        if (!isEmpty(instanceElements)) {
+          return instanceElements;
+        }
+      }
+      offSet = offSet + PageRequest.DEFAULT_PAGE_SIZE;
+      pageRequest.setOffset(String.valueOf(offSet));
+    } while (workflowExecutions.size() >= PageRequest.DEFAULT_PAGE_SIZE);
+
+    logger.info("No nodes were found in any execution for workflow {}", workflowId);
+    return singletonList(
+        InstanceElement.Builder.anInstanceElement()
+            .withHostName(
+                "No workflow execution found with deployed nodes for this workflow. Please run the workflow to get deployed nodes")
+            .build());
   }
 }
