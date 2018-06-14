@@ -685,6 +685,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       // this array is legacy, we always have just one item
       final PipelineStageElement element = stage.getPipelineStageElements().get(0);
 
+      if (element.isDisable()) {
+        continue;
+      }
+
       if (!ENV_STATE.name().equals(element.getType())) {
         continue;
       }
