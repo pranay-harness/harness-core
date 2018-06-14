@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.api.InstanceElement;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
@@ -140,4 +141,6 @@ public interface WorkflowService extends OwnedByApplication, OwnedByEnvironment,
    * @return
    */
   List<InfrastructureMapping> getResolvedInfraMappings(Workflow workflow, Map<String, String> workflowVariables);
+
+  List<InstanceElement> getDeployedNodes(String appId, String workflowId);
 }
