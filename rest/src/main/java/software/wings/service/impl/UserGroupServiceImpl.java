@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.exception.WingsException.USER;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -56,9 +57,9 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   @Override
   public PageResponse<UserGroup> list(String accountId, PageRequest<UserGroup> req, boolean loadUsers) {
-    Validator.notNullCheck("accountId", accountId);
+    Validator.notNullCheck("accountId", accountId, USER);
     Account account = accountService.get(accountId);
-    Validator.notNullCheck("account", account);
+    Validator.notNullCheck("account", account, USER);
     req.addFilter("accountId", Operator.EQ, accountId);
     PageResponse<UserGroup> res = wingsPersistence.query(UserGroup.class, req);
     List<UserGroup> userGroupList = res.getResponse();

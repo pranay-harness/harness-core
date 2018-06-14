@@ -84,7 +84,7 @@ public class InstanceSyncJob implements Job {
       // The app level lock was a work around for the threading issue we observed in quartz scheduler. The execute() was
       // getting called on all the managers. Its supposed to call it only on one manager. This is a way to stop that
       // from happening.
-      try (AcquiredLock lock = persistentLocker.tryToAcquireLock(Application.class, appId, Duration.ofSeconds(1))) {
+      try (AcquiredLock lock = persistentLocker.tryToAcquireLock(Application.class, appId, Duration.ofSeconds(10))) {
         if (lock == null) {
           return;
         }
@@ -111,8 +111,8 @@ public class InstanceSyncJob implements Job {
         String infraMappingId = infraMapping.getUuid();
         InfrastructureMappingType infraMappingType =
             Util.getEnumFromString(InfrastructureMappingType.class, infraMapping.getInfraMappingType());
-        try (AcquiredLock lock = persistentLocker.tryToAcquireLock(
-                 InfrastructureMapping.class, infraMappingId, Duration.ofSeconds(180))) {
+        try (AcquiredLock lock = persistentLocker.waitToAcquireLock(
+                 InfrastructureMapping.class, infraMappingId, Duration.ofSeconds(200), Duration.ofSeconds(220))) {
           if (lock == null) {
             logger.warn("Couldn't acquire infra lock for infraMappingId [{}] of appId [{}]", infraMappingId, appId);
             return;
