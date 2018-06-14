@@ -157,13 +157,34 @@ public class ApprovalState extends State {
     Long startTimeMillis = context.getStateExecutionData().getStartTs();
     Long currentTimeMillis = System.currentTimeMillis();
 
-    String errorMsg;
+    String errorMsg = "";
+    String approvalType = "";
+    if (((ExecutionContextImpl) context).getStateExecutionInstance() != null
+        && ((ExecutionContextImpl) context).getStateExecutionInstance().getExecutionType() != null) {
+      approvalType = notificationMessageResolver.getApprovalType(
+          ((ExecutionContextImpl) context).getStateExecutionInstance().getExecutionType());
+    }
+
     if (currentTimeMillis >= (timeout + startTimeMillis)) {
-      errorMsg = "Pipeline was not approved within " + Misc.getDurationString(getTimeoutMillis());
+      if (approvalType != null && approvalType.equalsIgnoreCase("PIPELINE")) {
+        errorMsg = "Pipeline was not approved within " + Misc.getDurationString(getTimeoutMillis());
+      } else if (approvalType != null && approvalType.equalsIgnoreCase("ORCHESTRATION")) {
+        errorMsg = "Workflow was not approved within " + Misc.getDurationString(getTimeoutMillis());
+      } else {
+        errorMsg = "Approval not approved within " + Misc.getDurationString(getTimeoutMillis());
+      }
       Map<String, String> placeholderValues = getPlaceholderValues(context, errorMsg);
       sendApprovalNotification(app.getAccountId(), APPROVAL_EXPIRED_NOTIFICATION, placeholderValues);
+
     } else {
-      errorMsg = "Pipeline was aborted";
+      if (approvalType != null && approvalType.equalsIgnoreCase("PIPELINE")) {
+        errorMsg = "Pipeline was aborted";
+      } else if (approvalType != null && approvalType.equalsIgnoreCase("ORCHESTRATION")) {
+        errorMsg = "Workflow was aborted";
+      } else {
+        errorMsg = "Workflow or Pipeline was aborted";
+      }
+
       User user = UserThreadLocal.get();
       String userName = (user != null && user.getName() != null) ? user.getName() : "System";
       Map<String, String> placeholderValues = getPlaceholderValues(context, userName, ABORTED);

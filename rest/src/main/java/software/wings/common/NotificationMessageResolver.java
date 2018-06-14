@@ -19,6 +19,7 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.WorkflowType;
 import software.wings.beans.alert.AlertType;
 import software.wings.common.NotificationMessageResolver.ChannelTemplate.EmailTemplate;
 import software.wings.exception.WingsException;
@@ -296,6 +297,15 @@ public class NotificationMessageResolver {
     return WordUtils.capitalizeFully(input);
   }
 
+  public String getApprovalType(WorkflowType workflowType) {
+    if (workflowType.equals(WorkflowType.PIPELINE)) {
+      return toCamelCase(WorkflowType.PIPELINE.name());
+    } else if (workflowType.equals(WorkflowType.ORCHESTRATION)) {
+      return "Workflow";
+    }
+    return "";
+  }
+
   public Map<String, String> getPlaceholderValues(ExecutionContext context, String userName, long startTs, long endTs,
       String timeout, String statusMsg, String artifactsMessage, ExecutionStatus status, AlertType alertType) {
     Application app = ((ExecutionContextImpl) context).getApp();
@@ -323,6 +333,14 @@ public class NotificationMessageResolver {
     placeHolderValues.put("STATUS", statusMsg);
     placeHolderValues.put("ENV", envName);
     placeHolderValues.put("ARTIFACT", artifactsMessage);
+
+    if (((ExecutionContextImpl) context).getStateExecutionInstance() != null
+        && ((ExecutionContextImpl) context).getStateExecutionInstance().getExecutionType() != null) {
+      placeHolderValues.put("APPROVAL_TYPE",
+          getApprovalType(((ExecutionContextImpl) context).getStateExecutionInstance().getExecutionType()));
+    } else {
+      placeHolderValues.put("APPROVAL_TYPE", "NONE");
+    }
 
     return placeHolderValues;
   }
