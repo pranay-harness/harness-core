@@ -149,6 +149,19 @@ public class TimeSeriesResource {
   @Path("/get-tooltip")
   @Timed
   @ExceptionMetered
+  public RestResponse<List<NewRelicMetricHostAnalysisValue>> getTooltipPost(@QueryParam("accountId") String accountId,
+      @QueryParam("stateExecutionId") String stateExecutionId,
+      @QueryParam("workFlowExecutionId") String workFlowExecutionId,
+      @QueryParam("analysisMinute") Integer analysisMinute, @QueryParam("transactionName") String transactionName,
+      @QueryParam("metricName") String metricName, @QueryParam("groupName") String groupName) throws IOException {
+    return new RestResponse<>(metricDataAnalysisService.getToolTip(
+        stateExecutionId, workFlowExecutionId, analysisMinute, transactionName, metricName, groupName));
+  }
+
+  @GET
+  @Path("/get-tooltip")
+  @Timed
+  @ExceptionMetered
   public RestResponse<List<NewRelicMetricHostAnalysisValue>> getTooltip(@QueryParam("accountId") String accountId,
       @QueryParam("stateExecutionId") String stateExecutionId,
       @QueryParam("workFlowExecutionId") String workFlowExecutionId,
