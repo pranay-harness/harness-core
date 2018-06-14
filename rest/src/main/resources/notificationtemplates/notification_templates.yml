@@ -42,17 +42,17 @@ DELEGATE_STATE_NOTIFICATION:
 
 APPROVAL_NEEDED_NOTIFICATION:
       web: Approval Required - ${WORKFLOW_NAME} in ${APP_NAME} is waiting for approval.
-      slack: Approval Required - \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* triggered by \*${USER_NAME}\* is waiting for approval in \*${APP_NAME}\* application|| Pipeline _started<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and ${VERB} for approval at <!date^${END_TS_SECS}^{time}|${END_DATE}>_||||${VERB}
+      slack: Approval Required - \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* triggered by \*${USER_NAME}\* is waiting for approval in \*${APP_NAME}\* application|| ${APPROVAL_TYPE} _started<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and ${VERB} for approval at <!date^${END_TS_SECS}^{time}|${END_DATE}>_||||${VERB}
       email:
           subject: Approval Required for ${WORKFLOW_NAME}
-          body: <<top-div>><b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> triggered by <b>${USER_NAME}</b> is waiting for approval in <b>${APP_NAME}</b> application</div> <<bottom-div>><<${VERB}-color>><i> Pipeline started ${START_DATE} and ${VERB} for approval at ${END_DATE}</i></span></div></div>
+          body: <<top-div>><b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> triggered by <b>${USER_NAME}</b> is waiting for approval in <b>${APP_NAME}</b> application</div> <<bottom-div>><<${VERB}-color>><i>  ${APPROVAL_TYPE} started ${START_DATE} and ${VERB} for approval at ${END_DATE}</i></span></div></div>
 
 APPROVAL_STATE_CHANGE_NOTIFICATION:
       web: Approval ${STATUS_CAMELCASE} - ${WORKFLOW_NAME} in ${APP_NAME} is ${STATUS}
-      slack: Approval ${STATUS_CAMELCASE} - \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* is ${STATUS} by \*${USER_NAME}\* in \*${APP_NAME}\* application|| Pipeline _paused<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and ${STATUS} at <!date^${END_TS_SECS}^{time}|${END_DATE}>_||${DURATION}||${VERB}
+      slack: Approval ${STATUS_CAMELCASE} - \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* is ${STATUS} by \*${USER_NAME}\* in \*${APP_NAME}\* application|| ${APPROVAL_TYPE} _paused<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and ${STATUS} at <!date^${END_TS_SECS}^{time}|${END_DATE}>_||${DURATION}||${VERB}
       email:
           subject: Approval ${STATUS_CAMELCASE} for ${WORKFLOW_NAME}
-          body: <<top-div>><b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> is ${STATUS} by <b>${USER_NAME}</b> in <b>${APP_NAME}</b> application</div> <<bottom-div>><<${VERB}-color>><i>Pipeline paused ${START_DATE} and ${STATUS} at ${END_DATE}</i><<img-path>>${VERB}<<img-suffix>>${DURATION}</span></div></div>
+          body: <<top-div>><b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> is ${STATUS} by <b>${USER_NAME}</b> in <b>${APP_NAME}</b> application</div> <<bottom-div>><<${VERB}-color>><i> ${APPROVAL_TYPE} paused ${START_DATE} and ${STATUS} at ${END_DATE}</i><<img-path>>${VERB}<<img-suffix>>${DURATION}</span></div></div>
 
 APPROVAL_EXPIRED_NOTIFICATION:
       web: Approval ${STATUS_CAMELCASE} - ${WORKFLOW_NAME} in ${APP_NAME} ${VERB}
