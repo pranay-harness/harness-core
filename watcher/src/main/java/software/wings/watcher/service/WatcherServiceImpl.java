@@ -565,7 +565,10 @@ public class WatcherServiceImpl implements WatcherService {
           }
           if ("illegalVersion".equals(cmd)) {
             int illegalVersion = Integer.parseInt(param);
-            illegalVersions.add(illegalVersion);
+            if (!illegalVersions.contains(illegalVersion)) {
+              illegalVersions.add(illegalVersion);
+              logger.info("Setting illegal delegate version: {}", illegalVersion);
+            }
           }
         }
       }
