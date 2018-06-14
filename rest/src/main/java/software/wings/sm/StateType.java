@@ -261,7 +261,7 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Approval state type for pipeline and workflow.
    */
-  APPROVAL(ApprovalState.class, OTHERS, asList(), PIPELINE_STENCILS, ORCHESTRATION_STENCILS, COMMON),
+  APPROVAL(ApprovalState.class, OTHERS, asList(), PIPELINE_STENCILS, COMMON),
 
   /**
    * The Load balancer.
