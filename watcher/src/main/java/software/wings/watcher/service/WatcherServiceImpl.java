@@ -69,6 +69,7 @@ import java.io.StringReader;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -106,6 +107,7 @@ public class WatcherServiceImpl implements WatcherService {
   private final List<String> runningDelegates = synchronizedList(new ArrayList<>());
 
   private final AtomicInteger minMinorVersion = new AtomicInteger(0);
+  private final Set<Integer> illegalVersions = new HashSet<>();
   private final Map<String, Long> delegateVersionMatchedAt = new HashMap<>();
   private HttpHost httpProxyHost;
   private List<String> nonProxyHosts;
@@ -278,8 +280,8 @@ public class WatcherServiceImpl implements WatcherService {
             if (isNotEmpty(delegateData)) {
               String delegateVersion = (String) delegateData.get(DELEGATE_VERSION);
               Integer delegateMinorVersion = getMinorVersion(delegateVersion);
-              boolean delegateMinorVersionMismatch =
-                  delegateMinorVersion != null && delegateMinorVersion < minMinorVersion.get();
+              boolean delegateMinorVersionMismatch = delegateMinorVersion != null
+                  && (delegateMinorVersion < minMinorVersion.get() || illegalVersions.contains(delegateMinorVersion));
               if (!delegateVersionMatchedAt.containsKey(delegateProcess)
                   || StringUtils.equals(expectedVersion, delegateVersion)) {
                 delegateVersionMatchedAt.put(delegateProcess, now);
@@ -317,6 +319,7 @@ public class WatcherServiceImpl implements WatcherService {
               } else if (restartNeeded || heartbeatTimedOut || versionMatchTimedOut || delegateMinorVersionMismatch) {
                 restartNeededList.add(delegateProcess);
                 minMinorVersion.set(0);
+                illegalVersions.clear();
               } else if (upgradeNeeded) {
                 upgradeNeededList.add(delegateProcess);
               }
@@ -559,6 +562,10 @@ public class WatcherServiceImpl implements WatcherService {
             if (minMinorVersion.getAndSet(minVersion) != minVersion) {
               logger.info("Setting minimum delegate version: {}", minVersion);
             }
+          }
+          if ("illegalVersion".equals(cmd)) {
+            int illegalVersion = Integer.parseInt(param);
+            illegalVersions.add(illegalVersion);
           }
         }
       }
