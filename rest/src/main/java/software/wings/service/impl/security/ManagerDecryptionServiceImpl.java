@@ -16,26 +16,52 @@ import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.ErrorCode;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.exception.WingsException;
+import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
+import java.util.stream.Collectors;
 /**
  * Created by rsingh on 6/7/18.
  */
 public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
   private static final Logger logger = LoggerFactory.getLogger(ManagerDecryptionServiceImpl.class);
-
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private TimeLimiter timeLimiter;
-
   @Override
   public void decrypt(Encryptable object, List<EncryptedDataDetail> encryptedDataDetails) {
     if (isEmpty(encryptedDataDetails)) {
+      return;
+    }
+    // decrypt locally encrypted variables in manager
+    encryptedDataDetails.stream()
+        .filter(encryptedDataDetail -> encryptedDataDetail.getEncryptionType() == EncryptionType.LOCAL)
+        .forEach(encryptedDataDetail -> {
+          SimpleEncryption encryption = new SimpleEncryption(encryptedDataDetail.getEncryptedData().getEncryptionKey());
+          char[] decryptChars = encryption.decryptChars(encryptedDataDetail.getEncryptedData().getEncryptedValue());
+          Field f = getFieldByName(object.getClass(), encryptedDataDetail.getFieldName());
+          f.setAccessible(true);
+          try {
+            f.set(object, decryptChars);
+          } catch (IllegalAccessException e) {
+            logger.error("Decryption failed for {}", encryptedDataDetail, e);
+          }
+        });
+
+    // filter non local encrypted values and send to delegate to decrypt
+    List<EncryptedDataDetail> nonLocalEncryptedDetails =
+        encryptedDataDetails.stream()
+            .filter(encryptedDataDetail -> encryptedDataDetail.getEncryptionType() != EncryptionType.LOCAL)
+            .collect(Collectors.toList());
+
+    // if nothing left to decrypt return
+    if (isEmpty(nonLocalEncryptedDetails)) {
+      object.setDecrypted(true);
       return;
     }
     SyncTaskContext syncTaskContext = aContext()
@@ -48,13 +74,13 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
         while (true) {
           try {
             return delegateProxyFactory.get(EncryptionService.class, syncTaskContext)
-                .decrypt(object, encryptedDataDetails);
+                .decrypt(object, nonLocalEncryptedDetails);
           } catch (Exception e) {
             logger.warn("Error decrypting value. Retrying.");
           }
         }
       }, 65, TimeUnit.SECONDS, true);
-      for (EncryptedDataDetail encryptedDataDetail : encryptedDataDetails) {
+      for (EncryptedDataDetail encryptedDataDetail : nonLocalEncryptedDetails) {
         Field f = getFieldByName(object.getClass(), encryptedDataDetail.getFieldName());
         if (f != null) {
           f.setAccessible(true);
