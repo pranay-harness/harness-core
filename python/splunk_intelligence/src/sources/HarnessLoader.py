@@ -1,13 +1,18 @@
 import json
 import time
 from datetime import timedelta, datetime
-import newrelic.agent
 import jwt
 import ConfigParser
 from StringIO import StringIO
 
-import requests
+import urllib3
+import urllib3.contrib.pyopenssl
+urllib3.contrib.pyopenssl.inject_into_urllib3()
 from core.util.lelogging import get_log
+
+
+
+
 
 logger = get_log(__name__)
 
@@ -41,15 +46,15 @@ class HarnessLoader(object):
         return headers
 
 
-    @newrelic.agent.background_task()
     @staticmethod
     def get_request(url, version_file_path, service_secret, max_retries=1):
         sleep_time = 1
         headers = HarnessLoader.make_header(version_file_path, service_secret)
         while max_retries > 0:
-            r = requests.get(url, headers=headers, verify=False, timeout=30)
-            if r.status_code == 200:
-                return json.loads(r.text), r.status_code
+            http = urllib3.PoolManager(cert_reqs='CERT_NONE', timeout=30)
+            r = http.request('GET', url, headers=headers)
+            if r.status == 200:
+                return json.loads(r.data), r.status
             else:
                 max_retries = max_retries - 1
                 if max_retries > 0:
@@ -59,20 +64,22 @@ class HarnessLoader(object):
         raise Exception(str(max_retries) + ' is tried, but unable to get request from ' + url)
 
 
-
-
-    @newrelic.agent.background_task()
     @staticmethod
-    def send_request(url, payload, version_file_path, service_secret, ssl_verify=False, read_timeout=30, max_retries=1):
+    def send_request(url, payload, version_file_path, service_secret, read_timeout=30, ssl_verify=False, max_retries=1):
 
         sleep_time = 1
 
         headers = HarnessLoader.make_header(version_file_path, service_secret)
 
         while max_retries > 0:
-            r = requests.post(url, data=payload, headers=headers, verify=ssl_verify, timeout=read_timeout)
-            if r.status_code == 200:
-                return r.text, r.status_code
+            http = urllib3.PoolManager(timeout=read_timeout, cert_reqs='CERT_NONE')
+            try:
+                r = http.request('POST', url, body=payload.encode('utf-8'), headers=headers)
+            except AttributeError:  # for when the body is dict
+                r = http.request('POST', url, body=json.dumps(payload), headers=headers)
+
+            if r.status == 200:
+                return r.data, r.status
             else:
                 max_retries = max_retries - 1
                 if max_retries > 0:

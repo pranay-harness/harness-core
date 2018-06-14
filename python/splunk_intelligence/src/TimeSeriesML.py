@@ -1,5 +1,4 @@
 from __future__ import division
-import newrelic.agent
 import argparse
 import json
 import sys
@@ -851,7 +850,6 @@ def analyze_parallel(queue, options, metric_template, control_metrics_batch, tes
         raise Exception('Analysis failed for one of the workers')
 
 
-@newrelic.agent.background_task()
 def parallelize_processing(options, metric_template, control_metrics, test_metrics):
     """
     Break the work into parallel units. Each transaction and its metrics constitute a unit.
