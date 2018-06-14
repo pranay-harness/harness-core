@@ -441,8 +441,8 @@ public class InstanceHelper {
     String infraMappingId = deploymentSummaries.iterator().next().getInfraMappingId();
     String appId = deploymentSummaries.iterator().next().getAppId();
     String workflowExecutionId = deploymentSummaries.iterator().next().getWorkflowExecutionId();
-    try (AcquiredLock lock =
-             persistentLocker.acquireLock(InfrastructureMapping.class, infraMappingId, Duration.ofSeconds(130))) {
+    try (AcquiredLock lock = persistentLocker.waitToAcquireLock(
+             InfrastructureMapping.class, infraMappingId, Duration.ofSeconds(200), Duration.ofSeconds(220))) {
       logger.info("Handling deployment event for executionId [{}], infraMappingId [{}] of appId [{}]",
           workflowExecutionId, infraMappingId, appId);
 
