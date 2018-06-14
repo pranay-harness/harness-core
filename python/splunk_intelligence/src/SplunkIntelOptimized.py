@@ -2,8 +2,6 @@ import argparse
 import json
 import sys
 import time
-import newrelic
-
 import numpy as np
 import os
 from sklearn.metrics.pairwise import euclidean_distances
@@ -196,7 +194,6 @@ class SplunkIntelOptimized(object):
         logger.info("Finish detect unknown events")
         return predictions
 
-    @newrelic.agent.background_task()
     def run(self):
 
         start_time = time.time()

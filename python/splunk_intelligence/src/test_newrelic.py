@@ -1,5 +1,3 @@
-import newrelic.agent
-newrelic.agent.initialize('/Users/parnianzargham/Desktop/portal/python/splunk_intelligence/newrelic.ini')
 import argparse
 import json
 import time
@@ -11,7 +9,6 @@ from sources.HarnessLoader import HarnessLoader
 from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
 from SplunkIntelOptimized import SplunkIntelOptimized
 from sources.LogCorpus import LogCorpus
-#import sources.HarnessLoader as HarnessLoader
 
 
 class PostHandler(BaseHTTPRequestHandler):

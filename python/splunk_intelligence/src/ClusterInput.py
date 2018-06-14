@@ -1,10 +1,8 @@
 import argparse
 import json
-import logging
 import multiprocessing
 import sys
 import time
-import newrelic
 
 import numpy as np
 import scipy.sparse as sps
@@ -151,7 +149,6 @@ class ClusterInput(object):
         logger.info("done clustering")
         return clusters, counts
 
-    @newrelic.agent.background_task()
     def run(self):
         """
         Main enrty point for the ClusterInput class.
