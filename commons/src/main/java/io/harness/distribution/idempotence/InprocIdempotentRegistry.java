@@ -65,7 +65,7 @@ public class InprocIdempotentRegistry<T> implements IdempotentRegistry<T> {
       switch (v.getState()) {
         case TENTATIVE:
         case TENTATIVE_ALREADY:
-          return Record.<T>builder().state(InternalState.TENTATIVE_ALREADY).build();
+          return Record.<T>builder().state(InternalState.TENTATIVE_ALREADY).validUntil(now + ttl.toMillis()).build();
         case FINISHED:
           return v;
         default:
