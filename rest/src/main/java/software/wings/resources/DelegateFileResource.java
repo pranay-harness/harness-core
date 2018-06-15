@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
@@ -81,7 +82,8 @@ public class DelegateFileResource {
 
     IdempotentId idempotentid = new IdempotentId(taskId + ":" + fileDetail.getFileName());
 
-    try (IdempotentLock<String> idempotent = idempotentRegistry.create(idempotentid, ofMinutes(1), ofSeconds(1))) {
+    try (IdempotentLock<String> idempotent =
+             idempotentRegistry.create(idempotentid, ofMinutes(1), ofSeconds(1), ofHours(2))) {
       if (idempotent.alreadyExecuted()) {
         return new RestResponse<>(idempotent.getResult());
       }

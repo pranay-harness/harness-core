@@ -24,7 +24,9 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Idempotent;
 import software.wings.dl.WingsPersistence;
 
+import java.sql.Date;
 import java.time.Duration;
+import java.time.OffsetDateTime;
 
 @Singleton
 public class MongoIdempotentRegistry<T> implements IdempotentRegistry<T> {
@@ -35,8 +37,10 @@ public class MongoIdempotentRegistry<T> implements IdempotentRegistry<T> {
 
   @Inject private WingsPersistence wingsPersistence;
 
-  public UpdateOperations<Idempotent> registerUpdateOperation() {
-    return wingsPersistence.createUpdateOperations(Idempotent.class).set("state", TENTATIVE);
+  public UpdateOperations<Idempotent> registerUpdateOperation(Duration ttl) {
+    return wingsPersistence.createUpdateOperations(Idempotent.class)
+        .set(Idempotent.STATE_KEY, TENTATIVE)
+        .set(Idempotent.VALID_UNTIL_KEY, Date.from(OffsetDateTime.now().plus(ttl).toInstant()));
   }
 
   public UpdateOperations<Idempotent> unregisterUpdateOperation() {
@@ -49,9 +53,9 @@ public class MongoIdempotentRegistry<T> implements IdempotentRegistry<T> {
   }
 
   @Override
-  public IdempotentLock create(IdempotentId id, Duration timeout, Duration pollingInterval)
+  public IdempotentLock create(IdempotentId id, Duration timeout, Duration pollingInterval, Duration ttl)
       throws UnableToRegisterIdempotentOperationException {
-    return IdempotentLock.create(id, this, timeout, pollingInterval);
+    return IdempotentLock.create(id, this, timeout, pollingInterval, ttl);
   }
 
   public Query<Idempotent> query(IdempotentId id) {
@@ -61,11 +65,11 @@ public class MongoIdempotentRegistry<T> implements IdempotentRegistry<T> {
   }
 
   @Override
-  public Response register(IdempotentId id) throws UnableToRegisterIdempotentOperationException {
+  public Response register(IdempotentId id, Duration ttl) throws UnableToRegisterIdempotentOperationException {
     try {
       // Insert new record in the idempotent collection with a tentative state
       final Idempotent idempotent =
-          wingsPersistence.findAndModify(query(id), registerUpdateOperation(), registerOptions);
+          wingsPersistence.findAndModify(query(id), registerUpdateOperation(ttl), registerOptions);
 
       // If there was no record from before, we are the first to handle this operation
       if (idempotent == null) {

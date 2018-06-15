@@ -2,6 +2,7 @@ package io.harness.distribution.idempotence;
 
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
+import static java.time.Duration.ofDays;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofMinutes;
 
@@ -18,23 +19,25 @@ import java.util.Optional;
 
 @Builder
 public class IdempotentLock<T> implements AutoCloseable {
-  private static Duration defaultPollingInterval = ofMillis(100);
-  private static Duration defaultTimeout = ofMinutes(3);
+  public static Duration defaultPollingInterval = ofMillis(100);
+  public static Duration defaultLockTimeout = ofMinutes(3);
+  public static Duration defaultTTL = ofDays(7);
+
   private IdempotentId id;
   private IdempotentRegistry registry;
   private Optional<T> resultData;
 
   public static IdempotentLock create(IdempotentId id, IdempotentRegistry registry)
       throws UnableToRegisterIdempotentOperationException {
-    return create(id, registry, defaultTimeout, defaultPollingInterval);
+    return create(id, registry, defaultLockTimeout, defaultPollingInterval, defaultTTL);
   }
 
-  public static IdempotentLock create(IdempotentId id, IdempotentRegistry registry, Duration timeout,
-      Duration pollingInterval) throws UnableToRegisterIdempotentOperationException {
+  public static IdempotentLock create(IdempotentId id, IdempotentRegistry registry, Duration lockTimeout,
+      Duration pollingInterval, Duration ttl) throws UnableToRegisterIdempotentOperationException {
     long systemTimeMillis = System.currentTimeMillis();
 
     do {
-      IdempotentRegistry.Response response = registry.register(id);
+      IdempotentRegistry.Response response = registry.register(id, ttl);
       switch (response.getState()) {
         case NEW:
           return builder().id(id).registry(registry).resultData(Optional.empty()).build();
@@ -46,10 +49,11 @@ public class IdempotentLock<T> implements AutoCloseable {
         default:
           unhandled(response.getState());
       }
-    } while (System.currentTimeMillis() - systemTimeMillis < timeout.toMillis());
+    } while (System.currentTimeMillis() - systemTimeMillis < lockTimeout.toMillis());
 
-    throw new UnableToRegisterIdempotentOperationException(format(
-        "Acquiring idempotent lock for operation %s timed out after %d seconds", id.getValue(), timeout.getSeconds()));
+    throw new UnableToRegisterIdempotentOperationException(
+        format("Acquiring idempotent lock for operation %s timed out after %d seconds", id.getValue(),
+            lockTimeout.getSeconds()));
   }
 
   public boolean alreadyExecuted() {

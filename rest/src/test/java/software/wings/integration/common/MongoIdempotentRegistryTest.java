@@ -1,5 +1,6 @@
 package software.wings.integration.common;
 
+import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertEquals;
@@ -66,7 +67,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
     wingsPersistence.delete(Idempotent.class, id.getValue());
 
     Idempotent previousIdempotent = wingsPersistence.findAndModify(idempotentRegistry.query(id),
-        idempotentRegistry.registerUpdateOperation(), MongoIdempotentRegistry.registerOptions);
+        idempotentRegistry.registerUpdateOperation(IdempotentLock.defaultTTL), MongoIdempotentRegistry.registerOptions);
 
     assertEquals(null, previousIdempotent);
     assertEquals(TENTATIVE, wingsPersistence.get(Idempotent.class, id.getValue()).getState());
@@ -80,7 +81,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
     wingsPersistence.save(tentativeIdempotent);
 
     Idempotent previousIdempotent = wingsPersistence.findAndModify(idempotentRegistry.query(id),
-        idempotentRegistry.registerUpdateOperation(), MongoIdempotentRegistry.registerOptions);
+        idempotentRegistry.registerUpdateOperation(IdempotentLock.defaultTTL), MongoIdempotentRegistry.registerOptions);
 
     assertEquals(TENTATIVE, previousIdempotent.getState());
     assertEquals(TENTATIVE, wingsPersistence.get(Idempotent.class, id.getValue()).getState());
@@ -95,7 +96,8 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
 
     assertThatThrownBy(()
                            -> wingsPersistence.findAndModify(idempotentRegistry.query(id),
-                               idempotentRegistry.registerUpdateOperation(), MongoIdempotentRegistry.registerOptions))
+                               idempotentRegistry.registerUpdateOperation(IdempotentLock.defaultTTL),
+                               MongoIdempotentRegistry.registerOptions))
         .isInstanceOf(MongoCommandException.class)
         .hasMessageContaining("E11000 ");
 
@@ -167,7 +169,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   public void testTimeout() throws InterruptedException, UnableToRegisterIdempotentOperationException {
     wingsPersistence.delete(Idempotent.class, id.getValue());
     IdempotentLock<String> idempotentLock = IdempotentLock.create(id, idempotentRegistry);
-    assertThatThrownBy(() -> IdempotentLock.create(id, idempotentRegistry, ofMillis(200), ofMillis(100)));
+    assertThatThrownBy(() -> IdempotentLock.create(id, idempotentRegistry, ofMillis(200), ofMillis(100), ofHours(1)));
     idempotentLock.close();
   }
 }

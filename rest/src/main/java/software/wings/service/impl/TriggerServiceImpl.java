@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.time.Duration.ofHours;
 import static java.time.Duration.ofSeconds;
 import static java.util.regex.Pattern.compile;
 import static java.util.stream.Collectors.toList;
@@ -537,7 +538,8 @@ public class TriggerServiceImpl implements TriggerService {
   private void triggerScheduledExecution(Trigger trigger, Date scheduledFireTime) {
     IdempotentId idempotentid = new IdempotentId(trigger.getUuid() + ":" + scheduledFireTime.getTime());
 
-    try (IdempotentLock<String> idempotent = idempotentRegistry.create(idempotentid, ofSeconds(10), ofSeconds(1))) {
+    try (IdempotentLock<String> idempotent =
+             idempotentRegistry.create(idempotentid, ofSeconds(10), ofSeconds(1), ofHours(1))) {
       if (idempotent.alreadyExecuted()) {
         return;
       }
@@ -568,13 +570,13 @@ public class TriggerServiceImpl implements TriggerService {
                 lastDeployedArtifacts.stream().map(Artifact::getUuid).distinct().collect(toList());
             List<String> artifactIds = artifacts.stream().map(Artifact::getUuid).distinct().collect(toList());
             if (!lastDeployedArtifactIds.containsAll(artifactIds)) {
-              logger.info(
-                  "New version of artifacts found from the last successful execution of pipeline/ workflow {}. So, triggering  execution",
+              logger.info("New version of artifacts found from the last successful execution "
+                      + "of pipeline/ workflow {}. So, triggering  execution",
                   trigger.getWorkflowId());
               triggerExecution(artifacts, trigger);
             } else {
-              logger.info(
-                  "No new version of artifacts found from the last successful execution of pipeline/ workflow {}. So, not triggering execution",
+              logger.info("No new version of artifacts found from the last successful execution "
+                      + "of pipeline/ workflow {}. So, not triggering execution",
                   trigger.getWorkflowId());
             }
           }
