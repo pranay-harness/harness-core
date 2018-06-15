@@ -13,6 +13,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.time.Timestamp;
 import lombok.Builder;
 import lombok.Data;
@@ -260,6 +261,12 @@ public class
 
         if (Arrays.asList("System", "Kubernetes").contains(metric.getDatadogMetricType())) {
           metricUrl = metricUrl.replace("${query}", metric.getMetricName());
+          if (EmptyPredicate.isEmpty(metric.getTransformation())) {
+            metricUrl = metricUrl.replace("${transformUnits}", "");
+          } else {
+            metricUrl = metricUrl.replace("${transformUnits}", metric.getTransformation());
+          }
+
           if (!result.containsKey(metricUrl)) {
             result.put(metricUrl, new ArrayList<>());
           }
@@ -346,6 +353,7 @@ public class
     private MetricType mlMetricType;
     private String datadogMetricType;
     private String displayName;
+    private String transformation;
     private Set<String> tags;
   }
 

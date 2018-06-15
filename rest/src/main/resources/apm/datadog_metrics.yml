@@ -37,6 +37,7 @@ Kubernetes:
       mlMetricType: INFRA
       datadogMetricType: Kubernetes
       displayName: K8 CPU Usage
+      transformation: /1000000000
   -
       metricName: kubernetes.memory.usage
       mlMetricType: INFRA

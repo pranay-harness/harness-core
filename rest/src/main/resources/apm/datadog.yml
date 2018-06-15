@@ -38,11 +38,13 @@ System:
               - ((?<=host:)([^,]*))
 
 Kubernetes:
-  url: query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=${query}{$harness_batch{pod_name:${host}, '|'}}by{pod_name}.rollup(avg,60)
+  url: query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=${query}{$harness_batch{pod_name:${host}, '|'}}by{pod_name}.rollup(avg,60)${transformUnits}
   responseMappers:
         -
             fieldName: txnName
             jsonPath: series[*].metric
+            regexs:
+              - ((?<=[(]|^)[^(]([^/|+|-|*]*))
         -
             fieldName: timestamp
             jsonPath: series[*].pointlist[*].[0]
