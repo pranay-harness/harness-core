@@ -75,7 +75,7 @@ public class IdempotentTest {
   @Test
   public void testIdempotentAfterTtl() throws UnableToRegisterIdempotentOperationException {
     final IdempotentRegistry<Boolean> idempotentRegistry = new InprocIdempotentRegistry<>();
-    try (IdempotentLock<Boolean> idempotent = idempotentRegistry.create(id, ofMillis(1), ofMillis(1), ofMillis(25))) {
+    try (IdempotentLock<Boolean> idempotent = idempotentRegistry.create(id, ofMillis(1), ofMillis(1), ofMillis(500))) {
       assertNotNull(idempotent);
       assertFalse(idempotent.alreadyExecuted());
       idempotent.succeeded(true);
@@ -84,7 +84,7 @@ public class IdempotentTest {
       assertNotNull(idempotent);
       assertTrue(idempotent.alreadyExecuted());
     }
-    sleep(ofMillis(30));
+    sleep(ofMillis(510));
     try (IdempotentLock<Boolean> idempotent = idempotentRegistry.create(id)) {
       assertNotNull(idempotent);
       assertFalse(idempotent.alreadyExecuted());
