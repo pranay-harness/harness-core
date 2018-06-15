@@ -600,7 +600,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   }
 
   @Override
-  public Query createAuthorizedQuery(Class collectionClass) {
+  public <T> Query<T> createAuthorizedQuery(Class<T> collectionClass) {
     Query query = createQuery(collectionClass);
     if (authFilters(query, collectionClass)) {
       return query;

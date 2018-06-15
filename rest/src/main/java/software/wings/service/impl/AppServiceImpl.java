@@ -184,8 +184,10 @@ public class AppServiceImpl implements AppService {
     PageResponse<Application> response = wingsPersistence.query(Application.class, req);
 
     List<Application> applicationList = response.getResponse();
-    List<String> appIdList =
-        applicationList.parallelStream().map(application -> application.getUuid()).collect(toList());
+    if (isEmpty(applicationList)) {
+      return response;
+    }
+    List<String> appIdList = applicationList.stream().map(application -> application.getUuid()).collect(toList());
 
     PermissionAttribute svcPermissionAttribute = new PermissionAttribute(PermissionType.SERVICE, Action.READ);
     authHandler.setEntityIdFilterIfUserAction(asList(svcPermissionAttribute), appIdList);

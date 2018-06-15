@@ -417,13 +417,13 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   @Override
   public List<Environment> getEnvByApp(String appId) {
-    return wingsPersistence.createQuery(Environment.class).filter(APP_ID_KEY, appId).asList();
+    return wingsPersistence.createAuthorizedQuery(Environment.class).filter(APP_ID_KEY, appId).asList();
   }
 
   @Override
   public List<Environment> findEnvNamesByAppIds(List<String> appIds) {
     List<Environment> environments = new ArrayList<>();
-    try (HIterator<Environment> envIterator = new HIterator<>(wingsPersistence.createQuery(Environment.class)
+    try (HIterator<Environment> envIterator = new HIterator<>(wingsPersistence.createAuthorizedQuery(Environment.class)
                                                                   .project(NAME_KEY, true)
                                                                   .project(APP_ID_KEY, true)
                                                                   .project(ENVIRONMENT_TYPE_KEY, true)

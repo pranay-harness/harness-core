@@ -9,7 +9,6 @@ import org.mongodb.morphia.query.Sort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentSummary;
-import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.key.deployment.AwsAmiDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.AwsCodeDeployDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.ContainerDeploymentKey;
@@ -108,14 +107,14 @@ public class DeploymentServiceImpl implements DeploymentService {
 
   @Override
   public void pruneByApplication(String appId) {
-    Query<Instance> query = wingsPersistence.createAuthorizedQuery(DeploymentSummary.class);
+    Query<DeploymentSummary> query = wingsPersistence.createAuthorizedQuery(DeploymentSummary.class);
     query.filter("appId", appId);
     wingsPersistence.delete(query);
   }
 
   @Override
   public boolean delete(Set<String> idSet) {
-    Query<Instance> query = wingsPersistence.createAuthorizedQuery(DeploymentSummary.class);
+    Query<DeploymentSummary> query = wingsPersistence.createAuthorizedQuery(DeploymentSummary.class);
     query.field("_id").in(idSet);
     return wingsPersistence.delete(query);
   }

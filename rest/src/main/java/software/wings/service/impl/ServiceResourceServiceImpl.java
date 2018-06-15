@@ -650,14 +650,14 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public List<Service> findServicesByApp(String appId) {
-    return wingsPersistence.createQuery(Service.class).filter(APP_ID_KEY, appId).asList();
+    return wingsPersistence.createAuthorizedQuery(Service.class).filter(APP_ID_KEY, appId).asList();
   }
 
   @Override
   public List<Service> findServiceNamesByAppIds(List<String> appIds) {
     List<Service> services = new ArrayList<>();
     try (HIterator<Service> iterator =
-             new HIterator<>(wingsPersistence.createQuery(Service.class)
+             new HIterator<>(wingsPersistence.createAuthorizedQuery(Service.class)
                                  .project(NAME_KEY, true)
                                  .project(APP_ID_KEY, true)
                                  .project(ARTIFACT_TYPE, true) // Do not remove this as UI dependent
