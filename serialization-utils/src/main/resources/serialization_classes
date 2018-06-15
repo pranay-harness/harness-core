@@ -400,3 +400,6 @@ software.wings.beans.ServiceVariable$OverrideType, 5361
 software.wings.beans.ServiceVariable$Type, 5362
 software.wings.beans.container.KubernetesServiceSpecification, 5363
 software.wings.beans.container.KubernetesBlueGreenConfig, 5364
+software.wings.beans.container.KubernetesSwapServiceSelectorsParams, 5365
+software.wings.sm.states.KubernetesSwapServiceSelectorsResponse, 5366
+software.wings.api.KubernetesSwapServiceSelectorsExecutionData, 5367

@@ -311,6 +311,10 @@ public interface Constants {
    */
   String KUBERNETES_STEADY_STATE_CHECK = "Steady State Check";
   /**
+   * The constant KUBERNETES_SWAP_SERVICE_SELECTORS.
+   */
+  String KUBERNETES_SWAP_SERVICE_SELECTORS = "Swap Service Selectors";
+  /**
    * The constant SUB_WORKFLOW_ID.
    */
   String SUB_WORKFLOW_ID = "subWorkflowId";

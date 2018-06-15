@@ -370,7 +370,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           }
         }
       } else {
-        executionLogCallback.saveExecutionLog("Cleaning up old versions");
+        executionLogCallback.saveExecutionLog("\nCleaning up old versions");
         cleanup(kubernetesConfig, encryptedDataDetails, containerServiceName, executionLogCallback, isStatefulSet);
       }
 
@@ -517,6 +517,14 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
     prepareIngress(kubernetesConfig, encryptedDataDetails, useIngress, ingressYaml, ingressName, labels,
         executionLogCallback, summaryOutput);
+
+    if (setupParams.isBlueGreen()) {
+      String primaryRevision = primaryService.getSpec().getSelector().get(HARNESS_REVISION);
+      String stageRevision = stageService.getSpec().getSelector().get(HARNESS_REVISION);
+
+      executionLogCallback.saveExecutionLog("Primary Service is at revision: " + primaryRevision);
+      executionLogCallback.saveExecutionLog("Stage Service is at revision: " + stageRevision);
+    }
   }
 
   private ImmutableMap<String, String> getLabels(KubernetesSetupParams setupParams) {
@@ -1568,9 +1576,13 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       Optional<Integer> podCount =
           kubernetesContainerService.getControllerPodCount(kubernetesConfig, encryptedDataDetails, controllerName);
 
-      kubernetesContainerService.setControllerPodCount(kubernetesConfig, encryptedDataDetails,
-          setupParams.getClusterName(), controllerName, podCount.orElse(1), 0,
-          setupParams.getServiceSteadyStateTimeout(), executionLogCallback);
+      if (podCount.isPresent() && podCount.get() > 0) {
+        kubernetesContainerService.setControllerPodCount(kubernetesConfig, encryptedDataDetails,
+            setupParams.getClusterName(), controllerName, podCount.orElse(1), 0,
+            setupParams.getServiceSteadyStateTimeout(), executionLogCallback);
+      } else {
+        executionLogCallback.saveExecutionLog("No Pods found for Stage Deployment. Continue..");
+      }
     } else {
       executionLogCallback.saveExecutionLog("Skipping Cleanup as Primary and Stage are using same Deployment");
     }

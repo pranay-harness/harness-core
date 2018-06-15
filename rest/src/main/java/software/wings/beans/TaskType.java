@@ -18,6 +18,7 @@ import software.wings.delegatetasks.HelmCommandTask;
 import software.wings.delegatetasks.HttpTask;
 import software.wings.delegatetasks.JenkinsTask;
 import software.wings.delegatetasks.KubernetesSteadyStateCheckTask;
+import software.wings.delegatetasks.KubernetesSwapServiceSelectorsTask;
 import software.wings.delegatetasks.NewRelicDataCollectionTask;
 import software.wings.delegatetasks.NewRelicDeploymentMarkerTask;
 import software.wings.delegatetasks.PrometheusDataCollectionTask;
@@ -54,6 +55,7 @@ import software.wings.delegatetasks.validation.HttpValidation;
 import software.wings.delegatetasks.validation.JenkinsValidation;
 import software.wings.delegatetasks.validation.KmsValidation;
 import software.wings.delegatetasks.validation.KubernetesSteadyStateCheckValidation;
+import software.wings.delegatetasks.validation.KubernetesSwapServiceSelectorsValidation;
 import software.wings.delegatetasks.validation.LogzValidation;
 import software.wings.delegatetasks.validation.NewRelicValidation;
 import software.wings.delegatetasks.validation.NexusValidation;
@@ -195,7 +197,9 @@ public enum TaskType {
   APM_METRIC_DATA_COLLECTION_TASK(TaskGroup.APM, APMDataCollectionTask.class, APMValidation.class),
   CLOUD_FORMATION_TASK(TaskGroup.CLOUD_FORMATION, CloudFormationCommandTask.class, AlwaysTrueValidation.class),
   TERRAFORM_PROVISION_TASK(TaskGroup.TERRAFORM, TerraformProvisionTask.class, TerraformValidation.class),
-  SECRET_DECRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class);
+  SECRET_DECRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class),
+  KUBERNETES_SWAP_SERVICE_SELECTORS_TASK(
+      TaskGroup.CONTAINER, KubernetesSwapServiceSelectorsTask.class, KubernetesSwapServiceSelectorsValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;
