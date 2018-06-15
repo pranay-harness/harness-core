@@ -35,6 +35,7 @@ class Record<T> {
 
   private InternalState state;
   private T result;
+  private long validUntil;
 }
 
 /*
@@ -49,16 +50,17 @@ public class InprocIdempotentRegistry<T> implements IdempotentRegistry<T> {
   }
 
   @Override
-  public IdempotentLock create(IdempotentId id, Duration timeout, Duration pollingInterval)
+  public IdempotentLock create(IdempotentId id, Duration timeout, Duration pollingInterval, Duration ttl)
       throws UnableToRegisterIdempotentOperationException {
-    return IdempotentLock.create(id, this, timeout, pollingInterval);
+    return IdempotentLock.create(id, this, timeout, pollingInterval, ttl);
   }
 
   @Override
-  public Response register(IdempotentId id) throws UnableToRegisterIdempotentOperationException {
+  public Response register(IdempotentId id, Duration ttl) throws UnableToRegisterIdempotentOperationException {
     final Record<T> record = map.compute(id, (k, v) -> {
-      if (v == null) {
-        return Record.<T>builder().state(InternalState.TENTATIVE).build();
+      final long now = System.currentTimeMillis();
+      if (v == null || v.getValidUntil() < now) {
+        return Record.<T>builder().state(InternalState.TENTATIVE).validUntil(now + ttl.toMillis()).build();
       }
       switch (v.getState()) {
         case TENTATIVE:
@@ -104,6 +106,8 @@ public class InprocIdempotentRegistry<T> implements IdempotentRegistry<T> {
 
   @Override
   public void finish(IdempotentId id, T result) {
-    map.put(id, Record.<T>builder().state(InternalState.FINISHED).result(result).build());
+    map.compute(id,
+        (k, v)
+            -> Record.<T>builder().state(InternalState.FINISHED).result(result).validUntil(v.getValidUntil()).build());
   }
 }

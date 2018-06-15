@@ -16,6 +16,10 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = false)
 public class Idempotent extends Base {
+  public static final String STATE_KEY = "state";
+  public static final String RESULT_KEY = "result";
+  public static final String VALID_UNTIL_KEY = "validUntil";
+
   public static final String TENTATIVE = "tentative";
   public static final String SUCCEEDED = "succeeded";
 

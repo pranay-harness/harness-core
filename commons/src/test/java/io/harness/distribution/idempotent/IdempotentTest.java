@@ -1,6 +1,9 @@
 package io.harness.distribution.idempotent;
 
+import static io.harness.threading.Morpheus.sleep;
+import static java.time.Duration.ofMillis;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
@@ -33,7 +36,7 @@ public class IdempotentTest {
   public void testNewIdempotentFailed() throws UnableToRegisterIdempotentOperationException {
     final IdempotentRegistry mockIdempotentRegistry = mock(IdempotentRegistry.class);
 
-    when(mockIdempotentRegistry.register(any())).thenReturn(newResponse);
+    when(mockIdempotentRegistry.register(any(), any())).thenReturn(newResponse);
 
     try (IdempotentLock idempotent = IdempotentLock.create(id, mockIdempotentRegistry)) {
       assertNotNull(idempotent);
@@ -46,7 +49,7 @@ public class IdempotentTest {
   public void testNewIdempotentSucceeded() throws UnableToRegisterIdempotentOperationException {
     final IdempotentRegistry mockIdempotentRegistry = mock(IdempotentRegistry.class);
 
-    when(mockIdempotentRegistry.register(any())).thenReturn(newResponse);
+    when(mockIdempotentRegistry.register(any(), any())).thenReturn(newResponse);
 
     try (IdempotentLock idempotent = IdempotentLock.create(id, mockIdempotentRegistry)) {
       assertNotNull(idempotent);
@@ -60,12 +63,31 @@ public class IdempotentTest {
   public void testFinishedIdempotent() throws UnableToRegisterIdempotentOperationException {
     final IdempotentRegistry mockIdempotentRegistry = mock(IdempotentRegistry.class);
 
-    when(mockIdempotentRegistry.register(any())).thenReturn(doneResponse);
+    when(mockIdempotentRegistry.register(any(), any())).thenReturn(doneResponse);
 
     try (IdempotentLock<Boolean> idempotent = IdempotentLock.create(id, mockIdempotentRegistry)) {
       assertNotNull(idempotent);
       assertTrue(idempotent.alreadyExecuted());
       assertTrue(idempotent.getResult());
+    }
+  }
+
+  @Test
+  public void testIdempotentAfterTtl() throws UnableToRegisterIdempotentOperationException {
+    final IdempotentRegistry<Boolean> idempotentRegistry = new InprocIdempotentRegistry<>();
+    try (IdempotentLock<Boolean> idempotent = idempotentRegistry.create(id, ofMillis(1), ofMillis(1), ofMillis(25))) {
+      assertNotNull(idempotent);
+      assertFalse(idempotent.alreadyExecuted());
+      idempotent.succeeded(true);
+    }
+    try (IdempotentLock<Boolean> idempotent = idempotentRegistry.create(id)) {
+      assertNotNull(idempotent);
+      assertTrue(idempotent.alreadyExecuted());
+    }
+    sleep(ofMillis(30));
+    try (IdempotentLock<Boolean> idempotent = idempotentRegistry.create(id)) {
+      assertNotNull(idempotent);
+      assertFalse(idempotent.alreadyExecuted());
     }
   }
 
