@@ -31,9 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
-import software.wings.beans.Environment;
 import software.wings.beans.Role;
-import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.StringValue;
 import software.wings.beans.yaml.Change.ChangeType;
@@ -71,7 +69,6 @@ import software.wings.service.intfc.yaml.YamlDirectoryService;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
@@ -196,18 +193,19 @@ public class AppServiceImpl implements AppService {
     authHandler.setEntityIdFilterIfUserAction(asList(envPermissionAttribute), appIdList);
 
     if (details) {
-      List<Environment> appEnvs = environmentService.findEnvNamesByAppIds(appIdList);
-      Map<String, List<Environment>> appIdEnvs = appEnvs.stream().collect(Collectors.groupingBy(Environment::getAppId));
-
-      List<Service> appServices = serviceResourceService.findServiceNamesByAppIds(appIdList);
-      Map<String, List<Service>> appIdServices = appServices.stream().collect(Collectors.groupingBy(Service::getAppId));
-
       applicationList.stream().forEach(application -> {
-        application.setEnvironments(appIdEnvs.get(application.getUuid()));
-        application.setServices(appIdServices.get(application.getUuid()));
+        try {
+          application.setEnvironments(environmentService.getEnvByApp(application.getUuid()));
+        } catch (Exception e) {
+          logger.error("Failed to fetch environments for app {} ", application, e);
+        }
+        try {
+          application.setServices(serviceResourceService.findServicesByApp(application.getUuid()));
+        } catch (Exception e) {
+          logger.error("Failed to fetch services for app {} ", application, e);
+        }
       });
     }
-
     return response;
   }
 
@@ -366,8 +364,8 @@ public class AppServiceImpl implements AppService {
     authHandler.setEntityIdFilterIfUserAction(asList(envPermissionAttribute), appIdAsList);
 
     if (details) {
-      application.setEnvironments(environmentService.findEnvNamesByAppIds(asList(application.getUuid())));
-      application.setServices(serviceResourceService.findServiceNamesByAppIds(asList(application.getUuid())));
+      application.setEnvironments(environmentService.getEnvByApp(application.getUuid()));
+      application.setServices(serviceResourceService.findServicesByApp(application.getUuid()));
     }
     return application;
   }

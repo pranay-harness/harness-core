@@ -248,8 +248,6 @@ public interface ServiceResourceService extends OwnedByApplication {
 
   Artifact findPreviousArtifact(String appId, String workflowExecutionId, ContextElement instanceElement);
 
-  List<Service> findServiceNamesByAppIds(List<String> appIds);
-
   /**
    * Get service.
    *

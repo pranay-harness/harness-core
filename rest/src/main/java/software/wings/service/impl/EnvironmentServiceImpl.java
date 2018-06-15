@@ -10,16 +10,13 @@ import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.SERVICE_TEMPLATE;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.Environment.ENVIRONMENT_TYPE_KEY;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
-import static software.wings.beans.Environment.NAME_KEY;
 import static software.wings.beans.ErrorCode.GENERAL_ERROR;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
@@ -58,7 +55,6 @@ import software.wings.beans.stats.CloneMetadata;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.common.Constants;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
-import software.wings.dl.HIterator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -417,24 +413,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   @Override
   public List<Environment> getEnvByApp(String appId) {
-    return wingsPersistence.createAuthorizedQuery(Environment.class).filter(APP_ID_KEY, appId).asList();
-  }
-
-  @Override
-  public List<Environment> findEnvNamesByAppIds(List<String> appIds) {
-    List<Environment> environments = new ArrayList<>();
-    try (HIterator<Environment> envIterator = new HIterator<>(wingsPersistence.createAuthorizedQuery(Environment.class)
-                                                                  .project(NAME_KEY, true)
-                                                                  .project(APP_ID_KEY, true)
-                                                                  .project(ENVIRONMENT_TYPE_KEY, true)
-                                                                  .field(APP_ID_KEY)
-                                                                  .in(appIds)
-                                                                  .fetch())) {
-      while (envIterator.hasNext()) {
-        environments.add(envIterator.next());
-      }
-    }
-    return environments;
+    PageRequest<Environment> pageRequest = aPageRequest().addFilter("appId", EQ, appId).build();
+    return wingsPersistence.query(Environment.class, pageRequest).getResponse();
   }
 
   @SuppressFBWarnings("NP_NULL_ON_SOME_PATH") // TODO
