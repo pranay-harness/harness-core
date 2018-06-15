@@ -2,6 +2,8 @@ FROM python:2.7-slim
 COPY VERSION dist/splunk_pyml /home/harness/
 WORKDIR /home/harness
 ENV SPLUNKML_ROOT /home/harness
+ENV logdna_key 4ac03b05674fc5c488e3b9b235078d5d
+ARG new_relic_key
 ARG server_url
 ARG service_secret
 ARG https_port
@@ -11,6 +13,8 @@ RUN apt-get update && apt-get install -y make \
     pip install -r requirements.txt  && \
     make init-docker && \
     apt-get remove -y build-essential && \
+    python -m nltk.downloader punkt && \
+    sed -i 's#new_relic_key#'"$new_relic_key"'#g' newrelic.ini && \
     rm -rf /var/lib/apt/lists/* /root/.cache/
 CMD ./run_learning_engine.sh --server_url ${server_url} --service_secret ${service_secret} --https_port ${https_port}
 
