@@ -199,7 +199,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     if (rbacEnabledForAccount) {
       requiredPermissionAttributes = getAllRequiredPermissionAttributes(requestContext);
 
-      if (isEmpty(requiredPermissionAttributes)) {
+      if (isEmpty(requiredPermissionAttributes) || allLoggedInScope(requiredPermissionAttributes)) {
         if (user != null) {
           UserRequestContextBuilder userRequestContextBuilder =
               UserRequestContext.builder().accountId(accountId).entityInfoMap(Maps.newHashMap());
