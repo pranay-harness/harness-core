@@ -84,7 +84,7 @@ public class InstanceSyncJob implements Job {
       // The app level lock was a work around for the threading issue we observed in quartz scheduler. The execute() was
       // getting called on all the managers. Its supposed to call it only on one manager. This is a way to stop that
       // from happening.
-      try (AcquiredLock lock = persistentLocker.tryToAcquireLock(Application.class, appId, Duration.ofSeconds(10))) {
+      try (AcquiredLock lock = persistentLocker.tryToAcquireLock(Application.class, appId, Duration.ofSeconds(60))) {
         if (lock == null) {
           return;
         }
