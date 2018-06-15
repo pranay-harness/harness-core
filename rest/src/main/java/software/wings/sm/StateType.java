@@ -22,6 +22,7 @@ import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.SELECT_NODE;
 import static software.wings.beans.PhaseStepType.START_SERVICE;
 import static software.wings.beans.PhaseStepType.STOP_SERVICE;
+import static software.wings.beans.PhaseStepType.WRAP_UP;
 import static software.wings.common.Constants.DE_PROVISION_CLOUD_FORMATION;
 import static software.wings.common.Constants.PROVISION_CLOUD_FORMATION;
 import static software.wings.sm.StateTypeScope.COMMON;
@@ -91,6 +92,7 @@ import software.wings.sm.states.KubernetesDeployRollback;
 import software.wings.sm.states.KubernetesSetup;
 import software.wings.sm.states.KubernetesSetupRollback;
 import software.wings.sm.states.KubernetesSteadyStateCheck;
+import software.wings.sm.states.KubernetesSwapServiceSelectors;
 import software.wings.sm.states.LogzAnalysisState;
 import software.wings.sm.states.NewRelicDeploymentMarkerState;
 import software.wings.sm.states.NewRelicState;
@@ -412,7 +414,13 @@ public enum StateType implements StateTypeDescriptor {
       asList(InfrastructureMappingType.AWS_SSH), asList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS),
 
   CLOUD_FORMATION_DELETE_STACK(CloudFormationDeleteStackState.class, PROVISIONERS, DE_PROVISION_CLOUD_FORMATION,
-      asList(InfrastructureMappingType.AWS_SSH), asList(POST_DEPLOYMENT), ORCHESTRATION_STENCILS);
+      asList(InfrastructureMappingType.AWS_SSH), asList(POST_DEPLOYMENT), ORCHESTRATION_STENCILS),
+
+  KUBERNETES_SWAP_SERVICE_SELECTORS(KubernetesSwapServiceSelectors.class, COMMANDS,
+      Constants.KUBERNETES_SWAP_SERVICE_SELECTORS,
+      Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.AZURE_KUBERNETES,
+          InfrastructureMappingType.GCP_KUBERNETES),
+      asList(CONTAINER_DEPLOY, WRAP_UP), ORCHESTRATION_STENCILS);
 
   private static final String stencilsPath = "/templates/stencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";
