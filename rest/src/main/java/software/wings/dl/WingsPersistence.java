@@ -347,7 +347,7 @@ public interface WingsPersistence {
    * @param collectionClass the collection class
    * @return query
    */
-  Query createAuthorizedQuery(Class collectionClass);
+  <T> Query<T> createAuthorizedQuery(Class<T> collectionClass);
 
   /**
    * Creates a query and runs the authFilter to it.
