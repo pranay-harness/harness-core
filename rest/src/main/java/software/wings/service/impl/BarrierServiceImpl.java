@@ -225,12 +225,18 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
     ExecutionStatus status = null;
 
     if ("pipeline".equals(metadata.get(LEVEL))) {
-      status = wingsPersistence.createQuery(WorkflowExecution.class)
-                   .filter(WorkflowExecution.APP_ID_KEY, metadata.get(APP_ID))
-                   .filter(WorkflowExecution.ID_KEY, forcerId.getValue())
-                   .project(WorkflowExecution.STATUS_KEY, true)
-                   .get()
-                   .getStatus();
+      final WorkflowExecution workflowExecution = wingsPersistence.createQuery(WorkflowExecution.class)
+                                                      .filter(WorkflowExecution.APP_ID_KEY, metadata.get(APP_ID))
+                                                      .filter(WorkflowExecution.ID_KEY, forcerId.getValue())
+                                                      .project(WorkflowExecution.STATUS_KEY, true)
+                                                      .get();
+      // The barriers are created before the pipeline is triggered. This creates a window in which barrier background
+      // job might trigger update while the workflow is still missing. This will happen also if we failed to trigger
+      // after we created the barriers.
+      if (workflowExecution == null) {
+        return State.APPROACHING;
+      }
+      status = workflowExecution.getStatus();
     } else {
       status = wingsPersistence.createQuery(StateExecutionInstance.class)
                    .filter(StateExecutionInstance.APP_ID_KEY, metadata.get(APP_ID))
