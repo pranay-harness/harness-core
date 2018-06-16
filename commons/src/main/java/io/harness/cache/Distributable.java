@@ -5,7 +5,7 @@ import java.io.Serializable;
 // Cacheable in a distributed store object.
 //
 // Distributed cache is mostly used for heavy to calculate objects based on too much data
-// involved in the calculation, like different forms of aggregations, expensive algorithm
+// involved in the calculation, like different forms of aggregations or expensive algorithm
 // that involve too much calculations or similar.
 //
 // For such objects though we would like to preserve and reuse the cache as long as possible.
@@ -41,7 +41,7 @@ public interface Distributable extends Cacheable, Serializable {
   // public static final long structureHash = ObjectStreamClass.lookup(Dummy.class).getSerialVersionUID();
   //
   // @Override
-  // public long structureId() {
+  // public long structureHash() {
   //   return structureHash;
   // }
   long structureHash();

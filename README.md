@@ -17,10 +17,10 @@ NOTE: Brew will download and install latest version of JDK/JRE, its recommended 
 
    `brew install maven`
 
-4. Install and start MongoDB Docker Image (v3.4):
+4. Install and start MongoDB Docker Image (v3.6):
 
 ```
-$ docker run -p 27017:27017 -v ~/_mongodb_data:/data/db --name mongoContainer -d --rm mongo:3.4
+$ docker run -p 27017:27017 -v ~/_mongodb_data:/data/db --name mongoContainer -d --rm mongo:3.6
 ```
 Install & use RoboMongo client to test MongoDB connection.
 
