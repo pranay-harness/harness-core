@@ -70,8 +70,7 @@ public class SlackNotificationServiceImpl implements SlackNotificationService {
     return message.replaceAll("<<<", "*<")
         .replaceAll("\\|-\\|", "|")
         .replaceAll(">>>", ">*")
-        .replaceAll("\\\\\\*", "*")
-        .replaceAll("\\|\\*\\|", "\\*");
+        .replaceAll("\\\\\\*", "*");
   }
 
   private String getColor(String status) {

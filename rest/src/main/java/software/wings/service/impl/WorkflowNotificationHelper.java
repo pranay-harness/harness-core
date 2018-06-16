@@ -321,7 +321,7 @@ public class WorkflowNotificationHelper {
         Artifact artifact = serviceIdArtifacts.get(serviceId);
         serviceMsg.append(artifact.getArtifactSourceName())
             .append(" (build# ")
-            .append(artifact.getBuildNo().replaceAll("\\*", "|*|"))
+            .append(artifact.getBuildNo().replaceAll("\\*", "٭"))
             .append(')');
       } else {
         serviceMsg.append("no artifact");
