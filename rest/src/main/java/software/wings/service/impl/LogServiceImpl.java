@@ -9,7 +9,6 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
-import static software.wings.dl.HQuery.excludeAuthority;
 
 import com.google.common.io.Files;
 import com.google.inject.Inject;
@@ -21,15 +20,12 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.DatastoreImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.Activity;
 import software.wings.beans.Log;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
-import software.wings.dl.HIterator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.scheduler.DataCleanUpJob;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.LogService;
 
@@ -144,51 +140,6 @@ public class LogServiceImpl implements LogService {
       //          Function.identity(), (l1, l2) -> l2)));
       activityService.updateCommandUnitStatus(activityCommandUnitLastLogMap);
     }
-  }
-
-  @Override
-  public void purgeActivityLogs() {
-    long startTime = System.currentTimeMillis();
-    logger.info("Purging activities Start time", startTime);
-
-    try (HIterator<Activity> nonPurgedActivityIterator =
-             new HIterator<>(wingsPersistence.createQuery(Activity.class, excludeAuthority)
-                                 .filter("logPurged", false)
-                                 .field("createdAt")
-                                 .greaterThan(System.currentTimeMillis() - DataCleanUpJob.LOGS_RETENTION_TIME)
-                                 .fetchEmptyEntities())) {
-      while (nonPurgedActivityIterator.hasNext()) {
-        String activityId = nonPurgedActivityIterator.next().getUuid();
-        List<String> idsToKeep = new ArrayList<>();
-        try (HIterator<Log> logIterator = new HIterator<>(wingsPersistence.createQuery(Log.class, excludeAuthority)
-                                                              .filter("activityId", activityId)
-                                                              .order("-createdAt")
-                                                              .fetchEmptyEntities())) {
-          while (logIterator.hasNext()) {
-            idsToKeep.add(logIterator.next().getUuid());
-            if (idsToKeep.size() >= NUM_OF_LOGS_TO_KEEP) {
-              break;
-            }
-          }
-        }
-        if (idsToKeep.size() != 0) {
-          logger.info("Deleting logs of size {} for activityId {}", idsToKeep.size(), activityId);
-          wingsPersistence.delete(wingsPersistence.createQuery(Log.class, excludeAuthority)
-                                      .filter("activityId", activityId)
-                                      .field("_id")
-                                      .hasNoneOf(idsToKeep));
-        }
-        // TODO: We should enable this and run it once. Also, We have not purged the command logs for a long time
-        /* logger.info("Updating activityId {} logPurged status to true", activityId);
-         Query<Activity> query =
-             wingsPersistence.createQuery(Activity.class).filter(Mapper.ID_KEY, activityId).disableValidation();
-         UpdateOperations<Activity> updateOperations =
-             wingsPersistence.createUpdateOperations(Activity.class).disableValidation().set("logPurged", true);
-         wingsPersistence.update(query, updateOperations);
-         logger.info("Updating activityId {} logPurged status to true success", activityId);*/
-      }
-    }
-    logger.info("Purging activities end time", System.currentTimeMillis() - startTime);
   }
 
   @Override

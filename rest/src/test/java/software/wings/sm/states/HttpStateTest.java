@@ -100,6 +100,7 @@ public class HttpStateTest extends WingsBaseTest {
   static {
     activity.setUuid(ACTIVITY_ID);
     activity.setAppId(APP_ID);
+    activity.setValidUntil(null);
   }
   /**
    * The Wire mock rule.
@@ -137,6 +138,7 @@ public class HttpStateTest extends WingsBaseTest {
     when(activityService.save(any(Activity.class))).thenAnswer(invocation -> {
       Activity activity = invocation.getArgumentAt(0, Activity.class);
       activity.setUuid(ACTIVITY_ID);
+      activity.setValidUntil(null);
       return activity;
     });
   }
@@ -289,6 +291,7 @@ public class HttpStateTest extends WingsBaseTest {
 
     act.setUuid(ACTIVITY_ID);
     act.setAppId(APP_ID);
+    act.setValidUntil(null);
 
     verify(activityService).save(act);
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
