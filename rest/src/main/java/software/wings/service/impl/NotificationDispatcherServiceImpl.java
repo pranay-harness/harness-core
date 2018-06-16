@@ -182,6 +182,7 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
   private String processEmailHtml(String text) {
     return text.replaceAll("<<<", "<b><<a>>href=\"")
         .replaceAll("\\|-\\|", "\" target=\"_blank\">")
+        .replaceAll("\\|\\*\\|", "*")
         .replaceAll(">>>", "</a></b>")
         .replaceAll("<<a>>", "<a style=\"text-decoration:none; color:" + LINK_COLOR + ";\" ")
         .replaceAll("<<top-div>>", "<div style=\"margin-top:12px; margin-left:14px\">")
