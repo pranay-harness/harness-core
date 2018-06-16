@@ -10,7 +10,7 @@ import software.wings.rules.Integration;
 @Integration
 @Ignore
 public class MigrationTest extends WingsBaseTest {
-  @Inject private AddValidUntilToDelegateTask migration;
+  @Inject private AddValidUntilToActivity migration;
 
   @Test
   public void shouldMigrate() {

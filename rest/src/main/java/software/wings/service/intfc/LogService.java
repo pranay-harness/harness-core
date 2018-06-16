@@ -61,11 +61,6 @@ public interface LogService extends OwnedByActivity {
   void batchedSave(@Valid List<Log> logs);
 
   /**
-   * Purge activity logs.
-   */
-  void purgeActivityLogs();
-
-  /**
    * Batched save command unit logs.
    *  @param activityId the activity id
    * @param unitName   the unit name

@@ -3,6 +3,7 @@ package migrations;
 import com.google.common.collect.ImmutableList;
 
 import migrations.all.AddUsersToAdminUserGroup;
+import migrations.all.AddValidUntilToActivity;
 import migrations.all.AddValidUntilToAlert;
 import migrations.all.AddValidUntilToDelegateTask;
 import migrations.all.EntityNameValidationMigration_All_00;
@@ -51,9 +52,11 @@ public class MigrationList {
         .add(Pair.of(144, MetricMLAnalysisRecordGroupNameMigration.class))
         .add(Pair.of(145, LearningEngineTaskGroupNameMigration.class))
         .add(Pair.of(146, AddValidUntilToAlert.class))
-        .add(Pair.of(147, AddValidUntilToDelegateTask.class))
+        .add(Pair.of(147, BaseMigration.class))
         .add(Pair.of(148, EntityNameValidationMigration_All_00.class))
         .add(Pair.of(149, NewRelicMetricDataGroupNameMigration.class))
+        .add(Pair.of(150, AddValidUntilToDelegateTask.class))
+        .add(Pair.of(151, AddValidUntilToActivity.class))
         .build();
   }
 }

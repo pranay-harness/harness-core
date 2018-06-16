@@ -61,14 +61,4 @@ public class DataCleanUpJob implements Job {
       logger.warn("Deleting audit records failed.", e);
     }
   }
-
-  private void deleteActivityLogs() {
-    try {
-      logger.info("Deleting activity logs");
-      logService.purgeActivityLogs();
-      logger.info("Deleting activity logs success");
-    } catch (Exception e) {
-      logger.warn("Deleting activity logs failed.", e);
-    }
-  }
 }
