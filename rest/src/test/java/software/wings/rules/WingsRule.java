@@ -297,7 +297,7 @@ public class WingsRule implements MethodRule {
     for (int i = 0; i < 20; i++) {
       int port = Network.getFreeServerPort();
       IMongodConfig mongodConfig = new MongodConfigBuilder()
-                                       .version(Main.V3_4)
+                                       .version(Main.V3_6)
                                        .net(new Net("127.0.0.1", port, Network.localhostIsIPv6()))
                                        .build();
       try {
