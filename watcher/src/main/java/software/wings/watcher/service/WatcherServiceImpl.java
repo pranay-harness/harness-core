@@ -541,6 +541,7 @@ public class WatcherServiceImpl implements WatcherService {
     } catch (Exception e) {
       working.set(false);
       logger.error("Exception while checking for upgrade", e);
+      logConfigWatcherYml();
     }
   }
 
@@ -575,17 +576,21 @@ public class WatcherServiceImpl implements WatcherService {
       }
     } catch (Exception e) {
       logger.info("No commands found. config-watcher.yml:");
-      try {
-        File configWatcher = new File("config-watcher.yml");
-        if (configWatcher.exists()) {
-          LineIterator reader = FileUtils.lineIterator(configWatcher);
-          while (reader.hasNext()) {
-            logger.warn("   " + reader.nextLine());
-          }
+      logConfigWatcherYml();
+    }
+  }
+
+  private static void logConfigWatcherYml() {
+    try {
+      File configWatcher = new File("config-watcher.yml");
+      if (configWatcher.exists()) {
+        LineIterator reader = FileUtils.lineIterator(configWatcher);
+        while (reader.hasNext()) {
+          logger.warn("   " + reader.nextLine());
         }
-      } catch (IOException ex) {
-        logger.error("Couldn't read config-watcher.yml", ex);
       }
+    } catch (IOException ex) {
+      logger.error("Couldn't read config-watcher.yml", ex);
     }
   }
 
