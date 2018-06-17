@@ -256,12 +256,12 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     initializeServiceSecretKeys(injector);
 
+    runMigrations(injector);
+
     logger.info("Leaving startup maintenance mode");
     MaintenanceController.resetForceMaintenance();
 
     logger.info("Starting app done");
-
-    runMigrations(injector);
   }
 
   private void registerAuditResponseFilter(Environment environment, Injector injector) {
