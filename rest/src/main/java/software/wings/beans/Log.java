@@ -3,11 +3,15 @@ package software.wings.beans;
 import com.google.common.base.MoreObjects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 
+import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
@@ -24,6 +28,11 @@ public class Log extends Base {
   private Integer linesCount;
   @NotNull private LogLevel logLevel;
   @NotNull private CommandExecutionStatus commandExecutionStatus;
+
+  @SchemaIgnore
+  @JsonIgnore
+  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
+  private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 
   /**
    * Gets activity id.
