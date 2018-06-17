@@ -48,6 +48,7 @@ import com.google.inject.name.Named;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.LineIterator;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHost;
@@ -573,7 +574,18 @@ public class WatcherServiceImpl implements WatcherService {
         }
       }
     } catch (Exception e) {
-      logger.info("No commands found");
+      logger.info("No commands found. config-watcher.yml:");
+      try {
+        File configWatcher = new File("config-watcher.yml");
+        if (configWatcher.exists()) {
+          LineIterator reader = FileUtils.lineIterator(configWatcher);
+          while (reader.hasNext()) {
+            logger.warn("   " + reader.nextLine());
+          }
+        }
+      } catch (IOException ex) {
+        logger.error("Couldn't read config-watcher.yml", ex);
+      }
     }
   }
 
