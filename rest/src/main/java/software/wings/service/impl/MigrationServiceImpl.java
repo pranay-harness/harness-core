@@ -26,6 +26,7 @@ import software.wings.service.intfc.MigrationService;
 import software.wings.service.intfc.yaml.YamlGitService;
 
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 public class MigrationServiceImpl implements MigrationService {
@@ -35,10 +36,15 @@ public class MigrationServiceImpl implements MigrationService {
   @Inject private PersistentLocker persistentLocker;
   @Inject private Injector injector;
   @Inject private YamlGitService yamlGitService;
+  @Inject private ExecutorService executorService;
 
-  @SuppressFBWarnings("REC_CATCH_EXCEPTION")
   @Override
   public void runMigrations() {
+    executorService.submit(this ::runMigrationsInternal);
+  }
+
+  @SuppressFBWarnings("REC_CATCH_EXCEPTION")
+  private void runMigrationsInternal() {
     Map<Integer, Class<? extends Migration>> migrations =
         MigrationList.getMigrations().stream().collect(Collectors.toMap(Pair::getKey, Pair::getValue));
     int maxVersion = migrations.keySet().stream().mapToInt(Integer::intValue).max().orElse(0);
