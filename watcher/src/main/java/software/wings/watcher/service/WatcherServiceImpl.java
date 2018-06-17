@@ -573,7 +573,7 @@ public class WatcherServiceImpl implements WatcherService {
         }
       }
     } catch (Exception e) {
-      logger.error("Exception while checking for commands", e);
+      logger.info("No commands found");
     }
   }
 
