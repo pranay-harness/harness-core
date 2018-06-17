@@ -1505,6 +1505,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         infraTypes.put(HELM,
             asList(SettingVariableTypes.GCP, SettingVariableTypes.AZURE, SettingVariableTypes.KUBERNETES_CLUSTER));
       }
+      infraTypes.put(SSH, asList(SettingVariableTypes.PHYSICAL_DATA_CENTER, SettingVariableTypes.AWS));
     } else if (artifactType == ArtifactType.AWS_CODEDEPLOY) {
       infraTypes.put(AWS_CODEDEPLOY, asList(SettingVariableTypes.AWS));
     } else if (artifactType == ArtifactType.AWS_LAMBDA) {
