@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import migrations.all.AddUsersToAdminUserGroup;
 import migrations.all.AddValidUntilToActivity;
 import migrations.all.AddValidUntilToAlert;
+import migrations.all.AddValidUntilToCommandLog;
 import migrations.all.AddValidUntilToDelegateTask;
 import migrations.all.EntityNameValidationMigration_All_00;
 import migrations.all.FixInstanceData;
@@ -57,6 +58,7 @@ public class MigrationList {
         .add(Pair.of(149, NewRelicMetricDataGroupNameMigration.class))
         .add(Pair.of(150, AddValidUntilToDelegateTask.class))
         .add(Pair.of(151, AddValidUntilToActivity.class))
+        .add(Pair.of(152, AddValidUntilToCommandLog.class))
         .build();
   }
 }

@@ -8,7 +8,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.github.reinert.jjschema.SchemaIgnore;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
@@ -159,27 +158,6 @@ public abstract class AbstractCommandUnit implements CommandUnit {
      * Continue command unit execution status.
      */
     CONTINUE;
-
-    private CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.SUCCESS;
-
-    /**
-     * Gets execution status.
-     *
-     * @return the execution status
-     */
-    public CommandExecutionStatus getCommandExecutionStatus() {
-      return commandExecutionStatus;
-    }
-
-    /**
-     * Sets execution status.
-     *
-     * @param commandExecutionStatus the execution status
-     */
-    @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
-    public void setCommandExecutionStatus(CommandExecutionStatus commandExecutionStatus) {
-      this.commandExecutionStatus = commandExecutionStatus;
-    }
   }
 
   @Data
