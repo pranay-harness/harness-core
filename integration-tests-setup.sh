@@ -2,7 +2,9 @@
 
 set -e
 
-sudo service mongod restart
+sudo service mongod stop
+sleep 5
+docker run -p 27017:27017 -d --rm mongo:3.6
 sleep 5
 
 echo 'starting server'

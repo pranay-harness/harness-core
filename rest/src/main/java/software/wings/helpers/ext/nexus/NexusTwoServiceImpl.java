@@ -16,7 +16,6 @@ import static software.wings.helpers.ext.nexus.NexusServiceImpl.isSuccessful;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import okhttp3.Credentials;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -46,7 +45,6 @@ import java.net.PasswordAuthentication;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -230,11 +228,9 @@ public class NexusTwoServiceImpl {
     return null;
   }
 
-  @SuppressFBWarnings("UC_USELESS_OBJECT")
   private Pair<String, InputStream> getUrlInputStream(NexusConfig nexusConfig,
       List<EncryptedDataDetail> encryptionDetails, Project project, List<IndexBrowserTreeNode> treeNodes,
       String repoType) {
-    Map<String, String> artifactToUrls = new HashMap<>();
     for (IndexBrowserTreeNode treeNode : treeNodes) {
       for (IndexBrowserTreeNode child : treeNode.getChildren()) {
         if (child.getType().equals("V")) {
@@ -242,7 +238,6 @@ public class NexusTwoServiceImpl {
           if (artifacts != null) {
             for (IndexBrowserTreeNode artifact : artifacts) {
               if (!artifact.getNodeName().endsWith("pom")) {
-                artifactToUrls.put(artifact.getNodeName(), artifact.getPath());
                 final String resourceUrl = getBaseUrl(nexusConfig) + "service/local/repositories/" + repoType
                     + "/content" + artifact.getPath();
                 logger.info("Resource url " + resourceUrl);
