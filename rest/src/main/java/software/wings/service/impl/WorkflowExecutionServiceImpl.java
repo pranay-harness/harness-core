@@ -1177,13 +1177,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   private void updateStartStatus(WorkflowExecution workflowExecution, ExecutionStatus status) {
     // TODO: findAndModify
     Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
-                                         .filter("appId", workflowExecution.getAppId())
-                                         .filter(ID_KEY, workflowExecution.getUuid())
-                                         .field("status")
+                                         .filter(WorkflowExecution.APP_ID_KEY, workflowExecution.getAppId())
+                                         .filter(WorkflowExecution.ID_KEY, workflowExecution.getUuid())
+                                         .field(WorkflowExecution.STATUS_KEY)
                                          .in(asList(NEW, QUEUED));
-    UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
-                                                        .set("status", status)
-                                                        .set("startTs", System.currentTimeMillis());
+    UpdateOperations<WorkflowExecution> updateOps =
+        wingsPersistence.createUpdateOperations(WorkflowExecution.class)
+            .set(WorkflowExecution.STATUS_KEY, status)
+            .set(WorkflowExecution.START_TS_KEY, System.currentTimeMillis());
     wingsPersistence.update(query, updateOps);
 
     notifyWorkflowExecution(workflowExecution);
