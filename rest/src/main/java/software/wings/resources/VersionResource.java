@@ -9,7 +9,8 @@ import software.wings.beans.EntityVersionCollection;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.security.annotations.PublicApi;
+import software.wings.security.PermissionAttribute.PermissionType;
+import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.EntityVersionService;
 
 import javax.ws.rs.BeanParam;
@@ -26,7 +27,6 @@ import javax.ws.rs.core.MediaType;
 @Path("/versions")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-@PublicApi
 public class VersionResource {
   private EntityVersionService entityVersionService;
 
@@ -38,6 +38,7 @@ public class VersionResource {
   @GET
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.LOGGED_IN)
   public RestResponse<PageResponse<EntityVersionCollection>> list(
       @BeanParam PageRequest<EntityVersionCollection> pageRequest) {
     return new RestResponse<>(entityVersionService.listEntityVersions(pageRequest));
