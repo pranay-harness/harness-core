@@ -263,6 +263,19 @@ public class AwsHelperService {
 
   private static final Logger logger = LoggerFactory.getLogger(AwsHelperService.class);
 
+  public boolean validateAwsAccountCredential(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
+    try {
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      getAmazonEc2Client(Regions.US_EAST_1.getName(), awsConfig.getAccessKey(), awsConfig.getSecretKey())
+          .describeRegions();
+    } catch (AmazonEC2Exception amazonEC2Exception) {
+      if (amazonEC2Exception.getStatusCode() == 401) {
+        throw new WingsException(ErrorCode.INVALID_CLOUD_PROVIDER).addParam("message", "Invalid AWS credentials.");
+      }
+    }
+    return true;
+  }
+
   public void validateAwsAccountCredential(String accessKey, char[] secretKey) {
     try {
       getAmazonEc2Client(Regions.US_EAST_1.getName(), accessKey, secretKey).describeRegions();

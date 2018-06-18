@@ -83,6 +83,7 @@ import software.wings.service.impl.AcrBuildServiceImpl;
 import software.wings.service.impl.AmazonS3BuildServiceImpl;
 import software.wings.service.impl.AmiBuildServiceImpl;
 import software.wings.service.impl.ArtifactoryBuildServiceImpl;
+import software.wings.service.impl.AwsEc2ServiceImpl;
 import software.wings.service.impl.BambooBuildServiceImpl;
 import software.wings.service.impl.CodeDeployCommandUnitExecutorServiceImpl;
 import software.wings.service.impl.ContainerCommandUnitExecutorServiceImpl;
@@ -113,6 +114,7 @@ import software.wings.service.intfc.AcrBuildService;
 import software.wings.service.intfc.AmazonS3BuildService;
 import software.wings.service.intfc.AmiBuildService;
 import software.wings.service.intfc.ArtifactoryBuildService;
+import software.wings.service.intfc.AwsEc2Service;
 import software.wings.service.intfc.BambooBuildService;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.ContainerService;
@@ -262,6 +264,7 @@ public class DelegateModule extends AbstractModule {
             new MessageServiceImpl(Clock.systemUTC(), MessengerType.DELEGATE, DelegateApplication.getProcessId()));
     bind(PcfClient.class).to(PcfClientImpl.class);
     bind(PcfDeploymentManager.class).to(PcfDeploymentManagerImpl.class);
+    bind(AwsEc2Service.class).to(AwsEc2ServiceImpl.class);
 
     MapBinder<String, CommandUnitExecutorService> serviceCommandExecutorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CommandUnitExecutorService.class);
