@@ -574,7 +574,7 @@ public class WatcherServiceImpl implements WatcherService {
           }
         }
       }
-    } catch (Exception e) {
+    } catch (IOException | RuntimeException e) {
       logger.info("No commands found. config-watcher.yml:");
       logConfigWatcherYml();
     }
