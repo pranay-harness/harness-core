@@ -396,18 +396,18 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     List<String> keywords = trimList(service.generateKeywords());
     UpdateOperations<Service> updateOperations =
         wingsPersistence.createUpdateOperations(Service.class)
-            .set("name", service.getName().trim())
+            .set("name", service.getName())
             .set("description", Optional.ofNullable(service.getDescription()).orElse(""))
             .set("keywords", keywords);
 
-    if (isNotBlank(service.getConfigMapYaml())) {
-      updateOperations.set("configMapYaml", service.getConfigMapYaml());
+    if (isNotBlank(savedService.getConfigMapYaml())) {
+      updateOperations.set("configMapYaml", savedService.getConfigMapYaml());
     } else {
       updateOperations.unset("configMapYaml");
     }
 
-    if (isNotBlank(service.getHelmValueYaml())) {
-      updateOperations.set("helmValueYaml", service.getHelmValueYaml());
+    if (isNotBlank(savedService.getHelmValueYaml())) {
+      updateOperations.set("helmValueYaml", savedService.getHelmValueYaml());
     } else {
       updateOperations.unset("helmValueYaml");
     }
@@ -418,7 +418,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     if (!savedService.getName().equals(service.getName())) {
       executorService.submit(() -> triggerService.updateByApp(service.getAppId()));
       serviceTemplateService.updateDefaultServiceTemplateName(
-          service.getAppId(), service.getUuid(), savedService.getName(), service.getName().trim());
+          service.getAppId(), service.getUuid(), savedService.getName(), service.getName());
     }
 
     if (!fromYaml) {

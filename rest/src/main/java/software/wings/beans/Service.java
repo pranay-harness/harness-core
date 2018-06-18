@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.data.validator.EntityName;
+import io.harness.data.validator.Trimmed;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -40,7 +41,7 @@ public class Service extends Base {
   public static final String NAME_KEY = "name";
   public static final String ARTIFACT_TYPE = "artifactType";
 
-  @EntityName private String name;
+  @Trimmed @EntityName private String name;
   private String description;
   private ArtifactType artifactType;
   private String configMapYaml;
