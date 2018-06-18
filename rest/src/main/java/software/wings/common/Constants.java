@@ -832,4 +832,9 @@ public interface Constants {
   String TOKEN_FIELD = "Token";
 
   String WINDOWS_HOME_DIR = "%USERPROFILE%";
+
+  String KUBERNETES_SERVICE_SETUP_BLUEGREEN = "Blue/Green Service Setup";
+  String ROUTE_UPDATE = "Route Update";
+  String UPGRADE_STAGE_CONTAINERS = "Upgrade Stage Containers";
+  String KUBERNETES_SWAP_SERVICES_PRIMARY_STAGE = "Swap Primary with Stage";
 }

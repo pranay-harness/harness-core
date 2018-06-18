@@ -30,6 +30,7 @@ import static software.wings.beans.ErrorCode.WORKFLOW_EXECUTION_IN_PROGRESS;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.OrchestrationWorkflowType.BASIC;
+import static software.wings.beans.OrchestrationWorkflowType.BLUE_GREEN;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.beans.OrchestrationWorkflowType.CANARY;
 import static software.wings.beans.OrchestrationWorkflowType.MULTI_SERVICE;
@@ -50,6 +51,7 @@ import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
 import static software.wings.beans.PhaseStepType.PCF_RESIZE;
 import static software.wings.beans.PhaseStepType.PCF_SETUP;
 import static software.wings.beans.PhaseStepType.PREPARE_STEPS;
+import static software.wings.beans.PhaseStepType.ROUTE_UPDATE;
 import static software.wings.beans.PhaseStepType.STOP_SERVICE;
 import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
 import static software.wings.beans.PhaseStepType.WRAP_UP;
@@ -88,6 +90,7 @@ import static software.wings.sm.StateType.KUBERNETES_DEPLOY;
 import static software.wings.sm.StateType.KUBERNETES_DEPLOY_ROLLBACK;
 import static software.wings.sm.StateType.KUBERNETES_SETUP;
 import static software.wings.sm.StateType.KUBERNETES_SETUP_ROLLBACK;
+import static software.wings.sm.StateType.KUBERNETES_SWAP_SERVICE_SELECTORS;
 import static software.wings.sm.StateType.PCF_ROLLBACK;
 import static software.wings.sm.StateType.PHASE;
 import static software.wings.sm.StateType.ROLLING_NODE_SELECT;
@@ -1537,7 +1540,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           workflow.getAppId(), workflowPhase, !serviceRepeat, orchestrationWorkflow.getOrchestrationWorkflowType());
       canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
     } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)
-        || orchestrationWorkflow.getOrchestrationWorkflowType().equals(ROLLING)) {
+        || orchestrationWorkflow.getOrchestrationWorkflowType().equals(ROLLING)
+        || orchestrationWorkflow.getOrchestrationWorkflowType().equals(BLUE_GREEN)) {
       CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
       generateNewWorkflowPhaseSteps(workflow.getAppId(), workflow.getEnvId(), workflowPhase, false,
           orchestrationWorkflow.getOrchestrationWorkflowType());
@@ -2024,7 +2028,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (deploymentType == ECS) {
       generateNewWorkflowPhaseStepsForECS(appId, workflowPhase, !serviceRepeat);
     } else if (deploymentType == KUBERNETES) {
-      generateNewWorkflowPhaseStepsForKubernetes(appId, workflowPhase, !serviceRepeat);
+      if (orchestrationWorkflowType == OrchestrationWorkflowType.BLUE_GREEN) {
+        generateNewWorkflowPhaseStepsForKubernetesBlueGreen(appId, workflowPhase, !serviceRepeat);
+      } else {
+        generateNewWorkflowPhaseStepsForKubernetes(appId, workflowPhase, !serviceRepeat);
+      }
     } else if (deploymentType == HELM) {
       generateNewWorkflowPhaseStepsForHelm(appId, workflowPhase, !serviceRepeat);
     } else if (deploymentType == AWS_CODEDEPLOY) {
@@ -2254,6 +2262,40 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
   }
 
+  private void generateNewWorkflowPhaseStepsForKubernetesBlueGreen(
+      String appId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
+    if (workflowPhase.isDaemonSet() || workflowPhase.isStatefulSet()) {
+      throw new InvalidRequestException("DaemonSet and StatefulSet are not supported with Blue/Green Deployment", USER);
+    }
+
+    Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
+    Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
+
+    if (serviceSetupRequired) {
+      workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
+                                     .addStep(aGraphNode()
+                                                  .withId(generateUuid())
+                                                  .withType(KUBERNETES_SETUP.name())
+                                                  .withName(Constants.KUBERNETES_SERVICE_SETUP_BLUEGREEN)
+                                                  .build())
+                                     .build());
+    }
+
+    workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+                                   .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
+                                   .build());
+
+    workflowPhase.addPhaseStep(aPhaseStep(ROUTE_UPDATE, Constants.ROUTE_UPDATE)
+                                   .addStep(aGraphNode()
+                                                .withId(generateUuid())
+                                                .withType(KUBERNETES_SWAP_SERVICE_SELECTORS.name())
+                                                .withName(Constants.KUBERNETES_SWAP_SERVICES_PRIMARY_STAGE)
+                                                .build())
+                                   .build());
+
+    workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+  }
+
   private void generateNewWorkflowPhaseStepsForSSH(
       String appId, WorkflowPhase workflowPhase, OrchestrationWorkflowType orchestrationWorkflowType) {
     // For DC only - for other types it has to be customized
@@ -2336,7 +2378,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (deploymentType == ECS) {
       return generateRollbackWorkflowPhaseForEcs(workflowPhase);
     } else if (deploymentType == KUBERNETES) {
-      return generateRollbackWorkflowPhaseForKubernetes(workflowPhase, appId, serviceSetupRequired);
+      if (orchestrationWorkflowType == OrchestrationWorkflowType.BLUE_GREEN) {
+        return generateRollbackWorkflowPhaseForKubernetesBlueGreen(workflowPhase, appId, serviceSetupRequired);
+      } else {
+        return generateRollbackWorkflowPhaseForKubernetes(workflowPhase, appId, serviceSetupRequired);
+      }
     } else if (deploymentType == AWS_CODEDEPLOY) {
       return generateRollbackWorkflowPhaseForAwsCodeDeploy(workflowPhase);
     } else if (deploymentType == AWS_LAMBDA) {
@@ -2644,6 +2690,54 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                                          .withName(Constants.ROLLBACK_KUBERNETES_SETUP)
                                                          .withRollback(true)
                                                          .build())
+                                            .withPhaseStepNameForRollback(Constants.SETUP_CONTAINER)
+                                            .withStatusForRollback(ExecutionStatus.SUCCESS)
+                                            .withRollback(true)
+                                            .build());
+    }
+
+    // When we rolling back the verification steps the same criterie to run if deployment is needed should be used
+    workflowPhaseBuilder
+        .addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+                          .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
+                          .withStatusForRollback(ExecutionStatus.SUCCESS)
+                          .withRollback(true)
+                          .build())
+        .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).withRollback(true).build());
+    return workflowPhaseBuilder.build();
+  }
+
+  private WorkflowPhase generateRollbackWorkflowPhaseForKubernetesBlueGreen(
+      WorkflowPhase workflowPhase, String appId, boolean serviceSetupRequired) {
+    if (workflowPhase.isDaemonSet() || workflowPhase.isStatefulSet()) {
+      throw new InvalidRequestException("DaemonSet and StatefulSet are not supported with Blue/Green Deployment", USER);
+    }
+
+    WorkflowPhaseBuilder workflowPhaseBuilder =
+        aWorkflowPhase()
+            .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
+            .withRollback(true)
+            .withServiceId(workflowPhase.getServiceId())
+            .withComputeProviderId(workflowPhase.getComputeProviderId())
+            .withInfraMappingName(workflowPhase.getInfraMappingName())
+            .withPhaseNameForRollback(workflowPhase.getName())
+            .withDeploymentType(workflowPhase.getDeploymentType())
+            .withInfraMappingId(workflowPhase.getInfraMappingId())
+            .addPhaseStep(aPhaseStep(ROUTE_UPDATE, Constants.ROUTE_UPDATE)
+                              .addStep(aGraphNode()
+                                           .withId(generateUuid())
+                                           .withType(KUBERNETES_SWAP_SERVICE_SELECTORS.name())
+                                           .withName(Constants.KUBERNETES_SWAP_SERVICES_PRIMARY_STAGE)
+                                           .build())
+                              .withRollback(true)
+                              .build())
+            .addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
+                              .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
+                              .withStatusForRollback(ExecutionStatus.SUCCESS)
+                              .withRollback(true)
+                              .build());
+    if (serviceSetupRequired) {
+      workflowPhaseBuilder.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
                                             .withPhaseStepNameForRollback(Constants.SETUP_CONTAINER)
                                             .withStatusForRollback(ExecutionStatus.SUCCESS)
                                             .withRollback(true)
