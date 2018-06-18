@@ -38,5 +38,6 @@ public enum TaskGroup {
   PCF,
   APM,
   CLOUD_FORMATION,
-  TERRAFORM
+  TERRAFORM,
+  AWS
 }

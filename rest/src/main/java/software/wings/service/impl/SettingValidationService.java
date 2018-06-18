@@ -45,6 +45,7 @@ import software.wings.exception.WingsException;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.AwsEc2Service;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -111,8 +112,7 @@ public class SettingValidationService {
     } else if (settingValue instanceof PcfConfig) {
       validatePcfConfig(settingAttribute, (PcfConfig) settingValue);
     } else if (settingValue instanceof AwsConfig) {
-      awsHelperService.validateAwsAccountCredential(
-          ((AwsConfig) settingValue).getAccessKey(), ((AwsConfig) settingValue).getSecretKey());
+      validateAwsConfig(settingAttribute);
     } else if (settingValue instanceof KubernetesClusterConfig) {
       validateKubernetesClusterConfig(settingAttribute);
     } else if (settingValue instanceof JenkinsConfig || settingValue instanceof BambooConfig
@@ -192,6 +192,17 @@ public class SettingValidationService {
                                                         .build();
     try {
       delegateProxyFactory.get(ContainerService.class, syncTaskContext).validate(containerServiceParams);
+    } catch (Exception e) {
+      logger.warn(Misc.getMessage(e), e);
+      throw new InvalidRequestException(Misc.getMessage(e), USER);
+    }
+  }
+
+  private void validateAwsConfig(SettingAttribute settingAttribute) {
+    try {
+      SyncTaskContext syncTaskContext = aContext().withAccountId(settingAttribute.getAccountId()).build();
+      AwsConfig value = (AwsConfig) settingAttribute.getValue();
+      delegateProxyFactory.get(AwsEc2Service.class, syncTaskContext).validateAwsAccountCredential(value, emptyList());
     } catch (Exception e) {
       logger.warn(Misc.getMessage(e), e);
       throw new InvalidRequestException(Misc.getMessage(e), USER);
