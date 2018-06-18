@@ -108,7 +108,7 @@ public class GraphRenderer {
     }
 
     for (ExecutionStatus status : asList(REJECTED, EXPIRED, ABORTED, ABORTING, ERROR, FAILED)) {
-      if (activeStatuses.stream().anyMatch(active -> active == status)) {
+      if (statuses.stream().anyMatch(active -> active == status)) {
         return status;
       }
     }

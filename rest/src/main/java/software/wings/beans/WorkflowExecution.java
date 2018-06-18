@@ -40,11 +40,12 @@ import java.util.Map;
                            , @Field("status") }))
 @SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 public class WorkflowExecution extends Base {
+  public static final String ARGS_PIPELINE_PHASE_ELEMENT_ID_KEY = "executionArgs.pipelinePhaseElementId";
+  public static final String PIPELINE_EXECUTION_ID_KEY = "pipelineExecutionId";
+  public static final String START_TS_KEY = "startTs";
   public static final String STATUS_KEY = "status";
   public static final String WORKFLOW_ID_KEY = "workflowId";
   public static final String WORKFLOW_TYPE_ID_KEY = "workflowType";
-  public static final String PIPELINE_EXECUTION_ID_KEY = "pipelineExecutionId";
-  public static final String ARGS_PIPELINE_PHASE_ELEMENT_ID_KEY = "executionArgs.pipelinePhaseElementId";
 
   // TODO: Determine the right expiry duration for workflow exceptions
   public static final Duration EXPIRY = Duration.ofDays(7);

@@ -196,7 +196,7 @@ public class CommandState extends State {
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
     InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infrastructureMappingId);
 
-    updateWorflowExecutionStatsInProgress(context);
+    updateWorkflowExecutionStatsInProgress(context);
 
     String delegateTaskId;
     try {
@@ -557,7 +557,7 @@ public class CommandState extends State {
     return workflowStandardParams.getAppId();
   }
 
-  private void updateWorflowExecutionStatsInProgress(ExecutionContext context) {
+  private void updateWorkflowExecutionStatsInProgress(ExecutionContext context) {
     Optional<ContextElement> simpleWorkflowParamOpt =
         context.getContextElementList(ContextElementType.PARAM)
             .stream()
