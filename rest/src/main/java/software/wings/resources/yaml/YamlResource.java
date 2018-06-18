@@ -870,6 +870,22 @@ public class YamlResource {
   }
 
   @POST
+  @Path("git-sync-errors-discard-all")
+  @Timed
+  @ExceptionMetered
+  public RestResponse discardGitSyncError(@QueryParam("accountId") String accountId) {
+    return yamlGitService.discardAllGitSyncError(accountId);
+  }
+
+  @POST
+  @Path("git-sync-errors-discard-selected")
+  @Timed
+  @ExceptionMetered
+  public RestResponse discardGitSyncError(@QueryParam("accountId") String accountId, List<String> yamlPaths) {
+    return yamlGitService.discardGitSyncErrorsForGivenPaths(accountId, yamlPaths);
+  }
+
+  @POST
   @Path("yaml-as-zip")
   @Consumes(MULTIPART_FORM_DATA)
   @Timed
