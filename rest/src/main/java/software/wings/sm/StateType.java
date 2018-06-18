@@ -19,6 +19,7 @@ import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
 import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
+import static software.wings.beans.PhaseStepType.ROUTE_UPDATE;
 import static software.wings.beans.PhaseStepType.SELECT_NODE;
 import static software.wings.beans.PhaseStepType.START_SERVICE;
 import static software.wings.beans.PhaseStepType.STOP_SERVICE;
@@ -362,7 +363,7 @@ public enum StateType implements StateTypeDescriptor {
   KUBERNETES_DEPLOY(KubernetesDeploy.class, COMMANDS, Constants.UPGRADE_CONTAINERS,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
-      asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
+      asList(CONTAINER_DEPLOY, WRAP_UP), ORCHESTRATION_STENCILS),
 
   KUBERNETES_DEPLOY_ROLLBACK(KubernetesDeployRollback.class, COMMANDS, Constants.ROLLBACK_CONTAINERS,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
@@ -420,7 +421,7 @@ public enum StateType implements StateTypeDescriptor {
       Constants.KUBERNETES_SWAP_SERVICE_SELECTORS,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.AZURE_KUBERNETES,
           InfrastructureMappingType.GCP_KUBERNETES),
-      asList(CONTAINER_DEPLOY, WRAP_UP), ORCHESTRATION_STENCILS);
+      asList(CONTAINER_DEPLOY, ROUTE_UPDATE, WRAP_UP), ORCHESTRATION_STENCILS);
 
   private static final String stencilsPath = "/templates/stencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";
