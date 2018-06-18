@@ -8,6 +8,7 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.sm.ExecutionStatus.ABORTED;
+import static software.wings.sm.ExecutionStatus.ABORTING;
 import static software.wings.sm.ExecutionStatus.ERROR;
 import static software.wings.sm.ExecutionStatus.EXPIRED;
 import static software.wings.sm.ExecutionStatus.FAILED;
@@ -91,17 +92,10 @@ public class GraphRenderer {
     List<ExecutionStatus> activeStatuses =
         statuses.stream().filter(status -> !ExecutionStatus.isFinalStatus(status)).collect(toList());
 
-    if (activeStatuses.stream().anyMatch(status -> status == WAITING)) {
-      return WAITING;
-    }
-    if (activeStatuses.stream().anyMatch(status -> status == PAUSED)) {
-      return PAUSED;
-    }
-    if (activeStatuses.stream().anyMatch(status -> status == PAUSING)) {
-      return PAUSING;
-    }
-    if (activeStatuses.stream().anyMatch(status -> status == RUNNING)) {
-      return RUNNING;
+    for (ExecutionStatus status : asList(WAITING, PAUSED, PAUSING, RUNNING)) {
+      if (activeStatuses.stream().anyMatch(active -> active == status)) {
+        return status;
+      }
     }
     final Optional<ExecutionStatus> notNewActiveStatuses =
         activeStatuses.stream().filter(status -> status != NEW).findFirst();
@@ -113,21 +107,12 @@ public class GraphRenderer {
       return NEW;
     }
 
-    if (statuses.stream().anyMatch(status -> status == REJECTED)) {
-      return REJECTED;
+    for (ExecutionStatus status : asList(REJECTED, EXPIRED, ABORTED, ABORTING, ERROR, FAILED)) {
+      if (activeStatuses.stream().anyMatch(active -> active == status)) {
+        return status;
+      }
     }
-    if (statuses.stream().anyMatch(status -> status == EXPIRED)) {
-      return EXPIRED;
-    }
-    if (statuses.stream().anyMatch(status -> status == ABORTED)) {
-      return ABORTED;
-    }
-    if (statuses.stream().anyMatch(status -> status == ERROR)) {
-      return ERROR;
-    }
-    if (statuses.stream().anyMatch(status -> status == FAILED)) {
-      return FAILED;
-    }
+
     return SUCCESS;
   }
 
@@ -242,9 +227,9 @@ public class GraphRenderer {
         Collection<String> elements = null;
         Collection<String> aggregateElements = null;
         StateExecutionData sed = instance.getStateExecutionData();
-        if (sed != null && sed instanceof ForkStateExecutionData) {
+        if (sed instanceof ForkStateExecutionData) {
           elements = ((ForkStateExecutionData) sed).getElements();
-        } else if (sed != null && sed instanceof RepeatStateExecutionData) {
+        } else if (sed instanceof RepeatStateExecutionData) {
           group.setExecutionStrategy(((RepeatStateExecutionData) sed).getExecutionStrategy());
 
           Collection<String> repeatedElements = ((RepeatStateExecutionData) sed)
@@ -435,7 +420,7 @@ public class GraphRenderer {
       builder.withExecutionHistoryCount(instance.getStateExecutionDataHistory().size());
     }
     int interrupts = instance.getDedicatedInterruptCount() == null
-        ? (int) workflowExecutionService.getExecutionInterruptCount(instance.getUuid())
+        ? workflowExecutionService.getExecutionInterruptCount(instance.getUuid())
         : instance.getDedicatedInterruptCount();
 
     if (instance.getInterruptHistory() != null) {
