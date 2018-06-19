@@ -6,8 +6,8 @@ import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
-import static software.wings.service.impl.GcpHelperService.ALL_ZONES;
-import static software.wings.service.impl.GcpHelperService.ZONE_DELIMITER;
+import static software.wings.service.impl.GcpHelperService.ALL_LOCATIONS;
+import static software.wings.service.impl.GcpHelperService.LOCATION_DELIMITER;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.HttpStatusCodes;
@@ -60,22 +60,26 @@ public class GkeClusterServiceImpl implements GkeClusterService {
 
   @Override
   public KubernetesConfig createCluster(SettingAttribute computeProviderSetting,
-      List<EncryptedDataDetail> encryptedDataDetails, String zoneClusterName, String namespace,
+      List<EncryptedDataDetail> encryptedDataDetails, String locationClusterName, String namespace,
       Map<String, String> params) {
     GcpConfig gcpConfig = validateAndGetCredentials(computeProviderSetting);
     Container gkeContainerService = gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails);
     String projectId = getProjectIdFromCredentials(gcpConfig.getServiceAccountKeyFileContent());
-    String[] zoneCluster = zoneClusterName.split(ZONE_DELIMITER);
-    String zone = zoneCluster[0];
-    String clusterName = zoneCluster[1];
+    String[] locationCluster = locationClusterName.split(LOCATION_DELIMITER);
+    String location = locationCluster[0];
+    String clusterName = locationCluster[1];
     // See if the cluster already exists
     try {
-      Cluster cluster = gkeContainerService.projects().zones().clusters().get(projectId, zone, clusterName).execute();
+      Cluster cluster = gkeContainerService.projects()
+                            .locations()
+                            .clusters()
+                            .get("projects/" + projectId + "/locations/" + location + "/clusters/" + clusterName)
+                            .execute();
       logger.info("Cluster already exists");
-      logger.debug("Cluster {}, zone {}, project {}", clusterName, zone, projectId);
+      logger.debug("Cluster {}, location {}, project {}", clusterName, location, projectId);
       return configFromCluster(cluster, namespace);
     } catch (IOException e) {
-      logNotFoundOrError(e, projectId, zone, clusterName, "getting");
+      logNotFoundOrError(e, projectId, location, clusterName, "getting");
     }
 
     // Cluster doesn't exist. Create it.
@@ -88,17 +92,25 @@ public class GkeClusterServiceImpl implements GkeClusterService {
               .setMasterAuth(
                   new MasterAuth().setUsername(params.get("masterUser")).setPassword(params.get("masterPwd"))));
       Operation createOperation =
-          gkeContainerService.projects().zones().clusters().create(projectId, zone, content).execute();
+          gkeContainerService.projects()
+              .locations()
+              .clusters()
+              .create("projects/" + projectId + "/locations/" + location + "/clusters/" + clusterName, content)
+              .execute();
       String operationStatus =
-          waitForOperationToComplete(createOperation, gkeContainerService, projectId, zone, "Provisioning");
+          waitForOperationToComplete(createOperation, gkeContainerService, projectId, location, "Provisioning");
       if (operationStatus.equals("DONE")) {
-        Cluster cluster = gkeContainerService.projects().zones().clusters().get(projectId, zone, clusterName).execute();
+        Cluster cluster = gkeContainerService.projects()
+                              .locations()
+                              .clusters()
+                              .get("projects/" + projectId + "/locations/" + location + "/clusters/" + clusterName)
+                              .execute();
         logger.info("Cluster status: {}", cluster.getStatus());
         logger.debug("Master endpoint: {}", cluster.getEndpoint());
         return configFromCluster(cluster, namespace);
       }
     } catch (IOException e) {
-      logNotFoundOrError(e, projectId, zone, clusterName, "creating");
+      logNotFoundOrError(e, projectId, location, clusterName, "creating");
     }
     return null;
   }
@@ -136,40 +148,45 @@ public class GkeClusterServiceImpl implements GkeClusterService {
   }
 
   @Override
-  public boolean deleteCluster(
-      SettingAttribute computeProviderSetting, List<EncryptedDataDetail> encryptedDataDetails, String zoneClusterName) {
+  public boolean deleteCluster(SettingAttribute computeProviderSetting, List<EncryptedDataDetail> encryptedDataDetails,
+      String locationClusterName) {
     GcpConfig gcpConfig = validateAndGetCredentials(computeProviderSetting);
     Container gkeContainerService = gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails);
     String projectId = getProjectIdFromCredentials(gcpConfig.getServiceAccountKeyFileContent());
-    String[] zoneCluster = zoneClusterName.split(ZONE_DELIMITER);
-    String zone = zoneCluster[0];
-    String clusterName = zoneCluster[1];
+    String[] locationCluster = locationClusterName.split(LOCATION_DELIMITER);
+    String location = locationCluster[0];
+    String clusterName = locationCluster[1];
     try {
       Operation deleteOperation =
-          gkeContainerService.projects().zones().clusters().delete(projectId, zone, clusterName).execute();
+          gkeContainerService.projects()
+              .locations()
+              .clusters()
+              .delete("projects/" + projectId + "/locations/" + location + "/clusters/" + clusterName)
+              .execute();
       String operationStatus =
-          waitForOperationToComplete(deleteOperation, gkeContainerService, projectId, zone, "Deleting cluster");
+          waitForOperationToComplete(deleteOperation, gkeContainerService, projectId, location, "Deleting cluster");
       if (operationStatus.equals("DONE")) {
         return true;
       }
     } catch (IOException e) {
-      logNotFoundOrError(e, projectId, zone, clusterName, "deleting");
+      logNotFoundOrError(e, projectId, location, clusterName, "deleting");
     }
     return false;
   }
 
-  private String waitForOperationToComplete(
-      Operation operation, Container gkeContainerService, String projectId, String zone, String operationLogMessage) {
+  private String waitForOperationToComplete(Operation operation, Container gkeContainerService, String projectId,
+      String location, String operationLogMessage) {
     logger.info(operationLogMessage + "...");
     try {
       return timeLimiter.callWithTimeout(() -> {
         while (true) {
-          String status = gkeContainerService.projects()
-                              .zones()
-                              .operations()
-                              .get(projectId, zone, operation.getName())
-                              .execute()
-                              .getStatus();
+          String status =
+              gkeContainerService.projects()
+                  .locations()
+                  .operations()
+                  .get("projects/" + projectId + "/locations/" + location + "/operations/" + operation.getName())
+                  .execute()
+                  .getStatus();
           if (!status.equals("RUNNING")) {
             logger.info(operationLogMessage + ": " + status);
             return status;
@@ -188,23 +205,28 @@ public class GkeClusterServiceImpl implements GkeClusterService {
 
   @Override
   public KubernetesConfig getCluster(SettingAttribute computeProviderSetting,
-      List<EncryptedDataDetail> encryptedDataDetails, String zoneClusterName, String namespace) {
+      List<EncryptedDataDetail> encryptedDataDetails, String locationClusterName, String namespace) {
     GcpConfig gcpConfig = validateAndGetCredentials(computeProviderSetting);
     Container gkeContainerService = gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails);
     String projectId = getProjectIdFromCredentials(gcpConfig.getServiceAccountKeyFileContent());
-    String[] zoneCluster = zoneClusterName.split(ZONE_DELIMITER);
-    String zone = zoneCluster[0];
-    String clusterName = zoneCluster[1];
+    String[] locationCluster = locationClusterName.split(LOCATION_DELIMITER);
+    String location = locationCluster[0];
+    String clusterName = locationCluster[1];
     try {
-      Cluster cluster = gkeContainerService.projects().zones().clusters().get(projectId, zone, clusterName).execute();
-      logger.debug("Found cluster {} in zone {} for project {}", clusterName, zone, projectId);
+      Cluster cluster = gkeContainerService.projects()
+                            .locations()
+                            .clusters()
+                            .get("projects/" + projectId + "/locations/" + location + "/clusters/" + clusterName)
+                            .execute();
+      logger.debug("Found cluster {} in location {} for project {}", clusterName, location, projectId);
       logger.info("Cluster status: {}", cluster.getStatus());
       logger.debug("Master endpoint: {}", cluster.getEndpoint());
       return configFromCluster(cluster, namespace);
     } catch (IOException exception) {
-      logNotFoundOrError(exception, projectId, zone, clusterName, "getting");
+      logNotFoundOrError(exception, projectId, location, clusterName, "getting");
       throw new InvalidRequestException(
-          format("Error getting cluster %s in zone %s for project %s", clusterName, zone, projectId), exception);
+          format("Error getting cluster %s in location %s for project %s", clusterName, location, projectId),
+          exception);
     }
   }
 
@@ -215,12 +237,16 @@ public class GkeClusterServiceImpl implements GkeClusterService {
     Container gkeContainerService = gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails);
     String projectId = getProjectIdFromCredentials(gcpConfig.getServiceAccountKeyFileContent());
     try {
-      ListClustersResponse response =
-          gkeContainerService.projects().zones().clusters().list(projectId, ALL_ZONES).execute();
+      ListClustersResponse response = gkeContainerService.projects()
+                                          .locations()
+                                          .clusters()
+                                          .list("projects/" + projectId + "/locations/" + ALL_LOCATIONS)
+                                          .execute();
       List<Cluster> clusters = response.getClusters();
-      return clusters != null
-          ? clusters.stream().map(cluster -> cluster.getZone() + ZONE_DELIMITER + cluster.getName()).collect(toList())
-          : ImmutableList.of();
+      return clusters != null ? clusters.stream()
+                                    .map(cluster -> cluster.getZone() + LOCATION_DELIMITER + cluster.getName())
+                                    .collect(toList())
+                              : ImmutableList.of();
     } catch (IOException e) {
       logger.error("Error listing clusters for project " + projectId, e);
     }
@@ -233,14 +259,14 @@ public class GkeClusterServiceImpl implements GkeClusterService {
 
   @Override
   public boolean setNodePoolAutoscaling(SettingAttribute computeProviderSetting,
-      List<EncryptedDataDetail> encryptedDataDetails, String zoneClusterName, @Nullable String nodePoolId,
+      List<EncryptedDataDetail> encryptedDataDetails, String locationClusterName, @Nullable String nodePoolId,
       boolean enabled, int min, int max) {
     GcpConfig gcpConfig = validateAndGetCredentials(computeProviderSetting);
     Container gkeContainerService = gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails);
     String projectId = getProjectIdFromCredentials(gcpConfig.getServiceAccountKeyFileContent());
-    String[] zoneCluster = zoneClusterName.split(ZONE_DELIMITER);
-    String zone = zoneCluster[0];
-    String clusterName = zoneCluster[1];
+    String[] locationCluster = locationClusterName.split(LOCATION_DELIMITER);
+    String location = locationCluster[0];
+    String clusterName = locationCluster[1];
     try {
       ClusterUpdate clusterUpdate = new ClusterUpdate();
       if (isNotBlank(nodePoolId)) {
@@ -249,39 +275,49 @@ public class GkeClusterServiceImpl implements GkeClusterService {
       UpdateClusterRequest update = new UpdateClusterRequest().setUpdate(clusterUpdate.setDesiredNodePoolAutoscaling(
           new NodePoolAutoscaling().setEnabled(enabled).setMinNodeCount(min).setMaxNodeCount(max)));
       Operation updateOperation =
-          gkeContainerService.projects().zones().clusters().update(projectId, zone, clusterName, update).execute();
+          gkeContainerService.projects()
+              .locations()
+              .clusters()
+              .update("projects/" + projectId + "/locations/" + location + "/clusters/" + clusterName, update)
+              .execute();
       String operationStatus =
-          waitForOperationToComplete(updateOperation, gkeContainerService, projectId, zone, "Updating cluster");
+          waitForOperationToComplete(updateOperation, gkeContainerService, projectId, location, "Updating cluster");
       if (operationStatus.equals("DONE")) {
         return true;
       }
     } catch (IOException e) {
-      logNotFoundOrError(e, projectId, zone, clusterName, "updating");
+      logNotFoundOrError(e, projectId, location, clusterName, "updating");
     }
     return false;
   }
 
-  private void logNotFoundOrError(IOException e, String projectId, String zone, String clusterName, String actionVerb) {
+  private void logNotFoundOrError(
+      IOException e, String projectId, String location, String clusterName, String actionVerb) {
     if (e instanceof GoogleJsonResponseException
         && ((GoogleJsonResponseException) e).getDetails().getCode() == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
-      logger.warn(format("Cluster %s does not exist in zone %s for project %s", clusterName, zone, projectId), e);
+      logger.warn(
+          format("Cluster %s does not exist in location %s for project %s", clusterName, location, projectId), e);
     } else {
       logger.error(
-          format("Error %s cluster %s in zone %s for project %s", actionVerb, clusterName, zone, projectId), e);
+          format("Error %s cluster %s in location %s for project %s", actionVerb, clusterName, location, projectId), e);
     }
   }
 
   @Override
   public NodePoolAutoscaling getNodePoolAutoscaling(SettingAttribute computeProviderSetting,
-      List<EncryptedDataDetail> encryptedDataDetails, String zoneClusterName, @Nullable String nodePoolId) {
+      List<EncryptedDataDetail> encryptedDataDetails, String locationClusterName, @Nullable String nodePoolId) {
     GcpConfig gcpConfig = validateAndGetCredentials(computeProviderSetting);
     Container gkeContainerService = gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails);
     String projectId = getProjectIdFromCredentials(gcpConfig.getServiceAccountKeyFileContent());
-    String[] zoneCluster = zoneClusterName.split(ZONE_DELIMITER);
-    String zone = zoneCluster[0];
-    String clusterName = zoneCluster[1];
+    String[] locationCluster = locationClusterName.split(LOCATION_DELIMITER);
+    String location = locationCluster[0];
+    String clusterName = locationCluster[1];
     try {
-      Cluster cluster = gkeContainerService.projects().zones().clusters().get(projectId, zone, clusterName).execute();
+      Cluster cluster = gkeContainerService.projects()
+                            .locations()
+                            .clusters()
+                            .get("projects/" + projectId + "/locations/" + location + "/clusters/" + clusterName)
+                            .execute();
       if (isNotBlank(nodePoolId)) {
         for (NodePool nodePool : cluster.getNodePools()) {
           if (nodePool.getName().equals(nodePoolId)) {
@@ -292,7 +328,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
         return Iterables.getOnlyElement(cluster.getNodePools()).getAutoscaling();
       }
     } catch (IOException e) {
-      logNotFoundOrError(e, projectId, zone, clusterName, "getting");
+      logNotFoundOrError(e, projectId, location, clusterName, "getting");
     }
     return null;
   }
