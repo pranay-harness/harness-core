@@ -1,5 +1,6 @@
 package software.wings.service.impl.analysis;
 
+import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.service.impl.newrelic.LearningEngineAnalysisTask.TIME_SERIES_ANALYSIS_TASK_TIME_OUT;
 import static software.wings.utils.Misc.generateSecretKey;
 
@@ -262,6 +263,8 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
 
   @Override
   public List<MLExperiments> getExperiments(MLAnalysisType ml_analysis_type) {
-    return wingsPersistence.createQuery(MLExperiments.class).filter("ml_analysis_type", ml_analysis_type).asList();
+    return wingsPersistence.createQuery(MLExperiments.class, excludeAuthority)
+        .filter("ml_analysis_type", ml_analysis_type)
+        .asList();
   }
 }

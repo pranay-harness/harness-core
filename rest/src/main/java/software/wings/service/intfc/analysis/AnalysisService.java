@@ -48,6 +48,8 @@ public interface AnalysisService {
       String stateExecutionId, String appId, StateType stateType, String expName);
   List<LogMLExpAnalysisInfo> getExpAnalysisInfoList();
 
+  boolean reQueueExperimentalTask(String appId, String stateExecutionId);
+
   void validateConfig(@NotNull SettingAttribute settingAttribute, StateType stateType);
 
   boolean isBaselineCreated(AnalysisComparisonStrategy comparisonStrategy, StateType stateType, String appId,

@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Optional;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -90,5 +91,14 @@ public class ExperimentalLogAnalysisResourceImpl implements ExperimentalLogAnaly
   public RestResponse<List<LogMLExpAnalysisInfo>> getLogExpAnalysisInfo(@QueryParam("accountId") String accountId)
       throws IOException {
     return new RestResponse<>(analysisService.getExpAnalysisInfoList());
+  }
+
+  @PUT
+  @Path(ExperimentalLogAnalysisResource.ANALYSIS_STATE_RE_QUEUE_TASK)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> experimentalTask(@QueryParam("accountId") String accountId,
+      @QueryParam("appId") String appId, @QueryParam("stateExecutionId") String stateExecutionId) throws IOException {
+    return new RestResponse<>(analysisService.reQueueExperimentalTask(appId, stateExecutionId));
   }
 }

@@ -704,6 +704,21 @@ public class AnalysisServiceImpl implements AnalysisService {
     return result;
   }
 
+  @Override
+  public boolean reQueueExperimentalTask(String appId, String stateExecutionId) {
+    final Query<LearningEngineExperimentalAnalysisTask> tasks =
+        wingsPersistence.createQuery(LearningEngineExperimentalAnalysisTask.class, excludeAuthority)
+            .filter("state_execution_id", stateExecutionId)
+            .filter("appId", appId);
+    return wingsPersistence
+               .update(tasks,
+                   wingsPersistence.createUpdateOperations(LearningEngineExperimentalAnalysisTask.class)
+                       .set("executionStatus", ExecutionStatus.QUEUED)
+                       .set("retry", 0))
+               .getUpdatedCount()
+        > 0;
+  }
+
   private Map<CLUSTER_TYPE, Map<Integer, LogMLFeedbackRecord>> getMLUserFeedbacks(
       String stateExecutionId, String appId) {
     Map<CLUSTER_TYPE, Map<Integer, LogMLFeedbackRecord>> userFeedbackMap = new HashMap<>();
