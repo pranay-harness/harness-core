@@ -7,8 +7,6 @@ import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static java.util.Comparator.comparing;
-import static java.util.Comparator.reverseOrder;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
 
@@ -34,6 +32,7 @@ import com.amazonaws.services.ecs.model.CreateClusterRequest;
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.CreateServiceResult;
 import com.amazonaws.services.ecs.model.DeleteServiceRequest;
+import com.amazonaws.services.ecs.model.Deployment;
 import com.amazonaws.services.ecs.model.DescribeClustersRequest;
 import com.amazonaws.services.ecs.model.DescribeContainerInstancesRequest;
 import com.amazonaws.services.ecs.model.DescribeServicesRequest;
@@ -48,7 +47,6 @@ import com.amazonaws.services.ecs.model.ListTasksRequest;
 import com.amazonaws.services.ecs.model.NetworkInterface;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.Service;
-import com.amazonaws.services.ecs.model.ServiceEvent;
 import com.amazonaws.services.ecs.model.Task;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.ecs.model.UpdateServiceRequest;
@@ -931,7 +929,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     }
   }
 
-  private void waitForTasksToBeInRunningStateButDontThrowException(String region, AwsConfig awsConfig,
+  @Override
+  public void waitForTasksToBeInRunningStateButDontThrowException(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
       ExecutionLogCallback executionLogCallback, int desiredCount) {
     try {
@@ -994,37 +993,45 @@ public class EcsContainerServiceImpl implements EcsContainerService {
         }
       }
 
-      List<String> taskArns = awsHelperService
-                                  .listTasks(region, awsConfig, encryptedDataDetails,
-                                      new ListTasksRequest()
-                                          .withCluster(clusterName)
-                                          .withServiceName(serviceName)
-                                          .withDesiredStatus(DesiredStatus.RUNNING))
-                                  .getTaskArns();
-      if (isEmpty(taskArns) || desiredCount <= previousCount) {
-        logger.info("Downsize complete for ECS deployment, Service: " + serviceName);
-        return emptyList();
-      }
-
-      logger.info("Task arns = " + taskArns);
-      List<Task> tasks = awsHelperService
-                             .describeTasks(region, awsConfig, encryptedDataDetails,
-                                 new DescribeTasksRequest().withCluster(clusterName).withTasks(taskArns))
-                             .getTasks();
-
-      List<ContainerInfo> containerInfos = null;
-      if (CollectionUtils.isNotEmpty(tasks)) {
-        containerInfos = generateContainerInfos(
-            tasks, clusterName, region, encryptedDataDetails, executionLogCallback, awsConfig, taskArns);
-      } else {
-        logger.warn("Could not fetched tasks, aws.describeTasks returned 0 tasks");
-      }
-
-      logger.info("Docker container ids = " + containerInfos);
-      return containerInfos;
+      return getContainerInfosAfterEcsWait(region, awsConfig, encryptedDataDetails, clusterName, serviceName,
+          executionLogCallback, desiredCount <= previousCount);
     } catch (Exception ex) {
       throw new InvalidRequestException(ex.getMessage(), ex);
     }
+  }
+
+  @Override
+  public List<ContainerInfo> getContainerInfosAfterEcsWait(String region, AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
+      ExecutionLogCallback executionLogCallback, boolean isDownsizeInitiatedByHarness) {
+    List<String> taskArns = awsHelperService
+                                .listTasks(region, awsConfig, encryptedDataDetails,
+                                    new ListTasksRequest()
+                                        .withCluster(clusterName)
+                                        .withServiceName(serviceName)
+                                        .withDesiredStatus(DesiredStatus.RUNNING))
+                                .getTaskArns();
+    if (isEmpty(taskArns) || isDownsizeInitiatedByHarness) {
+      logger.info("Downsize complete for ECS deployment, Service: " + serviceName);
+      return emptyList();
+    }
+
+    logger.info("Task arns = " + taskArns);
+    List<Task> tasks = awsHelperService
+                           .describeTasks(region, awsConfig, encryptedDataDetails,
+                               new DescribeTasksRequest().withCluster(clusterName).withTasks(taskArns))
+                           .getTasks();
+
+    List<ContainerInfo> containerInfos = null;
+    if (CollectionUtils.isNotEmpty(tasks)) {
+      containerInfos = generateContainerInfos(
+          tasks, clusterName, region, encryptedDataDetails, executionLogCallback, awsConfig, taskArns);
+    } else {
+      logger.warn("Could not fetched tasks, aws.describeTasks returned 0 tasks");
+    }
+
+    logger.info("Docker container ids = " + containerInfos);
+    return containerInfos;
   }
 
   @Override
@@ -1181,7 +1188,30 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     return "http://" + ipAddress + ":51678/v1/tasks";
   }
 
-  private void waitForServiceToReachSteadyState(String region, AwsConfig awsConfig,
+  /**
+   * Ecs continually reports a message saying Service XYZ "has reached steady state."
+   * The algorithm is pretty straigh forward.
+   * Look at the deployments. If there are more that one deployments, no steady state.
+   * else, the deployment.getUpdatedAt() >= last message with "has reached steady state."
+   */
+  private boolean hasServiceReachedSteadyState(Service service) {
+    List<Deployment> deployments = service.getDeployments();
+    if (deployments.size() != 1) {
+      return false;
+    }
+    long deploymentTime = deployments.get(0).getUpdatedAt().getTime();
+    long steadyStateMessageTime =
+        service.getEvents()
+            .stream()
+            .filter(serviceEvent -> serviceEvent.getMessage().endsWith("has reached a steady state."))
+            .map(serviceEvent -> serviceEvent.getCreatedAt().getTime())
+            .max(Long::compare)
+            .orElse(0L);
+    return steadyStateMessageTime >= deploymentTime;
+  }
+
+  @Override
+  public void waitForServiceToReachSteadyState(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
       int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
     try {
@@ -1193,15 +1223,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                   .describeServices(region, awsConfig, encryptedDataDetails,
                       new DescribeServicesRequest().withCluster(clusterName).withServices(serviceName))
                   .getServices();
-
-          List<ServiceEvent> events = isNotEmpty(services) ? services.get(0).getEvents() : null;
-
-          if (isNotEmpty(events)) {
-            // AWS returns events in descending order of createdTime, but its safer to sort on our own rather than
-            // depending on their API.
-            events.sort(comparing(ServiceEvent::getCreatedAt, reverseOrder()));
-
-            if (events.get(0).getMessage().endsWith("has reached a steady state.")) {
+          if (isNotEmpty(services)) {
+            if (hasServiceReachedSteadyState(services.get(0))) {
               executionLogCallback.saveExecutionLog("Service has reached a steady state", LogLevel.INFO);
               return true;
             }

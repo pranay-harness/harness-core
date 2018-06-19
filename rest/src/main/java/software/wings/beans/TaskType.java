@@ -12,6 +12,7 @@ import software.wings.delegatetasks.CollaborationProviderTask;
 import software.wings.delegatetasks.CommandTask;
 import software.wings.delegatetasks.DelegateRunnableTask;
 import software.wings.delegatetasks.DynaTraceDataCollectionTask;
+import software.wings.delegatetasks.EcsSteadyStateCheckTask;
 import software.wings.delegatetasks.ElkLogzDataCollectionTask;
 import software.wings.delegatetasks.GitCommandTask;
 import software.wings.delegatetasks.HelmCommandTask;
@@ -200,7 +201,8 @@ public enum TaskType {
   SECRET_DECRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class),
   KUBERNETES_SWAP_SERVICE_SELECTORS_TASK(
       TaskGroup.CONTAINER, KubernetesSwapServiceSelectorsTask.class, KubernetesSwapServiceSelectorsValidation.class),
-  AWS_VALIDATE(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class);
+  AWS_VALIDATE(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
+  ESC_STEADY_STATE_CHECK_TASK(TaskGroup.CONTAINER, EcsSteadyStateCheckTask.class, AlwaysTrueValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;
