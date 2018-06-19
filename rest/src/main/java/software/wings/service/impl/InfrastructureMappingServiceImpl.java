@@ -241,7 +241,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
 
     if (infraMapping instanceof EcsInfrastructureMapping) {
-      validateEcsInfraMapping((EcsInfrastructureMapping) infraMapping, computeProviderSetting);
+      validateEcsInfraMapping((EcsInfrastructureMapping) infraMapping);
     }
 
     if (infraMapping instanceof GcpKubernetesInfrastructureMapping) {
@@ -336,7 +336,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     infraMapping.setName(name);
   }
 
-  private void validateEcsInfraMapping(EcsInfrastructureMapping infraMapping, SettingAttribute computeProviderSetting) {
+  private void validateEcsInfraMapping(EcsInfrastructureMapping infraMapping) {
     SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
     notNullCheck("SettingAttribute", settingAttribute, USER);
     String clusterName = infraMapping.getClusterName();
@@ -346,7 +346,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
 
     Application app = appService.get(infraMapping.getAppId());
-    SyncTaskContext syncTaskContext = aContext().withAccountId(app.getAccountId()).withAppId(app.getUuid()).build();
+    SyncTaskContext syncTaskContext = aContext()
+                                          .withAccountId(app.getAccountId())
+                                          .withAppId(app.getUuid())
+                                          .withEnvId(infraMapping.getEnvId())
+                                          .withInfrastructureMappingId(infraMapping.getUuid())
+                                          .build();
     ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
                                                         .settingAttribute(settingAttribute)
                                                         .encryptionDetails(encryptionDetails)
@@ -371,7 +376,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
 
     Application app = appService.get(infraMapping.getAppId());
-    SyncTaskContext syncTaskContext = aContext().withAccountId(app.getAccountId()).withAppId(app.getUuid()).build();
+    SyncTaskContext syncTaskContext = aContext()
+                                          .withAccountId(app.getAccountId())
+                                          .withAppId(app.getUuid())
+                                          .withEnvId(infraMapping.getEnvId())
+                                          .withInfrastructureMappingId(infraMapping.getUuid())
+                                          .build();
     ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
                                                         .settingAttribute(settingAttribute)
                                                         .encryptionDetails(encryptionDetails)
@@ -398,7 +408,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
 
     Application app = appService.get(infraMapping.getAppId());
-    SyncTaskContext syncTaskContext = aContext().withAccountId(app.getAccountId()).withAppId(app.getUuid()).build();
+    SyncTaskContext syncTaskContext = aContext()
+                                          .withAccountId(app.getAccountId())
+                                          .withAppId(app.getUuid())
+                                          .withEnvId(infraMapping.getEnvId())
+                                          .withInfrastructureMappingId(infraMapping.getUuid())
+                                          .build();
     ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
                                                         .settingAttribute(settingAttribute)
                                                         .encryptionDetails(encryptionDetails)
@@ -428,7 +443,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         : secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
 
     Application app = appService.get(infraMapping.getAppId());
-    SyncTaskContext syncTaskContext = aContext().withAccountId(app.getAccountId()).withAppId(app.getUuid()).build();
+    SyncTaskContext syncTaskContext = aContext()
+                                          .withAccountId(app.getAccountId())
+                                          .withAppId(app.getUuid())
+                                          .withEnvId(infraMapping.getEnvId())
+                                          .withInfrastructureMappingId(infraMapping.getUuid())
+                                          .build();
     ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
                                                         .settingAttribute(settingAttribute)
                                                         .encryptionDetails(encryptionDetails)
@@ -477,7 +497,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     if (infrastructureMapping instanceof EcsInfrastructureMapping) {
       EcsInfrastructureMapping ecsInfrastructureMapping = (EcsInfrastructureMapping) infrastructureMapping;
-      validateEcsInfraMapping(ecsInfrastructureMapping, computeProviderSetting);
+      validateEcsInfraMapping(ecsInfrastructureMapping);
       handleEcsInfraMapping(keyValuePairs, ecsInfrastructureMapping);
 
     } else if (infrastructureMapping instanceof DirectKubernetesInfrastructureMapping) {
@@ -1434,7 +1454,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     List<EncryptedDataDetail> encryptionDetails =
         secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
 
-    SyncTaskContext syncTaskContext = aContext().withAccountId(app.getAccountId()).withAppId(app.getUuid()).build();
+    SyncTaskContext syncTaskContext = aContext()
+                                          .withAccountId(app.getAccountId())
+                                          .withAppId(app.getUuid())
+                                          .withEnvId(infrastructureMapping.getEnvId())
+                                          .withInfrastructureMappingId(infraMappingId)
+                                          .build();
     ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
                                                         .settingAttribute(settingAttribute)
                                                         .containerServiceName(containerServiceName)

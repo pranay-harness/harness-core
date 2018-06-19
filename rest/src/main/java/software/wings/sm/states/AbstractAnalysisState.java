@@ -331,7 +331,12 @@ public abstract class AbstractAnalysisState extends State {
     List<EncryptedDataDetail> encryptionDetails =
         secretManager.getEncryptionDetails(awsConfig, context.getAppId(), context.getWorkflowExecutionId());
     String accountId = this.appService.get(context.getAppId()).getAccountId();
-    SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(context.getAppId()).build();
+    SyncTaskContext syncTaskContext = aContext()
+                                          .withAccountId(accountId)
+                                          .withAppId(context.getAppId())
+                                          .withEnvId(containerInfrastructureMapping.getEnvId())
+                                          .withInfrastructureMappingId(containerInfrastructureMapping.getUuid())
+                                          .build();
     syncTaskContext.setTimeout(Constants.DEFAULT_SYNC_CALL_TIMEOUT * 2);
     List<software.wings.cloudprovider.ContainerInfo> containerInfos =
         delegateProxyFactory.get(ContainerService.class, syncTaskContext)
