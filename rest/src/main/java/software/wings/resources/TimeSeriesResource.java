@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -109,6 +110,10 @@ public class TimeSeriesResource {
       @QueryParam("stateExecutionId") final String stateExecutionId,
       @QueryParam("workflowExecutionId") final String workflowExecutionId,
       @QueryParam("accountId") final String accountId, @QueryParam("appId") final String appId) throws IOException {
+    if (featureFlagService.isEnabledRelaodCache(FeatureName.CV_DEMO, accountId)) {
+      return new RestResponse<>(Lists.newArrayList(
+          metricDataAnalysisService.getMetricsAnalysisForDemo(appId, stateExecutionId, workflowExecutionId).get(0)));
+    }
     return new RestResponse<>(
         metricDataAnalysisService.getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId));
   }
