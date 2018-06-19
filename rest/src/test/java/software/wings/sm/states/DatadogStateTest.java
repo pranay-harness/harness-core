@@ -71,7 +71,7 @@ public class DatadogStateTest extends WingsBaseTest {
         "query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=kubernetes.cpu.usage.total{$harness_batch{pod_name:${host}, '|'}}by{pod_name}.rollup(avg,60)/1000000000";
     assertEquals("Transformed query must be same", query, metricEndpointsInfo.keySet().iterator().next());
     assertEquals(
-        "[{\"metricName\":\"K8 CPU Usage\",\"responseMappers\":{\"host\":{\"fieldName\":\"host\",\"jsonPath\":\"series[*].scope\",\"regexs\":[\"((?<=pod_name:)([^,]*))\"]},\"value\":{\"fieldName\":\"value\",\"jsonPath\":\"series[*].pointlist[*].[1]\"},\"txnName\":{\"fieldName\":\"txnName\",\"jsonPath\":\"series[*].metric\",\"regexs\":[\"((?<=[(]|^)[^(]([^/|+|-|*]*))\"]},\"timestamp\":{\"fieldName\":\"timestamp\",\"jsonPath\":\"series[*].pointlist[*].[0]\"}},\"metricType\":{},\"tag\":\"Kubernetes\"}]",
+        "[{\"metricName\":\"K8 CPU Usage\",\"responseMappers\":{\"host\":{\"fieldName\":\"host\",\"jsonPath\":\"series[*].scope\",\"regexs\":[\"((?<=pod_name:)([^,]*))\"]},\"value\":{\"fieldName\":\"value\",\"jsonPath\":\"series[*].pointlist[*].[1]\"},\"txnName\":{\"fieldName\":\"txnName\",\"jsonPath\":\"series[*].metric\",\"regexs\":[\"((?<=[(]|^)[^(]([^ /|+|-|*]*))\"]},\"timestamp\":{\"fieldName\":\"timestamp\",\"jsonPath\":\"series[*].pointlist[*].[0]\"}},\"metricType\":{},\"tag\":\"Kubernetes\"}]",
         JsonUtils.asJson(apmMetricInfos));
   }
 
