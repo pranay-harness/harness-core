@@ -654,6 +654,18 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       return;
     }
 
+    // TODO: this is temporary code to track what is the amount of queries we getting for the same exceptions
+    if (ExecutionStatus.isFinalStatus(workflowExecution.getStatus())) {
+      logger.info("CACHE: requesting workflow graph when final state: {}", workflowExecution.getUuid());
+    } else {
+      final long finished =
+          allInstancesIdMap.values()
+              .stream()
+              .filter(stateExecutionInstance -> ExecutionStatus.isFinalStatus(stateExecutionInstance.getStatus()))
+              .count();
+      logger.info("CACHE: running workflow {} with {} finished states", workflowExecution.getUuid(), finished);
+    }
+
     final GraphNode graphNode = graphRenderer.generateHierarchyNode(allInstancesIdMap, excludeFromAggregation);
     workflowExecution.setExecutionNode(graphNode);
   }
