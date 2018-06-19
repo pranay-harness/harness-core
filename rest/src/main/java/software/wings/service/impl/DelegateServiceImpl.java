@@ -699,7 +699,8 @@ public class DelegateServiceImpl implements DelegateService {
 
     NotifyResponseData responseData = delegateTaskRef.get().getNotifyResponse();
     if (responseData == null) {
-      throw new WingsException(ErrorCode.REQUEST_TIMEOUT).addParam("name", "Harness delegate");
+      throw new WingsException(ErrorCode.REQUEST_TIMEOUT, WingsException.USER_ADMIN)
+          .addParam("name", "Harness delegate");
     }
 
     logger.info("Returned response to calling function for delegate task [{}] ", delegateTask.getUuid());

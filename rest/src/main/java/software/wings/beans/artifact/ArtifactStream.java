@@ -7,6 +7,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
+import static software.wings.beans.artifact.ArtifactStreamType.GCS;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.data.validator.EntityName;
@@ -48,9 +49,10 @@ public abstract class ArtifactStream extends Base {
   public static final String SERVICE_ID_KEY = "serviceId";
   public static final String ARTIFACT_STREAM_TYPE_KEY = "artifactStreamType";
   public static final String METADATA_ONLY_KEY = "metadataOnly";
+  public static final String SETTING_ID_KEY = "settingId";
 
   public static final List<String> metaDataOnlyStreams =
-      asList(DOCKER.name(), ECR.name(), GCR.name(), ACR.name(), AMI.name(), AMAZON_S3.name());
+      asList(DOCKER.name(), ECR.name(), GCR.name(), ACR.name(), AMI.name(), AMAZON_S3.name(), GCS.name());
 
   private String artifactStreamType;
   private String sourceName;

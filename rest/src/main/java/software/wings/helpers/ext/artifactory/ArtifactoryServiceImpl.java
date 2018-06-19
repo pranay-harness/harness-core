@@ -24,6 +24,7 @@ import static software.wings.common.Constants.ARTIFACT_PATH;
 import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.exception.WingsException.ADMIN;
 import static software.wings.exception.WingsException.USER;
+import static software.wings.exception.WingsException.USER_ADMIN;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.common.util.concurrent.TimeLimiter;
@@ -122,7 +123,6 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     }
   }
 
-  @SuppressFBWarnings("BC_IMPOSSIBLE_INSTANCEOF")
   private Map<String, String> getRepositories(ArtifactoryConfig artifactoryConfig,
       List<EncryptedDataDetail> encryptionDetails, EnumSet<PackageType> packageTypes) {
     logger.info("Retrieving repositories for packages {}", packageTypes.toArray());
@@ -142,6 +142,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
           }
         } catch (Exception e) {
           logger.warn("Failed to get repository settings for repo {}, Reason {}", repoKey, e.getMessage());
+          // TODO : Get Settings api only works for Artifactory Pro
+          repositories.put(repository.get("key").toString(), repository.get("key").toString());
         }
       }
       if (repositories.isEmpty()) {
@@ -150,16 +152,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
             packageTypes);
       }
       logger.info("Retrieving repositories for packages {} success", packageTypes.toArray());
-    } catch (Exception e) {
-      logger.error("Error occurred while retrieving Repositories from Artifactory server " + artifactory.getUri(), e);
-      if (e instanceof HttpResponseException) {
-        HttpResponseException httpResponseException = (HttpResponseException) e;
-        if (httpResponseException.getStatusCode() == 404) {
-          throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
-              .addParam("message", "Artifact server may not be running at " + artifactoryConfig.getArtifactoryUrl());
-        }
-      }
-      handleException(e, USER);
+    } catch (RuntimeException e) {
+      prepareException(e, USER_ADMIN);
     }
     return repositories;
   }
@@ -177,7 +171,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     } catch (Exception e) {
       logger.error("Error occurred while retrieving repository  from artifactory {} for Repo {}",
           artifactoryConfig.getArtifactoryUrl(), repoKey, e);
-      handleException(e, USER);
+      prepareException(e, USER_ADMIN);
     }
     if (packageType.equals(docker)) {
       return listDockerImages(artifactory, repoKey);
@@ -208,7 +202,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       logger.error(
           format("Error occurred while listing docker images from artifactory %s for Repo %s", artifactory, repoKey),
           e);
-      handleException(e, USER);
+      prepareException(e, USER_ADMIN);
     }
     return images;
   }
@@ -237,9 +231,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
                            .collect(toList());
       }
     } catch (Exception e) {
-      logger.error("Error occurred while listing docker tags from artifactory {} for Repo {} for image {} ",
-          artifactoryConfig.getArtifactoryUrl(), repoKey, imageName, e);
-      handleException(e, ADMIN);
+      prepareException(e, USER_ADMIN);
     }
     logger.info("Retrieving docker tags for repoKey {} imageName {} success ", repoKey, imageName);
     return buildDetails;
@@ -311,7 +303,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
                        .build())
             .collect(toList());
       } else {
-        throw new WingsException(INVALID_ARTIFACT_SERVER).addParam("message", "Artifact path can not be empty");
+        throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "Artifact path can not be empty");
       }
     } catch (Exception e) {
       if (e instanceof HttpResponseException) {
@@ -331,7 +323,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       }
       logger.error("Error occurred while retrieving File Paths from Artifactory server {}",
           artifactoryConfig.getArtifactoryUrl(), e);
-      handleException(e, ADMIN);
+      prepareException(e, ADMIN);
     }
     return new ArrayList<>();
   }
@@ -401,7 +393,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       return artifactPaths;
     } catch (Exception e) {
       logger.error("Error occurred while retrieving File Paths from Artifactory server {}", artifactory.getUri(), e);
-      handleException(e, ADMIN);
+      prepareException(e, ADMIN);
     }
     return new ArrayList<>();
   }
@@ -451,7 +443,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       }
       logger.error("Error occurred while retrieving groupIds from artifactory server {} and repoKey {}",
           artifactory.getUri(), repoKey, e);
-      handleException(e, USER);
+      prepareException(e, USER);
     }
     logger.info("Retrieving groupIds for repoKey {} success", repoKey);
     return groupIdList;
@@ -608,8 +600,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       logger.info("Latest version {} found", latestVersion);
       return aBuildDetails().withNumber(latestVersion).withRevision(latestVersion).build();
     } catch (Exception e) {
-      logger.error("Failed to fetch the latest version for url {}  ", artifactoryConfig.getArtifactoryUrl(), e);
-      handleException(e, ADMIN);
+      prepareException(e, ADMIN);
     }
     return null;
   }
@@ -679,7 +670,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     } catch (Exception e) {
       logger.error("Error occurred while Retrieving Artifact Ids from artifactory url {} repoKey {} groupId {} ",
           artifactoryConfig.getArtifactoryUrl(), repoKey, groupId, e);
-      handleException(e, USER);
+      prepareException(e, USER);
     }
     logger.info("Retrieving Artifact Ids from artifactory url {} repoKey {} groupId {} success",
         artifactoryConfig.getArtifactoryUrl(), repoKey, groupId);
@@ -763,7 +754,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       }
     } catch (Exception e) {
       String msg = "Failed to download the latest artifacts  of repo [" + repoType + "] groupId [" + groupId;
-      prepareAndThrowException(msg + "Reason:" + ExceptionUtils.getRootCauseMessage(e), ADMIN);
+      prepareAndThrowException(msg + "Reason:" + ExceptionUtils.getRootCauseMessage(e), ADMIN, e);
     }
     return res;
   }
@@ -774,30 +765,29 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     logger.info(
         "Validating artifact path {} for repository {} and repositoryType {}", artifactPath, repoType, repositoryType);
     if (isBlank(artifactPath)) {
-      prepareAndThrowException("Artifact Pattern  can not be empty");
+      throw new WingsException(ARTIFACT_SERVER_ERROR, USER).addParam("message", "Artifact Pattern  can not be empty");
     }
     List<BuildDetails> filePaths = null;
     if (!repositoryType.equals(maven.name())) {
       try {
         filePaths = getFilePaths(artifactoryConfig, encryptionDetails, repoType, artifactPath, repositoryType, 1);
-      } catch (WingsException e) {
-        throw e;
       } catch (Exception e) {
-        prepareAndThrowException("Invalid artifact path");
+        prepareAndThrowException("Invalid artifact path", USER, null);
       }
       if (isEmpty(filePaths)) {
-        prepareAndThrowException("No artifact files matching with the artifact path [" + artifactPath + "]");
+        prepareAndThrowException(
+            "No artifact files matching with the artifact path [" + artifactPath + "]", USER, null);
       }
       logger.info("Validating whether directory exists or not for Generic repository type by fetching file paths");
     } else {
       // First get the groupId
       String[] artifactPaths = artifactPath.split("/");
       if (isEmpty(artifactPaths)) {
-        prepareAndThrowException("Invalid artifact path", USER);
+        prepareAndThrowException("Invalid artifact path", USER, null);
       }
       if (artifactPaths.length < 4) {
         prepareAndThrowException(
-            "Not in maven style format. Sample format: com/mycompany/myservice/*/myservice*.war", USER);
+            "Not in maven style format. Sample format: com/mycompany/myservice/*/myservice*.war", USER, null);
         throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
             .addParam("message", "Not in maven style format. Sample format: com/mycompany/myservice/*/myservice*.war");
       }
@@ -805,11 +795,13 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       String artifactId = artifactPaths[artifactPaths.length - 3];
       if (groupId.contains("*") || groupId.contains("?")) {
         prepareAndThrowException(
-            "GroupId path can not contain wild chars. Sample format. e.g. com/mycompany/myservice/*/myservice*.war");
+            "GroupId path can not contain wild chars. Sample format. e.g. com/mycompany/myservice/*/myservice*.war",
+            USER, null);
       }
       if (artifactId.contains("*") || artifactId.contains("?")) {
         prepareAndThrowException(
-            "Artifact Id can not contain wild chars. Sample format. e.g. com/mycompany/myservice/*/myservice*.war");
+            "Artifact Id can not contain wild chars. Sample format. e.g. com/mycompany/myservice/*/myservice*.war",
+            USER, null);
       }
       try {
         logger.info("Validating maven style repo by fetching the version");
@@ -817,18 +809,15 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
             getLatestVersion(artifactoryConfig, encryptionDetails, repoType, groupId, artifactId);
         logger.info("Validation success. Version {}", buildDetails.getNumber());
       } catch (Exception e) {
-        prepareAndThrowException("Invalid artifact path. Please verify that artifact published as maven standard");
+        prepareAndThrowException(
+            "Invalid artifact path. Please verify that artifact published as maven standard", ADMIN, e);
       }
     }
     return true;
   }
 
-  private void prepareAndThrowException(String message) {
-    prepareAndThrowException(message, USER);
-  }
-
-  private void prepareAndThrowException(String message, ReportTarget[] reportTargets) {
-    throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, reportTargets).addParam("message", message);
+  private void prepareAndThrowException(String message, ReportTarget[] reportTargets, Exception e) {
+    throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, reportTargets, e).addParam("message", message);
   }
 
   private ListNotifyResponseData downloadArtifacts(ArtifactoryConfig artifactoryConfig,
@@ -898,8 +887,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       builder.setConnectionTimeout(15000);
       return builder.build();
     } catch (Exception ex) {
-      logger.error("Error occurred while trying to initialize artifactory", ex);
-      prepareAndThrowException("Invalid Artifactory credentials", USER);
+      prepareException(ex, USER_ADMIN);
     }
     return null;
   }
@@ -913,20 +901,26 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     return "/" + path.replace(".", "/") + "/";
   }
 
-  private void handleException(Exception e, ReportTarget[] reportTargets) {
+  private void prepareException(Exception e, ReportTarget[] reportTargets) throws WingsException {
     if (e instanceof HttpResponseException) {
       HttpResponseException httpResponseException = (HttpResponseException) e;
       if (httpResponseException.getStatusCode() == 401) {
-        prepareAndThrowException("Invalid Artifactory credentials", reportTargets);
+        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, reportTargets, e)
+            .addParam("message", "Invalid Artifactory credentials");
       } else if (httpResponseException.getStatusCode() == 403) {
-        prepareAndThrowException("User not authorized to access artifactory", reportTargets);
+        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, reportTargets, e)
+            .addParam("message", "User not authorized to access artifactory");
       }
     }
     if (e instanceof SocketTimeoutException) {
-      prepareAndThrowException(e.getMessage() + "."
-              + " Artifactory server may not be running",
-          reportTargets);
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, reportTargets, e)
+          .addParam("message",
+              e.getMessage() + "."
+                  + " Artifactory server may not be running");
     }
-    throw new WingsException(ARTIFACT_SERVER_ERROR, reportTargets).addParam("message", e.getMessage());
+    if (e instanceof WingsException) {
+      throw(WingsException) e;
+    }
+    throw new WingsException(ARTIFACT_SERVER_ERROR, reportTargets, e).addParam("message", e.getMessage());
   }
 }

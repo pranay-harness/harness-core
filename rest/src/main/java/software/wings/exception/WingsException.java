@@ -10,6 +10,7 @@ import static software.wings.exception.WingsException.ReportTarget.DELEGATE_LOG_
 import static software.wings.exception.WingsException.ReportTarget.LOG_SYSTEM;
 import static software.wings.exception.WingsException.ReportTarget.RED_BELL_ALERT;
 import static software.wings.exception.WingsException.ReportTarget.REST_API;
+import static software.wings.exception.WingsException.ReportTarget.UNIVERSAL;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Getter;
@@ -37,6 +38,9 @@ public class WingsException extends WingsApiException {
   private static final long serialVersionUID = -3266129015976960503L;
 
   public enum ReportTarget {
+    // Universal
+    UNIVERSAL,
+
     // Logging system.
     LOG_SYSTEM,
 
@@ -50,7 +54,7 @@ public class WingsException extends WingsApiException {
     RED_BELL_ALERT,
   }
 
-  public static final ReportTarget[] EVERYBODY = {LOG_SYSTEM, REST_API, RED_BELL_ALERT};
+  public static final ReportTarget[] EVERYBODY = {LOG_SYSTEM, DELEGATE_LOG_SYSTEM, REST_API, RED_BELL_ALERT};
   public static final ReportTarget[] ADMIN_SRE = {LOG_SYSTEM, DELEGATE_LOG_SYSTEM, RED_BELL_ALERT};
   public static final ReportTarget[] USER_SRE = {LOG_SYSTEM, DELEGATE_LOG_SYSTEM, REST_API};
   public static final ReportTarget[] USER_ADMIN = {DELEGATE_LOG_SYSTEM, RED_BELL_ALERT, REST_API};
@@ -160,7 +164,7 @@ public class WingsException extends WingsApiException {
         continue;
       }
       final WingsException exception = (WingsException) ex;
-      if (!ArrayUtils.contains(exception.getReportTargets(), reportTarget)) {
+      if (reportTarget != UNIVERSAL && !ArrayUtils.contains(exception.getReportTargets(), reportTarget)) {
         continue;
       }
 
@@ -261,10 +265,11 @@ public class WingsException extends WingsApiException {
         unhandled(context);
     }
 
-    final List<ResponseMessage> responseMessages = getResponseMessageList(target);
-    if (getResponseMessageList(target).stream().anyMatch(responseMessage -> responseMessage.getLevel() == ERROR)) {
+    List<ResponseMessage> responseMessages = getResponseMessageList(target);
+    if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getLevel() == ERROR)) {
       logger.error(calculateErrorMessage(responseMessages), this);
     } else {
+      responseMessages = getResponseMessageList(UNIVERSAL);
       logger.info(calculateInfoMessage(responseMessages));
       if (logger.isDebugEnabled()) {
         logger.debug(calculateDebugMessage(), this);

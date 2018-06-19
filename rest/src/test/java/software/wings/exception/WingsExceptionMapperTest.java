@@ -5,6 +5,7 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
 import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SOURCE;
@@ -19,8 +20,6 @@ import org.slf4j.Logger;
 import software.wings.beans.ResponseMessage;
 import software.wings.common.cache.ResponseCodeCache;
 
-import javax.ws.rs.core.Response;
-
 public class WingsExceptionMapperTest extends CategoryTest {
   @Test
   public void sanity() {
@@ -30,7 +29,7 @@ public class WingsExceptionMapperTest extends CategoryTest {
     Logger mockLogger = mock(Logger.class);
     Whitebox.setInternalState(mapper, "logger", mockLogger);
 
-    final Response response = mapper.toResponse(exception);
+    mapper.toResponse(exception);
 
     InOrder inOrder = inOrder(mockLogger);
     inOrder.verify(mockLogger)
@@ -47,8 +46,9 @@ public class WingsExceptionMapperTest extends CategoryTest {
     Logger mockLogger = mock(Logger.class);
     Whitebox.setInternalState(ResponseCodeCache.getInstance(), "logger", mockLogger);
 
-    final Response response = mapper.toResponse(exception);
-    verify(mockLogger).error("Insufficient parameter from [] in message \"Invalid Artifact Source:${name}.${reason}\"");
+    mapper.toResponse(exception);
+    verify(mockLogger, times(2))
+        .error("Insufficient parameter from [] in message \"Invalid Artifact Source:${name}.${reason}\"");
   }
 
   @Test
@@ -62,7 +62,7 @@ public class WingsExceptionMapperTest extends CategoryTest {
     Whitebox.setInternalState(mapper, "logger", mockLogger);
     Whitebox.setInternalState(ResponseCodeCache.getInstance(), "logger", mockLogger);
 
-    final Response response = mapper.toResponse(exception);
+    mapper.toResponse(exception);
 
     InOrder inOrder = inOrder(mockLogger);
     inOrder.verify(mockLogger)
@@ -79,7 +79,7 @@ public class WingsExceptionMapperTest extends CategoryTest {
     Logger mockLogger = mock(Logger.class);
     Whitebox.setInternalState(mapper, "logger", mockLogger);
 
-    final Response response = mapper.toResponse(exception);
+    mapper.toResponse(exception);
 
     InOrder inOrder = inOrder(mockLogger);
     inOrder.verify(mockLogger, never()).error(any());
