@@ -44,7 +44,6 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import com.mongodb.BasicDBObject;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
@@ -83,6 +82,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -134,16 +134,14 @@ public class ArtifactServiceImpl implements ArtifactService {
     return pageResponse;
   }
 
-  @SuppressFBWarnings("WMI_WRONG_MAP_ITERATOR")
   @Override
   public PageResponse<Artifact> listSortByBuildNo(PageRequest<Artifact> pageRequest) {
     PageResponse<Artifact> pageResponse = wingsPersistence.query(Artifact.class, pageRequest);
     Map<String, List<Artifact>> groupByArtifactStream =
         pageResponse.getResponse().stream().collect(Collectors.groupingBy(Artifact::getArtifactStreamId));
     List<Artifact> artifacts = new ArrayList<>();
-    for (String artifactStreamId : groupByArtifactStream.keySet()) {
-      artifacts.addAll(
-          groupByArtifactStream.get(artifactStreamId).stream().sorted(new ArtifactComparator()).collect(toList()));
+    for (Entry<String, List<Artifact>> artifactStreamEntry : groupByArtifactStream.entrySet()) {
+      artifacts.addAll(artifactStreamEntry.getValue().stream().sorted(new ArtifactComparator()).collect(toList()));
     }
     pageResponse.setResponse(artifacts);
     return pageResponse;
