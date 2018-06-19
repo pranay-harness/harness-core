@@ -3212,7 +3212,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   private Thread startTransitionListener() {
-    setInternalState(kmsService, "transitionKmsQueue", transitionKmsQueue);
     transitionEventListener = new KmsTransitionEventListener();
     setInternalState(transitionEventListener, "timer", new ScheduledThreadPoolExecutor(1));
     setInternalState(transitionEventListener, "queue", transitionKmsQueue);

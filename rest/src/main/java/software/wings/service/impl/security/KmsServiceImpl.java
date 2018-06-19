@@ -84,7 +84,6 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
         wingsPersistence.createQuery(KmsConfig.class).filter("accountId", accountId).filter("isDefault", true).get();
 
     if (kmsConfig == null) {
-      logger.info("No kms setup for account {}. Using harness's kms", accountId);
       kmsConfig = wingsPersistence.createQuery(KmsConfig.class).filter("accountId", Base.GLOBAL_ACCOUNT_ID).get();
     }
 

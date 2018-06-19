@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.CollectionUtils.isEqualCollection;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -16,6 +18,7 @@ import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.Validator.duplicateCheck;
 import static software.wings.utils.Validator.notNullCheck;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -28,8 +31,10 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
+import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
+import software.wings.dl.HIterator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -45,12 +50,15 @@ import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import javax.validation.Valid;
 
@@ -107,6 +115,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
       return null;
     }
 
+    executorService.submit(() -> addAndSaveSearchTags(serviceVariable));
     executorService.submit(() -> saveServiceVariableYamlChangeSet(serviceVariable));
     return newServiceVariable;
   }
@@ -129,6 +138,8 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   @Override
   public ServiceVariable update(@Valid ServiceVariable serviceVariable) {
     ServiceVariable savedServiceVariable = get(serviceVariable.getAppId(), serviceVariable.getUuid());
+    executorService.submit(
+        () -> removeSearchTagsIfNecessary(savedServiceVariable, String.valueOf(serviceVariable.getValue())));
     notNullCheck("Service variable", savedServiceVariable);
     if (!savedServiceVariable.getName().equals(serviceVariable.getName())) {
       throw new InvalidRequestException(format("Service variable name can not be changed."));
@@ -150,6 +161,8 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
         return null;
       }
       executorService.submit(() -> saveServiceVariableYamlChangeSet(serviceVariable));
+      serviceVariable.setEncryptedValue(String.valueOf(serviceVariable.getValue()));
+      executorService.submit(() -> addAndSaveSearchTags(serviceVariable));
       return updatedServiceVariable;
     }
     return serviceVariable;
@@ -161,6 +174,8 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     if (serviceVariable == null) {
       return;
     }
+
+    executorService.submit(() -> removeSearchTagsIfNecessary(serviceVariable, null));
     Query<ServiceVariable> query = wingsPersistence.createQuery(ServiceVariable.class)
                                        .filter("parentServiceVariableId", settingId)
                                        .filter(APP_ID_KEY, appId);
@@ -255,5 +270,124 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
       notNullCheck("no encrypted ref found for " + serviceVariable.getUuid(), encryptedData, USER);
       serviceVariable.setSecretTextName(encryptedData.getName());
     }
+  }
+
+  @Override
+  public void updateSearchTagsForSecrets(String accountId) {
+    Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
+                                     .filter("accountId", accountId)
+                                     .filter("type", SettingVariableTypes.SECRET_TEXT);
+    try (HIterator<EncryptedData> records = new HIterator<>(query.fetch())) {
+      while (records.hasNext()) {
+        EncryptedData savedData = records.next();
+        List<String> appIds = savedData.getAppIds() == null ? null : new ArrayList<>(savedData.getAppIds());
+        List<String> serviceIds = savedData.getServiceIds() == null ? null : new ArrayList<>(savedData.getServiceIds());
+        List<String> envIds = savedData.getEnvIds() == null ? null : new ArrayList<>(savedData.getEnvIds());
+        Set<String> serviceVariableIds =
+            savedData.getServiceVariableIds() == null ? null : new HashSet<>(savedData.getServiceVariableIds());
+
+        savedData.clearSearchTags();
+
+        if (!isEmpty(savedData.getParentIds())) {
+          savedData.getParentIds().forEach(serviceVariableId -> {
+            ServiceVariable serviceVariable = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
+            Preconditions.checkNotNull(serviceVariable, "parent " + serviceVariableId + " not found for " + savedData);
+            addSearchTags(serviceVariable, savedData);
+          });
+          if (!isEqualCollection(appIds, savedData.getAppIds())
+              || !isEqualCollection(serviceIds, savedData.getServiceIds())
+              || !isEqualCollection(envIds, savedData.getEnvIds())
+              || !isEqualCollection(serviceVariableIds, savedData.getServiceVariableIds())) {
+            wingsPersistence.save(savedData);
+          }
+        }
+      }
+    }
+  }
+
+  private void addAndSaveSearchTags(ServiceVariable serviceVariable) {
+    if (serviceVariable.getType() != Type.ENCRYPTED_TEXT) {
+      return;
+    }
+
+    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, serviceVariable.getEncryptedValue());
+    addSearchTags(serviceVariable, encryptedData);
+
+    wingsPersistence.save(encryptedData);
+  }
+
+  private void addSearchTags(ServiceVariable serviceVariable, EncryptedData encryptedData) {
+    Preconditions.checkNotNull(encryptedData, "could not find encrypted reference for " + serviceVariable);
+
+    String appId = serviceVariable.getAppId();
+    encryptedData.addApplication(appId, appService.get(appId).getName());
+
+    String serviceId;
+    switch (serviceVariable.getEntityType()) {
+      case SERVICE:
+        serviceId = serviceVariable.getEntityId();
+        encryptedData.addServiceVariable(serviceVariable.getUuid(), serviceVariable.getName());
+        break;
+
+      case SERVICE_TEMPLATE:
+        ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, serviceVariable.getEntityId());
+        serviceId = serviceTemplate.getServiceId();
+        encryptedData.addServiceVariable(serviceTemplate.getUuid(), serviceTemplate.getName());
+        break;
+
+      default:
+        throw new IllegalArgumentException("Invalid entity type " + serviceVariable.getEntityType());
+    }
+    encryptedData.addService(serviceId, serviceResourceService.get(appId, serviceId).getName());
+
+    String envId = serviceVariable.getEnvId();
+    if (!isEmpty(envId) && !envId.equals(GLOBAL_ENV_ID)) {
+      Environment environment = environmentService.get(appId, envId);
+      encryptedData.addEnvironment(envId, environment.getName());
+    }
+  }
+
+  private void removeSearchTagsIfNecessary(ServiceVariable savedServiceVariable, String newValue) {
+    Type savedServiceVariableType = savedServiceVariable.getType();
+    if (savedServiceVariableType != ENCRYPTED_TEXT) {
+      return;
+    }
+
+    if (savedServiceVariable.getEncryptedValue().equals(newValue)) {
+      return;
+    }
+
+    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, savedServiceVariable.getEncryptedValue());
+    Preconditions.checkNotNull(encryptedData, "could not find encrypted reference for " + savedServiceVariable);
+
+    String appId = savedServiceVariable.getAppId();
+    encryptedData.removeApplication(appId, appService.get(appId).getName());
+
+    String serviceId;
+    switch (savedServiceVariable.getEntityType()) {
+      case SERVICE:
+        serviceId = savedServiceVariable.getEntityId();
+        encryptedData.removeServiceVariable(savedServiceVariable.getUuid(), savedServiceVariable.getName());
+        break;
+
+      case SERVICE_TEMPLATE:
+        ServiceTemplate serviceTemplate =
+            wingsPersistence.get(ServiceTemplate.class, savedServiceVariable.getEntityId());
+        serviceId = serviceTemplate.getServiceId();
+        encryptedData.removeServiceVariable(serviceTemplate.getUuid(), serviceTemplate.getName());
+        break;
+
+      default:
+        throw new IllegalArgumentException("Invalid entity type " + savedServiceVariable.getEntityType());
+    }
+    encryptedData.removeService(serviceId, serviceResourceService.get(appId, serviceId).getName());
+
+    String envId = savedServiceVariable.getEnvId();
+    if (!isEmpty(envId) && !envId.equals(GLOBAL_ENV_ID)) {
+      Environment environment = environmentService.get(appId, envId);
+      encryptedData.removeEnvironment(envId, environment.getName());
+    }
+
+    wingsPersistence.save(encryptedData);
   }
 }

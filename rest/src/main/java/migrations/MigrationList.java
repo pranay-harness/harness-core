@@ -21,6 +21,7 @@ import migrations.all.NewRelicMetricDataGroupNameMigration;
 import migrations.all.NewRelicMetricDataRecordsMigration;
 import migrations.all.RemoveResizeFromStatefulSetWorkflows;
 import migrations.all.RenameProvisionNodeToInfrastructureNodeWorkflows;
+import migrations.all.SecretTextFilterMigration;
 import migrations.all.SetRollbackFlagToWorkflows;
 import migrations.all.TimeSeriesAnalysisRecordsMigration;
 import migrations.all.TimeSeriesMLScoresMigration;
@@ -61,6 +62,7 @@ public class MigrationList {
         .add(Pair.of(152, BaseMigration.class))
         .add(Pair.of(153, BaseMigration.class))
         .add(Pair.of(154, EntityNameValidationMigration_All_01.class))
+        .add(Pair.of(155, SecretTextFilterMigration.class))
         .build();
   }
 }
