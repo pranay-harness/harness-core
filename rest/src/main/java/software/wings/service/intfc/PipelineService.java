@@ -27,6 +27,15 @@ public interface PipelineService extends OwnedByApplication {
   PageResponse<Pipeline> listPipelines(PageRequest<Pipeline> pageRequest);
 
   /**
+   * Check if environment is referenced
+   *
+   * @param appId app Id
+   * @param envId env Id
+   * @return List of referenced pipelines
+   */
+  List<String> isEnvironmentReferenced(String appId, @NotEmpty String envId);
+
+  /**
    * List pipelines page response.
    *
    * @param pageRequest the page request

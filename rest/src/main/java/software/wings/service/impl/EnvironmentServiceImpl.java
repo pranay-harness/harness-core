@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtil.trimList;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
@@ -45,7 +44,6 @@ import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
@@ -76,6 +74,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.SetupService;
+import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.ownership.OwnedByEnvironment;
 import software.wings.stencils.DataProvider;
@@ -117,6 +116,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Inject private YamlChangeSetHelper yamlChangeSetHelper;
   @Inject private PersistentLocker persistentLocker;
   @Inject private WorkflowService workflowService;
+  @Inject private TriggerService triggerService;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
@@ -348,18 +348,33 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   }
 
   private void ensureEnvironmentSafeToDelete(Environment environment) {
-    List<Pipeline> pipelines = pipelineService.listPipelines(
-        aPageRequest()
-            .withLimit(PageRequest.UNLIMITED)
-            .addFilter("appId", EQ, environment.getAppId())
-            .addFilter("pipelineStages.pipelineStageElements.properties.envId", EQ, environment.getUuid())
-            .build());
+    try {
+      List<String> refPipelines =
+          pipelineService.isEnvironmentReferenced(environment.getAppId(), environment.getUuid());
+      if (refPipelines != null && refPipelines.size() > 0) {
+        throw new InvalidRequestException(
+            format("Environment is referenced by %d %s [%s].", refPipelines.size(),
+                plural("pipeline", refPipelines.size()), Joiner.on(", ").join(refPipelines)),
+            USER);
+      }
 
-    if (!pipelines.isEmpty()) {
-      List<String> pipelineNames = pipelines.stream().map(Pipeline::getName).collect(toList());
-      throw new InvalidRequestException(format("Environment is referenced by %d %s [%s].", pipelines.size(),
-                                            plural("pipeline", pipelines.size()), Joiner.on(", ").join(pipelineNames)),
-          USER);
+      List<String> refWorkflows =
+          workflowService.isEnvironmentReferenced(environment.getAppId(), environment.getUuid());
+      if (refWorkflows != null && refWorkflows.size() > 0) {
+        throw new InvalidRequestException(
+            format("Environment is referenced by %d %s [%s].", refWorkflows.size(),
+                plural("workflow", refWorkflows.size()), Joiner.on(", ").join(refWorkflows)),
+            USER);
+      }
+
+      List<String> refTriggers = triggerService.isEnvironmentReferenced(environment.getAppId(), environment.getUuid());
+      if (refTriggers != null && refTriggers.size() > 0) {
+        throw new InvalidRequestException(format("Environment is referenced by %d %s [%s].", refTriggers.size(),
+                                              plural("trigger", refTriggers.size()), Joiner.on(", ").join(refTriggers)),
+            USER);
+      }
+    } catch (RuntimeException ex) {
+      logger.error("Exception in ensureEnvironmentSafeToDelete: ", ex.getMessage());
     }
   }
 

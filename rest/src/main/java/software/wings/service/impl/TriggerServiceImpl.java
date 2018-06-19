@@ -9,6 +9,7 @@ import static java.util.stream.Collectors.toList;
 import static net.redhogs.cronparser.CronExpressionDescriptor.getDescription;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
@@ -79,6 +80,7 @@ import software.wings.beans.trigger.TriggerConditionType;
 import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.beans.trigger.WebhookParameters;
 import software.wings.common.MongoIdempotentRegistry;
+import software.wings.dl.HIterator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -231,6 +233,24 @@ public class TriggerServiceImpl implements TriggerService {
 
   private List<Trigger> getTriggersByApp(String appId) {
     return wingsPersistence.query(Trigger.class, aPageRequest().addFilter("appId", EQ, appId).build()).getResponse();
+  }
+
+  @Override
+  public List<String> isEnvironmentReferenced(String appId, String envId) {
+    List<String> referencedTriggers = new ArrayList<>();
+    try (HIterator<Trigger> triggerHIterator =
+             new HIterator<>(wingsPersistence.createQuery(Trigger.class).filter(APP_ID_KEY, appId).fetch())) {
+      while (triggerHIterator.hasNext()) {
+        Trigger trigger = triggerHIterator.next();
+        if (trigger.getWorkflowVariables() != null && trigger.getWorkflowVariables().values().contains(envId)) {
+          referencedTriggers.add(trigger.getName());
+        }
+      }
+
+    } catch (Exception ex) {
+      logger.error("Exception in TriggerServiceImpl::isEnvironmentReferenced: ", ex.getMessage());
+    }
+    return referencedTriggers;
   }
 
   private WebHookToken generateWebHookToken(Trigger trigger, WebHookToken existingToken) {

@@ -55,6 +55,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
+import software.wings.dl.HIterator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -202,6 +203,40 @@ public class PipelineServiceImpl implements PipelineService {
     savedPipeline.setFailureStrategies(failureStrategies);
     Pipeline pipeline = update(savedPipeline);
     return pipeline.getFailureStrategies();
+  }
+
+  @Override
+  public List<String> isEnvironmentReferenced(String appId, String envId) {
+    List<String> referencedPipelines = new ArrayList<>();
+    try (HIterator<Pipeline> pipelineHIterator =
+             new HIterator<>(wingsPersistence.createQuery(Pipeline.class).filter(APP_ID_KEY, appId).fetch())) {
+      while (pipelineHIterator.hasNext()) {
+        Pipeline pipeline = pipelineHIterator.next();
+        if (pipeline.getPipelineStages() != null) {
+          for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
+            if (pipelineStage.getPipelineStageElements() != null) {
+              for (PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
+                // Env Id in pipeline
+                if (pipelineStageElement.getProperties() != null
+                    && pipelineStageElement.getProperties().get("envId") != null
+                    && pipelineStageElement.getProperties().get("envId").equals(envId)) {
+                  referencedPipelines.add(pipeline.getName());
+                  continue;
+                }
+                // Env Id in workflow variables
+                if (pipelineStageElement.getWorkflowVariables() != null
+                    && pipelineStageElement.getWorkflowVariables().values().contains(envId)) {
+                  referencedPipelines.add(pipeline.getName());
+                }
+              }
+            }
+          }
+        }
+      }
+    } catch (Exception ex) {
+      logger.error("Exception in PipelineServiceImpl::isEnvironmentReferenced: ", ex.getMessage());
+    }
+    return referencedPipelines;
   }
 
   // TODO: Add unit tests for this function

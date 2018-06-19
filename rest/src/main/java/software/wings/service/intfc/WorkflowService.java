@@ -39,6 +39,7 @@ import javax.validation.constraints.NotNull;
  */
 public interface WorkflowService extends OwnedByApplication, OwnedByEnvironment, SettingsServiceManipulationObserver {
   PageResponse<Workflow> listWorkflows(PageRequest<Workflow> pageRequest);
+  List<String> isEnvironmentReferenced(String appId, @NotEmpty String envId);
 
   PageResponse<Workflow> listWorkflowsWithoutOrchestration(PageRequest<Workflow> pageRequest);
 

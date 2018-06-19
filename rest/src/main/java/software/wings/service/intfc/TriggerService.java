@@ -34,6 +34,8 @@ public interface TriggerService extends OwnedByApplication, OwnedByPipeline, Own
    */
   PageResponse<Trigger> list(PageRequest<Trigger> pageRequest);
 
+  List<String> isEnvironmentReferenced(String appId, @NotEmpty String envId);
+
   /**
    * Get artifact stream.
    *
