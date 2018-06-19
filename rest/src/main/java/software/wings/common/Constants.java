@@ -310,8 +310,6 @@ public interface Constants {
    * The constant KUBERNETES_STEADY_STATE_CHECK.
    */
   String KUBERNETES_STEADY_STATE_CHECK = "Steady State Check";
-
-  String ECS_STEADY_STATE_CHECK = "Ecs Steady State Check";
   /**
    * The constant KUBERNETES_SWAP_SERVICE_SELECTORS.
    */

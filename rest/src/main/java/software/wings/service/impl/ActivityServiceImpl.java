@@ -125,7 +125,6 @@ public class ActivityServiceImpl implements ActivityService {
         case JENKINS:
         case HELM:
         case KUBERNETES_STEADY_STATE_CHECK:
-        case ECS_STEADY_STATE_CHECK:
         case KUBERNETES_SWAP_SERVICE_SELECTORS:
           rv.add(CommandUnitDetails.builder()
                      .commandExecutionStatus(CommandExecutionStatus.translateExecutionStatus(activity.getStatus()))
