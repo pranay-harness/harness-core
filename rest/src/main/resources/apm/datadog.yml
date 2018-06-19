@@ -44,7 +44,7 @@ Kubernetes:
             fieldName: txnName
             jsonPath: series[*].metric
             regexs:
-              - ((?<=[(]|^)[^(]([^/|+|-|*]*))
+              - ((?<=[(]|^)[^(]([^ /|+|-|*]*))
         -
             fieldName: timestamp
             jsonPath: series[*].pointlist[*].[0]
