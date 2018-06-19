@@ -1,5 +1,6 @@
 package io.harness.logging;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.network.Localhost.getLocalHostName;
 import static java.lang.String.format;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
@@ -41,6 +42,7 @@ public class RestLogAppender<E> extends AppenderBase<E> {
                                                .addConverterFactory(JacksonConverterFactory.create())
                                                .client(Http.getUnsafeOkHttpClient(LOGDNA_HOST))
                                                .build();
+  private static final String DUMMY_KEY = "9a3e6eac4dcdbdc41a93ca99100537df";
 
   private String programName;
   private String key;
@@ -114,6 +116,11 @@ public class RestLogAppender<E> extends AppenderBase<E> {
 
   @Override
   public void start() {
+    if (isEmpty(key) || key.equals(DUMMY_KEY)) {
+      logger.info("Not starting RestLogAppender since RestLogAppender is disabled");
+      return;
+    }
+
     super.start();
 
     synchronized (this) {
