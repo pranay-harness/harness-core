@@ -473,6 +473,19 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
             .asList();
 
     timeSeriesMLAnalysisRecords.forEach(timeSeriesMLAnalysisRecord -> {
+      NewRelicMetricAnalysisRecord metricAnalysisRecord =
+          NewRelicMetricAnalysisRecord.builder()
+              .appId(timeSeriesMLAnalysisRecord.getAppId())
+              .stateType(timeSeriesMLAnalysisRecord.getStateType())
+              .analysisMinute(timeSeriesMLAnalysisRecord.getAnalysisMinute())
+              .stateExecutionId(timeSeriesMLAnalysisRecord.getStateExecutionId())
+              .workflowExecutionId(timeSeriesMLAnalysisRecord.getWorkflowExecutionId())
+              .baseLineExecutionId(timeSeriesMLAnalysisRecord.getBaseLineExecutionId())
+              .showTimeSeries(true)
+              .groupName(timeSeriesMLAnalysisRecord.getGroupName())
+              .message(timeSeriesMLAnalysisRecord.getMessage())
+              .build();
+      analysisRecords.add(metricAnalysisRecord);
       if (timeSeriesMLAnalysisRecord.getTransactions() != null) {
         List<NewRelicMetricAnalysis> metricAnalysisList = new ArrayList<>();
         for (TimeSeriesMLTxnSummary txnSummary : timeSeriesMLAnalysisRecord.getTransactions().values()) {
@@ -498,17 +511,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                      .riskLevel(globalRisk)
                                      .build());
         }
-        analysisRecords.add(NewRelicMetricAnalysisRecord.builder()
-                                .appId(timeSeriesMLAnalysisRecord.getAppId())
-                                .stateType(timeSeriesMLAnalysisRecord.getStateType())
-                                .analysisMinute(timeSeriesMLAnalysisRecord.getAnalysisMinute())
-                                .metricAnalyses(metricAnalysisList)
-                                .stateExecutionId(timeSeriesMLAnalysisRecord.getStateExecutionId())
-                                .workflowExecutionId(timeSeriesMLAnalysisRecord.getWorkflowExecutionId())
-                                .baseLineExecutionId(timeSeriesMLAnalysisRecord.getBaseLineExecutionId())
-                                .showTimeSeries(true)
-                                .groupName(timeSeriesMLAnalysisRecord.getGroupName())
-                                .build());
+        metricAnalysisRecord.setMetricAnalyses(metricAnalysisList);
       }
     });
 
@@ -582,7 +585,6 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
         Collections.sort(analysisRecord.getMetricAnalyses());
       } else {
         analysisRecord.setRiskLevel(RiskLevel.NA);
-        analysisRecord.setMessage("No data available");
       }
 
       if (analysisRecord.getStateType() == StateType.DYNA_TRACE) {

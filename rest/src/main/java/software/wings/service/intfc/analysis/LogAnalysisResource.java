@@ -1,11 +1,5 @@
 package software.wings.service.intfc.analysis;
 
-import software.wings.beans.RestResponse;
-import software.wings.service.impl.analysis.LogMLAnalysisSummary;
-
-import java.io.IOException;
-import javax.ws.rs.QueryParam;
-
 /**
  * Created by rsingh on 8/7/17.
  */
@@ -69,8 +63,4 @@ public interface LogAnalysisResource {
    * Validate query
    */
   String ELK_VALIDATE_QUERY = "/validate-query";
-
-  RestResponse<LogMLAnalysisSummary> getLogAnalysisSummary(@QueryParam("accountId") String accountId,
-      @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId)
-      throws IOException;
 }

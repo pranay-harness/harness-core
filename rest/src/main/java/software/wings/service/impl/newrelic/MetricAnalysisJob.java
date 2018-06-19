@@ -150,6 +150,11 @@ public class MetricAnalysisJob implements Job {
           context.getAppId(), context.getWorkflowExecutionId(), context.getStateExecutionId(), context.getWorkflowId(),
           context.getServiceId(), groupName, context.getTestNodes(), analysisMinute, analysisStartMin);
 
+      String message = "";
+      if (isEmpty(testRecords)) {
+        message = "No test data found. Please check load. Skipping analysis for minute " + analysisMinute;
+      }
+
       Map<String, List<NewRelicMetricDataRecord>> controlRecordsByMetric = splitMetricsByName(controlRecords);
       Map<String, List<NewRelicMetricDataRecord>> testRecordsByMetric = splitMetricsByName(testRecords);
 
@@ -161,6 +166,7 @@ public class MetricAnalysisJob implements Job {
                                                         .workflowId(context.getWorkflowId())
                                                         .riskLevel(RiskLevel.LOW)
                                                         .groupName(groupName)
+                                                        .message(message)
                                                         .metricAnalyses(new ArrayList<>())
                                                         .build();
 

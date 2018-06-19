@@ -42,5 +42,7 @@ public class TimeSeriesMLAnalysisRecord extends Base {
 
   @Default @Indexed private String groupName = DEFAULT_GROUP_NAME;
 
+  private String message;
+
   private Map<String, TimeSeriesMLTxnSummary> transactions;
 }
