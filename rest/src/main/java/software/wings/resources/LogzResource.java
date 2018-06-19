@@ -8,7 +8,6 @@ import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
-import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.StateType;
@@ -28,17 +27,6 @@ import javax.ws.rs.QueryParam;
 @Scope(ResourceType.SETTING)
 public class LogzResource implements LogAnalysisResource {
   @Inject private AnalysisService analysisService;
-
-  @GET
-  @Path(LogAnalysisResource.ANALYSIS_STATE_GET_ANALYSIS_SUMMARY_URL)
-  @Timed
-  @ExceptionMetered
-  @Override
-  public RestResponse<LogMLAnalysisSummary> getLogAnalysisSummary(@QueryParam("accountId") String accountId,
-      @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId)
-      throws IOException {
-    return new RestResponse<>(analysisService.getAnalysisSummary(stateExecutionId, applicationId, StateType.LOGZ));
-  }
 
   @GET
   @Path(LogAnalysisResource.ANALYSIS_STATE_GET_SAMPLE_RECORD_URL)

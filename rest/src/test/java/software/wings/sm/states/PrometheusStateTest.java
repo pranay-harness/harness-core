@@ -112,7 +112,7 @@ public class PrometheusStateTest extends APMStateVerificationTestBase {
     assertEquals(workflowExecutionId, metricsAnalysis.getWorkflowExecutionId());
     assertEquals(workflowId, metricsAnalysis.getWorkflowId());
     assertEquals(RiskLevel.NA, metricsAnalysis.getRiskLevel());
-    assertEquals("No data available", metricsAnalysis.getMessage());
+    assertEquals("Could not find nodes to analyze!", metricsAnalysis.getMessage());
     assertNull(metricsAnalysis.getMetricAnalyses());
   }
 
@@ -139,7 +139,8 @@ public class PrometheusStateTest extends APMStateVerificationTestBase {
     assertEquals(workflowExecutionId, metricsAnalysis.getWorkflowExecutionId());
     assertEquals(workflowId, metricsAnalysis.getWorkflowId());
     assertEquals(RiskLevel.NA, metricsAnalysis.getRiskLevel());
-    assertEquals("No data available", metricsAnalysis.getMessage());
+    assertEquals("Skipping analysis due to lack of baseline data (First time deployment or Last phase).",
+        metricsAnalysis.getMessage());
     assertNull(metricsAnalysis.getMetricAnalyses());
   }
 
@@ -166,7 +167,8 @@ public class PrometheusStateTest extends APMStateVerificationTestBase {
     assertEquals(workflowExecutionId, metricsAnalysis.getWorkflowExecutionId());
     assertEquals(workflowId, metricsAnalysis.getWorkflowId());
     assertEquals(RiskLevel.NA, metricsAnalysis.getRiskLevel());
-    assertEquals("No data available", metricsAnalysis.getMessage());
+    assertEquals("Skipping analysis due to lack of baseline data (First time deployment or Last phase).",
+        metricsAnalysis.getMessage());
     assertNull(metricsAnalysis.getMetricAnalyses());
   }
 

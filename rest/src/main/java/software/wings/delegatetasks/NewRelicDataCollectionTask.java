@@ -204,6 +204,9 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
           logger.warn(
               "Error fetching metrics for node: " + node + ", retry: " + retry + ", metrics: " + metricNames, e);
           retry++;
+          if (retry >= RETRIES) {
+            throw new WingsException("Fetching for web transaction metrics failed. reason " + e.getMessage());
+          }
         }
       }
     }
@@ -237,6 +240,9 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
           logger.warn(
               "Error fetching metrics for node: " + node + ", retry: " + retry + ", metrics: " + metricNames, e);
           retry++;
+          if (retry >= RETRIES) {
+            throw new WingsException("Fetching for error metrics failed. reason " + e.getMessage());
+          }
         }
       }
     }
@@ -270,6 +276,9 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
           logger.warn(
               "Error fetching metrics for node: " + node + ", retry: " + retry + ", metrics: " + metricNames, e);
           retry++;
+          if (retry >= RETRIES) {
+            throw new WingsException("Fetching for apdex metrics failed. reason " + e.getMessage());
+          }
         }
       }
     }
@@ -417,7 +426,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       } catch (Exception e) {
         completed.set(true);
         taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-        taskResult.setErrorMessage("error fetching new relic metrics for minute " + dataCollectionMinute);
+        taskResult.setErrorMessage(
+            "error fetching new relic metrics for minute " + dataCollectionMinute + " reason: " + e.getMessage());
         logger.error("error fetching new relic metrics for minute " + dataCollectionMinute, e);
       }
 

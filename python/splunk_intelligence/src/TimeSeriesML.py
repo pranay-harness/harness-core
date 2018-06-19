@@ -858,17 +858,25 @@ def parallelize_processing(options, metric_template, control_metrics, test_metri
     """
     result = {"transactions": {}}
 
+    analysis_message = ""
     if options.time_series_ml_analysis_type != 'PREDICTIVE':
-        if len(control_metrics) == 0 or len(test_metrics) == 0:
+        if len(control_metrics) == 0 :
+            analysis_message = "No control data found."
+        if len(test_metrics) == 0 :
+            analysis_message += " No test data found."
+
+        if analysis_message != "" :
             logger.warn(
                 "No control or test data given for minute " + str(
                     options.analysis_minute) + ". Skipping analysis!!")
+            result['message'] = analysis_message + " Please check load. Skipping analysis!!"
             return result
     else:
         if len(test_metrics) == 0:
             logger.warn(
                 "No data given for minute " + str(
                     options.analysis_minute) + ". Skipping predictive analysis!!")
+            result['message'] = "No test data found. Skipping analysis!!"
             return result
 
 

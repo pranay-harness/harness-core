@@ -14,7 +14,6 @@ import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
-import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.elk.ElkIndexTemplate;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
 import software.wings.service.impl.elk.ElkQueryType;
@@ -44,17 +43,6 @@ public class ElkResource implements LogAnalysisResource {
   private static final Logger logger = LoggerFactory.getLogger(AnalysisServiceImpl.class);
 
   @Inject private ElkAnalysisService analysisService;
-
-  @GET
-  @Path(LogAnalysisResource.ANALYSIS_STATE_GET_ANALYSIS_SUMMARY_URL)
-  @Timed
-  @ExceptionMetered
-  @Override
-  public RestResponse<LogMLAnalysisSummary> getLogAnalysisSummary(@QueryParam("accountId") String accountId,
-      @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId)
-      throws IOException {
-    return new RestResponse<>(analysisService.getAnalysisSummary(stateExecutionId, applicationId, StateType.ELK));
-  }
 
   @GET
   @Path(LogAnalysisResource.ANALYSIS_STATE_GET_SAMPLE_RECORD_URL)
