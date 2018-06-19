@@ -17,7 +17,7 @@
 package software.wings.integration;
 
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.service.impl.GcpHelperService.ZONE_DELIMITER;
+import static software.wings.service.impl.GcpHelperService.LOCATION_DELIMITER;
 
 import com.google.api.services.container.model.NodePoolAutoscaling;
 
@@ -51,7 +51,7 @@ public class KubernetesYamlIntegrationTest {
           .withValue(GcpConfig.builder().serviceAccountKeyFileContent("GCP_CONFIG".toCharArray()).build())
           .build();
 
-  private static final String ZONE_CLUSTER = "us-central1-a" + ZONE_DELIMITER + "brett-test";
+  private static final String ZONE_CLUSTER = "us-central1-a" + LOCATION_DELIMITER + "brett-test";
 
   public static void main(String[] args) throws InterruptedException {
     GkeClusterServiceImpl gkeClusterService = new GkeClusterServiceImpl();

@@ -32,14 +32,8 @@ import java.util.List;
  */
 @Singleton
 public class GcpHelperService {
-  /**
-   * The constant ZONE_DELIMITER.
-   */
-  public static final String ZONE_DELIMITER = "/";
-  /**
-   * The constant ALL_ZONES.
-   */
-  public static final String ALL_ZONES = "-";
+  public static final String LOCATION_DELIMITER = "/";
+  public static final String ALL_LOCATIONS = "-";
 
   private static final int SLEEP_INTERVAL_SECS = 5;
   private static final int TIMEOUT_MINS = 30;
