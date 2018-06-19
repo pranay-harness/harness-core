@@ -44,18 +44,6 @@ public interface EcsContainerService {
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName, int previousCount,
       int desiredCount, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback);
 
-  void waitForTasksToBeInRunningStateButDontThrowException(String region, AwsConfig awsConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
-      ExecutionLogCallback executionLogCallback, int desiredCount);
-
-  void waitForServiceToReachSteadyState(String region, AwsConfig awsConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
-      int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback);
-
-  List<ContainerInfo> getContainerInfosAfterEcsWait(String region, AwsConfig awsConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
-      ExecutionLogCallback executionLogCallback, boolean isDownsizeInitiatedByHarness);
-
   /**
    * Create service.
    */

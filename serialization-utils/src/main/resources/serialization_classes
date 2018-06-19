@@ -403,5 +403,3 @@ software.wings.beans.container.KubernetesBlueGreenConfig, 5364
 software.wings.beans.container.KubernetesSwapServiceSelectorsParams, 5365
 software.wings.sm.states.KubernetesSwapServiceSelectorsResponse, 5366
 software.wings.api.KubernetesSwapServiceSelectorsExecutionData, 5367
-software.wings.beans.container.EcsSteadyStateCheckParams, 5368
-software.wings.beans.container.EcsSteadyStateCheckResponse, 5369

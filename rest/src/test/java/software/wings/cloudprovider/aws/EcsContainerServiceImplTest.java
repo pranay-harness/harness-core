@@ -1,13 +1,15 @@
 package software.wings.cloudprovider.aws;
 
 import static java.util.Arrays.asList;
-import static org.apache.commons.lang3.reflect.MethodUtils.invokeMethod;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -18,6 +20,7 @@ import static software.wings.utils.WingsTestConstants.LAUNCHER_TEMPLATE_NAME;
 import static software.wings.utils.WingsTestConstants.SECRET_KEY;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 
 import com.amazonaws.regions.Regions;
@@ -30,7 +33,6 @@ import com.amazonaws.services.ecs.model.Cluster;
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.CreateServiceResult;
 import com.amazonaws.services.ecs.model.DeleteServiceRequest;
-import com.amazonaws.services.ecs.model.Deployment;
 import com.amazonaws.services.ecs.model.DescribeClustersRequest;
 import com.amazonaws.services.ecs.model.DescribeClustersResult;
 import com.amazonaws.services.ecs.model.DescribeServicesResult;
@@ -39,6 +41,7 @@ import com.amazonaws.services.ecs.model.DescribeTasksResult;
 import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.ServiceEvent;
 import com.amazonaws.services.ecs.model.UpdateServiceRequest;
+import org.apache.commons.lang3.reflect.MethodUtils;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -50,9 +53,13 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.service.impl.AwsHelperService;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -170,26 +177,78 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  public void testHasServiceReachedSteadyState() throws Exception {
+  public void testWaitForServiceToReachSteadyState() throws Exception {
+    ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(executionLogCallback).saveExecutionLog(anyString(), any());
+
     EcsContainerServiceImpl ecsContainerServiceImpl = (EcsContainerServiceImpl) ecsContainerService;
 
-    Service service = new Service().withDeployments(new Deployment(), new Deployment());
-    boolean ret =
-        (boolean) invokeMethod(ecsContainerServiceImpl, true, "hasServiceReachedSteadyState", new Object[] {service});
-    assertFalse(ret);
+    final OffsetDateTime startDate = OffsetDateTime.of(2018, 02, 02, 02, 10, 0, 0, ZoneOffset.UTC);
 
-    service =
-        new Service()
-            .withDeployments(new Deployment().withUpdatedAt(new Date(10)))
-            .withEvents(new ServiceEvent().withMessage("Foo has reached a steady state.").withCreatedAt(new Date(5)));
-    ret = (boolean) invokeMethod(ecsContainerServiceImpl, true, "hasServiceReachedSteadyState", new Object[] {service});
-    assertFalse(ret);
+    List<ServiceEvent> events = new ArrayList<>();
+    events.add(new ServiceEvent()
+                   .withCreatedAt(Date.from(startDate.plusMinutes(0).toInstant()))
+                   .withId("E1")
+                   .withMessage("message"));
+    events.add(new ServiceEvent()
+                   .withCreatedAt(Date.from(startDate.plusMinutes(7).toInstant()))
+                   .withId("E3")
+                   .withMessage("message"));
+    events.add(new ServiceEvent()
+                   .withCreatedAt(Date.from(startDate.plusMinutes(9).toInstant()))
+                   .withId("E4")
+                   .withMessage("message"));
+    events.add(new ServiceEvent()
+                   .withCreatedAt(Date.from(startDate.plusMinutes(4).toInstant()))
+                   .withId("E2")
+                   .withMessage("message"));
 
-    service =
-        new Service()
-            .withDeployments(new Deployment().withUpdatedAt(new Date(10)))
-            .withEvents(new ServiceEvent().withMessage("Foo has reached a steady state.").withCreatedAt(new Date(15)));
-    ret = (boolean) invokeMethod(ecsContainerServiceImpl, true, "hasServiceReachedSteadyState", new Object[] {service});
-    assertTrue(ret);
+    Service service = new Service()
+                          .withDesiredCount(DESIRED_COUNT)
+                          .withRunningCount(DESIRED_COUNT)
+                          .withServiceArn("SERVICE_ARN")
+                          .withEvents(events);
+
+    List<ServiceEvent> events1 = new ArrayList<>();
+    events1.add(new ServiceEvent()
+                    .withCreatedAt(Date.from(startDate.plusMinutes(0).toInstant()))
+                    .withId("E1")
+                    .withMessage("message"));
+    events1.add(new ServiceEvent()
+                    .withCreatedAt(Date.from(startDate.plusMinutes(7).toInstant()))
+                    .withId("E3")
+                    .withMessage("message"));
+    events1.add(new ServiceEvent()
+                    .withCreatedAt(Date.from(startDate.plusMinutes(9).toInstant()))
+                    .withId("E4")
+                    .withMessage("message"));
+    events1.add(new ServiceEvent()
+                    .withCreatedAt(Date.from(startDate.plusMinutes(4).toInstant()))
+                    .withId("E2")
+                    .withMessage("message"));
+    events1.add(new ServiceEvent()
+                    .withCreatedAt(Date.from(startDate.plusMinutes(10).toInstant()))
+                    .withId("E5")
+                    .withMessage("has reached a steady state."));
+
+    Service service1 = new Service()
+                           .withDesiredCount(DESIRED_COUNT)
+                           .withRunningCount(DESIRED_COUNT)
+                           .withServiceArn("SERVICE_ARN")
+                           .withEvents(events1);
+
+    doReturn(new DescribeServicesResult().withServices(asList(service)))
+        .doReturn(new DescribeServicesResult().withServices(asList(service1)))
+        .when(awsHelperService)
+        .describeServices(anyString(), any(), any(), any());
+
+    try {
+      MethodUtils.invokeMethod(ecsContainerServiceImpl, true, "waitForServiceToReachSteadyState",
+          new Object[] {"use-east-1", AwsConfig.builder().build(), new ArrayList<>(), "cluster", "service", 1,
+              new ExecutionLogCallback()});
+      assertTrue(true);
+    } catch (UncheckedTimeoutException e) {
+      fail("Timeout not expected");
+    }
   }
 }
