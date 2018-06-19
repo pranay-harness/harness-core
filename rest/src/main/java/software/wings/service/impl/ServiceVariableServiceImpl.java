@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
@@ -32,6 +33,7 @@ import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.expression.ExpressionEvaluator;
 import software.wings.security.encryption.EncryptedData;
@@ -128,6 +130,9 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   public ServiceVariable update(@Valid ServiceVariable serviceVariable) {
     ServiceVariable savedServiceVariable = get(serviceVariable.getAppId(), serviceVariable.getUuid());
     notNullCheck("Service variable", savedServiceVariable);
+    if (!savedServiceVariable.getName().equals(serviceVariable.getName())) {
+      throw new InvalidRequestException(format("Service variable name can not be changed."));
+    }
 
     ExpressionEvaluator.isValidVariableName(serviceVariable.getName());
 
