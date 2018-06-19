@@ -85,6 +85,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
@@ -98,6 +99,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   private static final Logger logger = LoggerFactory.getLogger(ArtifactServiceImpl.class);
 
   private static final String DEFAULT_ARTIFACT_FILE_NAME = "ArtifactFile";
+  private static final int ARTIFACT_RETENTION_SIZE = 25;
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private FileService fileService;
@@ -105,6 +107,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private AppService appService;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private ExecutorService executorService;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
@@ -168,6 +171,7 @@ public class ArtifactServiceImpl implements ArtifactService {
       logger.info("Sending event to collect artifact {} ", savedArtifact.getUuid());
       collectQueue.send(aCollectEvent().withArtifact(savedArtifact).build());
     }
+    executorService.submit(() -> deleteArtifactsWithContents(ARTIFACT_RETENTION_SIZE, artifactStream));
     return savedArtifact;
   }
 
@@ -456,26 +460,29 @@ public class ArtifactServiceImpl implements ArtifactService {
                                                                        .fetch())) {
       while (artifactStreams.hasNext()) {
         ArtifactStream artifactStream = artifactStreams.next();
-        if (artifactStream.isMetadataOnly() || metaDataOnlyStreams.contains(artifactStream.getArtifactStreamType())) {
-          continue;
-        }
-        List<Artifact> toBeDeletedArtifacts = wingsPersistence.createQuery(Artifact.class)
-                                                  .project("artifactFiles", true)
-                                                  .filter(APP_ID_KEY, artifactStream.getAppId())
-                                                  .filter(ARTIFACT_STREAM_ID_KEY, artifactStream.getUuid())
-                                                  .field(CONTENT_STATUS_KEY)
-                                                  .hasAnyOf(asList(DOWNLOADED))
-                                                  .order(Sort.descending(CREATED_AT_KEY))
-                                                  .asList(new FindOptions().skip(retentionSize));
-        if (isNotEmpty(toBeDeletedArtifacts)) {
-          toBeDeletedArtifacts = toBeDeletedArtifacts.stream()
-                                     .filter(artifact -> isNotEmpty(artifact.getArtifactFiles()))
-                                     .collect(toList());
-          logger.info("Deleting artifacts for artifactStreamId [{}]  of size: [{}] for appId [{}]",
-              artifactStream.getUuid(), toBeDeletedArtifacts.size(), artifactStream.getAppId());
-          deleteArtifacts(artifactStream.getAppId(), artifactStream.getUuid(), toBeDeletedArtifacts);
-        }
+        deleteArtifactsWithContents(retentionSize, artifactStream);
       }
+    }
+  }
+
+  private void deleteArtifactsWithContents(int retentionSize, ArtifactStream artifactStream) {
+    if (artifactStream.isMetadataOnly() || metaDataOnlyStreams.contains(artifactStream.getArtifactStreamType())) {
+      return;
+    }
+    List<Artifact> toBeDeletedArtifacts = wingsPersistence.createQuery(Artifact.class)
+                                              .project("artifactFiles", true)
+                                              .filter(APP_ID_KEY, artifactStream.getAppId())
+                                              .filter(ARTIFACT_STREAM_ID_KEY, artifactStream.getUuid())
+                                              .field(CONTENT_STATUS_KEY)
+                                              .hasAnyOf(asList(DOWNLOADED))
+                                              .order(Sort.descending(CREATED_AT_KEY))
+                                              .asList(new FindOptions().skip(retentionSize));
+    if (isNotEmpty(toBeDeletedArtifacts)) {
+      toBeDeletedArtifacts =
+          toBeDeletedArtifacts.stream().filter(artifact -> isNotEmpty(artifact.getArtifactFiles())).collect(toList());
+      logger.info("Deleting artifacts for artifactStreamId [{}]  of size: [{}] for appId [{}]",
+          artifactStream.getUuid(), toBeDeletedArtifacts.size(), artifactStream.getAppId());
+      deleteArtifacts(artifactStream.getAppId(), artifactStream.getUuid(), toBeDeletedArtifacts);
     }
   }
 

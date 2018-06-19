@@ -125,11 +125,13 @@ public class ZombieHunterJob implements Job {
 
   public static final String ENVIRONMENTS = "environments";
   public static final String SERVICES = "services";
+  public static final String SETTING_ATTRIBUTES = "settingAttributes";
 
   @SuppressFBWarnings("MS_MUTABLE_COLLECTION_PKGPROTECT")
   protected static final List<ZombieType> zombieTypes =
       asList(new ZombieType("applications", "accountId", asList("accounts"), null),
           new ZombieType("artifactStream", ArtifactStream.SERVICE_ID_KEY, asList(SERVICES), null),
+          new ZombieType("artifactStream", ArtifactStream.SETTING_ID_KEY, asList(SETTING_ATTRIBUTES), null),
           new ZombieType("infrastructureMapping", InfrastructureMapping.SERVICE_ID_KEY, asList(SERVICES), null),
           new ZombieType("infrastructureMapping", InfrastructureMapping.ENV_ID_KEY, asList(ENVIRONMENTS), null),
           new ZombieType("serviceTemplates", ServiceTemplate.SERVICE_ID_KEY, asList(SERVICES), null),

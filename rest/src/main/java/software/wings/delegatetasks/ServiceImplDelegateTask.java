@@ -2,6 +2,7 @@ package software.wings.delegatetasks;
 
 import static org.joor.Reflect.on;
 import static software.wings.delegatetasks.RemoteMethodReturnValueData.Builder.aRemoteMethodReturnValueData;
+import static software.wings.exception.WingsException.ExecutionContext.DELEGATE;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -11,6 +12,7 @@ import org.joor.ReflectException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.exception.WingsException;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.function.Consumer;
@@ -58,7 +60,11 @@ public class ServiceImplDelegateTask extends AbstractDelegateRunnableTask {
           exception = exception.getCause();
         }
       }
-      logger.error("Task error", exception);
+      if (exception instanceof WingsException) {
+        ((WingsException) exception).logProcessedMessages(DELEGATE, logger);
+      } else {
+        logger.error("Task error", exception);
+      }
     }
     return aRemoteMethodReturnValueData().withReturnValue(methodReturnValue).withException(exception).build();
   }
