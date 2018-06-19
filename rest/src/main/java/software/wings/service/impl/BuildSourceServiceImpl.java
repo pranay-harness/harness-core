@@ -224,8 +224,11 @@ public class BuildSourceServiceImpl implements BuildSourceService {
 
   @Override
   public BuildService getBuildService(SettingAttribute settingAttribute, String appId) {
-    SyncTaskContext syncTaskContext =
-        aContext().withAccountId(settingAttribute.getAccountId()).withAppId(appId).build();
+    SyncTaskContext syncTaskContext = aContext()
+                                          .withAccountId(settingAttribute.getAccountId())
+                                          .withAppId(appId)
+                                          .withEnvId(settingAttribute.getEnvId())
+                                          .build();
     if (settingAttribute.getValue().getType().equals(SettingVariableTypes.JENKINS.name())) {
       syncTaskContext.setTimeout(120 * 1000);
     }
@@ -245,8 +248,11 @@ public class BuildSourceServiceImpl implements BuildSourceService {
       return getBuildService(settingAttribute, appId);
     }
     Class<? extends BuildService> buildServiceClass = serviceLocator.getBuildServiceClass(artifactStreamType);
-    SyncTaskContext syncTaskContext =
-        aContext().withAccountId(settingAttribute.getAccountId()).withAppId(appId).build();
+    SyncTaskContext syncTaskContext = aContext()
+                                          .withAccountId(settingAttribute.getAccountId())
+                                          .withAppId(appId)
+                                          .withEnvId(settingAttribute.getEnvId())
+                                          .build();
     if (artifactStreamType.equals(ArtifactStreamType.JENKINS.name())) {
       syncTaskContext.setTimeout(120 * 1000);
     }

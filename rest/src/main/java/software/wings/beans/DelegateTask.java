@@ -253,6 +253,8 @@ public class DelegateTask extends Base {
   public static class SyncTaskContext {
     private String accountId;
     private String appId;
+    private String envId;
+    private String infrastructureMappingId;
     private long timeout = DEFAULT_SYNC_CALL_TIMEOUT;
 
     public String getAccountId() {
@@ -271,6 +273,22 @@ public class DelegateTask extends Base {
       this.appId = appId;
     }
 
+    public String getInfrastructureMappingId() {
+      return infrastructureMappingId;
+    }
+
+    public void setInfrastructureMappingId(String infrastructureMappingId) {
+      this.infrastructureMappingId = infrastructureMappingId;
+    }
+
+    public String getEnvId() {
+      return envId;
+    }
+
+    public void setEnvId(String envId) {
+      this.envId = envId;
+    }
+
     public long getTimeout() {
       return timeout;
     }
@@ -282,6 +300,8 @@ public class DelegateTask extends Base {
     public static final class Builder {
       private String accountId;
       private String appId;
+      private String envId;
+      private String infrastructureMappingId;
       private long timeout = DEFAULT_SYNC_CALL_TIMEOUT;
 
       private Builder() {}
@@ -300,19 +320,36 @@ public class DelegateTask extends Base {
         return this;
       }
 
+      public Builder withInfrastructureMappingId(String infrastructureMappingId) {
+        this.infrastructureMappingId = infrastructureMappingId;
+        return this;
+      }
+
+      public Builder withEnvId(String envId) {
+        this.envId = envId;
+        return this;
+      }
+
       public Builder withTimeout(long timeout) {
         this.timeout = timeout;
         return this;
       }
 
       public Builder but() {
-        return aContext().withAccountId(accountId).withAppId(appId).withTimeout(timeout);
+        return aContext()
+            .withAccountId(accountId)
+            .withAppId(appId)
+            .withEnvId(envId)
+            .withTimeout(timeout)
+            .withInfrastructureMappingId(infrastructureMappingId);
       }
 
       public SyncTaskContext build() {
         SyncTaskContext syncTaskContext = new SyncTaskContext();
         syncTaskContext.setAccountId(accountId);
         syncTaskContext.setAppId(appId);
+        syncTaskContext.setEnvId(envId);
+        syncTaskContext.setInfrastructureMappingId(infrastructureMappingId);
         syncTaskContext.setTimeout(timeout);
         return syncTaskContext;
       }
