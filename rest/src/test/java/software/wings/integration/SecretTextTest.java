@@ -14,13 +14,17 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
+import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.common.Constants.SECRET_MASK;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.service.impl.security.SecretManagerImpl.HARNESS_DEFAULT_SECRET_MANAGER;
 import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_FILE;
 import static software.wings.settings.SettingValue.SettingVariableTypes.SECRET_TEXT;
 
 import com.google.inject.Inject;
 
+import io.harness.data.structure.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,12 +38,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AppDynamicsConfig;
+import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ConfigFile.ConfigOverrideType;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.EntityType;
+import software.wings.beans.Environment;
 import software.wings.beans.KmsConfig;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.OverrideType;
 import software.wings.beans.ServiceVariable.Type;
@@ -50,17 +58,22 @@ import software.wings.beans.UuidAware;
 import software.wings.beans.VaultConfig;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.resources.SecretManagementResource;
+import software.wings.resources.ServiceVariableResource;
 import software.wings.rules.RealMongo;
 import software.wings.security.EncryptionType;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.service.impl.security.SecretText;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FileService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
@@ -74,6 +87,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -82,6 +96,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by rsingh on 11/3/17.
@@ -91,8 +107,6 @@ import java.util.Set;
 public class SecretTextTest extends WingsBaseTest {
   private static final Logger logger = LoggerFactory.getLogger(SecretTextTest.class);
 
-  private static String VAULT_TOKEN = System.getProperty("vault.token");
-
   @Parameter public EncryptionType encryptionType;
   @Inject private VaultService vaultService;
   @Inject private KmsService kmsService;
@@ -101,8 +115,12 @@ public class SecretTextTest extends WingsBaseTest {
   @Inject private ConfigService configService;
   @Inject private EncryptionService encryptionService;
   @Inject private ServiceVariableService serviceVariableService;
+  @Inject private ServiceVariableResource serviceVariableResource;
   @Inject private FileService fileService;
   @Inject private SecretManagementResource secretManagementResource;
+  @Inject private AppService appService;
+  @Inject private EnvironmentService environmentService;
+  @Inject private ServiceResourceService serviceResourceService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private SecretManagementDelegateService secretManagementDelegateService;
   private final String userEmail = "rsingh@harness.io";
@@ -124,7 +142,7 @@ public class SecretTextTest extends WingsBaseTest {
   @Before
   public void setup() throws IOException {
     initMocks(this);
-    appId = generateUuid();
+    appId = wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUuid()).build());
     workflowName = generateUuid();
     envId = generateUuid();
     workflowExecutionId = wingsPersistence.save(
@@ -216,7 +234,8 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   private void testSaveSecret(String secretName, String secretValue, String secretId) throws IllegalAccessException {
-    Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT);
+    Query<EncryptedData> query =
+        wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT).filter("accountId", accountId);
     List<EncryptedData> encryptedDataList = query.asList();
     assertEquals(1, encryptedDataList.size());
     EncryptedData encryptedData = encryptedDataList.get(0);
@@ -302,7 +321,8 @@ public class SecretTextTest extends WingsBaseTest {
     assertEquals(userName, secretChangeLog.getUser().getName());
     assertEquals(userEmail, secretChangeLog.getUser().getEmail());
 
-    query = wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT);
+    query =
+        wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT).filter("accountId", accountId);
     encryptedDataList = query.asList();
     assertEquals(1, encryptedDataList.size());
     encryptedData = encryptedDataList.get(0);
@@ -349,7 +369,7 @@ public class SecretTextTest extends WingsBaseTest {
     final ServiceVariable serviceVariable = ServiceVariable.builder()
                                                 .templateId(generateUuid())
                                                 .envId(generateUuid())
-                                                .entityType(EntityType.APPLICATION)
+                                                .entityType(EntityType.SERVICE)
                                                 .entityId(generateUuid())
                                                 .parentServiceVariableId(generateUuid())
                                                 .overrideType(OverrideType.ALL)
@@ -367,32 +387,50 @@ public class SecretTextTest extends WingsBaseTest {
     encryptionService.decrypt(
         savedVariable, secretManager.getEncryptionDetails(savedVariable, appId, workflowExecutionId));
     assertEquals(secretValue1, String.valueOf(savedVariable.getValue()));
-    EncryptedData encryptedData = wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName1).get();
+    EncryptedData encryptedData = wingsPersistence.createQuery(EncryptedData.class)
+                                      .filter("name", secretName1)
+                                      .filter("accountId", accountId)
+                                      .get();
     assertEquals(1, encryptedData.getParentIds().size());
     assertEquals(serviceVariable.getUuid(), encryptedData.getParentIds().iterator().next());
 
-    encryptedData = wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName2).get();
+    encryptedData = wingsPersistence.createQuery(EncryptedData.class)
+                        .filter("name", secretName2)
+                        .filter("accountId", accountId)
+                        .get();
     assertNull(encryptedData.getParentIds());
 
-    encryptedData = wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName3).get();
+    encryptedData = wingsPersistence.createQuery(EncryptedData.class)
+                        .filter("name", secretName3)
+                        .filter("accountId", accountId)
+                        .get();
     assertNull(encryptedData.getParentIds());
 
     savedVariable.setValue(secretId2.toCharArray());
-    wingsPersistence.save(savedVariable);
+    serviceVariableService.update(savedVariable);
 
     savedVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
     encryptionService.decrypt(
         savedVariable, secretManager.getEncryptionDetails(savedVariable, appId, workflowExecutionId));
     assertEquals(secretValue2, String.valueOf(savedVariable.getValue()));
 
-    encryptedData = wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName1).get();
+    encryptedData = wingsPersistence.createQuery(EncryptedData.class)
+                        .filter("name", secretName1)
+                        .filter("accountId", accountId)
+                        .get();
     assertNull(encryptedData.getParentIds());
 
-    encryptedData = wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName2).get();
+    encryptedData = wingsPersistence.createQuery(EncryptedData.class)
+                        .filter("name", secretName2)
+                        .filter("accountId", accountId)
+                        .get();
     assertEquals(1, encryptedData.getParentIds().size());
     assertEquals(serviceVariable.getUuid(), encryptedData.getParentIds().iterator().next());
 
-    encryptedData = wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName3).get();
+    encryptedData = wingsPersistence.createQuery(EncryptedData.class)
+                        .filter("name", secretName3)
+                        .filter("accountId", accountId)
+                        .get();
     assertNull(encryptedData.getParentIds());
 
     String updatedName = "updatedName" + generateUuid();
@@ -410,13 +448,22 @@ public class SecretTextTest extends WingsBaseTest {
         savedVariable, secretManager.getEncryptionDetails(savedVariable, appId, workflowExecutionId));
     assertEquals(secretValue3, String.valueOf(savedVariable.getValue()));
 
-    encryptedData = wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName1).get();
+    encryptedData = wingsPersistence.createQuery(EncryptedData.class)
+                        .filter("name", secretName1)
+                        .filter("accountId", accountId)
+                        .get();
     assertNull(encryptedData.getParentIds());
 
-    encryptedData = wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName2).get();
+    encryptedData = wingsPersistence.createQuery(EncryptedData.class)
+                        .filter("name", secretName2)
+                        .filter("accountId", accountId)
+                        .get();
     assertNull(encryptedData.getParentIds());
 
-    encryptedData = wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName3).get();
+    encryptedData = wingsPersistence.createQuery(EncryptedData.class)
+                        .filter("name", secretName3)
+                        .filter("accountId", accountId)
+                        .get();
     assertEquals(1, encryptedData.getParentIds().size());
     assertEquals(serviceVariable.getUuid(), encryptedData.getParentIds().iterator().next());
 
@@ -428,14 +475,23 @@ public class SecretTextTest extends WingsBaseTest {
         savedVariable, secretManager.getEncryptionDetails(savedVariable, appId, workflowExecutionId));
     assertEquals(secretValue1, String.valueOf(savedVariable.getValue()));
 
-    encryptedData = wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName1).get();
+    encryptedData = wingsPersistence.createQuery(EncryptedData.class)
+                        .filter("name", secretName1)
+                        .filter("accountId", accountId)
+                        .get();
     assertEquals(1, encryptedData.getParentIds().size());
     assertEquals(serviceVariable.getUuid(), encryptedData.getParentIds().iterator().next());
 
-    encryptedData = wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName2).get();
+    encryptedData = wingsPersistence.createQuery(EncryptedData.class)
+                        .filter("name", secretName2)
+                        .filter("accountId", accountId)
+                        .get();
     assertNull(encryptedData.getParentIds());
 
-    encryptedData = wingsPersistence.createQuery(EncryptedData.class).filter("name", secretName3).get();
+    encryptedData = wingsPersistence.createQuery(EncryptedData.class)
+                        .filter("name", secretName3)
+                        .filter("accountId", accountId)
+                        .get();
     assertNull(encryptedData.getParentIds());
   }
 
@@ -447,7 +503,8 @@ public class SecretTextTest extends WingsBaseTest {
         secretManagementResource.saveSecret(accountId, SecretText.builder().name(secretName).value(secretValue).build())
             .getResource();
 
-    Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT);
+    Query<EncryptedData> query =
+        wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT).filter("accountId", accountId);
     List<EncryptedData> encryptedDataList = query.asList();
     assertEquals(1, encryptedDataList.size());
     EncryptedData encryptedData = encryptedDataList.get(0);
@@ -482,7 +539,8 @@ public class SecretTextTest extends WingsBaseTest {
       String savedAttributeId = wingsPersistence.save(serviceVariable);
       variableIds.add(savedAttributeId);
 
-      query = wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT);
+      query =
+          wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT).filter("accountId", accountId);
       assertEquals(1, query.count());
       encryptedData = query.get();
       assertEquals(secretName, encryptedData.getName());
@@ -503,7 +561,8 @@ public class SecretTextTest extends WingsBaseTest {
       remainingVariables.remove(variableId);
       wingsPersistence.delete(ServiceVariable.class, variableId);
 
-      query = wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT);
+      query =
+          wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT).filter("accountId", accountId);
       assertEquals(1, query.count());
       encryptedData = query.get();
       assertEquals(secretName, encryptedData.getName());
@@ -524,7 +583,8 @@ public class SecretTextTest extends WingsBaseTest {
       i--;
     }
 
-    query = wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT);
+    query =
+        wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT).filter("accountId", accountId);
     assertEquals(1, query.count());
     encryptedData = query.get();
     assertEquals(secretName, encryptedData.getName());
@@ -545,7 +605,8 @@ public class SecretTextTest extends WingsBaseTest {
     String secretId =
         secretManagementResource.saveSecret(accountId, SecretText.builder().name(secretName).value(secretValue).build())
             .getResource();
-    Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT);
+    Query<EncryptedData> query =
+        wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT).filter("accountId", accountId);
     List<EncryptedData> encryptedDataList = query.asList();
     assertEquals(1, encryptedDataList.size());
     EncryptedData encryptedData = encryptedDataList.get(0);
@@ -580,7 +641,8 @@ public class SecretTextTest extends WingsBaseTest {
       String savedAttributeId = wingsPersistence.save(serviceVariable);
       variableIds.add(savedAttributeId);
 
-      query = wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT);
+      query =
+          wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT).filter("accountId", accountId);
       assertEquals(1, query.count());
       encryptedData = query.get();
       assertEquals(secretName, encryptedData.getName());
@@ -603,7 +665,9 @@ public class SecretTextTest extends WingsBaseTest {
 
       if (i == 0) {
         secretManagementResource.deleteSecret(accountId, secretId);
-        query = wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT);
+        query = wingsPersistence.createQuery(EncryptedData.class)
+                    .filter("type", SECRET_TEXT)
+                    .filter("accountId", accountId);
         assertTrue(query.asList().isEmpty());
       } else {
         try {
@@ -612,7 +676,9 @@ public class SecretTextTest extends WingsBaseTest {
         } catch (WingsException e) {
           // expected
         }
-        query = wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT);
+        query = wingsPersistence.createQuery(EncryptedData.class)
+                    .filter("type", SECRET_TEXT)
+                    .filter("accountId", accountId);
         assertEquals(1, query.count());
       }
       i--;
@@ -729,7 +795,8 @@ public class SecretTextTest extends WingsBaseTest {
       assertEquals(remainingVariables, new HashSet<>(usages));
     }
 
-    Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT);
+    Query<EncryptedData> query =
+        wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT).filter("accountId", accountId);
     assertEquals(1, query.count());
     EncryptedData encryptedData = query.get();
     assertEquals(secretName, encryptedData.getName());
@@ -754,7 +821,8 @@ public class SecretTextTest extends WingsBaseTest {
     String secretFileId =
         secretManagementResource.saveFile(accountId, secretName, new FileInputStream(fileToSave)).getResource();
 
-    Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE);
+    Query<EncryptedData> query =
+        wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE).filter("accountId", accountId);
     List<EncryptedData> encryptedDataList = query.asList();
     assertEquals(1, encryptedDataList.size());
     EncryptedData encryptedData = encryptedDataList.get(0);
@@ -795,7 +863,8 @@ public class SecretTextTest extends WingsBaseTest {
 
     String configFileId = configService.save(configFile, null);
 
-    query = wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE);
+    query =
+        wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE).filter("accountId", accountId);
     assertEquals(1, query.count());
     encryptedData = query.get();
     assertEquals(secretName, encryptedData.getName());
@@ -829,7 +898,8 @@ public class SecretTextTest extends WingsBaseTest {
     File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
     secretManagementResource.updateFile(accountId, newSecretName, encryptedUuid, new FileInputStream(fileToUpdate));
 
-    query = wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE);
+    query =
+        wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE).filter("accountId", accountId);
     assertEquals(1, query.count());
     encryptedData = query.get();
     assertEquals(newSecretName, encryptedData.getName());
@@ -887,7 +957,8 @@ public class SecretTextTest extends WingsBaseTest {
     String secretFileId =
         secretManager.saveFile(accountId, secretName, new BoundedInputStream(new FileInputStream(fileToSave)));
 
-    Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE);
+    Query<EncryptedData> query =
+        wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE).filter("accountId", accountId);
     List<EncryptedData> encryptedDataList = query.asList();
     assertEquals(1, encryptedDataList.size());
     EncryptedData encryptedData = encryptedDataList.get(0);
@@ -933,7 +1004,8 @@ public class SecretTextTest extends WingsBaseTest {
       String configFileId = configService.save(configFile, null);
       variableIds.add(configFileId);
 
-      query = wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE);
+      query =
+          wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE).filter("accountId", accountId);
       assertEquals(1, query.count());
       encryptedData = query.get();
       assertEquals(secretName, encryptedData.getName());
@@ -954,7 +1026,8 @@ public class SecretTextTest extends WingsBaseTest {
       remainingVariables.remove(variableId);
       configService.delete(appId, variableId);
 
-      query = wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE);
+      query =
+          wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE).filter("accountId", accountId);
       assertEquals(1, query.count());
       encryptedData = query.get();
       assertEquals(secretName, encryptedData.getName());
@@ -975,7 +1048,8 @@ public class SecretTextTest extends WingsBaseTest {
       i--;
     }
 
-    query = wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE);
+    query =
+        wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE).filter("accountId", accountId);
     assertEquals(1, query.count());
     encryptedData = query.get();
     assertEquals(secretName, encryptedData.getName());
@@ -1000,7 +1074,8 @@ public class SecretTextTest extends WingsBaseTest {
     String secretFileId =
         secretManager.saveFile(accountId, secretName, new BoundedInputStream(new FileInputStream(fileToSave)));
 
-    Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE);
+    Query<EncryptedData> query =
+        wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE).filter("accountId", accountId);
     List<EncryptedData> encryptedDataList = query.asList();
     assertEquals(1, encryptedDataList.size());
     EncryptedData encryptedData = encryptedDataList.get(0);
@@ -1046,7 +1121,8 @@ public class SecretTextTest extends WingsBaseTest {
       String configFileId = configService.save(configFile, null);
       variableIds.add(configFileId);
 
-      query = wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE);
+      query =
+          wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE).filter("accountId", accountId);
       assertEquals(1, query.count());
       encryptedData = query.get();
       assertEquals(secretName, encryptedData.getName());
@@ -1071,7 +1147,9 @@ public class SecretTextTest extends WingsBaseTest {
 
       if (i == 0) {
         secretManagementResource.deleteSecret(accountId, secretFileId);
-        query = wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE);
+        query = wingsPersistence.createQuery(EncryptedData.class)
+                    .filter("type", CONFIG_FILE)
+                    .filter("accountId", accountId);
         assertTrue(query.asList().isEmpty());
       } else {
         try {
@@ -1080,7 +1158,9 @@ public class SecretTextTest extends WingsBaseTest {
         } catch (WingsException e) {
           // expected
         }
-        query = wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE);
+        query = wingsPersistence.createQuery(EncryptedData.class)
+                    .filter("type", CONFIG_FILE)
+                    .filter("accountId", accountId);
         assertEquals(1, query.count());
       }
       i--;
@@ -1098,7 +1178,8 @@ public class SecretTextTest extends WingsBaseTest {
     String secretFileId =
         secretManager.saveFile(accountId, secretName, new BoundedInputStream(new FileInputStream(fileToSave)));
 
-    Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE);
+    Query<EncryptedData> query =
+        wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE).filter("accountId", accountId);
     List<EncryptedData> encryptedDataList = query.asList();
     assertEquals(1, encryptedDataList.size());
     EncryptedData encryptedData = encryptedDataList.get(0);
@@ -1140,7 +1221,8 @@ public class SecretTextTest extends WingsBaseTest {
 
     String configFileId = configService.save(configFile, null);
 
-    query = wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE);
+    query =
+        wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE).filter("accountId", accountId);
     assertEquals(1, query.count());
     encryptedData = query.get();
     assertEquals(secretName, encryptedData.getName());
@@ -1163,7 +1245,8 @@ public class SecretTextTest extends WingsBaseTest {
     Thread.sleep(2000);
 
     secretManagementResource.deleteSecret(accountId, secretFileId);
-    query = wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE);
+    query =
+        wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE).filter("accountId", accountId);
     assertTrue(query.asList().isEmpty());
   }
 
@@ -1210,7 +1293,8 @@ public class SecretTextTest extends WingsBaseTest {
         secretManagementResource.saveSecret(accountId, SecretText.builder().name(secretName).value(secretValue).build())
             .getResource();
 
-    Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT);
+    Query<EncryptedData> query =
+        wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT).filter("accountId", accountId);
     List<EncryptedData> encryptedDataList = query.asList();
     assertEquals(1, encryptedDataList.size());
     EncryptedData encryptedData = encryptedDataList.get(0);
@@ -1261,7 +1345,8 @@ public class SecretTextTest extends WingsBaseTest {
     secretManagementResource.updateSecret(
         accountId, secretId, SecretText.builder().name(newSecretName).value(newSecretValue).build());
 
-    query = wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT);
+    query =
+        wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT).filter("accountId", accountId);
     encryptedDataList = query.asList();
     assertEquals(1, encryptedDataList.size());
     encryptedData = encryptedDataList.get(0);
@@ -1285,6 +1370,546 @@ public class SecretTextTest extends WingsBaseTest {
     encryptionService.decrypt(
         savedVariable, secretManager.getEncryptionDetails(savedVariable, appId, workflowExecutionId));
     assertEquals(newSecretValue, String.valueOf(savedVariable.getValue()));
+  }
+
+  @Test
+  public void serviceVariableSearchTags() throws IllegalAccessException, InterruptedException {
+    String secretName = generateUuid();
+    String secretValue = generateUuid();
+    String secretId =
+        secretManagementResource.saveSecret(accountId, SecretText.builder().name(secretName).value(secretValue).build())
+            .getResource();
+
+    int numOfServices = 2;
+    int numOfServiceVariables = 3;
+
+    List<String> serviceNames = new ArrayList<>();
+    List<String> serviceIds = new ArrayList<>();
+    List<String> appIds = new ArrayList<>();
+    List<String> serviceVariableIds = new ArrayList<>();
+    Set<String> serviceVariableNames = new HashSet<>();
+    for (int i = 0; i < numOfServices; i++) {
+      Service service = Service.builder().appId(appId).name("service-" + i).build();
+      String serviceId = wingsPersistence.save(service);
+
+      for (int j = 0; j < numOfServiceVariables; j++) {
+        ServiceVariable serviceVariable = ServiceVariable.builder()
+                                              .templateId(UUID.randomUUID().toString())
+                                              .envId(Base.GLOBAL_ENV_ID)
+                                              .entityType(EntityType.SERVICE)
+                                              .entityId(service.getUuid())
+                                              .parentServiceVariableId(UUID.randomUUID().toString())
+                                              .overrideType(OverrideType.ALL)
+                                              .instances(Collections.singletonList(UUID.randomUUID().toString()))
+                                              .expression(UUID.randomUUID().toString())
+                                              .accountId(accountId)
+                                              .name("service-variable-" + i + "-j" + j)
+                                              .value(secretId.toCharArray())
+                                              .type(Type.ENCRYPTED_TEXT)
+                                              .build();
+        serviceVariableNames.add(serviceVariable.getName());
+        serviceVariableIds.add(serviceVariableResource.save(appId, serviceVariable).getResource().getUuid());
+        serviceIds.add(serviceId);
+        serviceNames.add(service.getName());
+        appIds.add(appId);
+      }
+    }
+
+    Thread.sleep(2000);
+    List<EncryptedData> encryptedDataList = wingsPersistence.createQuery(EncryptedData.class)
+                                                .filter("accountId", accountId)
+                                                .filter("type", SettingVariableTypes.SECRET_TEXT)
+                                                .asList();
+    assertEquals(1, encryptedDataList.size());
+
+    EncryptedData encryptedData = encryptedDataList.get(0);
+    assertEquals(appIds, encryptedData.getAppIds());
+    assertEquals(numOfServices * numOfServiceVariables, encryptedData.getAppIds().size());
+    Map<String, AtomicInteger> searchTags = encryptedData.getSearchTags();
+
+    String appName = appService.get(appId).getName();
+    assertTrue(searchTags.containsKey(appName));
+    assertEquals(numOfServices * numOfServiceVariables, searchTags.get(appName).get());
+
+    assertEquals(serviceIds, encryptedData.getServiceIds());
+    serviceNames.forEach(serviceName -> {
+      assertTrue(searchTags.containsKey(serviceName));
+      assertEquals(numOfServiceVariables, searchTags.get(serviceName).get());
+    });
+
+    assertTrue(encryptedData.getServiceVariableIds().containsAll(serviceVariableIds));
+    serviceVariableNames.forEach(servicevariableName -> {
+      assertTrue(searchTags.containsKey(servicevariableName));
+      assertEquals(1, searchTags.get(servicevariableName).get());
+    });
+
+    // update and test
+    secretName = generateUuid();
+    secretValue = generateUuid();
+    String newSecretId =
+        secretManagementResource.saveSecret(accountId, SecretText.builder().name(secretName).value(secretValue).build())
+            .getResource();
+
+    for (int i = 0; i < numOfServices; i++) {
+      for (int j = 0; j < numOfServiceVariables; j++) {
+        int serviceVariableIndex = i * numOfServiceVariables + j + 1;
+        System.out.println("loop i: " + i + " j: " + j + " index: " + serviceVariableIndex);
+        String serviceVariableId = serviceVariableIds.get(serviceVariableIndex - 1);
+        ServiceVariable serviceVariable = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
+        serviceVariable.setValue(newSecretId.toCharArray());
+        serviceVariableResource.update(appId, serviceVariableId, serviceVariable);
+
+        EncryptedData oldEncryptedData = wingsPersistence.get(EncryptedData.class, secretId);
+        EncryptedData newEncryptedData = wingsPersistence.get(EncryptedData.class, newSecretId);
+        if (serviceVariableIndex == numOfServices * numOfServiceVariables) {
+          assertNull(oldEncryptedData.getAppIds());
+        } else {
+          assertEquals(
+              numOfServices * numOfServiceVariables - serviceVariableIndex, oldEncryptedData.getAppIds().size());
+        }
+        assertEquals(serviceVariableIndex, newEncryptedData.getAppIds().size());
+
+        if (serviceVariableIndex != numOfServices * numOfServiceVariables) {
+          assertEquals(numOfServices * numOfServiceVariables - serviceVariableIndex,
+              oldEncryptedData.getSearchTags().get(appName).get());
+          assertEquals(serviceVariableIndex, newEncryptedData.getSearchTags().get(appName).get());
+          String serviceId = serviceVariable.getEntityId();
+          String serviceName = serviceResourceService.get(appId, serviceId).getName();
+
+          if (j != numOfServiceVariables - 1) {
+            assertEquals(numOfServiceVariables - j - 1, oldEncryptedData.getSearchTags().get(serviceName).get());
+          } else {
+            assertNull(oldEncryptedData.getSearchTags().get(serviceName));
+          }
+          assertEquals(j + 1, newEncryptedData.getSearchTags().get(serviceName).get());
+
+          assertNull(oldEncryptedData.getSearchTags().get(serviceVariable.getName()));
+          assertEquals(1, newEncryptedData.getSearchTags().get(serviceVariable.getName()).get());
+        } else {
+          assertNull(oldEncryptedData.getSearchTags());
+          assertNull(oldEncryptedData.getAppIds());
+          assertNull(oldEncryptedData.getServiceIds());
+        }
+      }
+    }
+
+    // delete service variable and test
+    for (int i = 0; i < numOfServices; i++) {
+      for (int j = 0; j < numOfServiceVariables; j++) {
+        int serviceVariableIndex = i * numOfServiceVariables + j + 1;
+        System.out.println("loop i: " + i + " j: " + j + " index: " + serviceVariableIndex);
+        String serviceVariableId = serviceVariableIds.get(serviceVariableIndex - 1);
+        ServiceVariable serviceVariable = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
+        serviceVariable.setValue(newSecretId.toCharArray());
+        serviceVariableResource.delete(appId, serviceVariableId);
+
+        EncryptedData newEncryptedData = wingsPersistence.get(EncryptedData.class, newSecretId);
+        if (serviceVariableIndex == numOfServices * numOfServiceVariables) {
+          assertNull(newEncryptedData.getAppIds());
+        } else {
+          assertEquals(
+              numOfServices * numOfServiceVariables - serviceVariableIndex, newEncryptedData.getAppIds().size());
+        }
+        if (serviceVariableIndex != numOfServices * numOfServiceVariables) {
+          assertEquals(numOfServices * numOfServiceVariables - serviceVariableIndex,
+              newEncryptedData.getSearchTags().get(appName).get());
+          String serviceId = serviceVariable.getEntityId();
+          String serviceName = serviceResourceService.get(appId, serviceId).getName();
+
+          if (j != numOfServiceVariables - 1) {
+            assertEquals(numOfServiceVariables - j - 1, newEncryptedData.getSearchTags().get(serviceName).get());
+          }
+
+          assertNull(newEncryptedData.getSearchTags().get(serviceVariable.getName()));
+        } else {
+          assertNull(newEncryptedData.getSearchTags());
+          assertNull(newEncryptedData.getAppIds());
+          assertNull(newEncryptedData.getServiceIds());
+        }
+      }
+    }
+  }
+
+  @Test
+  public void serviceVariableTemplateSearchTags() throws IllegalAccessException {
+    String secretName = generateUuid();
+    String secretValue = generateUuid();
+    String secretId =
+        secretManagementResource.saveSecret(accountId, SecretText.builder().name(secretName).value(secretValue).build())
+            .getResource();
+
+    int numOfServices = 2;
+    int numOfEnvs = 3;
+    int numOfServiceVariables = 4;
+
+    List<String> serviceNames = new ArrayList<>();
+    List<String> serviceIds = new ArrayList<>();
+    List<String> appIds = new ArrayList<>();
+    List<String> serviceVariableTemplateIds = new ArrayList<>();
+    List<String> serviceVariableIds = new ArrayList<>();
+    List<String> envIds = new ArrayList<>();
+    List<String> envNames = new ArrayList<>();
+    Set<String> serviceVariableTemplateNames = new HashSet<>();
+    for (int i = 0; i < numOfServices; i++) {
+      Service service = Service.builder().appId(appId).name("service-" + i).build();
+      String serviceId = wingsPersistence.save(service);
+
+      for (int j = 0; j < numOfEnvs; j++) {
+        String envId = wingsPersistence.save(
+            Environment.Builder.anEnvironment().withAppId(appId).withName("env-" + i + "-j" + j).build());
+        ServiceTemplate serviceTemplate = aServiceTemplate()
+                                              .withAppId(appId)
+                                              .withServiceId(serviceId)
+                                              .withEnvId(envId)
+                                              .withName("serviceTemplate-" + i + "-j" + j)
+                                              .build();
+        String serviceTemplateId = wingsPersistence.save(serviceTemplate);
+        envNames.add(serviceTemplate.getName());
+
+        for (int k = 0; k < numOfServiceVariables; k++) {
+          ServiceVariable serviceVariable = ServiceVariable.builder()
+                                                .templateId(UUID.randomUUID().toString())
+                                                .envId(envId)
+                                                .entityType(EntityType.SERVICE_TEMPLATE)
+                                                .entityId(serviceTemplateId)
+                                                .templateId(serviceTemplateId)
+                                                .parentServiceVariableId(UUID.randomUUID().toString())
+                                                .overrideType(OverrideType.ALL)
+                                                .instances(Collections.singletonList(UUID.randomUUID().toString()))
+                                                .expression(UUID.randomUUID().toString())
+                                                .accountId(accountId)
+                                                .name("service-variable-" + i + "-j" + j + "-k" + k)
+                                                .value(secretId.toCharArray())
+                                                .type(Type.ENCRYPTED_TEXT)
+                                                .build();
+          serviceVariableTemplateNames.add(serviceTemplate.getName());
+          serviceVariableIds.add(serviceVariableResource.save(appId, serviceVariable).getResource().getUuid());
+          serviceVariableTemplateIds.add(serviceTemplateId);
+          serviceIds.add(serviceId);
+          serviceNames.add(service.getName());
+          appIds.add(appId);
+          envIds.add(envId);
+        }
+      }
+    }
+
+    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, secretId);
+    assertEquals(appIds, encryptedData.getAppIds());
+    assertEquals(numOfServices * numOfServiceVariables * numOfEnvs, encryptedData.getAppIds().size());
+    Map<String, AtomicInteger> searchTags = encryptedData.getSearchTags();
+
+    String appName = appService.get(appId).getName();
+    assertTrue(searchTags.containsKey(appName));
+    assertEquals(numOfServices * numOfServiceVariables * numOfEnvs, searchTags.get(appName).get());
+
+    assertEquals(envIds, encryptedData.getEnvIds());
+    envNames.forEach(envName -> {
+      assertTrue(searchTags.containsKey(envName));
+      assertEquals(numOfServiceVariables, searchTags.get(envName).get());
+    });
+
+    assertEquals(serviceIds, encryptedData.getServiceIds());
+    serviceNames.forEach(serviceName -> {
+      assertTrue(searchTags.containsKey(serviceName));
+      assertEquals(numOfEnvs * numOfServiceVariables, searchTags.get(serviceName).get());
+    });
+
+    assertTrue(encryptedData.getServiceVariableIds().containsAll(serviceVariableTemplateIds));
+    serviceVariableTemplateNames.forEach(servicevariableName -> {
+      assertTrue(searchTags.containsKey(servicevariableName));
+      assertEquals(numOfServiceVariables, searchTags.get(servicevariableName).get());
+    });
+
+    // update and test
+    secretName = generateUuid();
+    secretValue = generateUuid();
+    String newSecretId =
+        secretManagementResource.saveSecret(accountId, SecretText.builder().name(secretName).value(secretValue).build())
+            .getResource();
+
+    for (int i = 0; i < numOfServices; i++) {
+      for (int j = 0; j < numOfEnvs; j++) {
+        for (int k = 0; k < numOfServiceVariables; k++) {
+          int serviceVariableIndex = i * numOfEnvs * numOfServiceVariables + j * numOfServiceVariables + k + 1;
+          System.out.println("loop i: " + i + " j: " + j + " k: " + k + " index: " + serviceVariableIndex);
+          String serviceVariableId = serviceVariableIds.get(serviceVariableIndex - 1);
+          ServiceVariable serviceVariable = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
+          serviceVariable.setValue(newSecretId.toCharArray());
+          serviceVariableResource.update(appId, serviceVariableId, serviceVariable);
+
+          EncryptedData oldEncryptedData = wingsPersistence.get(EncryptedData.class, secretId);
+          EncryptedData newEncryptedData = wingsPersistence.get(EncryptedData.class, newSecretId);
+          assertEquals(serviceVariableIndex, newEncryptedData.getAppIds().size());
+
+          if (serviceVariableIndex != numOfServices * numOfEnvs * numOfServiceVariables) {
+            assertEquals(numOfServices * numOfEnvs * numOfServiceVariables - serviceVariableIndex,
+                oldEncryptedData.getAppIds().size());
+            assertEquals(numOfServices * numOfEnvs * numOfServiceVariables - serviceVariableIndex,
+                oldEncryptedData.getSearchTags().get(appName).get());
+            assertEquals(serviceVariableIndex, newEncryptedData.getSearchTags().get(appName).get());
+            String serviceTemplateId = serviceVariable.getEntityId();
+            ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
+            String serviceId = serviceTemplate.getServiceId();
+            String serviceName = serviceResourceService.get(appId, serviceId).getName();
+            if (j == numOfEnvs - 1 && k == numOfServiceVariables - 1) {
+              assertNull(oldEncryptedData.getSearchTags().get(serviceName));
+            } else {
+              assertEquals(numOfEnvs * numOfServiceVariables - j * numOfServiceVariables - k - 1,
+                  oldEncryptedData.getSearchTags().get(serviceName).get());
+            }
+            assertEquals(j * numOfServiceVariables + k + 1, newEncryptedData.getSearchTags().get(serviceName).get());
+
+            assertNull(oldEncryptedData.getSearchTags().get(serviceVariable.getName()));
+            assertEquals(k + 1, newEncryptedData.getSearchTags().get(serviceTemplate.getName()).get());
+          } else {
+            assertNull(oldEncryptedData.getSearchTags());
+            assertNull(oldEncryptedData.getAppIds());
+            assertNull(oldEncryptedData.getServiceIds());
+          }
+        }
+      }
+    }
+
+    // delete service variable and test
+    for (int i = 0; i < numOfServices; i++) {
+      for (int j = 0; j < numOfEnvs; j++) {
+        for (int k = 0; k < numOfServiceVariables; k++) {
+          int serviceVariableIndex = i * numOfEnvs * numOfServiceVariables + j * numOfServiceVariables + k + 1;
+          System.out.println("loop i: " + i + " j: " + j + " k: " + k + " index: " + serviceVariableIndex);
+          String serviceVariableId = serviceVariableIds.get(serviceVariableIndex - 1);
+          ServiceVariable serviceVariable = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
+          serviceVariable.setValue(newSecretId.toCharArray());
+          serviceVariableResource.delete(appId, serviceVariableId);
+
+          EncryptedData newEncryptedData = wingsPersistence.get(EncryptedData.class, newSecretId);
+
+          if (serviceVariableIndex != numOfServices * numOfEnvs * numOfServiceVariables) {
+            assertEquals(numOfServices * numOfEnvs * numOfServiceVariables - serviceVariableIndex,
+                newEncryptedData.getAppIds().size());
+            assertEquals(numOfServices * numOfEnvs * numOfServiceVariables - serviceVariableIndex,
+                newEncryptedData.getSearchTags().get(appName).get());
+            String serviceTemplateId = serviceVariable.getEntityId();
+            ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
+            String serviceId = serviceTemplate.getServiceId();
+            String serviceName = serviceResourceService.get(appId, serviceId).getName();
+
+            if (j == numOfEnvs - 1 && k == numOfServiceVariables - 1) {
+              assertNull(newEncryptedData.getSearchTags().get(serviceName));
+            } else {
+              assertEquals(numOfEnvs * numOfServiceVariables - j * numOfServiceVariables - k - 1,
+                  newEncryptedData.getSearchTags().get(serviceName).get());
+            }
+
+            assertNull(newEncryptedData.getSearchTags().get(serviceVariable.getName()));
+          } else {
+            assertNull(newEncryptedData.getSearchTags());
+            assertNull(newEncryptedData.getAppIds());
+            assertNull(newEncryptedData.getServiceIds());
+          }
+        }
+      }
+    }
+  }
+
+  @Test
+  public void serviceVariableSyncSearchTags() throws IllegalAccessException {
+    String secretName = generateUuid();
+    String secretValue = generateUuid();
+    String secretId =
+        secretManagementResource.saveSecret(accountId, SecretText.builder().name(secretName).value(secretValue).build())
+            .getResource();
+
+    int numOfServices = 3;
+    int numOfServiceVariables = 3;
+
+    List<String> serviceNames = new ArrayList<>();
+    List<String> serviceIds = new ArrayList<>();
+    List<String> appIds = new ArrayList<>();
+    List<String> serviceVariableIds = new ArrayList<>();
+    Set<String> serviceVariableNames = new HashSet<>();
+    for (int i = 0; i < numOfServices; i++) {
+      Service service = Service.builder().appId(appId).name("service-" + i).build();
+      String serviceId = wingsPersistence.save(service);
+
+      for (int j = 0; j < numOfServiceVariables; j++) {
+        ServiceVariable serviceVariable = ServiceVariable.builder()
+                                              .templateId(UUID.randomUUID().toString())
+                                              .envId(Base.GLOBAL_ENV_ID)
+                                              .entityType(EntityType.SERVICE)
+                                              .entityId(service.getUuid())
+                                              .parentServiceVariableId(UUID.randomUUID().toString())
+                                              .overrideType(OverrideType.ALL)
+                                              .instances(Collections.singletonList(UUID.randomUUID().toString()))
+                                              .expression(UUID.randomUUID().toString())
+                                              .accountId(accountId)
+                                              .name("service-variable-" + i + "-j" + j)
+                                              .value(secretId.toCharArray())
+                                              .type(Type.ENCRYPTED_TEXT)
+                                              .build();
+        serviceVariableNames.add(serviceVariable.getName());
+        serviceVariableIds.add(serviceVariableResource.save(appId, serviceVariable).getResource().getUuid());
+        serviceIds.add(serviceId);
+        serviceNames.add(service.getName());
+        appIds.add(appId);
+      }
+    }
+
+    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, secretId);
+    encryptedData.clearSearchTags();
+    wingsPersistence.save(encryptedData);
+
+    encryptedData = wingsPersistence.get(EncryptedData.class, secretId);
+    assertNull(encryptedData.getAppIds());
+    assertNull(encryptedData.getServiceIds());
+    assertNull(encryptedData.getEnvIds());
+    assertNull(encryptedData.getServiceVariableIds());
+    assertNull(encryptedData.getSearchTags());
+
+    serviceVariableService.updateSearchTagsForSecrets(accountId);
+
+    encryptedData = wingsPersistence.get(EncryptedData.class, secretId);
+    assertEquals(appIds, encryptedData.getAppIds());
+    assertEquals(numOfServices * numOfServiceVariables, encryptedData.getAppIds().size());
+    Map<String, AtomicInteger> searchTags = encryptedData.getSearchTags();
+
+    String appName = appService.get(appId).getName();
+    assertTrue(searchTags.containsKey(appName));
+    assertEquals(numOfServices * numOfServiceVariables, searchTags.get(appName).get());
+
+    assertTrue(CollectionUtils.isEqualCollection(serviceIds, encryptedData.getServiceIds()));
+    serviceNames.forEach(serviceName -> {
+      assertTrue(searchTags.containsKey(serviceName));
+      assertEquals(numOfServiceVariables, searchTags.get(serviceName).get());
+    });
+
+    assertTrue(encryptedData.getServiceVariableIds().containsAll(serviceVariableIds));
+    serviceVariableNames.forEach(servicevariableName -> {
+      assertTrue(searchTags.containsKey(servicevariableName));
+      assertEquals(1, searchTags.get(servicevariableName).get());
+    });
+  }
+
+  @Test
+  public void filterSecretSearchTags() throws IllegalAccessException {
+    int numOfServiceVariables = 6;
+    int numOfSecrets = numOfServiceVariables * 5;
+    List<String> secretIds = new ArrayList<>();
+    List<SecretText> secretTexts = new ArrayList<>();
+    for (int i = 0; i < numOfSecrets; i++) {
+      SecretText secretText = SecretText.builder().name(generateUuid()).value(generateUuid()).build();
+      secretIds.add(secretManagementResource.saveSecret(accountId, secretText).getResource());
+      secretTexts.add(secretText);
+    }
+    int numOfServices = 5;
+    int numOfEnvs = 4;
+
+    List<String> serviceNames = new ArrayList<>();
+    List<String> serviceIds = new ArrayList<>();
+    List<String> appIds = new ArrayList<>();
+    List<String> serviceVariableTemplateIds = new ArrayList<>();
+    List<String> serviceVariableIds = new ArrayList<>();
+    List<String> envIds = new ArrayList<>();
+    List<String> envNames = new ArrayList<>();
+    Set<String> serviceVariableTemplateNames = new HashSet<>();
+    for (int i = 0; i < numOfServices; i++) {
+      Service service = Service.builder().appId(appId).name("service-" + i).build();
+      String serviceId = wingsPersistence.save(service);
+
+      for (int j = 0; j < numOfEnvs; j++) {
+        String envId = wingsPersistence.save(
+            Environment.Builder.anEnvironment().withAppId(appId).withName("env-" + i + "-" + j).build());
+        ServiceTemplate serviceTemplate = aServiceTemplate()
+                                              .withAppId(appId)
+                                              .withServiceId(serviceId)
+                                              .withEnvId(envId)
+                                              .withName("serviceTemplate-" + i + "-" + j)
+                                              .build();
+        String serviceTemplateId = wingsPersistence.save(serviceTemplate);
+        envNames.add(serviceTemplate.getName());
+
+        for (int k = 0; k < numOfServiceVariables; k++) {
+          ServiceVariable serviceVariable = ServiceVariable.builder()
+                                                .templateId(UUID.randomUUID().toString())
+                                                .envId(envId)
+                                                .entityType(EntityType.SERVICE_TEMPLATE)
+                                                .entityId(serviceTemplateId)
+                                                .templateId(serviceTemplateId)
+                                                .parentServiceVariableId(UUID.randomUUID().toString())
+                                                .overrideType(OverrideType.ALL)
+                                                .instances(Collections.singletonList(UUID.randomUUID().toString()))
+                                                .expression(UUID.randomUUID().toString())
+                                                .accountId(accountId)
+                                                .name("service-variable-" + i + "-" + j + "-" + k)
+                                                .value(secretIds.get(j * numOfServiceVariables).toCharArray())
+                                                .type(Type.ENCRYPTED_TEXT)
+                                                .build();
+          serviceVariableTemplateNames.add(serviceTemplate.getName());
+          serviceVariableIds.add(serviceVariableResource.save(appId, serviceVariable).getResource().getUuid());
+          serviceVariableTemplateIds.add(serviceTemplateId);
+          serviceIds.add(serviceId);
+          serviceNames.add(service.getName());
+          appIds.add(appId);
+          envIds.add(envId);
+        }
+      }
+    }
+
+    String appName = appService.get(appId).getName();
+    PageRequest<EncryptedData> pageRequest = aPageRequest()
+                                                 .addFilter("accountId", Operator.EQ, accountId)
+                                                 .addFilter("keywords", Operator.CONTAINS, appName)
+                                                 .build();
+    List<EncryptedData> encryptedDataList =
+        secretManagementResource.listSecrets(accountId, SettingVariableTypes.SECRET_TEXT, pageRequest).getResource();
+    assertEquals(numOfEnvs, encryptedDataList.size());
+
+    pageRequest = aPageRequest()
+                      .addFilter("accountId", Operator.EQ, accountId)
+                      .addFilter("keywords", Operator.CONTAINS, "service-variable")
+                      .build();
+
+    encryptedDataList =
+        secretManagementResource.listSecrets(accountId, SettingVariableTypes.SECRET_TEXT, pageRequest).getResource();
+    assertEquals(0, encryptedDataList.size());
+
+    pageRequest = aPageRequest()
+                      .addFilter("accountId", Operator.EQ, accountId)
+                      .addFilter("keywords", Operator.CONTAINS, "env")
+                      .build();
+    encryptedDataList =
+        secretManagementResource.listSecrets(accountId, SettingVariableTypes.SECRET_TEXT, pageRequest).getResource();
+    assertEquals(numOfEnvs, encryptedDataList.size());
+
+    pageRequest = aPageRequest()
+                      .addFilter("accountId", Operator.EQ, accountId)
+                      .addFilter("keywords", Operator.CONTAINS, "env-0")
+                      .build();
+    encryptedDataList =
+        secretManagementResource.listSecrets(accountId, SettingVariableTypes.SECRET_TEXT, pageRequest).getResource();
+    assertEquals(numOfEnvs, encryptedDataList.size());
+    for (int i = 0; i < numOfServices; i++) {
+      for (int j = 0; j < numOfEnvs; j++) {
+        pageRequest = aPageRequest()
+                          .addFilter("accountId", Operator.EQ, accountId)
+                          .addFilter("keywords", Operator.CONTAINS, "env-" + i + "-" + j)
+                          .build();
+        encryptedDataList =
+            secretManagementResource.listSecrets(accountId, SettingVariableTypes.SECRET_TEXT, pageRequest)
+                .getResource();
+        assertEquals(1, encryptedDataList.size());
+        assertEquals(secretTexts.get(j * numOfServiceVariables).getName(), encryptedDataList.get(0).getName());
+
+        pageRequest = aPageRequest()
+                          .addFilter("accountId", Operator.EQ, accountId)
+                          .addFilter("keywords", Operator.CONTAINS, "serviceTemplate-" + i + "-" + j)
+                          .build();
+        encryptedDataList =
+            secretManagementResource.listSecrets(accountId, SettingVariableTypes.SECRET_TEXT, pageRequest)
+                .getResource();
+        assertEquals(1, encryptedDataList.size());
+        assertEquals(secretTexts.get(j * numOfServiceVariables).getName(), encryptedDataList.get(0).getName());
+      }
+    }
   }
 
   private VaultConfig getVaultConfig() throws IOException {

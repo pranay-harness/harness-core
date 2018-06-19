@@ -11,6 +11,7 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import retrofit2.http.Body;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.RestResponse;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.UuidAware;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -170,10 +171,25 @@ public class SecretManagementResource {
   @Path("/list-secrets")
   @Timed
   @ExceptionMetered
+  @Deprecated
   public RestResponse<List<EncryptedData>> listSecrets(
       @QueryParam("accountId") final String accountId, @QueryParam("type") final SettingVariableTypes type) {
     try {
       return new RestResponse<>(secretManager.listSecrets(accountId, type));
+    } catch (IllegalAccessException e) {
+      throw new WingsException(e);
+    }
+  }
+
+  @GET
+  @Path("/list-secrets-page")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<PageResponse<EncryptedData>> listSecrets(@QueryParam("accountId") final String accountId,
+      @QueryParam("type") final SettingVariableTypes type, @BeanParam PageRequest<EncryptedData> pageRequest) {
+    try {
+      pageRequest.addFilter("type", Operator.EQ, type);
+      return new RestResponse<>(secretManager.listSecrets(pageRequest));
     } catch (IllegalAccessException e) {
       throw new WingsException(e);
     }

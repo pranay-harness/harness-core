@@ -105,4 +105,10 @@ public interface ServiceVariableService extends OwnedByService {
    * @param serviceTemplateId the service template id
    */
   void deleteByTemplateId(String appId, String serviceTemplateId);
+
+  /**
+   * Checks and updates the search tags for secrets.
+   * @param accountId
+   */
+  void updateSearchTagsForSecrets(String accountId);
 }

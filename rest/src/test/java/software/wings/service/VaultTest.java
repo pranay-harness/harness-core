@@ -1513,7 +1513,6 @@ public class VaultTest extends WingsBaseTest {
   }
 
   private Thread startTransitionListener() {
-    setInternalState(vaultService, "transitionKmsQueue", transitionKmsQueue);
     transitionEventListener = new KmsTransitionEventListener();
     setInternalState(transitionEventListener, "timer", new ScheduledThreadPoolExecutor(1));
     setInternalState(transitionEventListener, "queue", transitionKmsQueue);

@@ -81,7 +81,10 @@ public interface SecretManager {
 
   boolean deleteFile(String accountId, String uuId);
 
+  @Deprecated
   List<EncryptedData> listSecrets(String accountId, SettingVariableTypes type) throws IllegalAccessException;
+
+  PageResponse<EncryptedData> listSecrets(PageRequest<EncryptedData> pageRequest) throws IllegalAccessException;
 
   List<UuidAware> getSecretUsage(String accountId, String secretTextId);
 

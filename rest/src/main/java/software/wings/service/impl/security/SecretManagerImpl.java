@@ -1,9 +1,9 @@
 package software.wings.service.impl.security;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.stream.Collectors.joining;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.dl.HQuery.excludeAuthority;
@@ -252,7 +252,7 @@ public class SecretManagerImpl implements SecretManager {
 
           encryptedDataDetails.add(encryptedDataDetail);
 
-          if (isNotBlank(workflowExecutionId)) {
+          if (isNotEmpty(workflowExecutionId)) {
             WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, workflowExecutionId);
             if (workflowExecution == null) {
               logger.warn("No workflow execution with id {} found.", workflowExecutionId);
@@ -315,7 +315,7 @@ public class SecretManagerImpl implements SecretManager {
     pageRequest.addFilter("accountId", Operator.EQ, accountId);
     PageResponse<SecretUsageLog> response = wingsPersistence.query(SecretUsageLog.class, pageRequest);
     response.getResponse().forEach(secretUsageLog -> {
-      if (isNotBlank(secretUsageLog.getWorkflowExecutionId())) {
+      if (isNotEmpty(secretUsageLog.getWorkflowExecutionId())) {
         WorkflowExecution workflowExecution =
             wingsPersistence.get(WorkflowExecution.class, secretUsageLog.getWorkflowExecutionId());
         if (workflowExecution != null) {
@@ -411,7 +411,7 @@ public class SecretManagerImpl implements SecretManager {
 
   @Override
   public EncryptedData getEncryptedDataFromYamlRef(String encryptedYamlRef) throws IllegalAccessException {
-    Preconditions.checkState(isNotBlank(encryptedYamlRef));
+    Preconditions.checkState(isNotEmpty(encryptedYamlRef));
     String[] tags = encryptedYamlRef.split(":");
     String fieldRefId = tags[1];
     return wingsPersistence.get(EncryptedData.class, fieldRefId);
@@ -420,11 +420,11 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public boolean transitionSecrets(String accountId, EncryptionType fromEncryptionType, String fromSecretId,
       EncryptionType toEncryptionType, String toSecretId) {
-    Preconditions.checkState(isNotBlank(accountId), "accountId can't be blank");
+    Preconditions.checkState(isNotEmpty(accountId), "accountId can't be blank");
     Preconditions.checkNotNull(fromEncryptionType, "fromEncryptionType can't be blank");
-    Preconditions.checkState(isNotBlank(fromSecretId), "fromVaultId can't be blank");
+    Preconditions.checkState(isNotEmpty(fromSecretId), "fromVaultId can't be blank");
     Preconditions.checkNotNull(toEncryptionType, "toEncryptionType can't be blank");
-    Preconditions.checkState(isNotBlank(toSecretId), "toVaultId can't be blank");
+    Preconditions.checkState(isNotEmpty(toSecretId), "toVaultId can't be blank");
 
     Query<EncryptedData> query =
         wingsPersistence.createQuery(EncryptedData.class).filter("accountId", accountId).filter("kmsId", fromSecretId);
@@ -893,6 +893,25 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
+  public PageResponse<EncryptedData> listSecrets(PageRequest<EncryptedData> pageRequest) throws IllegalAccessException {
+    PageResponse<EncryptedData> pageResponse = wingsPersistence.query(EncryptedData.class, pageRequest);
+
+    for (EncryptedData encryptedData : pageResponse.getResponse()) {
+      encryptedData.setEncryptedValue(SECRET_MASK.toCharArray());
+      encryptedData.setEncryptionKey(SECRET_MASK);
+      encryptedData.setEncryptedBy(getSecretManagerName(encryptedData.getType(), encryptedData.getUuid(),
+          encryptedData.getKmsId(), encryptedData.getEncryptionType()));
+
+      encryptedData.setSetupUsage(getSecretUsage(encryptedData.getAccountId(), encryptedData.getUuid()).size());
+      encryptedData.setRunTimeUsage(getUsageLogsSize(encryptedData.getUuid(), SettingVariableTypes.SECRET_TEXT));
+      encryptedData.setChangeLog(
+          getChangeLogs(encryptedData.getAccountId(), encryptedData.getUuid(), SettingVariableTypes.SECRET_TEXT)
+              .size());
+    }
+    return pageResponse;
+  }
+
+  @Override
   public List<UuidAware> getSecretUsage(String accountId, String secretTextId) {
     EncryptedData secretText = wingsPersistence.get(EncryptedData.class, secretTextId);
     Preconditions.checkNotNull(secretText, "could not find secret with id " + secretTextId);
@@ -1031,7 +1050,7 @@ public class SecretManagerImpl implements SecretManager {
       SettingVariableTypes type, String parentId, String kmsId, EncryptionType encryptionType) {
     switch (encryptionType) {
       case LOCAL:
-        Preconditions.checkState(isBlank(kmsId),
+        Preconditions.checkState(isEmpty(kmsId),
             "kms id should be null for local type, "
                 + "kmsId: " + kmsId + " for " + type + " id: " + parentId);
         return HARNESS_DEFAULT_SECRET_MANAGER;
