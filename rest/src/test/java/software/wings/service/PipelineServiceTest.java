@@ -421,6 +421,26 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldCheckIfEnvReferenced() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("envId", ENV_ID);
+    properties.put("workflowId", WORKFLOW_ID);
+    PipelineStage pipelineStage =
+        PipelineStage.builder()
+            .pipelineStageElements(asList(
+                PipelineStageElement.builder().name("STAGE1").type(ENV_STATE.name()).properties(properties).build()))
+            .build();
+
+    List<PipelineStage> pipelineStages = new ArrayList<>();
+    pipelineStages.add(pipelineStage);
+
+    Pipeline pipeline =
+        Pipeline.builder().name("pipeline1").appId(APP_ID).pipelineStages(pipelineStages).uuid(PIPELINE_ID).build();
+
+    pipelineService.isEnvironmentReferenced(APP_ID, ENV_ID);
+  }
+
+  @Test
   public void shouldListPipelines() {
     Map<String, Object> properties = new HashMap<>();
     properties.put("envId", ENV_ID);

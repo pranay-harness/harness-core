@@ -172,6 +172,7 @@ import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.common.Constants;
+import software.wings.dl.HIterator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -506,6 +507,23 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public Workflow readWorkflow(String appId, String workflowId) {
     return readWorkflow(appId, workflowId, null);
+  }
+
+  @Override
+  public List<String> isEnvironmentReferenced(String appId, String envId) {
+    List<String> referencedWorkflows = new ArrayList<>();
+    try (HIterator<Workflow> workflowHIterator =
+             new HIterator<>(wingsPersistence.createQuery(Workflow.class).filter(APP_ID_KEY, appId).fetch())) {
+      while (workflowHIterator.hasNext()) {
+        Workflow workflow = workflowHIterator.next();
+        if (workflow.getEnvId() != null && workflow.getEnvId().equals(envId)) {
+          referencedWorkflows.add(workflow.getName());
+        }
+      }
+    } catch (Exception ex) {
+      logger.error("Exception in WorkflowServiceImpl::isEnvironmentReferenced: ", ex.getMessage());
+    }
+    return referencedWorkflows;
   }
 
   @Override
