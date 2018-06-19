@@ -45,6 +45,7 @@ public class AlertCheckJob implements Job {
 
   private static final int POLL_INTERVAL = 300;
   private static final long MAX_HB_TIMEOUT = TimeUnit.MINUTES.toMillis(5);
+  private static boolean sendEmailForNoActiveDelegates;
 
   @Inject private AlertService alertService;
   @Inject private WingsPersistence wingsPersistence;
@@ -93,7 +94,13 @@ public class AlertCheckJob implements Job {
                delegate -> System.currentTimeMillis() - delegate.getLastHeartBeat() > MAX_HB_TIMEOUT)) {
       alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.NoActiveDelegates,
           NoActiveDelegatesAlert.builder().accountId(accountId).build());
+      if (!sendEmailForNoActiveDelegates) {
+        delegateService.sendAlertNotificationsForNoActiveDelegates(accountId);
+        sendEmailForNoActiveDelegates = true;
+      }
     } else {
+      // reset this flag as all delegates are not down
+      sendEmailForNoActiveDelegates = false;
       checkIfAnyDelegatesAreDown(accountId, delegates);
     }
     checkForInvalidValidSMTP(accountId);
