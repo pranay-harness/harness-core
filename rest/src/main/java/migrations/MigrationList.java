@@ -7,6 +7,7 @@ import migrations.all.AddValidUntilToActivity;
 import migrations.all.AddValidUntilToAlert;
 import migrations.all.AddValidUntilToDelegateTask;
 import migrations.all.EntityNameValidationMigration_All_00;
+import migrations.all.EntityNameValidationMigration_All_01;
 import migrations.all.FixInstanceData;
 import migrations.all.FixInstanceDataForAwsSSH;
 import migrations.all.GitSyncToAllAccounts;
@@ -59,6 +60,7 @@ public class MigrationList {
         .add(Pair.of(151, AddValidUntilToActivity.class))
         .add(Pair.of(152, BaseMigration.class))
         .add(Pair.of(153, BaseMigration.class))
+        .add(Pair.of(154, EntityNameValidationMigration_All_01.class))
         .build();
   }
 }
