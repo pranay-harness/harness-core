@@ -40,6 +40,14 @@ DELEGATE_STATE_NOTIFICATION:
           subject: ${COUNT} ${ENTITY_AFFECTED} down.
           body: ${COUNT} ${ENTITY_AFFECTED} down with ${DESCRIPTION_FIELD} ${HOST_NAMES_HTML}
 
+ALL_DELEGATE_DOWN_NOTIFICATION:
+      web: No Active Delegates for Account ${ACCOUNT_ID}
+      slack: No Active Delegates for Account ${ACCOUNT_ID}
+      email:
+          subject: No Active Delegates
+          body: All delegates are down. No Active Delegates for Account ${ACCOUNT_ID}
+
+
 APPROVAL_NEEDED_NOTIFICATION:
       web: Approval Required - ${WORKFLOW_NAME} in ${APP_NAME} is waiting for approval.
       slack: Approval Required - \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* triggered by \*${USER_NAME}\* is waiting for approval in \*${APP_NAME}\* application|| ${APPROVAL_TYPE} _started<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and ${VERB} for approval at <!date^${END_TS_SECS}^{time}|${END_DATE}>_||||${VERB}

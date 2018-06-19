@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -74,12 +75,13 @@ public class AlertCheckJobTest extends WingsBaseTest {
         .getDelegatesForAccount(ACCOUNT_ID);
     doReturn(null).when(alertService).openAlert(any(), any(), any(), any());
     doNothing().when(alertService).closeAlert(any(), any(), any(), any());
-
+    doNothing().when(delegateService).sendAlertNotificationsForNoActiveDelegates(any());
     MethodUtils.invokeMethod(alertCheckJob, true, "executeInternal", ACCOUNT_ID);
     verify(alertService, times(1)).openAlert(any(), any(), any(), any());
 
     ArgumentCaptor<AlertType> captor = ArgumentCaptor.forClass(AlertType.class);
     verify(alertService).openAlert(any(), any(), captor.capture(), any());
+    verify(delegateService, times(1)).sendAlertNotificationsForNoActiveDelegates(anyString());
     AlertType alertType = captor.getValue();
     assertEquals(AlertType.NoActiveDelegates, alertType);
   }

@@ -35,6 +35,7 @@ import static software.wings.common.Constants.DELEGATE_DIR;
 import static software.wings.common.Constants.DOCKER_DELEGATE;
 import static software.wings.common.Constants.KUBERNETES_DELEGATE;
 import static software.wings.common.Constants.MAX_DELEGATE_LAST_HEARTBEAT;
+import static software.wings.common.NotificationMessageResolver.NotificationMessageType.ALL_DELEGATE_DOWN_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.DELEGATE_STATE_NOTIFICATION;
 import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.MongoHelper.setUnset;
@@ -1083,6 +1084,21 @@ public class DelegateServiceImpl implements DelegateService {
         sendDelegateDownNotification(accountId, alertsToBeCreated);
       }
     }
+  }
+
+  @Override
+  public void sendAlertNotificationsForNoActiveDelegates(String accountId) {
+    List<NotificationGroup> notificationGroups = notificationSetupService.listDefaultNotificationGroup(accountId);
+    NotificationRule notificationRule = aNotificationRule().withNotificationGroups(notificationGroups).build();
+
+    notificationService.sendNotificationAsync(
+        anInformationNotification()
+            .withAppId(GLOBAL_APP_ID)
+            .withAccountId(accountId)
+            .withNotificationTemplateId(ALL_DELEGATE_DOWN_NOTIFICATION.name())
+            .withNotificationTemplateVariables(ImmutableMap.of("ACCOUNT_ID", accountId))
+            .build(),
+        singletonList(notificationRule));
   }
 
   private void sendDelegateDownNotification(String accountId, List<AlertData> alertsToBeCreated) {

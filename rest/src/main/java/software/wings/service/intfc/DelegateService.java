@@ -82,4 +82,6 @@ public interface DelegateService {
   Delegate updateHeartbeat(String accountId, String delegateId);
 
   void sendAlertNotificationsForDownDelegates(String accountId, List<Delegate> delegates);
+
+  void sendAlertNotificationsForNoActiveDelegates(String accountId);
 }
