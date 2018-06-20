@@ -1,6 +1,7 @@
 package software.wings.beans.container;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.strip;
 import static software.wings.exception.WingsException.USER;
@@ -150,7 +151,7 @@ public class KubernetesContainerTask extends ContainerTask {
       LineIterator lineIterator = new LineIterator(new StringReader(getAdvancedConfig()));
       while (lineIterator.hasNext()) {
         String line = lineIterator.nextLine();
-        if (line.trim().charAt(0) == '#') {
+        if (isBlank(line) || line.trim().charAt(0) == '#') {
           continue;
         }
         if (line.contains("${DOCKER_IMAGE_NAME}")) {
