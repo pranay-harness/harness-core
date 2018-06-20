@@ -57,10 +57,10 @@ public class DatabaseModule extends AbstractModule {
     morphia.getMapper().getOptions().setMapSubPackages(true);
 
     Builder mongoClientOptions = MongoClientOptions.builder()
+                                     .retryWrites(true)
                                      .connectTimeout(30000)
                                      .serverSelectionTimeout(90000)
                                      .maxConnectionIdleTime(600000)
-                                     .socketKeepAlive(true)
                                      .connectionsPerHost(300);
     MongoClientURI uri = new MongoClientURI(mongoConfig.getUri(), mongoClientOptions);
     MongoClient mongoClient = new MongoClient(uri);
