@@ -218,7 +218,6 @@ public class APMResponseParser {
     return result;
   }
 
-  @SuppressFBWarnings("DM_BOXED_PRIMITIVE_FOR_PARSING")
   private static Object getValue(Object jsonObject, String field) {
     if (field.contains("[")) {
       if (field.charAt(0) == '[') {
@@ -228,9 +227,9 @@ public class APMResponseParser {
         if (group.equals("*")) {
           return jsonObject;
         }
-        Object val = ((JSONArray) jsonObject).get(Integer.valueOf(group));
+        Object val = ((JSONArray) jsonObject).get(Integer.parseInt(group));
         if (val instanceof JSONArray) {
-          return ((JSONArray) jsonObject).getJSONArray(Integer.valueOf(group));
+          return ((JSONArray) jsonObject).getJSONArray(Integer.parseInt(group));
         }
         return val;
 

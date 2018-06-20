@@ -188,8 +188,8 @@ public class DelegateServiceImpl implements DelegateService {
     return hostName;
   }
 
-  @SuppressFBWarnings({"UW_UNCOND_WAIT", "WA_NOT_IN_LOOP", "DM_BOXED_PRIMITIVE_FOR_PARSING",
-      "ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD", "REC_CATCH_EXCEPTION"})
+  @SuppressFBWarnings(
+      {"UW_UNCOND_WAIT", "WA_NOT_IN_LOOP", "ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD", "REC_CATCH_EXCEPTION"})
   @Override
   @SuppressWarnings("unchecked")
   public void
@@ -219,7 +219,7 @@ public class DelegateServiceImpl implements DelegateService {
         String proxyScheme = System.getProperty("proxyScheme");
         String proxyPort = System.getProperty("https.proxyPort");
         logger.info("Using {} proxy {}:{}", proxyScheme, proxyHost, proxyPort);
-        httpProxyHost = new HttpHost(proxyHost, Integer.valueOf(proxyPort), proxyScheme);
+        httpProxyHost = new HttpHost(proxyHost, Integer.parseInt(proxyPort), proxyScheme);
         String nonProxyHostsString = System.getProperty("http.nonProxyHosts");
         if (isNotBlank(nonProxyHostsString)) {
           String[] suffixes = nonProxyHostsString.split("\\|");
