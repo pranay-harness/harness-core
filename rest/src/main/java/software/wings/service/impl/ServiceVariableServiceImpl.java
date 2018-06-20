@@ -329,6 +329,14 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     String appId = serviceVariable.getAppId();
     encryptedData.addApplication(appId, appService.get(appId).getName());
 
+    String envId = serviceVariable.getEnvId();
+    if (!isEmpty(envId) && !envId.equals(GLOBAL_ENV_ID)) {
+      Environment environment = environmentService.get(appId, envId);
+      if (environment != null) {
+        encryptedData.addEnvironment(envId, environment.getName());
+      }
+    }
+
     String serviceId;
     switch (serviceVariable.getEntityType()) {
       case SERVICE:
@@ -343,14 +351,13 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
         break;
 
       default:
-        throw new IllegalArgumentException("Invalid entity type " + serviceVariable.getEntityType());
+        return;
     }
-    encryptedData.addService(serviceId, serviceResourceService.get(appId, serviceId).getName());
-
-    String envId = serviceVariable.getEnvId();
-    if (!isEmpty(envId) && !envId.equals(GLOBAL_ENV_ID)) {
-      Environment environment = environmentService.get(appId, envId);
-      encryptedData.addEnvironment(envId, environment.getName());
+    if (!isEmpty(serviceId)) {
+      Service service = serviceResourceService.get(appId, serviceId);
+      if (service != null) {
+        encryptedData.addService(serviceId, service.getName());
+      }
     }
   }
 
