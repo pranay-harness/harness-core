@@ -78,11 +78,11 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
             return delegateProxyFactory.get(EncryptionService.class, syncTaskContext)
                 .decrypt(object, nonLocalEncryptedDetails);
           } catch (Exception e) {
-            logger.warn("Error decrypting value. Retrying. Account ID: {}", object.getAccountId());
-            sleep(ofMillis(200));
+            logger.warn("Error decrypting value. Retrying. Account ID: {}", object.getAccountId(), e);
+            sleep(ofMillis(2000));
           }
         }
-      }, 65, TimeUnit.SECONDS, true);
+      }, 35, TimeUnit.SECONDS, true);
       for (EncryptedDataDetail encryptedDataDetail : nonLocalEncryptedDetails) {
         Field f = getFieldByName(object.getClass(), encryptedDataDetail.getFieldName());
         if (f != null) {
