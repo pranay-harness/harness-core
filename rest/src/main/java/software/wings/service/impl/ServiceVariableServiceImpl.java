@@ -62,6 +62,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.validation.Valid;
 
 /**
@@ -293,12 +294,17 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
         savedData.clearSearchTags();
 
         if (!isEmpty(savedData.getParentIds())) {
+          AtomicBoolean shouldUpdate = new AtomicBoolean(false);
           savedData.getParentIds().forEach(serviceVariableId -> {
             ServiceVariable serviceVariable = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
-            Preconditions.checkNotNull(serviceVariable, "parent " + serviceVariableId + " not found for " + savedData);
+            if (serviceVariable == null) {
+              savedData.getParentIds().remove(serviceVariableId);
+              shouldUpdate.set(true);
+              return;
+            }
             addSearchTags(serviceVariable, savedData);
           });
-          if (!isEqualCollection(appIds, savedData.getAppIds())
+          if (shouldUpdate.get() || !isEqualCollection(appIds, savedData.getAppIds())
               || !isEqualCollection(serviceIds, savedData.getServiceIds())
               || !isEqualCollection(envIds, savedData.getEnvIds())
               || !isEqualCollection(serviceVariableIds, savedData.getServiceVariableIds())) {
