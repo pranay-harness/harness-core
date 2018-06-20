@@ -1,5 +1,6 @@
 package software.wings.common.cache;
 
+import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -15,6 +16,7 @@ import java.io.ObjectStreamClass;
 
 public class MongoStoreTest extends WingsBaseTest {
   @Inject WingsPersistence wingsPersistence;
+  @Inject MongoStore mongoStore;
 
   @Value
   @Builder
@@ -50,13 +52,11 @@ public class MongoStoreTest extends WingsBaseTest {
 
   @Test
   public void testUpdateGet() {
-    final MongoStore mongoStore = new MongoStore(wingsPersistence.getDatastore());
-
     TestEntity foo = mongoStore.<TestEntity>get(0, TestEntity.algorithmId, TestEntity.structureHash, "key");
     assertThat(foo).isNull();
 
     TestEntity bar = TestEntity.builder().contextHash(0).key("key").value("value").build();
-    mongoStore.upsert(bar);
+    mongoStore.upsert(bar, ofSeconds(10));
 
     foo = mongoStore.<TestEntity>get(0, TestEntity.algorithmId, TestEntity.structureHash, "key");
     assertThat(foo).isNotNull();
