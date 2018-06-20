@@ -1,8 +1,6 @@
 package software.wings.service.impl.security;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.threading.Morpheus.sleep;
-import static java.time.Duration.ofSeconds;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.utils.WingsReflectionUtils.getFieldByName;
 
@@ -78,8 +76,7 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
             return delegateProxyFactory.get(EncryptionService.class, syncTaskContext)
                 .decrypt(object, nonLocalEncryptedDetails);
           } catch (Exception e) {
-            logger.warn("Error decrypting value. Retrying.");
-            sleep(ofSeconds(2));
+            logger.warn("Error decrypting value. Retrying. Account ID: {}", object.getAccountId());
           }
         }
       }, 65, TimeUnit.SECONDS, true);
