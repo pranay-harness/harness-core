@@ -66,6 +66,8 @@ public class GraphRenderer {
   private static final Logger logger = LoggerFactory.getLogger(GraphRenderer.class);
   private static final int AGGREGATION_LIMIT = 10;
 
+  public static final long algorithmId = 0;
+
   @Inject private Injector injector;
 
   @Inject private WorkflowExecutionService workflowExecutionService;

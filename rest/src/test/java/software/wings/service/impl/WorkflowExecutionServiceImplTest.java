@@ -825,11 +825,13 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   public void shouldGetNodeDetails() throws InterruptedException {
     String appId = app.getUuid();
 
+    final WorkflowExecution triggerWorkflow = triggerWorkflow(appId, env);
     WorkflowExecution execution =
-        workflowExecutionService.getExecutionDetails(appId, triggerWorkflow(appId, env).getUuid(), emptySet());
+        workflowExecutionService.getExecutionDetails(appId, triggerWorkflow.getUuid(), emptySet());
     GraphNode node0 = execution.getExecutionNode();
-    assertThat(workflowExecutionService.getExecutionDetailsForNode(appId, execution.getUuid(), node0.getId()))
-        .isEqualToIgnoringGivenFields(node0, "next");
+    final GraphNode executionDetailsForNode =
+        workflowExecutionService.getExecutionDetailsForNode(appId, execution.getUuid(), node0.getId());
+    assertThat(executionDetailsForNode).isEqualToIgnoringGivenFields(node0, "next");
   }
 
   /**
