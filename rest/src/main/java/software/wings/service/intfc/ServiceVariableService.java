@@ -110,5 +110,5 @@ public interface ServiceVariableService extends OwnedByService {
    * Checks and updates the search tags for secrets.
    * @param accountId
    */
-  void updateSearchTagsForSecrets(String accountId);
+  int updateSearchTagsForSecrets(String accountId);
 }
