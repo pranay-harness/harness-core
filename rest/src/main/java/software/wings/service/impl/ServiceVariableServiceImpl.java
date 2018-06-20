@@ -27,6 +27,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.SearchFilter.Operator;
@@ -333,7 +334,12 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     Preconditions.checkNotNull(encryptedData, "could not find encrypted reference for " + serviceVariable);
 
     String appId = serviceVariable.getAppId();
-    encryptedData.addApplication(appId, appService.get(appId).getName());
+    try {
+      Application app = appService.get(appId);
+      encryptedData.addApplication(appId, app.getName());
+    } catch (Exception e) {
+      logger.info("application {} does not exists", appId);
+    }
 
     String envId = serviceVariable.getEnvId();
     if (!isEmpty(envId) && !envId.equals(GLOBAL_ENV_ID)) {
