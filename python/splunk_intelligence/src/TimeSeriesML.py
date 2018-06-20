@@ -78,6 +78,8 @@ class TSAnomlyDetector(object):
         data_len = (self._options.analysis_minute - self._options.analysis_start_min)+1
         txn_metrics = {}
         for transaction in transactions:
+            # Strip the txnNames to make sure there are no leading or trailing spaces
+            transaction['name'] = transaction['name'].strip()
             txn_name = transaction.get('name')
             if txn_name not in txn_metrics:
                 txn_metrics[txn_name] = []
@@ -883,9 +885,11 @@ def parallelize_processing(options, metric_template, control_metrics, test_metri
 
     transaction_names = set()
     for transactions in control_metrics:
+        transactions['name'] = transactions['name'].strip()
         transaction_names.add(transactions['name'])
 
     for transactions in test_metrics:
+        transactions['name'] = transactions['name'].strip()
         transaction_names.add(transactions['name'])
 
     workers = min(options.parallel_processes, len(transaction_names))
