@@ -25,6 +25,8 @@ import com.google.inject.Singleton;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.SearchFilter.Operator;
@@ -67,6 +69,7 @@ import javax.validation.Valid;
  */
 @Singleton
 public class ServiceVariableServiceImpl implements ServiceVariableService {
+  private static final Logger logger = LoggerFactory.getLogger(ServiceVariableServiceImpl.class);
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private EnvironmentService environmentService;
@@ -273,7 +276,8 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   }
 
   @Override
-  public void updateSearchTagsForSecrets(String accountId) {
+  public int updateSearchTagsForSecrets(String accountId) {
+    int updateRecords = 0;
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
                                      .filter("accountId", accountId)
                                      .filter("type", SettingVariableTypes.SECRET_TEXT);
@@ -298,11 +302,14 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
               || !isEqualCollection(serviceIds, savedData.getServiceIds())
               || !isEqualCollection(envIds, savedData.getEnvIds())
               || !isEqualCollection(serviceVariableIds, savedData.getServiceVariableIds())) {
+            logger.info("updating {}", savedData.getUuid());
             wingsPersistence.save(savedData);
+            updateRecords++;
           }
         }
       }
     }
+    return updateRecords;
   }
 
   private void addAndSaveSearchTags(ServiceVariable serviceVariable) {
