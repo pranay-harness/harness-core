@@ -151,6 +151,7 @@ public class KryoUtils {
             kryo.register(java.lang.NoSuchMethodException.class, 72);
             kryo.register(java.lang.NoClassDefFoundError.class, 73);
             kryo.register(javax.net.ssl.SSLHandshakeException.class, 74);
+            kryo.register(java.util.concurrent.atomic.AtomicInteger.class, 75);
 
             // External Serializers
             UnmodifiableCollectionsSerializer.registerSerializers(kryo);
