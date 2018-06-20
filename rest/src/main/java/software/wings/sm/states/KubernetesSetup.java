@@ -13,7 +13,6 @@ import static software.wings.yaml.YamlHelper.trimYaml;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -292,10 +291,10 @@ public class KubernetesSetup extends ContainerServiceSetup {
     return containerServiceElementBuilder.build();
   }
 
-  @SuppressFBWarnings("DM_BOXED_PRIMITIVE_FOR_PARSING")
   private int computeFixedInstances(ExecutionContext context, int maxInstances) {
-    int evaluatedFixedInstances =
-        isNotBlank(getFixedInstances()) ? Integer.valueOf(context.renderExpression(getFixedInstances())) : maxInstances;
+    int evaluatedFixedInstances = isNotBlank(getFixedInstances())
+        ? Integer.parseInt(context.renderExpression(getFixedInstances()))
+        : maxInstances;
     return evaluatedFixedInstances == 0 ? maxInstances : evaluatedFixedInstances;
   }
 

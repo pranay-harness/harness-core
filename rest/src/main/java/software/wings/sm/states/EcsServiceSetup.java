@@ -9,7 +9,6 @@ import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -123,7 +122,6 @@ public class EcsServiceSetup extends ContainerServiceSetup {
     }
   }
 
-  @SuppressFBWarnings("DM_BOXED_PRIMITIVE_FOR_PARSING")
   @Override
   protected ContainerServiceElement buildContainerServiceElement(ExecutionContext context,
       CommandExecutionResult executionResult, ExecutionStatus status, ImageDetails imageDetails) {
@@ -139,8 +137,9 @@ public class EcsServiceSetup extends ContainerServiceSetup {
     }
     int evaluatedMaxInstances = maxVal != null ? maxVal : DEFAULT_MAX;
     int maxInstances = evaluatedMaxInstances == 0 ? DEFAULT_MAX : evaluatedMaxInstances;
-    int evaluatedFixedInstances =
-        isNotBlank(getFixedInstances()) ? Integer.valueOf(context.renderExpression(getFixedInstances())) : maxInstances;
+    int evaluatedFixedInstances = isNotBlank(getFixedInstances())
+        ? Integer.parseInt(context.renderExpression(getFixedInstances()))
+        : maxInstances;
     int fixedInstances = evaluatedFixedInstances == 0 ? maxInstances : evaluatedFixedInstances;
     ResizeStrategy resizeStrategy = getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy();
     int serviceSteadyStateTimeout =

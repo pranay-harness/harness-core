@@ -113,7 +113,7 @@ public class WatcherServiceImpl implements WatcherService {
   private HttpHost httpProxyHost;
   private List<String> nonProxyHosts;
 
-  @SuppressFBWarnings({"UW_UNCOND_WAIT", "REC_CATCH_EXCEPTION", "WA_NOT_IN_LOOP", "DM_BOXED_PRIMITIVE_FOR_PARSING"})
+  @SuppressFBWarnings({"UW_UNCOND_WAIT", "REC_CATCH_EXCEPTION", "WA_NOT_IN_LOOP"})
   @Override
   public void run(boolean upgrade) {
     try {
@@ -137,7 +137,7 @@ public class WatcherServiceImpl implements WatcherService {
         String proxyScheme = System.getProperty("proxyScheme");
         String proxyPort = System.getProperty("https.proxyPort");
         logger.info("Using {} proxy {}:{}", proxyScheme, proxyHost, proxyPort);
-        httpProxyHost = new HttpHost(proxyHost, Integer.valueOf(proxyPort), proxyScheme);
+        httpProxyHost = new HttpHost(proxyHost, Integer.parseInt(proxyPort), proxyScheme);
         String nonProxyHostsString = System.getProperty("http.nonProxyHosts");
         if (isNotBlank(nonProxyHostsString)) {
           String[] suffixes = nonProxyHostsString.split("\\|");
