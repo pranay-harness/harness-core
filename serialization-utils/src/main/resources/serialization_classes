@@ -405,3 +405,5 @@ software.wings.sm.states.KubernetesSwapServiceSelectorsResponse, 5366
 software.wings.api.KubernetesSwapServiceSelectorsExecutionData, 5367
 software.wings.api.ExecutionDataValue, 5368
 software.wings.service.impl.WorkflowExecutionServiceImpl$Tree, 5369
+software.wings.beans.container.EcsSteadyStateCheckParams, 5370
+software.wings.beans.container.EcsSteadyStateCheckResponse, 5371
