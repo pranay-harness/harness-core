@@ -1,6 +1,0 @@
-ignore:
-  - "**/*.py"            # ignore python
-  - "**/*Experimental*"  # ignore any experimental code
-
-coverage:
-  range: 40..100
