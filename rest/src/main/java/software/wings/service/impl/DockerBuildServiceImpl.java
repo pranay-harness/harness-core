@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static io.harness.network.Http.connectableHttpUrl;
-import static io.harness.network.Http.validUrl;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.exception.WingsException.SRE;
 import static software.wings.exception.WingsException.USER;
@@ -78,10 +77,6 @@ public class DockerBuildServiceImpl implements DockerBuildService {
 
   @Override
   public boolean validateArtifactServer(DockerConfig config) {
-    if (!validUrl(config.getDockerRegistryUrl())) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
-          .addParam("message", "Docker Registry URL must be a valid URL");
-    }
     if (!connectableHttpUrl(config.getDockerRegistryUrl())) {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
           .addParam("message", "Could not reach Docker Registry at : " + config.getDockerRegistryUrl());

@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.network.Http.connectableHttpUrl;
-import static io.harness.network.Http.validUrl;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static software.wings.exception.WingsException.SRE;
@@ -170,10 +169,6 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
 
   @Override
   public boolean validateArtifactServer(JenkinsConfig jenkinsConfig) {
-    if (!validUrl(jenkinsConfig.getJenkinsUrl())) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "Jenkins URL must be a valid URL");
-    }
-
     if (Constants.TOKEN_FIELD.equals(jenkinsConfig.getAuthMechanism())) {
       if (isEmpty(new String(jenkinsConfig.getToken()))) {
         throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "Token should be not empty");
