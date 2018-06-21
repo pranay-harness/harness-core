@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.harness.serializer.YamlUtils;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.metrics.MetricType;
@@ -14,7 +15,6 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.sm.states.APMVerificationState;
 import software.wings.sm.states.DatadogState;
 import software.wings.utils.JsonUtils;
-import software.wings.utils.YamlUtils;
 
 import java.io.IOException;
 import java.util.Collection;

@@ -18,7 +18,6 @@ import com.codahale.metrics.MetricRegistry;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.github.dirkraft.dropwizard.fileassets.FileAssetsBundle;
 import com.hazelcast.core.HazelcastInstance;
-import com.palantir.versioninfo.VersionInfoBundle;
 import com.palominolabs.metrics.guice.MetricsInstrumentationModule;
 import io.dropwizard.Application;
 import io.dropwizard.auth.AuthValueFactoryProvider;
@@ -138,7 +137,6 @@ public class WingsApplication extends Application<MainConfiguration> {
         return mainConfiguration.getSwaggerBundleConfiguration();
       }
     });
-    bootstrap.addBundle(new VersionInfoBundle("build.properties"));
     bootstrap.addBundle(new FileAssetsBundle("/.well-known"));
     bootstrap.getObjectMapper().addMixIn(AssetsConfiguration.class, AssetsConfigurationMixin.class);
     bootstrap.getObjectMapper().setSubtypeResolver(

@@ -1,0 +1,8 @@
+---
+# This file is populated at build time.
+# Used for baking in build version with artifacts.
+version   : ${version}
+buildNo   : ${buildNo}
+gitCommit : ${gitCommitId}
+gitBranch : ${gitBranch}
+timestamp : ${buildTimeStamp}

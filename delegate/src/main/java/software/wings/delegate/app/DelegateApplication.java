@@ -18,6 +18,7 @@ import com.google.inject.name.Names;
 
 import com.ning.http.client.AsyncHttpClient;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.serializer.YamlUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.LogManager;
 import org.slf4j.Logger;
@@ -25,7 +26,6 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 import software.wings.delegate.service.DelegateService;
 import software.wings.managerclient.ManagerClientModule;
-import software.wings.utils.YamlUtils;
 import software.wings.utils.message.MessageService;
 
 import java.io.FileReader;
@@ -52,6 +52,7 @@ public class DelegateApplication {
   @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   public static void main(String... args) throws IOException {
     processId = Splitter.on("@").split(ManagementFactory.getRuntimeMXBean().getName()).iterator().next();
+
     // Optionally remove existing handlers attached to j.u.l root logger
     SLF4JBridgeHandler.removeHandlersForRootLogger(); // (since SLF4J 1.6.5)
 

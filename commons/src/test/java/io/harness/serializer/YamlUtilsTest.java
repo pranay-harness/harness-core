@@ -1,4 +1,4 @@
-package software.wings.utils;
+package io.harness.serializer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -29,7 +29,7 @@ public class YamlUtilsTest {
    */
   @Test
   public void shouldReadCatalogs() throws IOException {
-    URL url = this.getClass().getResource("/catalogs.yml");
+    URL url = this.getClass().getResource("/sample-catalogs.yml");
     String yaml = Resources.toString(url, Charsets.UTF_8);
 
     Map<String, List<CatalogItem>> catalogs =

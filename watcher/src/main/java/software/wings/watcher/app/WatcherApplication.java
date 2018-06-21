@@ -12,12 +12,12 @@ import com.google.inject.Key;
 import com.google.inject.name.Names;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.serializer.YamlUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.LogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
-import software.wings.utils.YamlUtils;
 import software.wings.utils.message.MessageService;
 import software.wings.watcher.service.WatcherService;
 

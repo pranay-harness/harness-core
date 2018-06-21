@@ -14,6 +14,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.serializer.YamlUtils;
 import io.harness.time.Timestamp;
 import lombok.Builder;
 import lombok.Data;
@@ -47,7 +48,6 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
-import software.wings.utils.YamlUtils;
 
 import java.net.URL;
 import java.util.ArrayList;
