@@ -8,7 +8,7 @@ import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-import static software.wings.sm.StateType.ESC_STEADY_STATE_CHECK;
+import static software.wings.sm.StateType.ECS_STEADY_STATE_CHECK;
 
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
@@ -75,7 +75,7 @@ public class EcsSteadyStateCheck extends State {
   @Attributes(title = "Ecs Service") @Getter @Setter private String ecsServiceName;
 
   public EcsSteadyStateCheck(String name) {
-    super(name, ESC_STEADY_STATE_CHECK.name());
+    super(name, ECS_STEADY_STATE_CHECK.name());
   }
 
   @Override
