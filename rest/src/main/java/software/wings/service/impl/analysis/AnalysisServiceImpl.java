@@ -549,6 +549,11 @@ public class AnalysisServiceImpl implements AnalysisService {
 
     if (mlAnalysisResponse.getLogCollectionMinute() == -1 || !isEmpty(mlAnalysisResponse.getControl_events())
         || !isEmpty(mlAnalysisResponse.getTest_events())) {
+      wingsPersistence.delete(wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class)
+                                  .filter("appId", mlAnalysisResponse.getAppId())
+                                  .filter("stateExecutionId", mlAnalysisResponse.getStateExecutionId())
+                                  .filter("logCollectionMinute", mlAnalysisResponse.getLogCollectionMinute()));
+
       wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(mlAnalysisResponse));
     }
     if (logger.isDebugEnabled()) {

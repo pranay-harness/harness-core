@@ -139,7 +139,9 @@ public class LogMLAnalysisGenerator implements Runnable {
                 .analysis_save_url(experimentalLogAnalysisSaveUrl)
                 .log_analysis_get_url(logAnalysisGetUrl)
                 .ml_analysis_type(MLAnalysisType.LOG_ML)
-                .feedback_url(feedback_url)
+                .feedback_url("/api/" + LogAnalysisResource.LOG_ANALYSIS + LogAnalysisResource.ANALYSIS_USER_FEEDBACK
+                    + "?accountId=" + accountId + "&serviceId=" + serviceId + "&workflowId=" + workflowId
+                    + "&workflowExecutionId=" + context.getWorkflowExecutionId())
                 .stateType(context.getStateType());
 
         if (!isEmpty(feedback_url)) {
