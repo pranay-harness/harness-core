@@ -176,7 +176,9 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
   @Override
   protected String triggerAnalysisDataCollection(ExecutionContext context, String correlationId, Set<String> hosts) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
+
     SettingAttribute settingAttribute = null;
     String serverConfigId = analysisServerConfigId;
     if (!isEmpty(getTemplateExpressions())) {
@@ -195,7 +197,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     }
 
     final APMVerificationConfig apmConfig = (APMVerificationConfig) settingAttribute.getValue();
-    Map<String, List<APMMetricInfo>> apmMetricInfos = apmMetricInfos();
+    Map<String, List<APMMetricInfo>> apmMetricInfos = apmMetricInfos(context);
     metricAnalysisService.saveMetricTemplates(
         StateType.APM_VERIFICATION, context.getStateExecutionInstanceId(), metricDefinitions(apmMetricInfos));
     final long dataCollectionStartTimeStamp = Timestamp.minuteBoundary(System.currentTimeMillis());
@@ -239,11 +241,12 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     return delegateService.queueTask(delegateTask);
   }
 
-  public Map<String, List<APMMetricInfo>> apmMetricInfos() {
+  public Map<String, List<APMMetricInfo>> apmMetricInfos(final ExecutionContext context) {
     Map<String, List<APMMetricInfo>> metricInfoMap = new HashMap<>();
     for (MetricCollectionInfo metricCollectionInfo : metricCollectionInfos) {
-      if (!metricInfoMap.containsKey(metricCollectionInfo.getCollectionUrl())) {
-        metricInfoMap.put(metricCollectionInfo.getCollectionUrl(), new ArrayList<>());
+      final String evaluatedUrl = context.renderExpression(metricCollectionInfo.getCollectionUrl());
+      if (!metricInfoMap.containsKey(evaluatedUrl)) {
+        metricInfoMap.put(evaluatedUrl, new ArrayList<>());
       }
       APMMetricInfo metricInfo = APMMetricInfo.builder()
                                      .metricName(metricCollectionInfo.getMetricName())
@@ -251,7 +254,8 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
                                      .tag(metricCollectionInfo.getTag())
                                      .responseMappers(getResponseMappers(metricCollectionInfo))
                                      .build();
-      metricInfoMap.get(metricCollectionInfo.getCollectionUrl()).add(metricInfo);
+      logger.info("In APMMetricInfos, evaluatedUrl is: {}", evaluatedUrl);
+      metricInfoMap.get(evaluatedUrl).add(metricInfo);
     }
     return metricInfoMap;
   }
@@ -266,6 +270,15 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
       txnNameResponseMapper.setFieldValue(responseMapping.getTxnNameFieldValue());
     } else {
       txnNameResponseMapper.setJsonPath(responseMapping.getTxnNameJsonPath());
+    }
+    // Set the host details (if exists) in the responseMapper
+    if (!isEmpty(responseMapping.getHostJsonPath())) {
+      String hostJson = responseMapping.getHostJsonPath();
+      List<String> hostRegex =
+          isEmpty(responseMapping.getHostRegex()) ? null : Lists.newArrayList(responseMapping.getHostRegex());
+      ResponseMapper hostResponseMapper =
+          ResponseMapper.builder().fieldName("host").regexs(hostRegex).jsonPath(hostJson).build();
+      responseMappers.put("host", hostResponseMapper);
     }
     responseMappers.put("txnName", txnNameResponseMapper);
     responseMappers.put("timestamp",
@@ -304,6 +317,8 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     private String txnNameJsonPath;
     private String txnNameRegex;
     private String metricValueJsonPath;
+    private String hostJsonPath;
+    private String hostRegex;
     private String timestampJsonPath;
     private String timestampFormat;
   }
