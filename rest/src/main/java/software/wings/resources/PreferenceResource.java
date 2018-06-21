@@ -11,9 +11,11 @@ import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Preference;
 import software.wings.beans.RestResponse;
+import software.wings.beans.User;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.PreferenceService;
@@ -36,7 +38,7 @@ import javax.ws.rs.QueryParam;
 @Path("/preference")
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
-@Scope(ResourceType.APPLICATION)
+@Scope(ResourceType.PREFERENCE)
 public class PreferenceResource {
   private PreferenceService prefService;
 
@@ -64,7 +66,6 @@ public class PreferenceResource {
    * Get the preference
    *
    * @param accountId         the account id
-   * @param userId            the user id
    * @param preferenceId      the preference id
    * @return the rest response
    */
@@ -73,16 +74,16 @@ public class PreferenceResource {
   @ExceptionMetered
   @Path("{preferenceId}")
   @AuthRule(permissionType = LOGGED_IN)
-  public RestResponse<Preference> getPreference(@QueryParam("accountId") @NotEmpty String accountId,
-      @QueryParam("userId") @NotEmpty String userId, @PathParam("preferenceId") String preferenceId) {
-    return new RestResponse<>(prefService.get(accountId, userId, preferenceId));
+  public RestResponse<Preference> getPreference(
+      @QueryParam("accountId") @NotEmpty String accountId, @PathParam("preferenceId") String preferenceId) {
+    User user = UserThreadLocal.get();
+    return new RestResponse<>(prefService.get(accountId, user.getUuid(), preferenceId));
   }
 
   /**
    * Create the preference
    *
    * @param accountId         the account id
-   * @param userId            the user id
    * @param preference        the preference
    * @return the rest response
    */
@@ -90,18 +91,18 @@ public class PreferenceResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = LOGGED_IN)
-  public RestResponse<Preference> savePreference(@QueryParam("accountId") @NotEmpty String accountId,
-      @QueryParam("userId") @NotEmpty String userId, Preference preference) {
-    preference.setUserId(userId);
+  public RestResponse<Preference> savePreference(
+      @QueryParam("accountId") @NotEmpty String accountId, Preference preference) {
+    User user = UserThreadLocal.get();
+    preference.setUserId(user.getUuid());
     preference.setAccountId(accountId);
-    return new RestResponse<>(prefService.save(accountId, userId, preference));
+    return new RestResponse<>(prefService.save(accountId, user.getUuid(), preference));
   }
 
   /**
    * Update the preference
    *
    * @param accountId         the account id
-   * @param userId            the user id
    * @param preferenceId      the preference id
    * @param preference        the preference
    * @return the rest response
@@ -112,16 +113,15 @@ public class PreferenceResource {
   @Path("{preferenceId}")
   @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<Preference> updatePreference(@QueryParam("accountId") @NotEmpty String accountId,
-      @QueryParam("userId") @NotEmpty String userId, @PathParam("preferenceId") String preferenceId,
-      Preference preference) {
-    return new RestResponse<>(prefService.update(accountId, userId, preferenceId, preference));
+      @PathParam("preferenceId") String preferenceId, Preference preference) {
+    User user = UserThreadLocal.get();
+    return new RestResponse<>(prefService.update(accountId, user.getUuid(), preferenceId, preference));
   }
 
   /**
    * Delete the preference
    *
    * @param accountId         the account id
-   * @param userId            the user id
    * @param preferenceId      the preference id
    * @return the rest response
    */
@@ -130,9 +130,10 @@ public class PreferenceResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = LOGGED_IN)
-  public RestResponse<Void> deletePreference(@QueryParam("accountId") @NotEmpty String accountId,
-      @QueryParam("userId") @NotEmpty String userId, @PathParam("preferenceId") String preferenceId) {
-    prefService.delete(accountId, userId, preferenceId);
+  public RestResponse<Void> deletePreference(
+      @QueryParam("accountId") @NotEmpty String accountId, @PathParam("preferenceId") String preferenceId) {
+    User user = UserThreadLocal.get();
+    prefService.delete(accountId, user.getUuid(), preferenceId);
     return new RestResponse<>();
   }
 }
