@@ -52,7 +52,7 @@
         <skip.integration.tests>true</skip.integration.tests>
         <datagen.exclude>**/DataGenUtil.java</datagen.exclude>
         <datagen.include/>
-        <buildNo>default</buildNo>
+        <build.number>default</build.number>
         <maven.build.timestamp.format>yyMMdd-HHmm</maven.build.timestamp.format>
         <buildTimeStamp>${maven.build.timestamp}</buildTimeStamp>
         <gitCommitId>default</gitCommitId>
