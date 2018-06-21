@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.network.Http.connectableHttpUrl;
-import static io.harness.network.Http.validUrl;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static software.wings.exception.WingsException.USER;
@@ -133,10 +132,6 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
 
   @Override
   public boolean validateArtifactServer(ArtifactoryConfig config) {
-    if (!validUrl(config.getArtifactoryUrl())) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
-          .addParam("message", "Artifactory URL must be a valid URL");
-    }
     if (!connectableHttpUrl(config.getArtifactoryUrl())) {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
           .addParam("message", "Could not reach Artifactory Server at : " + config.getArtifactoryUrl());

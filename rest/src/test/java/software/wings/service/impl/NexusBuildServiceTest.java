@@ -107,7 +107,7 @@ public class NexusBuildServiceTest extends WingsBaseTest {
     } catch (WingsException e) {
       assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_ARTIFACT_SERVER.toString());
       assertThat(e.getParams()).isNotEmpty();
-      assertThat(e.getParams().get("message")).isEqualTo("Nexus URL must be a valid URL");
+      assertThat(e.getParams().get("message")).isEqualTo("Could not reach Nexus Server at : BAD_URL");
     }
   }
 }

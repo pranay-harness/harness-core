@@ -145,7 +145,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     executorService.submit(
         () -> removeSearchTagsIfNecessary(savedServiceVariable, String.valueOf(serviceVariable.getValue())));
     notNullCheck("Service variable", savedServiceVariable);
-    if (!savedServiceVariable.getName().equals(serviceVariable.getName())) {
+    if (savedServiceVariable.getName() != null && !savedServiceVariable.getName().equals(serviceVariable.getName())) {
       throw new InvalidRequestException(format("Service variable name can not be changed."));
     }
 

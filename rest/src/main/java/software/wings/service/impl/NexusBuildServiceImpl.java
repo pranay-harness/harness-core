@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static io.harness.network.Http.connectableHttpUrl;
-import static io.harness.network.Http.validUrl;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.Validator.equalCheck;
@@ -90,10 +89,6 @@ public class NexusBuildServiceImpl implements NexusBuildService {
 
   @Override
   public boolean validateArtifactServer(NexusConfig nexusConfig) {
-    if (!validUrl(nexusConfig.getNexusUrl())) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
-          .addParam("message", "Nexus URL must be a valid URL");
-    }
     if (!connectableHttpUrl(nexusConfig.getNexusUrl())) {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
           .addParam("message", "Could not reach Nexus Server at : " + nexusConfig.getNexusUrl());

@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static io.harness.network.Http.connectableHttpUrl;
-import static io.harness.network.Http.validUrl;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.Validator.equalCheck;
 
@@ -81,11 +80,6 @@ public class BambooBuildServiceImpl implements BambooBuildService {
 
   @Override
   public boolean validateArtifactServer(BambooConfig bambooConfig) {
-    if (!validUrl(bambooConfig.getBambooUrl())) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
-          .addParam("message", "Bamboo URL must be a valid URL");
-    }
-
     if (!connectableHttpUrl(bambooConfig.getBambooUrl())) {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
           .addParam("message", "Could not reach Bamboo Server at : " + bambooConfig.getBambooUrl());

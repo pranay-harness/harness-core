@@ -1,7 +1,6 @@
 package software.wings.service;
 
 import static io.harness.network.Http.connectableHttpUrl;
-import static io.harness.network.Http.validUrl;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.utils.Validator.equalCheck;
 
@@ -79,10 +78,6 @@ public class EcrClassicBuildServiceImpl implements EcrClassicBuildService {
 
   @Override
   public boolean validateArtifactServer(EcrConfig config) {
-    if (!validUrl(config.getEcrUrl())) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
-          .addParam("message", "Amazon EC2 Container Registry URL must be a valid URL");
-    }
     if (!connectableHttpUrl(config.getEcrUrl())) {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
           .addParam("message", "Could not reach Amazon EC2 Container Registry at : " + config.getEcrUrl());

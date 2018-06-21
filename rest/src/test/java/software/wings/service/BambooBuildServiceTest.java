@@ -93,7 +93,7 @@ public class BambooBuildServiceTest extends WingsBaseTest {
     } catch (WingsException e) {
       assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_ARTIFACT_SERVER.toString());
       assertThat(e.getParams()).isNotEmpty();
-      assertThat(e.getParams().get("message")).isEqualTo("Bamboo URL must be a valid URL");
+      assertThat(e.getParams().get("message")).isEqualTo("Could not reach Bamboo Server at : BAD_URL");
     }
   }
 }
