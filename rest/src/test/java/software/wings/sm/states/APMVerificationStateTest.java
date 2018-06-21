@@ -19,6 +19,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.harness.serializer.YamlUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -29,7 +30,6 @@ import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.utils.YamlUtils;
 
 import java.io.IOException;
 import java.util.List;
