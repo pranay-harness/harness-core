@@ -10,6 +10,7 @@ import com.amazonaws.services.cloudwatch.model.DimensionFilter;
 import com.amazonaws.services.cloudwatch.model.ListMetricsRequest;
 import com.amazonaws.services.cloudwatch.model.Metric;
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.harness.serializer.YamlUtils;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.common.Constants;
@@ -20,7 +21,6 @@ import software.wings.service.intfc.CloudWatchService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.StateExecutionException;
-import software.wings.utils.YamlUtils;
 
 import java.net.URL;
 import java.util.HashSet;

@@ -9,6 +9,8 @@ import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Names;
 
+import io.harness.version.VersionInfoManager;
+import org.apache.commons.io.IOUtils;
 import ro.fortsoft.pf4j.DefaultPluginManager;
 import ro.fortsoft.pf4j.PluginManager;
 import software.wings.beans.AwsConfig;
@@ -275,6 +277,8 @@ import software.wings.sm.ExpressionProcessorFactory;
 import software.wings.utils.HostValidationService;
 import software.wings.utils.HostValidationServiceImpl;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 
 /**
@@ -457,5 +461,13 @@ public class WingsModule extends AbstractModule {
     bind(SSOSettingService.class).to(SSOSettingServiceImpl.class);
     bind(SSOService.class).to(SSOServiceImpl.class);
     bind(DeploymentService.class).to(DeploymentServiceImpl.class);
+
+    try {
+      VersionInfoManager versionInfoManager = new VersionInfoManager(IOUtils.toString(
+          this.getClass().getClassLoader().getResourceAsStream("versionInfo.yaml"), StandardCharsets.UTF_8));
+      bind(VersionInfoManager.class).toInstance(versionInfoManager);
+    } catch (IOException e) {
+      throw new RuntimeException("Could not load versionInfo.yaml", e);
+    }
   }
 }

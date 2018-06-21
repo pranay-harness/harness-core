@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.harness.serializer.YamlUtils;
 import org.apache.commons.text.StrSubstitutor;
 import org.apache.commons.text.WordUtils;
 import org.apache.http.client.utils.URIBuilder;
@@ -26,7 +27,6 @@ import software.wings.exception.WingsException;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionStatus;
-import software.wings.utils.YamlUtils;
 
 import java.net.URISyntaxException;
 import java.net.URL;

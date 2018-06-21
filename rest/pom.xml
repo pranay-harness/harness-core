@@ -302,11 +302,6 @@
         </dependency>
 
         <dependency>
-            <groupId>com.palantir.versioninfo</groupId>
-            <artifactId>dropwizard-version-info</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>de.danielbechler</groupId>
             <artifactId>java-object-diff</artifactId>
         </dependency>
@@ -754,22 +749,11 @@
                             <goal>create</goal>
                         </goals>
                     </execution>
-                    <execution>
-                        <id>generate</id>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>create-metadata</goal>
-                        </goals>
-                    </execution>
                 </executions>
                 <configuration>
-                    <attach>true</attach>
-                    <!--make it available for jar/war classpath resource -->
+                    <buildNumberPropertyName>gitCommitId</buildNumberPropertyName>
+                    <scmBranchPropertyName>gitBranch</scmBranchPropertyName>
                     <shortRevisionLength>7</shortRevisionLength>
-                    <properties>
-                        <productVersion>${project.version}-${buildNumber}-${timestamp}</productVersion>
-                    </properties>
-                    <addOutputDirectoryToResources>true</addOutputDirectoryToResources>
                 </configuration>
             </plugin>
             <plugin>
@@ -942,6 +926,15 @@
                 </configuration>
             </plugin>
         </plugins>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+            <resource>
+                <directory>src/main/resources-filtered</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
     </build>
     <reporting>
         <plugins>

@@ -1,8 +1,4 @@
-/**
- *
- */
-
-package software.wings.utils;
+package io.harness.serializer;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -16,11 +12,6 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.io.IOException;
 
-/**
- * The Class YamlUtils.
- *
- * @author Rishi
- */
 public class YamlUtils {
   private final ObjectMapper mapper;
 

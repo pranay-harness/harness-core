@@ -12,6 +12,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.harness.serializer.YamlUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.CatalogItem;
@@ -19,7 +20,6 @@ import software.wings.common.Constants;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.FeatureFlagService;
-import software.wings.utils.YamlUtils;
 
 import java.net.URL;
 import java.util.Collections;
