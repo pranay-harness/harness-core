@@ -3,8 +3,8 @@
   tag: Servlet
   collectionUrl: query
   responseType: JSON
-  method: POST
-  responseMappings:
+  method: GET
+  responseMapping:
       txnNameFieldValue: ResponseTime
       timestampJsonPath: series[*].pointlist[*].[1]
       metricValueJsonPath: series[*].pointlist[*].[0]
@@ -13,10 +13,24 @@
   tag: Servlet
   collectionUrl: query
   responseType: JSON
-  method: POST
-  responseMappings:
+  method: GET
+  responseMapping:
       txnNameJsonPath: series[*].scope
       txnNameRegex: ((?<=host:)(.*))(?=,resource_name)
+      timestampJsonPath: series[*].pointlist[*].[1]
+      timestampFormat: yyyy-MM-dd'T'HH:mm:ss.SSSX
+      metricValueJsonPath: series[*].pointlist[*].[0]
+- metricName: HitsWIthHost
+  metricType: THROUGHPUT
+  tag: Servlet
+  collectionUrl: queryWithHost
+  responseType: JSON
+  method: GET
+  responseMapping:
+      txnNameJsonPath: series[*].scope
+      txnNameRegex: ((?<=host:)(.*))(?=,resource_name)
+      hostJsonPath: series[*].scope
+      hostRegex: ((?<=host:)(.*))(?=,resource_name)
       timestampJsonPath: series[*].pointlist[*].[1]
       timestampFormat: yyyy-MM-dd'T'HH:mm:ss.SSSX
       metricValueJsonPath: series[*].pointlist[*].[0]
