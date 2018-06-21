@@ -376,7 +376,7 @@ public enum StateType implements StateTypeDescriptor {
           InfrastructureMappingType.GCP_KUBERNETES),
       asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
 
-  ESC_STEADY_STATE_CHECK(EcsSteadyStateCheck.class, COMMANDS, Constants.ECS_STEADY_STATE_CHECK,
+  ECS_STEADY_STATE_CHECK(EcsSteadyStateCheck.class, COMMANDS, Constants.ECS_STEADY_STATE_CHECK,
       Lists.newArrayList(InfrastructureMappingType.AWS_ECS), asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
 
   GCP_CLUSTER_SETUP(GcpClusterSetup.class, CLOUD,
