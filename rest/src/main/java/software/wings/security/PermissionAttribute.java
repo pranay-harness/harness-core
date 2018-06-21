@@ -186,7 +186,8 @@ public class PermissionAttribute {
 
     API_KEY(ACCOUNT),
 
-    PROVISIONER(APP);
+    PROVISIONER(APP),
+    PREFERENCE(ACCOUNT);
 
     private ImmutableMap<Action, PermissionType> actionPermissionScopeMap;
 
