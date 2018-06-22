@@ -88,6 +88,7 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.TaskType;
 import software.wings.delegate.app.DelegateConfiguration;
 import software.wings.delegatetasks.DelegateRunnableTask;
+import software.wings.delegatetasks.TaskLogContext;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.delegatetasks.validation.DelegateValidateTask;
 import software.wings.managerclient.ManagerClient;
@@ -458,10 +459,12 @@ public class DelegateServiceImpl implements DelegateService {
       logger.info("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
       try {
         DelegateTaskEvent delegateTaskEvent = JsonUtils.asObject(message, DelegateTaskEvent.class);
-        if (delegateTaskEvent instanceof DelegateTaskAbortEvent) {
-          abortDelegateTask((DelegateTaskAbortEvent) delegateTaskEvent);
-        } else {
-          dispatchDelegateTask(delegateTaskEvent);
+        try (TaskLogContext ctx = new TaskLogContext(delegateTaskEvent.getDelegateTaskId())) {
+          if (delegateTaskEvent instanceof DelegateTaskAbortEvent) {
+            abortDelegateTask((DelegateTaskAbortEvent) delegateTaskEvent);
+          } else {
+            dispatchDelegateTask(delegateTaskEvent);
+          }
         }
       } catch (Exception e) {
         logger.info(message);
@@ -621,10 +624,12 @@ public class DelegateServiceImpl implements DelegateService {
       if (isNotEmpty(taskEvents)) {
         logger.info("Processing DelegateTaskEvents {}", taskEvents);
         for (DelegateTaskEvent taskEvent : taskEvents) {
-          if (taskEvent instanceof DelegateTaskAbortEvent) {
-            abortDelegateTask((DelegateTaskAbortEvent) taskEvent);
-          } else {
-            dispatchDelegateTask(taskEvent);
+          try (TaskLogContext ctx = new TaskLogContext(taskEvent.getDelegateTaskId())) {
+            if (taskEvent instanceof DelegateTaskAbortEvent) {
+              abortDelegateTask((DelegateTaskAbortEvent) taskEvent);
+            } else {
+              dispatchDelegateTask(taskEvent);
+            }
           }
         }
       }
