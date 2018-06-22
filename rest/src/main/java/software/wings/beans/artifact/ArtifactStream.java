@@ -1,14 +1,5 @@
 package software.wings.beans.artifact;
 
-import static java.util.Arrays.asList;
-import static software.wings.beans.artifact.ArtifactStreamType.ACR;
-import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
-import static software.wings.beans.artifact.ArtifactStreamType.AMI;
-import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
-import static software.wings.beans.artifact.ArtifactStreamType.ECR;
-import static software.wings.beans.artifact.ArtifactStreamType.GCR;
-import static software.wings.beans.artifact.ArtifactStreamType.GCS;
-
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.data.validator.EntityName;
 import lombok.AllArgsConstructor;
@@ -23,6 +14,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
+import software.wings.beans.config.ArtifactSourceable;
 import software.wings.utils.Util;
 import software.wings.yaml.BaseEntityYaml;
 
@@ -43,16 +35,13 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @AllArgsConstructor
-public abstract class ArtifactStream extends Base {
+public abstract class ArtifactStream extends Base implements ArtifactSourceable {
   protected static final DateFormat dateFormat = new SimpleDateFormat("HHMMSS");
 
   public static final String SERVICE_ID_KEY = "serviceId";
   public static final String ARTIFACT_STREAM_TYPE_KEY = "artifactStreamType";
   public static final String METADATA_ONLY_KEY = "metadataOnly";
   public static final String SETTING_ID_KEY = "settingId";
-
-  public static final List<String> metaDataOnlyStreams =
-      asList(DOCKER.name(), ECR.name(), GCR.name(), ACR.name(), AMI.name(), AMAZON_S3.name(), GCS.name());
 
   private String artifactStreamType;
   private String sourceName;

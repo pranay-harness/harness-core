@@ -119,4 +119,25 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
     Artifact artifact = std.getArtifactForService(SERVICE_ID);
     assertThat(artifact).isNull();
   }
+
+  @Test
+  public void shouldGetArtifactWithSourceProperties() {
+    when(artifactService.get(APP_ID, ARTIFACT_ID))
+        .thenReturn(anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).build());
+    Application app = Application.Builder.anApplication().withName("AppA").withAccountId(ACCOUNT_ID).build();
+    app = appService.save(app);
+    Environment env = Builder.anEnvironment().withAppId(app.getUuid()).withName("DEV").build();
+    env = environmentService.save(env);
+
+    WorkflowStandardParams std = new WorkflowStandardParams();
+    injector.injectMembers(std);
+    std.setAppId(app.getUuid());
+    std.setEnvId(env.getUuid());
+
+    ServiceElement serviceElement = aServiceElement().withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
+    when(context.getContextElement(ContextElementType.SERVICE)).thenReturn(serviceElement);
+
+    Map<String, Object> map = std.paramMap(context);
+    assertThat(map).isNotNull().containsEntry(ContextElement.APP, app);
+  }
 }

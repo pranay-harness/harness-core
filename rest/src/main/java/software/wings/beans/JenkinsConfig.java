@@ -17,6 +17,7 @@ import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
+import software.wings.beans.config.ArtifactSourceable;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
@@ -30,7 +31,7 @@ import software.wings.yaml.setting.VerificationProviderYaml;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @ToString(exclude = {"password", "token"})
-public class JenkinsConfig extends SettingValue implements Encryptable {
+public class JenkinsConfig extends SettingValue implements Encryptable, ArtifactSourceable {
   @Attributes(title = "Jenkins URL", required = true) @NotEmpty private String jenkinsUrl;
   @Attributes(title = "Authentication Mechanism", required = true, enums = {USERNAME_PASSWORD_FIELD, TOKEN_FIELD})
   @NotEmpty
@@ -65,6 +66,16 @@ public class JenkinsConfig extends SettingValue implements Encryptable {
     this.authMechanism = authMechanism;
     this.encryptedToken = encryptedToken;
     this.token = token;
+  }
+
+  @Override
+  public String fetchUserName() {
+    return getUsername();
+  }
+
+  @Override
+  public String fetchRegistryUrl() {
+    return getJenkinsUrl();
   }
 
   @Data

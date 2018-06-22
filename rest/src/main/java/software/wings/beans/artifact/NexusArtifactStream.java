@@ -1,6 +1,6 @@
 package software.wings.beans.artifact;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
@@ -49,7 +49,7 @@ public class NexusArtifactStream extends ArtifactStream {
 
   @SuppressFBWarnings("STCAL_INVOKE_ON_STATIC_DATE_FORMAT_INSTANCE")
   public String getArtifactDisplayName(String buildNo) {
-    if (!isEmpty(artifactPaths)) {
+    if (isNotEmpty(artifactPaths)) {
       return format("%s_%s_%s", getSourceName(), buildNo, dateFormat.format(new Date()));
     }
     return format("%s_%s_%s", getJobname() + "/" + getImageName(), buildNo, dateFormat.format(new Date()));
@@ -58,7 +58,7 @@ public class NexusArtifactStream extends ArtifactStream {
   @Override
   public String generateSourceName() {
     StringBuilder builder = new StringBuilder(getJobname());
-    if (!isEmpty(artifactPaths)) {
+    if (isNotEmpty(artifactPaths)) {
       builder.append('/').append(getGroupId());
       getArtifactPaths().forEach(artifactPath -> builder.append('/').append(artifactPath));
     } else {
@@ -73,6 +73,11 @@ public class NexusArtifactStream extends ArtifactStream {
   public void setGroupId(String groupId) {
     this.groupId = groupId;
     this.imageName = groupId;
+  }
+
+  @Override
+  public String fetchRepositoryName() {
+    return imageName;
   }
 
   @Override

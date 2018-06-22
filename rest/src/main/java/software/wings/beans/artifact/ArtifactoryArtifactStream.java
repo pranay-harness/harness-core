@@ -68,6 +68,11 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
   }
 
   @Override
+  public String fetchRepositoryName() {
+    return imageName;
+  }
+
+  @Override
   public String generateName() {
     return Util.normalize(generateSourceName());
   }

@@ -10,7 +10,6 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -25,7 +24,6 @@ import software.wings.beans.NameValuePair;
 import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
-import software.wings.beans.SettingAttribute;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.Constants;
@@ -562,22 +560,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   }
 
   @Override
-  public SettingValue getSettingValue(String id, String type) {
-    return settingsService.getSettingAttributesByType(getEnv().getAppId(), getEnv().getUuid(), type)
-        .stream()
-        .filter(settingAttribute -> StringUtils.equals(settingAttribute.getUuid(), id))
-        .findFirst()
-        .map(SettingAttribute::getValue)
-        .orElse(null);
-  }
-
-  @Override
-  public SettingValue getGlobalSettingValue(String accountId, String settingId, String type) {
-    return settingsService.getGlobalSettingAttributesByType(accountId, type)
-        .stream()
-        .filter(settingAttribute -> StringUtils.equals(settingAttribute.getUuid(), settingId))
-        .findFirst()
-        .map(SettingAttribute::getValue)
-        .orElse(null);
+  public SettingValue getGlobalSettingValue(String accountId, String settingId) {
+    return settingsService.getSettingValueById(accountId, settingId);
   }
 }

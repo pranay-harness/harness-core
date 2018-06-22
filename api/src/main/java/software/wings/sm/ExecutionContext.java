@@ -64,7 +64,5 @@ public interface ExecutionContext {
 
   Map<String, String> getSafeDisplayServiceVariables();
 
-  SettingValue getSettingValue(String name, String type);
-
-  SettingValue getGlobalSettingValue(String accountId, String settingId, String type);
+  SettingValue getGlobalSettingValue(String accountId, String settingId);
 }

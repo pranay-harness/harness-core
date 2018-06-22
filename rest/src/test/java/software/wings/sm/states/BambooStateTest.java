@@ -33,7 +33,6 @@ import software.wings.beans.DelegateTask;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
@@ -63,7 +62,7 @@ public class BambooStateTest {
     when(executionContext.getApp()).thenReturn(anApplication().withAccountId(ACCOUNT_ID).withUuid(APP_ID).build());
     when(executionContext.getEnv()).thenReturn(anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).build());
     when(activityService.save(any(Activity.class))).thenReturn(ACTIVITY_WITH_ID);
-    when(executionContext.getGlobalSettingValue(ACCOUNT_ID, SETTING_ID, SettingVariableTypes.BAMBOO.name()))
+    when(executionContext.getGlobalSettingValue(ACCOUNT_ID, SETTING_ID))
         .thenReturn(BambooConfig.builder()
                         .bambooUrl("http://bamboo")
                         .username("username")

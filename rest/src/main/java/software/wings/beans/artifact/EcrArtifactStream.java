@@ -59,6 +59,11 @@ public class EcrArtifactStream extends ArtifactStream {
     return getImageName();
   }
 
+  @Override
+  public String fetchRepositoryName() {
+    return imageName;
+  }
+
   @Data
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor

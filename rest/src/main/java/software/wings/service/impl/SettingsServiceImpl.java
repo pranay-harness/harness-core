@@ -82,6 +82,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.manipulation.SettingsServiceManipulationObserver;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.settings.UsageRestrictions.AppEnvRestriction;
@@ -735,10 +736,15 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   @Override
-  public SettingAttribute getGlobalSettingAttributesById(String accountId, String id) {
-    PageRequest<SettingAttribute> pageRequest =
-        aPageRequest().addFilter("accountId", EQ, accountId).addFilter("_id", EQ, id).build();
-    return wingsPersistence.query(SettingAttribute.class, pageRequest).getResponse().get(0);
+  public SettingValue getSettingValueById(String accountId, String id) {
+    SettingAttribute settingAttribute = wingsPersistence.createQuery(SettingAttribute.class)
+                                            .filter(SettingAttribute.ACCOUNT_ID_KEY, accountId)
+                                            .filter(SettingAttribute.ID_KEY, id)
+                                            .get();
+    if (settingAttribute != null) {
+      return settingAttribute.getValue();
+    }
+    return null;
   }
 
   @Override

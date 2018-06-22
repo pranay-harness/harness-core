@@ -9,6 +9,9 @@ import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.SERVICE_TEMPLATE;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
+import static software.wings.common.Constants.ARTIFACT_SOURCE_REGISTRY_URL_KEY;
+import static software.wings.common.Constants.ARTIFACT_SOURCE_REPOSITORY_NAME_KEY;
+import static software.wings.common.Constants.ARTIFACT_SOURCE_USER_NAME_KEY;
 import static software.wings.common.Constants.ASSERTION_STATEMENT;
 import static software.wings.common.Constants.ASSERTION_STATUS;
 import static software.wings.common.Constants.HARNESS_KUBE_CONFIG_PATH;
@@ -61,6 +64,10 @@ public abstract class ExpressionBuilder {
   protected static final String ARTIFACT_URL = "artifact.url";
   protected static final String ARTIFACT_BUILD_FULL_DISPLAYNAME = "artifact.buildFullDisplayName";
   protected static final String ARTIFACT_PATH = "artifact.artifactPath";
+  protected static final String ARTIFACT_SOURCE_USER_NAME = "artifact.source." + ARTIFACT_SOURCE_USER_NAME_KEY;
+  protected static final String ARTIFACT_SOURCE_REGISTRY_URL = "artifact.source." + ARTIFACT_SOURCE_REGISTRY_URL_KEY;
+  protected static final String ARTIFACT_SOURCE_REPOSITORY_NAME =
+      "artifact.source." + ARTIFACT_SOURCE_REPOSITORY_NAME_KEY;
 
   protected static final String ENV_NAME = "env.name";
   protected static final String ENV_DESCRIPTION = "env.description";
@@ -137,7 +144,8 @@ public abstract class ExpressionBuilder {
     Set<String> expressions = new TreeSet<>();
     expressions.addAll(asList(APP_NAME, APP_DESCRIPTION));
     expressions.addAll(asList(ARTIFACT_DISPLAY_NAME, ARTIFACT_BUILDNO, ARTIFACT_REVISION, ARTIFACT_DESCRIPTION,
-        ARTIFACT_FILE_NAME, ARTIFACT_BUILD_FULL_DISPLAYNAME, ARTIFACT_BUCKET_NAME, ARTIFACT_BUCKET_KEY, ARTIFACT_URL));
+        ARTIFACT_FILE_NAME, ARTIFACT_BUILD_FULL_DISPLAYNAME, ARTIFACT_BUCKET_NAME, ARTIFACT_BUCKET_KEY, ARTIFACT_URL,
+        ARTIFACT_SOURCE_USER_NAME, ARTIFACT_SOURCE_REGISTRY_URL, ARTIFACT_SOURCE_REPOSITORY_NAME));
     expressions.addAll(asList(ENV_NAME, ENV_DESCRIPTION));
     expressions.addAll(asList(SERVICE_NAME, SERVICE_DESCRIPTION));
     expressions.addAll(asList(WORKFLOW_NAME, WORKFLOW_DESCRIPTION, WORKFLOW_DISPLAY_NAME, WORKFLOW_RELEASE_NO,

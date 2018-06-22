@@ -95,4 +95,6 @@ public interface ArtifactStreamService extends OwnedByService {
    * @return
    */
   List<ArtifactStream> getArtifactStreamsForService(String appId, String serviceId);
+
+  Map<String, String> fetchArtifactSourceProperties(String accountId, String appId, String artifactStreamId);
 }

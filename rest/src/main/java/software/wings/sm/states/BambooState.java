@@ -34,7 +34,6 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
 import software.wings.beans.TaskType;
 import software.wings.common.Constants;
-import software.wings.common.TemplateExpressionProcessor;
 import software.wings.service.impl.BambooSettingProvider;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
@@ -73,8 +72,8 @@ public class BambooState extends State {
   @Attributes(title = "Artifacts/Files Paths")
   private List<FilePathAssertionEntry> filePathsForAssertion = Lists.newArrayList();
 
-  @Transient @Inject private TemplateExpressionProcessor templateExpressionProcessor;
   @Transient @Inject private ActivityService activityService;
+
   @Inject private DelegateService delegateService;
   @Inject private SecretManager secretManager;
 
@@ -148,7 +147,7 @@ public class BambooState extends State {
         : workflowStandardParams.getEnv().getUuid();
     String accountId = ((ExecutionContextImpl) context).getApp().getAccountId();
 
-    BambooConfig bambooConfig = (BambooConfig) context.getGlobalSettingValue(accountId, bambooConfigId, BAMBOO.name());
+    BambooConfig bambooConfig = (BambooConfig) context.getGlobalSettingValue(accountId, bambooConfigId);
     if (bambooConfig == null) {
       logger.warn("BamboodConfig Id {} does not exist. It might have been deleted", bambooConfigId);
       return anExecutionResponse()

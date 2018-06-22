@@ -200,8 +200,7 @@ public class JenkinsState extends State {
 
     String accountId = ((ExecutionContextImpl) context).getApp().getAccountId();
 
-    JenkinsConfig jenkinsConfig =
-        (JenkinsConfig) context.getGlobalSettingValue(accountId, jenkinsConfigId, StateType.JENKINS.name());
+    JenkinsConfig jenkinsConfig = (JenkinsConfig) context.getGlobalSettingValue(accountId, jenkinsConfigId);
     if (jenkinsConfig == null) {
       logger.warn("JenkinsConfig Id {} does not exist. It might have been deleted", jenkinsConfigId);
       return anExecutionResponse()

@@ -65,6 +65,16 @@ public class GcrArtifactStream extends ArtifactStream {
     return getRegistryHostName() + '/' + getDockerImageName();
   }
 
+  @Override
+  public String fetchRepositoryName() {
+    return dockerImageName;
+  }
+
+  @Override
+  public String fetchRegistryUrl() {
+    return registryHostName;
+  }
+
   @Data
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
