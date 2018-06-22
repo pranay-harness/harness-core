@@ -168,8 +168,16 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
           .kmsId(vaultConfig.getUuid())
           .build();
     } else {
-      logger.error("Request not successful. Reason: {}, headers: {}", response, response.raw().request().headers());
-      throw new IOException(response.errorBody().string());
+      String errorMsg = new StringBuilder()
+                            .append("Request not successful. Reason: {")
+                            .append(response)
+                            .append("}")
+                            .append(" headers: {")
+                            .append(response.raw().request().headers())
+                            .append("}")
+                            .toString();
+      logger.error(errorMsg);
+      throw new IOException(errorMsg);
     }
   }
 
@@ -186,8 +194,16 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     if (response.isSuccessful()) {
       return response.body().getData().getValue().toCharArray();
     } else {
-      logger.error("Request not successful. Reason: {}", response);
-      throw new IOException(response.errorBody().string());
+      String errorMsg = new StringBuilder()
+                            .append("Request not successful. Reason: {")
+                            .append(response)
+                            .append("}")
+                            .append(" headers: {")
+                            .append(response.raw().request().headers())
+                            .append("}")
+                            .toString();
+      logger.error(errorMsg);
+      throw new IOException(errorMsg);
     }
   }
 
