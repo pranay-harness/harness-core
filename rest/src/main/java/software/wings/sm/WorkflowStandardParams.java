@@ -32,6 +32,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.common.InstanceExpressionProcessor;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceTemplateService;
 
@@ -50,15 +51,17 @@ import java.util.stream.Collectors;
 public class WorkflowStandardParams implements ExecutionContextAware, ContextElement {
   private static final String STANDARD_PARAMS = "STANDARD_PARAMS";
 
-  @Transient @Inject private transient AppService appService;
+  @Inject private transient AppService appService;
 
-  @Transient @Inject private transient ArtifactService artifactService;
+  @Inject private transient ArtifactService artifactService;
 
-  @Transient @Inject private transient EnvironmentService environmentService;
+  @Inject private transient EnvironmentService environmentService;
 
-  @Transient @Inject private transient ServiceTemplateService serviceTemplateService;
+  @Inject private transient ServiceTemplateService serviceTemplateService;
 
-  @Transient @Inject private transient MainConfiguration configuration;
+  @Inject private transient MainConfiguration configuration;
+
+  @Inject private transient ArtifactStreamService artifactStreamService;
 
   private String appId;
   private String envId;
@@ -156,6 +159,8 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
 
   private void addArtifactToContext(Map<String, Object> map, Artifact artifact) {
     if (artifact != null) {
+      artifact.setSource(artifactStreamService.fetchArtifactSourceProperties(
+          getApp().getAccountId(), artifact.getAppId(), artifact.getArtifactStreamId()));
       map.put(ARTIFACT, artifact);
       String artifactFileName = null;
       if (isNotEmpty(artifact.getArtifactFiles())) {

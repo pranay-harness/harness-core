@@ -59,6 +59,7 @@ public class Artifact extends Base {
   private String description;
   private String errorMessage;
   @Indexed private ContentStatus contentStatus;
+  transient Map<String, String> source;
 
   /**
    * Gets buildNo.

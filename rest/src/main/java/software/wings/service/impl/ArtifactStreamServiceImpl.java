@@ -27,11 +27,13 @@ import com.google.inject.name.Named;
 
 import io.harness.data.validator.EntityNameValidator;
 import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.annotations.Transient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
+import software.wings.beans.config.ArtifactSourceable;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.PageRequest;
@@ -45,15 +47,15 @@ import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildSourceService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.ownership.OwnedByArtifactStream;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
+import software.wings.settings.SettingValue;
 import software.wings.stencils.DataProvider;
-import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.Util;
 import software.wings.utils.validation.Create;
@@ -62,6 +64,7 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -73,10 +76,11 @@ import javax.ws.rs.NotFoundException;
 @Singleton
 @ValidateOnExecution
 public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataProvider {
+  private static final Logger logger = LoggerFactory.getLogger(ArtifactStreamService.class);
+
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutorService executorService;
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
-  @Inject private StencilPostProcessor stencilPostProcessor;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private BuildSourceService buildSourceService;
   @Inject private EntityUpdateService entityUpdateService;
@@ -85,7 +89,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Inject private TriggerService triggerService;
   @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private YamlChangeSetHelper yamlChangeSetHelper;
-  @Inject @Transient private transient FeatureFlagService featureFlagService;
+  @Inject private SettingsService settingsService;
 
   @Override
   public PageResponse<ArtifactStream> list(PageRequest<ArtifactStream> req) {
@@ -266,6 +270,23 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                                   .build();
     PageResponse pageResponse = wingsPersistence.query(ArtifactStream.class, pageRequest);
     return pageResponse.getResponse();
+  }
+
+  @Override
+  public Map<String, String> fetchArtifactSourceProperties(String accountId, String appId, String artifactStreamId) {
+    ArtifactStream artifactStream = wingsPersistence.get(ArtifactStream.class, appId, artifactStreamId);
+    Map<String, String> artifactSourceProperties = new HashMap<>();
+    if (artifactStream == null) {
+      logger.warn("Failed to construct artifact source properties. Artifact Stream {} was deleted", artifactStreamId);
+      return artifactSourceProperties;
+    }
+    SettingValue settingValue = settingsService.getSettingValueById(accountId, artifactStream.getSettingId());
+    if (settingValue != null && settingValue instanceof ArtifactSourceable) {
+      artifactSourceProperties.putAll(((ArtifactSourceable) settingValue).fetchArtifactSourceProperties());
+    }
+    artifactSourceProperties.putAll(artifactStream.fetchArtifactSourceProperties());
+
+    return artifactSourceProperties;
   }
 
   @Override

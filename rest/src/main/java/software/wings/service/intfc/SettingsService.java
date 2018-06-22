@@ -6,6 +6,7 @@ import software.wings.beans.ValidationResult;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ownership.OwnedByAccount;
+import software.wings.settings.SettingValue;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
@@ -79,7 +80,7 @@ public interface SettingsService extends OwnedByAccount {
 
   void deleteSettingAttributesByType(String accountId, String appId, String envId, String type);
 
-  SettingAttribute getGlobalSettingAttributesById(String accountId, String id);
+  SettingValue getSettingValueById(String accountId, String id);
 
   ValidationResult validate(SettingAttribute settingAttribute);
 

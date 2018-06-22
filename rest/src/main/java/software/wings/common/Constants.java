@@ -8,9 +8,9 @@ import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
+import static software.wings.beans.artifact.ArtifactStreamType.GCS;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -777,10 +777,11 @@ public interface Constants {
   String CORRELATION_ID = "correlationId";
 
   /**
-   * The Auto downloaded.
+   * Auto downloaded
    */
-  @SuppressFBWarnings("MS_MUTABLE_COLLECTION")
-  List<String> autoDownloaded = asList(DOCKER.name(), ECR.name(), GCR.name(), ACR.name(), AMAZON_S3.name(), AMI.name());
+  List<String> autoDownloaded = Collections.unmodifiableList(
+      asList(DOCKER.name(), ECR.name(), GCR.name(), ACR.name(), AMAZON_S3.name(), AMI.name(), GCS.name()));
+
   /**
    * The constant DEPLOYMENT.
    */
@@ -839,4 +840,9 @@ public interface Constants {
   String ROUTE_UPDATE = "Route Update";
   String UPGRADE_STAGE_CONTAINERS = "Upgrade Stage Containers";
   String KUBERNETES_SWAP_SERVICES_PRIMARY_STAGE = "Swap Primary with Stage";
+
+  // Expression Builder Constants
+  String ARTIFACT_SOURCE_USER_NAME_KEY = "username";
+  String ARTIFACT_SOURCE_REGISTRY_URL_KEY = "registryUrl";
+  String ARTIFACT_SOURCE_REPOSITORY_NAME_KEY = "repositoryName";
 }

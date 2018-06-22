@@ -27,7 +27,6 @@ import static software.wings.service.impl.artifact.ArtifactCollectionUtil.getArt
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +50,7 @@ import software.wings.utils.MavenVersionCompareUtil;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -72,9 +72,8 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
   public static final Duration timeout = Duration.ofMinutes(10);
   private static final Logger logger = LoggerFactory.getLogger(ArtifactCollectionServiceImpl.class);
 
-  @SuppressFBWarnings("MS_MUTABLE_COLLECTION_PKGPROTECT")
-  public static final List<String> metadataOnlyStreams =
-      asList(DOCKER.name(), ECR.name(), GCR.name(), ACR.name(), NEXUS.name(), AMI.name());
+  private static final List<String> metadataOnlyStreams =
+      Collections.unmodifiableList(asList(DOCKER.name(), ECR.name(), GCR.name(), NEXUS.name(), AMI.name(), ACR.name()));
 
   @Override
   public Artifact collectArtifact(String appId, String artifactStreamId, BuildDetails buildDetails) {

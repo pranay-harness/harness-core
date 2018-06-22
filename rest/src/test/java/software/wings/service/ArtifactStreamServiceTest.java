@@ -16,9 +16,13 @@ import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 import static software.wings.beans.artifact.ArtifactStreamType.JENKINS;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
+import static software.wings.common.Constants.ARTIFACT_SOURCE_REGISTRY_URL_KEY;
+import static software.wings.common.Constants.ARTIFACT_SOURCE_REPOSITORY_NAME_KEY;
+import static software.wings.common.Constants.ARTIFACT_SOURCE_USER_NAME_KEY;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.TRIGGER_NAME;
@@ -32,6 +36,10 @@ import org.mockito.Mock;
 import org.quartz.JobDetail;
 import org.quartz.Trigger;
 import software.wings.WingsBaseTest;
+import software.wings.beans.AzureConfig;
+import software.wings.beans.DockerConfig;
+import software.wings.beans.GcpConfig;
+import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.artifact.AcrArtifactStream;
 import software.wings.beans.artifact.AmazonS3ArtifactStream;
@@ -46,6 +54,7 @@ import software.wings.beans.artifact.EcrArtifactStream;
 import software.wings.beans.artifact.GcrArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
+import software.wings.beans.config.NexusConfig;
 import software.wings.dl.PageRequest;
 import software.wings.exception.WingsException;
 import software.wings.scheduler.JobScheduler;
@@ -53,10 +62,12 @@ import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildSourceService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Mock private JobScheduler jobScheduler;
@@ -64,6 +75,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private BuildSourceService buildSourceService;
   @Mock private TriggerService triggerService;
+  @Mock private SettingsService settingsService;
   @InjectMocks @Inject private ArtifactStreamService artifactStreamService;
 
   @Before
@@ -1262,5 +1274,283 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
         .thenReturn(
             Collections.singletonList(software.wings.beans.trigger.Trigger.builder().name(TRIGGER_NAME).build()));
     assertThat(artifactStreamService.delete(APP_ID, savedArtifactStream.getUuid())).isTrue();
+  }
+
+  @Test
+  public void shouldGetDockerArtifactStreamSourceProperties() {
+    when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
+        .thenReturn(DockerConfig.builder()
+                        .dockerRegistryUrl("http://hub.docker.com/")
+                        .username("username")
+                        .password("password".toCharArray())
+                        .accountId(ACCOUNT_ID)
+                        .build());
+    DockerArtifactStream dockerArtifactStream = DockerArtifactStream.builder()
+                                                    .appId(APP_ID)
+                                                    .settingId(SETTING_ID)
+                                                    .imageName("wingsplugins/todolist")
+                                                    .autoPopulate(true)
+                                                    .serviceId(SERVICE_ID)
+                                                    .build();
+    ArtifactStream savedArtifactSteam = artifactStreamService.create(dockerArtifactStream);
+    assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
+    assertThat(savedArtifactSteam.getName()).isNotEmpty();
+    assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(DOCKER.name());
+    Map<String, String> artifactSourceProperties =
+        artifactStreamService.fetchArtifactSourceProperties(ACCOUNT_ID, APP_ID, savedArtifactSteam.getUuid());
+    assertThat(artifactSourceProperties).isNotEmpty();
+    assertThat(artifactSourceProperties)
+        .containsKeys(
+            ARTIFACT_SOURCE_USER_NAME_KEY, ARTIFACT_SOURCE_REGISTRY_URL_KEY, ARTIFACT_SOURCE_REPOSITORY_NAME_KEY);
+    assertThat(artifactSourceProperties).containsValues("username", "http://hub.docker.com/", "wingsplugins/todolist");
+  }
+
+  @Test
+  public void shouldGetDockerArtifactSourcePropertiesWhenArtifactStreamDeleted() {
+    Map<String, String> artifactSourceProperties =
+        artifactStreamService.fetchArtifactSourceProperties(ACCOUNT_ID, APP_ID, ARTIFACT_STREAM_ID);
+    assertThat(artifactSourceProperties).isEmpty();
+  }
+
+  @Test
+  public void shouldGetGcrArtifactStreamSourceProperties() {
+    when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
+        .thenReturn(GcpConfig.builder().accountId(ACCOUNT_ID).build());
+    GcrArtifactStream gcrArtifactStream = GcrArtifactStream.builder()
+                                              .appId(APP_ID)
+                                              .settingId(SETTING_ID)
+                                              .dockerImageName("exploration-161417/todolist")
+                                              .registryHostName("gcr.io")
+                                              .autoPopulate(true)
+                                              .serviceId(SERVICE_ID)
+                                              .build();
+    ArtifactStream savedArtifactSteam = artifactStreamService.create(gcrArtifactStream);
+    assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
+    Map<String, String> artifactSourceProperties =
+        artifactStreamService.fetchArtifactSourceProperties(ACCOUNT_ID, APP_ID, savedArtifactSteam.getUuid());
+    assertThat(artifactSourceProperties).isNotEmpty();
+    assertThat(artifactSourceProperties)
+        .containsOnlyKeys(ARTIFACT_SOURCE_REGISTRY_URL_KEY, ARTIFACT_SOURCE_REPOSITORY_NAME_KEY);
+    assertThat(artifactSourceProperties).containsValues("gcr.io", "exploration-161417/todolist");
+  }
+
+  @Test
+  public void shouldGetAcrArtifactStreamSourceProperties() {
+    when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
+        .thenReturn(AzureConfig.builder().accountId(ACCOUNT_ID).build());
+
+    AcrArtifactStream acrArtifactStream = AcrArtifactStream.builder()
+                                              .appId(APP_ID)
+                                              .settingId(SETTING_ID)
+                                              .subscriptionId("20d6a917-99fa-4b1b-9b2e-a3d624e9dcf0")
+                                              .repositoryName("nginx")
+                                              .registryName("harnessqa")
+                                              .autoPopulate(true)
+                                              .serviceId(SERVICE_ID)
+                                              .build();
+    ArtifactStream savedArtifactSteam = artifactStreamService.create(acrArtifactStream);
+    assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
+    Map<String, String> artifactSourceProperties =
+        artifactStreamService.fetchArtifactSourceProperties(ACCOUNT_ID, APP_ID, savedArtifactSteam.getUuid());
+    assertThat(artifactSourceProperties).isNotEmpty();
+    assertThat(artifactSourceProperties)
+        .containsOnlyKeys(ARTIFACT_SOURCE_REGISTRY_URL_KEY, ARTIFACT_SOURCE_REPOSITORY_NAME_KEY);
+    assertThat(artifactSourceProperties).containsValues("harnessqa", "nginx");
+  }
+
+  @Test
+  public void shouldGetEcrArtifactStreamSourceProperties() {
+    when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
+        .thenReturn(AzureConfig.builder().accountId(ACCOUNT_ID).build());
+
+    EcrArtifactStream ecrArtifactStream = EcrArtifactStream.builder()
+                                              .appId(APP_ID)
+                                              .settingId(SETTING_ID)
+                                              .imageName("todolist")
+                                              .region("us-east-1")
+                                              .autoPopulate(true)
+                                              .serviceId(SERVICE_ID)
+                                              .build();
+    ArtifactStream savedArtifactSteam = artifactStreamService.create(ecrArtifactStream);
+    assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
+    Map<String, String> artifactSourceProperties =
+        artifactStreamService.fetchArtifactSourceProperties(ACCOUNT_ID, APP_ID, savedArtifactSteam.getUuid());
+    assertThat(artifactSourceProperties).isNotEmpty();
+    assertThat(artifactSourceProperties).containsOnlyKeys(ARTIFACT_SOURCE_REPOSITORY_NAME_KEY);
+    assertThat(artifactSourceProperties).containsValues("todolist");
+  }
+
+  @Test
+  public void shouldGetJenkinsArtifactStreamSourceProperties() {
+    when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
+        .thenReturn(JenkinsConfig.builder()
+                        .jenkinsUrl("http://jenkins.software")
+                        .username("username")
+                        .accountId(ACCOUNT_ID)
+                        .build());
+
+    JenkinsArtifactStream jenkinsArtifactStream = JenkinsArtifactStream.builder()
+                                                      .sourceName("todolistwar")
+                                                      .settingId(SETTING_ID)
+                                                      .appId(APP_ID)
+                                                      .jobname("todolistwar")
+                                                      .autoPopulate(true)
+                                                      .serviceId(SERVICE_ID)
+                                                      .artifactPaths(asList("target/todolist.war"))
+                                                      .build();
+    ArtifactStream savedArtifactSteam = artifactStreamService.create(jenkinsArtifactStream);
+    assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
+
+    Map<String, String> artifactSourceProperties =
+        artifactStreamService.fetchArtifactSourceProperties(ACCOUNT_ID, APP_ID, savedArtifactSteam.getUuid());
+    assertThat(artifactSourceProperties).isNotEmpty();
+    assertThat(artifactSourceProperties)
+        .containsOnlyKeys(ARTIFACT_SOURCE_USER_NAME_KEY, ARTIFACT_SOURCE_REGISTRY_URL_KEY);
+    assertThat(artifactSourceProperties).containsValues("username", "http://jenkins.software");
+  }
+
+  @Test
+  public void shouldGetBabmooArtifactStreamSourceProperties() {
+    when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
+        .thenReturn(JenkinsConfig.builder()
+                        .jenkinsUrl("http://bamboo.software")
+                        .username("username")
+                        .accountId(ACCOUNT_ID)
+                        .build());
+
+    BambooArtifactStream bambooArtifactStream = BambooArtifactStream.builder()
+                                                    .appId(APP_ID)
+                                                    .settingId(SETTING_ID)
+                                                    .jobname("TOD-TOD")
+                                                    .autoPopulate(true)
+                                                    .serviceId(SERVICE_ID)
+                                                    .artifactPaths(asList("artifacts/todolist.war"))
+                                                    .build();
+    ArtifactStream savedArtifactSteam = artifactStreamService.create(bambooArtifactStream);
+    assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
+
+    Map<String, String> artifactSourceProperties =
+        artifactStreamService.fetchArtifactSourceProperties(ACCOUNT_ID, APP_ID, savedArtifactSteam.getUuid());
+    assertThat(artifactSourceProperties).isNotEmpty();
+    assertThat(artifactSourceProperties)
+        .containsOnlyKeys(ARTIFACT_SOURCE_USER_NAME_KEY, ARTIFACT_SOURCE_REGISTRY_URL_KEY);
+    assertThat(artifactSourceProperties).containsValues("username", "http://bamboo.software");
+  }
+
+  @Test
+  public void shouldGetNexusArtifactStreamSourceProperties() {
+    when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
+        .thenReturn(NexusConfig.builder()
+                        .nexusUrl("http://bamboo.software")
+                        .username("username")
+                        .accountId(ACCOUNT_ID)
+                        .build());
+
+    NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
+                                                  .appId(APP_ID)
+                                                  .settingId(SETTING_ID)
+                                                  .jobname("releases")
+                                                  .groupId("io.harness.test")
+                                                  .artifactPaths(asList("todolist"))
+                                                  .autoPopulate(true)
+                                                  .serviceId(SERVICE_ID)
+                                                  .build();
+    ArtifactStream savedArtifactSteam = artifactStreamService.create(nexusArtifactStream);
+    assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
+
+    Map<String, String> artifactSourceProperties =
+        artifactStreamService.fetchArtifactSourceProperties(ACCOUNT_ID, APP_ID, savedArtifactSteam.getUuid());
+    assertThat(artifactSourceProperties).isNotEmpty();
+    assertThat(artifactSourceProperties)
+        .containsOnlyKeys(ARTIFACT_SOURCE_USER_NAME_KEY, ARTIFACT_SOURCE_REGISTRY_URL_KEY);
+    assertThat(artifactSourceProperties).containsValues("username", "http://bamboo.software");
+  }
+
+  @Test
+  public void shouldGetNexusDockerArtifactStreamSourceProperties() {
+    when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
+        .thenReturn(NexusConfig.builder()
+                        .nexusUrl("http://bamboo.software")
+                        .username("username")
+                        .accountId(ACCOUNT_ID)
+                        .build());
+
+    NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
+                                                  .appId(APP_ID)
+                                                  .settingId(SETTING_ID)
+                                                  .jobname("releases")
+                                                  .imageName("wingsplugins/todolist")
+                                                  .autoPopulate(true)
+                                                  .serviceId(SERVICE_ID)
+                                                  .build();
+    ArtifactStream savedArtifactSteam = artifactStreamService.create(nexusArtifactStream);
+    assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
+
+    Map<String, String> artifactSourceProperties =
+        artifactStreamService.fetchArtifactSourceProperties(ACCOUNT_ID, APP_ID, savedArtifactSteam.getUuid());
+    assertThat(artifactSourceProperties).isNotEmpty();
+    assertThat(artifactSourceProperties)
+        .containsOnlyKeys(
+            ARTIFACT_SOURCE_USER_NAME_KEY, ARTIFACT_SOURCE_REGISTRY_URL_KEY, ARTIFACT_SOURCE_REPOSITORY_NAME_KEY);
+    assertThat(artifactSourceProperties).containsValues("username", "http://bamboo.software", "wingsplugins/todolist");
+  }
+
+  @Test
+  public void shouldGetArtifactoryArtifactStreamSourceProperties() {
+    when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
+        .thenReturn(NexusConfig.builder()
+                        .nexusUrl("http://artifactory.com")
+                        .username("username")
+                        .accountId(ACCOUNT_ID)
+                        .build());
+
+    ArtifactoryArtifactStream artifactoryArtifactStream = ArtifactoryArtifactStream.builder()
+                                                              .appId(APP_ID)
+                                                              .repositoryType("any")
+                                                              .settingId(SETTING_ID)
+                                                              .jobname("generic-repo")
+                                                              .artifactPattern("io/harness/todolist/todolist*")
+                                                              .autoPopulate(true)
+                                                              .serviceId(SERVICE_ID)
+                                                              .build();
+    ArtifactStream savedArtifactSteam = artifactStreamService.create(artifactoryArtifactStream);
+    assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
+
+    Map<String, String> artifactSourceProperties =
+        artifactStreamService.fetchArtifactSourceProperties(ACCOUNT_ID, APP_ID, savedArtifactSteam.getUuid());
+    assertThat(artifactSourceProperties).isNotEmpty();
+    assertThat(artifactSourceProperties)
+        .containsOnlyKeys(ARTIFACT_SOURCE_USER_NAME_KEY, ARTIFACT_SOURCE_REGISTRY_URL_KEY);
+    assertThat(artifactSourceProperties).containsValues("username", "http://artifactory.com");
+  }
+
+  @Test
+  public void shouldGetArtifactoryDockerArtifactStreamSourceProperties() {
+    when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
+        .thenReturn(NexusConfig.builder()
+                        .nexusUrl("http://artifactory.com")
+                        .username("username")
+                        .accountId(ACCOUNT_ID)
+                        .build());
+
+    ArtifactoryArtifactStream artifactoryArtifactStream = ArtifactoryArtifactStream.builder()
+                                                              .appId(APP_ID)
+                                                              .repositoryType("any")
+                                                              .jobname("docker")
+                                                              .settingId(SETTING_ID)
+                                                              .imageName("wingsplugins/todolist")
+                                                              .autoPopulate(true)
+                                                              .serviceId(SERVICE_ID)
+                                                              .build();
+    ArtifactStream savedArtifactSteam = artifactStreamService.create(artifactoryArtifactStream);
+    assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
+
+    Map<String, String> artifactSourceProperties =
+        artifactStreamService.fetchArtifactSourceProperties(ACCOUNT_ID, APP_ID, savedArtifactSteam.getUuid());
+    assertThat(artifactSourceProperties).isNotEmpty();
+    assertThat(artifactSourceProperties)
+        .containsOnlyKeys(
+            ARTIFACT_SOURCE_USER_NAME_KEY, ARTIFACT_SOURCE_REGISTRY_URL_KEY, ARTIFACT_SOURCE_REPOSITORY_NAME_KEY);
+    assertThat(artifactSourceProperties).containsValues("username", "http://artifactory.com", "wingsplugins/todolist");
   }
 }

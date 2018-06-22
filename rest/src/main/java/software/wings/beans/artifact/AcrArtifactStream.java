@@ -62,6 +62,16 @@ public class AcrArtifactStream extends ArtifactStream {
     return getRegistryName() + '/' + getRepositoryName();
   }
 
+  @Override
+  public String fetchRepositoryName() {
+    return getRepositoryName();
+  }
+
+  @Override
+  public String fetchRegistryUrl() {
+    return getRegistryName();
+  }
+
   @Data
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor

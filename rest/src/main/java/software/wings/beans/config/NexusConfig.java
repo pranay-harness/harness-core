@@ -24,7 +24,7 @@ import software.wings.yaml.setting.ArtifactServerYaml;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Builder
-public class NexusConfig extends SettingValue implements Encryptable {
+public class NexusConfig extends SettingValue implements Encryptable, ArtifactSourceable {
   @Attributes(title = "Nexus URL", required = true) @NotEmpty private String nexusUrl;
 
   @Attributes(title = "Version", required = true, enums = {"2.x", "3.x"})
@@ -55,6 +55,16 @@ public class NexusConfig extends SettingValue implements Encryptable {
     this.accountId = accountId;
     this.encryptedPassword = encryptedPassword;
     this.version = version;
+  }
+
+  @Override
+  public String fetchUserName() {
+    return username;
+  }
+
+  @Override
+  public String fetchRegistryUrl() {
+    return nexusUrl;
   }
 
   @Data

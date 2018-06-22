@@ -27,7 +27,6 @@ import static software.wings.beans.artifact.Artifact.Status.RUNNING;
 import static software.wings.beans.artifact.Artifact.Status.WAITING;
 import static software.wings.beans.artifact.ArtifactStream.ARTIFACT_STREAM_TYPE_KEY;
 import static software.wings.beans.artifact.ArtifactStream.METADATA_ONLY_KEY;
-import static software.wings.beans.artifact.ArtifactStream.metaDataOnlyStreams;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.collect.CollectEvent.Builder.aCollectEvent;
@@ -464,7 +463,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   }
 
   private void deleteArtifactsWithContents(int retentionSize, ArtifactStream artifactStream) {
-    if (artifactStream.isMetadataOnly() || metaDataOnlyStreams.contains(artifactStream.getArtifactStreamType())) {
+    if (artifactStream.isMetadataOnly() || autoDownloaded.contains(artifactStream.getArtifactStreamType())) {
       return;
     }
     List<Artifact> toBeDeletedArtifacts = wingsPersistence.createQuery(Artifact.class)

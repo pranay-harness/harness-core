@@ -26,7 +26,7 @@ import software.wings.yaml.setting.ArtifactServerYaml;
 @EqualsAndHashCode(callSuper = false)
 @ToString(exclude = "password")
 @Builder
-public class ArtifactoryConfig extends SettingValue implements Encryptable {
+public class ArtifactoryConfig extends SettingValue implements Encryptable, ArtifactSourceable {
   @Attributes(title = "Artifactory URL", required = true) @NotEmpty private String artifactoryUrl;
 
   @Attributes(title = "User Name") private String username;
@@ -50,6 +50,16 @@ public class ArtifactoryConfig extends SettingValue implements Encryptable {
     this.password = password;
     this.accountId = accountId;
     this.encryptedPassword = encryptedPassword;
+  }
+
+  @Override
+  public String fetchUserName() {
+    return username;
+  }
+
+  @Override
+  public String fetchRegistryUrl() {
+    return artifactoryUrl;
   }
 
   @Data
