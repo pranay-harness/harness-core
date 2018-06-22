@@ -1,0 +1,94 @@
+package software.wings.service.intfc;
+
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
+
+import com.google.inject.Inject;
+
+import com.amazonaws.services.ecr.model.Repository;
+import com.amazonaws.services.ecs.model.ListClustersResult;
+import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import software.wings.WingsBaseTest;
+import software.wings.beans.AwsConfig;
+import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.AwsEc2ServiceImpl;
+import software.wings.service.impl.AwsHelperService;
+
+public class AwsEc2ServiceTest extends WingsBaseTest {
+  @Mock private AwsHelperService mockAwsHelperService;
+
+  // Important: The "AwsEc2Service" is to be used "ONLY" in the Delegate Module, and not in the Wings Module.
+  // As a result, we are binding the impl itself rather than intfc for writing this test.
+  // !!! Do not change !!!
+  @Inject @InjectMocks private AwsEc2ServiceImpl service;
+
+  @Test
+  public void testGetRegions() {
+    doReturn(asList("r1", "r2")).when(mockAwsHelperService).listRegions(any(), anyList());
+    assertEquals(asList("r1", "r2"),
+        service.getRegions(AwsConfig.builder().build(), singletonList(EncryptedDataDetail.builder().build())));
+  }
+
+  @Test
+  public void testGetClusters() {
+    doReturn(new ListClustersResult().withClusterArns("arn1", "arn2"))
+        .when(mockAwsHelperService)
+        .listClusters(anyString(), any(), anyList(), any());
+    doReturn("id1").when(mockAwsHelperService).getIdFromArn(eq("arn1"));
+    doReturn("id2").when(mockAwsHelperService).getIdFromArn(eq("arn2"));
+    assertEquals(asList("id1", "id2"),
+        service.getClusters(
+            AwsConfig.builder().build(), singletonList(EncryptedDataDetail.builder().build()), "region"));
+  }
+
+  @Test
+  public void testGetVPCs() {
+    doReturn(asList("vpc1", "vpc2")).when(mockAwsHelperService).listVPCs(any(), anyList(), anyString());
+    assertEquals(asList("vpc1", "vpc2"),
+        service.getVPCs(AwsConfig.builder().build(), singletonList(EncryptedDataDetail.builder().build()), "region"));
+  }
+
+  @Test
+  public void testGetEcrImageUrl() {
+    doReturn(new Repository().withRepositoryUri("uri"))
+        .when(mockAwsHelperService)
+        .getRepository(any(), anyList(), anyString(), anyString());
+    assertEquals("uri",
+        service.getEcrImageUrl(
+            AwsConfig.builder().build(), singletonList(EncryptedDataDetail.builder().build()), "region", "name"));
+  }
+
+  @Test
+  public void testGetAmazonEcrAuthToken() {
+    doReturn("Token").when(mockAwsHelperService).getAmazonEcrAuthToken(any(), anyList(), anyString(), anyString());
+    assertEquals("Token",
+        service.getAmazonEcrAuthToken(
+            AwsConfig.builder().build(), singletonList(EncryptedDataDetail.builder().build()), "account", "region"));
+  }
+
+  @Test
+  public void testGetSubnets() {
+    doReturn(asList("s1", "s2")).when(mockAwsHelperService).listSubnetIds(any(), anyList(), anyString(), anyList());
+    assertEquals(asList("s1", "s2"),
+        service.getSubnets(AwsConfig.builder().build(), singletonList(EncryptedDataDetail.builder().build()), "region",
+            asList("v1", "v2")));
+  }
+
+  @Test
+  public void testGetSGs() {
+    doReturn(asList("s1", "s2"))
+        .when(mockAwsHelperService)
+        .listSecurityGroupIds(any(), anyList(), anyString(), anyList());
+    assertEquals(asList("s1", "s2"),
+        service.getSGs(AwsConfig.builder().build(), singletonList(EncryptedDataDetail.builder().build()), "region",
+            asList("v1", "v2")));
+  }
+}

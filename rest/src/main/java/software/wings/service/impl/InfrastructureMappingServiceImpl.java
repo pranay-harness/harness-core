@@ -58,6 +58,7 @@ import software.wings.annotation.Encryptable;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
@@ -108,6 +109,7 @@ import software.wings.scheduler.QuartzScheduler;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.AwsEc2Service;
 import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -965,6 +967,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     return serviceInstanceService.updateInstanceMappings(serviceTemplate, infrastructureMapping, savedHosts);
   }
 
+  private AwsConfig validateAndGetAwsConfig(SettingAttribute computeProviderSetting) {
+    if (computeProviderSetting == null || !(computeProviderSetting.getValue() instanceof AwsConfig)) {
+      throw new WingsException(INVALID_ARGUMENT).addParam("args", "InvalidConfiguration");
+    }
+    return (AwsConfig) computeProviderSetting.getValue();
+  }
+
   @Override
   public List<String> listClusters(String appId, String deploymentType, String computeProviderId, String region) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
@@ -972,9 +981,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     String type = computeProviderSetting.getValue().getType();
     if (AWS.name().equals(type)) {
-      AwsInfrastructureProvider infrastructureProvider =
-          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
-      return infrastructureProvider.listClusterNames(computeProviderSetting, region);
+      SyncTaskContext syncTaskContext = aContext().withAccountId(computeProviderSetting.getAccountId()).build();
+      AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+      return delegateProxyFactory.get(AwsEc2Service.class, syncTaskContext)
+          .getClusters(awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
     } else if (GCP.name().equals(type)) {
       GcpInfrastructureProvider infrastructureProvider =
           (GcpInfrastructureProvider) getInfrastructureProviderByComputeProviderType(GCP.name());
@@ -990,9 +1000,15 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
-      AwsInfrastructureProvider infrastructureProvider =
-          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
-      return infrastructureProvider.listRegions(computeProviderSetting);
+      try {
+        SyncTaskContext syncTaskContext = aContext().withAccountId(computeProviderSetting.getAccountId()).build();
+        AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+        return delegateProxyFactory.get(AwsEc2Service.class, syncTaskContext)
+            .getRegions(awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null));
+      } catch (Exception e) {
+        logger.warn(Misc.getMessage(e), e);
+        throw new InvalidRequestException(Misc.getMessage(e), USER);
+      }
     }
     return emptyList();
   }
@@ -1075,9 +1091,15 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
-      AwsInfrastructureProvider infrastructureProvider =
-          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
-      return infrastructureProvider.listIAMRoles(computeProviderSetting);
+      try {
+        SyncTaskContext syncTaskContext = aContext().withAccountId(computeProviderSetting.getAccountId()).build();
+        AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+        return delegateProxyFactory.get(AwsEc2Service.class, syncTaskContext)
+            .getIAMRoles(awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null));
+      } catch (Exception e) {
+        logger.warn(Misc.getMessage(e), e);
+        throw new InvalidRequestException(Misc.getMessage(e), USER);
+      }
     }
     return Collections.emptyMap();
   }
@@ -1088,9 +1110,15 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
-      AwsInfrastructureProvider infrastructureProvider =
-          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
-      return infrastructureProvider.listVPCs(computeProviderSetting, region);
+      try {
+        SyncTaskContext syncTaskContext = aContext().withAccountId(computeProviderSetting.getAccountId()).build();
+        AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+        return delegateProxyFactory.get(AwsEc2Service.class, syncTaskContext)
+            .getVPCs(awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
+      } catch (Exception e) {
+        logger.warn(Misc.getMessage(e), e);
+        throw new InvalidRequestException(Misc.getMessage(e), USER);
+      }
     }
     return emptyList();
   }
@@ -1134,9 +1162,15 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
-      AwsInfrastructureProvider infrastructureProvider =
-          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
-      return infrastructureProvider.listSecurityGroups(computeProviderSetting, region, vpcIds);
+      try {
+        SyncTaskContext syncTaskContext = aContext().withAccountId(computeProviderSetting.getAccountId()).build();
+        AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+        return delegateProxyFactory.get(AwsEc2Service.class, syncTaskContext)
+            .getSGs(awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region, vpcIds);
+      } catch (Exception e) {
+        logger.warn(Misc.getMessage(e), e);
+        throw new InvalidRequestException(Misc.getMessage(e), USER);
+      }
     }
     return emptyList();
   }
@@ -1147,9 +1181,15 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
-      AwsInfrastructureProvider infrastructureProvider =
-          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
-      return infrastructureProvider.listSubnets(computeProviderSetting, region, vpcIds);
+      try {
+        SyncTaskContext syncTaskContext = aContext().withAccountId(computeProviderSetting.getAccountId()).build();
+        AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+        return delegateProxyFactory.get(AwsEc2Service.class, syncTaskContext)
+            .getSubnets(awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region, vpcIds);
+      } catch (Exception e) {
+        logger.warn(Misc.getMessage(e), e);
+        throw new InvalidRequestException(Misc.getMessage(e), USER);
+      }
     }
     return emptyList();
   }

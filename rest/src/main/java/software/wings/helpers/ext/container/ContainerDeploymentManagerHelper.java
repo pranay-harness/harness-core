@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
+import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
@@ -11,6 +12,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
 import com.google.inject.Inject;
@@ -30,6 +32,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.ContainerInfrastructureMapping;
+import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.EcrConfig;
@@ -52,6 +55,7 @@ import software.wings.beans.container.ImageDetails.ImageDetailsBuilder;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.ContainerInfo.Status;
 import software.wings.common.Constants;
+import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.exception.InvalidRequestException;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.helpers.ext.ecr.EcrClassicService;
@@ -60,6 +64,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.AwsEc2Service;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -71,6 +76,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
@@ -90,6 +96,7 @@ public class ContainerDeploymentManagerHelper {
   @Inject private EcrService ecrService;
   @Inject private EcrClassicService ecrClassicService;
   @Inject private ServiceTemplateService serviceTemplateService;
+  @Inject private DelegateProxyFactory delegateProxyFactory;
 
   private static final Logger logger = LoggerFactory.getLogger(ContainerDeploymentManagerHelper.class);
 
@@ -210,9 +217,9 @@ public class ContainerDeploymentManagerHelper {
       // All the new ECR artifact streams use cloud provider AWS settings for accesskey and secret
       if (SettingVariableTypes.AWS.name().equals(settingValue.getType())) {
         AwsConfig awsConfig = (AwsConfig) settingsService.get(settingId).getValue();
-        encryptionService.decrypt(awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, workflowExecutionId));
-        imageDetails.password(awsHelperService.getAmazonEcrAuthToken(imageUrl.substring(0, imageUrl.indexOf('.')),
-            ecrArtifactStream.getRegion(), awsConfig.getAccessKey(), awsConfig.getSecretKey()));
+        imageDetails.password(getAmazonEcrAuthToken(awsConfig.getAccountId(), awsConfig,
+            secretManager.getEncryptionDetails(awsConfig, appId, workflowExecutionId),
+            imageUrl.substring(0, imageUrl.indexOf('.')), ecrArtifactStream.getRegion()));
       } else {
         // There is a point when old ECR artifact streams would be using the old ECR Artifact Server definition until
         // migration happens. The deployment code handles both the cases.
@@ -296,12 +303,35 @@ public class ContainerDeploymentManagerHelper {
     SettingValue value = settingAttribute.getValue();
     if (SettingVariableTypes.AWS.name().equals(value.getType())) {
       AwsConfig awsConfig = (AwsConfig) value;
-      return ecrService.getEcrImageUrl(awsConfig,
+      return getEcrImageUrl(settingAttribute.getAccountId(), awsConfig,
           secretManager.getEncryptionDetails(awsConfig, ecrArtifactStream.getAppId(), workflowExecutionId),
           ecrArtifactStream.getRegion(), ecrArtifactStream);
     } else {
       EcrConfig ecrConfig = (EcrConfig) value;
       return ecrClassicService.getEcrImageUrl(ecrConfig, ecrArtifactStream);
+    }
+  }
+
+  private String getEcrImageUrl(String accountId, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, EcrArtifactStream ecrArtifactStream) {
+    try {
+      SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).build();
+      return delegateProxyFactory.get(AwsEc2Service.class, syncTaskContext)
+          .getEcrImageUrl(awsConfig, encryptionDetails, region, ecrArtifactStream.getImageName());
+    } catch (Exception e) {
+      throw new InvalidRequestException(Misc.getMessage(e), USER);
+    }
+  }
+
+  private String getAmazonEcrAuthToken(String accountId, AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptionDetails, String awsAccount, String region) {
+    try {
+      SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).build();
+      return delegateProxyFactory.get(AwsEc2Service.class, syncTaskContext)
+          .getAmazonEcrAuthToken(awsConfig, encryptionDetails, awsAccount, region);
+    } catch (Exception e) {
+      logger.warn(Misc.getMessage(e), e);
+      throw new InvalidRequestException(Misc.getMessage(e), USER);
     }
   }
 }

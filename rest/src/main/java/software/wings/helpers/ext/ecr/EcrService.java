@@ -1,7 +1,6 @@
 package software.wings.helpers.ext.ecr;
 
 import software.wings.beans.AwsConfig;
-import software.wings.beans.artifact.EcrArtifactStream;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 
@@ -59,15 +58,4 @@ public interface EcrService {
    * @return the list
    */
   List<String> listEcrRegistry(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region);
-
-  /**
-   * Get the ECR repository info for the given name
-   *
-   * @param awsConfig         aws cloud provider config
-   * @param region            aws region
-   * @param ecrArtifactStream repository name
-   * @return ecr image url
-   */
-  String getEcrImageUrl(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
-      EcrArtifactStream ecrArtifactStream);
 }
