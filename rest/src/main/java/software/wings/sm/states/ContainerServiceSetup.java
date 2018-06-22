@@ -31,6 +31,7 @@ import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.ResizeStrategy;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -44,6 +45,7 @@ import software.wings.beans.command.ContainerSetupParams;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ImageDetails;
 import software.wings.common.Constants;
+import software.wings.exception.InvalidArgumentsException;
 import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
@@ -153,6 +155,11 @@ public abstract class ContainerServiceSetup extends State {
                 .withValue(((DirectKubernetesInfrastructureMapping) infrastructureMapping).createKubernetesConfig())
                 .build()
           : settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+
+      if (settingAttribute == null) {
+        throw new InvalidArgumentsException(
+            NameValuePair.builder().name("Cloud Provider").value("Missing, check service infrastructure").build());
+      }
 
       List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(
           (Encryptable) settingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
