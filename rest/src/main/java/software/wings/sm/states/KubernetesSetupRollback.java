@@ -72,7 +72,6 @@ public class KubernetesSetupRollback extends ContainerServiceSetup {
         .withControllerNamePrefix(rollbackElement.getControllerNamePrefix())
         .withInfraMappingId(infrastructureMapping.getUuid())
         .withPreviousYamlConfig(rollbackElement.getPreviousYamlConfig())
-        .withPreviousActiveAutoscalers(rollbackElement.getPreviousActiveAutoscalers())
         .withServiceSteadyStateTimeout(serviceSteadyStateTimeout)
         .withRollback(true)
         .withSubscriptionId(subscriptionId)

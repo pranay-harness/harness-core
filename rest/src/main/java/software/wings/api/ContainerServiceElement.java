@@ -34,13 +34,13 @@ public class ContainerServiceElement implements ContextElement {
   private DeploymentType deploymentType;
   private String infraMappingId;
   private boolean useAutoscaler;
+  private String autoscalerYaml;
   private int minAutoscaleInstances;
   private int maxAutoscaleInstances;
   private int targetCpuUtilizationPercentage;
   private String customMetricYamlConfig;
   private boolean useIstioRouteRule;
   private KubernetesYamlConfig previousYamlConfig;
-  private List<String> previousActiveAutoscalers;
   private List<String[]> activeServiceCounts;
   private List<String[]> trafficWeights;
 

@@ -22,7 +22,6 @@ public class CommandStepExecutionSummary extends StepExecutionSummary {
   private List<ContainerServiceData> oldInstanceData = new ArrayList<>();
   private String controllerNamePrefix;
   private KubernetesYamlConfig previousYamlConfig;
-  private List<String> previousActiveAutoscalers;
   private String clusterName;
   private CodeDeployParams codeDeployParams;
   private CodeDeployParams oldCodeDeployParams;

@@ -245,8 +245,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         if (isNotVersioned) {
           performYamlRollback(
               encryptedDataDetails, executionLogCallback, setupParams, kubernetesConfig, containerServiceName);
-        } else if (isNotEmpty(setupParams.getPreviousActiveAutoscalers())) {
-          performAutoscalerRollback(encryptedDataDetails, executionLogCallback, setupParams, kubernetesConfig);
+        } else if (isNotBlank(setupParams.getPreviousYamlConfig().getAutoscalerYaml())) {
+          performAutoscalerRollback(kubernetesConfig, encryptedDataDetails, executionLogCallback, setupParams);
         }
         executionLogCallback.saveExecutionLog("Rollback complete");
         executionLogCallback.saveExecutionLog(DASH_STRING + "\n");
@@ -272,9 +272,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
       KubernetesYamlConfigBuilder yamlConfigBuilder = KubernetesYamlConfig.builder();
       List<Pod> originalPods = null;
-      List<String> previousActiveAutoscalers = null;
       Map<String, Integer> activeServiceCounts = new HashMap<>();
       Map<String, Integer> trafficWeights = new HashMap<>();
+      String previousAutoscalerYaml;
 
       if (isNotVersioned) {
         yamlConfigBuilder.controllerYaml(
@@ -283,26 +283,21 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             kubernetesContainerService.getRunningPods(kubernetesConfig, encryptedDataDetails, containerServiceName);
         yamlConfigBuilder.configMapYaml(getConfigMapYaml(kubernetesConfig, encryptedDataDetails, containerServiceName));
         yamlConfigBuilder.secretMapYaml(getSecretMapYaml(kubernetesConfig, encryptedDataDetails, containerServiceName));
-        yamlConfigBuilder.autoscalerYaml(
-            getAutoscalerYaml(kubernetesConfig, encryptedDataDetails, containerServiceName));
-        HorizontalPodAutoscaler hpa = kubernetesContainerService.getAutoscaler(kubernetesConfig, encryptedDataDetails,
-            containerServiceName, ContainerApiVersions.KUBERNETES_V1.getVersionName());
-        if (hpa != null && !"none".equals(hpa.getSpec().getScaleTargetRef().getName())) {
-          disableAutoscaler(kubernetesConfig, encryptedDataDetails, containerServiceName, executionLogCallback);
-        }
+        previousAutoscalerYaml = getAutoscalerYaml(kubernetesConfig, encryptedDataDetails, containerServiceName);
       } else {
-        previousActiveAutoscalers = getActiveAutoscalers(
-            kubernetesConfig, encryptedDataDetails, containerServiceName, executionLogCallback, isStatefulSet);
         activeServiceCounts = kubernetesContainerService.getActiveServiceCounts(
             kubernetesConfig, encryptedDataDetails, containerServiceName, isStatefulSet);
         trafficWeights = kubernetesContainerService.getTrafficWeights(
             kubernetesConfig, encryptedDataDetails, containerServiceName, isStatefulSet);
+        previousAutoscalerYaml = getAutoscalerYaml(kubernetesConfig, encryptedDataDetails, lastCtrlName);
       }
+
+      yamlConfigBuilder.autoscalerYaml(previousAutoscalerYaml);
+
       KubernetesYamlConfig yamlConfig = yamlConfigBuilder.build();
 
       commandExecutionDataBuilder.containerServiceName(containerServiceName)
           .previousYamlConfig(yamlConfig)
-          .previousActiveAutoscalers(previousActiveAutoscalers)
           .activeServiceCounts(integerMapToListOfStringArray(activeServiceCounts))
           .trafficWeights(integerMapToListOfStringArray(trafficWeights));
 
@@ -320,19 +315,21 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       long replaceControllerStartTime = clock.millis();
 
       // Setup controller
-      kubernetesContainerService.createOrReplaceController(kubernetesConfig, encryptedDataDetails,
-          createKubernetesControllerDefinition(kubernetesContainerTask, containerServiceName, controllerLabels,
-              setupParams, registrySecretName, configMap, secretMap, originalPods, executionLogCallback));
+      HasMetadata controller =
+          kubernetesContainerService.createOrReplaceController(kubernetesConfig, encryptedDataDetails,
+              createKubernetesControllerDefinition(kubernetesContainerTask, containerServiceName, controllerLabels,
+                  setupParams, registrySecretName, configMap, secretMap, originalPods, executionLogCallback));
 
-      // Disable previous autoscalers
-      if (isNotEmpty(previousActiveAutoscalers)) {
-        previousActiveAutoscalers.forEach(
-            autoscaler -> disableAutoscaler(kubernetesConfig, encryptedDataDetails, autoscaler, executionLogCallback));
+      // Delete old autoscaler
+      if (isNotBlank(previousAutoscalerYaml)) {
+        kubernetesContainerService.deleteAutoscaler(kubernetesConfig, encryptedDataDetails, lastCtrlName);
       }
 
       // Create new autoscaler
-      HorizontalPodAutoscaler hpa = prepareHorizontalPodAutoscaler(kubernetesConfig, setupParams, encryptedDataDetails,
-          containerServiceName, controllerLabels, executionLogCallback);
+      HorizontalPodAutoscaler hpa = prepareHorizontalPodAutoscaler(
+          setupParams, containerServiceName, controller.getKind(), controllerLabels, executionLogCallback);
+
+      commandExecutionDataBuilder.autoscalerYaml(toYaml(hpa));
 
       if (configMap != null) {
         summaryOutput.append(format("%nConfig Map: %s", configMap.getMetadata().getName()));
@@ -357,8 +354,13 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         if (isStatefulSet) {
           if (hpa != null) {
             executionLogCallback.saveExecutionLog("Enabling autoscaler " + containerServiceName, LogLevel.INFO);
-            kubernetesContainerService.enableAutoscaler(kubernetesConfig, encryptedDataDetails, containerServiceName,
-                ContainerApiVersions.KUBERNETES_V1.getVersionName());
+            hpa = kubernetesContainerService.createOrReplaceAutoscaler(
+                kubernetesConfig, encryptedDataDetails, toYaml(hpa));
+            if (hpa != null) {
+              String hpaName = hpa.getMetadata().getName();
+              executionLogCallback.saveExecutionLog(
+                  "Created horizontal pod autoscaler " + hpaName + ":\n\n" + toDisplayYaml(hpa));
+            }
           }
 
           // TODO(brett) To transition to unversioned stateful sets we need to delete the versioned one.
@@ -389,21 +391,21 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
   private void validateBlueGreenConfig(KubernetesSetupParams setupParams) {
     if (setupParams.getServiceType() != null && setupParams.getServiceType() != KubernetesServiceType.None) {
-      throw new InvalidRequestException(format("Service cannot be specified for Blue/Green deployment setup"));
+      throw new InvalidRequestException("Service cannot be specified for Blue/Green deployment setup");
     }
 
     if (setupParams.getBlueGreenConfig() == null) {
-      throw new InvalidRequestException(format("BlueGreenConfig is not specified"));
+      throw new InvalidRequestException("BlueGreenConfig is not specified");
     }
 
     if (setupParams.getBlueGreenConfig().getPrimaryService() == null
         || setupParams.getBlueGreenConfig().getPrimaryService().getServiceType() == KubernetesServiceType.None) {
-      throw new InvalidRequestException(format("PrimaryService is not specified in BlueGreenConfig"));
+      throw new InvalidRequestException("PrimaryService is not specified in BlueGreenConfig");
     }
 
     if (setupParams.getBlueGreenConfig().getStageService() == null
         || setupParams.getBlueGreenConfig().getStageService().getServiceType() == KubernetesServiceType.None) {
-      throw new InvalidRequestException(format("StageService is not specified in BlueGreenConfig"));
+      throw new InvalidRequestException("StageService is not specified in BlueGreenConfig");
     }
   }
 
@@ -438,7 +440,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
     String ingressYaml = "";
 
-    if (setupParams.isUseIngress()) {
+    if (service != null && setupParams.isUseIngress()) {
       int port = (service.getSpec() != null && isNotEmpty(service.getSpec().getPorts()))
           ? service.getSpec().getPorts().get(0).getPort()
           : 80;
@@ -498,7 +500,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
     String ingressYaml = "";
 
-    if (useIngress) {
+    if (primaryService != null && stageService != null && useIngress) {
       int primaryServicePort =
           isNotEmpty(primaryService.getSpec().getPorts()) ? primaryService.getSpec().getPorts().get(0).getPort() : 80;
 
@@ -518,7 +520,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     prepareIngress(kubernetesConfig, encryptedDataDetails, useIngress, ingressYaml, ingressName, labels,
         executionLogCallback, summaryOutput);
 
-    if (setupParams.isBlueGreen()) {
+    if (primaryService != null && stageService != null && setupParams.isBlueGreen()) {
       String primaryRevision = primaryService.getSpec().getSelector().get(HARNESS_REVISION);
       String stageRevision = stageService.getSpec().getSelector().get(HARNESS_REVISION);
 
@@ -549,7 +551,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       boolean keepExistingSelectors, Map<String, String> labelSelectors, Map<String, String> labels, int timeout,
       ExecutionLogCallback executionLogCallback, StringBuffer summaryOutput) {
     Service service = null;
-    String serviceClusterIP = null;
+    String serviceClusterIP;
     String serviceLoadBalancerEndpoint = null;
     String nodePort = null;
 
@@ -622,23 +624,19 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     return service;
   }
 
-  private HorizontalPodAutoscaler prepareHorizontalPodAutoscaler(KubernetesConfig kubernetesConfig,
-      KubernetesSetupParams setupParams, List<EncryptedDataDetail> encryptedDataDetails, String hpaName,
-      Map<String, String> controllerLabels, ExecutionLogCallback executionLogCallback) {
-    HorizontalPodAutoscaler hpa = null;
+  private HorizontalPodAutoscaler prepareHorizontalPodAutoscaler(KubernetesSetupParams setupParams, String name,
+      String kind, Map<String, String> controllerLabels, ExecutionLogCallback executionLogCallback) {
     if (setupParams.isUseAutoscaler()) {
       HorizontalPodAutoscaler autoscalerDefinition =
-          createAutoscaler(hpaName, setupParams.getNamespace(), controllerLabels, setupParams, executionLogCallback);
+          createAutoscaler(name, kind, setupParams.getNamespace(), controllerLabels, setupParams, executionLogCallback);
 
       if (autoscalerDefinition != null) {
         executionLogCallback.saveExecutionLog(
-            format("Autoscaler %s - disabled until 100%% deployed", hpaName), LogLevel.INFO);
-
-        hpa = kubernetesContainerService.createOrReplaceAutoscaler(
-            kubernetesConfig, encryptedDataDetails, autoscalerDefinition);
+            format("Autoscaler %s - disabled until 100%% deployed", name), LogLevel.INFO);
+        return autoscalerDefinition;
       }
     }
-    return hpa;
+    return null;
   }
 
   private IstioResource prepareRouteRule(List<EncryptedDataDetail> encryptedDataDetails,
@@ -870,7 +868,6 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     return null;
   }
 
-  @SuppressFBWarnings("REC_CATCH_EXCEPTION")
   private Ingress createIngressDefinition(
       String ingressYaml, String ingressName, Map<String, String> labels, ExecutionLogCallback executionLogCallback) {
     try {
@@ -888,36 +885,19 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       ingress.getMetadata().setLabels(ingressLabels);
       executionLogCallback.saveExecutionLog("Setting ingress:\n\n" + toDisplayYaml(ingress));
       return ingress;
-    } catch (Exception e) {
+    } catch (IOException | RuntimeException e) {
       executionLogCallback.saveExecutionLog("Error reading Ingress from yaml: " + ingressName, LogLevel.ERROR);
     }
     return null;
   }
 
-  private List<String> getActiveAutoscalers(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName,
-      ExecutionLogCallback executionLogCallback, boolean isStatefulSet) {
-    String controllerNamePrefix = getPrefixFromControllerName(containerServiceName, isStatefulSet);
-    try {
-      return kubernetesContainerService.listAutoscalers(kubernetesConfig, encryptedDataDetails)
-          .stream()
-          .filter(autoscaler -> autoscaler.getMetadata().getName().startsWith(controllerNamePrefix))
-          .filter(autoscaler -> !"none".equals(autoscaler.getSpec().getScaleTargetRef().getName()))
-          .map(autoscaler -> autoscaler.getMetadata().getName())
-          .collect(toList());
-    } catch (Exception e) {
-      Misc.logAllMessages(e, executionLogCallback);
-    }
-    return emptyList();
-  }
-
-  private HorizontalPodAutoscaler createAutoscaler(String autoscalerName, String namespace,
+  private HorizontalPodAutoscaler createAutoscaler(String name, String kind, String namespace,
       Map<String, String> serviceLabels, KubernetesSetupParams setupParams, ExecutionLogCallback executionLogCallback) {
     HorizontalPodAutoscaler horizontalPodAutoscaler;
 
-    if (isNotEmpty(setupParams.getCustomMetricYamlConfig())) {
+    if (isNotBlank(setupParams.getCustomMetricYamlConfig())) {
       horizontalPodAutoscaler =
-          getCustomMetricHorizontalPodAutoscaler(autoscalerName, namespace, serviceLabels, setupParams);
+          getCustomMetricHorizontalPodAutoscaler(name, kind, namespace, serviceLabels, setupParams);
     } else {
       executionLogCallback.saveExecutionLog(
           format("Setting autoscaler min instances %d, max instances %d, with target CPU utilization %d%%",
@@ -925,7 +905,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
               setupParams.getTargetCpuUtilizationPercentage()),
           LogLevel.INFO);
 
-      horizontalPodAutoscaler = getBasicHorizontalPodAutoscaler(autoscalerName, namespace, serviceLabels, setupParams);
+      horizontalPodAutoscaler = getBasicHorizontalPodAutoscaler(name, kind, namespace, serviceLabels, setupParams);
     }
 
     executionLogCallback.saveExecutionLog(
@@ -933,24 +913,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     return horizontalPodAutoscaler;
   }
 
-  private void disableAutoscaler(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      String autoscaler, ExecutionLogCallback executionLogCallback) {
-    executionLogCallback.saveExecutionLog("Disabling autoscaler " + autoscaler);
-    /*
-     * Ideally we should be sending apiVersion as "v2beta1" when we are dealing with
-     * customMetricHPA, but there is a bug in fabric8 library in HasMetadataOperation.replace() method. For
-     * customMetricHPA, metric config info resides in HPA.Spec.additionalProperties map. but during execution of
-     * replace(), due to build() method in HorizontalPodAutoscalerSpecBuilder, this map goes away, and replace()
-     * call actually removes all metricConfig from autoScalar. So currently use v1 version only, till this issue
-     * gets fixed. (customMetricConfig is preserved as annotations in version_v1 HPA object, and that path is
-     * working fine)
-     * */
-    kubernetesContainerService.disableAutoscaler(
-        kubernetesConfig, encryptedDataDetails, autoscaler, ContainerApiVersions.KUBERNETES_V1.getVersionName());
-  }
-
-  private HorizontalPodAutoscaler getCustomMetricHorizontalPodAutoscaler(
-      String autoscalerName, String namespace, Map<String, String> serviceLabels, KubernetesSetupParams setupParams) {
+  private HorizontalPodAutoscaler getCustomMetricHorizontalPodAutoscaler(String name, String kind, String namespace,
+      Map<String, String> serviceLabels, KubernetesSetupParams setupParams) {
     try {
       HorizontalPodAutoscaler horizontalPodAutoscaler =
           KubernetesHelper.loadYaml(setupParams.getCustomMetricYamlConfig());
@@ -961,8 +925,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                 "args", "Couldn't parse Horizontal Pod Autoscaler YAML: " + setupParams.getCustomMetricYamlConfig());
       }
       // set kind/name to none
-      horizontalPodAutoscaler.getSpec().getScaleTargetRef().setName(NONE);
-      horizontalPodAutoscaler.getSpec().getScaleTargetRef().setKind(NONE);
+      horizontalPodAutoscaler.getSpec().getScaleTargetRef().setName(name);
+      horizontalPodAutoscaler.getSpec().getScaleTargetRef().setKind(kind);
 
       // create metadata
       ObjectMeta objectMeta = horizontalPodAutoscaler.getMetadata();
@@ -973,7 +937,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
       // set labels, name and namespace
       objectMeta.setLabels(serviceLabels);
-      objectMeta.setName(autoscalerName);
+      objectMeta.setName(name);
       objectMeta.setNamespace(namespace);
 
       return horizontalPodAutoscaler;
@@ -982,20 +946,20 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
   }
 
-  private HorizontalPodAutoscaler getBasicHorizontalPodAutoscaler(
-      String autoscalerName, String namespace, Map<String, String> serviceLabels, KubernetesSetupParams setupParams) {
+  private HorizontalPodAutoscaler getBasicHorizontalPodAutoscaler(String name, String kind, String namespace,
+      Map<String, String> serviceLabels, KubernetesSetupParams setupParams) {
     HorizontalPodAutoscalerSpecBuilder spec =
         new HorizontalPodAutoscalerSpecBuilder()
             .withMinReplicas(setupParams.getMinAutoscaleInstances())
             .withMaxReplicas(setupParams.getMaxAutoscaleInstances())
             .withTargetCPUUtilizationPercentage(setupParams.getTargetCpuUtilizationPercentage())
             .withNewScaleTargetRef()
-            .withKind(NONE)
-            .withName(NONE)
+            .withKind(kind)
+            .withName(name)
             .endScaleTargetRef();
     return new HorizontalPodAutoscalerBuilder()
         .withNewMetadata()
-        .withName(autoscalerName)
+        .withName(name)
         .withNamespace(namespace)
         .addToLabels(serviceLabels)
         .endMetadata()
@@ -1003,7 +967,6 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         .build();
   }
 
-  @SuppressFBWarnings("WMI_WRONG_MAP_ITERATOR")
   private IstioResource createRouteRuleDefinition(KubernetesSetupParams setupParams, String kubernetesServiceName,
       Map<String, String> serviceLabels, Map<String, Integer> activeControllers, boolean isStatefulSet,
       ExecutionLogCallback executionLogCallback) {
@@ -1019,10 +982,10 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                                                                         .withNamespace(setupParams.getNamespace())
                                                                         .endDestination();
     int totalInstances = activeControllers.values().stream().mapToInt(Integer::intValue).sum();
-    for (String controller : activeControllers.keySet()) {
-      Optional<Integer> revision = getRevisionFromControllerName(controller, isStatefulSet);
+    for (Entry<String, Integer> entry : activeControllers.entrySet()) {
+      Optional<Integer> revision = getRevisionFromControllerName(entry.getKey(), isStatefulSet);
       if (revision.isPresent()) {
-        int weight = (int) Math.round((activeControllers.get(controller) * 100.0) / totalInstances);
+        int weight = (int) Math.round((entry.getValue() * 100.0) / totalInstances);
         if (weight > 0) {
           routeRuleSpecNested.addNewRoute()
               .addToLabels(HARNESS_REVISION, revision.get().toString())
@@ -1036,7 +999,6 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     return routeRule;
   }
 
-  @SuppressFBWarnings({"VA_FORMAT_STRING_USES_NEWLINE", "VA_FORMAT_STRING_USES_NEWLINE"})
   private void listContainerInfosWhenReady(List<EncryptedDataDetail> encryptedDataDetails,
       int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback, KubernetesConfig kubernetesConfig,
       String containerServiceName, List<Pod> originalPods, long startTime, boolean isRollback) {
@@ -1186,52 +1148,26 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       }
     }
 
+    rollbackAutoscaler(encryptedDataDetails, executionLogCallback, kubernetesConfig, autoscalerYaml);
+  }
+
+  private void performAutoscalerRollback(KubernetesConfig kubernetesConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback,
+      KubernetesSetupParams setupParams) {
+    String autoscalerYaml = setupParams.getPreviousYamlConfig().getAutoscalerYaml();
     if (isNotBlank(autoscalerYaml)) {
-      executionLogCallback.saveExecutionLog("Rolling back horizontal pod autoscaler " + controllerName);
-      HorizontalPodAutoscaler hpa;
-      try {
-        hpa = KubernetesHelper.loadYaml(autoscalerYaml);
-      } catch (Exception e) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
-            .addParam("args", "Couldn't parse horizontal pod autoscaler YAML: " + autoscalerYaml);
-      }
-      executionLogCallback.saveExecutionLog("Setting horizontal pod autoscaler:\n\n" + toDisplayYaml(hpa));
-      kubernetesContainerService.createOrReplaceAutoscaler(kubernetesConfig, encryptedDataDetails, hpa);
-    } else {
-      HorizontalPodAutoscaler hpa = kubernetesContainerService.getAutoscaler(
-          kubernetesConfig, encryptedDataDetails, controllerName, ContainerApiVersions.KUBERNETES_V1.getVersionName());
-      if (hpa != null) {
-        executionLogCallback.saveExecutionLog(
-            "Horizontal pod autoscaler " + controllerName + " did not exist previously. Deleting on rollback");
-        try {
-          kubernetesContainerService.deleteAutoscaler(kubernetesConfig, encryptedDataDetails, controllerName);
-        } catch (Exception e) {
-          executionLogCallback.saveExecutionLog(
-              "Error deleting horizontal pod autoscaler: " + controllerName, LogLevel.ERROR);
-          Misc.logAllMessages(e, executionLogCallback);
-        }
-      }
+      rollbackAutoscaler(encryptedDataDetails, executionLogCallback, kubernetesConfig, autoscalerYaml);
     }
   }
 
-  private void performAutoscalerRollback(List<EncryptedDataDetail> encryptedDataDetails,
-      ExecutionLogCallback executionLogCallback, KubernetesSetupParams setupParams, KubernetesConfig kubernetesConfig) {
-    List<String> autoscalerNames = setupParams.getPreviousActiveAutoscalers();
-    if (isNotEmpty(autoscalerNames)) {
-      for (String autoscalerName : autoscalerNames) {
-        executionLogCallback.saveExecutionLog("Enabling autoscaler " + autoscalerName);
-        /*
-         * Ideally we should be sending apiVersion as "v2beta1" when we are dealing with
-         * customMetricHPA, but there is a bug in fabric8 library in HasMetadataOperation.replace() method. For
-         * customMetricHPA, metric config info resides in HPA.Spec.additionalProperties map. but during execution of
-         * replace(), due to build() method in HorizontalPodAutoscalerSpecBuilder, this map goes away, and replace()
-         * call actually removes all metricConfig from autoScalar. So currently use v1 version only, till this issue
-         * gets fixed. (customMetricConfig is preserved as annotations in version_v1 HPA object, and that path is
-         * working fine)
-         * */
-        kubernetesContainerService.enableAutoscaler(kubernetesConfig, encryptedDataDetails, autoscalerName,
-            ContainerApiVersions.KUBERNETES_V1.getVersionName());
-      }
+  private void rollbackAutoscaler(List<EncryptedDataDetail> encryptedDataDetails,
+      ExecutionLogCallback executionLogCallback, KubernetesConfig kubernetesConfig, String autoscalerYaml) {
+    HorizontalPodAutoscaler hpa =
+        kubernetesContainerService.createOrReplaceAutoscaler(kubernetesConfig, encryptedDataDetails, autoscalerYaml);
+    if (hpa != null) {
+      String hpaName = hpa.getMetadata().getName();
+      executionLogCallback.saveExecutionLog("Rolled back horizontal pod autoscaler " + hpaName);
+      executionLogCallback.saveExecutionLog("Set horizontal pod autoscaler:\n\n" + toDisplayYaml(hpa));
     }
   }
 
@@ -1265,7 +1201,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     LoadBalancerStatus loadBalancer = service.getStatus().getLoadBalancer();
     if (loadBalancer != null
         && (loadBalancer.getIngress().isEmpty()
-               || (isNotEmpty(loadBalancerIP) && !loadBalancerIP.equals(loadBalancer.getIngress().get(0).getIp())))) {
+               || (isNotBlank(loadBalancerIP) && !loadBalancerIP.equals(loadBalancer.getIngress().get(0).getIp())))) {
       executionLogCallback.saveExecutionLog("Waiting for service " + serviceName + " load balancer to be ready");
       try {
         return timeLimiter.callWithTimeout(() -> {
@@ -1297,7 +1233,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       ExecutionLogCallback executionLogCallback, String serviceName, LoadBalancerStatus loadBalancer) {
     LoadBalancerIngress loadBalancerIngress = loadBalancer.getIngress().get(0);
     String loadBalancerEndpoint =
-        isNotEmpty(loadBalancerIngress.getHostname()) ? loadBalancerIngress.getHostname() : loadBalancerIngress.getIp();
+        isNotBlank(loadBalancerIngress.getHostname()) ? loadBalancerIngress.getHostname() : loadBalancerIngress.getIp();
     executionLogCallback.saveExecutionLog(
         format("Service [%s] load balancer is ready with endpoint [%s]", serviceName, loadBalancerEndpoint),
         LogLevel.INFO);
@@ -1480,19 +1416,19 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         spec.withPorts(ImmutableList.of(servicePort.build()));
 
         if (serviceSpecification.getServiceType() == KubernetesServiceType.LoadBalancer
-            && isNotEmpty(serviceSpecification.getLoadBalancerIP())) {
+            && isNotBlank(serviceSpecification.getLoadBalancerIP())) {
           spec.withLoadBalancerIP(serviceSpecification.getLoadBalancerIP());
         }
 
         if (serviceSpecification.getServiceType() == KubernetesServiceType.ClusterIP
-            && isNotEmpty(serviceSpecification.getClusterIP())) {
+            && isNotBlank(serviceSpecification.getClusterIP())) {
           spec.withClusterIP(serviceSpecification.getClusterIP());
         }
       } else {
         spec.withExternalName(serviceSpecification.getExternalName());
       }
 
-      if (isNotEmpty(serviceSpecification.getExternalIPs())) {
+      if (isNotBlank(serviceSpecification.getExternalIPs())) {
         spec.withExternalIPs(
             Arrays.stream(serviceSpecification.getExternalIPs().split(",")).map(String::trim).collect(toList()));
       }
@@ -1545,8 +1481,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     String primaryServiceName = getPrimaryServiceName(getKubernetesServiceName(setupParams.getControllerNamePrefix()));
     String stageServiceName = getStageServiceName(getKubernetesServiceName(setupParams.getControllerNamePrefix()));
 
-    Service primaryService = null;
-    Service stageService = null;
+    Service primaryService;
+    Service stageService;
 
     try {
       primaryService =

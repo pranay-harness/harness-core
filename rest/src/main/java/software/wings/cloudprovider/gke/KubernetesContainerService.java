@@ -41,20 +41,11 @@ public interface KubernetesContainerService {
 
   void deleteController(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
 
-  HorizontalPodAutoscaler createOrReplaceAutoscaler(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, HorizontalPodAutoscaler definition);
+  HorizontalPodAutoscaler createOrReplaceAutoscaler(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String autoscalerYaml);
 
   HorizontalPodAutoscaler getAutoscaler(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String name, String apiVersion);
-
-  List<HorizontalPodAutoscaler> listAutoscalers(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails);
-
-  void disableAutoscaler(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name,
-      String apiVersion);
-
-  void enableAutoscaler(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name,
-      String apiVersion);
 
   void deleteAutoscaler(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
 

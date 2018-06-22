@@ -29,7 +29,6 @@ public class KubernetesSetupParams extends ContainerSetupParams {
   private String namespace;
   private String controllerNamePrefix;
   private KubernetesYamlConfig previousYamlConfig;
-  private List<String> previousActiveAutoscalers;
   private boolean rollback;
   private boolean useFixedInstances;
   private int maxInstances;
@@ -73,7 +72,6 @@ public class KubernetesSetupParams extends ContainerSetupParams {
     private String namespace;
     private String controllerNamePrefix;
     private KubernetesYamlConfig previousYamlConfig;
-    private List<String> previousActiveAutoscalers;
     private boolean rollback;
     private boolean useFixedInstances;
     private int maxInstances;
@@ -206,11 +204,6 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       return this;
     }
 
-    public KubernetesSetupParamsBuilder withPreviousActiveAutoscalers(List<String> previousActiveAutoscalers) {
-      this.previousActiveAutoscalers = previousActiveAutoscalers;
-      return this;
-    }
-
     public KubernetesSetupParamsBuilder withRollback(boolean rollback) {
       this.rollback = rollback;
       return this;
@@ -334,7 +327,6 @@ public class KubernetesSetupParams extends ContainerSetupParams {
           .withNamespace(namespace)
           .withControllerNamePrefix(controllerNamePrefix)
           .withPreviousYamlConfig(previousYamlConfig)
-          .withPreviousActiveAutoscalers(previousActiveAutoscalers)
           .withRollback(rollback)
           .withUseFixedInstances(useFixedInstances)
           .withMaxInstances(maxInstances)
@@ -380,7 +372,6 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       kubernetesSetupParams.setNamespace(namespace);
       kubernetesSetupParams.setControllerNamePrefix(controllerNamePrefix);
       kubernetesSetupParams.setPreviousYamlConfig(previousYamlConfig);
-      kubernetesSetupParams.setPreviousActiveAutoscalers(previousActiveAutoscalers);
       kubernetesSetupParams.setRollback(rollback);
       kubernetesSetupParams.setUseFixedInstances(useFixedInstances);
       kubernetesSetupParams.setMaxInstances(maxInstances);

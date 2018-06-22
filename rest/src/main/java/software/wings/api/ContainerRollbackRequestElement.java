@@ -21,7 +21,6 @@ public class ContainerRollbackRequestElement implements ContextElement {
   private List<ContainerServiceData> oldInstanceData;
   private String controllerNamePrefix;
   private KubernetesYamlConfig previousYamlConfig;
-  private List<String> previousActiveAutoscalers;
 
   @Override
   public ContextElementType getElementType() {
