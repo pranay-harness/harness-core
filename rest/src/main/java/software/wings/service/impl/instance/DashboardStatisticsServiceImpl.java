@@ -8,6 +8,7 @@ import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Projection.projection;
 import static org.mongodb.morphia.query.Sort.ascending;
 import static org.mongodb.morphia.query.Sort.descending;
+import static software.wings.beans.ErrorCode.NO_APPS_ASSIGNED;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
@@ -18,7 +19,6 @@ import static software.wings.beans.instance.dashboard.InstanceSummaryStats.Build
 import static software.wings.beans.instance.dashboard.service.PipelineExecutionHistory.Builder.aPipelineExecutionHistory;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
-import static software.wings.exception.WingsException.USER;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -36,7 +36,9 @@ import software.wings.beans.EmbeddedUser;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.ResponseMessage;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.SortOrder.OrderType;
@@ -62,6 +64,7 @@ import software.wings.beans.instance.dashboard.service.ServiceInstanceDashboard;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserRequestInfo;
@@ -105,11 +108,8 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     long instanceCount = 0;
     try {
       instanceCount = getInstanceCount(getQuery(appIds));
-    } catch (WingsException exception) {
-      exception.logProcessedMessages(MANAGER, logger);
-      return anInstanceSummaryStats().withCountMap(null).withTotalCount(instanceCount).build();
-    } catch (Exception e) {
-      logger.error("Unable to get app instance summary stats", e);
+    } catch (Exception exception) {
+      handleException(exception);
       return anInstanceSummaryStats().withCountMap(null).withTotalCount(instanceCount).build();
     }
 
@@ -145,11 +145,8 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     Query<Instance> query;
     try {
       query = getQuery(appIds);
-    } catch (WingsException exception) {
-      exception.logProcessedMessages(MANAGER, logger);
-      return Lists.newArrayList();
-    } catch (Exception e) {
-      logger.error("Unable to get entity summary stats ", e);
+    } catch (Exception exception) {
+      handleException(exception);
       return Lists.newArrayList();
     }
 
@@ -186,11 +183,8 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     Query<Instance> query = null;
     try {
       query = getQuery(null).filter("serviceId", serviceId);
-    } catch (WingsException exception) {
-      exception.logProcessedMessages(MANAGER, logger);
-      return Lists.newArrayList();
-    } catch (Exception e) {
-      logger.error("Unable to get service summary stats", e);
+    } catch (Exception exception) {
+      handleException(exception);
       return Lists.newArrayList();
     }
     wingsPersistence.getDatastore()
@@ -211,14 +205,11 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
   private List<EntitySummaryStats> getEnvironmentTypeSummaryStats(List<String> appIds) {
     List<EntitySummaryStats> entitySummaryStatsList = Lists.newArrayList();
-    Query<Instance> query = null;
+    Query<Instance> query;
     try {
       query = getQuery(appIds);
-    } catch (WingsException exception) {
-      exception.logProcessedMessages(MANAGER, logger);
-      return Lists.newArrayList();
-    } catch (Exception e) {
-      logger.error("Unable to get environment type summary stats", e);
+    } catch (Exception exception) {
+      handleException(exception);
       return Lists.newArrayList();
     }
     wingsPersistence.getDatastore()
@@ -256,11 +247,8 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     Query<Instance> query;
     try {
       query = getQuery(null).filter("serviceId", serviceId);
-    } catch (WingsException exception) {
-      exception.logProcessedMessages(MANAGER, logger);
-      return anInstanceSummaryStats().withCountMap(null).withTotalCount(0).build();
-    } catch (Exception e) {
-      logger.error("Unable to get current active instances", e);
+    } catch (Exception exception) {
+      handleException(exception);
       return anInstanceSummaryStats().withCountMap(null).withTotalCount(0).build();
     }
 
@@ -290,16 +278,31 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     return anInstanceSummaryStats().withCountMap(instanceSummaryMap).withTotalCount(instanceCount).build();
   }
 
+  private void handleException(Exception exception) {
+    if (exception instanceof HarnessException) {
+      HarnessException harnessException = (HarnessException) exception;
+      List<ResponseMessage> responseMessageList = harnessException.getResponseMessageList();
+      if (isNotEmpty(responseMessageList)) {
+        ResponseMessage responseMessage = responseMessageList.get(0);
+        if (!responseMessage.getCode().equals(ErrorCode.NO_APPS_ASSIGNED)) {
+          logger.error("Unable to get instance stats", exception);
+        }
+      }
+
+    } else if (exception instanceof WingsException) {
+      ((WingsException) exception).logProcessedMessages(MANAGER, logger);
+    } else {
+      logger.error("Unable to get instance stats", exception);
+    }
+  }
+
   @Override
   public List<InstanceStatsByService> getAppInstanceStats(List<String> appIds) {
-    Query<Instance> query = null;
+    Query<Instance> query;
     try {
       query = getQuery(appIds);
-    } catch (WingsException exception) {
-      exception.logProcessedMessages(MANAGER, logger);
-      return Lists.newArrayList();
-    } catch (Exception e) {
-      logger.error("Unable to get current active instances", e);
+    } catch (Exception exception) {
+      handleException(exception);
       return Lists.newArrayList();
     }
 
@@ -547,11 +550,8 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     Query<Instance> query;
     try {
       query = getQuery(null).filter("serviceId", serviceId);
-    } catch (WingsException exception) {
-      exception.logProcessedMessages(MANAGER, logger);
-      return Lists.newArrayList();
-    } catch (Exception e) {
-      logger.error("Unable to get current active instances", e);
+    } catch (Exception exception) {
+      handleException(exception);
       return Lists.newArrayList();
     }
 
@@ -762,7 +762,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     return builder.build();
   }
 
-  private Query<Instance> getQuery(List<String> appIds) throws Exception {
+  private Query<Instance> getQuery(List<String> appIds) throws HarnessException {
     Query query = wingsPersistence.createAuthorizedQuery(Instance.class);
     if (isNotEmpty(appIds)) {
       query.field("appId").in(appIds);
@@ -776,13 +776,13 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
             if (isNotEmpty(allowedAppIds)) {
               query.field("appId").in(allowedAppIds);
             } else {
-              throw new WingsException("No apps are assigned to the user or no apps exist in the account", USER);
+              throw new HarnessException(NO_APPS_ASSIGNED);
             }
           }
         } else {
           UserRequestInfo userRequestInfo = user.getUserRequestInfo();
           if (userRequestInfo == null) {
-            throw new WingsException("No apps are assigned to the user or no apps exist in the account", USER);
+            throw new HarnessException(NO_APPS_ASSIGNED);
           }
 
           if (userRequestInfo.isAllAppsAllowed()) {
@@ -794,11 +794,11 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
           if (isNotEmpty(appIds)) {
             query.field("appId").in(appIds);
           } else {
-            throw new WingsException("No appIds are assigned to the user or no apps exist in the account", USER);
+            throw new HarnessException(NO_APPS_ASSIGNED);
           }
         }
       } else {
-        throw new WingsException("No appIds are assigned to the user or no apps exist in the account", USER);
+        throw new HarnessException(NO_APPS_ASSIGNED);
       }
     }
 

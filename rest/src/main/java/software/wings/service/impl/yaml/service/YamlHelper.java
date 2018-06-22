@@ -177,10 +177,10 @@ public class YamlHelper {
     String appId = getAppId(accountId, yamlFilePath);
     Validator.notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
     String envId = getEnvironmentId(appId, yamlFilePath);
-    Validator.notNullCheck("Env null in the given yaml file: " + yamlFilePath, appId);
+    Validator.notNullCheck("Env null in the given yaml file: " + yamlFilePath, envId);
     String infraMappingName =
         extractEntityNameFromYamlPath(YamlType.INFRA_MAPPING.getPathExpression(), yamlFilePath, PATH_DELIMITER);
-    Validator.notNullCheck("Env null in the given yaml file: " + yamlFilePath, appId);
+    Validator.notNullCheck("Inframapping with name: " + infraMappingName, infraMappingName);
     return infraMappingService.getInfraMappingByName(appId, envId, infraMappingName);
   }
 
