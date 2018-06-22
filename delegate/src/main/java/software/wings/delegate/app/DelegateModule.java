@@ -204,7 +204,7 @@ public class DelegateModule extends AbstractModule {
     int maxPoolSize = Math.max(corePoolSize, 500);
     bind(ExecutorService.class)
         .toInstance(ThreadPool.create(corePoolSize, maxPoolSize, 0, TimeUnit.MILLISECONDS,
-            new ThreadFactoryBuilder().setNameFormat("delegate-task-%d").setPriority(Thread.MIN_PRIORITY).build()));
+            new ThreadFactoryBuilder().setNameFormat("task-%d").setPriority(Thread.MIN_PRIORITY).build()));
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
     bind(DelegateFileManager.class).to(DelegateFileManagerImpl.class).asEagerSingleton();
     bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
