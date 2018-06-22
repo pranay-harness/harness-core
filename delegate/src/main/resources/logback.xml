@@ -2,8 +2,6 @@
 <configuration>
     <statusListener class="ch.qos.logback.core.status.NopStatusListener"/>
 
-    <contextListener class="software.wings.delegate.app.DelegateLoggerStartupListener"/>
-
     <conversionRule conversionWord="process_id" converterClass="io.harness.logging.ProcessIdConverter"/>
 
     <appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -21,20 +19,20 @@
         <withJansi>true</withJansi>
 
         <encoder>
-            <pattern>%date{ISO8601} %cyan(${commitId}) %boldGreen(%process_id) %boldCyan(${version}) %blue(%X{taskId}) %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %n</pattern>
+            <pattern>%date{ISO8601} %boldGreen(%process_id) %boldCyan(${version}) %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %n</pattern>
         </encoder>
     </appender>
 
     <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
         <withJansi>true</withJansi>
         <encoder>
-            <pattern>%date{ISO8601} %cyan(${commitId}) %blue(%X{taskId}) %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %n</pattern>
+            <pattern>%date{ISO8601} %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %n</pattern>
         </encoder>
     </appender>
 
     <appender name="REST" class="io.harness.logging.RestLogAppender">
         <layout class="ch.qos.logback.classic.PatternLayout">
-            <pattern>%cyan(${commitId}) %boldGreen(%process_id) %boldCyan(${version}) %blue(%X{taskId}) %green([%thread]) %cyan(%logger) - %msg %n</pattern>
+            <pattern>%boldGreen(%process_id) %boldCyan(${version}) %green([%thread]) %cyan(%logger) - %msg %n</pattern>
         </layout>
         <programName>delegate</programName>
         <key>${logdnakey:-9a3e6eac4dcdbdc41a93ca99100537df}</key>

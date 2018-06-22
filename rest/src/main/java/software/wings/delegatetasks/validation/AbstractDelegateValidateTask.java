@@ -8,7 +8,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
-import software.wings.delegatetasks.TaskLogContext;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -37,28 +36,24 @@ public abstract class AbstractDelegateValidateTask implements DelegateValidateTa
 
   @Override
   public void run() {
-    try (TaskLogContext ctx = new TaskLogContext(this.delegateTaskId)) {
-      List<DelegateConnectionResult> results = null;
-      try {
-        long startTime = System.currentTimeMillis();
-        results = validate();
-        long duration = System.currentTimeMillis() - startTime;
-        for (DelegateConnectionResult result : results) {
-          result.setAccountId(accountId);
-          result.setDelegateId(delegateId);
-          if (result.getDuration() == 0) {
-            result.setDuration(duration);
-          }
-        }
-      } catch (Exception exception) {
-        logger.error("Unexpected error validating delegate task.", exception);
-      } finally {
-        if (consumer != null) {
-          consumer.accept(results);
+    List<DelegateConnectionResult> results = null;
+    try {
+      long startTime = System.currentTimeMillis();
+      results = validate();
+      long duration = System.currentTimeMillis() - startTime;
+      for (DelegateConnectionResult result : results) {
+        result.setAccountId(accountId);
+        result.setDelegateId(delegateId);
+        if (result.getDuration() == 0) {
+          result.setDuration(duration);
         }
       }
-    } catch (Exception e) {
-      logger.error("Unexpected error executing delegate task {}", delegateId, e);
+    } catch (Exception exception) {
+      logger.error("Unexpected error validating delegate task.", exception);
+    } finally {
+      if (consumer != null) {
+        consumer.accept(results);
+      }
     }
   }
 
