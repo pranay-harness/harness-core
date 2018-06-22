@@ -55,6 +55,7 @@ import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -88,6 +89,7 @@ public abstract class ContainerServiceDeploy extends State {
   @Inject @Transient private transient ServiceTemplateService serviceTemplateService;
   @Inject @Transient private transient SecretManager secretManager;
   @Inject @Transient private transient ContainerDeploymentManagerHelper containerDeploymentHelper;
+  @Inject @Transient protected transient FeatureFlagService featureFlagService;
 
   ContainerServiceDeploy(String name, String type) {
     super(name, type);

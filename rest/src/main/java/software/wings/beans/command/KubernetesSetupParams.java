@@ -49,6 +49,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
   private String configMapYaml;
   private List<String[]> plainConfigFiles;
   private List<String[]> encryptedConfigFiles;
+  private boolean useDashInHostname;
 
   public static final class KubernetesSetupParamsBuilder {
     private String serviceName;
@@ -92,6 +93,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
     private String configMapYaml;
     private List<String[]> plainConfigFiles;
     private List<String[]> encryptedConfigFiles;
+    private boolean useDashInHostname;
 
     private KubernetesSetupParamsBuilder() {}
 
@@ -304,6 +306,11 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       return this;
     }
 
+    public KubernetesSetupParamsBuilder withUseDashInHostname(boolean useDashInHostname) {
+      this.useDashInHostname = useDashInHostname;
+      return this;
+    }
+
     public KubernetesSetupParamsBuilder but() {
       return aKubernetesSetupParams()
           .withServiceName(serviceName)
@@ -346,7 +353,8 @@ public class KubernetesSetupParams extends ContainerSetupParams {
           .withBlueGreenConfig(blueGreenConfig)
           .withConfigMapYaml(configMapYaml)
           .withPlainConfigFiles(plainConfigFiles)
-          .withEncryptedConfigFiles(encryptedConfigFiles);
+          .withEncryptedConfigFiles(encryptedConfigFiles)
+          .withUseDashInHostname(useDashInHostname);
     }
 
     public KubernetesSetupParams build() {
@@ -392,6 +400,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       kubernetesSetupParams.setConfigMapYaml(configMapYaml);
       kubernetesSetupParams.setPlainConfigFiles(plainConfigFiles);
       kubernetesSetupParams.setEncryptedConfigFiles(encryptedConfigFiles);
+      kubernetesSetupParams.setUseDashInHostname(useDashInHostname);
       return kubernetesSetupParams;
     }
   }

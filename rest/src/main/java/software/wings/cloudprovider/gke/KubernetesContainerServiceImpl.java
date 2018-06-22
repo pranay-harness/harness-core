@@ -418,16 +418,20 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public LinkedHashMap<String, Integer> getActiveServiceCounts(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, boolean isStatefulSet) {
+      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, boolean isStatefulSet,
+      boolean useDashInHostname) {
     LinkedHashMap<String, Integer> result = new LinkedHashMap<>();
-    String controllerNamePrefix = getPrefixFromControllerName(containerServiceName, isStatefulSet);
+    String controllerNamePrefix = getPrefixFromControllerName(containerServiceName, isStatefulSet, useDashInHostname);
     listControllers(kubernetesConfig, encryptedDataDetails)
         .stream()
         .filter(ctrl -> ctrl.getMetadata().getName().startsWith(controllerNamePrefix))
         .filter(ctrl -> getControllerPodCount(ctrl) > 0)
-        .filter(ctrl -> getRevisionFromControllerName(ctrl.getMetadata().getName(), isStatefulSet).isPresent())
-        .sorted(
-            comparingInt(ctrl -> getRevisionFromControllerName(ctrl.getMetadata().getName(), isStatefulSet).orElse(-1)))
+        .filter(ctrl
+            -> getRevisionFromControllerName(ctrl.getMetadata().getName(), isStatefulSet, useDashInHostname)
+                   .isPresent())
+        .sorted(comparingInt(ctrl
+            -> getRevisionFromControllerName(ctrl.getMetadata().getName(), isStatefulSet, useDashInHostname)
+                   .orElse(-1)))
         .forEach(ctrl -> result.put(ctrl.getMetadata().getName(), getControllerPodCount(ctrl)));
     return result;
   }
@@ -435,14 +439,16 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Override
   public Map<String, String> getActiveServiceImages(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, boolean isStatefulSet,
-      String imagePrefix) {
+      String imagePrefix, boolean useDashInHostname) {
     Map<String, String> result = new HashMap<>();
-    String controllerNamePrefix = getPrefixFromControllerName(containerServiceName, isStatefulSet);
+    String controllerNamePrefix = getPrefixFromControllerName(containerServiceName, isStatefulSet, useDashInHostname);
     listControllers(kubernetesConfig, encryptedDataDetails)
         .stream()
         .filter(ctrl -> ctrl.getMetadata().getName().startsWith(controllerNamePrefix))
         .filter(ctrl -> getControllerPodCount(ctrl) > 0)
-        .filter(ctrl -> getRevisionFromControllerName(ctrl.getMetadata().getName(), isStatefulSet).isPresent())
+        .filter(ctrl
+            -> getRevisionFromControllerName(ctrl.getMetadata().getName(), isStatefulSet, useDashInHostname)
+                   .isPresent())
         .forEach(ctrl
             -> result.put(ctrl.getMetadata().getName(),
                 getPodTemplateSpec(ctrl)
@@ -784,10 +790,10 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public int getTrafficPercent(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      String controllerName, boolean isStatefulSet) {
-    String serviceName = getServiceNameFromControllerName(controllerName, isStatefulSet);
+      String controllerName, boolean isStatefulSet, boolean useDashInHostname) {
+    String serviceName = getServiceNameFromControllerName(controllerName, isStatefulSet, useDashInHostname);
     IstioResource routeRule = getRouteRule(kubernetesConfig, encryptedDataDetails, serviceName);
-    Optional<Integer> revision = getRevisionFromControllerName(controllerName, isStatefulSet);
+    Optional<Integer> revision = getRevisionFromControllerName(controllerName, isStatefulSet, useDashInHostname);
     if (routeRule == null || !revision.isPresent()) {
       return 0;
     }
@@ -802,9 +808,10 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public Map<String, Integer> getTrafficWeights(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String controllerName, boolean isStatefulSet) {
-    String serviceName = getServiceNameFromControllerName(controllerName, isStatefulSet);
-    String controllerNamePrefix = getPrefixFromControllerName(controllerName, isStatefulSet);
+      List<EncryptedDataDetail> encryptedDataDetails, String controllerName, boolean isStatefulSet,
+      boolean useDashInHostName) {
+    String serviceName = getServiceNameFromControllerName(controllerName, isStatefulSet, useDashInHostName);
+    String controllerNamePrefix = getPrefixFromControllerName(controllerName, isStatefulSet, useDashInHostName);
     IstioResource routeRule = getRouteRule(kubernetesConfig, encryptedDataDetails, serviceName);
     if (routeRule == null) {
       return new HashMap<>();

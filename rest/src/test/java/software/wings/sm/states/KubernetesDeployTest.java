@@ -86,6 +86,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -125,6 +126,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
   @Mock private ArtifactService artifactService;
   @Mock private VariableProcessor variableProcessor;
   @Mock private ExpressionEvaluator evaluator;
+  @Mock private FeatureFlagService featureFlagService;
 
   @InjectMocks
   private KubernetesDeploy kubernetesDeploy = aKubernetesDeploy(STATE_NAME)
@@ -227,6 +229,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
     when(artifactService.get(any(), any())).thenReturn(anArtifact().build());
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
     when(evaluator.substitute(any(), any(), any())).thenAnswer(i -> i.getArguments()[0]);
+    when(featureFlagService.isEnabled(any(), any())).thenReturn(false);
   }
 
   @Test

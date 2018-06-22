@@ -137,8 +137,10 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
       List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
       KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
       String controllerName = resizeParams.getContainerServiceName();
-      String kubernetesServiceName = getServiceNameFromControllerName(controllerName, !controllerName.contains(DOT));
-      String controllerPrefix = getPrefixFromControllerName(controllerName, !controllerName.contains(DOT));
+      String kubernetesServiceName = getServiceNameFromControllerName(
+          controllerName, !controllerName.contains(DOT), resizeParams.isUseDashInHostName());
+      String controllerPrefix = getPrefixFromControllerName(
+          controllerName, !controllerName.contains(DOT), resizeParams.isUseDashInHostName());
       IstioResource routeRuleDefinition = createRouteRuleDefinition(contextData, allData, kubernetesServiceName);
       IstioResource existingRouteRule =
           kubernetesContainerService.getRouteRule(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
@@ -226,19 +228,21 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
   protected Map<String, Integer> getActiveServiceCounts(ContextData contextData) {
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
     KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
-    String controllerName = contextData.resizeParams.getContainerServiceName();
-    return kubernetesContainerService.getActiveServiceCounts(
-        kubernetesConfig, encryptedDataDetails, controllerName, !controllerName.contains(DOT));
+    KubernetesResizeParams resizeParams = (KubernetesResizeParams) contextData.resizeParams;
+    String controllerName = resizeParams.getContainerServiceName();
+    return kubernetesContainerService.getActiveServiceCounts(kubernetesConfig, encryptedDataDetails, controllerName,
+        !controllerName.contains(DOT), resizeParams.isUseDashInHostName());
   }
 
   @Override
   protected Map<String, String> getActiveServiceImages(ContextData contextData) {
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
     KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
-    String controllerName = contextData.resizeParams.getContainerServiceName();
+    KubernetesResizeParams resizeParams = (KubernetesResizeParams) contextData.resizeParams;
+    String controllerName = resizeParams.getContainerServiceName();
     String imagePrefix = substringBefore(contextData.resizeParams.getImage(), ":");
-    return kubernetesContainerService.getActiveServiceImages(
-        kubernetesConfig, encryptedDataDetails, controllerName, !controllerName.contains(DOT), imagePrefix);
+    return kubernetesContainerService.getActiveServiceImages(kubernetesConfig, encryptedDataDetails, controllerName,
+        !controllerName.contains(DOT), imagePrefix, resizeParams.isUseDashInHostName());
   }
 
   @Override
@@ -253,18 +257,20 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
   protected Map<String, Integer> getTrafficWeights(ContextData contextData) {
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
     KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
-    String controllerName = contextData.resizeParams.getContainerServiceName();
-    return kubernetesContainerService.getTrafficWeights(
-        kubernetesConfig, encryptedDataDetails, controllerName, !controllerName.contains(DOT));
+    KubernetesResizeParams resizeParams = (KubernetesResizeParams) contextData.resizeParams;
+    String controllerName = resizeParams.getContainerServiceName();
+    return kubernetesContainerService.getTrafficWeights(kubernetesConfig, encryptedDataDetails, controllerName,
+        !controllerName.contains(DOT), resizeParams.isUseDashInHostName());
   }
 
   @Override
   protected int getPreviousTrafficPercent(ContextData contextData) {
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
     KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
-    String controllerName = contextData.resizeParams.getContainerServiceName();
-    return kubernetesContainerService.getTrafficPercent(
-        kubernetesConfig, encryptedDataDetails, controllerName, !controllerName.contains(DOT));
+    KubernetesResizeParams resizeParams = (KubernetesResizeParams) contextData.resizeParams;
+    String controllerName = resizeParams.getContainerServiceName();
+    return kubernetesContainerService.getTrafficPercent(kubernetesConfig, encryptedDataDetails, controllerName,
+        !controllerName.contains(DOT), resizeParams.isUseDashInHostName());
   }
 
   @Override
@@ -288,7 +294,9 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
 
     for (ContainerServiceData containerServiceData : allData) {
       String controllerName = containerServiceData.getName();
-      int revision = getRevisionFromControllerName(controllerName, !controllerName.contains(DOT)).orElse(-1);
+      int revision = getRevisionFromControllerName(
+          controllerName, !controllerName.contains(DOT), resizeParams.isUseDashInHostName())
+                         .orElse(-1);
       int weight = containerServiceData.getDesiredTraffic();
       if (weight > 0) {
         routeRuleSpecNested.addNewRoute()

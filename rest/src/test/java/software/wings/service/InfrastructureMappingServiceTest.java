@@ -708,12 +708,14 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     activeCounts.put("app-name.service-name.env-name.1", 2);
     activeCounts.put("app-name.service-name.env-name.2", 3);
     ArgumentCaptor<ContainerServiceParams> captor = ArgumentCaptor.forClass(ContainerServiceParams.class);
-    when(containerService.getActiveServiceCounts(captor.capture())).thenReturn(activeCounts);
+    ArgumentCaptor<Boolean> argumentCaptor = ArgumentCaptor.forClass(Boolean.class);
+    when(containerService.getActiveServiceCounts(captor.capture(), argumentCaptor.capture())).thenReturn(activeCounts);
 
     String result = infrastructureMappingService.getContainerRunningInstances(
         APP_ID, INFRA_MAPPING_ID, "${app.name}.${service.name}.${env.name}");
     assertThat(result).isEqualTo("5");
     assertThat(captor.getValue().getContainerServiceName()).isEqualTo("app-name.service-name.env-name.0");
+    assertThat(argumentCaptor.getValue()).isEqualTo(false);
   }
 
   @Test
@@ -742,12 +744,14 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     activeCounts.put("app-name.service-name.env-name.1", 2);
     activeCounts.put("app-name.service-name.env-name.2", 3);
     ArgumentCaptor<ContainerServiceParams> captor = ArgumentCaptor.forClass(ContainerServiceParams.class);
-    when(containerService.getActiveServiceCounts(captor.capture())).thenReturn(activeCounts);
+    ArgumentCaptor<Boolean> argumentCaptor = ArgumentCaptor.forClass(Boolean.class);
+    when(containerService.getActiveServiceCounts(captor.capture(), argumentCaptor.capture())).thenReturn(activeCounts);
 
     String result = infrastructureMappingService.getContainerRunningInstances(
         APP_ID, INFRA_MAPPING_ID, "${app.name}.${service.name}.${env.name}");
     assertThat(result).isEqualTo("5");
     assertThat(captor.getValue().getContainerServiceName()).isEqualTo("app-name.service-name.env-name.0");
+    assertThat(argumentCaptor.getValue()).isEqualTo(false);
   }
 
   @Test
@@ -775,12 +779,14 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     activeCounts.put("APP_NAME__SERVICE_NAME__ENV_NAME__1", 2);
     activeCounts.put("APP_NAME__SERVICE_NAME__ENV_NAME__2", 3);
     ArgumentCaptor<ContainerServiceParams> captor = ArgumentCaptor.forClass(ContainerServiceParams.class);
-    when(containerService.getActiveServiceCounts(captor.capture())).thenReturn(activeCounts);
+    ArgumentCaptor<Boolean> argumentCaptor = ArgumentCaptor.forClass(Boolean.class);
+    when(containerService.getActiveServiceCounts(captor.capture(), argumentCaptor.capture())).thenReturn(activeCounts);
 
     String result = infrastructureMappingService.getContainerRunningInstances(
         APP_ID, INFRA_MAPPING_ID, "${app.name}__${service.name}__${env.name}");
     assertThat(result).isEqualTo("5");
     assertThat(captor.getValue().getContainerServiceName()).isEqualTo("APP_NAME__SERVICE_NAME__ENV_NAME__0");
+    assertThat(argumentCaptor.getValue()).isEqualTo(false);
   }
 
   @Test

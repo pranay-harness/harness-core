@@ -67,12 +67,13 @@ public interface KubernetesContainerService {
 
   // TODO(brett) Stateful Sets are no longer versioned. Remove statefulSet param after 6/1/18
   LinkedHashMap<String, Integer> getActiveServiceCounts(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, boolean isStatefulSet);
+      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, boolean isStatefulSet,
+      boolean useDashInHostName);
 
   // TODO(brett) Stateful Sets are no longer versioned. Remove statefulSet param after 6/1/18
   Map<String, String> getActiveServiceImages(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, boolean isStatefulSet,
-      String imagePrefix);
+      String imagePrefix, boolean useDashInHostName);
 
   Service createOrReplaceService(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Service definition);
@@ -110,11 +111,12 @@ public interface KubernetesContainerService {
   void deleteRouteRule(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
 
   int getTrafficPercent(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      String controllerName, boolean isStatefulSet);
+      String controllerName, boolean isStatefulSet, boolean useDashInHostname);
 
   // TODO(brett) Stateful Sets are no longer versioned. Remove statefulSet param after 6/1/18
   Map<String, Integer> getTrafficWeights(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, boolean isStatefulSet);
+      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, boolean isStatefulSet,
+      boolean useDashInHostname);
 
   void createNamespaceIfNotExist(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails);
 
