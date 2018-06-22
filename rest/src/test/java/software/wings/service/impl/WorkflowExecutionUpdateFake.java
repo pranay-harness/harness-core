@@ -7,15 +7,17 @@ import org.slf4j.LoggerFactory;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
- * The type Workflow execution update mock.
+ * The type Workflow execution update fake.
  */
-public class WorkflowExecutionUpdateMock extends WorkflowExecutionUpdate {
-  private static final Logger logger = LoggerFactory.getLogger(WorkflowExecutionUpdateMock.class);
+public class WorkflowExecutionUpdateFake extends WorkflowExecutionUpdate {
+  private static final Logger logger = LoggerFactory.getLogger(WorkflowExecutionUpdateFake.class);
 
   private static Map<String, CountDownLatch> signalIdsMap = new HashMap<>();
 
@@ -25,7 +27,7 @@ public class WorkflowExecutionUpdateMock extends WorkflowExecutionUpdate {
    * Instantiates a new Workflow execution update mock.
    *
    */
-  public WorkflowExecutionUpdateMock() {
+  public WorkflowExecutionUpdateFake() {
     this.signalId = generateUuid();
     signalIdsMap.put(signalId, new CountDownLatch(1));
   }
@@ -35,7 +37,7 @@ public class WorkflowExecutionUpdateMock extends WorkflowExecutionUpdate {
    *
    * @param workflowExecutionId the workflowExecution id
    */
-  public WorkflowExecutionUpdateMock(String appId, String workflowExecutionId) {
+  public WorkflowExecutionUpdateFake(String appId, String workflowExecutionId) {
     super(appId, workflowExecutionId);
     this.signalId = generateUuid();
     signalIdsMap.put(signalId, new CountDownLatch(1));
@@ -66,7 +68,7 @@ public class WorkflowExecutionUpdateMock extends WorkflowExecutionUpdate {
     this.signalId = signalId;
   }
 
-  public void await() throws InterruptedException {
-    signalIdsMap.get(signalId).await();
+  public void await(Duration timeout) throws InterruptedException {
+    signalIdsMap.get(signalId).await(timeout.toMillis(), TimeUnit.MILLISECONDS);
   }
 }
