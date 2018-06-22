@@ -587,7 +587,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
         analysisRecord.setRiskLevel(RiskLevel.NA);
       }
 
-      if (analysisRecord.getStateType() == StateType.DYNA_TRACE) {
+      if (analysisRecord.getStateType() == StateType.DYNA_TRACE && !isEmpty(analysisRecord.getMetricAnalyses())) {
         for (NewRelicMetricAnalysis analysis : analysisRecord.getMetricAnalyses()) {
           String metricName = analysis.getMetricName();
           String[] split = metricName.split(":");
