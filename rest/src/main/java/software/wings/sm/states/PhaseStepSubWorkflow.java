@@ -240,7 +240,6 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
         return singletonList(ContainerRollbackRequestElement.builder()
                                  .controllerNamePrefix(commandStepExecutionSummary.getControllerNamePrefix())
                                  .previousYamlConfig(commandStepExecutionSummary.getPreviousYamlConfig())
-                                 .previousActiveAutoscalers(commandStepExecutionSummary.getPreviousActiveAutoscalers())
                                  .build());
       }
       case HELM_DEPLOY: {

@@ -11,6 +11,7 @@ import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.common.Constants.HARNESS_REVISION;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.KubernetesConvention.getPrefixFromControllerName;
 import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
 import static software.wings.utils.KubernetesConvention.getServiceNameFromControllerName;
@@ -22,13 +23,13 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerStateRunning;
 import io.fabric8.kubernetes.api.model.ContainerStateTerminated;
 import io.fabric8.kubernetes.api.model.ContainerStateWaiting;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
-import io.fabric8.kubernetes.api.model.CrossVersionObjectReferenceBuilder;
 import io.fabric8.kubernetes.api.model.DoneableReplicationController;
 import io.fabric8.kubernetes.api.model.Event;
 import io.fabric8.kubernetes.api.model.HasMetadata;
@@ -256,16 +257,27 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public HorizontalPodAutoscaler createOrReplaceAutoscaler(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, HorizontalPodAutoscaler definition) {
-    String api = kubernetesHelperService.trimVersion(definition.getApiVersion());
+  public HorizontalPodAutoscaler createOrReplaceAutoscaler(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String autoscalerYaml) {
+    if (isNotBlank(autoscalerYaml)) {
+      HorizontalPodAutoscaler hpa;
+      try {
+        hpa = KubernetesHelper.loadYaml(autoscalerYaml);
+        hpa.getMetadata().setResourceVersion(null);
+      } catch (Exception e) {
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
+            .addParam("args", "Couldn't parse horizontal pod autoscaler YAML: " + autoscalerYaml);
+      }
+      String api = kubernetesHelperService.trimVersion(hpa.getApiVersion());
 
-    if (ContainerApiVersions.KUBERNETES_V1.getVersionName().equals(api)) {
-      return kubernetesHelperService.hpaOperations(kubernetesConfig, encryptedDataDetails).createOrReplace(definition);
-    } else {
-      return kubernetesHelperService.hpaOperationsForCustomMetricHPA(kubernetesConfig, encryptedDataDetails, api)
-          .createOrReplace(definition);
+      if (ContainerApiVersions.KUBERNETES_V1.getVersionName().equals(api)) {
+        return kubernetesHelperService.hpaOperations(kubernetesConfig, encryptedDataDetails).createOrReplace(hpa);
+      } else {
+        return kubernetesHelperService.hpaOperationsForCustomMetricHPA(kubernetesConfig, encryptedDataDetails, api)
+            .createOrReplace(hpa);
+      }
     }
+    return null;
   }
 
   @Override
@@ -277,37 +289,6 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       return kubernetesHelperService.hpaOperationsForCustomMetricHPA(kubernetesConfig, encryptedDataDetails, apiVersion)
           .withName(name)
           .get();
-    }
-  }
-
-  @Override
-  public List<HorizontalPodAutoscaler> listAutoscalers(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    return kubernetesHelperService.hpaOperations(kubernetesConfig, encryptedDataDetails).list().getItems();
-  }
-
-  @Override
-  public void disableAutoscaler(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      String name, String apiVersion) {
-    HorizontalPodAutoscaler autoscaler = getAutoscaler(kubernetesConfig, encryptedDataDetails, name, apiVersion);
-    if (autoscaler != null) {
-      autoscaler.getSpec().setScaleTargetRef(
-          new CrossVersionObjectReferenceBuilder().withKind("none").withName("none").build());
-      createOrReplaceAutoscaler(kubernetesConfig, encryptedDataDetails, autoscaler);
-    }
-  }
-
-  @Override
-  public void enableAutoscaler(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      String name, String apiVersion) {
-    HorizontalPodAutoscaler autoscaler = getAutoscaler(kubernetesConfig, encryptedDataDetails, name, apiVersion);
-    if (autoscaler != null) {
-      HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, name);
-      if (controller != null) {
-        autoscaler.getSpec().getScaleTargetRef().setKind(controller.getKind());
-        autoscaler.getSpec().getScaleTargetRef().setName(name);
-        createOrReplaceAutoscaler(kubernetesConfig, encryptedDataDetails, autoscaler);
-      }
     }
   }
 

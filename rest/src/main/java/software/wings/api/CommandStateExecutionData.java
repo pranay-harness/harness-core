@@ -54,7 +54,6 @@ public class CommandStateExecutionData extends StateExecutionData {
   private List<ContainerServiceData> newInstanceData;
   private List<ContainerServiceData> oldInstanceData;
   private KubernetesYamlConfig previousYamlConfig;
-  private List<String> previousActiveAutoscalers;
   private boolean downsize;
   private String clusterName;
 
@@ -139,9 +138,6 @@ public class CommandStateExecutionData extends StateExecutionData {
     if (containerSetupParams instanceof KubernetesSetupParams) {
       KubernetesSetupParams kubernetesSetupParams = (KubernetesSetupParams) containerSetupParams;
       commandStepExecutionSummary.setControllerNamePrefix(kubernetesSetupParams.getControllerNamePrefix());
-      if (previousActiveAutoscalers != null) {
-        commandStepExecutionSummary.setPreviousActiveAutoscalers(previousActiveAutoscalers);
-      }
       if (previousYamlConfig != null) {
         commandStepExecutionSummary.setPreviousYamlConfig(previousYamlConfig);
       }

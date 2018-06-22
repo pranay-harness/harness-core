@@ -91,6 +91,7 @@ public class KubernetesDeploy extends ContainerServiceDeploy {
         .withResourceGroup(contextData.resourceGroup)
         .withServiceSteadyStateTimeout(contextData.containerElement.getServiceSteadyStateTimeout())
         .withUseAutoscaler(contextData.containerElement.isUseAutoscaler())
+        .withAutoscalerYaml(contextData.containerElement.getAutoscalerYaml())
         .withApiVersion(getApiVersion(contextData))
         .withUseIstioRouteRule(contextData.containerElement.isUseIstioRouteRule())
         .withContainerServiceName(contextData.containerElement.getName())

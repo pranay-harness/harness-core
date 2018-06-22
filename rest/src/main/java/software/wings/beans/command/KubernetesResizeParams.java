@@ -15,6 +15,7 @@ import java.util.List;
 public class KubernetesResizeParams extends ContainerResizeParams {
   private String namespace;
   private boolean useAutoscaler;
+  private String autoscalerYaml;
   private String apiVersion;
   private String subscriptionId;
   private String resourceGroup;
@@ -28,15 +29,16 @@ public class KubernetesResizeParams extends ContainerResizeParams {
     private boolean rollback;
     private boolean useAutoscaler;
     private boolean rollbackAllPhases;
+    private String autoscalerYaml;
+    private String containerServiceName;
     private String apiVersion;
     private String subscriptionId;
-    private String containerServiceName;
-    private String resourceGroup;
     private String image;
-    private boolean useIstioRouteRule;
+    private String resourceGroup;
     private ResizeStrategy resizeStrategy;
-    private Integer trafficPercent;
+    private boolean useIstioRouteRule;
     private boolean useFixedInstances;
+    private Integer trafficPercent;
     private int maxInstances;
     private int fixedInstances;
     private List<ContainerServiceData> newInstanceData;
@@ -84,6 +86,16 @@ public class KubernetesResizeParams extends ContainerResizeParams {
       return this;
     }
 
+    public KubernetesResizeParamsBuilder withAutoscalerYaml(String autoscalerYaml) {
+      this.autoscalerYaml = autoscalerYaml;
+      return this;
+    }
+
+    public KubernetesResizeParamsBuilder withContainerServiceName(String containerServiceName) {
+      this.containerServiceName = containerServiceName;
+      return this;
+    }
+
     public KubernetesResizeParamsBuilder withApiVersion(String apiVersion) {
       this.apiVersion = apiVersion;
       return this;
@@ -94,8 +106,8 @@ public class KubernetesResizeParams extends ContainerResizeParams {
       return this;
     }
 
-    public KubernetesResizeParamsBuilder withContainerServiceName(String containerServiceName) {
-      this.containerServiceName = containerServiceName;
+    public KubernetesResizeParamsBuilder withImage(String image) {
+      this.image = image;
       return this;
     }
 
@@ -104,8 +116,8 @@ public class KubernetesResizeParams extends ContainerResizeParams {
       return this;
     }
 
-    public KubernetesResizeParamsBuilder withImage(String image) {
-      this.image = image;
+    public KubernetesResizeParamsBuilder withResizeStrategy(ResizeStrategy resizeStrategy) {
+      this.resizeStrategy = resizeStrategy;
       return this;
     }
 
@@ -114,18 +126,13 @@ public class KubernetesResizeParams extends ContainerResizeParams {
       return this;
     }
 
-    public KubernetesResizeParamsBuilder withResizeStrategy(ResizeStrategy resizeStrategy) {
-      this.resizeStrategy = resizeStrategy;
+    public KubernetesResizeParamsBuilder withUseFixedInstances(boolean useFixedInstances) {
+      this.useFixedInstances = useFixedInstances;
       return this;
     }
 
     public KubernetesResizeParamsBuilder withTrafficPercent(Integer trafficPercent) {
       this.trafficPercent = trafficPercent;
-      return this;
-    }
-
-    public KubernetesResizeParamsBuilder withUseFixedInstances(boolean useFixedInstances) {
-      this.useFixedInstances = useFixedInstances;
       return this;
     }
 
@@ -187,15 +194,16 @@ public class KubernetesResizeParams extends ContainerResizeParams {
           .withRollback(rollback)
           .withUseAutoscaler(useAutoscaler)
           .withRollbackAllPhases(rollbackAllPhases)
+          .withAutoscalerYaml(autoscalerYaml)
+          .withContainerServiceName(containerServiceName)
           .withApiVersion(apiVersion)
           .withSubscriptionId(subscriptionId)
-          .withContainerServiceName(containerServiceName)
-          .withResourceGroup(resourceGroup)
           .withImage(image)
-          .withUseIstioRouteRule(useIstioRouteRule)
+          .withResourceGroup(resourceGroup)
           .withResizeStrategy(resizeStrategy)
-          .withTrafficPercent(trafficPercent)
+          .withUseIstioRouteRule(useIstioRouteRule)
           .withUseFixedInstances(useFixedInstances)
+          .withTrafficPercent(trafficPercent)
           .withMaxInstances(maxInstances)
           .withFixedInstances(fixedInstances)
           .withNewInstanceData(newInstanceData)
@@ -216,15 +224,16 @@ public class KubernetesResizeParams extends ContainerResizeParams {
       kubernetesResizeParams.setRollback(rollback);
       kubernetesResizeParams.setUseAutoscaler(useAutoscaler);
       kubernetesResizeParams.setRollbackAllPhases(rollbackAllPhases);
+      kubernetesResizeParams.setAutoscalerYaml(autoscalerYaml);
+      kubernetesResizeParams.setContainerServiceName(containerServiceName);
       kubernetesResizeParams.setApiVersion(apiVersion);
       kubernetesResizeParams.setSubscriptionId(subscriptionId);
-      kubernetesResizeParams.setContainerServiceName(containerServiceName);
-      kubernetesResizeParams.setResourceGroup(resourceGroup);
       kubernetesResizeParams.setImage(image);
-      kubernetesResizeParams.setUseIstioRouteRule(useIstioRouteRule);
+      kubernetesResizeParams.setResourceGroup(resourceGroup);
       kubernetesResizeParams.setResizeStrategy(resizeStrategy);
-      kubernetesResizeParams.setTrafficPercent(trafficPercent);
+      kubernetesResizeParams.setUseIstioRouteRule(useIstioRouteRule);
       kubernetesResizeParams.setUseFixedInstances(useFixedInstances);
+      kubernetesResizeParams.setTrafficPercent(trafficPercent);
       kubernetesResizeParams.setMaxInstances(maxInstances);
       kubernetesResizeParams.setFixedInstances(fixedInstances);
       kubernetesResizeParams.setNewInstanceData(newInstanceData);

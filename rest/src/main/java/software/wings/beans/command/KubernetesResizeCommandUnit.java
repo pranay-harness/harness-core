@@ -86,7 +86,8 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
       HorizontalPodAutoscaler autoscaler = kubernetesContainerService.getAutoscaler(
           kubernetesConfig, encryptedDataDetails, controllerName, resizeParams.getApiVersion());
       if (autoscaler != null && controllerName.equals(autoscaler.getSpec().getScaleTargetRef().getName())) {
-        disableAutoscaler(kubernetesConfig, encryptedDataDetails, controllerName, executionLogCallback);
+        executionLogCallback.saveExecutionLog("Deleting horizontal pod autoscaler: " + controllerName);
+        kubernetesContainerService.deleteAutoscaler(kubernetesConfig, encryptedDataDetails, controllerName);
       }
     }
 
@@ -117,7 +118,12 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     }
 
     if (desiredCount > 0 && contextData.deployingToHundredPercent && resizeParams.isUseAutoscaler()) {
-      enableAutoscaler(kubernetesConfig, encryptedDataDetails, controllerName, executionLogCallback);
+      HorizontalPodAutoscaler hpa = kubernetesContainerService.createOrReplaceAutoscaler(
+          kubernetesConfig, encryptedDataDetails, resizeParams.getAutoscalerYaml());
+      if (hpa != null) {
+        String hpaName = hpa.getMetadata().getName();
+        executionLogCallback.saveExecutionLog("\nHorizontal pod autoscaler enabled: " + hpaName);
+      }
     }
 
     return containerInfos;
@@ -293,38 +299,6 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     }
 
     return routeRuleSpecNested.endRouteRuleSpec().build();
-  }
-
-  private void enableAutoscaler(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      String name, ExecutionLogCallback executionLogCallback) {
-    executionLogCallback.saveExecutionLog("Enabling autoscaler " + name, LogLevel.INFO);
-    /*
-     * Ideally we should be sending resizeParams.getApiVersion(), so we use "v2beta1" when we are dealing with
-     * customMetricHPA, but there is a bug in fabric8 library in HasMetadataOperation.replace() method. For
-     * customMetricHPA, metric config info resides in HPA.Spec.additionalProperties map. but during execution of
-     * replace(), due to build() method in HorizontalPodAutoscalerSpecBuilder, this map goes away, and replace()
-     * call actually removes all metricConfig from autoScalar. So currently use v1 version only, till this issue
-     * gets fixed. (customMetricConfig is preserved as annotations in version_v1 HPA object, and that path is
-     * working fine)
-     * */
-    kubernetesContainerService.enableAutoscaler(
-        kubernetesConfig, encryptedDataDetails, name, ContainerApiVersions.KUBERNETES_V1.getVersionName());
-  }
-
-  private void disableAutoscaler(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      String name, ExecutionLogCallback executionLogCallback) {
-    executionLogCallback.saveExecutionLog("Disabling autoscaler " + name, LogLevel.INFO);
-    /*
-     * Ideally we should be sending resizeParams.getApiVersion(), so we use "v2beta1" when we are dealing with
-     * customMetricHPA, but there is a bug in fabric8 library in HasMetadataOperation.replace() method. For
-     * customMetricHPA, metric config info resides in HPA.Spec.additionalProperties map. but during execution of
-     * replace(), due to build() method in HorizontalPodAutoscalerSpecBuilder, this map goes away, and replace()
-     * call actually removes all metricConfig from autoScalar. So currently use v1 version only, till this issue
-     * gets fixed. (customMetricConfig is preserved as annotations in version_v1 HPA object, and that path is
-     * working fine)
-     * */
-    kubernetesContainerService.disableAutoscaler(
-        kubernetesConfig, encryptedDataDetails, name, ContainerApiVersions.KUBERNETES_V1.getVersionName());
   }
 
   @Data
