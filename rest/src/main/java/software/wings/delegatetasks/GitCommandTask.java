@@ -1,6 +1,7 @@
 package software.wings.delegatetasks;
 
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
+import static software.wings.exception.WingsException.USER_ADMIN;
 
 import com.google.inject.Inject;
 
@@ -50,7 +51,9 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
 
     try {
       List<EncryptedDataDetail> encryptionDetails = (List<EncryptedDataDetail>) parameters[2];
-      encryptionService.decrypt(gitConfig, encryptionDetails);
+
+      // Decrypt git config
+      decryptGitConfig(gitConfig, encryptionDetails);
 
       switch (gitCommandType) {
         case COMMIT_AND_PUSH:
@@ -99,6 +102,16 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
         builder.errorCode(ErrorCode.GIT_CONNECTION_ERROR);
       }
       return builder.build();
+    }
+  }
+
+  private void decryptGitConfig(GitConfig gitConfig, List<EncryptedDataDetail> encryptionDetails) {
+    try {
+      encryptionService.decrypt(gitConfig, encryptionDetails);
+    } catch (Exception ex) {
+      logger.error(GIT_YAML_LOG_PREFIX + "Exception in processing GitTask, decryption of git config failed: ", ex);
+      throw new WingsException("Decryption of git config failed: " + ex.getMessage(), USER_ADMIN)
+          .addParam(ErrorCode.GIT_CONNECTION_ERROR.name(), ErrorCode.GIT_CONNECTION_ERROR);
     }
   }
 }

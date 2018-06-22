@@ -471,6 +471,9 @@ public class YamlGitServiceImpl implements YamlGitService {
     if (ErrorCode.GIT_CONNECTION_ERROR.equals(errorCode)) {
       alertService.openAlert(
           accountId, appId, AlertType.GitConnectionError, getGitConnectionErrorAlert(accountId, errorMessage));
+    } else {
+      alertService.openAlert(
+          accountId, appId, AlertType.GitSyncError, getGitSyncErrorAlert(accountId, errorMessage, false));
     }
   }
 
@@ -485,6 +488,10 @@ public class YamlGitServiceImpl implements YamlGitService {
         .message("Unable to process changes from Git")
         .gitToHarness(gitToHarness)
         .build();
+  }
+
+  private GitSyncErrorAlert getGitSyncErrorAlert(String accountId, String errorMessage, boolean gitToHarness) {
+    return GitSyncErrorAlert.builder().accountId(accountId).message(errorMessage).gitToHarness(gitToHarness).build();
   }
 
   private GitConnectionErrorAlert getGitConnectionErrorAlert(String accountId, String message) {
