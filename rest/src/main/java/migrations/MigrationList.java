@@ -65,9 +65,10 @@ public class MigrationList {
         .add(Pair.of(153, BaseMigration.class))
         .add(Pair.of(154, EntityNameValidationMigration_All_01.class))
         .add(Pair.of(155, BaseMigration.class))
-        .add(Pair.of(156, SecretTextFilterMigration.class))
+        .add(Pair.of(156, BaseMigration.class))
         .add(Pair.of(157, AddValidUntilToCommandLog.class))
         .add(Pair.of(158, EntityNameValidationMigration_All_02.class))
+        .add(Pair.of(159, SecretTextFilterMigration.class))
         .build();
   }
 }

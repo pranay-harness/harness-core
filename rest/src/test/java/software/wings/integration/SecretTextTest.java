@@ -1712,6 +1712,140 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
+  public void serviceVariableEnvironmentSearchTags() throws IllegalAccessException {
+    String secretName = generateUuid();
+    String secretValue = generateUuid();
+    String secretId =
+        secretManagementResource.saveSecret(accountId, SecretText.builder().name(secretName).value(secretValue).build())
+            .getResource();
+
+    int numOfEnvs = 3;
+    int numOfServiceVariables = 4;
+
+    List<String> appIds = new ArrayList<>();
+    List<String> serviceVariableIds = new ArrayList<>();
+    List<String> envIds = new ArrayList<>();
+    List<String> envNames = new ArrayList<>();
+
+    for (int j = 0; j < numOfEnvs; j++) {
+      String envId =
+          wingsPersistence.save(Environment.Builder.anEnvironment().withAppId(appId).withName("env-j" + j).build());
+      envNames.add("env-j" + j);
+
+      for (int k = 0; k < numOfServiceVariables; k++) {
+        ServiceVariable serviceVariable = ServiceVariable.builder()
+                                              .templateId(UUID.randomUUID().toString())
+                                              .envId(envId)
+                                              .entityType(EntityType.ENVIRONMENT)
+                                              .entityId(envId)
+                                              .parentServiceVariableId(UUID.randomUUID().toString())
+                                              .overrideType(OverrideType.ALL)
+                                              .instances(Collections.singletonList(UUID.randomUUID().toString()))
+                                              .expression(UUID.randomUUID().toString())
+                                              .accountId(accountId)
+                                              .name("service-variable-j" + j + "-k" + k)
+                                              .value(secretId.toCharArray())
+                                              .type(Type.ENCRYPTED_TEXT)
+                                              .build();
+        serviceVariableIds.add(serviceVariableResource.save(appId, serviceVariable).getResource().getUuid());
+        appIds.add(appId);
+        envIds.add(envId);
+      }
+    }
+
+    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, secretId);
+    assertEquals(appIds, encryptedData.getAppIds());
+    assertEquals(numOfServiceVariables * numOfEnvs, encryptedData.getAppIds().size());
+    Map<String, AtomicInteger> searchTags = encryptedData.getSearchTags();
+
+    String appName = appService.get(appId).getName();
+    assertTrue(searchTags.containsKey(appName));
+    assertEquals(numOfServiceVariables * numOfEnvs, searchTags.get(appName).get());
+
+    assertEquals(envIds, encryptedData.getEnvIds());
+    envNames.forEach(envName -> {
+      assertTrue(searchTags.containsKey(envName));
+      assertEquals(numOfServiceVariables, searchTags.get(envName).get());
+    });
+
+    // update and test
+    secretName = generateUuid();
+    secretValue = generateUuid();
+    String newSecretId =
+        secretManagementResource.saveSecret(accountId, SecretText.builder().name(secretName).value(secretValue).build())
+            .getResource();
+
+    for (int j = 0; j < numOfEnvs; j++) {
+      for (int k = 0; k < numOfServiceVariables; k++) {
+        int serviceVariableIndex = j * numOfServiceVariables + k + 1;
+        System.out.println("loop j: " + j + " k: " + k + " index: " + serviceVariableIndex);
+        String serviceVariableId = serviceVariableIds.get(serviceVariableIndex - 1);
+        ServiceVariable serviceVariable = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
+        serviceVariable.setValue(newSecretId.toCharArray());
+        serviceVariableResource.update(appId, serviceVariableId, serviceVariable);
+
+        EncryptedData oldEncryptedData = wingsPersistence.get(EncryptedData.class, secretId);
+        EncryptedData newEncryptedData = wingsPersistence.get(EncryptedData.class, newSecretId);
+        assertEquals(serviceVariableIndex, newEncryptedData.getAppIds().size());
+
+        if (serviceVariableIndex != numOfEnvs * numOfServiceVariables) {
+          assertEquals(numOfEnvs * numOfServiceVariables - serviceVariableIndex, oldEncryptedData.getAppIds().size());
+          assertEquals(numOfEnvs * numOfServiceVariables - serviceVariableIndex,
+              oldEncryptedData.getSearchTags().get(appName).get());
+          assertEquals(serviceVariableIndex, newEncryptedData.getSearchTags().get(appName).get());
+          String envId = serviceVariable.getEntityId();
+          String envName = environmentService.get(appId, envId).getName();
+          if (k == numOfServiceVariables - 1) {
+            assertNull(oldEncryptedData.getSearchTags().get(envName));
+          } else {
+            assertEquals(numOfServiceVariables - k - 1, oldEncryptedData.getSearchTags().get(envName).get());
+          }
+          assertNull(oldEncryptedData.getSearchTags().get(serviceVariable.getName()));
+          assertEquals(k + 1, newEncryptedData.getSearchTags().get(envName).get());
+        } else {
+          assertNull(oldEncryptedData.getSearchTags());
+          assertNull(oldEncryptedData.getAppIds());
+          assertNull(oldEncryptedData.getServiceIds());
+        }
+      }
+    }
+
+    // delete service variable and test
+    for (int j = 0; j < numOfEnvs; j++) {
+      for (int k = 0; k < numOfServiceVariables; k++) {
+        int serviceVariableIndex = j * numOfServiceVariables + k + 1;
+        System.out.println("loop  j: " + j + " k: " + k + " index: " + serviceVariableIndex);
+        String serviceVariableId = serviceVariableIds.get(serviceVariableIndex - 1);
+        ServiceVariable serviceVariable = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
+        serviceVariable.setValue(newSecretId.toCharArray());
+        serviceVariableResource.delete(appId, serviceVariableId);
+
+        EncryptedData newEncryptedData = wingsPersistence.get(EncryptedData.class, newSecretId);
+
+        if (serviceVariableIndex != numOfEnvs * numOfServiceVariables) {
+          assertEquals(numOfEnvs * numOfServiceVariables - serviceVariableIndex, newEncryptedData.getAppIds().size());
+          assertEquals(numOfEnvs * numOfServiceVariables - serviceVariableIndex,
+              newEncryptedData.getSearchTags().get(appName).get());
+          String envId = serviceVariable.getEntityId();
+          String envName = environmentService.get(appId, envId).getName();
+
+          if (k == numOfServiceVariables - 1) {
+            assertNull(newEncryptedData.getSearchTags().get(envName));
+          } else {
+            assertEquals(numOfServiceVariables - k - 1, newEncryptedData.getSearchTags().get(envName).get());
+          }
+
+          assertNull(newEncryptedData.getSearchTags().get(serviceVariable.getName()));
+        } else {
+          assertNull(newEncryptedData.getSearchTags());
+          assertNull(newEncryptedData.getAppIds());
+          assertNull(newEncryptedData.getServiceIds());
+        }
+      }
+    }
+  }
+
+  @Test
   public void serviceVariableSyncSearchTags() throws IllegalAccessException {
     String secretName = generateUuid();
     String secretValue = generateUuid();
