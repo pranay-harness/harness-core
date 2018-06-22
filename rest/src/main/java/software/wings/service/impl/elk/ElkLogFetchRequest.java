@@ -41,7 +41,7 @@ public class ElkLogFetchRequest {
     }
 
     JSONObject regexObject = new JSONObject();
-    regexObject.put("regexp", new JSONObject().put(messageField, new JSONObject().put("value", query)));
+    regexObject.put("regexp", new JSONObject().put(messageField, new JSONObject().put("value", query.toLowerCase())));
 
     JSONObject rangeObject = new JSONObject();
     rangeObject.put("range",
@@ -88,7 +88,7 @@ public class ElkLogFetchRequest {
   @SuppressFBWarnings("REC_CATCH_EXCEPTION")
   protected JSONObject eval() {
     try {
-      String[] tokens = insertSpaces(query).split(" ");
+      String[] tokens = insertSpaces(query.toLowerCase()).split(" ");
       Stack<JSONObject> operandStack = new Stack<>();
       Stack<String> operatorStack = new Stack<>();
       JSONObject rval, lval;
