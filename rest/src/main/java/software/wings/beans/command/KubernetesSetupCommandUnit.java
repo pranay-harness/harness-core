@@ -245,7 +245,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         if (isNotVersioned) {
           performYamlRollback(
               encryptedDataDetails, executionLogCallback, setupParams, kubernetesConfig, containerServiceName);
-        } else if (isNotBlank(setupParams.getPreviousYamlConfig().getAutoscalerYaml())) {
+        } else if (setupParams.getPreviousYamlConfig() != null
+            && isNotBlank(setupParams.getPreviousYamlConfig().getAutoscalerYaml())) {
           performAutoscalerRollback(kubernetesConfig, encryptedDataDetails, executionLogCallback, setupParams);
         }
         executionLogCallback.saveExecutionLog("Rollback complete");
@@ -274,7 +275,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       List<Pod> originalPods = null;
       Map<String, Integer> activeServiceCounts = new HashMap<>();
       Map<String, Integer> trafficWeights = new HashMap<>();
-      String previousAutoscalerYaml;
+      String previousAutoscalerYaml = null;
 
       if (isNotVersioned) {
         yamlConfigBuilder.controllerYaml(
@@ -289,7 +290,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             kubernetesConfig, encryptedDataDetails, containerServiceName, isStatefulSet);
         trafficWeights = kubernetesContainerService.getTrafficWeights(
             kubernetesConfig, encryptedDataDetails, containerServiceName, isStatefulSet);
-        previousAutoscalerYaml = getAutoscalerYaml(kubernetesConfig, encryptedDataDetails, lastCtrlName);
+        if (isNotBlank(lastCtrlName)) {
+          previousAutoscalerYaml = getAutoscalerYaml(kubernetesConfig, encryptedDataDetails, lastCtrlName);
+        }
       }
 
       yamlConfigBuilder.autoscalerYaml(previousAutoscalerYaml);
