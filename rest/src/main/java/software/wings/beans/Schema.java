@@ -13,11 +13,15 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "schema", noClassnameStored = true)
 public class Schema extends Base {
   public static final String SCHEMA_ID = "schema";
+  public static final String VERSION_KEY = "version";
+  public static final String BACKGROUND_VERSION_KEY = "backgroundVersion";
 
   private int version;
+  private int backgroundVersion;
 
   public static final class SchemaBuilder {
     private int version;
+    private int backgroundVersion;
     private String uuid = SCHEMA_ID;
 
     private SchemaBuilder() {}
@@ -31,9 +35,15 @@ public class Schema extends Base {
       return this;
     }
 
+    public SchemaBuilder withBackgroundVersion(int backgroundVersion) {
+      this.backgroundVersion = backgroundVersion;
+      return this;
+    }
+
     public Schema build() {
       Schema schema = new Schema();
       schema.setVersion(version);
+      schema.setBackgroundVersion(backgroundVersion);
       schema.setUuid(uuid);
       return schema;
     }

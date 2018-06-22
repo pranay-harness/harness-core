@@ -16,20 +16,14 @@ import software.wings.dl.WingsPersistence;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.concurrent.ExecutorService;
 
 public class AddValidUntilToCommandLog implements Migration {
   private static final Logger logger = LoggerFactory.getLogger(AddValidUntilToCommandLog.class);
 
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private ExecutorService executorService;
 
   @Override
   public void migrate() {
-    executorService.submit(() -> background());
-  }
-
-  public void background() {
     final DBCollection collection = wingsPersistence.getCollection("commandLogs");
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
 

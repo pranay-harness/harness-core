@@ -5,7 +5,6 @@ import com.google.common.collect.ImmutableList;
 import migrations.all.AddUsersToAdminUserGroup;
 import migrations.all.AddValidUntilToActivity;
 import migrations.all.AddValidUntilToAlert;
-import migrations.all.AddValidUntilToCommandLog;
 import migrations.all.AddValidUntilToDelegateTask;
 import migrations.all.EntityNameValidationMigration_All_00;
 import migrations.all.EntityNameValidationMigration_All_01;
@@ -66,7 +65,7 @@ public class MigrationList {
         .add(Pair.of(154, EntityNameValidationMigration_All_01.class))
         .add(Pair.of(155, BaseMigration.class))
         .add(Pair.of(156, BaseMigration.class))
-        .add(Pair.of(157, AddValidUntilToCommandLog.class))
+        .add(Pair.of(157, BaseMigration.class))
         .add(Pair.of(158, EntityNameValidationMigration_All_02.class))
         .add(Pair.of(159, SecretTextFilterMigration.class))
         .build();
