@@ -65,7 +65,7 @@ public class ElkLogFetchRequestTest {
         "((.*exception.* and error) or warn) and source:/home/ubuntu/Harness/Manager/Manager/runtime/portal.log");
     JSONObject jsonObject = elkLogFetchRequest.eval();
     assertEquals(
-        "{\"size\":10000,\"query\":{\"bool\":{\"filter\":[{\"bool\":{\"should\":[{\"term\":{\"beat.hostname\":\"ip-172-31-13-153\"}},{\"term\":{\"beat.hostname\":\"ip-172-31-12-79\"}},{\"term\":{\"beat.hostname\":\"ip-172-31-8-144\"}}]}},{\"range\":{\"@timestamp\":{\"lt\":1518724315175,\"format\":\"epoch_millis\",\"gte\":1518724255175}}},{\"bool\":{\"must\":[{\"bool\":{\"should\":[{\"bool\":{\"must\":[{\"regexp\":{\"message\":{\"value\":\".*exception.*\"}}},{\"regexp\":{\"message\":{\"value\":\"error\"}}}]}},{\"regexp\":{\"message\":{\"value\":\"warn\"}}}]}},{\"term\":{\"source\":\"/home/ubuntu/Harness/Manager/Manager/runtime/portal.log\"}}]}}]}}}",
+        "{\"size\":10000,\"query\":{\"bool\":{\"filter\":[{\"bool\":{\"should\":[{\"term\":{\"beat.hostname\":\"ip-172-31-13-153\"}},{\"term\":{\"beat.hostname\":\"ip-172-31-12-79\"}},{\"term\":{\"beat.hostname\":\"ip-172-31-8-144\"}}]}},{\"range\":{\"@timestamp\":{\"lt\":1518724315175,\"format\":\"epoch_millis\",\"gte\":1518724255175}}},{\"bool\":{\"must\":[{\"bool\":{\"should\":[{\"bool\":{\"must\":[{\"regexp\":{\"message\":{\"value\":\".*exception.*\"}}},{\"regexp\":{\"message\":{\"value\":\"error\"}}}]}},{\"regexp\":{\"message\":{\"value\":\"warn\"}}}]}},{\"term\":{\"source\":\"/home/ubuntu/harness/manager/manager/runtime/portal.log\"}}]}}]}}}",
         JsonUtils.asJson(elkLogFetchRequest.toElasticSearchJsonObject()));
   }
 
@@ -89,12 +89,21 @@ public class ElkLogFetchRequestTest {
   }
 
   @Test
+  public void simpleQueryCaseInsensitive() {
+    ElkLogFetchRequest elkLogFetchRequest = getElkLogFetchRequest(".*Exception.* OR .*ERROR.*");
+    JSONObject jsonObject = elkLogFetchRequest.eval();
+    assertEquals(
+        "{\"size\":10000,\"query\":{\"bool\":{\"filter\":[{\"bool\":{\"should\":[{\"term\":{\"beat.hostname\":\"ip-172-31-13-153\"}},{\"term\":{\"beat.hostname\":\"ip-172-31-12-79\"}},{\"term\":{\"beat.hostname\":\"ip-172-31-8-144\"}}]}},{\"range\":{\"@timestamp\":{\"lt\":1518724315175,\"format\":\"epoch_millis\",\"gte\":1518724255175}}},{\"bool\":{\"should\":[{\"regexp\":{\"message\":{\"value\":\".*exception.*\"}}},{\"regexp\":{\"message\":{\"value\":\".*error.*\"}}}]}}]}}}",
+        JsonUtils.asJson(elkLogFetchRequest.toElasticSearchJsonObject()));
+  }
+
+  @Test
   public void multimessageterms() {
     ElkLogFetchRequest elkLogFetchRequest = getElkLogFetchRequest(
         "((.*exception.* or error) or warn) ors source:/home/ubuntu/Harness/Manager/Manager/runtime/portal.log");
     JSONObject jsonObject = elkLogFetchRequest.eval();
     assertEquals(
-        "{\"size\":10000,\"query\":{\"bool\":{\"filter\":[{\"bool\":{\"should\":[{\"term\":{\"beat.hostname\":\"ip-172-31-13-153\"}},{\"term\":{\"beat.hostname\":\"ip-172-31-12-79\"}},{\"term\":{\"beat.hostname\":\"ip-172-31-8-144\"}}]}},{\"range\":{\"@timestamp\":{\"lt\":1518724315175,\"format\":\"epoch_millis\",\"gte\":1518724255175}}},{\"bool\":{\"must\":[{\"term\":{\"source\":\"/home/ubuntu/Harness/Manager/Manager/runtime/portal.log\"}},{\"regexp\":{\"message\":{\"value\":\"ors\"}}},{\"bool\":{\"should\":[{\"bool\":{\"should\":[{\"regexp\":{\"message\":{\"value\":\".*exception.*\"}}},{\"regexp\":{\"message\":{\"value\":\"error\"}}}]}},{\"regexp\":{\"message\":{\"value\":\"warn\"}}}]}}]}}]}}}",
+        "{\"size\":10000,\"query\":{\"bool\":{\"filter\":[{\"bool\":{\"should\":[{\"term\":{\"beat.hostname\":\"ip-172-31-13-153\"}},{\"term\":{\"beat.hostname\":\"ip-172-31-12-79\"}},{\"term\":{\"beat.hostname\":\"ip-172-31-8-144\"}}]}},{\"range\":{\"@timestamp\":{\"lt\":1518724315175,\"format\":\"epoch_millis\",\"gte\":1518724255175}}},{\"bool\":{\"must\":[{\"term\":{\"source\":\"/home/ubuntu/harness/manager/manager/runtime/portal.log\"}},{\"regexp\":{\"message\":{\"value\":\"ors\"}}},{\"bool\":{\"should\":[{\"bool\":{\"should\":[{\"regexp\":{\"message\":{\"value\":\".*exception.*\"}}},{\"regexp\":{\"message\":{\"value\":\"error\"}}}]}},{\"regexp\":{\"message\":{\"value\":\"warn\"}}}]}}]}}]}}}",
         JsonUtils.asJson(elkLogFetchRequest.toElasticSearchJsonObject()));
   }
 
@@ -109,7 +118,7 @@ public class ElkLogFetchRequestTest {
   public void nonMessage() {
     ElkLogFetchRequest elkLogFetchRequest = getElkLogFetchRequest("level:Error OR level:Warn");
     assertEquals(
-        "{\"size\":10000,\"query\":{\"bool\":{\"filter\":[{\"bool\":{\"should\":[{\"term\":{\"beat.hostname\":\"ip-172-31-13-153\"}},{\"term\":{\"beat.hostname\":\"ip-172-31-12-79\"}},{\"term\":{\"beat.hostname\":\"ip-172-31-8-144\"}}]}},{\"range\":{\"@timestamp\":{\"lt\":1518724315175,\"format\":\"epoch_millis\",\"gte\":1518724255175}}},{\"bool\":{\"should\":[{\"term\":{\"level\":\"Error\"}},{\"term\":{\"level\":\"Warn\"}}]}}]}}}",
+        "{\"size\":10000,\"query\":{\"bool\":{\"filter\":[{\"bool\":{\"should\":[{\"term\":{\"beat.hostname\":\"ip-172-31-13-153\"}},{\"term\":{\"beat.hostname\":\"ip-172-31-12-79\"}},{\"term\":{\"beat.hostname\":\"ip-172-31-8-144\"}}]}},{\"range\":{\"@timestamp\":{\"lt\":1518724315175,\"format\":\"epoch_millis\",\"gte\":1518724255175}}},{\"bool\":{\"should\":[{\"term\":{\"level\":\"error\"}},{\"term\":{\"level\":\"warn\"}}]}}]}}}",
         JsonUtils.asJson(elkLogFetchRequest.toElasticSearchJsonObject()));
   }
 
