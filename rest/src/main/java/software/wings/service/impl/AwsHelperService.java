@@ -363,11 +363,13 @@ public class AwsHelperService {
         .getAuthorizationToken();
   }
 
-  public String getAmazonEcrAuthToken(String awsAccount, String region, String accessKey, char[] secretKey) {
+  public String getAmazonEcrAuthToken(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String awsAccount, String region) {
+    encryptionService.decrypt(awsConfig, encryptionDetails);
     AmazonECRClient ecrClient = (AmazonECRClient) AmazonECRClientBuilder.standard()
                                     .withRegion(region)
-                                    .withCredentials(new AWSStaticCredentialsProvider(
-                                        new BasicAWSCredentials(accessKey, new String(secretKey))))
+                                    .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(
+                                        awsConfig.getAccessKey(), new String(awsConfig.getSecretKey()))))
                                     .build();
     return ecrClient
         .getAuthorizationToken(new GetAuthorizationTokenRequest().withRegistryIds(singletonList(awsAccount)))

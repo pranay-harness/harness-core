@@ -12,9 +12,7 @@ import com.amazonaws.services.ecr.model.DescribeRepositoriesRequest;
 import com.amazonaws.services.ecr.model.DescribeRepositoriesResult;
 import com.amazonaws.services.ecr.model.ListImagesRequest;
 import com.amazonaws.services.ecr.model.ListImagesResult;
-import com.amazonaws.services.ecr.model.Repository;
 import software.wings.beans.AwsConfig;
-import software.wings.beans.artifact.EcrArtifactStream;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -84,16 +82,5 @@ public class EcrServiceImpl implements EcrService {
     } while (describeRepositoriesRequest.getNextToken() != null);
 
     return repoNames;
-  }
-
-  @Override
-  public String getEcrImageUrl(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
-      EcrArtifactStream ecrArtifactStream) {
-    Repository repository =
-        awsHelperService.getRepository(awsConfig, encryptionDetails, region, ecrArtifactStream.getImageName());
-    if (repository != null) {
-      return repository.getRepositoryUri();
-    }
-    return null;
   }
 }

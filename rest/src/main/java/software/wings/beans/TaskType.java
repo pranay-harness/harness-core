@@ -202,7 +202,15 @@ public enum TaskType {
   KUBERNETES_SWAP_SERVICE_SELECTORS_TASK(
       TaskGroup.CONTAINER, KubernetesSwapServiceSelectorsTask.class, KubernetesSwapServiceSelectorsValidation.class),
   AWS_VALIDATE(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
-  ECS_STEADY_STATE_CHECK_TASK(TaskGroup.CONTAINER, EcsSteadyStateCheckTask.class, AlwaysTrueValidation.class);
+  ECS_STEADY_STATE_CHECK_TASK(TaskGroup.CONTAINER, EcsSteadyStateCheckTask.class, AlwaysTrueValidation.class),
+  AWS_GET_REGIONS(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
+  AWS_GET_CLUSTERS(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
+  AWS_GET_VPCS(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
+  AWS_GET_IAM_ROLES(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
+  AWS_GET_ECR_IMAGE_URL(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
+  AWS_GET_ECR_AUTH_TOKEN(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
+  AWS_GET_SUBNETS(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
+  AWS_GET_SGS(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;
