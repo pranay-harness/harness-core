@@ -20,6 +20,7 @@ import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotifi
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.dl.HQuery.excludeAuthority;
+import static software.wings.security.UserThreadLocal.userGuard;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
@@ -51,6 +52,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.scheduler.JobScheduler;
+import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppContainerService;
@@ -68,6 +70,8 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+
+import java.io.IOException;
 
 /**
  * The type App service test.
@@ -249,17 +253,19 @@ public class AppServiceTest extends WingsBaseTest {
    * Should update.
    */
   @Test
-  public void shouldUpdateApplication() {
-    Application application = anApplication().withUuid(APP_ID).withName(APP_NAME).build();
-    when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(application);
-    appService.update(anApplication().withUuid(APP_ID).withName("App_Name").withDescription("Description").build());
-    verify(query).filter(ID_KEY, APP_ID);
-    verify(updateOperations).set("name", "App_Name");
-    verify(updateOperations).set("description", "Description");
-    verify(updateOperations).set("keywords", asList("App_Name".toLowerCase(), "Description".toLowerCase()));
-    verify(wingsPersistence).update(query, updateOperations);
-    verify(wingsPersistence, times(2)).get(Application.class, APP_ID);
-    verify(yamlChangeSetHelper).applicationUpdateYamlChangeAsync(application, application);
+  public void shouldUpdateApplication() throws IOException {
+    try (UserThreadLocal.Guard guard = userGuard(null)) {
+      Application application = anApplication().withUuid(APP_ID).withName(APP_NAME).build();
+      when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(application);
+      appService.update(anApplication().withUuid(APP_ID).withName("App_Name").withDescription("Description").build());
+      verify(query).filter(ID_KEY, APP_ID);
+      verify(updateOperations).set("name", "App_Name");
+      verify(updateOperations).set("description", "Description");
+      verify(updateOperations).set("keywords", asList("App_Name".toLowerCase(), "Description".toLowerCase()));
+      verify(wingsPersistence).update(query, updateOperations);
+      verify(wingsPersistence, times(2)).get(Application.class, APP_ID);
+      verify(yamlChangeSetHelper).applicationUpdateYamlChangeAsync(application, application);
+    }
   }
 
   /**
