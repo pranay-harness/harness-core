@@ -256,7 +256,9 @@ public enum ErrorCode {
 
   EMAIL_FAILED,
 
-  SSL_HANDSHAKE_FAILED;
+  SSL_HANDSHAKE_FAILED,
+
+  NO_APPS_ASSIGNED("No apps are assigned to the user or no apps exist in the account");
 
   private Status status = BAD_REQUEST;
   private String description;
