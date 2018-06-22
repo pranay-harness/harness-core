@@ -338,12 +338,6 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     }
 
     String envId = serviceVariable.getEnvId();
-    if (!isEmpty(envId) && !envId.equals(GLOBAL_ENV_ID)) {
-      Environment environment = environmentService.get(appId, envId);
-      if (environment != null) {
-        encryptedData.addEnvironment(envId, environment.getName());
-      }
-    }
 
     String serviceId;
     switch (serviceVariable.getEntityType()) {
@@ -358,9 +352,22 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
         encryptedData.addServiceVariable(serviceTemplate.getUuid(), serviceTemplate.getName());
         break;
 
+      case ENVIRONMENT:
+        envId = serviceVariable.getEntityId();
+        serviceId = null;
+        break;
+
       default:
         return;
     }
+
+    if (!isEmpty(envId) && !envId.equals(GLOBAL_ENV_ID)) {
+      Environment environment = environmentService.get(appId, envId);
+      if (environment != null) {
+        encryptedData.addEnvironment(envId, environment.getName());
+      }
+    }
+
     if (!isEmpty(serviceId)) {
       Service service = serviceResourceService.get(appId, serviceId);
       if (service != null) {
@@ -384,6 +391,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
 
     String appId = savedServiceVariable.getAppId();
     encryptedData.removeApplication(appId, appService.get(appId).getName());
+    String envId = savedServiceVariable.getEnvId();
 
     String serviceId;
     switch (savedServiceVariable.getEntityType()) {
@@ -399,12 +407,19 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
         encryptedData.removeServiceVariable(serviceTemplate.getUuid(), serviceTemplate.getName());
         break;
 
+      case ENVIRONMENT:
+        envId = savedServiceVariable.getEntityId();
+        serviceId = null;
+        break;
+
       default:
         throw new IllegalArgumentException("Invalid entity type " + savedServiceVariable.getEntityType());
     }
-    encryptedData.removeService(serviceId, serviceResourceService.get(appId, serviceId).getName());
 
-    String envId = savedServiceVariable.getEnvId();
+    if (!isEmpty(serviceId)) {
+      encryptedData.removeService(serviceId, serviceResourceService.get(appId, serviceId).getName());
+    }
+
     if (!isEmpty(envId) && !envId.equals(GLOBAL_ENV_ID)) {
       Environment environment = environmentService.get(appId, envId);
       encryptedData.removeEnvironment(envId, environment.getName());
