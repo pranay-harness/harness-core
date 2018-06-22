@@ -26,6 +26,7 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.Environment;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.ResizeStrategy;
@@ -41,6 +42,7 @@ import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.KubernetesPortProtocol;
 import software.wings.beans.container.KubernetesServiceType;
 import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
@@ -61,6 +63,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
 
   @Transient @Inject private transient ConfigService configService;
   @Transient @Inject private transient ServiceTemplateService serviceTemplateService;
+  @Transient @Inject private transient FeatureFlagService featureFlagService;
 
   private String replicationControllerName;
   private KubernetesServiceType serviceType;
@@ -126,6 +129,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
     }
 
     boolean isStatefulSet = false;
+    boolean useDashInHostName = featureFlagService.isEnabled(FeatureName.USE_DASH_IN_HOSTNAME, app.getAccountId());
 
     if (containerTask != null) {
       KubernetesContainerTask kubernetesContainerTask = (KubernetesContainerTask) containerTask;
@@ -144,7 +148,8 @@ public class KubernetesSetup extends ContainerServiceSetup {
 
     String controllerNamePrefix = isNotBlank(replicationControllerName)
         ? KubernetesConvention.normalize(context.renderExpression(replicationControllerName))
-        : KubernetesConvention.getControllerNamePrefix(app.getName(), serviceName, env.getName(), isStatefulSet);
+        : KubernetesConvention.getControllerNamePrefix(
+              app.getName(), serviceName, env.getName(), isStatefulSet, useDashInHostName);
 
     String ingressYamlEvaluated = null;
     if (isNotBlank(ingressYaml)) {
@@ -218,6 +223,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
         .withPlainConfigFiles(plainConfigFiles)
         .withEncryptedConfigFiles(encryptedConfigFiles)
         .withConfigMapYaml(configMapYamlEvaluated)
+        .withUseDashInHostname(useDashInHostName)
         .build();
   }
 

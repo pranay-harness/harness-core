@@ -11,7 +11,7 @@ import java.util.Set;
 
 public interface ContainerService {
   @DelegateTaskType(TaskType.CONTAINER_ACTIVE_SERVICE_COUNTS)
-  Map<String, Integer> getActiveServiceCounts(ContainerServiceParams containerServiceParams);
+  Map<String, Integer> getActiveServiceCounts(ContainerServiceParams containerServiceParams, boolean useDashInHostName);
 
   @DelegateTaskType(TaskType.CONTAINER_INFO)
   List<ContainerInfo> getContainerInfos(ContainerServiceParams containerServiceParams);

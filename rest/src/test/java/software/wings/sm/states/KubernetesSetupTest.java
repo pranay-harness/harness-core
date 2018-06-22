@@ -99,6 +99,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -137,6 +138,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
   @Mock private ExpressionEvaluator evaluator;
   @Mock private ConfigService configService;
   @Mock private ContainerDeploymentManagerHelper containerDeploymentHelper;
+  @Mock private FeatureFlagService featureFlagService;
 
   @InjectMocks private KubernetesSetup kubernetesSetup = new KubernetesSetup("name");
 
@@ -265,6 +267,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
     PortalConfig portalConfig = new PortalConfig();
     portalConfig.setUrl(BASE_URL);
     when(configuration.getPortal()).thenReturn(portalConfig);
+    when(featureFlagService.isEnabled(any(), any())).thenReturn(false);
   }
 
   @Test

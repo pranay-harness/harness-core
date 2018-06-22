@@ -5,6 +5,7 @@ import static software.wings.beans.command.KubernetesResizeParams.KubernetesResi
 import static software.wings.sm.StateType.KUBERNETES_DEPLOY;
 
 import org.apache.commons.lang3.StringUtils;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.command.ContainerApiVersions;
 import software.wings.beans.command.ContainerResizeParams;
@@ -83,6 +84,8 @@ public class KubernetesDeploy extends ContainerServiceDeploy {
   protected ContainerResizeParams buildContainerResizeParams(ExecutionContext context, ContextData contextData) {
     Integer trafficPercent =
         isNotBlank(getTrafficPercent()) ? Integer.valueOf(context.renderExpression(getTrafficPercent())) : null;
+    boolean useDashInHostName =
+        featureFlagService.isEnabled(FeatureName.USE_DASH_IN_HOSTNAME, contextData.app.getAccountId());
 
     return aKubernetesResizeParams()
         .withClusterName(contextData.containerElement.getClusterName())
@@ -108,6 +111,7 @@ public class KubernetesDeploy extends ContainerServiceDeploy {
         .withDownsizeInstanceCount(contextData.downsizeInstanceCount)
         .withDownsizeInstanceUnitType(getDownsizeInstanceUnitType())
         .withTrafficPercent(trafficPercent)
+        .withUseDashInHostName(useDashInHostName)
         .build();
   }
 

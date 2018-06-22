@@ -16,6 +16,7 @@ import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.Environment;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
@@ -61,6 +62,8 @@ public class KubernetesSetupRollback extends ContainerServiceSetup {
 
     int serviceSteadyStateTimeout =
         getServiceSteadyStateTimeout() > 0 ? getServiceSteadyStateTimeout() : DEFAULT_STEADY_STATE_TIMEOUT;
+    boolean useDashInHostname = featureFlagService.isEnabled(FeatureName.USE_DASH_IN_HOSTNAME, app.getAccountId());
+
     return aKubernetesSetupParams()
         .withAppName(app.getName())
         .withEnvName(env.getName())
@@ -76,6 +79,7 @@ public class KubernetesSetupRollback extends ContainerServiceSetup {
         .withRollback(true)
         .withSubscriptionId(subscriptionId)
         .withResourceGroup(resourceGroup)
+        .withUseDashInHostname(useDashInHostname)
         .build();
   }
 

@@ -27,28 +27,63 @@ public class KubernetesConvention {
   private static final String CONTAINER_PREFIX = "hs-";
   private static final String CONTAINER_SUFFIX = "-hs";
   private static Pattern wildCharPattern = Pattern.compile("[_+*/\\\\ &@$|\"':]");
+  private static final int MAX_REVISIONS = 100000;
 
   // TODO(brett) Stateful Sets are no longer versioned. Remove statefulSet param after 6/1/18
-  public static String getControllerName(String prefix, int revision, boolean isStatefulSet) {
+  public static String getControllerName(
+      String prefix, int revision, boolean isStatefulSet, boolean useDashInHostname) {
+    if (useDashInHostname) {
+      return getControllerName(prefix, revision);
+    }
     return normalize(prefix) + (isStatefulSet ? DASH : DOT) + revision;
+  }
+
+  public static String getControllerName(String prefix, int revision) {
+    return normalize(prefix) + DASH + revision;
   }
 
   // TODO(brett) Stateful Sets are no longer versioned. Remove statefulSet param after 6/1/18
   public static String getControllerNamePrefix(
-      String appName, String serviceName, String envName, boolean isStatefulSet) {
+      String appName, String serviceName, String envName, boolean isStatefulSet, boolean useDashInHostname) {
+    if (useDashInHostname) {
+      return getControllerNamePrefix(appName, serviceName, envName);
+    }
     String separator = isStatefulSet ? DASH : DOT;
     return normalize(appName + separator + serviceName + separator + envName);
   }
 
+  public static String getControllerNamePrefix(String appName, String serviceName, String envName) {
+    String separator = DASH;
+    return normalize(appName + separator + serviceName + separator + envName);
+  }
+
   // TODO(brett) Stateful Sets are no longer versioned. Remove statefulSet param after 6/1/18
-  public static String getPrefixFromControllerName(String controllerName, boolean isStatefulSet) {
+  public static String getPrefixFromControllerName(
+      String controllerName, boolean isStatefulSet, boolean useDashInHostname) {
+    if (useDashInHostname) {
+      getPrefixFromControllerName(controllerName);
+    }
     String versionSeparator = isStatefulSet ? DASH : DOT;
     return controllerName.substring(0, controllerName.lastIndexOf(versionSeparator) + versionSeparator.length());
   }
 
+  public static String getPrefixFromControllerName(String controllerName) {
+    String versionSeparator = DASH;
+    return controllerName.substring(0, controllerName.lastIndexOf(versionSeparator));
+  }
+
   // TODO(brett) Stateful Sets are no longer versioned. Remove statefulSet param after 6/1/18
-  public static String getServiceNameFromControllerName(String controllerName, boolean isStatefulSet) {
+  public static String getServiceNameFromControllerName(
+      String controllerName, boolean isStatefulSet, boolean useDashInHostname) {
+    if (useDashInHostname) {
+      return getServiceNameFromControllerName(controllerName);
+    }
     String versionSeparator = isStatefulSet ? DASH : DOT;
+    return noDot(controllerName.substring(0, controllerName.lastIndexOf(versionSeparator)));
+  }
+
+  public static String getServiceNameFromControllerName(String controllerName) {
+    String versionSeparator = DASH;
     return noDot(controllerName.substring(0, controllerName.lastIndexOf(versionSeparator)));
   }
 
@@ -83,7 +118,11 @@ public class KubernetesConvention {
   }
 
   // TODO(brett) Stateful Sets are no longer versioned. Remove statefulSet param after 6/1/18
-  public static Optional<Integer> getRevisionFromControllerName(String name, boolean isStatefulSet) {
+  public static Optional<Integer> getRevisionFromControllerName(
+      String name, boolean isStatefulSet, boolean useDashInHostname) {
+    if (useDashInHostname) {
+      return getRevisionFromControllerName(name);
+    }
     String versionSeparator = isStatefulSet ? DASH : DOT;
     if (name != null) {
       int index = name.lastIndexOf(versionSeparator);
@@ -96,6 +135,52 @@ public class KubernetesConvention {
         }
       }
     }
+    return Optional.empty();
+  }
+
+  public static Optional<Integer> getRevisionFromControllerName(String name) {
+    String versionSeparator = DASH;
+    if (name != null) {
+      int index = name.lastIndexOf(versionSeparator);
+      if (index >= 0) {
+        String version = "";
+        try {
+          version = name.substring(index + versionSeparator.length());
+          Optional<Integer> revision =
+              version.contains(DASH) ? Optional.empty() : Optional.of(Integer.parseInt(version));
+
+          // ToDo(anshul) needs better logic here rather than using MAX_REVISIONS
+          return (revision.isPresent() && revision.get() < MAX_REVISIONS) ? revision : Optional.empty();
+        } catch (NumberFormatException e) {
+          logger.warn("Couldn't get version from controller name {}. {} is not a valid version", name, version, e);
+        }
+      }
+    }
+
+    return getRevisionFromControllerNameWithDot(name);
+  }
+
+  // ToDo(anshul) method needs to be deprecated once we completely remove the DOT.
+  public static Optional<Integer> getRevisionFromControllerNameWithDot(String name) {
+    String versionSeparator = DOT;
+    if (name != null) {
+      int index = name.lastIndexOf(versionSeparator);
+      if (index >= 0) {
+        String version = "";
+        try {
+          version = name.substring(index + versionSeparator.length());
+          Optional<Integer> revision =
+              version.contains(DASH) ? Optional.empty() : Optional.of(Integer.parseInt(version));
+
+          // ToDo(anshul) needs better logic here rather than using MAX_REVISIONS
+          return (revision.isPresent() && revision.get() < MAX_REVISIONS) ? revision : Optional.empty();
+        } catch (NumberFormatException e) {
+          logger.error("Couldn't get version from controller name {}", name, e);
+          logger.warn("Couldn't get version from controller name {}. {} is not a valid version", name, version, e);
+        }
+      }
+    }
+
     return Optional.empty();
   }
 

@@ -18,6 +18,7 @@ import software.wings.api.ClusterElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Application;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
@@ -102,10 +103,13 @@ public class GcpClusterSetup extends State {
     if (isEmpty(machineType)) {
       machineType = "n1-standard-2";
     }
+
+    boolean useDashInHostName = featureFlagService.isEnabled(FeatureName.USE_DASH_IN_HOSTNAME, app.getAccountId());
     String clusterName = "harness-"
-        + KubernetesConvention.getKubernetesServiceName(
-              KubernetesConvention.getControllerNamePrefix(app.getName(), serviceName, env, isStatefulSet));
+        + KubernetesConvention.getKubernetesServiceName(KubernetesConvention.getControllerNamePrefix(
+              app.getName(), serviceName, env, isStatefulSet, useDashInHostName));
     String zoneCluster = zone + "/" + clusterName;
+
     gkeClusterService.createCluster(computeProviderSetting, encryptionDetails, zoneCluster,
         gcpInfraMapping.getNamespace(),
         ImmutableMap.<String, String>builder()

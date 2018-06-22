@@ -1400,6 +1400,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     String resourceGroup = null;
     ContainerInfrastructureMapping containerInfraMapping = (ContainerInfrastructureMapping) infrastructureMapping;
     boolean isStatefulSet = false;
+    boolean useDashInHostName = featureFlagService.isEnabled(FeatureName.USE_DASH_IN_HOSTNAME, app.getAccountId());
+
     ContainerTask containerTask = serviceResourceService.getContainerTaskByDeploymentType(
         app.getUuid(), service.getUuid(), infrastructureMapping.getDeploymentType());
     if (containerTask instanceof KubernetesContainerTask) {
@@ -1417,8 +1419,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           (isNotBlank(serviceNameExpression)
                   ? KubernetesConvention.normalize(evaluator.substitute(serviceNameExpression, context))
                   : KubernetesConvention.getControllerNamePrefix(
-                        app.getName(), service.getName(), env.getName(), isStatefulSet))
-          + (isStatefulSet ? DASH : DOT) + "0";
+                        app.getName(), service.getName(), env.getName(), isStatefulSet, useDashInHostName))
+          + (useDashInHostName ? DASH : (isStatefulSet ? DASH : DOT)) + "0";
     } else {
       settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
       clusterName = containerInfraMapping.getClusterName();
@@ -1428,8 +1430,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
             (isNotBlank(serviceNameExpression)
                     ? KubernetesConvention.normalize(evaluator.substitute(serviceNameExpression, context))
                     : KubernetesConvention.getControllerNamePrefix(
-                          app.getName(), service.getName(), env.getName(), isStatefulSet))
-            + (isStatefulSet ? DASH : DOT) + "0";
+                          app.getName(), service.getName(), env.getName(), isStatefulSet, useDashInHostName))
+            + (useDashInHostName ? DASH : (isStatefulSet ? DASH : DOT)) + "0";
       } else if (containerInfraMapping instanceof AzureKubernetesInfrastructureMapping) {
         namespace = containerInfraMapping.getNamespace();
         subscriptionId = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getSubscriptionId();
@@ -1438,8 +1440,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
             (isNotBlank(serviceNameExpression)
                     ? KubernetesConvention.normalize(evaluator.substitute(serviceNameExpression, context))
                     : KubernetesConvention.getControllerNamePrefix(
-                          app.getName(), service.getName(), env.getName(), isStatefulSet))
-            + (isStatefulSet ? DASH : DOT) + "0";
+                          app.getName(), service.getName(), env.getName(), isStatefulSet, useDashInHostName))
+            + (useDashInHostName ? DASH : (isStatefulSet ? DASH : DOT)) + "0";
 
       } else if (containerInfraMapping instanceof EcsInfrastructureMapping) {
         region = ((EcsInfrastructureMapping) containerInfraMapping).getRegion();
@@ -1472,7 +1474,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                                         .build();
     try {
       Map<String, Integer> activeServiceCounts = delegateProxyFactory.get(ContainerService.class, syncTaskContext)
-                                                     .getActiveServiceCounts(containerServiceParams);
+                                                     .getActiveServiceCounts(containerServiceParams, useDashInHostName);
       return Integer.toString(activeServiceCounts.values().stream().mapToInt(Integer::intValue).sum());
     } catch (Exception e) {
       logger.warn(Misc.getMessage(e), e);
