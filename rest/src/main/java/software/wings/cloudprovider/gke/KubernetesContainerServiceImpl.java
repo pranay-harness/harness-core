@@ -144,7 +144,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     } else if (definition instanceof StatefulSet) {
       HasMetadata existing = getController(kubernetesConfig, encryptedDataDetails, name);
       if (existing != null && existing.getKind().equals("StatefulSet")) {
-        statefulOperations(kubernetesConfig, encryptedDataDetails).withName(name).patch((StatefulSet) definition);
+        controller =
+            statefulOperations(kubernetesConfig, encryptedDataDetails).withName(name).patch((StatefulSet) definition);
       } else {
         controller = statefulOperations(kubernetesConfig, encryptedDataDetails).create((StatefulSet) definition);
       }
