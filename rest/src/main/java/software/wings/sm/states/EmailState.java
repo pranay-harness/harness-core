@@ -68,10 +68,14 @@ public class EmailState extends State {
                                                           .withSubject(subject)
                                                           .build();
     try {
+      String evaluatedTo = context.renderExpression(toAddress);
+      String evaluatedCc = context.renderExpression(ccAddress);
       String evaluatedSubject = context.renderExpression(subject);
       String evaluatedBody = context.renderExpression(body);
       emailStateExecutionData.setSubject(evaluatedSubject);
       emailStateExecutionData.setBody(evaluatedBody);
+      emailStateExecutionData.setToAddress(evaluatedTo);
+      emailStateExecutionData.setCcAddress(evaluatedCc);
       logger.debug("Email Notification - subject:{}, body:{}", evaluatedSubject, evaluatedBody);
       emailNotificationService.send(EmailData.builder()
                                         .to(getEmailAddressList(toAddress))
