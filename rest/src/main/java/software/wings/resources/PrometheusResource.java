@@ -47,15 +47,15 @@ public class PrometheusResource {
     Map<String, MetricType> metricNameToType = new HashMap<>();
     timeSeriesToAnalyze.forEach(timeSeries -> {
       List<String> missingPlaceHolders = new ArrayList<>();
-      if (!timeSeries.getUrl().contains(HOST_NAME_PLACE_HOLDER)) {
+      if (isEmpty(timeSeries.getUrl()) || !timeSeries.getUrl().contains(HOST_NAME_PLACE_HOLDER)) {
         missingPlaceHolders.add(HOST_NAME_PLACE_HOLDER);
       }
 
-      if (!timeSeries.getUrl().contains(START_TIME_PLACE_HOLDER)) {
+      if (isEmpty(timeSeries.getUrl()) || !timeSeries.getUrl().contains(START_TIME_PLACE_HOLDER)) {
         missingPlaceHolders.add(START_TIME_PLACE_HOLDER);
       }
 
-      if (!timeSeries.getUrl().contains(END_TIME_PLACE_HOLDER)) {
+      if (isEmpty(timeSeries.getUrl()) || !timeSeries.getUrl().contains(END_TIME_PLACE_HOLDER)) {
         missingPlaceHolders.add(END_TIME_PLACE_HOLDER);
       }
 
