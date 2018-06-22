@@ -114,7 +114,9 @@ public class SettingValidationService {
     } else if (settingValue instanceof AwsConfig) {
       validateAwsConfig(settingAttribute);
     } else if (settingValue instanceof KubernetesClusterConfig) {
-      validateKubernetesClusterConfig(settingAttribute);
+      if (!((KubernetesClusterConfig) settingValue).isSkipValidation()) {
+        validateKubernetesClusterConfig(settingAttribute);
+      }
     } else if (settingValue instanceof JenkinsConfig || settingValue instanceof BambooConfig
         || settingValue instanceof NexusConfig || settingValue instanceof DockerConfig
         || settingValue instanceof ArtifactoryConfig) {
