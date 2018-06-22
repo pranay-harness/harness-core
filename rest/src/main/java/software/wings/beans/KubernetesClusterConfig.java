@@ -37,6 +37,7 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
   @Encrypted private char[] clientKey;
   @Encrypted private char[] clientKeyPassphrase;
   private String clientKeyAlgo;
+  private boolean skipValidation;
 
   @JsonView(JsonViews.Internal.class) private String encryptedPassword;
   @JsonView(JsonViews.Internal.class) private String encryptedCaCert;
@@ -55,8 +56,9 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
   @SuppressFBWarnings("EI_EXPOSE_REP2")
   public KubernetesClusterConfig(boolean useKubernetesDelegate, String delegateName, String masterUrl, String username,
       char[] password, char[] caCert, char[] clientCert, char[] clientKey, char[] clientKeyPassphrase,
-      String clientKeyAlgo, String encryptedPassword, String encryptedCaCert, String encryptedClientCert,
-      String encryptedClientKey, String encryptedClientKeyPassphrase, String accountId, boolean decrypted) {
+      String clientKeyAlgo, boolean skipValidation, String encryptedPassword, String encryptedCaCert,
+      String encryptedClientCert, String encryptedClientKey, String encryptedClientKeyPassphrase, String accountId,
+      boolean decrypted) {
     this();
     this.useKubernetesDelegate = useKubernetesDelegate;
     this.delegateName = delegateName;
@@ -68,6 +70,7 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
     this.clientKey = clientKey;
     this.clientKeyPassphrase = clientKeyPassphrase;
     this.clientKeyAlgo = clientKeyAlgo;
+    this.skipValidation = skipValidation;
     this.encryptedPassword = encryptedPassword;
     this.encryptedCaCert = encryptedCaCert;
     this.encryptedClientCert = encryptedClientCert;
@@ -137,11 +140,12 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
     private String clientKey;
     private String clientKeyPassphrase;
     private String clientKeyAlgo;
+    private boolean skipValidation;
 
     @lombok.Builder
     public Yaml(boolean useKubernetesDelegate, String delegateName, String type, String harnessApiVersion,
         String masterUrl, String username, String password, String caCert, String clientCert, String clientKey,
-        String clientKeyPassphrase, String clientKeyAlgo, UsageRestrictions usageRestrictions) {
+        String clientKeyPassphrase, String clientKeyAlgo, boolean skipValidation, UsageRestrictions usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
       this.useKubernetesDelegate = useKubernetesDelegate;
       this.delegateName = delegateName;
@@ -153,6 +157,7 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
       this.clientKey = clientKey;
       this.clientKeyPassphrase = clientKeyPassphrase;
       this.clientKeyAlgo = clientKeyAlgo;
+      this.skipValidation = skipValidation;
     }
   }
 }
