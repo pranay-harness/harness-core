@@ -30,6 +30,7 @@ import static software.wings.generator.InfrastructureMappingGenerator.Infrastruc
 import static software.wings.generator.SettingGenerator.Settings.HARNESS_ARTIFACTORY_CONNECTOR;
 import static software.wings.generator.SettingGenerator.Settings.HARNESS_BAMBOO_CONNECTOR;
 import static software.wings.generator.SettingGenerator.Settings.HARNESS_DOCKER_REGISTRY;
+import static software.wings.generator.SettingGenerator.Settings.HARNESS_GCP_EXPLORATION;
 import static software.wings.generator.SettingGenerator.Settings.HARNESS_NEXU3_CONNECTOR;
 import static software.wings.generator.SettingGenerator.Settings.HARNESS_NEXUS_CONNECTOR;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
@@ -429,6 +430,7 @@ public class DataGenUtil extends BaseIntegrationTest {
     settingGenerator.ensurePredefined(seed, HARNESS_NEXU3_CONNECTOR);
     settingGenerator.ensurePredefined(seed, HARNESS_ARTIFACTORY_CONNECTOR);
     settingGenerator.ensurePredefined(seed, HARNESS_DOCKER_REGISTRY);
+    settingGenerator.ensurePredefined(seed, HARNESS_GCP_EXPLORATION);
 
     SettingAttribute smtpSettingAttribute = aSettingAttribute()
                                                 .withCategory(Category.CONNECTOR)

@@ -5,6 +5,7 @@ import static software.wings.beans.Service.APP_ID_KEY;
 import static software.wings.beans.Service.NAME_KEY;
 import static software.wings.beans.Service.ServiceBuilder;
 import static software.wings.beans.Service.builder;
+import static software.wings.generator.ServiceGenerator.Services.KUBERNETES_GENERIC_TEST;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -26,14 +27,14 @@ public class ServiceGenerator {
   @Inject ServiceResourceService serviceResourceService;
   @Inject WingsPersistence wingsPersistence;
 
-  public enum Services {
-    GENERIC_TEST,
-  }
+  public enum Services { GENERIC_TEST, KUBERNETES_GENERIC_TEST }
 
   public Service ensurePredefined(Randomizer.Seed seed, Owners owners, Services predefined) {
     switch (predefined) {
       case GENERIC_TEST:
         return ensureGenericTest(seed, owners);
+      case KUBERNETES_GENERIC_TEST:
+        return ensureKubernetesGenericTest(seed, owners);
       default:
         unhandled(predefined);
     }
@@ -48,6 +49,17 @@ public class ServiceGenerator {
       owners.add(application);
     }
     return ensureService(seed, owners, builder().name("Test Service").artifactType(ArtifactType.WAR).build());
+  }
+
+  private Service ensureKubernetesGenericTest(Randomizer.Seed seed, Owners owners) {
+    Application application = owners.obtainApplication();
+    if (application == null) {
+      application = applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST);
+      owners.add(application);
+    }
+
+    return ensureService(
+        seed, owners, builder().name(KUBERNETES_GENERIC_TEST.name()).artifactType(ArtifactType.DOCKER).build());
   }
 
   public Service ensureRandom(Randomizer.Seed seed, Owners owners) {
