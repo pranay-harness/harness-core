@@ -51,24 +51,29 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
   @Override
   @SuppressWarnings("PMD")
   public void run() {
-    if (preExecute.get()) {
-      NotifyResponseData result = null;
-      try {
-        logger.info("Started executing task {}", taskId);
-        result = run(parameters);
-        logger.info("Completed executing task {}", taskId);
-      } catch (Throwable exception) {
-        logger.error("Unexpected error executing delegate task {}", taskId, exception);
-        result = ErrorNotifyResponseData.builder().errorMessage(exception.getMessage()).build();
-      } finally {
-        if (consumer != null) {
-          if (result == null) {
-            logger.error("Null result executing delegate task {}", taskId);
-            result = ErrorNotifyResponseData.builder().errorMessage("No response from delegate task " + taskId).build();
+    try (TaskLogContext ctx = new TaskLogContext(this.taskId)) {
+      if (preExecute.get()) {
+        NotifyResponseData result = null;
+        try {
+          logger.info("Started executing task {}", taskId);
+          result = run(parameters);
+          logger.info("Completed executing task {}", taskId);
+        } catch (Throwable exception) {
+          logger.error("Unexpected error executing delegate task {}", taskId, exception);
+          result = ErrorNotifyResponseData.builder().errorMessage(exception.getMessage()).build();
+        } finally {
+          if (consumer != null) {
+            if (result == null) {
+              logger.error("Null result executing delegate task {}", taskId);
+              result =
+                  ErrorNotifyResponseData.builder().errorMessage("No response from delegate task " + taskId).build();
+            }
+            consumer.accept(result);
           }
-          consumer.accept(result);
         }
       }
+    } catch (Exception e) {
+      logger.error("Unexpected error executing delegate task {}", taskId, e);
     }
   }
 
