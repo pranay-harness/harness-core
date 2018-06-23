@@ -48,11 +48,13 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
           SimpleEncryption encryption = new SimpleEncryption(encryptedDataDetail.getEncryptedData().getEncryptionKey());
           char[] decryptChars = encryption.decryptChars(encryptedDataDetail.getEncryptedData().getEncryptedValue());
           Field f = getFieldByName(object.getClass(), encryptedDataDetail.getFieldName());
-          f.setAccessible(true);
-          try {
-            f.set(object, decryptChars);
-          } catch (IllegalAccessException e) {
-            logger.error("Decryption failed for {}", encryptedDataDetail, e);
+          if (f != null) {
+            f.setAccessible(true);
+            try {
+              f.set(object, decryptChars);
+            } catch (IllegalAccessException e) {
+              logger.error("Decryption failed for {}", encryptedDataDetail, e);
+            }
           }
         });
 
@@ -70,7 +72,7 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
     SyncTaskContext syncTaskContext = aContext()
                                           .withAccountId(object.getAccountId())
                                           .withAppId(Base.GLOBAL_APP_ID)
-                                          .withTimeout(TimeUnit.SECONDS.toMillis(10L))
+                                          .withTimeout(TimeUnit.SECONDS.toMillis(15L))
                                           .build();
     try {
       Encryptable decrypted = timeLimiter.callWithTimeout(() -> {
@@ -80,10 +82,10 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
                 .decrypt(object, nonLocalEncryptedDetails);
           } catch (Exception e) {
             logger.warn("Error decrypting value. Retrying. Account ID: {}", object.getAccountId(), e);
-            sleep(ofMillis(2000));
+            sleep(ofMillis(200));
           }
         }
-      }, 35, TimeUnit.SECONDS, true);
+      }, 2, TimeUnit.MINUTES, true);
       for (EncryptedDataDetail encryptedDataDetail : nonLocalEncryptedDetails) {
         Field f = getFieldByName(object.getClass(), encryptedDataDetail.getFieldName());
         if (f != null) {
