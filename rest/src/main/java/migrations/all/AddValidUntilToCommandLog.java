@@ -1,6 +1,5 @@
 package migrations.all;
 
-import com.google.common.util.concurrent.RateLimiter;
 import com.google.inject.Inject;
 
 import com.mongodb.BasicDBObject;
@@ -27,8 +26,6 @@ public class AddValidUntilToCommandLog implements Migration {
     final DBCollection collection = wingsPersistence.getCollection("commandLogs");
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
 
-    RateLimiter slower = RateLimiter.create(100);
-
     int i = 1;
     try (HIterator<Log> logs = new HIterator<>(wingsPersistence.createQuery(Log.class)
                                                    .field("validUntil")
@@ -36,8 +33,6 @@ public class AddValidUntilToCommandLog implements Migration {
                                                    .project("createdAt", true)
                                                    .fetch())) {
       while (logs.hasNext()) {
-        slower.acquire();
-
         final Log log = logs.next();
         final ZonedDateTime zonedDateTime =
             Instant.ofEpochMilli(log.getCreatedAt()).atZone(ZoneOffset.UTC).plusMonths(6);
