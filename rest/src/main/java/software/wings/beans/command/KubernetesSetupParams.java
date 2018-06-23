@@ -33,7 +33,6 @@ public class KubernetesSetupParams extends ContainerSetupParams {
   private boolean useFixedInstances;
   private int maxInstances;
   private int fixedInstances;
-  private int serviceSteadyStateTimeout;
   private boolean useAutoscaler;
   private int minAutoscaleInstances;
   private int maxAutoscaleInstances;

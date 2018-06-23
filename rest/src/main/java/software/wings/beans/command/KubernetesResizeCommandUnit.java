@@ -92,9 +92,10 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     }
 
     int desiredCount = containerServiceData.getDesiredCount();
+    int previousCount = containerServiceData.getPreviousCount();
     List<ContainerInfo> containerInfos = kubernetesContainerService.setControllerPodCount(kubernetesConfig,
-        encryptedDataDetails, resizeParams.getClusterName(), controllerName, containerServiceData.getPreviousCount(),
-        desiredCount, resizeParams.getServiceSteadyStateTimeout(), executionLogCallback);
+        encryptedDataDetails, resizeParams.getClusterName(), controllerName, previousCount, desiredCount,
+        resizeParams.getServiceSteadyStateTimeout(), executionLogCallback);
 
     boolean allContainersSuccess = containerInfos.stream().allMatch(info -> info.getStatus() == SUCCESS);
 
@@ -117,7 +118,8 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
       throw new WingsException(GENERAL_ERROR).addParam("message", "Failed to resize controller");
     }
 
-    if (desiredCount > 0 && contextData.deployingToHundredPercent && resizeParams.isUseAutoscaler()) {
+    if (desiredCount > 0 && desiredCount > previousCount && contextData.deployingToHundredPercent
+        && resizeParams.isUseAutoscaler()) {
       HorizontalPodAutoscaler hpa = kubernetesContainerService.createOrReplaceAutoscaler(
           kubernetesConfig, encryptedDataDetails, resizeParams.getAutoscalerYaml());
       if (hpa != null) {

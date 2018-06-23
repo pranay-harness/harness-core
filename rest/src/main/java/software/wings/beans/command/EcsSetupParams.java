@@ -1,6 +1,5 @@
 package software.wings.beans.command;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.container.ContainerTask;
@@ -37,9 +36,10 @@ public class EcsSetupParams extends ContainerSetupParams {
     private ImageDetails imageDetails;
     private String region;
     private ContainerTask containerTask;
-    private String infraMappingId;
     private String vpcId;
+    private String infraMappingId;
     private String[] subnetIds;
+    private int serviceSteadyStateTimeout;
     private String[] securityGroupIds;
     private boolean assignPublicIps;
     private String executionRoleArn;
@@ -113,25 +113,28 @@ public class EcsSetupParams extends ContainerSetupParams {
       return this;
     }
 
-    public EcsSetupParamsBuilder withInfraMappingId(String infraMappingId) {
-      this.infraMappingId = infraMappingId;
-      return this;
-    }
-
     public EcsSetupParamsBuilder withVpcId(String vpcId) {
       this.vpcId = vpcId;
       return this;
     }
 
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
-    public EcsSetupParamsBuilder withSubnetIds(String[] subnetIds) {
-      this.subnetIds = subnetIds;
+    public EcsSetupParamsBuilder withInfraMappingId(String infraMappingId) {
+      this.infraMappingId = infraMappingId;
       return this;
     }
 
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
+    public EcsSetupParamsBuilder withSubnetIds(String[] subnetIds) {
+      this.subnetIds = subnetIds.clone();
+      return this;
+    }
+
+    public EcsSetupParamsBuilder withServiceSteadyStateTimeout(int serviceSteadyStateTimeout) {
+      this.serviceSteadyStateTimeout = serviceSteadyStateTimeout;
+      return this;
+    }
+
     public EcsSetupParamsBuilder withSecurityGroupIds(String[] securityGroupIds) {
-      this.securityGroupIds = securityGroupIds;
+      this.securityGroupIds = securityGroupIds.clone();
       return this;
     }
 
@@ -174,9 +177,10 @@ public class EcsSetupParams extends ContainerSetupParams {
           .withImageDetails(imageDetails)
           .withRegion(region)
           .withContainerTask(containerTask)
-          .withInfraMappingId(infraMappingId)
           .withVpcId(vpcId)
+          .withInfraMappingId(infraMappingId)
           .withSubnetIds(subnetIds)
+          .withServiceSteadyStateTimeout(serviceSteadyStateTimeout)
           .withSecurityGroupIds(securityGroupIds)
           .withAssignPublicIps(assignPublicIps)
           .withExecutionRoleArn(executionRoleArn)
@@ -199,9 +203,10 @@ public class EcsSetupParams extends ContainerSetupParams {
       ecsSetupParams.setImageDetails(imageDetails);
       ecsSetupParams.setRegion(region);
       ecsSetupParams.setContainerTask(containerTask);
-      ecsSetupParams.setInfraMappingId(infraMappingId);
       ecsSetupParams.setVpcId(vpcId);
+      ecsSetupParams.setInfraMappingId(infraMappingId);
       ecsSetupParams.setSubnetIds(subnetIds);
+      ecsSetupParams.setServiceSteadyStateTimeout(serviceSteadyStateTimeout);
       ecsSetupParams.setSecurityGroupIds(securityGroupIds);
       ecsSetupParams.setAssignPublicIps(assignPublicIps);
       ecsSetupParams.setExecutionRoleArn(executionRoleArn);

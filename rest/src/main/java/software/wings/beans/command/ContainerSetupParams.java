@@ -13,4 +13,5 @@ public class ContainerSetupParams {
   private ImageDetails imageDetails;
   private ContainerTask containerTask;
   private String infraMappingId;
+  private int serviceSteadyStateTimeout;
 }

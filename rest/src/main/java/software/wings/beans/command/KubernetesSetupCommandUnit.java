@@ -370,7 +370,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           }
         }
       } else {
-        executionLogCallback.saveExecutionLog("\nCleaning up old versions");
+        downsizeOldOrUnhealthy(kubernetesConfig, encryptedDataDetails, containerServiceName, setupParams,
+            executionLogCallback, useDashInHostname);
         cleanup(kubernetesConfig, encryptedDataDetails, containerServiceName, executionLogCallback, useDashInHostname);
       }
 
@@ -1447,18 +1448,50 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
   }
 
+  private void downsizeOldOrUnhealthy(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      String containerServiceName, KubernetesSetupParams setupParams, ExecutionLogCallback executionLogCallback,
+      boolean useDashInHostname) {
+    Map<String, Integer> activeCounts = kubernetesContainerService.getActiveServiceCounts(
+        kubernetesConfig, encryptedDataDetails, containerServiceName, false, useDashInHostname);
+    String latestHealthyController = null;
+    if (activeCounts.size() > 1) {
+      executionLogCallback.saveExecutionLog("\nActive pods:");
+      for (Entry<String, Integer> entry : activeCounts.entrySet()) {
+        String activeControllerName = entry.getKey();
+        List<Pod> pods =
+            kubernetesContainerService.getRunningPods(kubernetesConfig, encryptedDataDetails, activeControllerName);
+        List<ContainerInfo> containerInfos =
+            kubernetesContainerService.getContainerInfosWhenReady(kubernetesConfig, encryptedDataDetails,
+                activeControllerName, entry.getValue(), 0, pods, false, executionLogCallback, false, clock.millis());
+        boolean allContainersSuccess =
+            containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);
+        if (allContainersSuccess) {
+          latestHealthyController = activeControllerName;
+        }
+      }
+
+      for (Entry<String, Integer> entry : activeCounts.entrySet()) {
+        String controllerName = entry.getKey();
+        if (!controllerName.equals(latestHealthyController)) {
+          executionLogCallback.saveExecutionLog("");
+          kubernetesContainerService.setControllerPodCount(kubernetesConfig, encryptedDataDetails,
+              setupParams.getClusterName(), controllerName, entry.getValue(), 0,
+              setupParams.getServiceSteadyStateTimeout(), executionLogCallback);
+        }
+      }
+    }
+  }
+
   private void cleanup(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
       String containerServiceName, ExecutionLogCallback executionLogCallback, boolean useDashInHostname) {
+    executionLogCallback.saveExecutionLog("\nRemoving versions with no pods");
     Optional<Integer> revision = getRevisionFromControllerName(containerServiceName, false, useDashInHostname);
     if (revision.isPresent()) {
       String controllerNamePrefix = getPrefixFromControllerName(containerServiceName, false, useDashInHostname);
       kubernetesContainerService.listControllers(kubernetesConfig, encryptedDataDetails)
           .stream()
           .filter(ctrl -> ctrl.getMetadata().getName().startsWith(controllerNamePrefix))
-          .filter(ctrl
-              -> !getRevisionFromControllerName(ctrl.getMetadata().getName())
-                      .orElse(revision.get())
-                      .equals(revision.get()))
+          .filter(ctrl -> !ctrl.getMetadata().getName().equals(containerServiceName))
           .filter(ctrl -> kubernetesContainerService.getControllerPodCount(ctrl) == 0)
           .forEach(ctrl -> {
             String controllerName = ctrl.getMetadata().getName();
