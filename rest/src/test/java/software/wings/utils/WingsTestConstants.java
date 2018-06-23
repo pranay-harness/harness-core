@@ -220,4 +220,5 @@ public interface WingsTestConstants {
   String HARNESS_ARTIFACTORY = "Harness Artifactory";
   String HARNESS_BAMBOO = "Harness Bamboo";
   String HARNESS_DOCKER_REGISTRY = "Harness Docker Registry";
+  String HARNESS_GCP_EXPLORATION = "harness-exploration";
 }
