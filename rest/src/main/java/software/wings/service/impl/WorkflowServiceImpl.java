@@ -574,7 +574,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   @ValidationGroups(Create.class)
   public Workflow createWorkflow(Workflow workflow) {
-    validateBasicOrRollingWorkflow(workflow);
+    validateOrchestrationWorkflow(workflow);
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     workflow.setDefaultVersion(1);
     String key = wingsPersistence.save(workflow);
@@ -588,7 +588,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           workflowPhases.forEach(workflowPhase -> attachWorkflowPhase(workflow, workflowPhase));
         }
       } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)
-          || orchestrationWorkflow.getOrchestrationWorkflowType().equals(ROLLING)) {
+          || orchestrationWorkflow.getOrchestrationWorkflowType().equals(ROLLING)
+          || orchestrationWorkflow.getOrchestrationWorkflowType().equals(BLUE_GREEN)) {
         CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
         WorkflowPhase workflowPhase;
         if (isEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
@@ -817,7 +818,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       boolean envChanged, boolean inframappingChanged) {
     if (orchestrationWorkflow != null) {
       if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)
-          || orchestrationWorkflow.getOrchestrationWorkflowType().equals(ROLLING)) {
+          || orchestrationWorkflow.getOrchestrationWorkflowType().equals(ROLLING)
+          || orchestrationWorkflow.getOrchestrationWorkflowType().equals(BLUE_GREEN)) {
         handleBasicWorkflow((CanaryOrchestrationWorkflow) orchestrationWorkflow, templateExpressions, appId, serviceId,
             inframappingId, envChanged, inframappingChanged);
       } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
@@ -1696,7 +1698,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
       // Propagate template expressions to workflow level
       if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)
-          || orchestrationWorkflow.getOrchestrationWorkflowType().equals(ROLLING)) {
+          || orchestrationWorkflow.getOrchestrationWorkflowType().equals(ROLLING)
+          || orchestrationWorkflow.getOrchestrationWorkflowType().equals(BLUE_GREEN)) {
         setTemplateExpresssionsFromPhase(workflow, workflowPhase);
       } else {
         List<TemplateExpression> templateExpressions = workflow.getTemplateExpressions();
@@ -2290,24 +2293,56 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
     if (serviceSetupRequired) {
+      Map<String, Object> defaultServiceSpec = new HashMap<>();
+      defaultServiceSpec.put("serviceType", "ClusterIP");
+      defaultServiceSpec.put("port", 80);
+      defaultServiceSpec.put("targetPort", 8080);
+      defaultServiceSpec.put("protocol", "TCP");
+
+      Map<String, Object> defaultBlueGreenConfig = new HashMap<>();
+      defaultBlueGreenConfig.put("primaryService", defaultServiceSpec);
+      defaultBlueGreenConfig.put("stageService", defaultServiceSpec);
+
+      Map<String, Object> defaultSetupProperties = new HashMap<>();
+      defaultSetupProperties.put("blueGreen", true);
+      defaultSetupProperties.put("blueGreenConfig", defaultBlueGreenConfig);
+
       workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
                                      .addStep(aGraphNode()
                                                   .withId(generateUuid())
                                                   .withType(KUBERNETES_SETUP.name())
                                                   .withName(Constants.KUBERNETES_SERVICE_SETUP_BLUEGREEN)
+                                                  .withProperties(defaultSetupProperties)
                                                   .build())
                                      .build());
     }
+
+    Map<String, Object> defaultUpgradeStageContainerProperties = new HashMap<>();
+    defaultUpgradeStageContainerProperties.put("instanceUnitType", "PERCENTAGE");
+    defaultUpgradeStageContainerProperties.put("instanceCount", 100);
+
+    workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.UPGRADE_STAGE_CONTAINERS)
+                                   .addStep(aGraphNode()
+                                                .withId(generateUuid())
+                                                .withType(KUBERNETES_DEPLOY.name())
+                                                .withName(Constants.UPGRADE_CONTAINERS)
+                                                .withProperties(defaultUpgradeStageContainerProperties)
+                                                .build())
+                                   .build());
 
     workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
                                    .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
                                    .build());
 
+    Map<String, Object> defaultRouteUpdateProperties = new HashMap<>();
+    defaultRouteUpdateProperties.put("service1", "${app.name}-${service.name}-${env.name}-primary");
+    defaultRouteUpdateProperties.put("service2", "${app.name}-${service.name}-${env.name}-stage");
     workflowPhase.addPhaseStep(aPhaseStep(ROUTE_UPDATE, Constants.ROUTE_UPDATE)
                                    .addStep(aGraphNode()
                                                 .withId(generateUuid())
                                                 .withType(KUBERNETES_SWAP_SERVICE_SELECTORS.name())
                                                 .withName(Constants.KUBERNETES_SWAP_SERVICES_PRIMARY_STAGE)
+                                                .withProperties(defaultRouteUpdateProperties)
                                                 .build())
                                    .build());
 
@@ -2910,6 +2945,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     switch (orchestrationWorkflow.getOrchestrationWorkflowType()) {
       case BASIC:
       case ROLLING:
+      case BLUE_GREEN:
       case CANARY:
       case MULTI_SERVICE: {
         CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
@@ -2920,29 +2956,47 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
   }
 
-  private void validateBasicOrRollingWorkflow(Workflow workflow) {
+  private void validateOrchestrationWorkflow(Workflow workflow) {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-    if (orchestrationWorkflow != null
-        && (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)
-               || orchestrationWorkflow.getOrchestrationWorkflowType().equals(ROLLING))) {
-      if (!orchestrationWorkflow.isInfraMappingTemplatized()) {
-        notNullCheck("Invalid inframappingId", workflow.getInfraMappingId(), USER);
 
-        if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(ROLLING)) {
-          String infraMappingId = workflow.getInfraMappingId();
-          InfrastructureMapping infrastructureMapping =
-              infrastructureMappingService.get(workflow.getAppId(), infraMappingId);
-          if (infrastructureMapping == null
-              || !(InfrastructureMappingType.AWS_SSH.name().equals(infrastructureMapping.getInfraMappingType())
-                     || InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name().equals(
-                            infrastructureMapping.getInfraMappingType()))) {
-            throw new InvalidRequestException(
-                "Requested Infrastructure Type is not supported using Rolling Deployment", USER);
-          }
-        }
-      }
+    if (orchestrationWorkflow == null) {
+      return;
+    }
+
+    if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)
+        || orchestrationWorkflow.getOrchestrationWorkflowType().equals(ROLLING)
+        || orchestrationWorkflow.getOrchestrationWorkflowType().equals(BLUE_GREEN)) {
       if (!orchestrationWorkflow.isServiceTemplatized()) {
         notNullCheck("Invalid serviceId", workflow.getServiceId(), USER);
+      }
+
+      if (orchestrationWorkflow.isInfraMappingTemplatized()) {
+        return;
+      }
+
+      notNullCheck("Invalid inframappingId", workflow.getInfraMappingId(), USER);
+
+      String infraMappingId = workflow.getInfraMappingId();
+      InfrastructureMapping infrastructureMapping =
+          infrastructureMappingService.get(workflow.getAppId(), infraMappingId);
+
+      notNullCheck("Invalid inframapping", infrastructureMapping, USER);
+
+      if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(ROLLING)) {
+        if (!(InfrastructureMappingType.AWS_SSH.name().equals(infrastructureMapping.getInfraMappingType())
+                || InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name().equals(
+                       infrastructureMapping.getInfraMappingType()))) {
+          throw new InvalidRequestException(
+              "Requested Infrastructure Type is not supported using Rolling Deployment", USER);
+        }
+      } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BLUE_GREEN)) {
+        if (!(InfrastructureMappingType.DIRECT_KUBERNETES.name().equals(infrastructureMapping.getInfraMappingType())
+                || InfrastructureMappingType.GCP_KUBERNETES.name().equals(infrastructureMapping.getInfraMappingType())
+                || InfrastructureMappingType.AZURE_KUBERNETES.name().equals(
+                       infrastructureMapping.getInfraMappingType()))) {
+          throw new InvalidRequestException(
+              "Requested Infrastructure Type is not supported using Blue/Green Deployment", USER);
+        }
       }
     }
   }

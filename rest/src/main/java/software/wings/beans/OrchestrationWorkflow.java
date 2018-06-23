@@ -49,6 +49,7 @@ import java.util.regex.Matcher;
   @JsonSubTypes.Type(value = CanaryOrchestrationWorkflow.class, name = "CANARY")
   , @JsonSubTypes.Type(value = CustomOrchestrationWorkflow.class, name = "CUSTOM"),
       @JsonSubTypes.Type(value = BasicOrchestrationWorkflow.class, name = "BASIC"),
+      @JsonSubTypes.Type(value = BlueGreenOrchestrationWorkflow.class, name = "BLUE_GREEN"),
       @JsonSubTypes.Type(value = RollingOrchestrationWorkflow.class, name = "ROLLING"),
       @JsonSubTypes.Type(value = MultiServiceOrchestrationWorkflow.class, name = "MULTI_SERVICE"),
       @JsonSubTypes.Type(value = BuildWorkflow.class, name = "BUILD"),

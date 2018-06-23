@@ -12,6 +12,7 @@ import static software.wings.beans.InfrastructureMappingType.PCF_PCF;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM;
 import static software.wings.beans.OrchestrationWorkflowType.BASIC;
+import static software.wings.beans.OrchestrationWorkflowType.BLUE_GREEN;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.beans.OrchestrationWorkflowType.CANARY;
 import static software.wings.beans.OrchestrationWorkflowType.MULTI_SERVICE;
@@ -137,6 +138,7 @@ import software.wings.service.impl.yaml.handler.setting.verificationprovider.Spl
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.SumoConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.VerificationProviderYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.BasicWorkflowYamlHandler;
+import software.wings.service.impl.yaml.handler.workflow.BlueGreenWorkflowYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.BuildWorkflowYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.CanaryWorkflowYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.MultiServiceWorkflowYamlHandler;
@@ -270,6 +272,7 @@ public class YamlModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), String.class, WorkflowYamlHandler.class);
     workflowYamlHelperMapBinder.addBinding(BASIC.name()).to(BasicWorkflowYamlHandler.class);
     workflowYamlHelperMapBinder.addBinding(ROLLING.name()).to(RollingWorkflowYamlHandler.class);
+    workflowYamlHelperMapBinder.addBinding(BLUE_GREEN.name()).to(BlueGreenWorkflowYamlHandler.class);
     workflowYamlHelperMapBinder.addBinding(BUILD.name()).to(BuildWorkflowYamlHandler.class);
     workflowYamlHelperMapBinder.addBinding(CANARY.name()).to(CanaryWorkflowYamlHandler.class);
     workflowYamlHelperMapBinder.addBinding(MULTI_SERVICE.name()).to(MultiServiceWorkflowYamlHandler.class);
