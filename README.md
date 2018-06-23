@@ -11,7 +11,7 @@
 2. Install Java 8 download : 
 NOTE: Brew will download and install latest version of JDK/JRE, its recommended to install JDK/JRE_1.8.0_152 to be in sync with version everyone is using in the team.
 
-   `brew tap caskroom/versions && brew cask install java8`
+Download JDK 1.8-152 from [Java archive downloads](http://www.oracle.com/technetwork/java/javase/downloads/java-archive-javase8-2177648.html), unzip it, then set `JAVA_HOME`, and `PATH` accordingly.
 
 3. Install maven :
 
