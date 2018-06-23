@@ -23,6 +23,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
+import software.wings.utils.Misc;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -95,7 +96,7 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
       logger.warn("Timed out decrypting value", ex);
       throw new WingsException(ErrorCode.KMS_OPERATION_ERROR).addParam("reason", "Timed out decrypting value");
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, e).addParam("reason", e.getMessage());
+      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, e).addParam("reason", Misc.getMessage(e));
     }
   }
 }

@@ -234,6 +234,7 @@ import software.wings.expression.ExpressionEvaluator;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.ManagerExecutionLogCallback;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -1107,9 +1108,9 @@ public class AwsHelperService {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       return getAmazonEcsClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey()).listTasks(listTasksRequest);
     } catch (ClusterNotFoundException ex) {
-      throw new WingsException(ErrorCode.AWS_CLUSTER_NOT_FOUND).addParam("message", ex.getMessage());
+      throw new WingsException(ErrorCode.AWS_CLUSTER_NOT_FOUND).addParam("message", Misc.getMessage(ex));
     } catch (ServiceNotFoundException ex) {
-      throw new WingsException(ErrorCode.AWS_SERVICE_NOT_FOUND).addParam("message", ex.getMessage());
+      throw new WingsException(ErrorCode.AWS_SERVICE_NOT_FOUND).addParam("message", Misc.getMessage(ex));
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }

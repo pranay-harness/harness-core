@@ -13,6 +13,7 @@ import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.utils.Misc;
 
 import java.util.List;
 
@@ -47,7 +48,7 @@ public class PcfValidationCommandTaskHandler extends PcfCommandTaskHandler {
     } catch (Exception e) {
       logger.error("Exception in processing PCF validation task [{}]", pcfInfraMappingDataRequest, e);
       pcfCommandExecutionResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
-      pcfCommandExecutionResponse.setErrorMessage(e.getMessage());
+      pcfCommandExecutionResponse.setErrorMessage(Misc.getMessage(e));
     }
 
     return pcfCommandExecutionResponse;

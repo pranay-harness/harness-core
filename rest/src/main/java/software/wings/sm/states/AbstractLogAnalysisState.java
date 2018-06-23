@@ -35,6 +35,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.JsonUtils;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.UnsupportedEncodingException;
@@ -178,7 +179,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           .withAsync(true)
           .withCorrelationIds(Collections.singletonList(analysisContext.getCorrelationId()))
           .withExecutionStatus(ExecutionStatus.ERROR)
-          .withErrorMessage(ex.getMessage())
+          .withErrorMessage(Misc.getMessage(ex))
           .withStateExecutionData(executionData)
           .build();
     }

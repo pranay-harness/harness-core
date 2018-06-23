@@ -19,6 +19,7 @@ import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmReleaseHistoryCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
 import software.wings.helpers.ext.helm.response.HelmCommandResponse;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.function.Consumer;
@@ -75,7 +76,7 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
       logger.error("Exception in processing helm task [{}]", helmCommandRequest, ex);
       return HelmCommandExecutionResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-          .errorMessage(ex.getMessage())
+          .errorMessage(Misc.getMessage(ex))
           .build();
     }
 

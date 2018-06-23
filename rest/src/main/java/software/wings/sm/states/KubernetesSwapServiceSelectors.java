@@ -48,6 +48,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.KubernetesConvention;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Arrays;
@@ -88,7 +89,7 @@ public class KubernetesSwapServiceSelectors extends State {
     try {
       return executeInternal(context);
     } catch (Exception e) {
-      throw new InvalidRequestException(e.getMessage(), e);
+      throw new InvalidRequestException(Misc.getMessage(e), e);
     }
   }
 
@@ -102,7 +103,7 @@ public class KubernetesSwapServiceSelectors extends State {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new InvalidRequestException(e.getMessage(), e);
+      throw new InvalidRequestException(Misc.getMessage(e), e);
     }
   }
 

@@ -18,6 +18,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -114,7 +115,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
       return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
           .validateConfig(appDynamicsConfig);
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR).addParam("reason", e.getMessage());
+      throw new WingsException(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR).addParam("reason", Misc.getMessage(e));
     }
   }
 }

@@ -54,6 +54,7 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
@@ -130,7 +131,7 @@ public class PcfDeployState extends State {
     try {
       return executeInternal(context);
     } catch (Exception e) {
-      throw new InvalidRequestException(e.getMessage(), e);
+      throw new InvalidRequestException(Misc.getMessage(e), e);
     }
   }
 
@@ -284,7 +285,7 @@ public class PcfDeployState extends State {
     try {
       return handleAsyncInternal(context, response);
     } catch (Exception e) {
-      throw new InvalidRequestException(e.getMessage(), e);
+      throw new InvalidRequestException(Misc.getMessage(e), e);
     }
   }
 

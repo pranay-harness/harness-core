@@ -27,6 +27,7 @@ import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
 import software.wings.service.intfc.MigrationService;
 import software.wings.service.intfc.yaml.YamlGitService;
+import software.wings.utils.Misc;
 
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -125,7 +126,7 @@ public class MigrationServiceImpl implements MigrationService {
               yamlGitService.fullSync(account.getUuid(), false);
             } catch (Exception ex) {
               logger.error(
-                  "Git full sync failed for account: {}. Reason is: {}", account.getAccountName(), ex.getMessage());
+                  "Git full sync failed for account: {}. Reason is: {}", account.getAccountName(), Misc.getMessage(ex));
             }
           }
         }

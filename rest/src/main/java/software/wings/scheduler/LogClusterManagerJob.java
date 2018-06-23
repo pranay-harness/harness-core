@@ -24,6 +24,7 @@ import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.ExecutionStatus;
 import software.wings.utils.JsonUtils;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.Collections;
@@ -135,7 +136,7 @@ public class LogClusterManagerJob implements Job {
         }
       } catch (Exception ex) {
         completeCron = true;
-        throw new RuntimeException("Verification L0 => L1 cluster failed, " + ex.getMessage(), ex);
+        throw new RuntimeException("Verification L0 => L1 cluster failed, " + Misc.getMessage(ex), ex);
       } finally {
         // Delete cron.
         try {

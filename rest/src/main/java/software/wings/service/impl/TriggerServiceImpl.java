@@ -97,6 +97,7 @@ import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.CryptoUtil;
+import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 
 import java.time.Duration;
@@ -795,7 +796,8 @@ public class TriggerServiceImpl implements TriggerService {
             getCronDescription(ScheduledTriggerJob.PREFIX + scheduledTriggerCondition.getCronExpression()));
       }
     } catch (Exception ex) {
-      logger.warn("Error parsing cron expression: {}", scheduledTriggerCondition.getCronExpression(), ex.getMessage());
+      logger.warn(
+          "Error parsing cron expression: {} : {}", scheduledTriggerCondition.getCronExpression(), Misc.getMessage(ex));
       throw new WingsException(INVALID_ARGUMENT, USER).addParam("args", "Invalid cron expression");
     }
   }
@@ -806,7 +808,7 @@ public class TriggerServiceImpl implements TriggerService {
           getDescription(DescriptionTypeEnum.FULL, cronExpression, new Options(), I18nMessages.DEFAULT_LOCALE);
       return StringUtils.lowerCase("" + description.charAt(0)) + description.substring(1);
     } catch (Exception e) {
-      logger.warn("Error parsing cron expression: {} ", cronExpression, e.getMessage());
+      logger.warn("Error parsing cron expression: {} ", cronExpression, e);
       throw new WingsException(INVALID_ARGUMENT, USER).addParam("args", "Invalid cron expression");
     }
   }

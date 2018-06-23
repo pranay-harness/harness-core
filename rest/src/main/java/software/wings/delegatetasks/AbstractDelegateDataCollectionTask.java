@@ -14,6 +14,7 @@ import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollect
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.StateType;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
@@ -115,7 +116,7 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
       return DataCollectionTaskResult.builder()
           .status(DataCollectionTaskStatus.FAILURE)
           .stateType(getStateType())
-          .errorMessage("Data collection task failed : " + e.getMessage())
+          .errorMessage("Data collection task failed : " + Misc.getMessage(e))
           .build();
     }
   }

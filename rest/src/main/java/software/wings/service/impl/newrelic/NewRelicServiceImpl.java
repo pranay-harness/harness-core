@@ -32,6 +32,7 @@ import software.wings.service.intfc.prometheus.PrometheusDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.StateType;
 import software.wings.utils.CacheHelper;
+import software.wings.utils.Misc;
 
 import java.util.List;
 import javax.cache.Cache;
@@ -54,7 +55,7 @@ public class NewRelicServiceImpl implements NewRelicService {
           aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
       delegateProxyFactory.get(APMDelegateService.class, syncTaskContext).validateCollector(config);
     } catch (Exception e) {
-      String errorMsg = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
+      String errorMsg = e.getCause() != null ? Misc.getMessage(e.getCause()) : Misc.getMessage(e);
       throw new WingsException(ErrorCode.APM_CONFIGURATION_ERROR).addParam("reason", errorMsg);
     }
   }
@@ -75,7 +76,7 @@ public class NewRelicServiceImpl implements NewRelicService {
       SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
       return delegateProxyFactory.get(APMDelegateService.class, syncTaskContext).fetch(apmValidateCollectorConfig);
     } catch (Exception e) {
-      String errorMsg = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
+      String errorMsg = e.getCause() != null ? Misc.getMessage(e.getCause()) : Misc.getMessage(e);
       throw new WingsException(ErrorCode.APM_CONFIGURATION_ERROR).addParam("reason", errorMsg);
     }
   }
@@ -111,7 +112,7 @@ public class NewRelicServiceImpl implements NewRelicService {
           throw new IllegalStateException("Invalid state" + stateType);
       }
     } catch (Exception e) {
-      throw new WingsException(errorCode).addParam("reason", e.getMessage());
+      throw new WingsException(errorCode).addParam("reason", Misc.getMessage(e));
     }
   }
 
@@ -156,7 +157,7 @@ public class NewRelicServiceImpl implements NewRelicService {
 
     } catch (Exception e) {
       throw new WingsException(errorCode).addParam(
-          "message", "Error in getting new relic applications. " + e.getMessage());
+          "message", "Error in getting new relic applications. " + Misc.getMessage(e));
     }
   }
 }

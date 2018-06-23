@@ -27,6 +27,7 @@ import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.GcpHelperService;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.util.List;
@@ -79,7 +80,7 @@ public class GcrServiceImpl implements GcrService {
       checkValidImage(imageName, response);
       return processBuildResponse(response.body());
     } catch (IOException e) {
-      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, USER).addParam("message", e.getMessage());
+      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, USER).addParam("message", Misc.getMessage(e));
     }
   }
 
@@ -119,7 +120,7 @@ public class GcrServiceImpl implements GcrService {
         return validateImageName(imageName);
       }
     } catch (IOException e) {
-      logger.error(e.getMessage(), e);
+      logger.error(Misc.getMessage(e), e);
       throw new WingsException(ErrorCode.REQUEST_TIMEOUT, USER).addParam("name", "Registry server");
     }
     return true;
@@ -142,7 +143,7 @@ public class GcrServiceImpl implements GcrService {
           registryRestClient.listImageTags(basicAuthHeader, artifactStreamAttributes.getImageName()).execute();
       return isSuccessful(response);
     } catch (IOException e) {
-      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, USER).addParam("message", e.getMessage());
+      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, USER).addParam("message", Misc.getMessage(e));
     }
   }
 

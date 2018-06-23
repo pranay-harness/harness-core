@@ -15,6 +15,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlGitService;
+import software.wings.utils.Misc;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
 
 import java.util.List;
@@ -83,7 +84,7 @@ public class GitChangeSetRunnable implements Runnable {
             yamlChangeSetService.updateStatus(queuedChangeSet.getAccountId(), queuedChangeSet.getUuid(), Status.FAILED);
             stringBuilder.append(" and for changeSet: ").append(queuedChangeSet.getUuid());
           }
-          stringBuilder.append(" Reason: ").append(ex.getMessage());
+          stringBuilder.append(" Reason: ").append(Misc.getMessage(ex));
           logger.error(GIT_YAML_LOG_PREFIX + stringBuilder.toString(), ex);
         }
       });

@@ -27,6 +27,7 @@ import software.wings.service.impl.jenkins.JenkinsUtil;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.states.JenkinsState.JenkinsExecutionResponse;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
@@ -87,9 +88,9 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
         jenkinsExecutionResponse.setJobParameters(jenkinsBuildWithDetails.getParameters());
       } catch (Exception e) { // cause buildWithDetails.getParameters() can throw NPE
         // unexpected exception
-        logger.error("Error occurred while retrieving build parameters for build number {} ",
-            jenkinsBuildWithDetails.getNumber(), e.getMessage());
-        jenkinsExecutionResponse.setErrorMessage(e.getMessage());
+        logger.error("Error occurred while retrieving build parameters for build number {}",
+            jenkinsBuildWithDetails.getNumber(), e);
+        jenkinsExecutionResponse.setErrorMessage(Misc.getMessage(e));
       }
 
       if (buildResult != BuildResult.SUCCESS
@@ -99,7 +100,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
     } catch (Exception e) {
       logger.error("Error occurred while running Jenkins task", e);
       executionStatus = ExecutionStatus.FAILED;
-      jenkinsExecutionResponse.setErrorMessage(e.getMessage());
+      jenkinsExecutionResponse.setErrorMessage(Misc.getMessage(e));
     }
     jenkinsExecutionResponse.setExecutionStatus(executionStatus);
     return jenkinsExecutionResponse;
@@ -115,7 +116,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
         jenkinsBuildWithDetails = jenkinsBuild.details();
         saveConsoleLogs(jenkinsBuildWithDetails, consoleLogsSent, activityId, unitName, RUNNING);
       } catch (IOException e) {
-        logger.error("Error occurred while waiting for Job to start execution. Retrying", e.getMessage());
+        logger.error("Error occurred while waiting for Job to start execution. Retrying. {}", Misc.getMessage(e));
       }
 
     } while (jenkinsBuildWithDetails == null || jenkinsBuildWithDetails.isBuilding());

@@ -14,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.DelegateTask;
-import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
@@ -29,6 +28,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.sm.StateType;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
@@ -288,15 +288,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
               break;
             } else {
               if (retry == 1) {
-                if (ex instanceof WingsException) {
-                  if (((WingsException) ex).getParams().containsKey("reason")) {
-                    taskResult.setErrorMessage((String) ((WingsException) ex).getParams().get("reason"));
-                  } else {
-                    taskResult.setErrorMessage(ex.getMessage());
-                  }
-                } else {
-                  taskResult.setErrorMessage(ex.getMessage());
-                }
+                taskResult.setErrorMessage(Misc.getMessage(ex));
               }
               logger.warn("error fetching appdynamics metrics for minute " + dataCollectionMinute + ". retrying in "
                       + RETRY_SLEEP + "s",

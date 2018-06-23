@@ -23,6 +23,7 @@ import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.logz.LogzDelegateService;
 import software.wings.sm.StateType;
 import software.wings.utils.JsonUtils;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.time.Instant;
@@ -266,7 +267,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                    * more meaningful to trouble shoot.
                    */
                   if (retry == 1) {
-                    taskResult.setErrorMessage(e.getMessage());
+                    taskResult.setErrorMessage(Misc.getMessage(e));
                   }
                   logger.warn("error fetching elk/logz logs. retrying in " + RETRY_SLEEP + "s", e);
                   sleep(RETRY_SLEEP);

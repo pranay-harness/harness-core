@@ -45,6 +45,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.states.ManagerExecutionLogCallback;
+import software.wings.utils.Misc;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
@@ -244,7 +245,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       infrastructureMapping.applyProvisionerVariables(stringMap);
       infrastructureMappingService.update(infrastructureMapping);
     } catch (Exception e) {
-      addToExecutionLog(executionLogCallbackOptional, e.getMessage());
+      addToExecutionLog(executionLogCallbackOptional, Misc.getMessage(e));
       throw e;
     }
   }

@@ -1,7 +1,6 @@
 package software.wings.exception;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.Level.ERROR;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.stream.Collectors.joining;
@@ -13,8 +12,10 @@ import static software.wings.exception.WingsException.ReportTarget.REST_API;
 import static software.wings.exception.WingsException.ReportTarget.UNIVERSAL;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.data.structure.EmptyPredicate;
 import lombok.Getter;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage;
@@ -170,7 +171,9 @@ public class WingsException extends WingsApiException {
 
       ResponseMessage responseMessage =
           ResponseCodeCache.getInstance().rebuildMessage(exception.getResponseMessage(), exception.getParams());
-      list.add(responseMessage);
+      if (list.stream().noneMatch(msg -> StringUtils.equals(responseMessage.getMessage(), msg.getMessage()))) {
+        list.add(responseMessage);
+      }
     }
 
     return list;
@@ -237,7 +240,7 @@ public class WingsException extends WingsApiException {
     return Stream
         .of(calculateResponseMessage(responseMessages), calculateContextObjectsMessage(),
             "Exception occurred: " + getMessage())
-        .filter(s -> isNotEmpty(s))
+        .filter(EmptyPredicate::isNotEmpty)
         .collect(joining("\n"));
   }
 
@@ -247,7 +250,7 @@ public class WingsException extends WingsApiException {
 
   protected String calculateDebugMessage() {
     return Stream.of(calculateContextObjectsMessage(), "Exception occurred: " + getMessage())
-        .filter(s -> isNotEmpty(s))
+        .filter(EmptyPredicate::isNotEmpty)
         .collect(joining("\n"));
   }
 

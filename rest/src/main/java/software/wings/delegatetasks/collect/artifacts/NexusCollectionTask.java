@@ -12,6 +12,7 @@ import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.ListNotifyResponseData;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -61,7 +62,7 @@ public class NexusCollectionTask extends AbstractDelegateRunnableTask {
             fileInfo, artifactPath, res, getDelegateId(), getTaskId(), getAccountId());
       }
     } catch (Exception e) {
-      logger.warn("Exception: " + e.getMessage(), e);
+      logger.warn("Exception: " + Misc.getMessage(e), e);
       // TODO: better error handling
 
       //      if (e instanceof WingsException)

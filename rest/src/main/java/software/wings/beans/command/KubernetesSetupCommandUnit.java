@@ -379,7 +379,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
       return CommandExecutionStatus.SUCCESS;
     } catch (Exception ex) {
-      logger.error(ex.getMessage(), ex);
+      logger.error(Misc.getMessage(ex), ex);
       Misc.logAllMessages(ex, executionLogCallback);
       return CommandExecutionStatus.FAILURE;
     } finally {
@@ -1395,7 +1395,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         executionLogCallback.saveExecutionLog("Setting service:\n\n" + toDisplayYaml(service));
         return service;
       } catch (Exception e) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, e).addParam("args", e.getMessage());
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, e).addParam("args", Misc.getMessage(e));
       }
     } else {
       ServiceSpecBuilder spec =

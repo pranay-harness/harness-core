@@ -37,6 +37,7 @@ import software.wings.helpers.ext.nexus.model.IndexBrowserTreeViewResponse;
 import software.wings.helpers.ext.nexus.model.Project;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -247,7 +248,7 @@ public class NexusTwoServiceImpl {
                       new MyAuthenticator(nexusConfig.getUsername(), new String(nexusConfig.getPassword())));
                   return ImmutablePair.of(artifact.getNodeName(), new URL(resourceUrl).openStream());
                 } catch (IOException ex) {
-                  throw new InvalidRequestException(ex.getMessage(), ex);
+                  throw new InvalidRequestException(Misc.getMessage(ex), ex);
                 }
               }
             }

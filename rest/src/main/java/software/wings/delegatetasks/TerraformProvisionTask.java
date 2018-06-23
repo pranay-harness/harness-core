@@ -30,6 +30,7 @@ import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
 import software.wings.sm.ExecutionStatus;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.BufferedWriter;
@@ -80,7 +81,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       logger.error("Exception in processing git operation", ex);
       return TerraformExecutionData.builder()
           .executionStatus(ExecutionStatus.FAILED)
-          .errorMessage(ex.getMessage())
+          .errorMessage(Misc.getMessage(ex))
           .build();
     }
 
@@ -197,7 +198,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       logger.error("Exception in processing terraform operation", ex);
       return TerraformExecutionData.builder()
           .executionStatus(ExecutionStatus.FAILED)
-          .errorMessage(ex.getMessage())
+          .errorMessage(Misc.getMessage(ex))
           .build();
     }
   }

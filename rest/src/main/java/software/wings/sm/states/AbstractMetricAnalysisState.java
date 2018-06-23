@@ -33,6 +33,7 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.JsonUtils;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.UnsupportedEncodingException;
@@ -190,7 +191,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           .withAsync(true)
           .withCorrelationIds(Collections.singletonList(executionData.getCorrelationId()))
           .withExecutionStatus(ExecutionStatus.ERROR)
-          .withErrorMessage(ex.getMessage())
+          .withErrorMessage(Misc.getMessage(ex))
           .withStateExecutionData(executionData)
           .build();
     }

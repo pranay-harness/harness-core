@@ -29,6 +29,7 @@ import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.ListNotifyResponseData;
 
 import java.io.IOException;
@@ -102,10 +103,10 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
       }
       return buildDetailsList;
     } catch (WingsException e) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, ADMIN).addParam("message", e.getMessage());
+      throw new WingsException(INVALID_ARTIFACT_SERVER, ADMIN).addParam("message", Misc.getMessage(e));
     } catch (Exception e) {
       logger.error("Error occurred while retrieving artifacts from ", e);
-      throw new WingsException(INVALID_ARTIFACT_SERVER, ADMIN).addParam("message", e.getMessage());
+      throw new WingsException(INVALID_ARTIFACT_SERVER, ADMIN).addParam("message", Misc.getMessage(e));
     }
   }
 

@@ -23,6 +23,7 @@ import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
@@ -95,7 +96,7 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
       logger.error(GIT_YAML_LOG_PREFIX + "Exception in processing GitTask", ex);
       GitCommandExecutionResponseBuilder builder = GitCommandExecutionResponse.builder()
                                                        .gitCommandStatus(GitCommandStatus.FAILURE)
-                                                       .errorMessage(ex.getMessage());
+                                                       .errorMessage(Misc.getMessage(ex));
 
       if (ex instanceof WingsException
           && ((WingsException) ex).getParams().containsKey(ErrorCode.GIT_CONNECTION_ERROR.name())) {

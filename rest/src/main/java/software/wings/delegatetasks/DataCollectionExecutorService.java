@@ -6,6 +6,7 @@ import com.google.inject.name.Named;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -50,7 +51,7 @@ public class DataCollectionExecutorService {
       } catch (ExecutionException ee) {
         throw new IOException("error executing parallel task " + ee.getCause().getMessage(), ee.getCause());
       } catch (Exception e) {
-        throw new IOException("error executing parallel task " + e.getMessage(), e);
+        throw new IOException("error executing parallel task " + Misc.getMessage(e), e);
       }
     }
     logger.info("Done parallelizing callables {} ", callables.size());

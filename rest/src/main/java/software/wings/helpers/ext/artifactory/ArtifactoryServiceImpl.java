@@ -59,6 +59,7 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.ListNotifyResponseData;
 
 import java.io.InputStream;
@@ -141,7 +142,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
             repositories.put(repository.get("key").toString(), repository.get("key").toString());
           }
         } catch (Exception e) {
-          logger.warn("Failed to get repository settings for repo {}, Reason {}", repoKey, e.getMessage());
+          logger.warn("Failed to get repository settings for repo {}, Reason {}", repoKey, Misc.getMessage(e));
           // TODO : Get Settings api only works for Artifactory Pro
           repositories.put(repository.get("key").toString(), repository.get("key").toString());
         }
@@ -921,6 +922,6 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     if (e instanceof WingsException) {
       throw(WingsException) e;
     }
-    throw new WingsException(ARTIFACT_SERVER_ERROR, reportTargets, e).addParam("message", e.getMessage());
+    throw new WingsException(ARTIFACT_SERVER_ERROR, reportTargets, e).addParam("message", Misc.getMessage(e));
   }
 }

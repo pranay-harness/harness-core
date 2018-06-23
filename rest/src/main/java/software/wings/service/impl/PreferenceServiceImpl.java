@@ -16,6 +16,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.PreferenceService;
+import software.wings.utils.Misc;
 
 @Singleton
 public class PreferenceServiceImpl implements PreferenceService {
@@ -29,7 +30,7 @@ public class PreferenceServiceImpl implements PreferenceService {
     try {
       savedPreference = wingsPersistence.saveAndGet(Preference.class, preference);
     } catch (Exception e) {
-      logger.error("Exception while saving preference to DB: ", e.getMessage());
+      logger.error("Exception while saving preference to DB: ", Misc.getMessage(e));
     }
     return savedPreference;
   }

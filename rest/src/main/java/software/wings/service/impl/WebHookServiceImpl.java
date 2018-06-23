@@ -24,6 +24,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WebHookService;
 import software.wings.utils.JsonUtils;
+import software.wings.utils.Misc;
 
 import java.util.HashMap;
 import java.util.List;
@@ -109,7 +110,7 @@ public class WebHookServiceImpl implements WebHookService {
 
   private WebHookResponse constructWebhookResponse(String token, Exception ex) {
     logger.warn("WebHook call failed [%s]", token, ex);
-    return WebHookResponse.builder().error(ex.getMessage().toLowerCase()).build();
+    return WebHookResponse.builder().error(Misc.getMessage(ex).toLowerCase()).build();
   }
 
   @SuppressFBWarnings("WMI_WRONG_MAP_ITERATOR")

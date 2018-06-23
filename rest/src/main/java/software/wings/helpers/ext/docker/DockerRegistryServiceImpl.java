@@ -28,6 +28,7 @@ import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -75,7 +76,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       checkValidImage(imageName, response);
       return processBuildResponse(response.body(), dockerConfig, imageName);
     } catch (IOException e) {
-      throw new WingsException(GENERAL_ERROR, WingsException.ADMIN_SRE).addParam("message", e.getMessage());
+      throw new WingsException(GENERAL_ERROR, WingsException.ADMIN_SRE).addParam("message", Misc.getMessage(e));
     }
   }
 
@@ -150,7 +151,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       }
       return isSuccessful(response);
     } catch (IOException e) {
-      throw new WingsException(GENERAL_ERROR, USER).addParam("message", e.getMessage());
+      throw new WingsException(GENERAL_ERROR, USER).addParam("message", Misc.getMessage(e));
     }
   }
 

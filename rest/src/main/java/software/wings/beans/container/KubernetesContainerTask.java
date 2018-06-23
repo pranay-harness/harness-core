@@ -35,6 +35,7 @@ import software.wings.beans.artifact.ArtifactEnumDataProvider;
 import software.wings.exception.WingsException;
 import software.wings.stencils.EnumData;
 import software.wings.utils.KubernetesConvention;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -194,7 +195,7 @@ public class KubernetesContainerTask extends ContainerTask {
       }
       return controller;
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, e).addParam("args", e.getMessage());
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, e).addParam("args", Misc.getMessage(e));
     }
   }
 
@@ -205,7 +206,7 @@ public class KubernetesContainerTask extends ContainerTask {
           .replaceAll(DUMMY_CONTAINER_NAME, CONTAINER_NAME_PLACEHOLDER_REGEX)
           .replaceAll(DUMMY_SECRET_NAME, SECRET_NAME_PLACEHOLDER_REGEX);
     } catch (IOException e) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, e).addParam("args", e.getMessage());
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, e).addParam("args", Misc.getMessage(e));
     }
   }
 

@@ -193,7 +193,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
             success = true;
           } catch (Exception e) {
             logger.warn(
-                "Exception while getting controller {}: {}:{}", name, e.getClass().getSimpleName(), e.getMessage());
+                "Exception while getting controller {}: {}:{}", name, e.getClass().getSimpleName(), Misc.getMessage(e));
             if (e.getCause() != null) {
               logger.warn("Caused by: {}:{}", e.getCause().getClass().getSimpleName(), e.getCause().getMessage());
             }

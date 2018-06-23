@@ -164,7 +164,7 @@ public class PcfSetupState extends State {
     try {
       return executeInternal(context);
     } catch (Exception e) {
-      throw new InvalidRequestException(e.getMessage(), e);
+      throw new InvalidRequestException(Misc.getMessage(e), e);
     }
   }
 
@@ -307,7 +307,7 @@ public class PcfSetupState extends State {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new InvalidRequestException(e.getMessage(), e);
+      throw new InvalidRequestException(Misc.getMessage(e), e);
     }
   }
 

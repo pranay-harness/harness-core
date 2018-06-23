@@ -66,7 +66,7 @@ public class WingsExceptionMapperTest extends CategoryTest {
 
     InOrder inOrder = inOrder(mockLogger);
     inOrder.verify(mockLogger)
-        .error("Response message: An error has occurred. Please contact the Harness support team.\n"
+        .error("Response message: Override message\n"
                 + "Exception occurred: Override message",
             exception);
   }

@@ -21,6 +21,7 @@ import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfSetupCommandResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.utils.Misc;
 import software.wings.utils.ServiceVersionConvention;
 
 import java.io.File;
@@ -166,10 +167,10 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       logger.error(
           PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Exception in processing PCF Setup task [{}]", pcfCommandSetupRequest, e);
       executionLogCallback.saveExecutionLog("\n\n ----------  PCF Setup process failed to complete successfully");
-      executionLogCallback.saveExecutionLog("\n# Error: " + e.getMessage());
+      Misc.logAllMessages(e, executionLogCallback);
       return PcfCommandExecutionResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-          .errorMessage(e.getMessage())
+          .errorMessage(Misc.getMessage(e))
           .build();
     }
   }

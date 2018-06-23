@@ -28,6 +28,7 @@ import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.BoundedInputStream;
+import software.wings.utils.Misc;
 
 import java.io.File;
 import java.io.IOException;
@@ -53,7 +54,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
           .encrypt(name, value, accountId, settingType, vaultConfig, encryptedData);
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR).addParam("reason", e.getMessage());
+      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR).addParam("reason", Misc.getMessage(e));
     }
   }
 
@@ -64,7 +65,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
           .decrypt(data, vaultConfig);
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, e).addParam("reason", e.getMessage());
+      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, e).addParam("reason", Misc.getMessage(e));
     }
   }
 
@@ -275,7 +276,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
           .deleteVaultSecret(path, vaultConfig);
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR).addParam("reason", e.getMessage());
+      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR).addParam("reason", Misc.getMessage(e));
     }
   }
 

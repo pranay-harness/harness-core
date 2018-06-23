@@ -18,6 +18,7 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +49,7 @@ public class EcrServiceImpl implements EcrService {
         listImagesRequest.setNextToken(listImagesResult.getNextToken());
       } while (listImagesRequest.getNextToken() != null);
     } catch (Exception e) {
-      throw new WingsException(GENERAL_ERROR, ADMIN).addParam("message", e.getMessage());
+      throw new WingsException(GENERAL_ERROR, ADMIN).addParam("message", Misc.getMessage(e));
     }
     return buildDetails;
   }
