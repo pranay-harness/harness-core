@@ -10,6 +10,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.common.Constants.HARNESS_REVISION;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.KubernetesConvention.getPrefixFromControllerName;
@@ -936,6 +937,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     AtomicBoolean steadyStateCountReached = new AtomicBoolean(false);
     String namespace = kubernetesConfig.getNamespace();
     try {
+      int waitMinutes = serviceSteadyStateTimeout > 0 ? serviceSteadyStateTimeout : DEFAULT_STEADY_STATE_TIMEOUT;
       return timeLimiter.callWithTimeout(() -> {
         Set<String> seenEvents = new HashSet<>();
 
@@ -1006,7 +1008,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           }
           return pods;
         }
-      }, serviceSteadyStateTimeout, TimeUnit.MINUTES, true);
+      }, waitMinutes, TimeUnit.MINUTES, true);
     } catch (UncheckedTimeoutException e) {
       String msg = "Timed out waiting for pods to be ready";
       logger.error(msg, e);

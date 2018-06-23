@@ -1462,7 +1462,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             kubernetesContainerService.getRunningPods(kubernetesConfig, encryptedDataDetails, activeControllerName);
         List<ContainerInfo> containerInfos =
             kubernetesContainerService.getContainerInfosWhenReady(kubernetesConfig, encryptedDataDetails,
-                activeControllerName, entry.getValue(), 0, pods, false, executionLogCallback, false, clock.millis());
+                activeControllerName, entry.getValue(), 1, pods, false, executionLogCallback, false, clock.millis());
         boolean allContainersSuccess =
             containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);
         if (allContainersSuccess) {
