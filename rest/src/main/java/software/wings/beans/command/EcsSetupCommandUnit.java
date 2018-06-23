@@ -475,22 +475,18 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
   private void cleanup(SettingAttribute settingAttribute, String region, String containerServiceName,
       String clusterName, List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
     int revision = getRevisionFromServiceName(containerServiceName);
-    if (revision > KEEP_N_REVISIONS) {
-      int minRevisionToKeep = revision - KEEP_N_REVISIONS;
-      String serviceNamePrefix = getServiceNamePrefixFromServiceName(containerServiceName);
-      awsClusterService.getServices(region, settingAttribute, encryptedDataDetails, clusterName)
-          .stream()
-          .filter(s -> s.getServiceName().startsWith(serviceNamePrefix) && s.getDesiredCount() == 0)
-          .collect(toList())
-          .forEach(s -> {
-            String oldServiceName = s.getServiceName();
-            if (getRevisionFromServiceName(oldServiceName) < minRevisionToKeep) {
-              executionLogCallback.saveExecutionLog("Deleting old version: " + oldServiceName, LogLevel.INFO);
-              awsClusterService.deleteService(
-                  region, settingAttribute, encryptedDataDetails, clusterName, oldServiceName);
-            }
-          });
-    }
+    String serviceNamePrefix = getServiceNamePrefixFromServiceName(containerServiceName);
+    awsClusterService.getServices(region, settingAttribute, encryptedDataDetails, clusterName)
+        .stream()
+        .filter(s -> s.getServiceName().startsWith(serviceNamePrefix))
+        .filter(s -> getRevisionFromServiceName(s.getServiceName()) != revision)
+        .filter(s -> s.getDesiredCount() == 0)
+        .collect(toList())
+        .forEach(s -> {
+          String oldServiceName = s.getServiceName();
+          executionLogCallback.saveExecutionLog("Deleting old version: " + oldServiceName, LogLevel.INFO);
+          awsClusterService.deleteService(region, settingAttribute, encryptedDataDetails, clusterName, oldServiceName);
+        });
   }
 
   @Data

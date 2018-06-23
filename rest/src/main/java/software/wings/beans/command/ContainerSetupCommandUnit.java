@@ -19,8 +19,6 @@ import java.util.Map;
  * Created by brett on 11/18/17
  */
 public abstract class ContainerSetupCommandUnit extends AbstractCommandUnit {
-  static final int KEEP_N_REVISIONS = 3;
-
   @Inject @Transient private transient DelegateLogService logService;
 
   static List<String[]> integerMapToListOfStringArray(Map<String, Integer> integerMap) {
