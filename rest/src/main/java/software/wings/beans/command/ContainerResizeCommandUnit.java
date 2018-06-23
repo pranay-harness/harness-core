@@ -30,6 +30,7 @@ import software.wings.utils.Misc;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -237,7 +238,6 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
     }
   }
 
-  @SuppressFBWarnings("WMI_WRONG_MAP_ITERATOR")
   private List<ContainerServiceData> getOldInstanceData(ContextData contextData, ContainerServiceData newServiceData) {
     List<ContainerServiceData> oldInstanceData = new ArrayList<>();
     Map<String, Integer> previousCounts = getActiveServiceCounts(contextData);
@@ -254,9 +254,10 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
     int targetOldInstances = runningOldInstances - downsizeCount;
     double oldInstanceTrafficShare = 100.0 - newServiceData.getDesiredTraffic();
 
-    for (String serviceName : previousCounts.keySet()) {
+    for (Entry<String, Integer> entry : previousCounts.entrySet()) {
+      String serviceName = entry.getKey();
       String previousImage = previousImages.get(serviceName);
-      int previousCount = previousCounts.get(serviceName);
+      int previousCount = entry.getValue();
       int desiredCount = Math.max(previousCount - downsizeCount, 0);
       int previousTraffic = Optional.ofNullable(previousTrafficWeights.get(serviceName)).orElse(0);
       int desiredTraffic = (int) Math.round((desiredCount * oldInstanceTrafficShare) / targetOldInstances);

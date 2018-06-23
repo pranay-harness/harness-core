@@ -88,6 +88,9 @@ public class EcsServiceSetup extends ContainerServiceSetup {
       }
     }
 
+    int serviceSteadyStateTimeout =
+        getServiceSteadyStateTimeout() > 0 ? getServiceSteadyStateTimeout() : DEFAULT_STEADY_STATE_TIMEOUT;
+
     EcsInfrastructureMapping ecsInfrastructureMapping = (EcsInfrastructureMapping) infrastructureMapping;
     return anEcsSetupParams()
         .withAppName(app.getName())
@@ -111,6 +114,7 @@ public class EcsServiceSetup extends ContainerServiceSetup {
         .withLaunchType(ecsInfrastructureMapping.getLaunchType())
         .withTargetContainerName(targetContainerName)
         .withTargetPort(targetPort)
+        .withServiceSteadyStateTimeout(serviceSteadyStateTimeout)
         .build();
   }
 

@@ -7,7 +7,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.utils.EcsConvention.getRevisionFromServiceName;
 import static software.wings.utils.EcsConvention.getServiceNamePrefixFromServiceName;
 
 import com.google.common.collect.HashMultimap;
@@ -41,12 +40,15 @@ import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ContainerSetupCommandUnitExecutionData.ContainerSetupCommandUnitExecutionDataBuilder;
 import software.wings.beans.container.EcsContainerTask;
+import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.aws.AwsClusterService;
+import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.EcsConvention;
@@ -59,6 +61,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -70,6 +73,7 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
   public static final String ERROR = "Error: ";
 
   @Inject @Transient private transient AwsClusterService awsClusterService;
+  @Inject @Transient private transient EcsContainerService ecsContainerService;
 
   public EcsSetupCommandUnit() {
     super(CommandUnitType.ECS_SETUP);
@@ -120,7 +124,8 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
       awsClusterService.createService(
           setupParams.getRegion(), cloudProviderSetting, encryptedDataDetails, createServiceRequest);
 
-      executionLogCallback.saveExecutionLog("Cleaning up old versions", LogLevel.INFO);
+      downsizeOldOrUnhealthy(
+          cloudProviderSetting, setupParams, containerServiceName, encryptedDataDetails, executionLogCallback);
       cleanup(cloudProviderSetting, setupParams.getRegion(), containerServiceName, setupParams.getClusterName(),
           encryptedDataDetails, executionLogCallback);
 
@@ -469,19 +474,50 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
     return false;
   }
 
+  private void downsizeOldOrUnhealthy(SettingAttribute settingAttribute, EcsSetupParams setupParams,
+      String containerServiceName, List<EncryptedDataDetail> encryptedDataDetails,
+      ExecutionLogCallback executionLogCallback) {
+    Map<String, Integer> activeCounts = awsClusterService.getActiveServiceCounts(setupParams.getRegion(),
+        settingAttribute, encryptedDataDetails, setupParams.getClusterName(), containerServiceName);
+    String latestHealthyController = null;
+    if (activeCounts.size() > 1) {
+      executionLogCallback.saveExecutionLog("\nActive tasks:");
+      for (Entry<String, Integer> entry : activeCounts.entrySet()) {
+        String activeServiceName = entry.getKey();
+        List<ContainerInfo> containerInfos = ecsContainerService.getContainerInfosAfterEcsWait(setupParams.getRegion(),
+            (AwsConfig) settingAttribute.getValue(), encryptedDataDetails, setupParams.getClusterName(),
+            activeServiceName, executionLogCallback, false);
+        boolean allContainersSuccess =
+            containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);
+        if (allContainersSuccess) {
+          latestHealthyController = activeServiceName;
+        }
+      }
+
+      for (Entry<String, Integer> entry : activeCounts.entrySet()) {
+        String serviceName = entry.getKey();
+        if (!serviceName.equals(latestHealthyController)) {
+          executionLogCallback.saveExecutionLog("");
+          awsClusterService.resizeCluster(setupParams.getRegion(), settingAttribute, encryptedDataDetails,
+              setupParams.getClusterName(), serviceName, entry.getValue(), 0,
+              setupParams.getServiceSteadyStateTimeout(), executionLogCallback);
+        }
+      }
+    }
+  }
+
   /**
    * Delete all older service with desiredCount as 0 while keeping only recent "minRevisionToKeep" no of services
    */
   private void cleanup(SettingAttribute settingAttribute, String region, String containerServiceName,
       String clusterName, List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
-    int revision = getRevisionFromServiceName(containerServiceName);
+    executionLogCallback.saveExecutionLog("\nCleaning versions with no tasks", LogLevel.INFO);
     String serviceNamePrefix = getServiceNamePrefixFromServiceName(containerServiceName);
     awsClusterService.getServices(region, settingAttribute, encryptedDataDetails, clusterName)
         .stream()
         .filter(s -> s.getServiceName().startsWith(serviceNamePrefix))
-        .filter(s -> getRevisionFromServiceName(s.getServiceName()) != revision)
+        .filter(s -> !s.getServiceName().equals(containerServiceName))
         .filter(s -> s.getDesiredCount() == 0)
-        .collect(toList())
         .forEach(s -> {
           String oldServiceName = s.getServiceName();
           executionLogCallback.saveExecutionLog("Deleting old version: " + oldServiceName, LogLevel.INFO);
