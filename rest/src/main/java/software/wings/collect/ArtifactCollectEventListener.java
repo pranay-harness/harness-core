@@ -39,6 +39,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 /**
@@ -84,7 +85,7 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
       delegateService.queueTask(delegateTask);
 
     } catch (Exception ex) {
-      logger.error("Failed to collect artifact. Reason {}", ex.getMessage(), ex);
+      logger.error("Failed to collect artifact. Reason {}", Misc.getMessage(ex), ex);
       artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.FAILED, ContentStatus.FAILED);
       eventEmitter.send(Channel.ARTIFACTS,
           anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.getAppId()).build());

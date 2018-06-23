@@ -80,6 +80,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
+import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -344,7 +345,7 @@ public class AwsAmiServiceDeployState extends State {
     } catch (Exception ex) {
       logger.error("Ami deploy step failed with error ", ex);
       executionStatus = ExecutionStatus.FAILED;
-      errorMessage = ex.getMessage();
+      errorMessage = Misc.getMessage(ex);
       executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
     }
 

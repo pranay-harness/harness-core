@@ -18,6 +18,7 @@ import software.wings.helpers.ext.pcf.request.PcfCommandRouteUpdateRequest;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfCommandResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.utils.Misc;
 
 import java.util.List;
 
@@ -66,8 +67,8 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
     } catch (Exception e) {
       logger.error("Exception in processing PCF Route Update task [{}]", e);
       executionLogCallback.saveExecutionLog("\n\n--------- PCF Route Update failed to complete successfully");
-      executionLogCallback.saveExecutionLog("# Error: " + e.getMessage());
-      pcfCommandResponse.setOutput(e.getMessage());
+      Misc.logAllMessages(e, executionLogCallback);
+      pcfCommandResponse.setOutput(Misc.getMessage(e));
       pcfCommandResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
     }
 

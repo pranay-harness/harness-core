@@ -50,8 +50,7 @@ public class ResponseCodeCache {
 
   public ResponseMessage rebuildMessage(ResponseMessage inputMessage, Map<String, Object> params) {
     if (isNotEmpty(inputMessage.getMessage())) {
-      logger.error(
-          MessageFormat.format("The provided response message \"{0}\" will be overridden!", inputMessage.getMessage()));
+      return inputMessage;
     }
 
     return aResponseMessage()

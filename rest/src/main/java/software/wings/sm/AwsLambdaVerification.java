@@ -27,6 +27,7 @@ import software.wings.beans.LambdaTestEvent;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.utils.LambdaConvention;
+import software.wings.utils.Misc;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -104,7 +105,7 @@ public class AwsLambdaVerification extends State {
       }
     } catch (Exception ex) {
       logger.error("Exception in verifying lambda", ex);
-      errorMessage = ex.getMessage();
+      errorMessage = Misc.getMessage(ex);
       awsLambdaExecutionData.setErrorMsg(errorMessage);
       executionStatus = ExecutionStatus.FAILED;
     }

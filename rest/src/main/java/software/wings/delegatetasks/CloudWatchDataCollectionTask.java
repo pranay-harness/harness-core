@@ -33,6 +33,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.StateType;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
@@ -151,15 +152,7 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
               break;
             } else {
               if (retry == 1) {
-                if (ex instanceof WingsException) {
-                  if (((WingsException) ex).getParams().containsKey("reason")) {
-                    taskResult.setErrorMessage((String) ((WingsException) ex).getParams().get("reason"));
-                  } else {
-                    taskResult.setErrorMessage(ex.getMessage());
-                  }
-                } else {
-                  taskResult.setErrorMessage(ex.getMessage());
-                }
+                taskResult.setErrorMessage(Misc.getMessage(ex));
               }
               logger.warn("error fetching cloud watch metrics for minute " + dataCollectionMinute + ". retrying in "
                       + RETRY_SLEEP + "s",

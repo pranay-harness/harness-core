@@ -14,6 +14,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.sm.ContextElement;
+import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -102,7 +103,7 @@ public interface PartitionProcessor {
               + "percentages:" + Arrays.toString(percentages) + ", counts:" + Arrays.toString(counts));
         }
       } catch (Exception e) {
-        log().error(e.getMessage(), e);
+        log().error(Misc.getMessage(e), e);
         throw new InvalidRequestException("Incorrect partition expressions- breakdowns:" + Arrays.toString(breakdowns)
                 + "percentages:" + Arrays.toString(percentages) + ", counts:" + Arrays.toString(counts),
             e);

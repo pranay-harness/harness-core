@@ -17,6 +17,7 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.utils.Misc;
 
 import java.util.List;
 
@@ -37,7 +38,7 @@ public class AcrServiceImpl implements AcrService {
     try {
       return azureHelperService.listContainerRegistries(config, encryptionDetails, subscriptionId);
     } catch (Exception e) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", e.getMessage());
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", Misc.getMessage(e));
     }
   }
 
@@ -52,7 +53,7 @@ public class AcrServiceImpl implements AcrService {
           .map(tag -> aBuildDetails().withNumber(tag).build())
           .collect(toList());
     } catch (Exception e) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, ADMIN).addParam("message", e.getMessage());
+      throw new WingsException(INVALID_ARTIFACT_SERVER, ADMIN).addParam("message", Misc.getMessage(e));
     }
   }
 

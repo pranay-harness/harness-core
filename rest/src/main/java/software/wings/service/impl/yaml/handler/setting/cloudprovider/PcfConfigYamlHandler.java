@@ -7,6 +7,7 @@ import software.wings.beans.PcfConfig.Yaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
+import software.wings.utils.Misc;
 
 import java.util.List;
 
@@ -35,7 +36,7 @@ public class PcfConfigYamlHandler extends CloudProviderYamlHandler<Yaml, PcfConf
       decryptedPassword = secretManager.decryptYamlRef(yaml.getPassword());
     } catch (Exception e) {
       throw new HarnessException(
-          "Exception while decrypting the password ref:" + yaml.getPassword() + ", " + e.getMessage());
+          "Exception while decrypting the password ref:" + yaml.getPassword() + ", " + Misc.getMessage(e));
     }
 
     PcfConfig config = PcfConfig.builder()

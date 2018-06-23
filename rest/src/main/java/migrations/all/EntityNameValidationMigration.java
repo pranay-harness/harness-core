@@ -27,6 +27,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.Command;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
+import software.wings.utils.Misc;
 
 import java.util.List;
 import java.util.Set;
@@ -140,7 +141,7 @@ public abstract class EntityNameValidationMigration implements Migration {
         migrateCommandsOfApplication(application.getUuid());
         logger.info("Done with Application: " + application.getUuid());
       } catch (Exception ex) {
-        logger.error("Exception: " + ex.getMessage() + " while migrating App: " + application.getUuid(), ex);
+        logger.error("Exception: " + Misc.getMessage(ex) + " while migrating App: " + application.getUuid(), ex);
       }
     });
     logger.info("Done with Account: " + accountId);
@@ -191,7 +192,8 @@ public abstract class EntityNameValidationMigration implements Migration {
         logger.info("Done migrating Setting Attribute: " + attribute.getUuid());
       } catch (Exception ex) {
         logger.error(
-            "Exception: " + ex.getMessage() + " while migrating Setting Attribute of id: " + attribute.getUuid(), ex);
+            "Exception: " + Misc.getMessage(ex) + " while migrating Setting Attribute of id: " + attribute.getUuid(),
+            ex);
       }
     });
     logger.info("Done with Setting Attributes of Account: " + accountId);
@@ -228,7 +230,7 @@ public abstract class EntityNameValidationMigration implements Migration {
         migrateArtifactStreamsOfService(service.getUuid(), appId);
         logger.info("Done with Service: " + service.getUuid());
       } catch (Exception ex) {
-        logger.error("Exception: " + ex.getMessage() + " while migrating service: " + service.getUuid(), ex);
+        logger.error("Exception: " + Misc.getMessage(ex) + " while migrating service: " + service.getUuid(), ex);
       }
     });
   }
@@ -268,7 +270,7 @@ public abstract class EntityNameValidationMigration implements Migration {
         logger.info("Done with Artifact Stream: " + artifactStream.getUuid());
       } catch (Exception ex) {
         logger.error(
-            "Exception: " + ex.getMessage() + " while migrating artifact stream: " + artifactStream.getUuid(), ex);
+            "Exception: " + Misc.getMessage(ex) + " while migrating artifact stream: " + artifactStream.getUuid(), ex);
       }
     });
   }
@@ -304,7 +306,8 @@ public abstract class EntityNameValidationMigration implements Migration {
         migrateInfrastructureMappingOfEnvironment(environment.getUuid(), appId);
         logger.info("Done with Environment: " + environment.getUuid());
       } catch (Exception ex) {
-        logger.error("Exception: " + ex.getMessage() + " while migrating environment: " + environment.getUuid(), ex);
+        logger.error(
+            "Exception: " + Misc.getMessage(ex) + " while migrating environment: " + environment.getUuid(), ex);
       }
     });
   }
@@ -345,7 +348,8 @@ public abstract class EntityNameValidationMigration implements Migration {
         logger.info("Done with Infrastructure Mapping: " + infrastructureMapping.getUuid());
       } catch (Exception ex) {
         logger.error(
-            "Exception: " + ex.getMessage() + " while migrating Infra mapping: " + infrastructureMapping.getUuid(), ex);
+            "Exception: " + Misc.getMessage(ex) + " while migrating Infra mapping: " + infrastructureMapping.getUuid(),
+            ex);
       }
     });
   }
@@ -363,7 +367,7 @@ public abstract class EntityNameValidationMigration implements Migration {
         }
         logger.info("Done with workflow: " + workflow.getUuid());
       } catch (Exception ex) {
-        logger.error("Exception: " + ex.getMessage() + " while migrating workflow: " + workflow.getUuid());
+        logger.error("Exception: " + Misc.getMessage(ex) + " while migrating workflow: " + workflow.getUuid());
       }
     });
   }
@@ -381,7 +385,7 @@ public abstract class EntityNameValidationMigration implements Migration {
         }
         logger.info("Done with pipeline: " + pipeline.getUuid());
       } catch (Exception ex) {
-        logger.error("Exception: " + ex.getMessage() + " while migrating pipeline: " + pipeline.getName());
+        logger.error("Exception: " + Misc.getMessage(ex) + " while migrating pipeline: " + pipeline.getName());
       }
     });
   }
@@ -399,7 +403,7 @@ public abstract class EntityNameValidationMigration implements Migration {
         }
         logger.info("Done with Command: " + command.getUuid());
       } catch (Exception ex) {
-        logger.error("Exception: " + ex.getMessage() + " while migrating command:" + command.getUuid(), ex);
+        logger.error("Exception: " + Misc.getMessage(ex) + " while migrating command:" + command.getUuid(), ex);
       }
     });
   }

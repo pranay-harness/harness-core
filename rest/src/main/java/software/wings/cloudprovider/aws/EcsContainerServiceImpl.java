@@ -73,6 +73,7 @@ import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.utils.JsonUtils;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -897,7 +898,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     try {
       createServiceRequest = mapper.readValue(serviceDefinition, CreateServiceRequest.class);
     } catch (IOException ex) {
-      throw new InvalidRequestException(ex.getMessage(), ex);
+      throw new InvalidRequestException(Misc.getMessage(ex), ex);
     }
     logger.info("Begin service deployment " + createServiceRequest.getServiceName());
     CreateServiceResult createServiceResult =
@@ -996,7 +997,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       return getContainerInfosAfterEcsWait(region, awsConfig, encryptedDataDetails, clusterName, serviceName,
           executionLogCallback, desiredCount <= previousCount);
     } catch (Exception ex) {
-      throw new InvalidRequestException(ex.getMessage(), ex);
+      throw new InvalidRequestException(Misc.getMessage(ex), ex);
     }
   }
 
@@ -1157,7 +1158,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                                    .status(Status.SUCCESS)
                                    .build());
           } catch (Exception e) {
-            throw new InvalidRequestException(e.getMessage(), e);
+            throw new InvalidRequestException(Misc.getMessage(e), e);
           }
         } else {
           logger.warn("Could not connect to {}", uri);
@@ -1244,7 +1245,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
         executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
         throw new InvalidRequestException(msg, e);
       }
-      throw new InvalidRequestException(e.getMessage(), e);
+      throw new InvalidRequestException(Misc.getMessage(e), e);
     }
   }
 

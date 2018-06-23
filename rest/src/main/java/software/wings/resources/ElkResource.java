@@ -20,6 +20,7 @@ import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.sm.StateType;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.util.List;
@@ -97,7 +98,7 @@ public class ElkResource implements LogAnalysisResource {
           .toElasticSearchJsonObject();
       return new RestResponse<>(true);
     } catch (Exception ex) {
-      throw new WingsException(ErrorCode.ELK_CONFIGURATION_ERROR).addParam("reason", ex.getMessage());
+      throw new WingsException(ErrorCode.ELK_CONFIGURATION_ERROR).addParam("reason", Misc.getMessage(ex));
     }
   }
 }

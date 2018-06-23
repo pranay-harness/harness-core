@@ -31,6 +31,7 @@ import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.BoundedInputStream;
+import software.wings.utils.Misc;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -60,7 +61,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
           .encrypt(accountId, value, kmsConfig);
     } catch (Exception e) {
       logger.error("Error while encrypting: ", e);
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR).addParam("reason", e.getMessage());
+      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR).addParam("reason", Misc.getMessage(e));
     }
   }
 
@@ -74,7 +75,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext).decrypt(data, kmsConfig);
     } catch (Exception e) {
       logger.error("Error while decrypting: ", e);
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR).addParam("reason", e.getMessage());
+      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR).addParam("reason", Misc.getMessage(e));
     }
   }
 

@@ -14,6 +14,7 @@ import software.wings.delegatetasks.cloudformation.cloudformationtaskhandler.Clo
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCommandRequest;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandExecutionResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
@@ -63,7 +64,7 @@ public class CloudFormationCommandTask extends AbstractDelegateRunnableTask {
       logger.error("Exception in processing cloud formation task [{}]", request, ex);
       return CloudFormationCommandExecutionResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-          .errorMessage(ex.getMessage())
+          .errorMessage(Misc.getMessage(ex))
           .build();
     }
   }

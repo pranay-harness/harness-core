@@ -158,7 +158,7 @@ public class EmailStateTest extends WingsBaseTest {
     assertThat(executionResponse.getStateExecutionData())
         .isInstanceOf(EmailStateExecutionData.class)
         .isEqualTo(expected.but().build());
-    assertThat(executionResponse.getErrorMessage()).isNotNull().isEqualTo("Test exception");
+    assertThat(executionResponse.getErrorMessage()).isNotNull().isEqualTo("RuntimeException: Test exception");
 
     verify(emailNotificationService).send(emailData);
   }
@@ -181,7 +181,7 @@ public class EmailStateTest extends WingsBaseTest {
     assertThat(executionResponse.getStateExecutionData())
         .isInstanceOf(EmailStateExecutionData.class)
         .isEqualTo(expected.but().build());
-    assertThat(executionResponse.getErrorMessage()).isNotNull().isEqualTo("Test exception");
+    assertThat(executionResponse.getErrorMessage()).isNotNull().isEqualTo("RuntimeException: Test exception");
 
     verify(emailNotificationService).send(emailData);
   }

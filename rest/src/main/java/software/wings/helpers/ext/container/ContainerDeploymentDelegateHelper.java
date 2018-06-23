@@ -35,6 +35,7 @@ import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.utils.Misc;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -82,7 +83,7 @@ public class ContainerDeploymentDelegateHelper {
         return file.getAbsolutePath();
       }
     } catch (Exception e) {
-      throw new InvalidRequestException(e.getMessage(), e);
+      throw new InvalidRequestException(Misc.getMessage(e), e);
     }
   }
 
@@ -128,7 +129,7 @@ public class ContainerDeploymentDelegateHelper {
       encryptionService.decrypt(kubernetesConfig, containerServiceParam.getEncryptionDetails());
       return getConfigFileContent(kubernetesConfig);
     } catch (Exception e) {
-      throw new InvalidRequestException(e.getMessage(), e);
+      throw new InvalidRequestException(Misc.getMessage(e), e);
     }
   }
 

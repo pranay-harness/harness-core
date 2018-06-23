@@ -11,6 +11,7 @@ import software.wings.beans.PrometheusConfig;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.prometheus.PrometheusRestClient;
 import software.wings.service.intfc.prometheus.PrometheusDelegateService;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 
@@ -33,7 +34,7 @@ public class PrometheusDelegateServiceImpl implements PrometheusDelegateService 
         throw new WingsException(response.errorBody().string());
       }
     } catch (Exception e) {
-      throw new WingsException("Could not validate prometheus server. " + e.getMessage(), e);
+      throw new WingsException("Could not validate prometheus server. " + Misc.getMessage(e), e);
     }
   }
 

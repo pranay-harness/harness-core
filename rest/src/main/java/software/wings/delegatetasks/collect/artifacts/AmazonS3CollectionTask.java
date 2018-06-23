@@ -10,6 +10,7 @@ import software.wings.beans.DelegateTask;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.helpers.ext.amazons3.AmazonS3Service;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.ListNotifyResponseData;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -51,7 +52,7 @@ public class AmazonS3CollectionTask extends AbstractDelegateRunnableTask {
       amazonS3Service.downloadArtifacts(
           awsConfig, encryptionDetails, bucketName, artifactPaths, getDelegateId(), getTaskId(), getAccountId());
     } catch (Exception e) {
-      logger.error("Exception occurred while collecting S3 artifacts" + e.getMessage(), e);
+      logger.error("Exception occurred while collecting S3 artifacts {}", Misc.getMessage(e), e);
       // TODO: Change list
     } finally {
       IOUtils.closeQuietly(in);

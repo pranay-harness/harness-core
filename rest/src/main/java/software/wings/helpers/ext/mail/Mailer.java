@@ -113,10 +113,10 @@ public class Mailer {
 
       email.send();
     } catch (EmailException | IOException e) {
-      logger.warn("Failed to send email. Reason: " + e.getMessage());
+      logger.warn("Failed to send email. Reason: " + Misc.getMessage(e));
       throw new WingsException(ErrorCode.EMAIL_FAILED, e);
     } catch (TemplateException e) {
-      logger.warn("Failed to parse email template . Reason: " + e.getMessage());
+      logger.warn("Failed to parse email template . Reason: " + Misc.getMessage(e));
       throw new WingsException(ErrorCode.EMAIL_FAILED, e);
     }
   }

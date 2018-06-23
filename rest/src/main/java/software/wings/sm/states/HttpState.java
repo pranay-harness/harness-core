@@ -48,6 +48,7 @@ import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.ErrorNotifyResponseData;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -351,7 +352,7 @@ public class HttpState extends State {
             logger.info("assertion status: {}", assertionStatus);
 
           } catch (ClassCastException e) {
-            logger.error("Invalid assertion " + e.getMessage(), e);
+            logger.error("Invalid assertion " + Misc.getMessage(e), e);
             executionData.setErrorMsg(ASSERTION_ERROR_MSG);
           } catch (JexlException e) {
             logger.error("Error in httpStateAssertion", e);

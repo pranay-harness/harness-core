@@ -87,6 +87,7 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.settings.UsageRestrictions.AppEnvRestriction;
 import software.wings.utils.CacheHelper;
+import software.wings.utils.Misc;
 import software.wings.utils.validation.Create;
 
 import java.util.Collection;
@@ -133,7 +134,7 @@ public class SettingsServiceImpl implements SettingsService {
           .build();
 
     } catch (Exception e) {
-      throw new InvalidRequestException(e.getMessage(), e);
+      throw new InvalidRequestException(Misc.getMessage(e), e);
     }
   }
 
@@ -282,7 +283,7 @@ public class SettingsServiceImpl implements SettingsService {
     try {
       return new ValidationResult(settingValidationService.validate(settingAttribute), "");
     } catch (Exception ex) {
-      return new ValidationResult(false, ex.getMessage());
+      return new ValidationResult(false, Misc.getMessage(ex));
     }
   }
 

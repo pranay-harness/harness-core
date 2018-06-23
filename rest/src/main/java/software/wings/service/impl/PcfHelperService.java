@@ -26,6 +26,7 @@ import software.wings.helpers.ext.pcf.response.PcfInstanceSyncResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.utils.Misc;
 
 import java.util.Collections;
 import java.util.List;
@@ -63,7 +64,7 @@ public class PcfHelperService {
     } catch (InterruptedException e) {
       pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder()
                                         .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-                                        .errorMessage(e.getMessage())
+                                        .errorMessage(Misc.getMessage(e))
                                         .build();
     }
 
@@ -159,7 +160,7 @@ public class PcfHelperService {
     } catch (InterruptedException e) {
       pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder()
                                         .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-                                        .errorMessage(e.getMessage())
+                                        .errorMessage(Misc.getMessage(e))
                                         .build();
     }
 
@@ -193,7 +194,7 @@ public class PcfHelperService {
     } catch (InterruptedException e) {
       pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder()
                                         .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-                                        .errorMessage(e.getMessage())
+                                        .errorMessage(Misc.getMessage(e))
                                         .build();
     }
 
@@ -228,7 +229,7 @@ public class PcfHelperService {
     } catch (InterruptedException e) {
       pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder()
                                         .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-                                        .errorMessage(e.getMessage())
+                                        .errorMessage(Misc.getMessage(e))
                                         .build();
     }
 

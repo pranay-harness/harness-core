@@ -9,6 +9,7 @@ import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.helpers.ext.artifactory.ArtifactoryService;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.ListNotifyResponseData;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -49,8 +50,8 @@ public class ArtifactoryCollectionTask extends AbstractDelegateRunnableTask {
       return artifactoryService.downloadArtifacts(artifactoryConfig, encryptedDataDetails, repoType, groupId,
           artifactPaths, artifactPattern, metadata, getDelegateId(), getTaskId(), getAccountId());
     } catch (Exception e) {
-      logger.warn("Exception occurred while collecting artifact for artifact server {}  " + e.getMessage(),
-          artifactoryConfig.getArtifactoryUrl(), e);
+      logger.warn("Exception occurred while collecting artifact for artifact server {} : {}",
+          artifactoryConfig.getArtifactoryUrl(), Misc.getMessage(e), e);
     }
     return new ListNotifyResponseData();
   }

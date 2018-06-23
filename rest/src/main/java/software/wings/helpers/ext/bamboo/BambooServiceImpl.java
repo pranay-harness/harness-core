@@ -34,6 +34,7 @@ import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -99,7 +100,7 @@ public class BambooServiceImpl implements BambooService {
       if (response != null && !response.isSuccessful()) {
         IOUtils.closeQuietly(response.errorBody());
       }
-      throw new WingsException(ARTIFACT_SERVER_ERROR, USER).addParam("message", ex.getMessage());
+      throw new WingsException(ARTIFACT_SERVER_ERROR, USER).addParam("message", Misc.getMessage(ex));
     }
   }
 
@@ -186,7 +187,7 @@ public class BambooServiceImpl implements BambooService {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new WingsException(UNKNOWN_ERROR, e.getMessage(), e);
+      throw new WingsException(UNKNOWN_ERROR, Misc.getMessage(e), e);
     }
   }
 
@@ -249,7 +250,7 @@ public class BambooServiceImpl implements BambooService {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new WingsException(UNKNOWN_ERROR, e.getMessage(), e);
+      throw new WingsException(UNKNOWN_ERROR, Misc.getMessage(e), e);
     }
   }
 
@@ -276,7 +277,7 @@ public class BambooServiceImpl implements BambooService {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new WingsException(UNKNOWN_ERROR, e.getMessage(), e);
+      throw new WingsException(UNKNOWN_ERROR, Misc.getMessage(e), e);
     }
   }
 

@@ -1,5 +1,7 @@
 package software.wings.delegatetasks.pcf.pcftaskhandler;
 
+import static java.util.Collections.emptyList;
+
 import com.google.inject.Singleton;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -17,8 +19,8 @@ import software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfInfraMappingDataResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.utils.Misc;
 
-import java.util.Collections;
 import java.util.List;
 
 @NoArgsConstructor
@@ -28,9 +30,6 @@ public class PcfDataFetchCommandTaskHandler extends PcfCommandTaskHandler {
 
   /**
    * Fetches Organization, Spaces, RouteMap data
-   * @param pcfCommandRequest
-   * @param encryptedDataDetails
-   * @return
    */
   @SuppressFBWarnings("BC_UNCONFIRMED_CAST")
   public PcfCommandExecutionResponse executeTaskInternal(
@@ -56,11 +55,11 @@ public class PcfDataFetchCommandTaskHandler extends PcfCommandTaskHandler {
       pcfInfraMappingDataResponse.setOutput(StringUtils.EMPTY);
     } catch (Exception e) {
       logger.error("Exception in processing PCF DataFetch task [{}]", e);
-      pcfInfraMappingDataResponse.setOrganizations(Collections.EMPTY_LIST);
-      pcfInfraMappingDataResponse.setSpaces(Collections.EMPTY_LIST);
-      pcfInfraMappingDataResponse.setRouteMaps(Collections.EMPTY_LIST);
+      pcfInfraMappingDataResponse.setOrganizations(emptyList());
+      pcfInfraMappingDataResponse.setSpaces(emptyList());
+      pcfInfraMappingDataResponse.setRouteMaps(emptyList());
       pcfInfraMappingDataResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
-      pcfInfraMappingDataResponse.setOutput(e.getMessage());
+      pcfInfraMappingDataResponse.setOutput(Misc.getMessage(e));
     }
 
     pcfCommandExecutionResponse.setCommandExecutionStatus(pcfInfraMappingDataResponse.getCommandExecutionStatus());

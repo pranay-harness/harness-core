@@ -25,6 +25,7 @@ import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandE
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse.CloudFormationCreateStackResponseBuilder;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.utils.Misc;
 
 import java.util.List;
 import java.util.Optional;
@@ -89,7 +90,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
       }
     } catch (Exception ex) {
       String errorMessage =
-          String.format("# Exception: %s while Updating stack: %s", ex.getMessage(), stack.getStackName());
+          String.format("# Exception: %s while Updating stack: %s", Misc.getMessage(ex), stack.getStackName());
       executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
       builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
     }
@@ -130,7 +131,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
         }
       }
     } catch (Exception ex) {
-      String errorMessage = String.format("Exception: %s while creating stack: %s", ex.getMessage(), stackName);
+      String errorMessage = String.format("Exception: %s while creating stack: %s", Misc.getMessage(ex), stackName);
       executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
       builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
     }

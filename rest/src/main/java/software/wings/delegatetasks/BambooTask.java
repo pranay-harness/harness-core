@@ -49,7 +49,7 @@ public class BambooTask extends AbstractDelegateRunnableTask {
       bambooExecutionResponse = run((BambooConfig) parameters[0], (List<EncryptedDataDetail>) parameters[1],
           (String) parameters[2], (List<ParameterEntry>) parameters[3], (List<FilePathAssertionEntry>) parameters[4]);
     } catch (Exception e) {
-      logger.warn("Failed to execute Bamboo verification task: " + e.getMessage(), e);
+      logger.warn("Failed to execute Bamboo verification task: " + Misc.getMessage(e), e);
       bambooExecutionResponse.setExecutionStatus(ExecutionStatus.FAILED);
     }
     logger.info("Bamboo task  completed");
@@ -91,7 +91,7 @@ public class BambooTask extends AbstractDelegateRunnableTask {
         bambooExecutionResponse.setParameters(parameterEntries);
       }
     } catch (Exception e) {
-      logger.warn("Failed to execute Bamboo verification task: " + e.getMessage(), e);
+      logger.warn("Failed to execute Bamboo verification task: " + Misc.getMessage(e), e);
       errorMessage = Misc.getMessage(e);
       executionStatus = ExecutionStatus.FAILED;
     }

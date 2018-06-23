@@ -22,6 +22,7 @@ import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollect
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
 import software.wings.sm.StateType;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
@@ -96,7 +97,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
       splunkService = Service.connect(loginArgs);
     } catch (Exception ex) {
       taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-      taskResult.setErrorMessage("Unable to connect to server : " + ex.getMessage());
+      taskResult.setErrorMessage("Unable to connect to server : " + Misc.getMessage(ex));
       return taskResult;
     }
     return taskResult;
@@ -197,7 +198,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
                  * more meaningful to trouble shoot.
                  */
                 if (retry == 1) {
-                  taskResult.setErrorMessage(e.getMessage());
+                  taskResult.setErrorMessage(Misc.getMessage(e));
                 }
                 logger.warn("error fetching splunk logs. retrying in " + RETRY_SLEEP + "s", e);
                 sleep(RETRY_SLEEP);

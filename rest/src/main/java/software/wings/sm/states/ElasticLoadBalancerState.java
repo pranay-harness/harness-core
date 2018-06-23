@@ -32,6 +32,7 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
+import software.wings.utils.Misc;
 
 /**
  * Created by peeyushaggarwal on 10/3/16.
@@ -113,7 +114,7 @@ public class ElasticLoadBalancerState extends State {
       status = result ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
     } catch (Exception e) {
       status = ExecutionStatus.ERROR;
-      errorMessage = e.getMessage();
+      errorMessage = Misc.getMessage(e);
     }
 
     return anExecutionResponse()

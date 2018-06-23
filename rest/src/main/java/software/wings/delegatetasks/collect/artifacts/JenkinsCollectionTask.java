@@ -14,6 +14,7 @@ import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.jenkins.JenkinsUtil;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.ListNotifyResponseData;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -59,7 +60,7 @@ public class JenkinsCollectionTask extends AbstractDelegateRunnableTask {
             fileInfo, artifactPath, res, getDelegateId(), getTaskId(), getAccountId());
       }
     } catch (Exception e) {
-      logger.warn("Exception: " + e.getMessage(), e);
+      logger.warn("Exception: " + Misc.getMessage(e), e);
       // TODO: better error handling
 
       //      if (e instanceof WingsException)

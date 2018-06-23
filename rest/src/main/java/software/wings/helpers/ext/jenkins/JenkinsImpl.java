@@ -43,6 +43,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.exception.WingsException;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -110,10 +111,6 @@ public class JenkinsImpl implements Jenkins {
   /**
    * Instantiates a new jenkins impl.
    *
-   * @param jenkinsUrl the jenkins url
-   * @param username   the username
-   * @param password   the password
-   * @throws URISyntaxException the URI syntax exception
    */
   @AssistedInject
   public JenkinsImpl(@Assisted(value = "url") String jenkinsUrl, @Assisted(value = "token") char[] token)
@@ -160,7 +157,7 @@ public class JenkinsImpl implements Jenkins {
             }
             jobWithDetails = jenkinsServer.getJob(folderJob, childJobName);
           } catch (HttpResponseException e) {
-            if (e.getStatusCode() == 500 || e.getMessage().contains("Server Error")) {
+            if (e.getStatusCode() == 500 || Misc.getMessage(e).contains("Server Error")) {
               logger.warn(format("Error occurred while retrieving job %s. Retrying ", jobname), e);
               sleep(ofSeconds(1L));
               continue;
@@ -173,7 +170,7 @@ public class JenkinsImpl implements Jenkins {
         }
       }, 120L, TimeUnit.SECONDS, true);
     } catch (Exception e) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", e.getMessage());
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", Misc.getMessage(e));
     }
   }
 
@@ -209,7 +206,7 @@ public class JenkinsImpl implements Jenkins {
         }
       }, 120L, TimeUnit.SECONDS, true);
     } catch (Exception e) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", e.getMessage());
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", Misc.getMessage(e));
     }
   }
 
@@ -346,8 +343,8 @@ public class JenkinsImpl implements Jenkins {
       }
     } catch (Exception e) { // cause buildWithDetails.getParameters() can throw NPE
       // unexpected exception
-      logger.warn("Error occurred while retrieving build parameters for build number {} ", buildWithDetails.getNumber(),
-          e.getMessage());
+      logger.warn(
+          "Error occurred while retrieving build parameters for build number {} ", buildWithDetails.getNumber(), e);
     }
   }
 
@@ -489,7 +486,7 @@ public class JenkinsImpl implements Jenkins {
             .addParam("message", "User not authorized to access jenkins");
       }
     }
-    throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", e.getMessage());
+    throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", Misc.getMessage(e));
   }
 
   private Pair<String, InputStream> downloadArtifactFromABuild(Build build, String artifactpathRegex)

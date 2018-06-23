@@ -25,6 +25,7 @@ import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,7 +49,7 @@ public class NexusServiceImpl implements NexusService {
   @Inject private TimeLimiter timeLimiter;
 
   public static void handleException(IOException e) {
-    throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", e.getMessage());
+    throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", Misc.getMessage(e));
   }
 
   public static boolean isSuccessful(Response<?> response) {
@@ -121,8 +122,7 @@ public class NexusServiceImpl implements NexusService {
       if (e.getCause() != null && e.getCause() instanceof XMLStreamException) {
         throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "Nexus may not be running");
       }
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
-          .addParam("message", e.getMessage() == null ? "Unknown error" : e.getMessage());
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", Misc.getMessage(e));
     }
   }
 
@@ -148,8 +148,7 @@ public class NexusServiceImpl implements NexusService {
       if (e.getCause() != null && e.getCause() instanceof XMLStreamException) {
         throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "Nexus may not be running");
       }
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
-          .addParam("message", e.getMessage() == null ? "Unknown error" : e.getMessage());
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", Misc.getMessage(e));
     }
   }
 
@@ -189,7 +188,7 @@ public class NexusServiceImpl implements NexusService {
       return nexusTwoService.downloadArtifact(nexusConfig, encryptionDetails, repoType, groupId, artifactName, version);
     } catch (IOException e) {
       logger.error("Error occurred while downloading the artifact", e);
-      throw new WingsException(ARTIFACT_SERVER_ERROR, ADMIN).addParam("message", e.getMessage());
+      throw new WingsException(ARTIFACT_SERVER_ERROR, ADMIN).addParam("message", Misc.getMessage(e));
     }
   }
 
@@ -262,7 +261,7 @@ public class NexusServiceImpl implements NexusService {
       try {
         repositories = getRepositories(nexusConfig, encryptionDetails, ArtifactType.DOCKER);
       } catch (WingsException e) {
-        if (e.getMessage() != null && e.getMessage().contains("Invalid Nexus credentials")) {
+        if (Misc.getMessage(e).contains("Invalid Nexus credentials")) {
           throw e;
         }
         return true;

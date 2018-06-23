@@ -40,6 +40,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
+import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -300,7 +301,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
           .build()
           .toElasticSearchJsonObject();
     } catch (Exception ex) {
-      invalidFields.put("query", ex.getMessage());
+      invalidFields.put("query", Misc.getMessage(ex));
     }
     return invalidFields;
   }

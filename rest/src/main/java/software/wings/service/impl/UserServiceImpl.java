@@ -110,6 +110,7 @@ import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.CacheHelper;
 import software.wings.utils.KryoUtils;
+import software.wings.utils.Misc;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
@@ -1076,8 +1077,8 @@ public class UserServiceImpl implements UserService {
       JWSSigner signer = new MACSigner(jwtZendeskSecret.getBytes());
       jwsObject.sign(signer);
     } catch (com.nimbusds.jose.JOSEException e) {
-      logger.error("Error signing JWT: " + e.getMessage(), e);
-      throw new InvalidRequestException("Error signing JWT: " + e.getMessage());
+      logger.error("Error signing JWT: " + Misc.getMessage(e), e);
+      throw new InvalidRequestException("Error signing JWT: " + Misc.getMessage(e));
     }
 
     // Serialise to JWT compact form

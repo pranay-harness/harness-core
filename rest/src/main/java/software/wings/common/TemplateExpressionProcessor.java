@@ -14,6 +14,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.sm.ExecutionContext;
+import software.wings.utils.Misc;
 
 import java.util.List;
 import java.util.regex.Matcher;
@@ -62,7 +63,7 @@ public class TemplateExpressionProcessor {
 
     } catch (Exception ex) {
       throw new WingsException("Failed to resolve the Service Infrastructure expression:" + templateExpression
-          + "Reason: " + ex.getMessage());
+          + "Reason: " + Misc.getMessage(ex));
     }
   }
 
@@ -87,7 +88,7 @@ public class TemplateExpressionProcessor {
 
     } catch (Exception ex) {
       throw new WingsException(
-          "Failed to resolve the service expression:" + templateExpression + "Reason: " + ex.getMessage());
+          "Failed to resolve the service expression:" + templateExpression + "Reason: " + Misc.getMessage(ex));
     }
   }
 
@@ -110,7 +111,7 @@ public class TemplateExpressionProcessor {
 
     } catch (Exception ex) {
       throw new WingsException(
-          "Failed to resolve the service expression:" + templateExpression + "Reason: " + ex.getMessage());
+          "Failed to resolve the service expression:" + templateExpression + "Reason: " + Misc.getMessage(ex));
     }
   }
 

@@ -37,6 +37,7 @@ import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.sm.StateType;
 import software.wings.utils.JsonUtils;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
@@ -205,7 +206,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
               "Error fetching metrics for node: " + node + ", retry: " + retry + ", metrics: " + metricNames, e);
           retry++;
           if (retry >= RETRIES) {
-            throw new WingsException("Fetching for web transaction metrics failed. reason " + e.getMessage());
+            throw new WingsException("Fetching for web transaction metrics failed. reason " + Misc.getMessage(e));
           }
         }
       }
@@ -241,7 +242,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
               "Error fetching metrics for node: " + node + ", retry: " + retry + ", metrics: " + metricNames, e);
           retry++;
           if (retry >= RETRIES) {
-            throw new WingsException("Fetching for error metrics failed. reason " + e.getMessage());
+            throw new WingsException("Fetching for error metrics failed. reason " + Misc.getMessage(e));
           }
         }
       }
@@ -277,7 +278,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
               "Error fetching metrics for node: " + node + ", retry: " + retry + ", metrics: " + metricNames, e);
           retry++;
           if (retry >= RETRIES) {
-            throw new WingsException("Fetching for apdex metrics failed. reason " + e.getMessage());
+            throw new WingsException("Fetching for apdex metrics failed. reason " + Misc.getMessage(e));
           }
         }
       }
@@ -406,15 +407,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                * more meaningful to trouble shoot.
                */
               if (retry == 1) {
-                if (ex instanceof WingsException) {
-                  if (((WingsException) ex).getParams().containsKey("reason")) {
-                    taskResult.setErrorMessage((String) ((WingsException) ex).getParams().get("reason"));
-                  } else {
-                    taskResult.setErrorMessage(ex.getMessage());
-                  }
-                } else {
-                  taskResult.setErrorMessage(ex.getMessage());
-                }
+                taskResult.setErrorMessage(Misc.getMessage(ex));
               }
               logger.warn("error fetching new relic metrics for minute " + dataCollectionMinute + ". retrying in "
                       + RETRY_SLEEP + "s",
@@ -427,7 +420,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
         completed.set(true);
         taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
         taskResult.setErrorMessage(
-            "error fetching new relic metrics for minute " + dataCollectionMinute + " reason: " + e.getMessage());
+            "error fetching new relic metrics for minute " + dataCollectionMinute + " reason: " + Misc.getMessage(e));
         logger.error("error fetching new relic metrics for minute " + dataCollectionMinute, e);
       }
 

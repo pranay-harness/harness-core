@@ -30,6 +30,7 @@ import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.ElkValidationType;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -166,7 +167,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
         final Response<Object> response = request.execute();
         return response.headers().get("kbn-version");
       } catch (Exception ex) {
-        throw new WingsException("Unable to get version. Check url : " + ex.getMessage(), ex);
+        throw new WingsException("Unable to get version. Check url : " + Misc.getMessage(ex), ex);
       }
     } else {
       throw new WingsException("Get version is supported only for the Kibana connector");
@@ -270,7 +271,7 @@ builder.hostnameVerifier((hostname, session) -> true);
 return builder;
 }
 catch (Exception e) {
-  throw new WingsException("Unexpected error : " + e.getMessage(), e);
+  throw new WingsException("Unexpected error : " + Misc.getMessage(e), e);
 }
 }
 }

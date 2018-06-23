@@ -27,6 +27,7 @@ import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.dynatrace.DynaTraceDelegateService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.DynatraceState;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
@@ -144,13 +145,7 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
             } else {
               if (retry == 1) {
                 if (ex instanceof WingsException) {
-                  if (((WingsException) ex).getParams().containsKey("reason")) {
-                    taskResult.setErrorMessage((String) ((WingsException) ex).getParams().get("reason"));
-                  } else {
-                    taskResult.setErrorMessage(ex.getMessage());
-                  }
-                } else {
-                  taskResult.setErrorMessage(ex.getMessage());
+                  taskResult.setErrorMessage(Misc.getMessage(ex));
                 }
               }
               logger.warn("error fetching Dynatrace metrics for minute " + dataCollectionMinute + ". retrying in "

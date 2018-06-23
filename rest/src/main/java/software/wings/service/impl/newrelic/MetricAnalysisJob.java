@@ -37,6 +37,7 @@ import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.utils.JsonUtils;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.IOException;
@@ -435,7 +436,7 @@ public class MetricAnalysisJob implements Job {
       } catch (Exception ex) {
         completeCron = true;
         error = true;
-        errMsg = ex.getMessage();
+        errMsg = Misc.getMessage(ex);
         logger.warn("analysis failed", ex);
       } finally {
         try {

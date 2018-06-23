@@ -110,12 +110,11 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
       postExecution(contextData, allData, executionLogCallback);
       status = CommandExecutionStatus.SUCCESS;
     } catch (Exception ex) {
-      logger.error(ex.getMessage(), ex);
+      logger.error(Misc.getMessage(ex), ex);
       Misc.logAllMessages(ex, executionLogCallback);
       logger.error("Completed operation with errors");
       executionLogCallback.saveExecutionLog(
           format("Completed operation with errors\n%s\n", DASH_STRING), LogLevel.ERROR);
-      executionLogCallback.saveExecutionLog("Error: " + ex.getMessage());
     } finally {
       context.setCommandExecutionData(executionDataBuilder.build());
     }

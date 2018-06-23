@@ -309,10 +309,10 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
             message = "Not a well-formed yaml. The field " + snippet + " in line " + contextMark.getLine()
                 + " doesn't end with :";
           } else {
-            message = ex.getMessage();
+            message = Misc.getMessage(ex);
           }
         } else {
-          message = ex.getMessage();
+          message = Misc.getMessage(ex);
         }
         logger.warn(message, ex);
         failedChangeErrorMsgMap.put(change, message);
@@ -324,11 +324,11 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
           failedChangeErrorMsgMap.put(change, error);
         } else {
           logger.warn("Unable to load yaml from string for file: " + yamlFilePath, ex);
-          failedChangeErrorMsgMap.put(change, ex.getMessage());
+          failedChangeErrorMsgMap.put(change, Misc.getMessage(ex));
         }
       } catch (Exception ex) {
         logger.warn("Unable to load yaml from string for file: " + yamlFilePath, ex);
-        failedChangeErrorMsgMap.put(change, ex.getMessage());
+        failedChangeErrorMsgMap.put(change, Misc.getMessage(ex));
       }
     }
 

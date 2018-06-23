@@ -18,6 +18,7 @@ import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
+import software.wings.utils.Misc;
 
 import java.util.List;
 import java.util.Set;
@@ -200,7 +201,7 @@ public class LogMLAnalysisGenerator implements Runnable {
 
     } catch (Exception e) {
       throw new RuntimeException("Log analysis failed for " + context.getStateExecutionId() + " for minute "
-              + logAnalysisMinute + ", reason: " + e.getMessage(),
+              + logAnalysisMinute + ", reason: " + Misc.getMessage(e),
           e);
     }
   }

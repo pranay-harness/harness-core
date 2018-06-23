@@ -54,6 +54,7 @@ import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
+import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -128,7 +129,7 @@ public class EcsSteadyStateCheck extends State {
           .withDelegateTaskId(delegateTaskId)
           .build();
     } catch (Exception e) {
-      throw new InvalidRequestException(e.getMessage(), e);
+      throw new InvalidRequestException(Misc.getMessage(e), e);
     }
   }
 
@@ -159,7 +160,7 @@ public class EcsSteadyStateCheck extends State {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new InvalidRequestException(e.getMessage(), e);
+      throw new InvalidRequestException(Misc.getMessage(e), e);
     }
   }
 

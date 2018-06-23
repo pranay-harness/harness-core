@@ -93,6 +93,7 @@ import software.wings.sm.StateExecutionException;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.Expand;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.ErrorNotifyResponseData;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -397,7 +398,7 @@ public class CommandState extends State {
       return anExecutionResponse()
           .withExecutionStatus(ExecutionStatus.FAILED)
           .withStateExecutionData(executionDataBuilder.build())
-          .withErrorMessage(e.getMessage())
+          .withErrorMessage(Misc.getMessage(e))
           .build();
     }
 

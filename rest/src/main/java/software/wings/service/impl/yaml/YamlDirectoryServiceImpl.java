@@ -94,6 +94,7 @@ import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.Misc;
 import software.wings.utils.Util;
 import software.wings.utils.Validator;
 import software.wings.yaml.YamlVersion.Type;
@@ -377,7 +378,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
       } catch (ExecutionException e) {
-        logger.error(e.getMessage(), e);
+        logger.error(Misc.getMessage(e), e);
       }
     }
 
@@ -512,7 +513,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         } catch (InterruptedException e) {
           Thread.currentThread().interrupt();
         } catch (ExecutionException e) {
-          logger.error(e.getMessage(), e);
+          logger.error(Misc.getMessage(e), e);
         }
       }
 

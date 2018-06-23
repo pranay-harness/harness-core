@@ -12,6 +12,7 @@ import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.sm.StateType;
 import software.wings.utils.JsonUtils;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.function.Consumer;
@@ -43,7 +44,7 @@ public class NewRelicDeploymentMarkerTask extends AbstractDelegateRunnableTask {
       return DataCollectionTaskResult.builder()
           .status(DataCollectionTaskResult.DataCollectionTaskStatus.FAILURE)
           .stateType(StateType.NEW_RELIC)
-          .errorMessage("Could not send deployment marker : " + ex.getMessage())
+          .errorMessage("Could not send deployment marker : " + Misc.getMessage(ex))
           .newRelicDeploymentMarkerBody(dataCollectionInfo.getDeploymentMarker())
           .build();
     }

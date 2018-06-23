@@ -31,6 +31,7 @@ import software.wings.helpers.ext.helm.response.HelmListReleasesCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
 import software.wings.helpers.ext.helm.response.ReleaseInfo;
 import software.wings.service.impl.ContainerServiceParams;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -80,12 +81,12 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       logger.error(msg, e);
       executionLogCallback.saveExecutionLog(
           "Timed out waiting for controller to reach in steady state", LogLevel.ERROR);
-      return new HelmCommandResponse(CommandExecutionStatus.FAILURE, e.getMessage());
+      return new HelmCommandResponse(CommandExecutionStatus.FAILURE, Misc.getMessage(e));
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
       logger.error("Exception in deploying helm chart [{}]", commandRequest, e);
-      return new HelmCommandResponse(CommandExecutionStatus.FAILURE, e.getMessage());
+      return new HelmCommandResponse(CommandExecutionStatus.FAILURE, Misc.getMessage(e));
     }
   }
 
@@ -115,12 +116,12 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       logger.error(msg, e);
       executionLogCallback.saveExecutionLog(
           "Timed out waiting for controller to reach in steady state", LogLevel.ERROR);
-      return new HelmCommandResponse(CommandExecutionStatus.FAILURE, e.getMessage());
+      return new HelmCommandResponse(CommandExecutionStatus.FAILURE, Misc.getMessage(e));
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
       logger.error("Helm chart rollback failed [{}]", commandRequest, e);
-      return new HelmCommandResponse(CommandExecutionStatus.FAILURE, e.getMessage());
+      return new HelmCommandResponse(CommandExecutionStatus.FAILURE, Misc.getMessage(e));
     }
   }
 
@@ -149,7 +150,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       logger.error("Helm list releases failed", e);
       return HelmListReleasesCommandResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-          .output(e.getMessage())
+          .output(Misc.getMessage(e))
           .build();
     }
   }

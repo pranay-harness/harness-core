@@ -40,6 +40,7 @@ import software.wings.beans.KubernetesConfig;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.Base64;
@@ -208,7 +209,7 @@ public class AzureHelperService {
       logger.error("Error occurred while getting repositories from subscriptionId/registryName :" + subscriptionId + "/"
               + registryName,
           e);
-      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE).addParam("message", e.getMessage());
+      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE).addParam("message", Misc.getMessage(e));
     }
   }
 
@@ -234,7 +235,7 @@ public class AzureHelperService {
       logger.error("Error occurred while getting repositories from subscriptionId/registryName/repositoryName :"
               + subscriptionId + "/" + registryName + "/" + repositoryName,
           e);
-      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE).addParam("message", e.getMessage());
+      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE).addParam("message", Misc.getMessage(e));
     }
   }
 
@@ -310,7 +311,7 @@ public class AzureHelperService {
           .clientKey(currentAuthInfo.getClientKeyData().toCharArray())
           .build();
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE).addParam("message", e.getMessage());
+      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE).addParam("message", Misc.getMessage(e));
     }
   }
 
@@ -399,6 +400,6 @@ public class AzureHelperService {
       }
     }
 
-    throw new WingsException(ErrorCode.UNKNOWN_ERROR).addParam("message", e.getMessage());
+    throw new WingsException(ErrorCode.UNKNOWN_ERROR).addParam("message", Misc.getMessage(e));
   }
 }

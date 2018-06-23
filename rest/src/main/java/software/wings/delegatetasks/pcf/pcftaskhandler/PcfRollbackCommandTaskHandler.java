@@ -22,6 +22,7 @@ import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfDeployCommandResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -99,10 +100,10 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
       logger.error(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Exception in processing PCF Rollback task [{}]",
           commandRollbackRequest, e);
       executionLogCallback.saveExecutionLog("\n\n--------- PCF Rollback failed to complete successfully");
-      executionLogCallback.saveExecutionLog("# Error: " + e.getMessage());
+      Misc.logAllMessages(e, executionLogCallback);
       pcfDeployCommandResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
       pcfDeployCommandResponse.setInstanceDataUpdated(pcfServiceDataUpdated);
-      pcfDeployCommandResponse.setOutput(e.getMessage());
+      pcfDeployCommandResponse.setOutput(Misc.getMessage(e));
     }
 
     return PcfCommandExecutionResponse.builder()

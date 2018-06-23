@@ -23,6 +23,7 @@ import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfDeployCommandResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -105,9 +106,9 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
       logger.error(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Exception in processing PCF Deploy task [{}]",
           pcfCommandDeployRequest, e);
       executionLogCallback.saveExecutionLog("\n\n--------- PCF Resize failed to complete successfully");
-      executionLogCallback.saveExecutionLog("# Error: " + e.getMessage());
+      Misc.logAllMessages(e, executionLogCallback);
       pcfDeployCommandResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
-      pcfDeployCommandResponse.setOutput(e.getMessage());
+      pcfDeployCommandResponse.setOutput(Misc.getMessage(e));
       pcfDeployCommandResponse.setInstanceDataUpdated(pcfServiceDataUpdated);
     }
 

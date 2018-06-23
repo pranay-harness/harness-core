@@ -32,6 +32,7 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.GcpHelperService;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.utils.Misc;
 
 import java.util.HashMap;
 import java.util.List;
@@ -88,10 +89,10 @@ public class GcsServiceImpl implements GcsService {
       }
       return buildDetailsList;
     } catch (WingsException e) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, ADMIN).addParam("message", e.getMessage());
+      throw new WingsException(INVALID_ARTIFACT_SERVER, ADMIN).addParam("message", Misc.getMessage(e));
     } catch (Exception e) {
       logger.error("Error occurred while retrieving artifacts from ", e);
-      throw new WingsException(INVALID_ARTIFACT_SERVER, ADMIN).addParam("message", e.getMessage());
+      throw new WingsException(INVALID_ARTIFACT_SERVER, ADMIN).addParam("message", Misc.getMessage(e));
     }
   }
 
@@ -182,7 +183,7 @@ public class GcsServiceImpl implements GcsService {
       }
     } catch (Exception e) {
       throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
-          .addParam("message", "Could not get versioning information for GCS bucket. " + e.getMessage());
+          .addParam("message", "Could not get versioning information for GCS bucket. " + Misc.getMessage(e));
     }
     return versioningEnabled;
   }

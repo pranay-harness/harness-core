@@ -17,6 +17,7 @@ import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandE
 import software.wings.helpers.ext.cloudformation.response.CloudFormationListStacksResponse;
 import software.wings.helpers.ext.cloudformation.response.StackSummaryInfo;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.utils.Misc;
 
 import java.util.Collections;
 import java.util.List;
@@ -56,8 +57,8 @@ public class CloudFormationListStacksHandler extends CloudFormationCommandTaskHa
       builder.commandExecutionStatus(CommandExecutionStatus.SUCCESS)
           .commandResponse(CloudFormationListStacksResponse.builder().stackSummaryInfos(summaryInfos).build());
     } catch (Exception ex) {
-      String errorMessage = String.format(
-          "Exception: %s while getting stacks list: %s", ex.getMessage(), cloudFormationListStacksRequest.getStackId());
+      String errorMessage = String.format("Exception: %s while getting stacks list: %s", Misc.getMessage(ex),
+          cloudFormationListStacksRequest.getStackId());
       executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
       builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
     }
