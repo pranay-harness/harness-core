@@ -1447,21 +1447,23 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
   }
 
-  // TODO(brett) Stateful Sets are no longer versioned. Remove statefulSet param after 6/1/18
   private void cleanup(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
       String containerServiceName, ExecutionLogCallback executionLogCallback, boolean useDashInHostname) {
     Optional<Integer> revision = getRevisionFromControllerName(containerServiceName, false, useDashInHostname);
-    if (revision.isPresent() && (revision.get() >= KEEP_N_REVISIONS)) {
-      int minRevisionToKeep = revision.get() - KEEP_N_REVISIONS + 1;
+    if (revision.isPresent()) {
       String controllerNamePrefix = getPrefixFromControllerName(containerServiceName, false, useDashInHostname);
       kubernetesContainerService.listControllers(kubernetesConfig, encryptedDataDetails)
           .stream()
           .filter(ctrl -> ctrl.getMetadata().getName().startsWith(controllerNamePrefix))
+          .filter(ctrl
+              -> !getRevisionFromControllerName(ctrl.getMetadata().getName())
+                      .orElse(revision.get())
+                      .equals(revision.get()))
           .filter(ctrl -> kubernetesContainerService.getControllerPodCount(ctrl) == 0)
           .forEach(ctrl -> {
             String controllerName = ctrl.getMetadata().getName();
             Optional<Integer> ctrlRevision = getRevisionFromControllerName(controllerName, false, useDashInHostname);
-            if (ctrlRevision.isPresent() && ctrlRevision.get() < minRevisionToKeep) {
+            if (ctrlRevision.isPresent()) {
               logger.info("Deleting old version: " + controllerName);
               executionLogCallback.saveExecutionLog("Deleting old version: " + controllerName);
               try {
