@@ -78,7 +78,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
     if (isEmpty(environment.getServiceTemplates())) {
       return serviceVariableList;
     }
-    environment.getServiceTemplates().stream().forEach(serviceTemplate -> {
+    environment.getServiceTemplates().forEach(serviceTemplate -> {
       List<ServiceVariable> serviceVariablesByTemplate = serviceVariableService.getServiceVariablesByTemplate(
           environment.getAppId(), environment.getUuid(), serviceTemplate, false);
       serviceVariableList.addAll(serviceVariablesByTemplate);

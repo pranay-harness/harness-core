@@ -310,7 +310,7 @@ public class
       Map<String, Metric> metricMap = new HashMap<>();
       Set<String> metricNamesSet = Sets.newHashSet(metricNames);
       for (Map.Entry<String, List<Metric>> entry : metrics.entrySet()) {
-        entry.getValue().stream().forEach(metric -> {
+        entry.getValue().forEach(metric -> {
           if (metricNamesSet.contains(metric.getMetricName())) {
             if (metric.getTags() == null) {
               metric.setTags(new HashSet());

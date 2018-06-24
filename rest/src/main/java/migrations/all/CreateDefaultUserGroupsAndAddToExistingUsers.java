@@ -36,14 +36,14 @@ public class CreateDefaultUserGroupsAndAddToExistingUsers implements Migration {
     List<User> userList = userPageResponse.getResponse();
 
     if (userList != null) {
-      userList.stream().forEach(user -> {
+      userList.forEach(user -> {
         List<Account> accounts = user.getAccounts();
         if (CollectionUtils.isEmpty(accounts)) {
           logger.info("User {} is not associated to any account", user.getName());
           return;
         }
 
-        accounts.stream().forEach(account -> authHandler.addUserToDefaultAccountAdminUserGroup(user, account));
+        accounts.forEach(account -> authHandler.addUserToDefaultAccountAdminUserGroup(user, account));
       });
     }
   }

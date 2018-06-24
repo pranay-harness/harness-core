@@ -239,7 +239,7 @@ public abstract class TerraformProvisionState extends State {
       List<NameValuePair> variables, List<NameValuePair> provisionerVariables) {
     Map<String, NameValuePair> map = new HashMap<>();
     if (isNotEmpty(provisionerVariables)) {
-      provisionerVariables.stream().forEach(variable -> map.put(variable.getName(), variable));
+      provisionerVariables.forEach(variable -> map.put(variable.getName(), variable));
     }
 
     List<NameValuePair> list = new ArrayList<>();

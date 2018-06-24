@@ -22,7 +22,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.FileSystem;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -103,7 +102,9 @@ public class FileSystemAwareProcessShell extends AbstractLoggingBean implements 
             e);
         if (log.isDebugEnabled()) {
           log.debug("start(" + cmdValue + ") failure details: " + e.getMessage(), e);
-          Arrays.stream(e.getStackTrace()).forEach(elem -> log.debug("Trace: {}", elem));
+          for (StackTraceElement elem : e.getStackTrace()) {
+            log.debug("Trace: {}", elem);
+          }
         }
       }
     }

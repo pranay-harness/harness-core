@@ -92,13 +92,13 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
       return entityIdMap;
     }
 
-    pipelineStages.stream().forEach(pipelineStage -> {
+    pipelineStages.forEach(pipelineStage -> {
       List<PipelineStageElement> pipelineStageElements = pipelineStage.getPipelineStageElements();
       if (isEmpty(pipelineStageElements)) {
         return;
       }
 
-      pipelineStageElements.stream().forEach(
+      pipelineStageElements.forEach(
           stageElement -> entityIdMap.putIfAbsent(stageElement.getName(), stageElement.getUuid()));
     });
 

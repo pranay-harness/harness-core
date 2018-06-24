@@ -152,7 +152,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
             Sets.difference(instancesInDBMap.keySet(), latestContainerInfoMap.keySet());
 
         Set<String> instanceIdsToBeDeleted = new HashSet<>();
-        instancesToBeDeleted.stream().forEach(ec2InstanceId -> {
+        instancesToBeDeleted.forEach(ec2InstanceId -> {
           Instance instance = instancesInDBMap.get(ec2InstanceId);
           if (instance != null) {
             instanceIdsToBeDeleted.add(instance.getUuid());
@@ -217,7 +217,6 @@ public class ContainerInstanceHandler extends InstanceHandler {
       for (DeploymentSummary deploymentSummary : newDeploymentSummaries) {
         ((ContainerDeploymentInfoWithLabels) deploymentSummary.getDeploymentInfo())
             .getLabels()
-            .stream()
             .forEach(labelEntry -> labelMap.put(labelEntry.getName(), labelEntry.getValue()));
 
         Set<String> controllerNames = containerSync.getControllerNames(containerInfraMapping, labelMap);
@@ -227,13 +226,13 @@ public class ContainerInstanceHandler extends InstanceHandler {
             newDeploymentSummaries.iterator().next().getWorkflowExecutionId(), containerInfraMapping.getUuid(),
             newDeploymentSummaries.iterator().next().getAppId(), controllerNames.size());
 
-        controllerNames.stream().forEach(controllerName -> {
+        controllerNames.forEach(controllerName -> {
           deploymentSummaryMap.put(controllerName, deploymentSummary);
           containerSvcNameInstanceMap.put(controllerName, null);
         });
       }
     } else {
-      newDeploymentSummaries.stream().forEach(deploymentSummary
+      newDeploymentSummaries.forEach(deploymentSummary
           -> deploymentSummaryMap.put(
 
               ((ContainerDeploymentInfoWithNames) deploymentSummary.getDeploymentInfo()).getContainerSvcName(),
@@ -274,7 +273,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
     validateDeploymentInfos(deploymentSummaries);
 
     if (deploymentSummaries.iterator().next().getDeploymentInfo() instanceof ContainerDeploymentInfoWithNames) {
-      deploymentSummaries.stream().forEach(deploymentSummary -> {
+      deploymentSummaries.forEach(deploymentSummary -> {
         ContainerDeploymentInfoWithNames containerDeploymentInfo =
             (ContainerDeploymentInfoWithNames) deploymentSummary.getDeploymentInfo();
         containerSvcNameInstanceMap.put(containerDeploymentInfo.getContainerSvcName(), null);
@@ -390,7 +389,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
 
   private List<DeploymentInfo> getContainerDeploymentInfos(String clusterName, Set<String> containerSvcNameSet) {
     List<DeploymentInfo> containerDeploymentInfoWithNames = new ArrayList<>();
-    containerSvcNameSet.stream().forEach(containerSvcName
+    containerSvcNameSet.forEach(containerSvcName
         -> containerDeploymentInfoWithNames.add(ContainerDeploymentInfoWithNames.builder()
                                                     .containerSvcName(containerSvcName)
                                                     .clusterName(clusterName)
@@ -480,7 +479,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
               .filter(entry -> entry.getKey().equals(Constants.DEPLOY_CONTAINERS))
               .map(entry -> entry.getValue())
               .collect(toList());
-      deployPhaseStepList.stream().forEach(phaseStep -> {
+      deployPhaseStepList.forEach(phaseStep -> {
         PhaseStepExecutionSummary phaseStepExecutionSummary =
             ((PhaseStepExecutionData) phaseStep).getPhaseStepExecutionSummary();
         Preconditions.checkNotNull(
@@ -534,7 +533,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
     List<software.wings.beans.infrastructure.instance.ContainerDeploymentInfo> currentContainerDeploymentsInDB =
         instanceService.getContainerDeploymentInfoList(containerSvcNameNoRevision, context.getAppId());
 
-    currentContainerDeploymentsInDB.stream().forEach(currentContainerDeploymentInDB
+    currentContainerDeploymentsInDB.forEach(currentContainerDeploymentInDB
         -> containerSvcNameDeploymentInfoMap.put(
             currentContainerDeploymentInDB.getContainerSvcName(), currentContainerDeploymentInDB));
 

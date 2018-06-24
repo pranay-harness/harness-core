@@ -84,7 +84,7 @@ public class RsyslogAppenderFactory<E extends DeferredProcessingAware> extends A
       restLogAppender.setContext(context);
       restLogAppender.setLayout(buildLayout(context, layoutFactory));
       restLogAppender.addFilter(levelFilterFactory.build(threshold));
-      getFilterFactories().stream().forEach(f -> restLogAppender.addFilter(f.build()));
+      getFilterFactories().forEach(f -> restLogAppender.addFilter(f.build()));
       log.info("Using RestLogAppender as LogAppender, log streaming is ENABLED");
     }
 

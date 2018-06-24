@@ -215,7 +215,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     if (workflowPhaseIdMap == null || serviceIdMapping == null) {
       return;
     }
-    workflowPhaseIdMap.values().stream().forEach(workflowPhase -> {
+    workflowPhaseIdMap.values().forEach(workflowPhase -> {
       String serviceId = workflowPhase.getServiceId();
       if (serviceId != null) {
         if (serviceIdMapping.containsKey(serviceId)) {
@@ -229,7 +229,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     if (rollbackWorkflowPhaseIdMap == null || serviceIdMapping == null) {
       return;
     }
-    rollbackWorkflowPhaseIdMap.values().stream().forEach(rollbackPhase -> {
+    rollbackWorkflowPhaseIdMap.values().forEach(rollbackPhase -> {
       String serviceId = rollbackPhase.getServiceId();
       if (serviceId != null) {
         if (serviceIdMapping.containsKey(serviceId)) {

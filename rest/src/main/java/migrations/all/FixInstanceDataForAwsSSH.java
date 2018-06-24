@@ -46,9 +46,9 @@ public class FixInstanceDataForAwsSSH implements Migration {
   public void migrate() {
     PageRequest<Account> accountPageRequest = aPageRequest().addFieldsIncluded("_id").build();
     List<Account> accounts = accountService.list(accountPageRequest);
-    accounts.stream().forEach(account -> {
+    accounts.forEach(account -> {
       List<String> appIds = appService.getAppIdsByAccountId(account.getUuid());
-      appIds.stream().forEach(appId -> {
+      appIds.forEach(appId -> {
         try {
           logger.info("Fixing instances for appId:" + appId);
           PageRequest<InfrastructureMapping> pageRequest = new PageRequest<>();

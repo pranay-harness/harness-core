@@ -69,8 +69,9 @@ public class WaitNotifyEngine {
     String waitInstanceId = wingsPersistence.save(new WaitInstance(callback, correlationIds));
 
     // create queue
-    Arrays.stream(correlationIds)
-        .forEach(correlationId -> wingsPersistence.save(new WaitQueue(waitInstanceId, correlationId)));
+    for (String correlationId : correlationIds) {
+      wingsPersistence.save(new WaitQueue(waitInstanceId, correlationId));
+    }
 
     return waitInstanceId;
   }

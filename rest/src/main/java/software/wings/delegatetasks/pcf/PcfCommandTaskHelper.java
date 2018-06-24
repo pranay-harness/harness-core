@@ -217,7 +217,7 @@ public class PcfCommandTaskHelper {
 
         // Application that is downsized
         if (EmptyPredicate.isNotEmpty(applicationDetailAfterResize.getInstanceDetails())) {
-          applicationDetailAfterResize.getInstanceDetails().stream().forEach(instance
+          applicationDetailAfterResize.getInstanceDetails().forEach(instance
               -> pcfInstanceElements.add(PcfInstanceElement.builder()
                                              .applicationId(applicationDetailAfterResize.getId())
                                              .displayName(applicationDetailAfterResize.getName())
@@ -244,7 +244,7 @@ public class PcfCommandTaskHelper {
         pcfRequestConfig.setApplicationName(applicationSummary.getName());
         ApplicationDetail applicationDetail = pcfDeploymentManager.getApplicationByName(pcfRequestConfig);
         if (EmptyPredicate.isNotEmpty(applicationDetail.getInstanceDetails())) {
-          applicationDetail.getInstanceDetails().stream().forEach(instanceDetail
+          applicationDetail.getInstanceDetails().forEach(instanceDetail
               -> pcfInstanceElements.add(PcfInstanceElement.builder()
                                              .displayName(applicationDetail.getName())
                                              .applicationId(applicationDetail.getId())
@@ -273,7 +273,7 @@ public class PcfCommandTaskHelper {
 
   public void printInstanceDetails(ExecutionLogCallback executionLogCallback, List<InstanceDetail> instances) {
     StringBuilder builder = new StringBuilder("Instance Details:");
-    instances.stream().forEach(instance
+    instances.forEach(instance
         -> builder.append("\nIndex: ")
                .append(instance.getIndex())
                .append("\nState: ")
@@ -323,7 +323,7 @@ public class PcfCommandTaskHelper {
   }
 
   public void deleteCreataedFile(List<File> files) {
-    files.stream().forEach(file -> file.delete());
+    files.forEach(file -> file.delete());
   }
 
   public String getAppPrefix(String appName) {
@@ -430,7 +430,7 @@ public class PcfCommandTaskHelper {
     executionLogCallback.saveExecutionLog(sb.append("# Application upsized successfully ").toString());
 
     List<InstanceDetail> instances = detailsAfterUpsize.getInstanceDetails().stream().collect(toList());
-    instances.stream().forEach(instance
+    instances.forEach(instance
         -> pcfInstanceElements.add(PcfInstanceElement.builder()
                                        .applicationId(detailsAfterUpsize.getId())
                                        .displayName(detailsAfterUpsize.getName())

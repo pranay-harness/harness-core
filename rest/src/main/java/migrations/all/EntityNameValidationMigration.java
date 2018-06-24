@@ -65,7 +65,7 @@ public abstract class EntityNameValidationMigration implements Migration {
   @Override
   public void migrate() {
     List<String> accountIdsToMigrate = getAccountIdsToMigrate();
-    accountIdsToMigrate.stream().forEach(this ::migrateAccount);
+    accountIdsToMigrate.forEach(this ::migrateAccount);
   }
 
   private List<String> getAccountIdsToMigrate() {

@@ -57,7 +57,7 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
     query.or(query.criteria("applyToAllAccounts").equal(true), query.criteria("accountIds").equal(accountId));
     List<HarnessUserGroup> harnessUserGroups = query.asList();
     Set<Action> actionSet = Sets.newHashSet();
-    harnessUserGroups.stream().forEach(harnessUserGroup -> {
+    harnessUserGroups.forEach(harnessUserGroup -> {
       Set<Action> actions = harnessUserGroup.getActions();
       if (isNotEmpty(actions)) {
         actionSet.addAll(actions);

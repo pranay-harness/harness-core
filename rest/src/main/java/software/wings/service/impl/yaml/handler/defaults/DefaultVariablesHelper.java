@@ -54,7 +54,7 @@ public class DefaultVariablesHelper {
         .collect(toList());
   }
 
-  @SuppressFBWarnings("NP_NULL_ON_SOME_PATH") // TODO
+  @SuppressFBWarnings({"NP_NULL_ON_SOME_PATH", "UC_USELESS_OBJECT"}) // TODO
   public void saveOrUpdateDefaults(Yaml updatedYaml, String appId, String accountId) throws HarnessException {
     List<SettingAttribute> previousDefaultValues = getCurrentDefaultVariables(appId, accountId);
     List<NameValuePair.Yaml> previousDefaultYamls = convertToNameValuePairYamlList(previousDefaultValues);
@@ -105,19 +105,19 @@ public class DefaultVariablesHelper {
         Collectors.toMap(defaultVar -> defaultVar.getName(), defaultVar -> defaultVar));
 
     // do deletions
-    varsToDelete.stream().forEach(defaultVar -> {
+    varsToDelete.forEach(defaultVar -> {
       if (defaultVarMap.containsKey(defaultVar.getName())) {
         settingsService.delete(appId, defaultVarMap.get(defaultVar.getName()).getUuid(), false);
       }
     });
 
     // save the new variables
-    varsToAdd.stream().forEach(
+    varsToAdd.forEach(
         defaultVar -> settingsService.save(createNewSettingAttribute(accountId, appId, defaultVar), false));
 
     try {
       // update the existing variables
-      varsToUpdate.stream().forEach(defaultVar -> {
+      varsToUpdate.forEach(defaultVar -> {
         SettingAttribute settingAttribute = defaultVarMap.get(defaultVar.getName());
         if (settingAttribute != null) {
           SettingValue settingValue = settingAttribute.getValue();

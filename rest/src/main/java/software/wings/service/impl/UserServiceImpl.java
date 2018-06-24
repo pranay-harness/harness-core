@@ -444,7 +444,7 @@ public class UserServiceImpl implements UserService {
   private void addUserToUserGroups(User user, List<UserGroup> userGroups) {
     if (isNotEmpty(userGroups)) {
       final User userFinal = user;
-      userGroups.stream().forEach(userGroup -> {
+      userGroups.forEach(userGroup -> {
         List<User> userGroupMembers = userGroup.getMembers();
         if (isEmpty(userGroupMembers)) {
           userGroupMembers = new ArrayList<>();
@@ -473,7 +473,7 @@ public class UserServiceImpl implements UserService {
   private void removeUserFromUserGroups(User user, List<UserGroup> userGroups) {
     if (isNotEmpty(userGroups)) {
       final User userFinal = user;
-      userGroups.stream().forEach(userGroup -> {
+      userGroups.forEach(userGroup -> {
         List<User> userGroupMembers = userGroup.getMembers();
         if (userGroupMembers != null) {
           userGroupMembers.remove(userFinal);
@@ -864,7 +864,7 @@ public class UserServiceImpl implements UserService {
     PageResponse<UserGroup> pageResponse = userGroupService.list(
         accountId, aPageRequest().addFilter("memberIds", Operator.HAS, user.getUuid()).build(), true);
     List<UserGroup> userGroupList = pageResponse.getResponse();
-    userGroupList.stream().forEach(userGroup -> {
+    userGroupList.forEach(userGroup -> {
       List<User> members = userGroup.getMembers();
       if (isNotEmpty(members)) {
         // Find the user to be removed, then remove from the member list and update the user group.

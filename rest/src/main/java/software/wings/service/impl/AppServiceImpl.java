@@ -193,7 +193,7 @@ public class AppServiceImpl implements AppService {
     authHandler.setEntityIdFilterIfUserAction(asList(envPermissionAttribute), appIdList);
 
     if (details) {
-      applicationList.stream().forEach(application -> {
+      applicationList.forEach(application -> {
         try {
           application.setEnvironments(environmentService.getEnvByApp(application.getUuid()));
         } catch (Exception e) {

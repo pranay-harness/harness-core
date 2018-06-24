@@ -85,7 +85,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
 
       if (isNotEmpty(yaml.getWorkflowVariables())) {
         final String[] envId = {workflow.getEnvId()};
-        yaml.getWorkflowVariables().stream().forEach((PipelineStage.WorkflowVariable variable) -> {
+        yaml.getWorkflowVariables().forEach((PipelineStage.WorkflowVariable variable) -> {
           String entityType = variable.getEntityType();
           String variableName = variable.getName();
           String variableValue = variable.getValue();

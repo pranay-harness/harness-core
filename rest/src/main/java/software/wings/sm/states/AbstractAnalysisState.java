@@ -365,7 +365,7 @@ public abstract class AbstractAnalysisState extends State {
         .filter(stateExecutionData -> stateExecutionData.getStateType().equals(StateType.PHASE.name()))
         .forEach(stateExecutionData -> {
           PhaseExecutionData phaseExecutionData = (PhaseExecutionData) stateExecutionData;
-          phaseExecutionData.getElementStatusSummary().stream().forEach(elementExecutionSummary -> {
+          phaseExecutionData.getElementStatusSummary().forEach(elementExecutionSummary -> {
             PhaseElement phaseElement = (PhaseElement) elementExecutionSummary.getContextElement();
             if (phaseElement == null) {
               getLogger().error("null phase element for " + elementExecutionSummary);

@@ -1625,7 +1625,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     Validator.notNullCheck("stateExecutionInstance", stateExecutionInstance);
 
     Map<String, ExecutionInterruptEffect> map = new HashMap<>();
-    stateExecutionInstance.getInterruptHistory().stream().forEach(effect -> map.put(effect.getInterruptId(), effect));
+    stateExecutionInstance.getInterruptHistory().forEach(effect -> map.put(effect.getInterruptId(), effect));
 
     List<StateExecutionInterrupt> interrupts = wingsPersistence.createQuery(ExecutionInterrupt.class)
                                                    .filter(ExecutionInterrupt.APP_ID_KEY, appId)
@@ -1645,7 +1645,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           .field(ID_KEY)
           .in(map.keySet())
           .asList()
-          .stream()
           .forEach(interrupt -> {
             final ExecutionInterruptEffect effect = map.get(interrupt.getUuid());
             interrupts.add(

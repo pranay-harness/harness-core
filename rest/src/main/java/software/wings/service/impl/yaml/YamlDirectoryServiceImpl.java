@@ -665,7 +665,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
         List<ArtifactStream> artifactStreamList =
             artifactStreamService.getArtifactStreamsForService(service.getAppId(), service.getUuid());
-        artifactStreamList.stream().forEach(artifactStream -> {
+        artifactStreamList.forEach(artifactStream -> {
           String artifactYamlFileName = artifactStream.getName() + YAML_EXTENSION;
           artifactStreamsFolder.addChild(new ServiceLevelYamlNode(accountId, artifactStream.getUuid(),
               artifactStream.getAppId(), service.getUuid(), artifactYamlFileName, ArtifactStream.class,
@@ -682,7 +682,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
         List<ConfigFile> configFiles =
             configService.getConfigFilesForEntity(service.getAppId(), DEFAULT_TEMPLATE_ID, service.getUuid());
-        configFiles.stream().forEach(configFile -> {
+        configFiles.forEach(configFile -> {
           String configFileName = Util.normalize(configFile.getRelativeFilePath()) + YAML_EXTENSION;
           configFilesFolder.addChild(new ServiceLevelYamlNode(accountId, configFile.getUuid(), configFile.getAppId(),
               configFile.getEntityId(), configFileName, ConfigFile.class, configFilesPath.clone().add(configFileName),
@@ -738,7 +738,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         PageResponse<InfrastructureMapping> infraMappingList = infraMappingService.list(pageRequest);
 
         // iterate over service commands
-        infraMappingList.stream().forEach(infraMapping -> {
+        infraMappingList.forEach(infraMapping -> {
           String infraMappingYamlFileName = infraMapping.getName() + YAML_EXTENSION;
           infraMappingsFolder.addChild(new EnvLevelYamlNode(accountId, infraMapping.getUuid(), infraMapping.getAppId(),
               infraMapping.getEnvId(), infraMappingYamlFileName, InfrastructureMapping.class,
@@ -755,7 +755,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
         List<ConfigFile> configFiles =
             configService.getConfigFileOverridesForEnv(environment.getAppId(), environment.getUuid());
-        configFiles.stream().forEach(configFile -> {
+        configFiles.forEach(configFile -> {
           String configFileName = Util.normalize(configFile.getRelativeFilePath()) + YAML_EXTENSION;
           configFilesFolder.addChild(new EnvLevelYamlNode(accountId, configFile.getUuid(), configFile.getAppId(),
               environment.getUuid(), configFileName, ConfigFile.class, configFilesPath.clone().add(configFileName),
@@ -1014,7 +1014,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
     if (isNotEmpty(notificationGroups)) {
       // iterate over notification groups
-      notificationGroups.stream().forEach(notificationGroup -> {
+      notificationGroups.forEach(notificationGroup -> {
         DirectoryPath notificationGroupPath = directoryPath.clone();
         String notificationGroupYamlFileName = notificationGroup.getName() + YAML_EXTENSION;
         notificationGroupsFolder.addChild(new AccountLevelYamlNode(accountId, notificationGroup.getUuid(),

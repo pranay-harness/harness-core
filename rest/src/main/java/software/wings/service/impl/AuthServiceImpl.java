@@ -526,7 +526,7 @@ public class AuthServiceImpl implements AuthService {
     if (isEmpty(accountIds)) {
       return;
     }
-    accountIds.stream().forEach(accountId -> evictAccountUserPermissionInfoCache(accountId, memberIds));
+    accountIds.forEach(accountId -> evictAccountUserPermissionInfoCache(accountId, memberIds));
   }
 
   @Override

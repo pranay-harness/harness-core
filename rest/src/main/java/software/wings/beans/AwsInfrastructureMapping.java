@@ -143,12 +143,12 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     } else {
       List<Tag> tags = new ArrayList<>();
       String[] tokens = ((String) input).split(";");
-      Arrays.stream(tokens).forEach(token -> {
+      for (String token : tokens) {
         String[] subTokens = token.split(":");
         if (subTokens.length == 2) {
           tags.add(new TagBuilder().key(subTokens[0]).value(subTokens[1]).build());
         }
-      });
+      }
       builder.tags(tags);
     }
   }

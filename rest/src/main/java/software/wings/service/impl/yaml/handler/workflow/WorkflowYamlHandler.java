@@ -150,7 +150,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
                   }
                 })
                 .collect(toList());
-        rollbackPhaseList.stream().forEach(rollbackPhase -> {
+        rollbackPhaseList.forEach(rollbackPhase -> {
           WorkflowPhase workflowPhase = workflowPhaseMap.get(rollbackPhase.getPhaseNameForRollback());
           if (workflowPhase != null) {
             rollbackPhaseMap.put(workflowPhase.getUuid(), rollbackPhase);
@@ -342,7 +342,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
     // rollback phases
     Map<String, WorkflowPhase> rollbackWorkflowPhaseIdMap = orchestrationWorkflow.getRollbackWorkflowPhaseIdMap();
     List<WorkflowPhase.Yaml> rollbackPhaseYamlList = Lists.newArrayList();
-    orchestrationWorkflow.getWorkflowPhaseIds().stream().forEach(workflowPhaseId -> {
+    orchestrationWorkflow.getWorkflowPhaseIds().forEach(workflowPhaseId -> {
       WorkflowPhase rollbackPhase = rollbackWorkflowPhaseIdMap.get(workflowPhaseId);
       if (rollbackPhase != null) {
         Yaml rollbackPhaseYaml = phaseYamlHandler.toYaml(rollbackPhase, appId);

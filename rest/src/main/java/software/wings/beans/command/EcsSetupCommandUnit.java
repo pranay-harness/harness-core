@@ -232,7 +232,7 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
       List<ContainerDefinition> containerDefinitionList = taskDefinition.getContainerDefinitions();
 
       Multimap<ContainerDefinition, PortMapping> portMappingListWithTargetPort = HashMultimap.create();
-      containerDefinitionList.stream().forEach(containerDefinition -> {
+      containerDefinitionList.forEach(containerDefinition -> {
         List<PortMapping> portMappings = containerDefinition.getPortMappings();
 
         if (portMappings == null) {

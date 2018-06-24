@@ -57,6 +57,7 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.runner.JUnitCore;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Morphia;
+import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.mapping.MappedField;
@@ -292,7 +293,9 @@ public class DataGenUtil extends BaseIntegrationTest {
             DatabaseModule.reportDeprecatedUnique(index);
 
             BasicDBObject keys = new BasicDBObject();
-            Arrays.stream(index.fields()).forEach(field -> keys.append(field.value(), 1));
+            for (Field field : index.fields()) {
+              keys.append(field.value(), 1);
+            }
             primaryDatastore.getCollection(mc.getClazz())
                 .createIndex(keys, index.options().name(), index.options().unique());
           });

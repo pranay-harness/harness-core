@@ -147,8 +147,7 @@ public class AzureIntegrationTest {
     List<AzureKubernetesCluster> clusters =
         azureHelperService.listKubernetesClusters(config, Collections.emptyList(), subscriptionId);
     logger.info("Clusters:");
-    clusters.stream().forEach(
-        cluster -> logger.info("Cluster Detail: " + cluster.getResourceGroup() + "/" + cluster.getName()));
+    clusters.forEach(cluster -> logger.info("Cluster Detail: " + cluster.getResourceGroup() + "/" + cluster.getName()));
   }
 
   private static void getKubernetesClusterConfig() {

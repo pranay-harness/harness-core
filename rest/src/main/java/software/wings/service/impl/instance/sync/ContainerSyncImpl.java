@@ -138,7 +138,7 @@ public class ContainerSyncImpl implements ContainerSync {
   public ContainerSyncResponse getInstances(
       ContainerInfrastructureMapping containerInfraMapping, List<String> containerSvcNameList) {
     List<ContainerInfo> result = Lists.newArrayList();
-    containerSvcNameList.stream().forEach(containerSvcName -> {
+    containerSvcNameList.forEach(containerSvcName -> {
       try {
         ContainerServiceParams containerServiceParams =
             getContainerServiceParams(containerInfraMapping, containerSvcName);

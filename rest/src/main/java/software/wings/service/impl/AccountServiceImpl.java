@@ -159,7 +159,7 @@ public class AccountServiceImpl implements AccountService {
     if (wingsPersistence.delete(Account.class, accountId)) {
       executorService.submit(() -> {
         List<OwnedByAccount> services = descendingServices(OwnedByAccount.class);
-        services.stream().forEach(service -> service.deleteByAccountId(accountId));
+        services.forEach(service -> service.deleteByAccountId(accountId));
       });
     }
   }
