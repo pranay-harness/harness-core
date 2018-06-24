@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.core.queue.Queuable;
 
@@ -22,5 +21,5 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class DeploymentEvent extends Queuable {
   private boolean isRollback;
-  @Embedded private List<DeploymentSummary> deploymentSummaries;
+  private List<DeploymentSummary> deploymentSummaries;
 }

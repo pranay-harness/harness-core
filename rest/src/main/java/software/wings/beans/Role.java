@@ -3,7 +3,6 @@ package software.wings.beans;
 import static java.util.Arrays.asList;
 
 import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.PostLoad;
@@ -24,7 +23,7 @@ public class Role extends Base {
 
   private String appName;
 
-  @Embedded private List<Permission> permissions;
+  private List<Permission> permissions;
   private RoleType roleType;
   private boolean allApps;
 

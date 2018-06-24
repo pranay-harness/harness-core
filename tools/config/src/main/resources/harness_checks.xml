@@ -84,6 +84,10 @@
                                                    org.assertj.core.api.Java6Assertions.assertThat,
                                                    org.hamcrest.MatcherAssert.assertThat,
                                                    org.junit.Assert.assertThat"/>
+
+            <!-- Do not use morphia Embedded. We do not need to change the name of the field and we
+                 would like better control for the indexes. -->
+            <property name="illegalClasses" value="org.mongodb.morphia.annotations.Embedded"/>
         </module>
 
         <module name="io.harness.checks.ExclusiveStaticImportCheck">

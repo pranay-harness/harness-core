@@ -13,7 +13,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.yaml.BaseEntityYaml;
@@ -45,7 +44,7 @@ public class Pipeline extends Base {
   @Transient private String validationMessage;
   @Transient private boolean templatized;
   private transient boolean hasSshInfraMapping;
-  @Embedded private List<FailureStrategy> failureStrategies = new ArrayList<>();
+  private List<FailureStrategy> failureStrategies = new ArrayList<>();
   private transient List<Variable> pipelineVariables = new ArrayList<>();
 
   @Builder

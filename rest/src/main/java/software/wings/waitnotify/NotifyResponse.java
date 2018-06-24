@@ -1,6 +1,5 @@
 package software.wings.waitnotify;
 
-import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
@@ -17,7 +16,7 @@ import java.util.Objects;
  */
 @Entity(value = "notifyResponses", noClassnameStored = true)
 public class NotifyResponse<T extends NotifyResponseData> extends Base {
-  @Embedded private T response;
+  private T response;
 
   private boolean error;
 
