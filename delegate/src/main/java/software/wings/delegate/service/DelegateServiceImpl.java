@@ -33,6 +33,7 @@ import static software.wings.utils.message.MessageConstants.DELEGATE_STARTED;
 import static software.wings.utils.message.MessageConstants.DELEGATE_STOP_ACQUIRING;
 import static software.wings.utils.message.MessageConstants.DELEGATE_UPGRADE_NEEDED;
 import static software.wings.utils.message.MessageConstants.DELEGATE_UPGRADE_PENDING;
+import static software.wings.utils.message.MessageConstants.DELEGATE_UPGRADE_STARTED;
 import static software.wings.utils.message.MessageConstants.DELEGATE_VERSION;
 import static software.wings.utils.message.MessageConstants.UPGRADING_DELEGATE;
 import static software.wings.utils.message.MessageConstants.WATCHER_DATA;
@@ -178,6 +179,7 @@ public class DelegateServiceImpl implements DelegateService {
   private Socket socket;
   private RequestBuilder request;
   private String upgradeVersion;
+  private long upgradeStartedAt;
   private long stoppedAcquiringAt;
   private String delegateId;
   private String accountId;
@@ -593,6 +595,13 @@ public class DelegateServiceImpl implements DelegateService {
           DelegateScripts delegateScripts = restResponse.getResource();
           if (delegateScripts.isDoUpgrade()) {
             upgradePending.set(true);
+
+            upgradeStartedAt = clock.millis();
+            Map<String, Object> upgradeData = new HashMap<>();
+            upgradeData.put(DELEGATE_UPGRADE_PENDING, true);
+            upgradeData.put(DELEGATE_UPGRADE_STARTED, upgradeStartedAt);
+            messageService.putAllData(DELEGATE_DASH + getProcessId(), upgradeData);
+
             logger.info("[Old] Replace run scripts");
             replaceRunScripts(delegateScripts);
             logger.info("[Old] Run scripts downloaded. Upgrading delegate. Stop acquiring async tasks");
@@ -686,6 +695,9 @@ public class DelegateServiceImpl implements DelegateService {
           statusData.put(DELEGATE_UPGRADE_NEEDED, upgradeNeeded.get());
           statusData.put(DELEGATE_UPGRADE_PENDING, upgradePending.get());
           statusData.put(DELEGATE_SHUTDOWN_PENDING, !acquireTasks.get());
+          if (upgradePending.get()) {
+            statusData.put(DELEGATE_UPGRADE_STARTED, upgradeStartedAt);
+          }
           if (!acquireTasks.get()) {
             statusData.put(DELEGATE_SHUTDOWN_STARTED, stoppedAcquiringAt);
           }
