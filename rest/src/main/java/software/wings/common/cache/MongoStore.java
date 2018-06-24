@@ -8,6 +8,7 @@ import com.google.inject.Singleton;
 import io.harness.cache.Distributable;
 import io.harness.cache.DistributedStore;
 import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.QueryFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +64,11 @@ public class MongoStore implements DistributedStore {
               .entity(KryoUtils.asBytes(entity))
               .validUntil(Date.from(OffsetDateTime.now().plus(ttl).toInstant()))
               .build();
-      wingsPersistence.getDatastore().save(collectionName, cacheEntity);
+
+      final Datastore datastore = wingsPersistence.getDatastore();
+      final Query<CacheEntity> query =
+          datastore.createQuery(CacheEntity.class).filter(CacheEntity.CANONICAL_KEY_KEY, cacheEntity.getCanonicalKey());
+      datastore.updateFirst(query, cacheEntity, true);
     } catch (RuntimeException ex) {
       logger.error("Failed to update cache", ex);
     }
