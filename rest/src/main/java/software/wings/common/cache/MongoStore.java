@@ -10,6 +10,7 @@ import io.harness.cache.DistributedStore;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.QueryFactory;
+import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.CacheEntity;
@@ -57,18 +58,20 @@ public class MongoStore implements DistributedStore {
   @Override
   public <T extends Distributable> void upsert(T entity, Duration ttl) {
     try {
-      final CacheEntity cacheEntity =
-          CacheEntity.builder()
-              .contextHash(entity.contextHash())
-              .canonicalKey(canonicalKey(entity.algorithmId(), entity.structureHash(), entity.key()))
-              .entity(KryoUtils.asBytes(entity))
-              .validUntil(Date.from(OffsetDateTime.now().plus(ttl).toInstant()))
-              .build();
+      final String canonicalKey = canonicalKey(entity.algorithmId(), entity.structureHash(), entity.key());
 
       final Datastore datastore = wingsPersistence.getDatastore();
+
+      final UpdateOperations<CacheEntity> updateOperations = datastore.createUpdateOperations(CacheEntity.class);
+      updateOperations.set(CacheEntity.CONTEXT_HASH_KEY, entity.contextHash());
+      updateOperations.set(CacheEntity.CANONICAL_KEY_KEY, canonicalKey);
+      updateOperations.set(CacheEntity.ENTITY_KEY, KryoUtils.asBytes(entity));
+      updateOperations.set(CacheEntity.VALID_UNTIL_KEY, Date.from(OffsetDateTime.now().plus(ttl).toInstant()));
+
       final Query<CacheEntity> query =
-          datastore.createQuery(CacheEntity.class).filter(CacheEntity.CANONICAL_KEY_KEY, cacheEntity.getCanonicalKey());
-      datastore.updateFirst(query, cacheEntity, true);
+          datastore.createQuery(CacheEntity.class).filter(CacheEntity.CANONICAL_KEY_KEY, canonicalKey);
+
+      datastore.update(query, updateOperations, true);
     } catch (RuntimeException ex) {
       logger.error("Failed to update cache", ex);
     }
