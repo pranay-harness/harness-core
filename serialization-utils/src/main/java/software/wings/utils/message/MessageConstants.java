@@ -27,6 +27,7 @@ public interface MessageConstants {
   String DELEGATE_RESTART_NEEDED = "restartNeeded";
   String DELEGATE_UPGRADE_NEEDED = "upgradeNeeded";
   String DELEGATE_UPGRADE_PENDING = "upgradePending";
+  String DELEGATE_UPGRADE_STARTED = "upgradeStarted";
   String DELEGATE_SHUTDOWN_PENDING = "shutdownPending";
   String DELEGATE_SHUTDOWN_STARTED = "shutdownStarted";
 

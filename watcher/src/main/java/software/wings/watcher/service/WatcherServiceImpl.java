@@ -25,6 +25,7 @@ import static software.wings.utils.message.MessageConstants.DELEGATE_STARTED;
 import static software.wings.utils.message.MessageConstants.DELEGATE_STOP_ACQUIRING;
 import static software.wings.utils.message.MessageConstants.DELEGATE_UPGRADE_NEEDED;
 import static software.wings.utils.message.MessageConstants.DELEGATE_UPGRADE_PENDING;
+import static software.wings.utils.message.MessageConstants.DELEGATE_UPGRADE_STARTED;
 import static software.wings.utils.message.MessageConstants.DELEGATE_VERSION;
 import static software.wings.utils.message.MessageConstants.EXTRA_WATCHER;
 import static software.wings.utils.message.MessageConstants.NEW_DELEGATE;
@@ -91,6 +92,7 @@ public class WatcherServiceImpl implements WatcherService {
 
   private static final long DELEGATE_HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(3);
   private static final long DELEGATE_STARTUP_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
+  private static final long DELEGATE_UPGRADE_TIMEOUT = TimeUnit.MINUTES.toMillis(10);
   private static final long DELEGATE_SHUTDOWN_TIMEOUT = TimeUnit.HOURS.toMillis(2);
   private static final long DELEGATE_VERSION_MATCH_TIMEOUT = TimeUnit.HOURS.toMillis(2);
 
@@ -302,6 +304,9 @@ public class WatcherServiceImpl implements WatcherService {
                   Optional.ofNullable((Boolean) delegateData.get(DELEGATE_SHUTDOWN_PENDING)).orElse(false);
               long shutdownStarted = Optional.ofNullable((Long) delegateData.get(DELEGATE_SHUTDOWN_STARTED)).orElse(0L);
               boolean shutdownTimedOut = now - shutdownStarted > DELEGATE_SHUTDOWN_TIMEOUT;
+              long upgradeStarted =
+                  Optional.ofNullable((Long) delegateData.get(DELEGATE_UPGRADE_STARTED)).orElse(Long.MAX_VALUE);
+              boolean upgradeTimedOut = now - upgradeStarted > DELEGATE_UPGRADE_TIMEOUT;
 
               if (newDelegate) {
                 logger.info("New delegate process {} is starting", delegateProcess);
@@ -317,7 +322,8 @@ public class WatcherServiceImpl implements WatcherService {
                 if (shutdownTimedOut || heartbeatTimedOut) {
                   shutdownNeededList.add(delegateProcess);
                 }
-              } else if (restartNeeded || heartbeatTimedOut || versionMatchTimedOut || delegateMinorVersionMismatch) {
+              } else if (restartNeeded || heartbeatTimedOut || versionMatchTimedOut || delegateMinorVersionMismatch
+                  || upgradeTimedOut) {
                 restartNeededList.add(delegateProcess);
                 minMinorVersion.set(0);
                 illegalVersions.clear();
