@@ -47,7 +47,6 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
     this.datastore = datastore;
     this.klass = klass;
     this.resetDurationInSeconds = resetDurationInSeconds;
-    datastore.ensureIndexes(klass);
   }
 
   /* (non-Javadoc)

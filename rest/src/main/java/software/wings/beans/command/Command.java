@@ -38,9 +38,9 @@ import java.util.Optional;
 @JsonTypeName("COMMAND")
 @Attributes(title = "Command")
 @Entity(value = "commands")
-@Indexes(@Index(
+@Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true),
     fields = { @Field("appId")
-               , @Field("originEntityId"), @Field("version") }, options = @IndexOptions(unique = true)))
+               , @Field("originEntityId"), @Field("version") }))
 public class Command extends Base implements CommandUnit {
   @NotEmpty @SchemaIgnore private String name;
   @SchemaIgnore private CommandUnitType commandUnitType;

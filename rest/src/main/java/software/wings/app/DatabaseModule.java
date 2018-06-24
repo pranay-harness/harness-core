@@ -1,7 +1,11 @@
 package software.wings.app;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.logging.MorphiaLoggerFactory.registerLogger;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.Maps;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
@@ -11,6 +15,7 @@ import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.deftlabs.lock.mongo.DistributedLockSvcFactory;
 import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
 import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
@@ -21,7 +26,6 @@ import io.harness.exception.UnexpectedException;
 import io.harness.logging.MorphiaLoggerFactory;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
@@ -34,8 +38,11 @@ import software.wings.lock.ManagedDistributedLockSvc;
 import software.wings.utils.NoDefaultConstructorMorphiaObjectFactory;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class DatabaseModule extends AbstractModule {
   private static final Logger logger = LoggerFactory.getLogger(DatabaseModule.class);
@@ -119,6 +126,8 @@ public class DatabaseModule extends AbstractModule {
     }
   }
 
+  private interface IndexCreator { void create(); }
+
   private void ensureIndex(Morphia morphia) {
     /*
     Morphia auto creates embedded/nested Entity indexes with the parent Entity indexes.
@@ -126,54 +135,101 @@ public class DatabaseModule extends AbstractModule {
     https://github.com/mongodb/morphia/issues/706
      */
 
+    Set<String> processedCollections = new HashSet<>();
+
     morphia.getMapper().getMappedClasses().forEach(mc -> {
-      if (mc.getEntityAnnotation() != null && !mc.isAbstract()) {
-        // Read Entity level "Indexes" annotation
-        List<Indexes> indexesAnnotations = mc.getAnnotations(Indexes.class);
-        if (indexesAnnotations != null) {
-          indexesAnnotations.stream().flatMap(indexes -> Arrays.stream(indexes.value())).forEach(index -> {
-            reportDeprecatedUnique(index);
+      if (mc.getEntityAnnotation() == null) {
+        return;
+      }
 
-            BasicDBObject keys = new BasicDBObject();
-            for (Field field : index.fields()) {
-              keys.append(field.value(), 1);
-            }
-            this.primaryDatastore.getCollection(mc.getClazz())
-                .createIndex(keys, index.options().name(), index.options().unique());
-          });
+      final DBCollection collection = primaryDatastore.getCollection(mc.getClazz());
+      if (processedCollections.contains(collection.getName())) {
+        return;
+      }
+      processedCollections.add(collection.getName());
+
+      Map<String, IndexCreator> creators = new HashMap<>();
+
+      // Read Entity level "Indexes" annotation
+      List<Indexes> indexesAnnotations = mc.getAnnotations(Indexes.class);
+      if (indexesAnnotations != null) {
+        indexesAnnotations.stream().flatMap(indexes -> Arrays.stream(indexes.value())).forEach(index -> {
+          reportDeprecatedUnique(index);
+
+          BasicDBObject keys = new BasicDBObject();
+          Arrays.stream(index.fields()).forEach(field -> keys.append(field.value(), 1));
+
+          final String indexName = index.options().name();
+          if (isEmpty(indexName)) {
+            logger.error("Do not use default index name for collection: {}\n"
+                    + "WARNING: this index will not be created",
+                collection.getName());
+          } else {
+            creators.put(indexName, () -> collection.createIndex(keys, indexName, index.options().unique()));
+          }
+        });
+      }
+
+      // Read field level "Indexed" annotation
+      for (final MappedField mf : mc.getPersistenceFields()) {
+        if (mf.hasAnnotation(Indexed.class)) {
+          final Indexed indexed = mf.getAnnotation(Indexed.class);
+          reportDeprecatedUnique(indexed);
+
+          int direction = 1;
+          final String name = isNotEmpty(indexed.options().name()) ? indexed.options().name() : mf.getNameToStore();
+
+          final String indexName = name + "_" + direction;
+          BasicDBObject dbObject = new BasicDBObject(name, direction);
+
+          DBObject options = new BasicDBObject();
+          options.put("name", indexName);
+          if (indexed.options().unique()) {
+            options.put("unique", Boolean.TRUE);
+          }
+          if (indexed.options().expireAfterSeconds() != -1) {
+            options.put("expireAfterSeconds", indexed.options().expireAfterSeconds());
+          }
+
+          creators.put(indexName, () -> collection.createIndex(dbObject, options));
         }
+      }
 
-        // Read field level "Indexed" annotation
-        for (final MappedField mf : mc.getPersistenceFields()) {
-          if (mf.hasAnnotation(Indexed.class)) {
-            final Indexed indexed = mf.getAnnotation(Indexed.class);
-            reportDeprecatedUnique(indexed);
+      final List<String> obsoleteIndexes = collection.getIndexInfo()
+                                               .stream()
+                                               .map(obj -> obj.get("name").toString())
+                                               .filter(name -> !"_id_".equals(name))
+                                               .filter(name -> !creators.keySet().contains(name))
+                                               .collect(toList());
+      if (isNotEmpty(obsoleteIndexes)) {
+        logger.error("Obsolete indexes: {} : {}", collection.getName(), Joiner.on(", ").join(obsoleteIndexes));
+        obsoleteIndexes.forEach(name -> {
+          try {
+            collection.dropIndex(name);
+          } catch (RuntimeException ex) {
+            logger.error("Failed to drop index {}", name, ex);
+          }
+        });
+      }
 
-            BasicDBObject dbObject = new BasicDBObject().append(mf.getNameToStore(), 1);
-
-            DBObject options = new BasicDBObject();
-            if (indexed.options().unique()) {
-              options.put("unique", Boolean.TRUE);
-            }
-            if (indexed.options().expireAfterSeconds() != -1) {
-              options.put("expireAfterSeconds", indexed.options().expireAfterSeconds());
-            }
-
-            try {
-              primaryDatastore.getCollection(mc.getClazz()).createIndex(dbObject, options);
-            } catch (MongoCommandException mex) {
-              if (mex.getErrorCode() != 85) {
-                throw mex;
+      creators.forEach((name, creator) -> {
+        for (int retry = 0; retry < 2; ++retry) {
+          try {
+            creator.create();
+            break;
+          } catch (MongoCommandException mex) {
+            if (mex.getErrorCode() == 85) {
+              try {
+                collection.dropIndex(name);
+              } catch (RuntimeException ex) {
+                logger.error("Failed to drop index {}", name, mex);
               }
-
-              // When Index creation fails due to changed options drop it and recreate.
-              primaryDatastore.getCollection(mc.getClazz())
-                  .dropIndex(new BasicDBObject().append(mf.getNameToStore(), 1));
-              primaryDatastore.getCollection(mc.getClazz()).createIndex(dbObject, options);
+            } else {
+              logger.error("Failed to create index {}", name, mex);
             }
           }
         }
-      }
+      });
     });
   }
 

@@ -13,9 +13,9 @@ import software.wings.yaml.BaseYaml;
 /**
  * Created by peeyushaggarwal on 11/2/16.
  */
-@Indexes(@Index(
+@Indexes(@Index(options = @IndexOptions(name = "locate", unique = true),
     fields = { @Field("entityType")
-               , @Field("entityUuid"), @Field("version") }, options = @IndexOptions(unique = true)))
+               , @Field("entityUuid"), @Field("version") }))
 @Entity(value = "entityVersions", noClassnameStored = true)
 public class EntityVersionCollection extends EntityVersion {
   public static final class Builder {

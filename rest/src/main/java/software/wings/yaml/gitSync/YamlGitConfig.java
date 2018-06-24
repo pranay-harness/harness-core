@@ -25,12 +25,10 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import javax.validation.constraints.NotNull;
 
-/**
- * Created by bsollish
- */
 @Entity(value = "yamlGitConfig", noClassnameStored = true)
-@Indexes(@Index(fields = { @Field("accountId")
-                           , @Field("entityId") }, options = @IndexOptions(unique = true)))
+@Indexes(@Index(
+    options = @IndexOptions(name = "locate", unique = true), fields = { @Field("accountId")
+                                                                        , @Field("entityId") }))
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Builder
