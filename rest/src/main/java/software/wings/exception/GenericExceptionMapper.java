@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.RestResponse;
 import software.wings.common.cache.ResponseCodeCache;
+import software.wings.utils.Misc;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -26,7 +27,7 @@ public class GenericExceptionMapper<T> implements ExceptionMapper<Throwable> {
    */
   @Override
   public Response toResponse(Throwable exception) {
-    logger.error("Exception occurred: " + exception.getMessage(), exception);
+    logger.error("Exception occurred: " + Misc.getMessage(exception), exception);
     RestResponse<T> restResponse = new RestResponse<>();
 
     // No known exception or error code

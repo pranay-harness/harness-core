@@ -260,7 +260,7 @@ public class AwsAmiServiceSetup extends State {
     } catch (Exception exception) {
       logger.error("Ami setup step failed with error ", exception);
       executionStatus = ExecutionStatus.FAILED;
-      errorMessage = exception.getMessage();
+      errorMessage = Misc.getMessage(exception);
       awsAmiExecutionData.setStatus(executionStatus);
       awsAmiExecutionData.setErrorMsg(errorMessage);
       Misc.logAllMessages(exception, executionLogCallback, CommandExecutionStatus.FAILURE);
