@@ -107,7 +107,7 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
     List<String> envNameList = commandYaml.getTargetEnvs();
     Map<String, EntityVersion> envIdMap = Maps.newHashMap();
     if (isNotEmpty(envNameList)) {
-      envNameList.stream().forEach(envName -> {
+      envNameList.forEach(envName -> {
         Environment environment = environmentService.getEnvironmentByName(appId, envName);
         if (environment != null) {
           envIdMap.put(environment.getUuid(), null);

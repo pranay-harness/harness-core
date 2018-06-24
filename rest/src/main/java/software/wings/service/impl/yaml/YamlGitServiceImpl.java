@@ -359,7 +359,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     // e.g. Setup/Application/app_name/index.yaml is valid one, but
     // Setup/Application/app/name/index.yaml is invalid. (this case is happening id app was names as "app/name")
     // we do not want to allow this scenario.
-    gitFileChanges.stream().forEach(gitFileChange
+    gitFileChanges.forEach(gitFileChange
         -> matchPathPrefix(gitFileChange.getFilePath().charAt(0) == '/' ? gitFileChange.getFilePath().substring(1)
                                                                         : gitFileChange.getFilePath(),
             folderYamlTypes));
@@ -458,8 +458,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   public void processFailedChanges(
       String accountId, Map<Change, String> failedChangeErrorMsgMap, boolean gitToHarness) {
     if (failedChangeErrorMsgMap.size() > 0) {
-      failedChangeErrorMsgMap.entrySet().stream().forEach(
-          entry -> upsertGitSyncErrors(entry.getKey(), entry.getValue(), false));
+      failedChangeErrorMsgMap.entrySet().forEach(entry -> upsertGitSyncErrors(entry.getKey(), entry.getValue(), false));
 
       alertService.openAlert(
           accountId, GLOBAL_APP_ID, AlertType.GitSyncError, getGitSyncErrorAlert(accountId, gitToHarness));
@@ -602,7 +601,7 @@ public class YamlGitServiceImpl implements YamlGitService {
 
     List<GitFileChange> gitFileChangeList = Lists.newArrayList();
 
-    syncErrorList.stream().forEach(syncError -> {
+    syncErrorList.forEach(syncError -> {
       String currentYamlFilePath = syncError.getYamlFilePath();
       String yamlContent;
       if (currentYamlFilePath.equals(yamlFilePath)) {

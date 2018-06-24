@@ -200,6 +200,10 @@
         </module>
 
 
+        <!-- PERFORMANCE -->
+
+        <module name="io.harness.checks.ForEachCheck"/>
+
         <!-- *** -->
 
         <module name="EmptyStatement"/>

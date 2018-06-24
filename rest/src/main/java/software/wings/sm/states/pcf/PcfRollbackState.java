@@ -36,7 +36,7 @@ public class PcfRollbackState extends PcfDeployState {
     // in case of rollback, we send InstanceData mentioning apps and their reset counts
     StringBuilder updateDetails = new StringBuilder();
     if (pcfDeployContextElement.getInstanceData() != null) {
-      pcfDeployContextElement.getInstanceData().stream().forEach(pcfServiceData -> {
+      pcfDeployContextElement.getInstanceData().forEach(pcfServiceData -> {
         Integer temp = pcfServiceData.getDesiredCount();
         pcfServiceData.setDesiredCount(pcfServiceData.getPreviousCount());
         pcfServiceData.setPreviousCount(temp);

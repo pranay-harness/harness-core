@@ -22,7 +22,6 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.FeatureFlagServiceImpl;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -145,9 +144,9 @@ public class FeatureFlagTest extends WingsBaseTest {
 
     featureFlagService.initializeFeatureFlags();
 
-    Arrays.stream(FeatureName.values())
-        .forEach(featureName
-            -> assertThat(featureFlagService.isEnabled(featureName, null)).isEqualTo(featureName == FEATURE));
+    for (FeatureName featureName : FeatureName.values()) {
+      assertThat(featureFlagService.isEnabled(featureName, null)).isEqualTo(featureName == FEATURE);
+    }
   }
 
   @Test
@@ -157,8 +156,9 @@ public class FeatureFlagTest extends WingsBaseTest {
 
     featureFlagService.initializeFeatureFlags();
 
-    Arrays.stream(FeatureName.values())
-        .forEach(featureName -> assertThat(featureFlagService.isEnabled(featureName, null)).isFalse());
+    for (FeatureName featureName : FeatureName.values()) {
+      assertThat(featureFlagService.isEnabled(featureName, null)).isFalse();
+    }
   }
 
   @Test
@@ -168,7 +168,8 @@ public class FeatureFlagTest extends WingsBaseTest {
 
     featureFlagService.initializeFeatureFlags();
 
-    Arrays.stream(FeatureName.values())
-        .forEach(featureName -> assertThat(featureFlagService.isEnabled(featureName, null)).isFalse());
+    for (FeatureName featureName : FeatureName.values()) {
+      assertThat(featureFlagService.isEnabled(featureName, null)).isFalse();
+    }
   }
 }

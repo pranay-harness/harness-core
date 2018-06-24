@@ -102,7 +102,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
               .collect(toList());
       if (awsInfrastructureMapping.getHostNameConvention() != null
           && !awsInfrastructureMapping.getHostNameConvention().equals(Constants.DEFAULT_AWS_HOST_NAME_CONVENTION)) {
-        awsHosts.stream().forEach(h -> {
+        awsHosts.forEach(h -> {
           HostElement hostElement = aHostElement().withEc2Instance(h.getEc2Instance()).build();
 
           final Map<String, Object> contextMap = new HashMap();
@@ -141,8 +141,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     DescribeInstancesResult describeInstancesResult =
         listFilteredHosts(awsInfrastructureMapping, awsConfig, encryptedDataDetails);
     List<Instance> instanceList = Lists.newArrayList();
-    describeInstancesResult.getReservations().stream().forEach(
-        reservation -> instanceList.addAll(reservation.getInstances()));
+    describeInstancesResult.getReservations().forEach(reservation -> instanceList.addAll(reservation.getInstances()));
     return instanceList;
   }
 

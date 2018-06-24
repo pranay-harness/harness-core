@@ -149,7 +149,7 @@ public class AwsInstanceHandler extends InstanceHandler {
       Map<String, DeploymentSummary> asgNameDeploymentSummaryMap, boolean isAmi, boolean rollback) {
     // This is to handle the case of the instances stored in the new schema.
     if (asgInstanceMap.size() > 0) {
-      asgInstanceMap.keySet().stream().forEach(autoScalingGroupName -> {
+      asgInstanceMap.keySet().forEach(autoScalingGroupName -> {
         List<com.amazonaws.services.ec2.model.Instance> latestEc2Instances =
             getEc2InstancesFromAutoScalingGroup(region, autoScalingGroupName, awsConfig, encryptedDataDetails);
 
@@ -162,7 +162,7 @@ public class AwsInstanceHandler extends InstanceHandler {
 
         // If there are prior instances in db already
         if (isNotEmpty(instancesInDB)) {
-          instancesInDB.stream().forEach(instance -> {
+          instancesInDB.forEach(instance -> {
             if (instance != null) {
               instancesInDBMap.put(getEc2InstanceId(instance), instance);
             }
@@ -176,7 +176,7 @@ public class AwsInstanceHandler extends InstanceHandler {
         SetView<String> instancesToBeAdded = Sets.difference(latestEc2InstanceMap.keySet(), instancesInDBMap.keySet());
 
         if (asgNameDeploymentSummaryMap != null && !isAmi) {
-          instancesToBeUpdated.stream().forEach(ec2InstanceId -> {
+          instancesToBeUpdated.forEach(ec2InstanceId -> {
             Instance instance = instancesInDBMap.get(ec2InstanceId);
             String uuid = null;
             if (instance != null) {
@@ -216,7 +216,7 @@ public class AwsInstanceHandler extends InstanceHandler {
                   asgNameDeploymentSummaryMap.get(autoScalingGroupName), rollback);
             }
 
-            instancesToBeAdded.stream().forEach(ec2InstanceId -> {
+            instancesToBeAdded.forEach(ec2InstanceId -> {
               com.amazonaws.services.ec2.model.Instance ec2Instance = latestEc2InstanceMap.get(ec2InstanceId);
               // change to asg based instance builder
               Instance instance = buildInstanceUsingEc2InstanceAndASG(
@@ -331,7 +331,7 @@ public class AwsInstanceHandler extends InstanceHandler {
     SetView<String> instancesToBeDeleted = Sets.difference(instancesInDBMap.keySet(), latestEc2InstanceMap.keySet());
 
     Set<String> instanceIdsToBeDeleted = new HashSet<>();
-    instancesToBeDeleted.stream().forEach(ec2InstanceId -> {
+    instancesToBeDeleted.forEach(ec2InstanceId -> {
       Instance instance = instancesInDBMap.get(ec2InstanceId);
       if (instance != null) {
         instanceIdsToBeDeleted.add(instance.getUuid());

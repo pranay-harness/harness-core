@@ -65,8 +65,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
         executionLogCallback.saveExecutionLog("# No Existing applications found");
       } else {
         StringBuilder appNames = new StringBuilder("# Existing applications: ");
-        previousReleases.stream().forEach(
-            applicationSummary -> appNames.append("\n").append(applicationSummary.getName()));
+        previousReleases.forEach(applicationSummary -> appNames.append("\n").append(applicationSummary.getName()));
         executionLogCallback.saveExecutionLog(appNames.toString());
       }
 

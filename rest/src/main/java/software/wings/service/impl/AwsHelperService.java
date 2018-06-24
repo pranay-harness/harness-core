@@ -1463,7 +1463,7 @@ public class AwsHelperService {
 
       do {
         describeInstancesResult = amazonEc2Client.describeInstances(describeInstancesRequest);
-        describeInstancesResult.getReservations().stream().forEach(
+        describeInstancesResult.getReservations().forEach(
             reservation -> instanceList.addAll(reservation.getInstances()));
 
         describeInstancesRequest.withNextToken(describeInstancesResult.getNextToken());

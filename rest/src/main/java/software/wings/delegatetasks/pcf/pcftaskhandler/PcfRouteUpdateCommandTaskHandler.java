@@ -114,7 +114,7 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
     }
 
     StringBuilder builder = new StringBuilder();
-    routeMaps.stream().forEach(routeMap -> builder.append("\n").append(routeMap));
+    routeMaps.forEach(routeMap -> builder.append("\n").append(routeMap));
     builder.append("\n]");
     return builder.toString();
   }

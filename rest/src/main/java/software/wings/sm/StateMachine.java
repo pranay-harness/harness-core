@@ -895,7 +895,7 @@ public class StateMachine extends Base {
     } else {
       stateNamesInOrder.add(ind, state.getName());
     }
-    nextStates.stream().forEach(nextState -> {
+    nextStates.forEach(nextState -> {
       if (!stateNamesInOrder.contains(nextState.getName())) {
         buildStateNamesInOrderByAppearance(nextState, stateNamesInOrder);
       }

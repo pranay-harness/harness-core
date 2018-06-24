@@ -156,7 +156,7 @@ public class SettingsServiceImpl implements SettingsService {
 
             Multimap<String, String> appEnvMap = HashMultimap.create();
 
-            appEnvRestrictions.stream().forEach(appEnvRestriction -> {
+            appEnvRestrictions.forEach(appEnvRestriction -> {
               GenericEntityFilter appFilter = appEnvRestriction.getAppFilter();
               Set<String> appIds = authHandler.getAppIdsByFilter(settingAttribute.getAccountId(), appFilter);
               if (isEmpty(appIds)) {
@@ -164,7 +164,7 @@ public class SettingsServiceImpl implements SettingsService {
               }
 
               EnvFilter envFilter = appEnvRestriction.getEnvFilter();
-              appIds.stream().forEach(appId -> {
+              appIds.forEach(appId -> {
                 Set<String> envIds = authHandler.getEnvIdsByFilter(appId, envFilter);
                 if (isEmpty(envIds)) {
                   appEnvMap.put(appId, null);

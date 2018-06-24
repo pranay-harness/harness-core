@@ -381,7 +381,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
             Collection<NewRelicMetricDataRecord> newRelicMetricDataRecords =
                 new APMResponseParser().extract(apmResponseDataList);
 
-            newRelicMetricDataRecords.stream().forEach(newRelicMetricDataRecord -> {
+            newRelicMetricDataRecords.forEach(newRelicMetricDataRecord -> {
               newRelicMetricDataRecord.setServiceId(dataCollectionInfo.getServiceId());
               newRelicMetricDataRecord.setStateExecutionId(dataCollectionInfo.getStateExecutionId());
               newRelicMetricDataRecord.setWorkflowExecutionId(dataCollectionInfo.getWorkflowExecutionId());

@@ -156,12 +156,12 @@ public class AuthHandler {
     Multimap<String, Action> envActionMapForPipeline = HashMultimap.create();
     Multimap<String, Action> envActionMapForDeployment = HashMultimap.create();
 
-    userGroups.stream().forEach(userGroup -> {
+    userGroups.forEach(userGroup -> {
       Set<AppPermission> appPermissions = userGroup.getAppPermissions();
       if (isEmpty(appPermissions)) {
         return;
       }
-      appPermissions.stream().forEach(appPermission -> {
+      appPermissions.forEach(appPermission -> {
         if (isEmpty(appPermission.getActions())) {
           logger.error("Actions empty for apps: {}", appPermission.getAppFilter());
           return;
@@ -361,7 +361,7 @@ public class AuthHandler {
 
           pipelineIdActionMap = getPipelineIdsByFilter(permissionTypeAppIdEntityMap.get(PIPELINE).get(appId),
               permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter, envActionMap, entityActions);
-          pipelineIdActionMap.asMap().entrySet().stream().forEach(entry -> {
+          pipelineIdActionMap.asMap().entrySet().forEach(entry -> {
             Map<String, Set<Action>> permissionMap = setActionsForEntity(
                 finalAppPermissionSummaryForUI.getPipelinePermissions(), entry.getKey(), entry.getValue());
             finalAppPermissionSummaryForUI.setPipelinePermissions(permissionMap);
@@ -376,7 +376,7 @@ public class AuthHandler {
           pipelineIdActionMap = getPipelineIdsByFilter(permissionTypeAppIdEntityMap.get(PIPELINE).get(appId),
               permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter, envActionMap, entityActions);
 
-          pipelineIdActionMap.asMap().entrySet().stream().forEach(entry -> {
+          pipelineIdActionMap.asMap().entrySet().forEach(entry -> {
             Map<String, Set<Action>> permissionMap = setActionsForEntity(
                 finalAppPermissionSummaryForUI.getDeploymentPermissions(), entry.getKey(), entry.getValue());
             finalAppPermissionSummaryForUI.setDeploymentPermissions(permissionMap);
@@ -488,7 +488,7 @@ public class AuthHandler {
 
   private void populateRequiredAccountPermissions(
       List<UserGroup> userGroups, Set<PermissionType> accountPermissionSet) {
-    userGroups.stream().forEach(userGroup -> {
+    userGroups.forEach(userGroup -> {
       AccountPermissions accountPermissions = userGroup.getAccountPermissions();
       if (accountPermissions != null) {
         Set<PermissionType> permissions = accountPermissions.getPermissions();
@@ -506,13 +506,13 @@ public class AuthHandler {
     asList(SERVICE, PROVISIONER, ENV, WORKFLOW, PIPELINE, DEPLOYMENT)
         .forEach(permissionType -> permissionTypeAppIdSetMap.put(permissionType, new HashSet<>()));
 
-    userGroups.stream().forEach(userGroup -> {
+    userGroups.forEach(userGroup -> {
       Set<AppPermission> appPermissions = userGroup.getAppPermissions();
       if (isEmpty(appPermissions)) {
         return;
       }
 
-      appPermissions.stream().forEach(appPermission -> {
+      appPermissions.forEach(appPermission -> {
         Set<String> appIdSet = getAppIdsByFilter(allAppIds, appPermission.getAppFilter());
         if (appIdSet == null) {
           return;
@@ -939,13 +939,13 @@ public class AuthHandler {
     Set<String> envIds;
     if (isNotEmpty(environments)) {
       envIds = getEnvIdsByFilter(environments, envFilter);
-      envIds.stream().forEach(envId -> envActionMap.putAll(envId, entityActionsFromCurrentPermission));
+      envIds.forEach(envId -> envActionMap.putAll(envId, entityActionsFromCurrentPermission));
     } else {
       envIds = Collections.emptySet();
     }
 
     Set<String> envIdsFromOtherPermissions = envActionMap.keySet();
-    pipelines.stream().forEach(p -> {
+    pipelines.forEach(p -> {
       Set<Action> entityActions = new HashSet(entityActionsFromCurrentPermission);
       boolean match;
       Pipeline pipeline = (Pipeline) p;
@@ -1018,7 +1018,7 @@ public class AuthHandler {
       userPermissionInfo.setAppPermissionMapInternal(toAppPermissionSummaryMap);
     }
 
-    fromAppPermissionMap.entrySet().stream().forEach(entry -> {
+    fromAppPermissionMap.entrySet().forEach(entry -> {
       AppPermissionSummary toAppPermissionSummary = convertToAppSummaryInternal(entry.getValue());
       toAppPermissionSummaryMap.put(entry.getKey(), toAppPermissionSummary);
     });
@@ -1054,11 +1054,11 @@ public class AuthHandler {
       return new HashMap<>();
     }
 
-    fromMap.entrySet().stream().forEach(entry -> {
+    fromMap.entrySet().forEach(entry -> {
       Collection<Action> actions = entry.getValue();
       final String entityId = entry.getKey();
       if (CollectionUtils.isNotEmpty(actions)) {
-        actions.stream().forEach(action -> {
+        actions.forEach(action -> {
           if (action == Action.READ) {
             readSet.add(entityId);
           } else if (action == Action.UPDATE) {

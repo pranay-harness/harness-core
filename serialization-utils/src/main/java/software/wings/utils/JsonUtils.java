@@ -32,7 +32,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -366,7 +365,9 @@ public class JsonUtils {
     try {
       return objectMapper.readTree(json);
     } catch (Exception e) {
-      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+      for (StackTraceElement elem : e.getStackTrace()) {
+        logger.error("Trace: {}", elem);
+      }
       throw new RuntimeException(e);
     }
   }

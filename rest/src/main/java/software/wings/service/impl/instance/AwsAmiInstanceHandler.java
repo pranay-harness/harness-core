@@ -91,7 +91,7 @@ public class AwsAmiInstanceHandler extends AwsInstanceHandler {
     }
 
     Map<String, DeploymentSummary> deploymentSummaryMap = new HashMap<>();
-    newDeploymentSummaries.stream().forEach(deploymentSummary
+    newDeploymentSummaries.forEach(deploymentSummary
         -> deploymentSummaryMap.put(
             ((AwsAutoScalingGroupDeploymentInfo) deploymentSummary.getDeploymentInfo()).getAutoScalingGroupName(),
             deploymentSummary));
@@ -108,7 +108,7 @@ public class AwsAmiInstanceHandler extends AwsInstanceHandler {
 
     Multimap<String, Instance> asgInstanceMap = ArrayListMultimap.create();
 
-    deploymentSummaries.stream().forEach(deploymentSummary
+    deploymentSummaries.forEach(deploymentSummary
         -> asgInstanceMap.put(
             ((AwsAutoScalingGroupDeploymentInfo) deploymentSummary.getDeploymentInfo()).getAutoScalingGroupName(),
             null));
@@ -181,7 +181,7 @@ public class AwsAmiInstanceHandler extends AwsInstanceHandler {
     List<String> autoScalingGroupNames =
         getASGFromAMIDeployment(phaseExecutionData, phaseStepExecutionData, workflowExecution);
     List<DeploymentInfo> deploymentInfos = new ArrayList<>();
-    autoScalingGroupNames.stream().forEach(autoScalingGroupName
+    autoScalingGroupNames.forEach(autoScalingGroupName
         -> deploymentInfos.add(
             AwsAutoScalingGroupDeploymentInfo.builder().autoScalingGroupName(autoScalingGroupName).build()));
     return Optional.of(deploymentInfos);

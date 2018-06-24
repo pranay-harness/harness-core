@@ -45,7 +45,7 @@ public class CreateSupportUserGroupsAndRenameAccountAdmin implements Migration {
     List<Account> accountList = accountService.list(accountPageRequest);
 
     if (accountList != null) {
-      accountList.stream().forEach(account -> {
+      accountList.forEach(account -> {
         String accountId = account.getUuid();
         PageRequest<UserGroup> pageRequest =
             aPageRequest()

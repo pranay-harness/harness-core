@@ -62,7 +62,7 @@ public class PcfRouteUpdateStateExecutionData extends StateExecutionData impleme
 
   private String getDisplayString(List<String> inputs) {
     StringBuilder builder = new StringBuilder();
-    inputs.stream().forEach(input -> builder.append(input).append(" "));
+    inputs.forEach(input -> builder.append(input).append(" "));
     return builder.toString();
   }
 

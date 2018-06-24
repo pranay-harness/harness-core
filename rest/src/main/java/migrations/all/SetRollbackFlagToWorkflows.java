@@ -72,7 +72,7 @@ public class SetRollbackFlagToWorkflows implements Migration {
                  phaseStep -> phaseStep.isRollback() || phaseStep.getSteps().stream().anyMatch(GraphNode::isRollback));
 
       workflowPhase.setRollback(false);
-      workflowPhase.getPhaseSteps().stream().forEach(phaseStep -> {
+      workflowPhase.getPhaseSteps().forEach(phaseStep -> {
         phaseStep.setRollback(false);
         phaseStep.getSteps().forEach(step -> step.setRollback(false));
       });
@@ -83,9 +83,9 @@ public class SetRollbackFlagToWorkflows implements Migration {
           || workflowPhase.getPhaseSteps().stream().anyMatch(phaseStep
                  -> !phaseStep.isRollback() || phaseStep.getSteps().stream().anyMatch(step -> !step.isRollback()));
       workflowPhase.setRollback(true);
-      workflowPhase.getPhaseSteps().stream().forEach(phaseStep -> {
+      workflowPhase.getPhaseSteps().forEach(phaseStep -> {
         phaseStep.setRollback(true);
-        phaseStep.getSteps().stream().forEach(step -> step.setRollback(true));
+        phaseStep.getSteps().forEach(step -> step.setRollback(true));
       });
     }
 

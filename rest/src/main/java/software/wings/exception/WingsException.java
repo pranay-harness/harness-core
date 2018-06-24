@@ -213,7 +213,6 @@ public class WingsException extends WingsApiException {
         ((WingsException) t)
             .getContextObjects()
             .entrySet()
-            .stream()
             .forEach(entry -> context.put(entry.getKey().getCanonicalName(), entry.getValue()));
       }
       t = t.getCause();

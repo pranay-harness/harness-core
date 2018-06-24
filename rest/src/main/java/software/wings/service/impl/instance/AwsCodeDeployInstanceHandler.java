@@ -134,7 +134,7 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
     String region = codeDeployInfraMapping.getRegion();
 
     if (isNotEmpty(newDeploymentSummaries)) {
-      newDeploymentSummaries.stream().forEach(newDeploymentSummary -> {
+      newDeploymentSummaries.forEach(newDeploymentSummary -> {
         AwsCodeDeployDeploymentInfo awsCodeDeployDeploymentInfo =
             (AwsCodeDeployDeploymentInfo) newDeploymentSummary.getDeploymentInfo();
 
@@ -156,7 +156,7 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
             Sets.intersection(latestEc2InstanceMap.keySet(), instancesInDBMap.keySet());
 
         if (newDeploymentSummary != null) {
-          instancesToBeUpdated.stream().forEach(ec2InstanceId -> {
+          instancesToBeUpdated.forEach(ec2InstanceId -> {
             // change to codeDeployInstance builder
             Instance instance = instancesInDBMap.get(ec2InstanceId);
             String uuid = null;
@@ -193,7 +193,7 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
             deploymentSummary = getDeploymentSummaryForInstanceCreation(newDeploymentSummary, rollback);
           }
 
-          instancesToBeAdded.stream().forEach(ec2InstanceId -> {
+          instancesToBeAdded.forEach(ec2InstanceId -> {
             com.amazonaws.services.ec2.model.Instance ec2Instance = latestEc2InstanceMap.get(ec2InstanceId);
             // change to codeDeployInstance builder
             Instance instance =

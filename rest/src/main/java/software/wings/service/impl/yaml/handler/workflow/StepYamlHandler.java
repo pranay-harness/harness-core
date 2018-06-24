@@ -80,7 +80,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
 
     Map<String, Object> yamlProperties = yaml.getProperties();
     if (yamlProperties != null) {
-      yamlProperties.entrySet().stream().forEach(
+      yamlProperties.entrySet().forEach(
           entry -> convertNameToIdIfKnownType(entry, outputProperties, appId, accountId, yamlProperties));
     }
 
@@ -109,7 +109,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
     Map<String, Object> properties = bean.getProperties();
     final Map<String, Object> outputProperties = Maps.newHashMap();
     if (properties != null) {
-      properties.entrySet().stream().forEach(entry -> {
+      properties.entrySet().forEach(entry -> {
         if (!shouldBeIgnored(entry.getKey())) {
           convertIdToNameIfKnownType(entry, outputProperties, appId, properties);
         }

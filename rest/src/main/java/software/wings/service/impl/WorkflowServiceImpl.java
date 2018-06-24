@@ -413,8 +413,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       return cachedStencils;
     }
 
-    List<StateTypeDescriptor> stencils = new ArrayList<>();
-    Arrays.stream(values()).forEach(state -> stencils.add(state));
+    List<StateTypeDescriptor> stencils = Arrays.asList(values());
 
     List<StateTypeDescriptor> plugins = pluginManager.getExtensions(StateTypeDescriptor.class);
     stencils.addAll(plugins);
@@ -1922,7 +1921,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public List<Variable> updateUserVariables(String appId, String workflowId, List<Variable> userVariables) {
     if (userVariables != null) {
-      userVariables.stream().forEach(variable -> ExpressionEvaluator.isValidVariableName(variable.getName()));
+      userVariables.forEach(variable -> ExpressionEvaluator.isValidVariableName(variable.getName()));
     }
     Workflow workflow = readWorkflow(appId, workflowId);
     notNullCheck("Workflow was deleted", workflow, USER);

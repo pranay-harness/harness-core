@@ -142,7 +142,7 @@ public class PcfInstanceHandler extends InstanceHandler {
               Sets.difference(instancesInDBMap.keySet(), latestPcfInstanceInfoMap.keySet());
 
           Set<String> instanceIdsToBeDeleted = new HashSet<>();
-          instancesToBeDeleted.stream().forEach(id -> {
+          instancesToBeDeleted.forEach(id -> {
             Instance instance = instancesInDBMap.get(id);
             if (instance != null) {
               instanceIdsToBeDeleted.add(instance.getUuid());
@@ -198,7 +198,7 @@ public class PcfInstanceHandler extends InstanceHandler {
     }
 
     Map<String, DeploymentSummary> deploymentSummaryMap = new HashMap<>();
-    newDeploymentSummaries.stream().forEach(deploymentSummary
+    newDeploymentSummaries.forEach(deploymentSummary
         -> deploymentSummaryMap.put(
             ((PcfDeploymentInfo) deploymentSummary.getDeploymentInfo()).getApplicationName(), deploymentSummary));
 
@@ -239,7 +239,7 @@ public class PcfInstanceHandler extends InstanceHandler {
   public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback)
       throws HarnessException {
     Multimap<String, Instance> pcfApplicationNameInstanceMap = ArrayListMultimap.create();
-    deploymentSummaries.stream().forEach(deploymentSummary -> {
+    deploymentSummaries.forEach(deploymentSummary -> {
       PcfDeploymentInfo pcfDeploymentInfo = (PcfDeploymentInfo) deploymentSummary.getDeploymentInfo();
       pcfApplicationNameInstanceMap.put(pcfDeploymentInfo.getApplicationName(), null);
     });
@@ -286,7 +286,7 @@ public class PcfInstanceHandler extends InstanceHandler {
         }
 
         List<DeploymentInfo> pcfDeploymentInfo = new ArrayList<>();
-        pcfServiceDatas.stream().forEach(pcfServiceData
+        pcfServiceDatas.forEach(pcfServiceData
             -> pcfDeploymentInfo.add(PcfDeploymentInfo.builder()
                                          .applicationName(pcfServiceData.getName())
                                          .applicationGuild(pcfServiceData.getId())

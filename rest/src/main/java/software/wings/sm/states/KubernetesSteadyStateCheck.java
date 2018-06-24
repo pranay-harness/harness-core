@@ -194,7 +194,7 @@ public class KubernetesSteadyStateCheck extends State {
       throw new InvalidRequestException("Labels cannot be empty.");
     }
 
-    labels.stream().forEach(label -> label.setValue(context.renderExpression(label.getValue())));
+    labels.forEach(label -> label.setValue(context.renderExpression(label.getValue())));
 
     Map<String, String> labelMap =
         labels.stream().collect(Collectors.toMap(label -> label.getName(), label -> label.getValue()));
