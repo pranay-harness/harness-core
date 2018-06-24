@@ -1480,7 +1480,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     List<StateExecutionInstance> stateExecutionInstances = getStateExecutionInstances(workflowExecution);
     for (StateExecutionInstance stateExecutionInstance : stateExecutionInstances) {
       StateExecutionData stateExecutionData = stateExecutionInstance.getStateExecutionData();
-      if (stateExecutionData == null || !(stateExecutionData instanceof EnvStateExecutionData)) {
+      if (!(stateExecutionData instanceof EnvStateExecutionData)) {
         continue;
       }
       EnvStateExecutionData envStateExecutionData = (EnvStateExecutionData) stateExecutionData;
@@ -1495,6 +1495,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
       try {
         ExecutionInterrupt executionInterruptClone = KryoUtils.clone(executionInterrupt);
+        executionInterruptClone.setUuid(generateUuid());
         executionInterruptClone.setExecutionUuid(workflowExecution2.getUuid());
         executionInterruptManager.registerExecutionInterrupt(executionInterruptClone);
       } catch (WingsException exception) {
