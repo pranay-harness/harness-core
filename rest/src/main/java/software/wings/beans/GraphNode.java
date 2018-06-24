@@ -7,7 +7,6 @@ import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
-import org.mongodb.morphia.annotations.Embedded;
 import software.wings.common.Constants;
 import software.wings.sm.InstanceStatusSummary;
 
@@ -44,7 +43,7 @@ public class GraphNode {
   private List<TemplateExpression> templateExpressions;
   private List<NameValuePair> variableOverrides;
 
-  @Embedded private Map<String, Object> properties = new HashMap<>();
+  private Map<String, Object> properties = new HashMap<>();
 
   private GraphNode next;
   private GraphGroup group;

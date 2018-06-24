@@ -1,6 +1,5 @@
 package software.wings.beans;
 
-import org.mongodb.morphia.annotations.Embedded;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
@@ -9,7 +8,7 @@ import software.wings.security.PermissionAttribute.ResourceType;
 /**
  * Created by anubhaw on 3/17/16.
  */
-@Embedded
+
 public class Permission {
   private ResourceType resourceType;
   private Action action;

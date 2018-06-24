@@ -3,7 +3,6 @@ package software.wings.api;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
@@ -33,11 +32,11 @@ public class DeploymentSummary extends Base {
   private String deployedById;
   private String deployedByName;
   private long deployedAt;
-  @Embedded private DeploymentInfo deploymentInfo;
-  @Indexed @Embedded private PcfDeploymentKey pcfDeploymentKey;
-  @Indexed @Embedded private AwsAmiDeploymentKey awsAmiDeploymentKey;
-  @Indexed @Embedded private AwsCodeDeployDeploymentKey awsCodeDeployDeploymentKey;
-  @Indexed @Embedded private ContainerDeploymentKey containerDeploymentKey;
+  private DeploymentInfo deploymentInfo;
+  @Indexed private PcfDeploymentKey pcfDeploymentKey;
+  @Indexed private AwsAmiDeploymentKey awsAmiDeploymentKey;
+  @Indexed private AwsCodeDeployDeploymentKey awsCodeDeployDeploymentKey;
+  @Indexed private ContainerDeploymentKey containerDeploymentKey;
 
   @Builder
   public DeploymentSummary(String uuid, String appId, EmbeddedUser createdBy, long createdAt,

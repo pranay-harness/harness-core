@@ -4,7 +4,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
@@ -25,9 +24,9 @@ import software.wings.beans.infrastructure.instance.key.PcfInstanceKey;
 @EqualsAndHashCode(callSuper = true)
 public class Instance extends Base {
   @Indexed @NotEmpty private InstanceType instanceType;
-  @Indexed @Embedded private HostInstanceKey hostInstanceKey;
-  @Indexed @Embedded private ContainerInstanceKey containerInstanceKey;
-  @Indexed @Embedded private PcfInstanceKey pcfInstanceKey;
+  @Indexed private HostInstanceKey hostInstanceKey;
+  @Indexed private ContainerInstanceKey containerInstanceKey;
+  @Indexed private PcfInstanceKey pcfInstanceKey;
   @Indexed private String envId;
   private String envName;
   private EnvironmentType envType;
@@ -58,7 +57,7 @@ public class Instance extends Base {
   @Indexed private String lastPipelineExecutionId;
   private String lastPipelineExecutionName;
 
-  @Embedded private InstanceInfo instanceInfo;
+  private InstanceInfo instanceInfo;
 
   @Builder
   public Instance(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,

@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
@@ -67,7 +66,7 @@ public class StateExecutionInstance extends Base {
   private String delegateTaskId;
   private String rollbackPhaseName;
 
-  @Embedded private WingsDeque<ContextElement> contextElements = new WingsDeque<>();
+  private WingsDeque<ContextElement> contextElements = new WingsDeque<>();
   private Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
   private List<StateExecutionData> stateExecutionDataHistory = new ArrayList<>();
 

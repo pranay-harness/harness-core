@@ -2,7 +2,6 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
-import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Version;
@@ -22,7 +21,7 @@ public class PipelineExecution extends Base {
   @Indexed private String pipelineId;
   @Indexed private String workflowExecutionId;
   private String stateMachineId;
-  @Embedded private Pipeline pipeline;
+  private Pipeline pipeline;
   private List<PipelineStageExecution> pipelineStageExecutions = new ArrayList<>();
   private String appName;
   @Indexed private WorkflowType workflowType;

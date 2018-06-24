@@ -2,8 +2,6 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
-import org.mongodb.morphia.annotations.Embedded;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -12,7 +10,7 @@ import java.util.Objects;
 /**
  * Created by anubhaw on 9/29/16.
  */
-@Embedded
+
 public class InfrastructureMappingRule {
   private String name;
   private List<Rule> rules = new ArrayList<>();

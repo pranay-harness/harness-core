@@ -14,7 +14,6 @@ import static software.wings.sm.TransitionType.SUCCESS;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.harness.data.structure.UUIDGenerator;
-import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.common.Constants;
 
@@ -32,9 +31,9 @@ import java.util.Optional;
  */
 public class Graph {
   private String graphName = Constants.DEFAULT_WORKFLOW_NAME;
-  @Embedded private List<GraphNode> nodes = new ArrayList<>();
+  private List<GraphNode> nodes = new ArrayList<>();
   private List<GraphLink> links = new ArrayList<>();
-  @Embedded private Map<String, Graph> subworkflows = new HashMap<>();
+  private Map<String, Graph> subworkflows = new HashMap<>();
 
   @Transient private Optional<GraphNode> originState;
 

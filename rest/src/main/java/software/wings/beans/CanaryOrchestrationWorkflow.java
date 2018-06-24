@@ -34,7 +34,6 @@ import static software.wings.common.Constants.phaseNamePattern;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,21 +57,21 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   private static final Logger logger = LoggerFactory.getLogger(CanaryOrchestrationWorkflow.class);
 
-  @Embedded private PhaseStep preDeploymentSteps = new PhaseStep(PhaseStepType.PRE_DEPLOYMENT, PRE_DEPLOYMENT);
+  private PhaseStep preDeploymentSteps = new PhaseStep(PhaseStepType.PRE_DEPLOYMENT, PRE_DEPLOYMENT);
 
   @JsonIgnore private List<String> workflowPhaseIds = new ArrayList<>();
 
-  @Embedded @JsonIgnore private Map<String, WorkflowPhase> workflowPhaseIdMap = new HashMap<>();
+  @JsonIgnore private Map<String, WorkflowPhase> workflowPhaseIdMap = new HashMap<>();
 
-  @Embedded private Map<String, WorkflowPhase> rollbackWorkflowPhaseIdMap = new HashMap<>();
+  private Map<String, WorkflowPhase> rollbackWorkflowPhaseIdMap = new HashMap<>();
 
   @Transient private List<WorkflowPhase> workflowPhases = new ArrayList<>();
 
-  @Embedded private PhaseStep postDeploymentSteps = new PhaseStep(PhaseStepType.POST_DEPLOYMENT, POST_DEPLOYMENT);
+  private PhaseStep postDeploymentSteps = new PhaseStep(PhaseStepType.POST_DEPLOYMENT, POST_DEPLOYMENT);
 
-  @Embedded private List<NotificationRule> notificationRules = new ArrayList<>();
+  private List<NotificationRule> notificationRules = new ArrayList<>();
 
-  @Embedded private List<FailureStrategy> failureStrategies = new ArrayList<>();
+  private List<FailureStrategy> failureStrategies = new ArrayList<>();
 
   private List<Variable> systemVariables = new ArrayList<>();
 

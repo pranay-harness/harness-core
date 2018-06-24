@@ -1,6 +1,5 @@
 package software.wings.waitnotify;
 
-import org.mongodb.morphia.annotations.Embedded;
 import software.wings.beans.Base;
 
 import java.util.ArrayList;
@@ -10,7 +9,7 @@ import java.util.List;
  * Created by rishi on 12/14/16.
  */
 public class ListNotifyResponseData implements NotifyResponseData {
-  @Embedded private List<Base> data = new ArrayList<>();
+  private List<Base> data = new ArrayList<>();
 
   public ListNotifyResponseData() {}
 

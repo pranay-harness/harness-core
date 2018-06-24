@@ -14,7 +14,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.mongodb.morphia.annotations.Embedded;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Graph.Builder;
 import software.wings.common.Constants;
@@ -56,7 +55,7 @@ public class WorkflowPhase implements UuidAware {
 
   @Valid private List<NameValuePair> variableOverrides = new ArrayList<>();
 
-  @Embedded private List<PhaseStep> phaseSteps = new ArrayList<>();
+  private List<PhaseStep> phaseSteps = new ArrayList<>();
 
   public String getUuid() {
     return uuid;

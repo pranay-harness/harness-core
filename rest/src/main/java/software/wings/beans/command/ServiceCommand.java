@@ -8,7 +8,6 @@ import com.google.common.collect.Maps;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
@@ -27,7 +26,7 @@ import java.util.Optional;
 public class ServiceCommand extends Base {
   private String name;
   @Indexed private String serviceId;
-  @Embedded private Map<String, EntityVersion> envIdVersionMap = Maps.newHashMap();
+  private Map<String, EntityVersion> envIdVersionMap = Maps.newHashMap();
   private Integer defaultVersion;
 
   private boolean targetToAllEnv = true;

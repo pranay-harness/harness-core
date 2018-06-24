@@ -17,7 +17,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Graph.Builder;
@@ -43,7 +42,7 @@ public class PhaseStep {
   @JsonIgnore private List<String> stepsIds = new ArrayList<>();
   @Transient private List<GraphNode> steps = new ArrayList<>();
   private boolean stepsInParallel;
-  @Embedded private List<FailureStrategy> failureStrategies = new ArrayList<>();
+  private List<FailureStrategy> failureStrategies = new ArrayList<>();
 
   private boolean rollback;
   private String phaseStepNameForRollback;
