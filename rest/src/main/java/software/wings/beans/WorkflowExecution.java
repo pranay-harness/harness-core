@@ -13,6 +13,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
@@ -36,8 +37,8 @@ import java.util.Map;
  * @author Rishi
  */
 @Entity(value = "workflowExecutions", noClassnameStored = true)
-@Indexes(@Index(fields = { @Field("workflowId")
-                           , @Field("status") }))
+@Indexes(@Index(options = @IndexOptions(name = "search"), fields = { @Field("workflowId")
+                                                                     , @Field("status") }))
 @SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 public class WorkflowExecution extends Base {
   public static final String ARGS_PIPELINE_PHASE_ELEMENT_ID_KEY = "executionArgs.pipelinePhaseElementId";

@@ -5,21 +5,20 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.PrePersist;
 
 import java.util.Date;
 
-/**
- * Created by peeyushaggarwal on 4/11/16.
- */
 @Indexes({
-  @Index(value = "getStuckIndex", fields = { @Field("running")
-                                             , @Field("resetTimestamp") })
-  , @Index(value = "countIndex", fields = { @Field("running") }), @Index(value = "getIndex", fields = {
-    @Field("running"), @Field("priority"), @Field("created"), @Field("earliestGet")
-  })
+  @Index(options = @IndexOptions(name = "stuck"), fields = { @Field("running")
+                                                             , @Field("resetTimestamp") })
+  , @Index(options = @IndexOptions(name = "count"), fields = { @Field("running") }),
+      @Index(options = @IndexOptions(name = "obtain"), fields = {
+        @Field("running"), @Field("priority"), @Field("created"), @Field("earliestGet")
+      })
 })
 public abstract class Queuable {
   @Id private String id;
@@ -38,7 +37,7 @@ public abstract class Queuable {
   /**
    * Instantiates a new queuable.
    *
-   * @param other Queueable to copy from.
+   * @param other Queuable to copy from.
    */
   public Queuable(Queuable other) {
     id = other.id;

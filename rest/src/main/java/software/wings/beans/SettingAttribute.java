@@ -64,10 +64,9 @@ import javax.validation.Valid;
  * Created by anubhaw on 5/16/16.
  */
 @Entity(value = "settingAttributes")
-@Indexes(
-    @Index(fields = { @Field("accountId")
-                      , @Field("appId"), @Field("envId"), @Field("name"), @Field("value.type") },
-        options = @IndexOptions(unique = true)))
+@Indexes(@Index(options = @IndexOptions(name = "locate", unique = true),
+    fields = { @Field("accountId")
+               , @Field("appId"), @Field("envId"), @Field("name"), @Field("value.type") }))
 @Data
 @EqualsAndHashCode(callSuper = false)
 public class SettingAttribute extends Base {

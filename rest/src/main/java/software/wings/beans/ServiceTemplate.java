@@ -21,8 +21,9 @@ import java.util.Objects;
  * Created by anubhaw on 4/4/16.
  */
 @Entity(value = "serviceTemplates", noClassnameStored = true)
-@Indexes(@Index(fields = { @Field("appId")
-                           , @Field("envId"), @Field("name") }, options = @IndexOptions(unique = true)))
+@Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true),
+    fields = { @Field("appId")
+               , @Field("envId"), @Field("name") }))
 public class ServiceTemplate extends Base {
   public static final String SERVICE_ID_KEY = "serviceId";
   public static final String ENVIRONMENT_ID_KEY = "envId";

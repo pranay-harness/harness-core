@@ -32,8 +32,8 @@ import java.util.List;
  */
 @Entity(value = "services", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Indexes(@Index(fields = { @Field("appId")
-                           , @Field("name") }, options = @IndexOptions(unique = true)))
+@Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("appId")
+                                                                                  , @Field("name") }))
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor

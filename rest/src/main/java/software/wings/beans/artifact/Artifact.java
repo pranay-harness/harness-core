@@ -18,6 +18,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
@@ -38,8 +39,8 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @EqualsAndHashCode(callSuper = true)
-@Indexes(@Index(fields = { @Field("artifactStreamId")
-                           , @Field("appId") }))
+@Indexes(@Index(options = @IndexOptions(name = "owners"), fields = { @Field("artifactStreamId")
+                                                                     , @Field("appId") }))
 public class Artifact extends Base {
   public static final String ARTIFACT_STREAM_ID_KEY = "artifactStreamId";
   public static final String CONTENT_STATUS_KEY = "contentStatus";

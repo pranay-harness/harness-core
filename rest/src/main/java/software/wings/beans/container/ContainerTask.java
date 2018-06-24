@@ -24,8 +24,9 @@ import java.util.List;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "deploymentType")
-@Indexes(@Index(fields = { @Field("serviceId")
-                           , @Field("deploymentType") }, options = @IndexOptions(unique = true)))
+@Indexes(@Index(options = @IndexOptions(name = "service", unique = true),
+    fields = { @Field("serviceId")
+               , @Field("deploymentType") }))
 @Entity("containerTasks")
 public abstract class ContainerTask extends DeploymentSpecification {
   static final String DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX = "\\$\\{DOCKER_IMAGE_NAME}";

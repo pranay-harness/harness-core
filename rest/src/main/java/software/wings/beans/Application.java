@@ -30,8 +30,9 @@ import java.util.Objects;
  * @author Rishi
  */
 @Entity(value = "applications", noClassnameStored = true)
-@Indexes(@Index(fields = { @Field("accountId")
-                           , @Field("name") }, options = @IndexOptions(unique = true)))
+@Indexes(
+    @Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("accountId")
+                                                                             , @Field("name") }))
 public class Application extends Base {
   public static final String NAME_KEY = "name";
 

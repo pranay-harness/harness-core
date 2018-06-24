@@ -19,8 +19,9 @@ import java.util.Objects;
  *
  * @author Rishi
  */
-@Indexes(@Index(fields = { @Field("accountId")
-                           , @Field("name") }, options = @IndexOptions(unique = true)))
+@Indexes(
+    @Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("accountId")
+                                                                             , @Field("name") }))
 @Entity(value = "appContainers", noClassnameStored = true)
 public class AppContainer extends BaseFile {
   @FormDataParam("standard") private boolean standard;

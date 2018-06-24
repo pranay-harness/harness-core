@@ -30,8 +30,8 @@ import javax.validation.constraints.NotNull;
  * @author Rishi
  */
 @Entity(value = "environments", noClassnameStored = true)
-@Indexes(@Index(fields = { @Field("appId")
-                           , @Field("name") }, options = @IndexOptions(unique = true)))
+@Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("appId")
+                                                                                  , @Field("name") }))
 public class Environment extends Base {
   public static final String NAME_KEY = "name";
   public static final String ENVIRONMENT_TYPE_KEY = "environmentType";

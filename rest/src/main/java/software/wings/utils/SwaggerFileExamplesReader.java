@@ -66,12 +66,16 @@ public class SwaggerFileExamplesReader implements ReaderListener {
         if (bodyParameter.isPresent()) {
           String exampleFileName = removeEnd(path.replace("/", "").replace("{", ".").replace("}", "."), ".") + "."
               + operation.getOperationId() + ".json";
+
+          Object resource = null;
           try {
-            String json = JsonUtils.asJson(JsonUtils.readResource("/apiexamples/" + exampleFileName), mapper);
-            ((BodyParameter) bodyParameter.get()).setExamples(ImmutableMap.of("default", json));
-          } catch (Exception e) {
-            logger.warn("Missing api example file " + exampleFileName);
+            resource = JsonUtils.readResource("/apiexamples/" + exampleFileName);
+          } catch (RuntimeException ignore) {
+            // no example file
+            continue;
           }
+          String json = JsonUtils.asJson(resource, mapper);
+          ((BodyParameter) bodyParameter.get()).setExamples(ImmutableMap.of("default", json));
         }
       }
     }

@@ -19,9 +19,9 @@ import java.util.List;
 
 @Entity(value = "barrierInstances", noClassnameStored = true)
 @Indexes({
-  @Index(fields = @Field("name"))
-  , @Index(fields = @Field("state")), @Index(fields = @Field("pipeline.executionId")),
-      @Index(fields = @Field("pipeline.workflows.pipelineStateId")),
+  @Index(options = @IndexOptions(name = "search", unique = true), fields = {
+    @Field("name"), @Field("pipeline.executionId")
+  })
 })
 @EqualsAndHashCode(callSuper = false)
 @Data
@@ -33,7 +33,7 @@ public class BarrierInstance extends Base {
   public static final String PIPELINE_WORKFLOWS_PIPELINE_STATE_ID_KEY = "pipeline.workflows.pipelineStateId";
 
   private String name;
-  private String state;
+  @Indexed private String state;
 
   @Data
   @Builder

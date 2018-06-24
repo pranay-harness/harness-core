@@ -49,8 +49,9 @@ import javax.annotation.Nullable;
  */
 @JsonTypeInfo(use = Id.NAME, property = "infraMappingType")
 @Entity(value = "infrastructureMapping")
-@Indexes(@Index(fields = { @Field("appId")
-                           , @Field("envId"), @Field("name") }, options = @IndexOptions(unique = true)))
+@Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true),
+    fields = { @Field("appId")
+               , @Field("envId"), @Field("name") }))
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class InfrastructureMapping extends Base {
   public static final String ENV_ID_KEY = "envId";

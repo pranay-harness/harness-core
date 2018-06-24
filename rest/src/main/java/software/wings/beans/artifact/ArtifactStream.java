@@ -29,9 +29,9 @@ import java.util.List;
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "artifactStreamType")
 @Entity(value = "artifactStream")
-@Indexes(
-    @Index(fields = { @Field("appId")
-                      , @Field("serviceId"), @Field("name") }, options = @IndexOptions(unique = true)))
+@Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true),
+    fields = { @Field("appId")
+               , @Field("serviceId"), @Field("name") }))
 @Data
 @EqualsAndHashCode(callSuper = false)
 @AllArgsConstructor

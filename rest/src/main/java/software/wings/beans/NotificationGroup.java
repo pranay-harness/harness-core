@@ -25,8 +25,9 @@ import javax.validation.constraints.NotNull;
  * Created by rishi on 10/30/16.
  */
 @Entity(value = "notificationGroups", noClassnameStored = true)
-@Indexes(@Index(fields = { @Field("accountId")
-                           , @Field("name") }, options = @IndexOptions(unique = true)))
+@Indexes(
+    @Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("accountId")
+                                                                             , @Field("name") }))
 @SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 public class NotificationGroup extends Base {
   @NotEmpty private String accountId;

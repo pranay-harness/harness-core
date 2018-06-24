@@ -30,8 +30,8 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @Entity(value = "triggers")
-@Indexes(@Index(fields = { @Field("appId")
-                           , @Field("name") }, options = @IndexOptions(unique = true)))
+@Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("appId")
+                                                                                  , @Field("name") }))
 public class Trigger extends Base {
   @NotEmpty private String name;
   private String description;
