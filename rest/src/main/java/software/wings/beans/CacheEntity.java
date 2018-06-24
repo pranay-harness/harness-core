@@ -25,6 +25,8 @@ import java.util.Date;
 public class CacheEntity {
   public static final String CONTEXT_HASH_KEY = "contextHash";
   public static final String CANONICAL_KEY_KEY = "canonicalKey";
+  public static final String ENTITY_KEY = "entity";
+  public static final String VALID_UNTIL_KEY = "validUntil";
 
   private long contextHash;
   @Id private String canonicalKey;
