@@ -19,6 +19,7 @@ import software.wings.annotation.Encryptable;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.pcf.PcfSetupContextElement;
+import software.wings.api.pcf.PcfSetupContextElement.PcfSetupContextElementBuilder;
 import software.wings.api.pcf.PcfSetupStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
@@ -75,6 +76,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 public class PcfSetupState extends State {
@@ -327,7 +329,7 @@ public class PcfSetupState extends State {
     PcfSetupCommandResponse pcfSetupCommandResponse =
         (PcfSetupCommandResponse) executionResponse.getPcfCommandResponse();
 
-    PcfSetupContextElement pcfSetupContextElement =
+    PcfSetupContextElementBuilder pcfSetupContextElementBuilder =
         PcfSetupContextElement.builder()
             .serviceId(stateExecutionData.getServiceId())
             .commandName(PCF_SETUP_COMMAND)
@@ -335,18 +337,20 @@ public class PcfSetupState extends State {
             .resizeStrategy(resizeStrategy)
             .infraMappingId(stateExecutionData.getInfraMappingId())
             .pcfCommandRequest(stateExecutionData.getPcfCommandRequest())
-            .routeMaps(stateExecutionData.getRouteMaps())
-            .totalPreviousInstanceCount(pcfSetupCommandResponse.getTotalPreviousInstanceCount() == null
-                    ? 0
-                    : pcfSetupCommandResponse.getTotalPreviousInstanceCount())
-            .timeoutIntervalInMinutes(timeoutIntervalInMinutes)
-            .appsToBeDownsized(pcfSetupCommandResponse.getDownsizeDetails())
-            .build();
+            .routeMaps(stateExecutionData.getRouteMaps());
 
-    if (ExecutionStatus.SUCCESS.equals(executionStatus)) {
-      pcfSetupContextElement.setNewPcfApplicationId(pcfSetupCommandResponse.getNewApplicationId());
-      pcfSetupContextElement.setNewPcfApplicationName(pcfSetupCommandResponse.getNewApplicationName());
+    if (pcfSetupCommandResponse != null) {
+      pcfSetupContextElementBuilder.timeoutIntervalInMinutes(timeoutIntervalInMinutes)
+          .totalPreviousInstanceCount(
+              Optional.ofNullable(pcfSetupCommandResponse.getTotalPreviousInstanceCount()).orElse(0))
+          .appsToBeDownsized(pcfSetupCommandResponse.getDownsizeDetails());
+      if (ExecutionStatus.SUCCESS.equals(executionStatus)) {
+        pcfSetupContextElementBuilder.newPcfApplicationId(pcfSetupCommandResponse.getNewApplicationId())
+            .newPcfApplicationName(pcfSetupCommandResponse.getNewApplicationName());
+      }
     }
+
+    PcfSetupContextElement pcfSetupContextElement = pcfSetupContextElementBuilder.build();
 
     return anExecutionResponse()
         .withExecutionStatus(executionStatus)

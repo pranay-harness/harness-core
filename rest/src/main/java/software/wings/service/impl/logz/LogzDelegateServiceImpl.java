@@ -18,6 +18,7 @@ import software.wings.service.impl.elk.ElkLogFetchRequest;
 import software.wings.service.intfc.logz.LogzDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.JsonUtils;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.util.List;
@@ -40,7 +41,7 @@ public class LogzDelegateServiceImpl implements LogzDelegateService {
       }
       throw new WingsException(response.errorBody().string());
     } catch (Exception exception) {
-      throw new WingsException("Error validating LOGZ config " + exception.getMessage(), exception);
+      throw new WingsException("Error validating LOGZ config " + Misc.getMessage(exception), exception);
     }
   }
 

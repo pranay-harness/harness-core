@@ -24,6 +24,7 @@ import software.wings.service.impl.appdynamics.AppdynamicsMetric.AppdynamicsMetr
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -327,7 +328,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
         return true;
       }
     } catch (Exception exception) {
-      throw new WingsException("Could not reach AppDynamics server. " + exception.getMessage(), exception);
+      throw new WingsException("Could not reach AppDynamics server. " + Misc.getMessage(exception), exception);
     }
 
     final int errorCode = response.code();

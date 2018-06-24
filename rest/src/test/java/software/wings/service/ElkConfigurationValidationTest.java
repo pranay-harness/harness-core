@@ -95,7 +95,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
       analysisService.validateConfig(settingAttribute, StateType.ELK);
       Assert.fail("validated invalid config");
     } catch (WingsException e) {
-      assertEquals("Illegal URL: some url/", e.getParams().get("reason"));
+      assertEquals("IllegalArgumentException: Illegal URL: some url/", e.getParams().get("reason"));
     }
   }
 

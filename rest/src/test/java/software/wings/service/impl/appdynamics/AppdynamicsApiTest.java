@@ -45,6 +45,7 @@ import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -97,7 +98,8 @@ public class AppdynamicsApiTest extends WingsBaseTest {
       fail("Validated invalid config");
     } catch (WingsException e) {
       assertEquals(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR, e.getResponseMessage().getCode());
-      assertEquals("Could not reach AppDynamics server. " + runtimeException.getMessage(), e.getParams().get("reason"));
+      assertEquals(
+          "Could not reach AppDynamics server. " + Misc.getMessage(runtimeException), e.getParams().get("reason"));
     }
   }
 

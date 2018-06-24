@@ -7,6 +7,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.ErrorNotifyResponseData;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -60,7 +61,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
           logger.info("Completed executing task {}", taskId);
         } catch (Throwable exception) {
           logger.error("Unexpected error executing delegate task {}", taskId, exception);
-          result = ErrorNotifyResponseData.builder().errorMessage(exception.getMessage()).build();
+          result = ErrorNotifyResponseData.builder().errorMessage(Misc.getMessage(exception)).build();
         } finally {
           if (consumer != null) {
             if (result == null) {

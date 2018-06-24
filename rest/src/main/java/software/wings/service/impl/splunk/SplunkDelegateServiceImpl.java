@@ -13,6 +13,7 @@ import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
+import software.wings.utils.Misc;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -52,7 +53,7 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
     } catch (MalformedURLException exception) {
       throw new WingsException(splunkConfig.getSplunkUrl() + " is not a valid url", exception);
     } catch (Exception exception) {
-      throw new WingsException("Error connecting to Splunk " + exception.getMessage(), exception);
+      throw new WingsException("Error connecting to Splunk " + Misc.getMessage(exception), exception);
     }
   }
 }

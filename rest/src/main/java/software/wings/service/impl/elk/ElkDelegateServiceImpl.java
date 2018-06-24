@@ -68,7 +68,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
       getLogSample(elkConfig, "*", encryptedDataDetails);
       return true;
     } catch (Exception exception) {
-      throw new WingsException(exception.getMessage(), exception);
+      throw new WingsException(Misc.getMessage(exception), exception);
     }
   }
 
