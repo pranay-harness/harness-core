@@ -2,67 +2,69 @@ harnessApiVersion: '1.0'
 type: OTHER
 commandUnitType: COMMAND
 commandUnits:
-  - command: |2-
+- command: |2-
 
-        # Execute as root and pass environment variables
-        # su -p -
+      # Execute as root and pass environment variables
+      # su -p -
 
-        # Execute as root via user credentials (with root privileges)
-        # sudo -E su -p -
+      # Execute as root via user credentials (with root privileges)
+      # sudo -E su -p -
 
-        # The following variables are absolute paths defined as:
-        # ${HOME}/${appName}/${serviceName}/${serviceTemplateName}/[runtime|backup|staging]
+      # The following variables are absolute paths defined as:
+      # ${HOME}/${appName}/${serviceName}/${serviceTemplateName}/[runtime|backup|staging]
 
-        sudo mkdir -p ${STORAGE_DIR}
+      sudo mkdir -p ${STORAGE_DIR}
 
-        mkdir -p "$WINGS_RUNTIME_PATH"
-        mkdir -p "$WINGS_BACKUP_PATH"
-        mkdir -p "$WINGS_STAGING_PATH"
-    commandUnitType: SETUP_ENV
-    deploymentType: SSH
-    name: Setup Env
-  - command: |-
-        #sudo mv ${serviceVariable.STORAGE_DIR}/* ${WINGS_BACKUP_PATH}
+      mkdir -p "$WINGS_RUNTIME_PATH"
+      mkdir -p "$WINGS_BACKUP_PATH"
+      mkdir -p "$WINGS_STAGING_PATH"
+  commandUnitType: SETUP_ENV
+  deploymentType: SSH
+  name: Setup Env
+  scriptType: BASH
+- command: |-
+    #sudo mv ${serviceVariable.STORAGE_DIR}/* ${WINGS_BACKUP_PATH}
 
-        sudo rm -rf ${serviceVariable.STORAGE_DIR}/*
-    commandUnitType: EXEC
-    deploymentType: SSH
-    name: Move data to backup
-    workingDirectory: ${WINGS_RUNTIME_PATH}
-  - command: |+
-        sudo mkdir -p ${STORAGE_DIR}/wingsdelegates/jre/${serviceVariable.jre_version}/
+    sudo rm -rf ${serviceVariable.STORAGE_DIR}/*
+  commandUnitType: EXEC
+  deploymentType: SSH
+  name: Move data to backup
+  scriptType: BASH
+  workingDirectory: ${WINGS_RUNTIME_PATH}
+- command: |
+    sudo mkdir -p ${STORAGE_DIR}/wingsdelegates/jre/${serviceVariable.jre_version}/
 
-        curl https://app.harness.io/storage/wingsdelegates/jre/8u131/jre-8u131-solaris-x64.tar.gz > jre-8u131-solaris-x64.tar.gz
+    curl https://app.harness.io/storage/wingsdelegates/jre/8u131/jre-8u131-solaris-x64.tar.gz > jre-8u131-solaris-x64.tar.gz
 
-        curl https://app.harness.io/storage/wingsdelegates/jre/8u131/jre-8u131-macosx-x64.tar.gz > jre-8u131-macosx-x64.tar.gz
+    curl https://app.harness.io/storage/wingsdelegates/jre/8u131/jre-8u131-macosx-x64.tar.gz > jre-8u131-macosx-x64.tar.gz
 
-        curl https://app.harness.io/storage/wingsdelegates/jre/8u131/jre-8u131-linux-x64.tar.gz > jre-8u131-linux-x64.tar.gz
+    curl https://app.harness.io/storage/wingsdelegates/jre/8u131/jre-8u131-linux-x64.tar.gz > jre-8u131-linux-x64.tar.gz
 
-        sudo mv *.gz ${STORAGE_DIR}/wingsdelegates/jre/${serviceVariable.jre_version}/
+    sudo mv *.gz ${STORAGE_DIR}/wingsdelegates/jre/${serviceVariable.jre_version}/
 
 
-        sudo mkdir -p  ${STORAGE_DIR}/wingsdelegates/jobs/deploy-prod-delegate/${workflow.variables.DELEGATE_VERSION}
+    sudo mkdir -p  ${STORAGE_DIR}/wingsdelegates/jobs/deploy-prod-delegate/${workflow.variables.DELEGATE_VERSION}
 
-        curl https://app.harness.io/storage/wingsdelegates/jobs/deploy-prod-delegate/${workflow.variables.DELEGATE_VERSION}/delegate.jar -o delegate.jar
+    sudo curl "${workflow.variables.DELEGATE_SIGNED_URL}" -o delegate.jar
 
-        sudo mv *.jar ${STORAGE_DIR}/wingsdelegates/jobs/deploy-prod-delegate/${workflow.variables.DELEGATE_VERSION}/
+    sudo mv *.jar ${STORAGE_DIR}/wingsdelegates/jobs/deploy-prod-delegate/${workflow.variables.DELEGATE_VERSION}/
 
-        echo "1.0.${workflow.variables.DELEGATE_VERSION} jobs/deploy-prod-delegate/${workflow.variables.DELEGATE_VERSION}/delegate.jar" > delegateprod.txt
+    echo "1.0.${workflow.variables.DELEGATE_VERSION} jobs/deploy-prod-delegate/${workflow.variables.DELEGATE_VERSION}/delegate.jar" > delegateprod.txt
 
-        sudo mv delegateprod.txt ${STORAGE_DIR}/wingsdelegates
+    sudo mv delegateprod.txt ${STORAGE_DIR}/wingsdelegates
 
-        sudo mkdir -p  ${STORAGE_DIR}/wingswatchers/jobs/deploy-prod-watcher/${workflow.variables.WATCHER_VERSION}
+    sudo mkdir -p  ${STORAGE_DIR}/wingswatchers/jobs/deploy-prod-watcher/${workflow.variables.WATCHER_VERSION}
 
-        curl https://app.harness.io/storage/wingswatchers/jobs/deploy-prod-watcher/${workflow.variables.WATCHER_VERSION}/watcher.jar -o watcher.jar
+    sudo curl "${workflow.variables.WATCHER_SIGNED_URL}" -o watcher.jar
 
-        sudo mv *.jar ${STORAGE_DIR}/wingswatchers/jobs/deploy-prod-watcher/${workflow.variables.WATCHER_VERSION}/
+    sudo mv *.jar ${STORAGE_DIR}/wingswatchers/jobs/deploy-prod-watcher/${workflow.variables.WATCHER_VERSION}/
 
-        echo "1.0.${workflow.variables.WATCHER_VERSION} jobs/deploy-prod-watcher/${workflow.variables.WATCHER_VERSION}/watcher.jar" > watcherprod.txt
+    echo "1.0.${workflow.variables.WATCHER_VERSION} jobs/deploy-prod-watcher/${workflow.variables.WATCHER_VERSION}/watcher.jar" > watcherprod.txt
 
-        sudo mv watcherprod.txt ${STORAGE_DIR}/wingswatchers
-
-    commandUnitType: EXEC
-    deploymentType: SSH
-    name: Copy Jars and metadeta
-    workingDirectory: ${WINGS_RUNTIME_PATH}
+    sudo mv watcherprod.txt ${STORAGE_DIR}/wingswatchers
+  commandUnitType: EXEC
+  deploymentType: SSH
+  name: Copy Jars and metadeta
+  scriptType: BASH
+  workingDirectory: ${WINGS_RUNTIME_PATH}
 targetToAllEnv: true
