@@ -88,6 +88,8 @@ def run_analysis(options_var, ctrl_file, test_file, out_file):
                 assert ''.join(host_data['test_cuts']) == ''.join(out_metric_data[host_name]['test_cuts'])
                 assert compare(host_data['score'], out_metric_data[host_name]['score'])
                 assert host_data['optimal_cuts'] == out_metric_data[host_name]['optimal_cuts']
+                assert host_data['control_data'] == out_metric_data[host_name]['control_data']
+                assert host_data['test_data'] == out_metric_data[host_name]['test_data']
                 assert compare(host_data['risk'], out_metric_data[host_name]['risk'])
                 assert host_data['nn'] == out_metric_data[host_name]['nn']
 
@@ -150,9 +152,11 @@ def test_run_5():
 
 
 def main(args):
-    #test_run_4()
+    test_run_2()
+    test_run_3()
+    test_run_4()
     test_run_5()
-    #test_max_threshold_node()
+
 
 
 if __name__ == "__main__":
