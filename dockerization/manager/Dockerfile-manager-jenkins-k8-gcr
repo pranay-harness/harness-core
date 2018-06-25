@@ -1,6 +1,6 @@
 # to be used when building in Jenkins
 FROM us.gcr.io/platform-205701/harness/serverjre_8:131
-#RUN yum install -y vim
+RUN yum install -y hostname
 
 # we need to install the JCE extensions
 COPY common-resources/local_policy.jar /usr/java/jdk1.8.0_131/jre/lib/security/
