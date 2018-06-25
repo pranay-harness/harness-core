@@ -1,27 +1,27 @@
 harnessApiVersion: '1.0'
 type: PIPELINE
 pipelineStages:
-  - type: ENV_STATE
-    name: Stop UI
-    parallel: false
-    workflowName: Stop UI
-  - type: ENV_STATE
-    name: Stop Manager
-    parallel: true
-    workflowName: Stop Manager
-  - type: ENV_STATE
-    name: Stop Learning Engine
-    parallel: true
-    workflowName: Stop Learning Engine
-  - type: ENV_STATE
-    name: Stop Proxy
-    parallel: true
-    workflowName: Stop proxy
-  - type: ENV_STATE
-    name: Stop and cleanup mongo
-    parallel: false
-    workflowName: Stop and cleanup mongodb
-  - type: ENV_STATE
-    name: Cleanup docker images
-    parallel: false
-    workflowName: Clean docker images
+- type: ENV_STATE
+  name: Stop UI
+  parallel: false
+  workflowName: Stop UI
+- type: ENV_STATE
+  name: Stop Manager
+  parallel: true
+  workflowName: Stop Manager
+- type: ENV_STATE
+  name: Stop Learning Engine
+  parallel: true
+  workflowName: Stop Learning Engine
+- type: ENV_STATE
+  name: Stop Proxy
+  parallel: true
+  workflowName: Stop proxy
+- type: ENV_STATE
+  name: Stop and cleanup mongo
+  parallel: false
+  workflowName: Stop and cleanup mongodb
+- type: ENV_STATE
+  name: Cleanup docker images
+  parallel: false
+  workflowName: Clean docker images

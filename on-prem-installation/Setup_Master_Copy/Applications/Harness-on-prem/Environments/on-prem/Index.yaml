@@ -16,33 +16,39 @@ variableOverrides:
   - name: MONGODB_PORT
     value: '7144'
     valueType: TEXT
+  - name: UI_PORT
+    value: '7146'
+    valueType: TEXT
+  - name: MANAGER_PORT
+    value: '7147'
+    valueType: TEXT
   - name: docker_image_tag
     serviceName: Proxy
-    value: on_prem_8
+    value: on_prem_9
     valueType: TEXT
   - name: MANAGER3
     serviceName: Proxy
-    value: ${serviceVariable.HOST3}:9090
+    value: ${serviceVariable.HOST3}:${serviceVariable.MANAGER_PORT}
     valueType: TEXT
   - name: MANAGER2
     serviceName: Proxy
-    value: ${serviceVariable.HOST2}:9090
+    value: ${serviceVariable.HOST2}:${serviceVariable.MANAGER_PORT}
     valueType: TEXT
   - name: MANAGER1
     serviceName: Proxy
-    value: ${serviceVariable.HOST1}:9090
+    value: ${serviceVariable.HOST1}:${serviceVariable.MANAGER_PORT}
     valueType: TEXT
   - name: UI3
     serviceName: Proxy
-    value: ${serviceVariable.HOST3}:8000
+    value: ${serviceVariable.HOST3}:${serviceVariable.UI_PORT}
     valueType: TEXT
   - name: UI2
     serviceName: Proxy
-    value: ${serviceVariable.HOST2}:8000
+    value: ${serviceVariable.HOST2}:${serviceVariable.UI_PORT}
     valueType: TEXT
   - name: UI1
     serviceName: Proxy
-    value: ${serviceVariable.HOST1}:8000
+    value: ${serviceVariable.HOST1}:${serviceVariable.UI_PORT}
     valueType: TEXT
   - name: TCP_HOSTS_DETAILS
     serviceName: Manager

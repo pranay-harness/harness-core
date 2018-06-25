@@ -100,25 +100,30 @@ echo "sshKeyPath="$sshKeyPath
 
 ###### ACCOUNT CREATION SECTION START ##################################
 
-curlstatement="curl -X POST -k $API_URL/api/users/account -H 'Authorization: Bearer $TOKEN' -H 'Cache-Control: no-cache' -H 'Content-Type: application/json' -d '{ \"accountName\":\"$accountName\", \"companyName\":\"$companyName\" }'"
+#curlstatement="curl -X POST -k $API_URL/api/users/account -H 'Authorization: Bearer $TOKEN' -H 'Cache-Control: no-cache' -H 'Content-Type: application/json' -d '{ \"accountName\":\"$accountName\", \"companyName\":\"$companyName\" }'"
+#
+#echo "curl command sent is : "$curlstatement
+#
+#response="$(eval $curlstatement)"
+#echo "Response is "$response
+#
+##response='{"metaData":{},"resource":{"uuid":"P-280t2zQ5C8idcb8_-64Q","appId":"__GLOBAL_APP_ID__","createdBy":null,"createdAt":1520543497776,"lastUpdatedBy":{"uuid":"c0RigPdWTlOCUeeAsdolJQ","name":"Admin","email":"admin@harness.io"},"lastUpdatedAt":1520543497776,"keywords":null,"companyName":"BigBank","accountName":"BigBank","accountKey":"83e3f0b0271f180238525d6f394eed9e","licenseId":null,"licenseExpiryTime":0},"responseMessages":[]}'
+#
+#if [[ $response = *"$accountName"* ]]; then
+#  echo "Account creation is successful"
+#else
+#  echo "Account creation failed"
+#  exit 1;
+#fi
+#
+#accountId=$(echo $response | cut -d "," -f2 | cut -d ":" -f3 | cut -d "\"" -f2)
+#
+#echo "AccountID="$accountId
 
-echo "curl command sent is : "$curlstatement
+#OpenBank Account is below
+#accountId=qRQNzCqyS3CmfnFt-q5owA
 
-response="$(eval $curlstatement)"
-echo "Response is "$response
-
-#response='{"metaData":{},"resource":{"uuid":"P-280t2zQ5C8idcb8_-64Q","appId":"__GLOBAL_APP_ID__","createdBy":null,"createdAt":1520543497776,"lastUpdatedBy":{"uuid":"c0RigPdWTlOCUeeAsdolJQ","name":"Admin","email":"admin@harness.io"},"lastUpdatedAt":1520543497776,"keywords":null,"companyName":"BigBank","accountName":"BigBank","accountKey":"83e3f0b0271f180238525d6f394eed9e","licenseId":null,"licenseExpiryTime":0},"responseMessages":[]}'
-
-if [[ $response = *"$accountName"* ]]; then
-  echo "Account creation is successful"
-else
-  echo "Account creation failed"
-  exit 1;
-fi
-
-accountId=$(echo $response | cut -d "," -f2 | cut -d ":" -f3 | cut -d "\"" -f2)
-
-echo "AccountID="$accountId
+accountId=E8iBDt9aTcmJvJqzeb3SdQ
 
 ###### ACCOUNT CREATION SECTION END ##################################
 
