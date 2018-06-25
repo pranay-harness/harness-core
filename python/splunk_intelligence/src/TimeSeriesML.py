@@ -385,7 +385,7 @@ class TSAnomlyDetector(object):
                     final_risk = risk
 
 
-                response['results'][host_name] = dict(score=weighted_dist, risk=final_risk, test_data=np.ma.masked_array(all_data, np.isnan(all_data)).filled(0).tolist(), anomalies=list(anomalies))
+                response['results'][host_name] = dict(score=weighted_dist, risk=final_risk, test_data=np.ma.masked_array(all_data, np.isnan(all_data)).filled(-1).tolist(), anomalies=list(anomalies))
                 response['max_risk'] = max(final_risk, response['max_risk'])
         if 'data' in data_dict:
             response['test_avg'] = simple_average(data_dict['data'].flatten(), -1)
@@ -581,20 +581,20 @@ class TSAnomlyDetector(object):
                 response['results'][host]['test_data'] = np.ma.masked_array(analysis_output['test_values'][index],
                                                                             np.isnan(
                                                                                 analysis_output['test_values'][index])) \
-                    .filled(0).tolist()
+                    .filled(-1).tolist()
                 response['results'][host]['score'] = analysis_output['score'][index]
                 response['results'][host]['distance'] = analysis_output['distances'][index].tolist()
                 if fast_analysis:
                     response['results'][host]['control_data'] = np.ma.masked_array(
                         analysis_output['control_values'],
-                        np.isnan(analysis_output['control_values'])).filled(0).tolist()
+                        np.isnan(analysis_output['control_values'])).filled(-1).tolist()
                     response['results'][host]['nn'] = 'base'
                     response['results'][host]['control_index'] = 0
                 else:
                     response['results'][host]['control_data'] = np.ma.masked_array(
                         analysis_output['control_values'][index],
                         np.isnan(analysis_output['control_values'][
-                                     index])).filled(0).tolist()
+                                     index])).filled(-1).tolist()
 
                     response['results'][host]['nn'] = control_txn_data_dict[metric_name].keys()[
                         analysis_output['nn'][index]]
@@ -604,7 +604,7 @@ class TSAnomlyDetector(object):
                         analysis_output['optimal_test_data'][index],
                         np.isnan(analysis_output['optimal_test_data'][
                                      index])).filled(
-                        0).tolist()
+                        -1).tolist()
                     response['results'][host]['control_cuts'] = analysis_output['control_cuts'][index].tolist()
                     response['results'][host]['control_index'] = analysis_output['nn'][index]
                 throughput_metric_name = self.metric_template.get_metric_name(MetricType.THROUGHPUT)
