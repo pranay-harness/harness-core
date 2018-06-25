@@ -23,7 +23,8 @@ public class ForEachCheckTest extends AbstractModuleTestSupport {
 
   @Test
   public void testIssues() throws Exception {
-    final String[] expected = {"5:19: Collection forEach is faster than stream forEach - use it instead."};
+    final String[] expected = {"5:19: Collection forEach is faster than stream forEach - use it instead.",
+        "6:20: EntrySet forEach can be replaced with direct map forEach in (k, v)."};
 
     verify(config(), getPath("ForEachCheckIssues.jv"), expected);
   }

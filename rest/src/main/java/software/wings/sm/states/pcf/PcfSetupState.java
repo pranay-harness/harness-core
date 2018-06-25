@@ -225,7 +225,7 @@ public class PcfSetupState extends State {
 
     Map<String, String> serviceVariables = context.getServiceVariables();
     if (serviceVariables != null) {
-      serviceVariables.entrySet().forEach(entry -> { entry.setValue(context.renderExpression(entry.getValue())); });
+      serviceVariables.replaceAll((name, value) -> context.renderExpression(value));
     }
 
     PcfCommandRequest commandRequest =

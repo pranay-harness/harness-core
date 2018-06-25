@@ -208,12 +208,11 @@ public class ShellScriptState extends State {
     Map<String, String> safeDisplayServiceVariables = context.getSafeDisplayServiceVariables();
 
     if (serviceVariables != null) {
-      serviceVariables.entrySet().forEach(entry -> { entry.setValue(context.renderExpression(entry.getValue())); });
+      serviceVariables.replaceAll((name, value) -> context.renderExpression(value));
     }
 
     if (safeDisplayServiceVariables != null) {
-      safeDisplayServiceVariables.entrySet().forEach(
-          entry -> { entry.setValue(context.renderExpression(entry.getValue())); });
+      safeDisplayServiceVariables.replaceAll((name, value) -> context.renderExpression(value));
     }
 
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;

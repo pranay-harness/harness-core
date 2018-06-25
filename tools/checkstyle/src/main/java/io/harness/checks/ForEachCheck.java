@@ -5,7 +5,8 @@ import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 
 public class ForEachCheck extends AbstractCheck {
-  private static final String MSG_KEY = "performance.for_each.stream";
+  private static final String STREAM_MSG_KEY = "performance.for_each.stream";
+  private static final String ENTRY_SET_MSG_KEY = "performance.for_each.entry_set";
 
   @Override
   public int[] getDefaultTokens() {
@@ -47,11 +48,15 @@ public class ForEachCheck extends AbstractCheck {
       return;
     }
 
-    DetailAST stream = streamDot.getFirstChild().getNextSibling();
-    if (stream.getType() != TokenTypes.IDENT || !stream.getText().equals("stream")) {
+    DetailAST prevFunc = streamDot.getFirstChild().getNextSibling();
+    if (prevFunc.getType() != TokenTypes.IDENT) {
       return;
     }
 
-    log(identifier, MSG_KEY, "SuboptimalUseOfForEach");
+    if (prevFunc.getText().equals("stream")) {
+      log(identifier, STREAM_MSG_KEY, "SuboptimalUseOfForEach");
+    } else if (prevFunc.getText().equals("entrySet")) {
+      log(identifier, ENTRY_SET_MSG_KEY, "SuboptimalUseOfForEach");
+    }
   }
 }

@@ -36,7 +36,6 @@ import software.wings.yaml.workflow.StepYaml;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 /**
  * @author rktummala on 10/28/17
  */
@@ -80,8 +79,8 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
 
     Map<String, Object> yamlProperties = yaml.getProperties();
     if (yamlProperties != null) {
-      yamlProperties.entrySet().forEach(
-          entry -> convertNameToIdIfKnownType(entry, outputProperties, appId, accountId, yamlProperties));
+      yamlProperties.forEach(
+          (name, value) -> convertNameToIdIfKnownType(name, value, outputProperties, appId, accountId, yamlProperties));
     }
 
     generateKnownProperties(outputProperties, changeContext);
@@ -109,9 +108,9 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
     Map<String, Object> properties = bean.getProperties();
     final Map<String, Object> outputProperties = Maps.newHashMap();
     if (properties != null) {
-      properties.entrySet().forEach(entry -> {
-        if (!shouldBeIgnored(entry.getKey())) {
-          convertIdToNameIfKnownType(entry, outputProperties, appId, properties);
+      properties.forEach((name, value) -> {
+        if (!shouldBeIgnored(name)) {
+          convertIdToNameIfKnownType(name, value, outputProperties, appId, properties);
         }
       });
     }
@@ -137,14 +136,11 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
   }
 
   // If the properties contain known entity id, convert it into name
-  private void convertIdToNameIfKnownType(Entry<String, Object> mapEntry, Map<String, Object> outputProperties,
+  private void convertIdToNameIfKnownType(String name, Object objectValue, Map<String, Object> outputProperties,
       String appId, Map<String, Object> inputProperties) {
-    String name = mapEntry.getKey();
     if (isEmpty(name)) {
       return;
     }
-
-    Object objectValue = mapEntry.getValue();
 
     switch (name) {
       case "computeProviderId":
@@ -186,14 +182,11 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
   }
 
   // If the properties contain known entity type, convert the name back to id, this is used in toBean() path
-  private void convertNameToIdIfKnownType(Entry<String, Object> mapEntry, Map<String, Object> properties, String appId,
+  private void convertNameToIdIfKnownType(String name, Object objectValue, Map<String, Object> properties, String appId,
       String accountId, Map<String, Object> inputProperties) {
-    String name = mapEntry.getKey();
     if (isEmpty(name)) {
       return;
     }
-
-    Object objectValue = mapEntry.getValue();
 
     switch (name) {
       case "computeProviderName":
