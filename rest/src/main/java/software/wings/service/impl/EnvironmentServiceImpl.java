@@ -348,33 +348,27 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   }
 
   private void ensureEnvironmentSafeToDelete(Environment environment) {
-    try {
-      List<String> refPipelines =
-          pipelineService.isEnvironmentReferenced(environment.getAppId(), environment.getUuid());
-      if (refPipelines != null && refPipelines.size() > 0) {
-        throw new InvalidRequestException(
-            format("Environment is referenced by %d %s [%s].", refPipelines.size(),
-                plural("pipeline", refPipelines.size()), Joiner.on(", ").join(refPipelines)),
-            USER);
-      }
+    List<String> refPipelines = pipelineService.isEnvironmentReferenced(environment.getAppId(), environment.getUuid());
+    if (refPipelines != null && refPipelines.size() > 0) {
+      throw new InvalidRequestException(
+          format("Environment is referenced by %d %s [%s].", refPipelines.size(),
+              plural("pipeline", refPipelines.size()), Joiner.on(", ").join(refPipelines)),
+          USER);
+    }
 
-      List<String> refWorkflows =
-          workflowService.isEnvironmentReferenced(environment.getAppId(), environment.getUuid());
-      if (refWorkflows != null && refWorkflows.size() > 0) {
-        throw new InvalidRequestException(
-            format("Environment is referenced by %d %s [%s].", refWorkflows.size(),
-                plural("workflow", refWorkflows.size()), Joiner.on(", ").join(refWorkflows)),
-            USER);
-      }
+    List<String> refWorkflows = workflowService.isEnvironmentReferenced(environment.getAppId(), environment.getUuid());
+    if (refWorkflows != null && refWorkflows.size() > 0) {
+      throw new InvalidRequestException(
+          format("Environment is referenced by %d %s [%s].", refWorkflows.size(),
+              plural("workflow", refWorkflows.size()), Joiner.on(", ").join(refWorkflows)),
+          USER);
+    }
 
-      List<String> refTriggers = triggerService.isEnvironmentReferenced(environment.getAppId(), environment.getUuid());
-      if (refTriggers != null && refTriggers.size() > 0) {
-        throw new InvalidRequestException(format("Environment is referenced by %d %s [%s].", refTriggers.size(),
-                                              plural("trigger", refTriggers.size()), Joiner.on(", ").join(refTriggers)),
-            USER);
-      }
-    } catch (RuntimeException ex) {
-      logger.error("Exception in ensureEnvironmentSafeToDelete: ", ex.getMessage());
+    List<String> refTriggers = triggerService.isEnvironmentReferenced(environment.getAppId(), environment.getUuid());
+    if (refTriggers != null && refTriggers.size() > 0) {
+      throw new InvalidRequestException(format("Environment is referenced by %d %s [%s].", refTriggers.size(),
+                                            plural("trigger", refTriggers.size()), Joiner.on(", ").join(refTriggers)),
+          USER);
     }
   }
 
