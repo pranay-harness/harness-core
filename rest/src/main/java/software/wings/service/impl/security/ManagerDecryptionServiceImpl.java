@@ -72,7 +72,7 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
     SyncTaskContext syncTaskContext = aContext()
                                           .withAccountId(object.getAccountId())
                                           .withAppId(Base.GLOBAL_APP_ID)
-                                          .withTimeout(TimeUnit.SECONDS.toMillis(15L))
+                                          .withTimeout(TimeUnit.SECONDS.toMillis(60L))
                                           .build();
     try {
       Encryptable decrypted = timeLimiter.callWithTimeout(() -> {
@@ -85,7 +85,7 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
             sleep(ofMillis(200));
           }
         }
-      }, 2, TimeUnit.MINUTES, true);
+      }, 200, TimeUnit.SECONDS, true);
       for (EncryptedDataDetail encryptedDataDetail : nonLocalEncryptedDetails) {
         Field f = getFieldByName(object.getClass(), encryptedDataDetail.getFieldName());
         if (f != null) {
