@@ -2,6 +2,7 @@ package software.wings.service.impl.analysis;
 
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
@@ -29,6 +30,7 @@ import java.util.Map;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Builder
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class TimeSeriesMLAnalysisRecord extends Base {
   @NotEmpty @Indexed private StateType stateType;
 

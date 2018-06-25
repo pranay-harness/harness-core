@@ -46,6 +46,7 @@ import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.DelegateScopeService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.DownloadTokenService;
+import software.wings.service.intfc.ThirdPartyApiService;
 import software.wings.utils.ResourceTestRule;
 
 import java.io.File;
@@ -73,6 +74,7 @@ public class DelegateResourceTest {
   private static HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
 
   private static @Mock MainConfiguration mainConfiguration = mock(MainConfiguration.class);
+  private static @Mock ThirdPartyApiService thirdPartyApiService = mock(ThirdPartyApiService.class);
 
   public @Parameter String apiUrl;
 
@@ -84,8 +86,8 @@ public class DelegateResourceTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .addResource(
-              new DelegateResource(DELEGATE_SERVICE, DELEGATE_SCOPE_SERVICE, DOWNLOAD_TOKEN_SERVICE, mainConfiguration))
+          .addResource(new DelegateResource(DELEGATE_SERVICE, DELEGATE_SCOPE_SERVICE, DOWNLOAD_TOKEN_SERVICE,
+              mainConfiguration, thirdPartyApiService))
           .addResource(new AbstractBinder() {
             @Override
             protected void configure() {

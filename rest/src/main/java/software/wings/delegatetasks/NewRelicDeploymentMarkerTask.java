@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.NewRelicDeploymentMarkerPayload;
 import software.wings.exception.WingsException;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
@@ -35,7 +36,14 @@ public class NewRelicDeploymentMarkerTask extends AbstractDelegateRunnableTask {
       NewRelicDeploymentMarkerPayload payload =
           JsonUtils.asObject(dataCollectionInfo.getDeploymentMarker(), NewRelicDeploymentMarkerPayload.class);
       newRelicDelegateService.postDeploymentMarker(dataCollectionInfo.getNewRelicConfig(),
-          dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(), payload);
+          dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(), payload,
+          ThirdPartyApiCallLog.builder()
+              .accountId(getAccountId())
+              .appId(getAppId())
+              .delegateId(getDelegateId())
+              .delegateTaskId(getTaskId())
+              .stateExecutionId(dataCollectionInfo.getStateExecutionId())
+              .build());
       return DataCollectionTaskResult.builder()
           .status(DataCollectionTaskResult.DataCollectionTaskStatus.SUCCESS)
           .newRelicDeploymentMarkerBody(dataCollectionInfo.getDeploymentMarker())

@@ -143,7 +143,7 @@ public class NewRelicServiceImpl implements NewRelicService {
           errorCode = ErrorCode.NEWRELIC_ERROR;
           List<NewRelicApplication> allApplications =
               delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
-                  .getAllApplications((NewRelicConfig) settingAttribute.getValue(), encryptionDetails);
+                  .getAllApplications((NewRelicConfig) settingAttribute.getValue(), encryptionDetails, null);
           applications = NewRelicApplications.builder().applications(allApplications).build();
           newRelicApplicationCache.put(key, applications);
           return allApplications;

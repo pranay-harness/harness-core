@@ -42,6 +42,7 @@ public class AnalysisContext {
   private int comparisonWindow;
   private int parallelProcesses;
   private Map<String, List<TimeSeries>> timeSeriesToCollect;
+  private boolean runTillConvergence;
 
   public LogClusterContext getClusterContext() {
     return LogClusterContext.builder()

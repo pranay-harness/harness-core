@@ -181,7 +181,7 @@ public class DelegateServiceImpl implements DelegateService {
   private String upgradeVersion;
   private long upgradeStartedAt;
   private long stoppedAcquiringAt;
-  private String delegateId;
+  private static String delegateId;
   private String accountId;
   private long watcherVersionMatchedAt = System.currentTimeMillis();
   private HttpHost httpProxyHost;
@@ -189,6 +189,10 @@ public class DelegateServiceImpl implements DelegateService {
 
   public static String getHostName() {
     return hostName;
+  }
+
+  public static String getDelegateId() {
+    return delegateId;
   }
 
   @SuppressFBWarnings(

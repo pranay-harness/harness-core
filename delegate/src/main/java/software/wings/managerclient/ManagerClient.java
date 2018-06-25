@@ -23,6 +23,7 @@ import software.wings.beans.Log;
 import software.wings.beans.RestResponse;
 import software.wings.delegatetasks.DelegateFile;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.FileService.FileBucket;
@@ -63,6 +64,10 @@ public interface ManagerClient {
   @POST("logs/activity/{activityId}/unit/{unitName}/batched")
   Call<RestResponse> saveCommandUnitLogs(@Path("activityId") String activityId, @Path("unitName") String unitName,
       @Query("accountId") String accountId, @Body Log log);
+
+  @POST("delegates/{delegateId}/state-executions")
+  Call<RestResponse> saveApiCallLogs(@Path("delegateId") String delegateId, @Query("accountId") String accountId,
+      @Body List<ThirdPartyApiCallLog> log);
 
   @POST(MetricDataAnalysisService.RESOURCE_URL + "/save-metrics")
   Call<RestResponse<Boolean>> saveNewRelicMetrics(@Query("accountId") String accountId,

@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.exception.WingsException;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.newrelic.NewRelicApdex;
@@ -60,6 +61,9 @@ import java.util.function.Supplier;
  */
 public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTask {
   private static final Logger logger = LoggerFactory.getLogger(NewRelicDataCollectionTask.class);
+  private static final String ALL_WEB_TXN_NAME = "WebTransaction/all";
+  private static final String ALL_ERRORS_TXN_NAME = "Errors/all";
+  private static final String OVERALL_APDEX_TXN_NAME = "Apdex";
   private static final int INITIAL_DELAY_MINUTES = 0;
   private static final int PERIOD_MINS = 1;
   private static final int METRIC_DATA_QUERY_BATCH_SIZE = 50;
@@ -131,14 +135,21 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       this.dataCollectionMinute = 0;
       this.taskResult = taskResult;
       this.allTxns = newRelicDelegateService.getTxnNameToCollect(dataCollectionInfo.getNewRelicConfig(),
-          dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId());
+          dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(),
+          ThirdPartyApiCallLog.builder()
+              .accountId(getAccountId())
+              .appId(getAppId())
+              .delegateId(getDelegateId())
+              .delegateTaskId(getTaskId())
+              .stateExecutionId(dataCollectionInfo.getStateExecutionId())
+              .build());
 
       logger.info("NewRelic collector initialized : managerAnalysisStartTime - {}, windowStartTimeManager {}",
           managerAnalysisStartTime, windowStartTimeManager);
     }
 
     private TreeBasedTable<String, Long, NewRelicMetricDataRecord> getMetricData(
-        NewRelicApplicationInstance node, Collection<String> metricNames, long endTime) throws Exception {
+        NewRelicApplicationInstance node, Set<String> metricNames, long endTime) throws Exception {
       TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
 
       logger.info("Fetching for host {} for stateExecutionId {} for metrics {}", node.getHost(),
@@ -153,14 +164,21 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       return records;
     }
 
-    private void getWebTransactionMetrics(NewRelicApplicationInstance node, Collection<String> metricNames,
-        long endTime, TreeBasedTable<String, Long, NewRelicMetricDataRecord> records) throws IOException {
+    private void getWebTransactionMetrics(NewRelicApplicationInstance node, Set<String> metricNames, long endTime,
+        TreeBasedTable<String, Long, NewRelicMetricDataRecord> records) throws IOException {
       int retry = 0;
       while (retry < RETRIES) {
         try {
           NewRelicMetricData metricData = newRelicDelegateService.getMetricDataApplicationInstance(
               dataCollectionInfo.getNewRelicConfig(), dataCollectionInfo.getEncryptedDataDetails(),
-              dataCollectionInfo.getNewRelicAppId(), node.getId(), metricNames, windowStartTimeManager, endTime);
+              dataCollectionInfo.getNewRelicAppId(), node.getId(), metricNames, windowStartTimeManager, endTime,
+              ThirdPartyApiCallLog.builder()
+                  .accountId(getAccountId())
+                  .appId(getAppId())
+                  .delegateId(getDelegateId())
+                  .delegateTaskId(getTaskId())
+                  .stateExecutionId(dataCollectionInfo.getStateExecutionId())
+                  .build());
 
           for (NewRelicMetricSlice metric : metricData.getMetrics()) {
             for (NewRelicMetricTimeSlice timeSlice : metric.getTimeslices()) {
@@ -212,7 +230,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       }
     }
 
-    private void getErrorMetrics(NewRelicApplicationInstance node, Collection<String> metricNames, long endTime,
+    private void getErrorMetrics(NewRelicApplicationInstance node, Set<String> metricNames, long endTime,
         TreeBasedTable<String, Long, NewRelicMetricDataRecord> records) throws IOException {
       // get error metrics
       int retry = 0;
@@ -221,11 +239,20 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
           NewRelicMetricData metricData =
               newRelicDelegateService.getMetricDataApplicationInstance(dataCollectionInfo.getNewRelicConfig(),
                   dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(), node.getId(),
-                  getErrorMetricNames(metricNames), windowStartTimeManager, endTime);
+                  getErrorMetricNames(metricNames), windowStartTimeManager, endTime,
+                  ThirdPartyApiCallLog.builder()
+                      .accountId(getAccountId())
+                      .appId(getAppId())
+                      .delegateId(getDelegateId())
+                      .delegateTaskId(getTaskId())
+                      .stateExecutionId(dataCollectionInfo.getStateExecutionId())
+                      .build());
           for (NewRelicMetricSlice metric : metricData.getMetrics()) {
             for (NewRelicMetricTimeSlice timeslice : metric.getTimeslices()) {
               long timeStamp = TimeUnit.SECONDS.toMillis(OffsetDateTime.parse(timeslice.getFrom()).toEpochSecond());
-              String metricName = metric.getName().replace("Errors/", "");
+              String metricName = metric.getName().equals(ALL_ERRORS_TXN_NAME)
+                  ? metric.getName()
+                  : metric.getName().replace("Errors/", "");
 
               NewRelicMetricDataRecord metricDataRecord = records.get(metricName, timeStamp);
               if (metricDataRecord != null) {
@@ -248,7 +275,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       }
     }
 
-    private void getApdexMetrics(NewRelicApplicationInstance node, Collection<String> metricNames, long endTime,
+    private void getApdexMetrics(NewRelicApplicationInstance node, Set<String> metricNames, long endTime,
         TreeBasedTable<String, Long, NewRelicMetricDataRecord> records) throws IOException {
       // get apdex metrics
       int retry = 0;
@@ -257,11 +284,20 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
           NewRelicMetricData metricData =
               newRelicDelegateService.getMetricDataApplicationInstance(dataCollectionInfo.getNewRelicConfig(),
                   dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(), node.getId(),
-                  getApdexMetricNames(metricNames), windowStartTimeManager, endTime);
+                  getApdexMetricNames(metricNames), windowStartTimeManager, endTime,
+                  ThirdPartyApiCallLog.builder()
+                      .accountId(getAccountId())
+                      .appId(getAppId())
+                      .delegateId(getDelegateId())
+                      .delegateTaskId(getTaskId())
+                      .stateExecutionId(dataCollectionInfo.getStateExecutionId())
+                      .build());
           for (NewRelicMetricSlice metric : metricData.getMetrics()) {
             for (NewRelicMetricTimeSlice timeslice : metric.getTimeslices()) {
               long timeStamp = TimeUnit.SECONDS.toMillis(OffsetDateTime.parse(timeslice.getFrom()).toEpochSecond());
-              String metricName = metric.getName().replace("Apdex", "WebTransaction");
+              String metricName = metric.getName().equals(OVERALL_APDEX_TXN_NAME)
+                  ? metric.getName()
+                  : metric.getName().replace("Apdex", "WebTransaction");
 
               NewRelicMetricDataRecord metricDataRecord = records.get(metricName, timeStamp);
               if (metricDataRecord != null) {
@@ -288,7 +324,14 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       logger.info("Collecting txn names for {}", dataCollectionInfo);
       logger.info("all txns far {}", allTxns.size());
       Set<NewRelicMetric> newTxns = newRelicDelegateService.getTxnNameToCollect(dataCollectionInfo.getNewRelicConfig(),
-          dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId());
+          dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(),
+          ThirdPartyApiCallLog.builder()
+              .accountId(getAccountId())
+              .appId(getAppId())
+              .delegateId(getDelegateId())
+              .delegateTaskId(getTaskId())
+              .stateExecutionId(dataCollectionInfo.getStateExecutionId())
+              .build());
       newTxns.removeAll(allTxns);
       logger.info("new txns {}", newTxns.size());
       Set<NewRelicMetric> txnsWithData = getTxnsWithDataInLastHour(allTxns);
@@ -328,7 +371,14 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
             }
             List<NewRelicApplicationInstance> instances =
                 newRelicDelegateService.getApplicationInstances(dataCollectionInfo.getNewRelicConfig(),
-                    dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId());
+                    dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(),
+                    ThirdPartyApiCallLog.builder()
+                        .accountId(getAccountId())
+                        .appId(getAppId())
+                        .delegateId(getDelegateId())
+                        .delegateTaskId(getTaskId())
+                        .stateExecutionId(dataCollectionInfo.getStateExecutionId())
+                        .build());
             logger.info("Got {} new relic nodes.", instances.size());
 
             lastCollectionTime = System.currentTimeMillis();
@@ -338,7 +388,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
             final int collectionLength = timeDeltaInMins(windowEndTimeManager, windowStartTimeManager);
             int dataCollectionMinuteEnd = dataCollectionMinute + collectionLength - 1;
 
-            List<Collection<String>> metricBatches = batchMetricsToCollect(txnsToCollect);
+            List<Set<String>> metricBatches = batchMetricsToCollect(txnsToCollect);
             logger.info("Found total new relic metric batches " + metricBatches.size());
 
             List<Callable<Boolean>> callables = new ArrayList<>();
@@ -432,11 +482,11 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
     }
 
     private boolean fetchAndSaveMetricsForNode(
-        NewRelicApplicationInstance node, List<Collection<String>> metricBatches, long endTime) throws Exception {
+        NewRelicApplicationInstance node, List<Set<String>> metricBatches, long endTime) throws Exception {
       TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
 
       final long startTime = System.currentTimeMillis();
-      for (Collection<String> metricNames : metricBatches) {
+      for (Set<String> metricNames : metricBatches) {
         records.putAll(getMetricData(node, metricNames, endTime));
       }
 
@@ -447,32 +497,36 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
           dataCollectionInfo.getStateExecutionId(), metricRecords);
     }
 
-    private Collection<String> getApdexMetricNames(Collection<String> metricNames) {
-      final Collection<String> rv = new ArrayList<>();
+    private Set<String> getApdexMetricNames(Set<String> metricNames) {
+      final Set<String> rv = new HashSet<>();
       for (String metricName : metricNames) {
         rv.add(metricName.replace("WebTransaction", "Apdex"));
       }
 
+      // overall apdex
+      metricNames.add(OVERALL_APDEX_TXN_NAME);
       return rv;
     }
 
-    private Collection<String> getErrorMetricNames(Collection<String> metricNames) {
-      final Collection<String> rv = new ArrayList<>();
+    private Collection<String> getErrorMetricNames(Set<String> metricNames) {
+      final Set<String> rv = new HashSet<>();
       for (String metricName : metricNames) {
         rv.add("Errors/" + metricName);
       }
 
+      // overall errors
+      metricNames.add(ALL_ERRORS_TXN_NAME);
       return rv;
     }
 
-    private Set<NewRelicMetric> getTxnsWithDataInLastHour(Collection<NewRelicMetric> metrics) throws IOException {
+    private Set<NewRelicMetric> getTxnsWithDataInLastHour(Set<NewRelicMetric> metrics) throws IOException {
       Map<String, NewRelicMetric> webTransactionMetrics = new HashMap<>();
       for (NewRelicMetric metric : metrics) {
         webTransactionMetrics.put(metric.getName(), metric);
       }
-      List<Collection<String>> metricBatches = batchMetricsToCollect(metrics);
+      List<Set<String>> metricBatches = batchMetricsToCollect(metrics);
       List<Callable<Set<String>>> metricDataCallabels = new ArrayList<>();
-      for (Collection<String> metricNames : metricBatches) {
+      for (Set<String> metricNames : metricBatches) {
         metricDataCallabels.add(() -> getMetricsWithNoData(metricNames));
       }
       List<Optional<Set<String>>> results = executeParrallel(metricDataCallabels);
@@ -487,13 +541,20 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
     }
 
     @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
-    private Set<String> getMetricsWithNoData(Collection<String> metricNames) throws IOException {
+    private Set<String> getMetricsWithNoData(Set<String> metricNames) throws IOException {
       final long currentTime = System.currentTimeMillis();
       Set<String> metricsWithNoData = Sets.newHashSet(metricNames);
       NewRelicMetricData metricData =
           newRelicDelegateService.getMetricDataApplication(dataCollectionInfo.getNewRelicConfig(),
               dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(), metricNames,
-              currentTime - TimeUnit.HOURS.toMillis(1), currentTime, true);
+              currentTime - TimeUnit.HOURS.toMillis(1), currentTime, true,
+              ThirdPartyApiCallLog.builder()
+                  .accountId(getAccountId())
+                  .appId(getAppId())
+                  .delegateId(getDelegateId())
+                  .delegateTaskId(getTaskId())
+                  .stateExecutionId(dataCollectionInfo.getStateExecutionId())
+                  .build());
 
       if (metricData == null) {
         throw new WingsException("Unable to get NewRelic metric data for metric name collection " + dataCollectionInfo);
@@ -504,7 +565,14 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       NewRelicMetricData errorMetricData =
           newRelicDelegateService.getMetricDataApplication(dataCollectionInfo.getNewRelicConfig(),
               dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(),
-              getErrorMetricNames(metricNames), currentTime - TimeUnit.HOURS.toMillis(1), currentTime, true);
+              getErrorMetricNames(metricNames), currentTime - TimeUnit.HOURS.toMillis(1), currentTime, true,
+              ThirdPartyApiCallLog.builder()
+                  .accountId(getAccountId())
+                  .appId(getAppId())
+                  .delegateId(getDelegateId())
+                  .delegateTaskId(getTaskId())
+                  .stateExecutionId(dataCollectionInfo.getStateExecutionId())
+                  .build());
 
       if (metricData == null) {
         throw new WingsException("Unable to get NewRelic metric data for metric name collection " + dataCollectionInfo);
@@ -533,16 +601,16 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       return metricsWithNoData;
     }
 
-    private List<Collection<String>> batchMetricsToCollect(Collection<NewRelicMetric> metrics) {
-      List<Collection<String>> rv = new ArrayList<>();
+    private List<Set<String>> batchMetricsToCollect(Collection<NewRelicMetric> metrics) {
+      List<Set<String>> rv = new ArrayList<>();
 
-      List<String> batchedMetrics = new ArrayList<>();
+      Set<String> batchedMetrics = new HashSet<>();
       for (NewRelicMetric metric : metrics) {
         batchedMetrics.add(metric.getName());
 
         if (batchedMetrics.size() == METRIC_DATA_QUERY_BATCH_SIZE) {
           rv.add(batchedMetrics);
-          batchedMetrics = new ArrayList<>();
+          batchedMetrics = new HashSet<>();
         }
       }
 
@@ -558,7 +626,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       List<NewRelicMetricDataRecord> rv = new ArrayList<>();
       for (Cell<String, Long, NewRelicMetricDataRecord> cell : records.cellSet()) {
         NewRelicMetricDataRecord value = cell.getValue();
-        value.setName(value.getName().replace("WebTransaction/", ""));
+        value.setName(value.getName().equals("WebTransaction") ? ALL_WEB_TXN_NAME
+                                                               : value.getName().replace("WebTransaction/", ""));
         rv.add(value);
       }
 

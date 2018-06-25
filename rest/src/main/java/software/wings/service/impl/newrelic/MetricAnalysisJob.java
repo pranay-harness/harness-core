@@ -355,6 +355,28 @@ public class MetricAnalysisJob implements Job {
             }
           }
 
+          if (context.isRunTillConvergence()) {
+            int convergedCount = 0;
+            List<NewRelicMetricAnalysisRecord> metricsAnalysisList = analysisService.getMetricsAnalysis(
+                context.getAppId(), context.getStateExecutionId(), context.getWorkflowExecutionId());
+            for (NewRelicMetricAnalysisRecord metricAnalysis : metricsAnalysisList) {
+              int min_analysis_duration = timeSeriesMlAnalysisType.equals(TimeSeriesMlAnalysisType.PREDICTIVE)
+                  ? PREDECTIVE_HISTORY_MINUTES + COMPARATIVE_ANALYSIS_DURATION
+                  : COMPARATIVE_ANALYSIS_DURATION;
+              if (metricAnalysis.getAnalysisMinute() >= min_analysis_duration) {
+                if (metricAnalysis.getRiskLevel() == RiskLevel.LOW || metricAnalysis.getRiskLevel() == RiskLevel.NA) {
+                  ++convergedCount;
+                }
+              }
+            }
+            if (convergedCount == metricsAnalysisList.size()) {
+              completeCron = true;
+              logger.info("time series analysis finished after running for {} minutes due to convergence",
+                  heartBeatRecord.getDataCollectionMinute());
+              return;
+            }
+          }
+
           final NewRelicMetricDataRecord analysisDataRecord =
               analysisService.getAnalysisMinute(context.getStateType(), context.getAppId(),
                   context.getStateExecutionId(), context.getWorkflowExecutionId(), context.getServiceId(), groupName);
