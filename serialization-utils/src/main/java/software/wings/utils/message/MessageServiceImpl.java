@@ -233,10 +233,10 @@ public class MessageServiceImpl implements MessageService {
         while (message == null || !messageName.equals(message.getMessage())) {
           try {
             message = queue.take();
-            Thread.sleep(200L);
           } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
           }
+          Thread.sleep(200L);
         }
         return message;
       }, timeout, TimeUnit.MILLISECONDS, true);
@@ -271,10 +271,10 @@ public class MessageServiceImpl implements MessageService {
                   if (messageName.equals(message.getMessage())) {
                     messages.add(message);
                   }
-                  Thread.sleep(200L);
                 } catch (InterruptedException e) {
                   Thread.currentThread().interrupt();
                 }
+                Thread.sleep(200L);
               }
             }, minWaitTime, TimeUnit.MILLISECONDS, true);
           } catch (UncheckedTimeoutException e) {
