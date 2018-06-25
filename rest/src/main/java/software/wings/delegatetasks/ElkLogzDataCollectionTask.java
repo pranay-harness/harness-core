@@ -200,6 +200,12 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                   final String host = hostObject == null ? source.getString(hostnameField)
                                                          : hostObject.getString(hostPaths[hostPaths.length - 1]);
 
+                  // if this elkResponse doesn't belong to this host, ignore it.
+                  // We ignore case because we don't know if elasticsearch might just lowercase everything in the index.
+                  if (!hostName.trim().equalsIgnoreCase(host.trim())) {
+                    continue;
+                  }
+
                   JSONObject messageObject = null;
                   String[] messagePaths = messageField.split("\\.");
                   for (int j = 0; j < messagePaths.length - 1; ++j) {
