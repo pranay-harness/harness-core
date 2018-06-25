@@ -37,7 +37,6 @@ import static software.wings.common.Constants.KUBERNETES_DELEGATE;
 import static software.wings.common.Constants.MAX_DELEGATE_LAST_HEARTBEAT;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.ALL_DELEGATE_DOWN_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.DELEGATE_STATE_NOTIFICATION;
-import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.exception.WingsException.USER_ADMIN;
@@ -1005,10 +1004,10 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public List<DelegateTaskEvent> getDelegateTaskEvents(String accountId, String delegateId, boolean syncOnly) {
-    List<DelegateTaskEvent> delegateTaskEvents = new ArrayList<>(getQueuedEvents(true));
+    List<DelegateTaskEvent> delegateTaskEvents = new ArrayList<>(getQueuedEvents(accountId, true));
     if (!syncOnly) {
-      delegateTaskEvents.addAll(getQueuedEvents(false));
-      delegateTaskEvents.addAll(getAbortedEvents(delegateId));
+      delegateTaskEvents.addAll(getQueuedEvents(accountId, false));
+      delegateTaskEvents.addAll(getAbortedEvents(accountId, delegateId));
     }
 
     logger.info("Dispatched delegateTaskIds:{} to delegate:[{}]",
@@ -1018,8 +1017,9 @@ public class DelegateServiceImpl implements DelegateService {
     return delegateTaskEvents;
   }
 
-  private List<DelegateTaskEvent> getQueuedEvents(boolean sync) {
-    return wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
+  private List<DelegateTaskEvent> getQueuedEvents(String accountId, boolean sync) {
+    return wingsPersistence.createQuery(DelegateTask.class)
+        .filter("accountId", accountId)
         .filter("status", QUEUED)
         .filter("async", !sync)
         .field("delegateId")
@@ -1036,10 +1036,11 @@ public class DelegateServiceImpl implements DelegateService {
         .collect(toList());
   }
 
-  private List<DelegateTaskEvent> getAbortedEvents(String delegateId) {
-    Query<DelegateTask> abortedQuery = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
+  private List<DelegateTaskEvent> getAbortedEvents(String accountId, String delegateId) {
+    Query<DelegateTask> abortedQuery = wingsPersistence.createQuery(DelegateTask.class)
                                            .filter("status", ABORTED)
                                            .filter("async", true)
+                                           .filter("accountId", accountId)
                                            .filter("delegateId", delegateId);
 
     // Send abort event only once by clearing delegateId
