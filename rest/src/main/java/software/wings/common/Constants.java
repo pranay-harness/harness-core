@@ -430,7 +430,7 @@ public interface Constants {
    * O
    * The constant DEFAULT_PARENT_STATE_TIMEOUT_MILLIS.
    */
-  Integer DEFAULT_PARENT_STATE_TIMEOUT_MILLIS = 90 * 60 * 1000; // 90 minutes
+  Integer DEFAULT_PARENT_STATE_TIMEOUT_MILLIS = 4 * 60 * 60 * 1000; // 4 hours
 
   /**
    * The constant DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS.
