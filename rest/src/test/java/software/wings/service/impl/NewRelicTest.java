@@ -52,35 +52,35 @@ public class NewRelicTest extends WingsBaseTest {
   @Test
   @Repeat(times = 5, successes = 1)
   @Ignore
-  public void getAllApplications() throws IOException {
+  public void getAllApplications() throws IOException, CloneNotSupportedException {
     List<NewRelicApplication> allApplications =
-        newRelicDelegateService.getAllApplications(newRelicConfig, Collections.emptyList());
+        newRelicDelegateService.getAllApplications(newRelicConfig, Collections.emptyList(), null);
     assertFalse(allApplications.isEmpty());
   }
 
   @Test
   @Repeat(times = 5, successes = 1)
   @Ignore
-  public void getApplicationInstances() throws IOException {
+  public void getApplicationInstances() throws IOException, CloneNotSupportedException {
     NewRelicApplication demoApp = getDemoApp();
     List<NewRelicApplicationInstance> applicationInstances =
-        newRelicDelegateService.getApplicationInstances(newRelicConfig, Collections.emptyList(), demoApp.getId());
+        newRelicDelegateService.getApplicationInstances(newRelicConfig, Collections.emptyList(), demoApp.getId(), null);
     assertFalse(applicationInstances.isEmpty());
   }
 
   @Test
   @Repeat(times = 5, successes = 1)
   @Ignore
-  public void getMetricsNameToCollect() throws IOException {
+  public void getMetricsNameToCollect() throws IOException, CloneNotSupportedException {
     NewRelicApplication demoApp = getDemoApp();
     Collection<NewRelicMetric> metricsNameToCollect =
-        newRelicDelegateService.getTxnNameToCollect(newRelicConfig, Collections.emptyList(), demoApp.getId());
+        newRelicDelegateService.getTxnNameToCollect(newRelicConfig, Collections.emptyList(), demoApp.getId(), null);
     assertFalse(metricsNameToCollect.isEmpty());
   }
 
-  private NewRelicApplication getDemoApp() throws IOException {
+  private NewRelicApplication getDemoApp() throws IOException, CloneNotSupportedException {
     List<NewRelicApplication> allApplications =
-        newRelicDelegateService.getAllApplications(newRelicConfig, Collections.emptyList());
+        newRelicDelegateService.getAllApplications(newRelicConfig, Collections.emptyList(), null);
     for (NewRelicApplication application : allApplications) {
       if (application.getName().equals("rsingh-demo-app")) {
         return application;

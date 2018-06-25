@@ -25,12 +25,7 @@ import javax.ws.rs.Produces;
 @Produces("application/json")
 @Scope(ResourceType.APPLICATION)
 public class LogResource {
-  private LogService logService;
-
-  @Inject
-  public LogResource(LogService logService) {
-    this.logService = logService;
-  }
+  @Inject private LogService logService;
 
   @DelegateAuth
   @POST

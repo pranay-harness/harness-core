@@ -18,9 +18,11 @@ import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.LogService;
+import software.wings.service.intfc.ThirdPartyApiService;
 
 import java.io.File;
 import java.util.List;
@@ -45,6 +47,7 @@ public class ActivityResource {
   private AppService appService;
   private ActivityService activityService;
   private LogService logService;
+  private ThirdPartyApiService thirdPartyApiService;
 
   /**
    * Instantiates a new activity resource.
@@ -55,10 +58,12 @@ public class ActivityResource {
    */
   @SuppressFBWarnings("URF_UNREAD_FIELD")
   @Inject
-  public ActivityResource(AppService appService, ActivityService activityService, LogService logService) {
+  public ActivityResource(AppService appService, ActivityService activityService, LogService logService,
+      ThirdPartyApiService thirdPartyApiService) {
     this.appService = appService;
     this.activityService = activityService;
     this.logService = logService;
+    this.thirdPartyApiService = thirdPartyApiService;
   }
 
   /**
@@ -151,5 +156,16 @@ public class ActivityResource {
     ResponseBuilder response = Response.ok(logFile, "application/x-unknown");
     response.header("Content-Disposition", "attachment; filename=" + logFile.getName());
     return response.build();
+  }
+
+  @GET
+  @Path("{stateExecutionId}/api-call-logs")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<PageResponse<ThirdPartyApiCallLog>> listLogs(@QueryParam("appId") String appId,
+      @PathParam("stateExecutionId") String stateExecutionId, @BeanParam PageRequest<ThirdPartyApiCallLog> request) {
+    request.addFilter("appId", EQ, appId);
+    request.addFilter("stateExecutionId", EQ, stateExecutionId);
+    return new RestResponse<>(thirdPartyApiService.list(request));
   }
 }

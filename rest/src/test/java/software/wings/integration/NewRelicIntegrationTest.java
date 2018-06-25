@@ -153,7 +153,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     for (NewRelicApplication app : restResponse.getResource()) {
       assertTrue(app.getId() > 0);
       Set<NewRelicMetric> txnNameToCollect = newRelicDelegateService.getTxnNameToCollect(
-          newRelicConfig, secretManager.getEncryptionDetails(newRelicConfig, null, null), app.getId());
+          newRelicConfig, secretManager.getEncryptionDetails(newRelicConfig, null, null), app.getId(), null);
       totalTxns += txnNameToCollect.size();
     }
 

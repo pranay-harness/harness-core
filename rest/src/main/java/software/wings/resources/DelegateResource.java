@@ -35,9 +35,11 @@ import software.wings.dl.PageResponse;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.PublicApi;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.intfc.DelegateScopeService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.DownloadTokenService;
+import software.wings.service.intfc.ThirdPartyApiService;
 
 import java.io.File;
 import java.io.IOException;
@@ -66,19 +68,23 @@ import javax.ws.rs.core.Response;
 @Produces("application/json")
 @Scope(DELEGATE)
 public class DelegateResource {
+  private static final Logger logger = LoggerFactory.getLogger(DelegateResource.class);
+
   private DelegateService delegateService;
   private DelegateScopeService delegateScopeService;
   private DownloadTokenService downloadTokenService;
-  private static final Logger logger = LoggerFactory.getLogger(DelegateResource.class);
-
   private MainConfiguration mainConfiguration;
+  private ThirdPartyApiService thirdPartyApiService;
+
   @Inject
   public DelegateResource(DelegateService delegateService, DelegateScopeService delegateScopeService,
-      DownloadTokenService downloadTokenService, MainConfiguration mainConfiguration) {
+      DownloadTokenService downloadTokenService, MainConfiguration mainConfiguration,
+      ThirdPartyApiService thirdPartyApiService) {
     this.delegateService = delegateService;
     this.delegateScopeService = delegateScopeService;
     this.downloadTokenService = downloadTokenService;
     this.mainConfiguration = mainConfiguration;
+    this.thirdPartyApiService = thirdPartyApiService;
   }
 
   @GET
@@ -404,5 +410,15 @@ public class DelegateResource {
   public Delegate updateDelegateHB(
       @PathParam("delegateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
     return delegateService.updateHeartbeat(accountId, delegateId);
+  }
+
+  @DelegateAuth
+  @POST
+  @Path("{delegateId}/state-executions")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> saveApiCallLogs(@PathParam("delegateId") String delegateId,
+      @QueryParam("accountId") String accountId, List<ThirdPartyApiCallLog> logs) {
+    return new RestResponse<>(thirdPartyApiService.saveApiCallLog(logs));
   }
 }

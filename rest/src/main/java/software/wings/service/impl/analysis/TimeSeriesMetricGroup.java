@@ -1,5 +1,7 @@
 package software.wings.service.impl.analysis;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -14,6 +16,8 @@ import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
 import software.wings.sm.StateType;
 
+import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -34,6 +38,11 @@ public class TimeSeriesMetricGroup extends Base {
   @NotEmpty @Indexed private String stateExecutionId;
 
   @NotEmpty private Map<String, TimeSeriesMlAnalysisGroupInfo> groups;
+
+  @SchemaIgnore
+  @JsonIgnore
+  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
+  private Date validUntil = Date.from(OffsetDateTime.now().plusWeeks(1).toInstant());
 
   @Builder
   public TimeSeriesMetricGroup(String uuid, String appId, EmbeddedUser createdBy, long createdAt,

@@ -132,6 +132,7 @@ import software.wings.service.impl.StateExecutionServiceImpl;
 import software.wings.service.impl.StaticInfrastructureProvider;
 import software.wings.service.impl.StatisticsServiceImpl;
 import software.wings.service.impl.SystemCatalogSeviceImpl;
+import software.wings.service.impl.ThirdPartyApiServiceImpl;
 import software.wings.service.impl.TriggerServiceImpl;
 import software.wings.service.impl.UserGroupServiceImpl;
 import software.wings.service.impl.UserServiceImpl;
@@ -240,6 +241,7 @@ import software.wings.service.intfc.SlackNotificationService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.SystemCatalogService;
+import software.wings.service.intfc.ThirdPartyApiService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
@@ -461,6 +463,7 @@ public class WingsModule extends AbstractModule {
     bind(SSOSettingService.class).to(SSOSettingServiceImpl.class);
     bind(SSOService.class).to(SSOServiceImpl.class);
     bind(DeploymentService.class).to(DeploymentServiceImpl.class);
+    bind(ThirdPartyApiService.class).to(ThirdPartyApiServiceImpl.class);
 
     try {
       VersionInfoManager versionInfoManager = new VersionInfoManager(IOUtils.toString(
