@@ -164,7 +164,7 @@ public class MessageServiceImpl implements MessageService {
             }
           }
           reader.close();
-          Thread.sleep(100L);
+          Thread.sleep(200L);
         }
       }, timeout, TimeUnit.MILLISECONDS, true);
     } catch (UncheckedTimeoutException e) {
@@ -233,6 +233,7 @@ public class MessageServiceImpl implements MessageService {
         while (message == null || !messageName.equals(message.getMessage())) {
           try {
             message = queue.take();
+            Thread.sleep(200L);
           } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
           }
@@ -270,6 +271,7 @@ public class MessageServiceImpl implements MessageService {
                   if (messageName.equals(message.getMessage())) {
                     messages.add(message);
                   }
+                  Thread.sleep(200L);
                 } catch (InterruptedException e) {
                   Thread.currentThread().interrupt();
                 }
