@@ -43,7 +43,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -357,7 +356,6 @@ public class EnvironmentServiceTest extends WingsBaseTest {
 
   // We are not throwing an exception anymore and this will be ignored for now
   @Test
-  @Ignore
   public void shouldThrowExceptionOnReferencedEnvironmentDelete() {
     when(wingsPersistence.get(Environment.class, APP_ID, ENV_ID))
         .thenReturn(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName("PROD").build());
