@@ -85,6 +85,7 @@ import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -102,6 +103,10 @@ public abstract class AbstractAnalysisState extends State {
   protected String timeDuration;
   protected String comparisonStrategy;
   protected String tolerance;
+
+  private static final int TIMEOUT_BUFFER = 150; // 150 Minutes.
+
+  private static final int MAX_WORKFLOW_TIMEOUT = 4 * 60; // 4 hours
 
   @Transient @Inject protected WorkflowExecutionService workflowExecutionService;
 
@@ -533,5 +538,23 @@ public abstract class AbstractAnalysisState extends State {
                                 .withEc2Instance(host.getEc2Instance())
                                 .withPublicDns(host.getPublicDns())
                                 .build());
+  }
+
+  @Override
+  public Integer getTimeoutMillis() {
+    if (!isEmpty(timeDuration)) {
+      return 60 * 1000 * (Integer.parseInt(timeDuration) + TIMEOUT_BUFFER);
+    }
+    return Constants.DEFAULT_VERIFICATION_STATE_TIMEOUT_MILLIS;
+  }
+
+  @Override
+  public Map<String, String> validateFields() {
+    if (!isEmpty(timeDuration) && Integer.parseInt(timeDuration) > MAX_WORKFLOW_TIMEOUT) {
+      return new HashMap<String, String>() {
+        { put("timeDuration", "Time duration cannot be more than 4 hours."); }
+      };
+    }
+    return null;
   }
 }

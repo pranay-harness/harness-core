@@ -414,7 +414,12 @@ public interface Constants {
   /**
    * The constant DEFAULT_STATE_TIMEOUT_MILLIS.
    */
-  Integer DEFAULT_STATE_TIMEOUT_MILLIS = 60 * 60 * 1000; // 60 minutes
+  Integer DEFAULT_STATE_TIMEOUT_MILLIS = 4 * 60 * 60 * 1000; // 4 hours
+
+  /**
+   * The constant DEFAULT_VERIFICATION_STATE_TIMEOUT_MILLIS.
+   */
+  Integer DEFAULT_VERIFICATION_STATE_TIMEOUT_MILLIS = 3 * 60 * 60 * 1000; // 3 hours
 
   /**
    * The constant DEFAULT_STATE_TIMEOUT_MILLIS.
