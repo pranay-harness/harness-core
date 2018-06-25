@@ -21,8 +21,8 @@ public class ReminderNotifyJob implements Job {
     String correlationId = jobExecutionContext.getMergedJobDataMap().getString(Constants.CORRELATION_ID);
 
     Map<String, String> parameters = new HashMap<>();
-    jobExecutionContext.getMergedJobDataMap().entrySet().forEach(
-        entry -> { parameters.put(entry.getKey(), String.valueOf(entry.getValue())); });
+    jobExecutionContext.getMergedJobDataMap().forEach(
+        (name, value) -> { parameters.put(name, String.valueOf(value)); });
     waitNotifyEngine.notify(correlationId, ReminderNotifyResponse.builder().parameters(parameters).build());
   }
 }

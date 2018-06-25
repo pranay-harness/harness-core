@@ -26,6 +26,7 @@ import io.harness.exception.UnexpectedException;
 import io.harness.logging.MorphiaLoggerFactory;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
+import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
@@ -157,7 +158,9 @@ public class DatabaseModule extends AbstractModule {
           reportDeprecatedUnique(index);
 
           BasicDBObject keys = new BasicDBObject();
-          Arrays.stream(index.fields()).forEach(field -> keys.append(field.value(), 1));
+          for (Field field : index.fields()) {
+            keys.append(field.value(), 1);
+          }
 
           final String indexName = index.options().name();
           if (isEmpty(indexName)) {

@@ -458,7 +458,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   public void processFailedChanges(
       String accountId, Map<Change, String> failedChangeErrorMsgMap, boolean gitToHarness) {
     if (failedChangeErrorMsgMap.size() > 0) {
-      failedChangeErrorMsgMap.entrySet().forEach(entry -> upsertGitSyncErrors(entry.getKey(), entry.getValue(), false));
+      failedChangeErrorMsgMap.forEach((change, msg) -> upsertGitSyncErrors(change, msg, false));
 
       alertService.openAlert(
           accountId, GLOBAL_APP_ID, AlertType.GitSyncError, getGitSyncErrorAlert(accountId, gitToHarness));

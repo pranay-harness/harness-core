@@ -361,9 +361,9 @@ public class AuthHandler {
 
           pipelineIdActionMap = getPipelineIdsByFilter(permissionTypeAppIdEntityMap.get(PIPELINE).get(appId),
               permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter, envActionMap, entityActions);
-          pipelineIdActionMap.asMap().entrySet().forEach(entry -> {
-            Map<String, Set<Action>> permissionMap = setActionsForEntity(
-                finalAppPermissionSummaryForUI.getPipelinePermissions(), entry.getKey(), entry.getValue());
+          pipelineIdActionMap.asMap().forEach((pipelineId, action) -> {
+            Map<String, Set<Action>> permissionMap =
+                setActionsForEntity(finalAppPermissionSummaryForUI.getPipelinePermissions(), pipelineId, action);
             finalAppPermissionSummaryForUI.setPipelinePermissions(permissionMap);
           });
           break;
@@ -376,9 +376,9 @@ public class AuthHandler {
           pipelineIdActionMap = getPipelineIdsByFilter(permissionTypeAppIdEntityMap.get(PIPELINE).get(appId),
               permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter, envActionMap, entityActions);
 
-          pipelineIdActionMap.asMap().entrySet().forEach(entry -> {
-            Map<String, Set<Action>> permissionMap = setActionsForEntity(
-                finalAppPermissionSummaryForUI.getDeploymentPermissions(), entry.getKey(), entry.getValue());
+          pipelineIdActionMap.asMap().forEach((pipelineId, action) -> {
+            Map<String, Set<Action>> permissionMap =
+                setActionsForEntity(finalAppPermissionSummaryForUI.getDeploymentPermissions(), pipelineId, action);
             finalAppPermissionSummaryForUI.setDeploymentPermissions(permissionMap);
           });
           break;
@@ -1018,9 +1018,9 @@ public class AuthHandler {
       userPermissionInfo.setAppPermissionMapInternal(toAppPermissionSummaryMap);
     }
 
-    fromAppPermissionMap.entrySet().forEach(entry -> {
-      AppPermissionSummary toAppPermissionSummary = convertToAppSummaryInternal(entry.getValue());
-      toAppPermissionSummaryMap.put(entry.getKey(), toAppPermissionSummary);
+    fromAppPermissionMap.forEach((key, summary) -> {
+      AppPermissionSummary toAppPermissionSummary = convertToAppSummaryInternal(summary);
+      toAppPermissionSummaryMap.put(key, toAppPermissionSummary);
     });
 
     userPermissionInfo.setAppPermissionMapInternal(toAppPermissionSummaryMap);
@@ -1054,9 +1054,7 @@ public class AuthHandler {
       return new HashMap<>();
     }
 
-    fromMap.entrySet().forEach(entry -> {
-      Collection<Action> actions = entry.getValue();
-      final String entityId = entry.getKey();
+    fromMap.forEach((entityId, actions) -> {
       if (CollectionUtils.isNotEmpty(actions)) {
         actions.forEach(action -> {
           if (action == Action.READ) {

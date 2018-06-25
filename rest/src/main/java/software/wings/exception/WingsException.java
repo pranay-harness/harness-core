@@ -210,10 +210,7 @@ public class WingsException extends WingsApiException {
     Throwable t = this;
     while (t != null) {
       if (t instanceof WingsException) {
-        ((WingsException) t)
-            .getContextObjects()
-            .entrySet()
-            .forEach(entry -> context.put(entry.getKey().getCanonicalName(), entry.getValue()));
+        ((WingsException) t).getContextObjects().forEach((clz, value) -> context.put(clz.getCanonicalName(), value));
       }
       t = t.getCause();
     }

@@ -65,7 +65,7 @@ public class AuthenticationUtil {
       URIBuilder uriBuilder = new URIBuilder(baseUrl);
       uriBuilder.setPath(path);
       if (params != null) {
-        params.entrySet().forEach(entry -> uriBuilder.addParameter(entry.getKey(), entry.getValue()));
+        params.forEach((name, value) -> uriBuilder.addParameter(name, value));
       }
       return uriBuilder.build();
     } catch (URISyntaxException e) {
