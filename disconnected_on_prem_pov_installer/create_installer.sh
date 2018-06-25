@@ -10,7 +10,9 @@ function getProperty () {
 rm -f harness_installer.zip
 
 mkdir -p harness_installer
-cp scripts/first_time_install.sh harness_installer
+cp scripts/first_time_only_install_harness.sh harness_installer
+cp scripts/upgrade_harness.sh harness_installer
+
 cp README.txt harness_installer
 mongo_version=$(getProperty "version.properties" "mongo")
 manager_version=$(getProperty "version.properties" "manager")
@@ -29,9 +31,9 @@ echo "UI version is ${ui_version}"
 echo "Learning Engine version is ${learning_engine_version}"
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    sed -i '' -e "s|MONGO_VERSION|${mongo_version}|g" harness_installer/first_time_install.sh
+    sed -i '' -e "s|MONGO_VERSION|${mongo_version}|g" harness_installer/first_time_only_install_harness.sh
 else
-    sed -i "s|MONGO_VERSION|${mongo_version}|g" harness_installer/first_time_install.sh
+    sed -i "s|MONGO_VERSION|${mongo_version}|g" harness_installer/first_time_only_install_harness.sh
 fi
 
 cp -r ../harness_disconnected_on_prem_pov_final harness_installer/
