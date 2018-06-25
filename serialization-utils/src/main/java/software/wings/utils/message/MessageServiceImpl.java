@@ -280,6 +280,7 @@ public class MessageServiceImpl implements MessageService {
           } catch (UncheckedTimeoutException e) {
             // Do nothing
           }
+          Thread.sleep(200L);
         }
         return messages;
       }, timeout, TimeUnit.MILLISECONDS, true);
