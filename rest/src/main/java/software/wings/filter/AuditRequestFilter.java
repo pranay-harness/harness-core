@@ -20,6 +20,7 @@ import software.wings.beans.HttpMethod;
 import software.wings.common.AuditHelper;
 import software.wings.exception.WingsException;
 import software.wings.security.annotations.DelegateAuth;
+import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.utils.BoundedInputStream;
@@ -106,7 +107,8 @@ public class AuditRequestFilter implements ContainerRequestFilter {
   }
 
   private boolean isAuditExemptedResource() {
-    return resourceInfo.getResourceMethod().getAnnotation(DelegateAuth.class) != null;
+    return resourceInfo.getResourceMethod().getAnnotation(DelegateAuth.class) != null
+        || resourceInfo.getResourceMethod().getAnnotation(LearningEngineAuth.class) != null;
   }
 
   private boolean isAuditExemptedHttpMethod(ContainerRequestContext requestContext) {
