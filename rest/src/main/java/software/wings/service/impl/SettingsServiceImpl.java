@@ -80,7 +80,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.manipulation.SettingsServiceManipulationObserver;
-import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -112,7 +112,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private YamlChangeSetHelper yamlChangeSetHelper;
   @Inject private AuthHandler authHandler;
   @Transient @Inject private SecretManager secretManager;
-  @Inject private EncryptionService encryptionService;
+  @Inject private ManagerDecryptionService managerDecryptionService;
   @Getter private Subject<SettingsServiceManipulationObserver> manipulationSubject = new Subject<>();
   @Inject private CacheHelper cacheHelper;
 
@@ -392,7 +392,7 @@ public class SettingsServiceImpl implements SettingsService {
       object.setDecrypted(false);
       List<EncryptedDataDetail> encryptionDetails =
           secretManager.getEncryptionDetails(object, settingAttribute.getAppId(), null);
-      encryptionService.decrypt(object, encryptionDetails);
+      managerDecryptionService.decrypt(object, encryptionDetails);
     }
 
     resetUnchangedEncryptedFields(existingSetting, settingAttribute);
