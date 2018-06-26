@@ -95,6 +95,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
               if (environment != null) {
                 envId[0] = environment.getUuid();
                 workflowVariables.put(variableName, envId[0]);
+                properties.put("envId", envId[0]);
               } else {
                 notNullCheck("Environment [" + variableValue + "] does not exist", environment, USER);
               }
