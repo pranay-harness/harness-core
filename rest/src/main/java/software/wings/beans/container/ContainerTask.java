@@ -18,6 +18,7 @@ import software.wings.beans.DeploymentSpecification;
 import software.wings.beans.EmbeddedUser;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * Created by anubhaw on 2/6/17.
@@ -30,6 +31,7 @@ import java.util.List;
 @Entity("containerTasks")
 public abstract class ContainerTask extends DeploymentSpecification {
   static final String DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX = "\\$\\{DOCKER_IMAGE_NAME}";
+  static final String DOCKER_IMAGE_NAME_REGEX = "(\\s*\"?image\"?\\s*:\\s*\"?)";
   static final String CONTAINER_NAME_PLACEHOLDER_REGEX = "\\$\\{CONTAINER_NAME}";
 
   static final String DUMMY_DOCKER_IMAGE_NAME = "hv--docker-image-name--hv";
@@ -72,6 +74,11 @@ public abstract class ContainerTask extends DeploymentSpecification {
 
   public void setAdvancedConfig(String advancedConfig) {
     this.advancedConfig = trimYaml(advancedConfig);
+  }
+
+  public static Pattern getRegexPattern(String domainName) {
+    return Pattern.compile(
+        DOCKER_IMAGE_NAME_REGEX + "(" + Pattern.quote(domainName) + "\\/)" + DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX);
   }
 
   @SchemaIgnore

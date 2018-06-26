@@ -11,6 +11,7 @@ public class EcsContainerTaskTest {
   public static final String CONTAINER_NAME = "containerName";
   public static final String IMAGE_NAME = "imageName";
   public static final String EXEC_ROLE = "exec_role";
+  public static final String DOMAIN_NAME = "domain.name.co";
 
   @Test
   public void testcreateTaskDefinition() {
@@ -27,7 +28,8 @@ public class EcsContainerTaskTest {
 
     ecsContainerTask.setContainerDefinitions(asList(containerDefinition));
 
-    TaskDefinition taskDefinition = ecsContainerTask.createTaskDefinition(CONTAINER_NAME, IMAGE_NAME, EXEC_ROLE);
+    TaskDefinition taskDefinition =
+        ecsContainerTask.createTaskDefinition(CONTAINER_NAME, IMAGE_NAME, EXEC_ROLE, DOMAIN_NAME);
 
     assertNotNull(taskDefinition);
     assertEquals(1, taskDefinition.getContainerDefinitions().size());
@@ -39,14 +41,14 @@ public class EcsContainerTaskTest {
         taskDefinition.getContainerDefinitions().get(0);
     assertNotNull(containerDefinitionAws);
     assertEquals(CONTAINER_NAME, containerDefinitionAws.getName());
-    assertEquals(IMAGE_NAME, containerDefinitionAws.getImage());
+    assertEquals(DOMAIN_NAME + "/" + IMAGE_NAME, containerDefinitionAws.getImage());
     assertEquals(256, containerDefinitionAws.getCpu().intValue());
     assertEquals(1024, containerDefinitionAws.getMemory().intValue());
     assertNotNull(containerDefinitionAws.getPortMappings());
     assertEquals(1, containerDefinitionAws.getPortMappings().size());
     assertEquals(80, containerDefinitionAws.getPortMappings().iterator().next().getContainerPort().intValue());
 
-    taskDefinition = ecsContainerTask.createTaskDefinition(CONTAINER_NAME, IMAGE_NAME, null);
+    taskDefinition = ecsContainerTask.createTaskDefinition(CONTAINER_NAME, IMAGE_NAME, null, DOMAIN_NAME);
 
     assertNotNull(taskDefinition);
     assertEquals(1, taskDefinition.getContainerDefinitions().size());
@@ -57,7 +59,7 @@ public class EcsContainerTaskTest {
     containerDefinitionAws = taskDefinition.getContainerDefinitions().get(0);
     assertNotNull(containerDefinitionAws);
     assertEquals(CONTAINER_NAME, containerDefinitionAws.getName());
-    assertEquals(IMAGE_NAME, containerDefinitionAws.getImage());
+    assertEquals(DOMAIN_NAME + "/" + IMAGE_NAME, containerDefinitionAws.getImage());
     assertEquals(256, containerDefinitionAws.getCpu().intValue());
     assertEquals(1024, containerDefinitionAws.getMemory().intValue());
     assertNotNull(containerDefinitionAws.getPortMappings());
@@ -70,7 +72,7 @@ public class EcsContainerTaskTest {
                               .build();
 
     ecsContainerTask.setContainerDefinitions(asList(containerDefinition));
-    taskDefinition = ecsContainerTask.createTaskDefinition(CONTAINER_NAME, IMAGE_NAME, EXEC_ROLE);
+    taskDefinition = ecsContainerTask.createTaskDefinition(CONTAINER_NAME, IMAGE_NAME, EXEC_ROLE, DOMAIN_NAME);
     assertNotNull(taskDefinition);
   }
 
@@ -88,7 +90,8 @@ public class EcsContainerTaskTest {
 
     ecsContainerTask.setContainerDefinitions(asList(containerDefinition));
 
-    TaskDefinition taskDefinition = ecsContainerTask.createTaskDefinition(CONTAINER_NAME, IMAGE_NAME, EXEC_ROLE);
+    TaskDefinition taskDefinition =
+        ecsContainerTask.createTaskDefinition(CONTAINER_NAME, IMAGE_NAME, EXEC_ROLE, DOMAIN_NAME);
 
     assertNotNull(taskDefinition);
     assertEquals(1, taskDefinition.getContainerDefinitions().size());
@@ -99,14 +102,14 @@ public class EcsContainerTaskTest {
         taskDefinition.getContainerDefinitions().get(0);
     assertNotNull(containerDefinitionAws);
     assertEquals(CONTAINER_NAME, containerDefinitionAws.getName());
-    assertEquals(IMAGE_NAME, containerDefinitionAws.getImage());
+    assertEquals(DOMAIN_NAME + "/" + IMAGE_NAME, containerDefinitionAws.getImage());
     assertEquals(256, containerDefinitionAws.getCpu().intValue());
     assertEquals(1024, containerDefinitionAws.getMemory().intValue());
     assertNotNull(containerDefinitionAws.getPortMappings());
     assertEquals(1, containerDefinitionAws.getPortMappings().size());
     assertEquals(80, containerDefinitionAws.getPortMappings().iterator().next().getContainerPort().intValue());
 
-    taskDefinition = ecsContainerTask.createTaskDefinition(CONTAINER_NAME, IMAGE_NAME, null);
+    taskDefinition = ecsContainerTask.createTaskDefinition(CONTAINER_NAME, IMAGE_NAME, null, DOMAIN_NAME);
 
     assertNotNull(taskDefinition);
     assertEquals(1, taskDefinition.getContainerDefinitions().size());
@@ -116,7 +119,7 @@ public class EcsContainerTaskTest {
     containerDefinitionAws = taskDefinition.getContainerDefinitions().get(0);
     assertNotNull(containerDefinitionAws);
     assertEquals(CONTAINER_NAME, containerDefinitionAws.getName());
-    assertEquals(IMAGE_NAME, containerDefinitionAws.getImage());
+    assertEquals(DOMAIN_NAME + "/" + IMAGE_NAME, containerDefinitionAws.getImage());
     assertEquals(256, containerDefinitionAws.getCpu().intValue());
     assertEquals(1024, containerDefinitionAws.getMemory().intValue());
     assertNotNull(containerDefinitionAws.getPortMappings());
@@ -129,7 +132,7 @@ public class EcsContainerTaskTest {
                               .build();
 
     ecsContainerTask.setContainerDefinitions(asList(containerDefinition));
-    taskDefinition = ecsContainerTask.createTaskDefinition(CONTAINER_NAME, IMAGE_NAME, EXEC_ROLE);
+    taskDefinition = ecsContainerTask.createTaskDefinition(CONTAINER_NAME, IMAGE_NAME, EXEC_ROLE, DOMAIN_NAME);
     assertNotNull(taskDefinition);
   }
 }

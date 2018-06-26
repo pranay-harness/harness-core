@@ -34,6 +34,7 @@ import software.wings.beans.TaskType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
+import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.ImageDetails;
 import software.wings.common.Constants;
@@ -75,6 +76,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -98,6 +101,7 @@ public class HelmDeployState extends State {
   public static final String HELM_COMMAND_NAME = "Helm Deploy";
   private static final String DOCKER_IMAGE_TAG_PLACEHOLDER_REGEX = "\\$\\{DOCKER_IMAGE_TAG}";
   private static final String DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX = "\\$\\{DOCKER_IMAGE_NAME}";
+  private static final String DOCKER_IMAGE_NAME_REGEX = "(\\s*\"?image\"?\\s*:\\s*\"?)";
 
   private static final Logger logger = LoggerFactory.getLogger(HelmDeployState.class);
 
@@ -211,14 +215,14 @@ public class HelmDeployState extends State {
       ContainerInfrastructureMapping infrastructureMapping) {
     List<String> helmValueOverridesYamlFiles =
         serviceTemplateService.helmValueOverridesYamlFiles(appId, infrastructureMapping.getServiceTemplateId());
-
     List<String> helmValueOverridesYamlFilesEvaluated = null;
     if (isNotEmpty(helmValueOverridesYamlFiles)) {
       helmValueOverridesYamlFilesEvaluated =
           helmValueOverridesYamlFiles.stream()
               .map(yamlFileContent
                   -> yamlFileContent.replaceAll(DOCKER_IMAGE_TAG_PLACEHOLDER_REGEX, imageDetails.getTag())
-                         .replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX, imageDetails.getName()))
+                         .replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX,
+                             getImageName(yamlFileContent, imageDetails.getName(), imageDetails.getDomainName())))
               .map(context::renderExpression)
               .collect(Collectors.toList());
     }
@@ -236,6 +240,19 @@ public class HelmDeployState extends State {
         .variableOverridesYamlFiles(helmValueOverridesYamlFilesEvaluated)
         .timeoutInMillis(TimeUnit.MINUTES.toMillis(steadyStateTimeout))
         .build();
+  }
+
+  private String getImageName(String yamlFileContent, String imageNameTag, String domainName) {
+    if (isNotEmpty(domainName)) {
+      Pattern pattern = ContainerTask.getRegexPattern(domainName);
+      Matcher matcher = pattern.matcher(yamlFileContent);
+      if (!matcher.find()) {
+        imageNameTag = domainName + "/" + imageNameTag;
+        imageNameTag = imageNameTag.replaceAll("//", "/");
+      }
+    }
+
+    return imageNameTag;
   }
 
   @SuppressFBWarnings("NP_NULL_ON_SOME_PATH") // TODO

@@ -74,6 +74,7 @@ public class EcsSetupCommandUnitTest extends WingsBaseTest {
   public static final String CONTAINER_NAME = "containerName";
   public static final String ROLE_ARN = "taskToleArn";
   public static final String DOCKER_IMG_NAME = "dockerImgName";
+  public static final String DOCKER_DOMAIN_NAME = "dockerDomainName";
   @Mock private AwsClusterService awsClusterService;
 
   @InjectMocks private EcsSetupCommandUnit ecsSetupCommandUnit = new EcsSetupCommandUnit();
@@ -437,7 +438,7 @@ public class EcsSetupCommandUnitTest extends WingsBaseTest {
     TaskDefinition taskDefinition =
         (TaskDefinition) MethodUtils.invokeMethod(ecsSetupCommandUnit, true, "createTaskDefinition",
             new Object[] {ecsContainerTask, CONTAINER_NAME, DOCKER_IMG_NAME, setupParams, settingAttribute,
-                new HashMap<>(), new HashMap<>(), encryptedDataDetails, executionLogCallback});
+                new HashMap<>(), new HashMap<>(), encryptedDataDetails, executionLogCallback, DOCKER_DOMAIN_NAME});
 
     // Capture RegisterTaskDefinitionRequest arg that was passed to "awsClusterService.createTask" and assert it
     ArgumentCaptor<RegisterTaskDefinitionRequest> captor = ArgumentCaptor.forClass(RegisterTaskDefinitionRequest.class);
