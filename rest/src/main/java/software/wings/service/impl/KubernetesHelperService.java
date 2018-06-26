@@ -126,6 +126,9 @@ public class KubernetesHelperService {
     if (kubernetesConfig.getClientKeyPassphrase() != null) {
       configBuilder.withClientKeyPassphrase(new String(kubernetesConfig.getClientKeyPassphrase()).trim());
     }
+    if (kubernetesConfig.getServiceAccountToken() != null) {
+      configBuilder.withOauthToken(new String(kubernetesConfig.getServiceAccountToken()).trim());
+    }
     if (kubernetesConfig.getClientKeyAlgo() != null) {
       configBuilder.withClientKeyAlgo(kubernetesConfig.getClientKeyAlgo().trim());
     }
