@@ -221,7 +221,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
               .mlAnalysisType(TimeSeriesMlAnalysisType.PREDICTIVE)
               .build());
     }
-    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId, true), waitIds);
+    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId, false), waitIds);
     metricAnalysisService.saveMetricGroups(
         context.getAppId(), StateType.APP_DYNAMICS, context.getStateExecutionInstanceId(), metricGroups);
     List<String> delegateTaskIds = new ArrayList<>();
