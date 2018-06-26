@@ -3,5 +3,5 @@
   "type": { "ui:widget": "hidden" },
   "newRelicUrl": { "ui:widget": "hidden" },
   "custom:encryptedFields": [ "apiKey" ],
-  "ui:order": ["type", "newRelicUrl", "apiKey"]
+  "ui:order": ["type", "newRelicUrl", "apiKey", "*"]
 }

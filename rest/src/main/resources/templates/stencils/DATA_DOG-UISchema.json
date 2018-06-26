@@ -1,6 +1,6 @@
 {
   "ui:order" : [
-    "analysisServerConfigId", "datadogServiceName", "metrics", "hostnameTemplate", "timeDuration", "comparisonStrategy", "analysisTolerance"
+    "analysisServerConfigId", "datadogServiceName", "metrics", "hostnameTemplate", "timeDuration", "comparisonStrategy", "analysisTolerance", "*"
   ],
   "metrics" : {
     "ui:widget" : "textarea"

@@ -3,7 +3,7 @@
       [
         "analysisServerConfigId", "query", "hostnameField", "hostnameTemplate",
         "timeDuration", "comparisonStrategy", "analysisTolerance",
-        "executeWithPreviousSteps"
+        "executeWithPreviousSteps", "*"
       ],
       "query" : {
     "ui:widget" : "textarea"
