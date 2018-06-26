@@ -63,6 +63,12 @@ public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler
         yaml.setClientKeyPassphrase(encryptedYamlRef);
       }
 
+      if (kubernetesClusterConfig.getEncryptedServiceAccountToken() != null) {
+        fieldName = "serviceAccountToken";
+        encryptedYamlRef = secretManager.getEncryptedYamlRef(kubernetesClusterConfig, fieldName);
+        yaml.setServiceAccountToken(encryptedYamlRef);
+      }
+
       yaml.setClientKeyAlgo(kubernetesClusterConfig.getClientKeyAlgo());
 
     } catch (IllegalAccessException e) {

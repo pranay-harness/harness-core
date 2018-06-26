@@ -541,6 +541,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       } else {
         fieldsToRemove.add("clientKeyPassphrase");
       }
+      if (directKubernetesInfrastructureMapping.getServiceAccountToken() != null) {
+        keyValuePairs.put("serviceAccountToken", directKubernetesInfrastructureMapping.getServiceAccountToken());
+      } else {
+        fieldsToRemove.add("serviceAccountToken");
+      }
       if (directKubernetesInfrastructureMapping.getClientKeyAlgo() != null) {
         keyValuePairs.put("clientKeyAlgo", directKubernetesInfrastructureMapping.getClientKeyAlgo());
       } else {

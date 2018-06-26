@@ -6,6 +6,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.settings.SettingValue.SettingVariableTypes.KUBERNETES_CLUSTER;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -29,6 +30,7 @@ import java.util.Optional;
  * Created by brett on 2/27/17
  */
 @JsonTypeName("DIRECT_KUBERNETES")
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructureMapping implements Encryptable {
@@ -39,6 +41,7 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
   @Encrypted @Attributes(title = "Client Certificate") private char[] clientCert;
   @Encrypted @Attributes(title = "Client Key") private char[] clientKey;
   @Encrypted @Attributes(title = "Client Key Passphrase") private char[] clientKeyPassphrase;
+  @Encrypted @Attributes(title = "Service Account Token") private char[] serviceAccountToken;
   @Attributes(title = "Client Key Algorithm") private String clientKeyAlgo;
   @Attributes(title = "Namespace") private String namespace;
 
@@ -47,6 +50,7 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
   @SchemaIgnore private String encryptedClientCert;
   @SchemaIgnore private String encryptedClientKey;
   @SchemaIgnore private String encryptedClientKeyPassphrase;
+  @SchemaIgnore private String encryptedServiceAccountToken;
 
   @SchemaIgnore @Transient private boolean decrypted;
 
@@ -152,6 +156,12 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
       kubernetesConfig.clientKeyPassphrase(clientKeyPassphrase);
     }
 
+    if (isNotBlank(encryptedServiceAccountToken)) {
+      kubernetesConfig.encryptedServiceAccountToken(encryptedServiceAccountToken);
+    } else {
+      kubernetesConfig.serviceAccountToken(serviceAccountToken);
+    }
+
     return kubernetesConfig.build();
   }
 
@@ -167,6 +177,7 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
     private char[] clientCert;
     private char[] clientKey;
     private char[] clientKeyPassphrase;
+    private char[] serviceAccountToken;
     private String clientKeyAlgo;
     private String namespace;
     private String uuid;
@@ -234,6 +245,12 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
     @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder withClientKeyPassphrase(char[] clientKeyPassphrase) {
       this.clientKeyPassphrase = clientKeyPassphrase;
+      return this;
+    }
+
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
+    public Builder withServiceAccountToken(char[] serviceAccountToken) {
+      this.serviceAccountToken = serviceAccountToken;
       return this;
     }
 
@@ -347,6 +364,7 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
           .withClientCert(clientCert)
           .withClientKey(clientKey)
           .withClientKeyPassphrase(clientKeyPassphrase)
+          .withServiceAccountToken(serviceAccountToken)
           .withClientKeyAlgo(clientKeyAlgo)
           .withNamespace(namespace)
           .withUuid(uuid)
@@ -380,6 +398,7 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
       directKubernetesInfrastructureMapping.setClientCert(clientCert);
       directKubernetesInfrastructureMapping.setClientKey(clientKey);
       directKubernetesInfrastructureMapping.setClientKeyPassphrase(clientKeyPassphrase);
+      directKubernetesInfrastructureMapping.setServiceAccountToken(serviceAccountToken);
       directKubernetesInfrastructureMapping.setClientKeyAlgo(clientKeyAlgo);
       directKubernetesInfrastructureMapping.setNamespace(namespace);
       directKubernetesInfrastructureMapping.setUuid(uuid);
@@ -415,6 +434,7 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
     private String clientCert;
     private String clientKey;
     private String clientKeyPassphrase;
+    private String serviceAccountToken;
     private String clientKeyAlgo;
     private String namespace;
 
@@ -422,7 +442,7 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
     public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
         String infraMappingType, String deploymentType, String computeProviderName, String cluster, String masterUrl,
         String username, String password, String caCert, String clientCert, String clientKey,
-        String clientKeyPassphrase, String clientKeyAlgo, String namespace) {
+        String clientKeyPassphrase, String serviceAccountToken, String clientKeyAlgo, String namespace) {
       super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
           computeProviderName, cluster);
       this.masterUrl = masterUrl;
@@ -432,6 +452,7 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
       this.clientCert = clientCert;
       this.clientKey = clientKey;
       this.clientKeyPassphrase = clientKeyPassphrase;
+      this.serviceAccountToken = serviceAccountToken;
       this.clientKeyAlgo = clientKeyAlgo;
       this.namespace = namespace;
     }

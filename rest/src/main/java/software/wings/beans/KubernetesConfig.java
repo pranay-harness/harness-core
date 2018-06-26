@@ -18,7 +18,7 @@ import software.wings.settings.SettingValue;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Builder
-@ToString(exclude = {"password", "clientKeyPassphrase"})
+@ToString(exclude = {"password", "caCert", "clientCert", "clientKey", "clientKeyPassphrase", "serviceAccountToken"})
 public class KubernetesConfig extends SettingValue implements Encryptable {
   @NotEmpty private String masterUrl;
   private String username;
@@ -27,6 +27,7 @@ public class KubernetesConfig extends SettingValue implements Encryptable {
   @Encrypted private char[] clientCert;
   @Encrypted private char[] clientKey;
   @Encrypted private char[] clientKeyPassphrase;
+  @Encrypted private char[] serviceAccountToken;
   private String clientKeyAlgo;
   private String namespace;
   @NotEmpty private String accountId;
@@ -36,6 +37,7 @@ public class KubernetesConfig extends SettingValue implements Encryptable {
   private String encryptedClientCert;
   private String encryptedClientKey;
   private String encryptedClientKeyPassphrase;
+  private String encryptedServiceAccountToken;
 
   /**
    * Instantiates a new setting value.
@@ -46,9 +48,9 @@ public class KubernetesConfig extends SettingValue implements Encryptable {
 
   @SuppressFBWarnings("EI_EXPOSE_REP2")
   public KubernetesConfig(String masterUrl, String username, char[] password, char[] caCert, char[] clientCert,
-      char[] clientKey, char[] clientKeyPassphrase, String clientKeyAlgo, String namespace, String accountId,
-      String encryptedPassword, String encryptedCaCert, String encryptedClientCert, String encryptedClientKey,
-      String encryptedClientKeyPassphrase) {
+      char[] clientKey, char[] clientKeyPassphrase, char[] serviceAccountToken, String clientKeyAlgo, String namespace,
+      String accountId, String encryptedPassword, String encryptedCaCert, String encryptedClientCert,
+      String encryptedClientKey, String encryptedClientKeyPassphrase, String encryptedServiceAccountToken) {
     this();
     this.masterUrl = masterUrl;
     this.username = username;
@@ -57,6 +59,7 @@ public class KubernetesConfig extends SettingValue implements Encryptable {
     this.clientCert = clientCert;
     this.clientKey = clientKey;
     this.clientKeyPassphrase = clientKeyPassphrase;
+    this.serviceAccountToken = serviceAccountToken;
     this.clientKeyAlgo = clientKeyAlgo;
     this.namespace = namespace;
     this.accountId = accountId;
@@ -65,5 +68,6 @@ public class KubernetesConfig extends SettingValue implements Encryptable {
     this.encryptedClientCert = encryptedClientCert;
     this.encryptedClientKey = encryptedClientKey;
     this.encryptedClientKeyPassphrase = encryptedClientKeyPassphrase;
+    this.encryptedServiceAccountToken = encryptedServiceAccountToken;
   }
 }

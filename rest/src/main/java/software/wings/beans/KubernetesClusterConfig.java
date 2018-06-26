@@ -38,6 +38,7 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
   @Encrypted private char[] clientCert;
   @Encrypted private char[] clientKey;
   @Encrypted private char[] clientKeyPassphrase;
+  @Encrypted private char[] serviceAccountToken;
   private String clientKeyAlgo;
   private boolean skipValidation;
 
@@ -46,6 +47,7 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
   @JsonView(JsonViews.Internal.class) private String encryptedClientCert;
   @JsonView(JsonViews.Internal.class) private String encryptedClientKey;
   @JsonView(JsonViews.Internal.class) private String encryptedClientKeyPassphrase;
+  @JsonView(JsonViews.Internal.class) private String encryptedServiceAccountToken;
 
   @NotEmpty private String accountId;
 
@@ -58,9 +60,9 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
   @SuppressFBWarnings("EI_EXPOSE_REP2")
   public KubernetesClusterConfig(boolean useKubernetesDelegate, String delegateName, String masterUrl, String username,
       char[] password, char[] caCert, char[] clientCert, char[] clientKey, char[] clientKeyPassphrase,
-      String clientKeyAlgo, boolean skipValidation, String encryptedPassword, String encryptedCaCert,
-      String encryptedClientCert, String encryptedClientKey, String encryptedClientKeyPassphrase, String accountId,
-      boolean decrypted) {
+      char[] serviceAccountToken, String clientKeyAlgo, boolean skipValidation, String encryptedPassword,
+      String encryptedCaCert, String encryptedClientCert, String encryptedClientKey,
+      String encryptedClientKeyPassphrase, String encryptedServiceAccountToken, String accountId, boolean decrypted) {
     this();
     this.useKubernetesDelegate = useKubernetesDelegate;
     this.delegateName = delegateName;
@@ -71,6 +73,7 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
     this.clientCert = clientCert;
     this.clientKey = clientKey;
     this.clientKeyPassphrase = clientKeyPassphrase;
+    this.serviceAccountToken = serviceAccountToken;
     this.clientKeyAlgo = clientKeyAlgo;
     this.skipValidation = skipValidation;
     this.encryptedPassword = encryptedPassword;
@@ -78,6 +81,7 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
     this.encryptedClientCert = encryptedClientCert;
     this.encryptedClientKey = encryptedClientKey;
     this.encryptedClientKeyPassphrase = encryptedClientKeyPassphrase;
+    this.encryptedServiceAccountToken = encryptedServiceAccountToken;
     this.accountId = accountId;
     this.decrypted = decrypted;
   }
@@ -125,6 +129,12 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
       kubernetesConfig.clientKeyPassphrase(clientKeyPassphrase);
     }
 
+    if (isNotBlank(encryptedServiceAccountToken)) {
+      kubernetesConfig.encryptedServiceAccountToken(encryptedServiceAccountToken);
+    } else {
+      kubernetesConfig.serviceAccountToken(serviceAccountToken);
+    }
+
     return kubernetesConfig.build();
   }
 
@@ -141,13 +151,15 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
     private String clientCert;
     private String clientKey;
     private String clientKeyPassphrase;
+    private String serviceAccountToken;
     private String clientKeyAlgo;
     private boolean skipValidation;
 
     @lombok.Builder
     public Yaml(boolean useKubernetesDelegate, String delegateName, String type, String harnessApiVersion,
         String masterUrl, String username, String password, String caCert, String clientCert, String clientKey,
-        String clientKeyPassphrase, String clientKeyAlgo, boolean skipValidation, UsageRestrictions usageRestrictions) {
+        String clientKeyPassphrase, String serviceAccountToken, String clientKeyAlgo, boolean skipValidation,
+        UsageRestrictions usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
       this.useKubernetesDelegate = useKubernetesDelegate;
       this.delegateName = delegateName;
@@ -158,6 +170,7 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
       this.clientCert = clientCert;
       this.clientKey = clientKey;
       this.clientKeyPassphrase = clientKeyPassphrase;
+      this.serviceAccountToken = serviceAccountToken;
       this.clientKeyAlgo = clientKeyAlgo;
       this.skipValidation = skipValidation;
     }

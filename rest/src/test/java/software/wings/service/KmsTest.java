@@ -3054,6 +3054,7 @@ public class KmsTest extends WingsBaseTest {
     String clientCert = UUID.randomUUID().toString();
     String clientKey = UUID.randomUUID().toString();
     String clientKeyPassphrase = UUID.randomUUID().toString();
+    String serviceAccountToken = UUID.randomUUID().toString();
     DirectKubernetesInfrastructureMapping infrastructureMapping =
         DirectKubernetesInfrastructureMapping.Builder.aDirectKubernetesInfrastructureMapping()
             .withName("Name1")
@@ -3108,7 +3109,7 @@ public class KmsTest extends WingsBaseTest {
 
     Query<EncryptedData> query =
         wingsPersistence.createQuery(EncryptedData.class).filter("type", SettingVariableTypes.DIRECT);
-    assertEquals(5, query.count());
+    assertEquals(6, query.count());
 
     query = wingsPersistence.createQuery(EncryptedData.class)
                 .filter("type", SettingVariableTypes.DIRECT)
@@ -3118,6 +3119,7 @@ public class KmsTest extends WingsBaseTest {
     directInfraMapping.setPassword(password.toCharArray());
     directInfraMapping.setCaCert(caCert.toCharArray());
     directInfraMapping.setClientKeyPassphrase(clientKeyPassphrase.toCharArray());
+    directInfraMapping.setServiceAccountToken(serviceAccountToken.toCharArray());
 
     infrastructureMappingService.update(directInfraMapping);
 
@@ -3147,16 +3149,17 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(clientCert, String.valueOf(directInfraMapping.getClientCert()));
     assertEquals(clientKey, String.valueOf(directInfraMapping.getClientKey()));
     assertEquals(clientKeyPassphrase, String.valueOf(directInfraMapping.getClientKeyPassphrase()));
+    assertEquals(serviceAccountToken, String.valueOf(directInfraMapping.getServiceAccountToken()));
 
     query = wingsPersistence.createQuery(EncryptedData.class).filter("type", SettingVariableTypes.DIRECT);
-    assertEquals(5, query.count());
+    assertEquals(6, query.count());
 
-    assertEquals(5, query.count());
+    assertEquals(6, query.count());
 
     query = wingsPersistence.createQuery(EncryptedData.class)
                 .filter("type", SettingVariableTypes.DIRECT)
                 .filter("encryptionType", EncryptionType.KMS);
-    assertEquals(5, query.count());
+    assertEquals(6, query.count());
 
     directInfraMapping.setPassword(null);
     directInfraMapping.setCaCert(null);
@@ -3192,14 +3195,14 @@ public class KmsTest extends WingsBaseTest {
     assertNull(directInfraMapping.getClientKeyPassphrase());
 
     query = wingsPersistence.createQuery(EncryptedData.class).filter("type", SettingVariableTypes.DIRECT);
-    assertEquals(5, query.count());
+    assertEquals(6, query.count());
 
-    assertEquals(5, query.count());
+    assertEquals(6, query.count());
 
     query = wingsPersistence.createQuery(EncryptedData.class)
                 .filter("type", SettingVariableTypes.DIRECT)
                 .filter("encryptionType", EncryptionType.KMS);
-    assertEquals(2, query.count());
+    assertEquals(3, query.count());
   }
 
   public static KmsConfig getKmsConfig() {
