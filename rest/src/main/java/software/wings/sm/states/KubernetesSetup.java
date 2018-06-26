@@ -128,7 +128,6 @@ public class KubernetesSetup extends ContainerServiceSetup {
       configMapYamlEvaluated = context.renderExpression(configMapYaml);
     }
 
-    boolean isStatefulSet = false;
     boolean useDashInHostName = featureFlagService.isEnabled(FeatureName.USE_DASH_IN_HOSTNAME, app.getAccountId());
 
     if (containerTask != null) {
@@ -142,14 +141,12 @@ public class KubernetesSetup extends ContainerServiceSetup {
       if (kubernetesContainerTask.getAdvancedConfig() != null) {
         kubernetesContainerTask.setAdvancedConfig(
             context.renderExpression(kubernetesContainerTask.getAdvancedConfig()));
-        isStatefulSet = kubernetesContainerTask.checkStatefulSet();
       }
     }
 
     String controllerNamePrefix = isNotBlank(replicationControllerName)
         ? KubernetesConvention.normalize(context.renderExpression(replicationControllerName))
-        : KubernetesConvention.getControllerNamePrefix(
-              app.getName(), serviceName, env.getName(), isStatefulSet, useDashInHostName);
+        : KubernetesConvention.getControllerNamePrefix(app.getName(), serviceName, env.getName(), useDashInHostName);
 
     String ingressYamlEvaluated = null;
     if (isNotBlank(ingressYaml)) {

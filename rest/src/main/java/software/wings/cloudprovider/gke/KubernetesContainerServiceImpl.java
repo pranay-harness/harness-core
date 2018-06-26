@@ -13,6 +13,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.common.Constants.HARNESS_REVISION;
 import static software.wings.exception.WingsException.USER;
+import static software.wings.utils.KubernetesConvention.DASH;
+import static software.wings.utils.KubernetesConvention.DOT;
 import static software.wings.utils.KubernetesConvention.getPrefixFromControllerName;
 import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
 import static software.wings.utils.KubernetesConvention.getServiceNameFromControllerName;
@@ -419,37 +421,31 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public LinkedHashMap<String, Integer> getActiveServiceCounts(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, boolean isStatefulSet,
-      boolean useDashInHostname) {
+      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, boolean useDashInHostname) {
     LinkedHashMap<String, Integer> result = new LinkedHashMap<>();
-    String controllerNamePrefix = getPrefixFromControllerName(containerServiceName, isStatefulSet, useDashInHostname);
+    String controllerNamePrefix = getPrefixFromControllerName(containerServiceName, useDashInHostname);
     listControllers(kubernetesConfig, encryptedDataDetails)
         .stream()
         .filter(ctrl -> ctrl.getMetadata().getName().startsWith(controllerNamePrefix))
         .filter(ctrl -> getControllerPodCount(ctrl) > 0)
-        .filter(ctrl
-            -> getRevisionFromControllerName(ctrl.getMetadata().getName(), isStatefulSet, useDashInHostname)
-                   .isPresent())
-        .sorted(comparingInt(ctrl
-            -> getRevisionFromControllerName(ctrl.getMetadata().getName(), isStatefulSet, useDashInHostname)
-                   .orElse(-1)))
+        .filter(ctrl -> getRevisionFromControllerName(ctrl.getMetadata().getName(), useDashInHostname).isPresent())
+        .sorted(comparingInt(
+            ctrl -> getRevisionFromControllerName(ctrl.getMetadata().getName(), useDashInHostname).orElse(-1)))
         .forEach(ctrl -> result.put(ctrl.getMetadata().getName(), getControllerPodCount(ctrl)));
     return result;
   }
 
   @Override
   public Map<String, String> getActiveServiceImages(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, boolean isStatefulSet,
-      String imagePrefix, boolean useDashInHostname) {
+      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, String imagePrefix,
+      boolean useDashInHostname) {
     Map<String, String> result = new HashMap<>();
-    String controllerNamePrefix = getPrefixFromControllerName(containerServiceName, isStatefulSet, useDashInHostname);
+    String controllerNamePrefix = getPrefixFromControllerName(containerServiceName, useDashInHostname);
     listControllers(kubernetesConfig, encryptedDataDetails)
         .stream()
         .filter(ctrl -> ctrl.getMetadata().getName().startsWith(controllerNamePrefix))
         .filter(ctrl -> getControllerPodCount(ctrl) > 0)
-        .filter(ctrl
-            -> getRevisionFromControllerName(ctrl.getMetadata().getName(), isStatefulSet, useDashInHostname)
-                   .isPresent())
+        .filter(ctrl -> getRevisionFromControllerName(ctrl.getMetadata().getName(), useDashInHostname).isPresent())
         .forEach(ctrl
             -> result.put(ctrl.getMetadata().getName(),
                 getPodTemplateSpec(ctrl)
@@ -791,10 +787,10 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public int getTrafficPercent(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      String controllerName, boolean isStatefulSet, boolean useDashInHostname) {
-    String serviceName = getServiceNameFromControllerName(controllerName, isStatefulSet, useDashInHostname);
+      String controllerName, boolean useDashInHostname) {
+    String serviceName = getServiceNameFromControllerName(controllerName, useDashInHostname);
     IstioResource routeRule = getRouteRule(kubernetesConfig, encryptedDataDetails, serviceName);
-    Optional<Integer> revision = getRevisionFromControllerName(controllerName, isStatefulSet, useDashInHostname);
+    Optional<Integer> revision = getRevisionFromControllerName(controllerName, useDashInHostname);
     if (routeRule == null || !revision.isPresent()) {
       return 0;
     }
@@ -809,17 +805,17 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public Map<String, Integer> getTrafficWeights(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String controllerName, boolean isStatefulSet,
-      boolean useDashInHostName) {
-    String serviceName = getServiceNameFromControllerName(controllerName, isStatefulSet, useDashInHostName);
-    String controllerNamePrefix = getPrefixFromControllerName(controllerName, isStatefulSet, useDashInHostName);
+      List<EncryptedDataDetail> encryptedDataDetails, String controllerName, boolean useDashInHostName) {
+    String serviceName = getServiceNameFromControllerName(controllerName, useDashInHostName);
+    String controllerNamePrefix = getPrefixFromControllerName(controllerName, useDashInHostName);
     IstioResource routeRule = getRouteRule(kubernetesConfig, encryptedDataDetails, serviceName);
     if (routeRule == null) {
       return new HashMap<>();
     }
     RouteRule routeRuleSpec = (RouteRule) routeRule.getSpec();
-    return routeRuleSpec.getRoute().stream().collect(
-        toMap(dw -> controllerNamePrefix + dw.getLabels().get(HARNESS_REVISION), DestinationWeight::getWeight));
+    return routeRuleSpec.getRoute().stream().collect(toMap(dw
+        -> controllerNamePrefix + (useDashInHostName ? DASH : DOT) + dw.getLabels().get(HARNESS_REVISION),
+        DestinationWeight::getWeight));
   }
 
   @Override

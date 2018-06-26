@@ -9,7 +9,6 @@ import static software.wings.beans.ErrorCode.GENERAL_ERROR;
 import static software.wings.cloudprovider.ContainerInfo.Status.SUCCESS;
 import static software.wings.common.Constants.HARNESS_REVISION;
 import static software.wings.service.impl.KubernetesHelperService.printRouteRuleWeights;
-import static software.wings.utils.KubernetesConvention.DOT;
 import static software.wings.utils.KubernetesConvention.getPrefixFromControllerName;
 import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
 import static software.wings.utils.KubernetesConvention.getServiceNameFromControllerName;
@@ -139,21 +138,22 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
       List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
       KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
       String controllerName = resizeParams.getContainerServiceName();
-      String kubernetesServiceName = getServiceNameFromControllerName(
-          controllerName, !controllerName.contains(DOT), resizeParams.isUseDashInHostName());
-      String controllerPrefix = getPrefixFromControllerName(
-          controllerName, !controllerName.contains(DOT), resizeParams.isUseDashInHostName());
+      String kubernetesServiceName =
+          getServiceNameFromControllerName(controllerName, resizeParams.isUseDashInHostName());
+      String controllerPrefix = getPrefixFromControllerName(controllerName, resizeParams.isUseDashInHostName());
       IstioResource routeRuleDefinition = createRouteRuleDefinition(contextData, allData, kubernetesServiceName);
       IstioResource existingRouteRule =
           kubernetesContainerService.getRouteRule(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
       if (!routeRuleMatchesExisting(existingRouteRule, routeRuleDefinition)) {
         executionLogCallback.saveExecutionLog("Setting Istio route rule weights:");
-        printRouteRuleWeights(routeRuleDefinition, controllerPrefix, executionLogCallback);
+        printRouteRuleWeights(
+            routeRuleDefinition, controllerPrefix, resizeParams.isUseDashInHostName(), executionLogCallback);
         kubernetesContainerService.createOrReplaceRouteRule(
             kubernetesConfig, encryptedDataDetails, routeRuleDefinition);
       } else {
         executionLogCallback.saveExecutionLog("No change to Istio route rule:");
-        printRouteRuleWeights(existingRouteRule, controllerPrefix, executionLogCallback);
+        printRouteRuleWeights(
+            existingRouteRule, controllerPrefix, resizeParams.isUseDashInHostName(), executionLogCallback);
       }
       executionLogCallback.saveExecutionLog(DASH_STRING + "\n");
     }
@@ -232,8 +232,8 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
     KubernetesResizeParams resizeParams = (KubernetesResizeParams) contextData.resizeParams;
     String controllerName = resizeParams.getContainerServiceName();
-    return kubernetesContainerService.getActiveServiceCounts(kubernetesConfig, encryptedDataDetails, controllerName,
-        !controllerName.contains(DOT), resizeParams.isUseDashInHostName());
+    return kubernetesContainerService.getActiveServiceCounts(
+        kubernetesConfig, encryptedDataDetails, controllerName, resizeParams.isUseDashInHostName());
   }
 
   @Override
@@ -243,8 +243,8 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     KubernetesResizeParams resizeParams = (KubernetesResizeParams) contextData.resizeParams;
     String controllerName = resizeParams.getContainerServiceName();
     String imagePrefix = substringBefore(contextData.resizeParams.getImage(), ":");
-    return kubernetesContainerService.getActiveServiceImages(kubernetesConfig, encryptedDataDetails, controllerName,
-        !controllerName.contains(DOT), imagePrefix, resizeParams.isUseDashInHostName());
+    return kubernetesContainerService.getActiveServiceImages(
+        kubernetesConfig, encryptedDataDetails, controllerName, imagePrefix, resizeParams.isUseDashInHostName());
   }
 
   @Override
@@ -261,8 +261,8 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
     KubernetesResizeParams resizeParams = (KubernetesResizeParams) contextData.resizeParams;
     String controllerName = resizeParams.getContainerServiceName();
-    return kubernetesContainerService.getTrafficWeights(kubernetesConfig, encryptedDataDetails, controllerName,
-        !controllerName.contains(DOT), resizeParams.isUseDashInHostName());
+    return kubernetesContainerService.getTrafficWeights(
+        kubernetesConfig, encryptedDataDetails, controllerName, resizeParams.isUseDashInHostName());
   }
 
   @Override
@@ -271,8 +271,8 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
     KubernetesResizeParams resizeParams = (KubernetesResizeParams) contextData.resizeParams;
     String controllerName = resizeParams.getContainerServiceName();
-    return kubernetesContainerService.getTrafficPercent(kubernetesConfig, encryptedDataDetails, controllerName,
-        !controllerName.contains(DOT), resizeParams.isUseDashInHostName());
+    return kubernetesContainerService.getTrafficPercent(
+        kubernetesConfig, encryptedDataDetails, controllerName, resizeParams.isUseDashInHostName());
   }
 
   @Override
@@ -296,9 +296,7 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
 
     for (ContainerServiceData containerServiceData : allData) {
       String controllerName = containerServiceData.getName();
-      int revision = getRevisionFromControllerName(
-          controllerName, !controllerName.contains(DOT), resizeParams.isUseDashInHostName())
-                         .orElse(-1);
+      int revision = getRevisionFromControllerName(controllerName, resizeParams.isUseDashInHostName()).orElse(-1);
       int weight = containerServiceData.getDesiredTraffic();
       if (weight > 0) {
         routeRuleSpecNested.addNewRoute()
