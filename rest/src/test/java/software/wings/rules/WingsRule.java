@@ -377,16 +377,18 @@ public class WingsRule implements MethodRule {
 
     try {
       log().info("Stopping distributed lock service...");
-      ((Managed) distributedLockSvc).stop();
+      if (distributedLockSvc instanceof Managed) {
+        ((Managed) distributedLockSvc).stop();
+      }
       log().info("Stopped distributed lock service...");
     } catch (Exception ex) {
       logger.error("", ex);
     }
 
     try {
-      log().info("Stopping WingsPersistance...");
+      log().info("Stopping WingsPersistence...");
       ((Managed) injector.getInstance(WingsPersistence.class)).stop();
-      log().info("Stopped WingsPersistance...");
+      log().info("Stopped WingsPersistence...");
     } catch (Exception ex) {
       logger.error("", ex);
     }
