@@ -65,7 +65,7 @@ public class DatabaseModule extends AbstractModule {
   /**
    * Creates a guice module for portal app.
    *
-   * @param configuration Dropwizard configuration
+   * @param configuration DropWizard configuration
    */
   public DatabaseModule(MainConfiguration configuration) {
     registerLogger(MorphiaLoggerFactory.class);

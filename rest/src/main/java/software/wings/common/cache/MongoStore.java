@@ -57,11 +57,9 @@ public class MongoStore implements DistributedStore {
 
   @Override
   public <T extends Distributable> void upsert(T entity, Duration ttl) {
+    final String canonicalKey = canonicalKey(entity.algorithmId(), entity.structureHash(), entity.key());
     try {
-      final String canonicalKey = canonicalKey(entity.algorithmId(), entity.structureHash(), entity.key());
-
       final Datastore datastore = wingsPersistence.getDatastore();
-
       final UpdateOperations<CacheEntity> updateOperations = datastore.createUpdateOperations(CacheEntity.class);
       updateOperations.set(CacheEntity.CONTEXT_HASH_KEY, entity.contextHash());
       updateOperations.set(CacheEntity.CANONICAL_KEY_KEY, canonicalKey);
@@ -73,7 +71,7 @@ public class MongoStore implements DistributedStore {
 
       datastore.update(query, updateOperations, true);
     } catch (RuntimeException ex) {
-      logger.error("Failed to update cache", ex);
+      logger.error("Failed to update cache for key {}, hash {}", canonicalKey, entity.contextHash(), ex);
     }
   }
 }
