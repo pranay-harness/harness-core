@@ -113,7 +113,8 @@ public class AppDefaultVarYamlHandlerTest extends BaseYamlHandlerTest {
     when(yamlHelper.getAppName(anyString())).thenReturn(APP_NAME);
     Application app = new Application();
     app.setUuid(APP_ID);
-    when(appService.getAppByName(ACCOUNT_ID, APP_NAME)).thenReturn(app);
+    when(appService.getAppByName(ACCOUNT_ID, APP_NAME)).thenReturn(app).thenReturn(app);
+    when(yamlHelper.getApp(anyString(), anyString())).thenReturn(app);
 
     GitFileChange gitFileChange = new GitFileChange();
     gitFileChange.setFileContent(v1_validYamlContent);

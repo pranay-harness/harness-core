@@ -11,6 +11,7 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import software.wings.beans.Application;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
@@ -26,6 +27,7 @@ import software.wings.service.intfc.PipelineService;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author rktummala on 11/2/17
@@ -150,7 +152,12 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
   public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
     String accountId = changeContext.getChange().getAccountId();
     String filePath = changeContext.getChange().getFilePath();
-    Pipeline pipeline = get(accountId, filePath);
+    Optional<Application> optionalApplication = yamlHelper.getApplicationIfPresent(accountId, filePath);
+    if (!optionalApplication.isPresent()) {
+      return;
+    }
+
+    Pipeline pipeline = yamlHelper.getPipelineByAppIdYamlPath(optionalApplication.get().getUuid(), filePath);
     if (pipeline != null) {
       pipelineService.deletePipeline(pipeline.getAppId(), pipeline.getUuid());
     }

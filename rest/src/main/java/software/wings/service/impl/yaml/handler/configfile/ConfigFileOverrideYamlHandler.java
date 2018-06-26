@@ -13,12 +13,14 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.Key;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.ChecksumType;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ConfigFile.ConfigOverrideType;
 import software.wings.beans.ConfigFile.OverrideYaml;
 import software.wings.beans.EntityType;
+import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.yaml.ChangeContext;
@@ -50,13 +52,21 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
   public void delete(ChangeContext<OverrideYaml> changeContext) throws HarnessException {
     String accountId = changeContext.getChange().getAccountId();
     String yamlFilePath = changeContext.getChange().getFilePath();
-    String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-    notNullCheck("Invalid Application for the yaml file:" + yamlFilePath, appId, USER);
-    String envId = yamlHelper.getServiceId(appId, yamlFilePath);
-    notNullCheck("Invalid Environment for the yaml file:" + yamlFilePath, envId, USER);
+    Optional<Application> optionalApplication = yamlHelper.getApplicationIfPresent(accountId, yamlFilePath);
+    if (!optionalApplication.isPresent()) {
+      return;
+    }
+
+    Optional<Environment> optionalEnvironment =
+        yamlHelper.getEnvIfPresent(optionalApplication.get().getUuid(), yamlFilePath);
+    if (!optionalEnvironment.isPresent()) {
+      return;
+    }
+
     OverrideYaml yaml = changeContext.getYaml();
     String targetFilePath = yaml.getTargetFilePath();
-    configService.delete(appId, envId, EntityType.ENVIRONMENT, targetFilePath);
+    configService.delete(optionalApplication.get().getUuid(), optionalEnvironment.get().getUuid(),
+        EntityType.ENVIRONMENT, targetFilePath);
   }
 
   @Override

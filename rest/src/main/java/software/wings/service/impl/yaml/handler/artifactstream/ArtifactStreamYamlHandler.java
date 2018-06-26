@@ -5,6 +5,8 @@ import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 
+import software.wings.beans.Application;
+import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.Yaml;
@@ -16,6 +18,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.SettingsService;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author rktummala on 10/09/17
@@ -52,11 +55,21 @@ public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends Artifa
   public void delete(ChangeContext<Y> changeContext) throws HarnessException {
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
-    String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-    notNullCheck("Application can't be found for yaml file:" + yamlFilePath, appId, USER);
-    ArtifactStream artifactStream = yamlHelper.getArtifactStream(accountId, yamlFilePath);
+    Optional<Application> optionalApplication = yamlHelper.getApplicationIfPresent(accountId, yamlFilePath);
+    if (!optionalApplication.isPresent()) {
+      return;
+    }
+
+    Application application = optionalApplication.get();
+    Optional<Service> serviceOptional = yamlHelper.getServiceIfPresent(application.getUuid(), yamlFilePath);
+    if (!serviceOptional.isPresent()) {
+      return;
+    }
+
+    ArtifactStream artifactStream =
+        yamlHelper.getArtifactStream(application.getUuid(), serviceOptional.get().getUuid(), yamlFilePath);
     if (artifactStream != null) {
-      artifactStreamService.delete(appId, artifactStream.getUuid());
+      artifactStreamService.delete(application.getUuid(), artifactStream.getUuid());
     }
   }
 
