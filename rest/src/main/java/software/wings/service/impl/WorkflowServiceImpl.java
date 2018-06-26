@@ -2305,6 +2305,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       Map<String, Object> defaultSetupProperties = new HashMap<>();
       defaultSetupProperties.put("blueGreen", true);
       defaultSetupProperties.put("blueGreenConfig", defaultBlueGreenConfig);
+      defaultSetupProperties.put("resizeStrategy", "RESIZE_NEW_FIRST");
 
       workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
                                      .addStep(aGraphNode()
@@ -2319,6 +2320,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Map<String, Object> defaultUpgradeStageContainerProperties = new HashMap<>();
     defaultUpgradeStageContainerProperties.put("instanceUnitType", "PERCENTAGE");
     defaultUpgradeStageContainerProperties.put("instanceCount", 100);
+    defaultUpgradeStageContainerProperties.put("downsizeInstanceUnitType", "PERCENTAGE");
+    defaultUpgradeStageContainerProperties.put("downsizeInstanceCount", 100);
 
     workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.UPGRADE_STAGE_CONTAINERS)
                                    .addStep(aGraphNode()
