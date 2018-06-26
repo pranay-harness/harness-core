@@ -242,7 +242,6 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -916,7 +915,7 @@ public class AwsHelperService {
   public Set<String> listTags(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, ResourceType resourceType) {
     String nextToken = null;
-    Set<String> tags = new LinkedHashSet<>();
+    Set<String> tags = new HashSet<>();
     try {
       do {
         encryptionService.decrypt(awsConfig, encryptionDetails);
@@ -1484,7 +1483,7 @@ public class AwsHelperService {
         .collect(toList());
   }
 
-  List<String> listIAMInstanceRoles(AwsConfig awsConfig) {
+  public List<String> listIAMInstanceRoles(AwsConfig awsConfig) {
     try {
       AmazonIdentityManagementClient amazonIdentityManagementClient =
           getAmazonIdentityManagementClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
@@ -1515,7 +1514,7 @@ public class AwsHelperService {
     return emptyMap();
   }
 
-  List<String> listApplicationLoadBalancers(
+  public List<String> listApplicationLoadBalancers(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
@@ -1534,7 +1533,7 @@ public class AwsHelperService {
     return emptyList();
   }
 
-  List<String> listClassicLoadBalancers(
+  public List<String> listClassicLoadBalancers(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
     try {
       List<LoadBalancerDescription> describeLoadBalancers =
