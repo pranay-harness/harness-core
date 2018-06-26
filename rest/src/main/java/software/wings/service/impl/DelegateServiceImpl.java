@@ -57,11 +57,13 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
+import io.harness.version.VersionInfoManager;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.compress.archivers.zip.AsiExtraField;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.fluent.Request;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.atteo.evo.inflector.English;
@@ -81,6 +83,7 @@ import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Event.Type;
+import software.wings.beans.FeatureName;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.TaskType;
@@ -98,6 +101,7 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.waitnotify.NotifyResponseData;
@@ -149,6 +153,8 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private NotificationSetupService notificationSetupService;
   @Inject private TimeLimiter timeLimiter;
   @Inject private Clock clock;
+  @Inject private VersionInfoManager versionInfoManager;
+  @Inject private FeatureFlagService featureFlagService;
 
   private LoadingCache<String, String> delegateVersionCache =
       CacheBuilder.newBuilder()
@@ -618,6 +624,11 @@ public class DelegateServiceImpl implements DelegateService {
     if (!delegate.getHostName().contains(getAccountIdentifier(delegate.getAccountId()))) {
       delegateQuery.filter("ip", delegate.getIp());
     }
+
+    if (featureFlagService.isEnabled(FeatureName.DELEGATE_TASK_VERSIONING, delegate.getAccountId())) {
+      delegateQuery.filter("version", delegate.getVersion());
+    }
+
     Delegate existingDelegate = delegateQuery.project("status", true).get();
     Delegate registeredDelegate;
     if (existingDelegate == null) {
@@ -646,6 +657,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public String queueTask(DelegateTask task) {
     task.setAsync(true);
+    task.setVersion(getVersion());
     DelegateTask delegateTask = wingsPersistence.saveAndGet(DelegateTask.class, task);
     logger.info("Queueing async task uuid: {}, accountId: {}, type: {}", delegateTask.getUuid(),
         delegateTask.getAccountId(), delegateTask.getTaskType());
@@ -661,6 +673,7 @@ public class DelegateServiceImpl implements DelegateService {
       throw new WingsException(UNAVAILABLE_DELEGATES, USER_ADMIN);
     }
     task.setAsync(false);
+    task.setVersion(getVersion());
     DelegateTask delegateTask = wingsPersistence.saveAndGet(DelegateTask.class, task);
 
     broadcasterFactory.lookup("/stream/delegate/" + delegateTask.getAccountId(), true).broadcast(delegateTask);
@@ -970,6 +983,12 @@ public class DelegateServiceImpl implements DelegateService {
 
     if (delegate != null && delegate.getSupportedTaskTypes().contains(task.getTaskType())) {
       qualifies = true;
+
+      if (featureFlagService.isEnabled(FeatureName.DELEGATE_TASK_VERSIONING, delegate.getAccountId())) {
+        if (!StringUtils.equals(delegate.getVersion(), task.getVersion())) {
+          qualifies = false;
+        }
+      }
     }
 
     return qualifies;
@@ -1128,5 +1147,9 @@ public class DelegateServiceImpl implements DelegateService {
                 Integer.toString(alertsToBeCreated.size())))
             .build(),
         singletonList(notificationRule));
+  }
+
+  private String getVersion() {
+    return versionInfoManager.getVersionInfo().getVersion();
   }
 }

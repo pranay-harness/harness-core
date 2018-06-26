@@ -37,6 +37,7 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "delegateTasks", noClassnameStored = true)
 @Converters(Converter.class)
 public class DelegateTask extends Base {
+  private String version;
   @NotNull private String taskType;
   private Object[] parameters;
   private List<String> tags = new ArrayList<>();
@@ -63,6 +64,14 @@ public class DelegateTask extends Base {
 
   public boolean isTimedOut() {
     return getLastUpdatedAt() + timeout <= System.currentTimeMillis();
+  }
+
+  public String getVersion() {
+    return version;
+  }
+
+  public void setVersion(String version) {
+    this.version = version;
   }
 
   public String getTaskType() {
@@ -224,11 +233,11 @@ public class DelegateTask extends Base {
       return false;
     }
     DelegateTask that = (DelegateTask) o;
-    return timeout == that.timeout && async == that.async && Objects.equals(taskType, that.taskType)
-        && Arrays.equals(parameters, that.parameters) && Objects.equals(tags, that.tags)
-        && Objects.equals(accountId, that.accountId) && Objects.equals(waitId, that.waitId) && status == that.status
-        && Objects.equals(delegateId, that.delegateId) && Objects.equals(envId, that.envId)
-        && Objects.equals(infrastructureMappingId, that.infrastructureMappingId)
+    return timeout == that.timeout && async == that.async && Objects.equals(version, that.version)
+        && Objects.equals(taskType, that.taskType) && Arrays.equals(parameters, that.parameters)
+        && Objects.equals(tags, that.tags) && Objects.equals(accountId, that.accountId)
+        && Objects.equals(waitId, that.waitId) && status == that.status && Objects.equals(delegateId, that.delegateId)
+        && Objects.equals(envId, that.envId) && Objects.equals(infrastructureMappingId, that.infrastructureMappingId)
         && Objects.equals(delegateRunnableTask, that.delegateRunnableTask)
         && Objects.equals(notifyResponse, that.notifyResponse)
         && Arrays.equals(serializedNotifyResponseData, that.serializedNotifyResponseData);
@@ -236,17 +245,18 @@ public class DelegateTask extends Base {
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), taskType, parameters, tags, accountId, waitId, status, delegateId, timeout,
-        async, envId, infrastructureMappingId, delegateRunnableTask, notifyResponse, serializedNotifyResponseData);
+    return Objects.hash(super.hashCode(), version, taskType, parameters, tags, accountId, waitId, status, delegateId,
+        timeout, async, envId, infrastructureMappingId, delegateRunnableTask, notifyResponse,
+        serializedNotifyResponseData);
   }
 
   @Override
   public String toString() {
     return "DelegateTask{"
-        + "taskType=" + taskType + ", parameters=" + Arrays.toString(parameters) + ", tag='" + tags + '\''
-        + ", accountId='" + accountId + '\'' + ", waitId='" + waitId + '\'' + '\'' + ", status=" + status
-        + ", delegateId='" + delegateId + '\'' + ", timeout=" + timeout + ", async=" + async + ", envId='" + envId
-        + '\'' + ", infrastructureMappingId='" + infrastructureMappingId + '\''
+        + "version='" + version + '\'' + ", taskType=" + taskType + ", parameters=" + Arrays.toString(parameters)
+        + ", tag='" + tags + '\'' + ", accountId='" + accountId + '\'' + ", waitId='" + waitId + '\'' + '\''
+        + ", status=" + status + ", delegateId='" + delegateId + '\'' + ", timeout=" + timeout + ", async=" + async
+        + ", envId='" + envId + '\'' + ", infrastructureMappingId='" + infrastructureMappingId + '\''
         + ", delegateRunnableTask=" + delegateRunnableTask + ", notifyResponse=" + notifyResponse + '}';
   }
 
@@ -375,6 +385,7 @@ public class DelegateTask extends Base {
   public enum Status { QUEUED, STARTED, FINISHED, ERROR, ABORTED }
 
   public static final class Builder {
+    private String version;
     private TaskType taskType;
     private Object[] parameters;
     private List<String> tags;
@@ -398,6 +409,11 @@ public class DelegateTask extends Base {
 
     public static Builder aDelegateTask() {
       return new Builder();
+    }
+
+    public Builder withVersion(String version) {
+      this.version = version;
+      return this;
     }
 
     public Builder withTaskType(TaskType taskType) {
@@ -493,6 +509,7 @@ public class DelegateTask extends Base {
 
     public Builder but() {
       return aDelegateTask()
+          .withVersion(version)
           .withTaskType(taskType)
           .withParameters(parameters)
           .withTags(tags)
@@ -515,6 +532,7 @@ public class DelegateTask extends Base {
 
     public DelegateTask build() {
       DelegateTask delegateTask = new DelegateTask();
+      delegateTask.setVersion(version);
       delegateTask.setTaskType(taskType != null ? taskType.name() : null);
       delegateTask.setParameters(parameters);
       delegateTask.setTags(tags);

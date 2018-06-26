@@ -56,6 +56,7 @@ import com.google.inject.name.Named;
 import com.ning.http.client.AsyncHttpClient;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.network.FibonacciBackOff;
+import io.harness.version.VersionInfoManager;
 import okhttp3.ResponseBody;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
@@ -161,6 +162,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private AsyncHttpClient asyncHttpClient;
   @Inject private Clock clock;
   @Inject private TimeLimiter timeLimiter;
+  @Inject private VersionInfoManager versionInfoManager;
 
   private static final Logger logger = LoggerFactory.getLogger(DelegateServiceImpl.class);
   private final Object waiter = new Object();
@@ -1072,6 +1074,6 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private String getVersion() {
-    return System.getProperty("version", "1.0.0-DEV");
+    return versionInfoManager.getVersionInfo().getVersion();
   }
 }
