@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.infrastructure.instance.info.EcsContainerInfo.Builder.anEcsContainerInfo;
 import static software.wings.common.Constants.HARNESS_REVISION;
 import static software.wings.exception.WingsException.USER;
-import static software.wings.utils.KubernetesConvention.DOT;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -68,8 +67,7 @@ public class ContainerServiceImpl implements ContainerService {
     String controllerName = containerServiceParams.getContainerServiceName();
     if (isKubernetesClusterConfig(value)) {
       return kubernetesContainerService.getActiveServiceCounts(getKubernetesConfig(containerServiceParams),
-          containerServiceParams.getEncryptionDetails(), controllerName, !controllerName.contains(DOT),
-          useDashInHostname);
+          containerServiceParams.getEncryptionDetails(), controllerName, useDashInHostname);
     } else if (value instanceof AwsConfig) {
       return awsClusterService.getActiveServiceCounts(containerServiceParams.getRegion(),
           containerServiceParams.getSettingAttribute(), containerServiceParams.getEncryptionDetails(),

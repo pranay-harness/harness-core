@@ -65,15 +65,12 @@ public interface KubernetesContainerService {
 
   PodTemplateSpec getPodTemplateSpec(HasMetadata controller);
 
-  // TODO(brett) Stateful Sets are no longer versioned. Remove statefulSet param after 6/1/18
   LinkedHashMap<String, Integer> getActiveServiceCounts(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, boolean isStatefulSet,
-      boolean useDashInHostName);
+      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, boolean useDashInHostName);
 
-  // TODO(brett) Stateful Sets are no longer versioned. Remove statefulSet param after 6/1/18
   Map<String, String> getActiveServiceImages(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, boolean isStatefulSet,
-      String imagePrefix, boolean useDashInHostName);
+      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, String imagePrefix,
+      boolean useDashInHostName);
 
   Service createOrReplaceService(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Service definition);
@@ -111,12 +108,10 @@ public interface KubernetesContainerService {
   void deleteRouteRule(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
 
   int getTrafficPercent(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      String controllerName, boolean isStatefulSet, boolean useDashInHostname);
+      String controllerName, boolean useDashInHostname);
 
-  // TODO(brett) Stateful Sets are no longer versioned. Remove statefulSet param after 6/1/18
   Map<String, Integer> getTrafficWeights(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, boolean isStatefulSet,
-      boolean useDashInHostname);
+      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, boolean useDashInHostname);
 
   void createNamespaceIfNotExist(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails);
 

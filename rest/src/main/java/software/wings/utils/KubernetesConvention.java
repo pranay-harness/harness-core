@@ -29,62 +29,25 @@ public class KubernetesConvention {
   private static Pattern wildCharPattern = Pattern.compile("[_+*/\\\\ &@$|\"':]");
   private static final int MAX_REVISIONS = 100000;
 
-  // TODO(brett) Stateful Sets are no longer versioned. Remove statefulSet param after 6/1/18
-  public static String getControllerName(
-      String prefix, int revision, boolean isStatefulSet, boolean useDashInHostname) {
-    if (useDashInHostname) {
-      return getControllerName(prefix, revision);
-    }
-    return normalize(prefix) + (isStatefulSet ? DASH : DOT) + revision;
+  public static String getControllerName(String prefix, int revision, boolean useDashInHostname) {
+    String separator = useDashInHostname ? DASH : DOT;
+    return normalize(prefix) + separator + revision;
   }
 
-  public static String getControllerName(String prefix, int revision) {
-    return normalize(prefix) + DASH + revision;
-  }
-
-  // TODO(brett) Stateful Sets are no longer versioned. Remove statefulSet param after 6/1/18
   public static String getControllerNamePrefix(
-      String appName, String serviceName, String envName, boolean isStatefulSet, boolean useDashInHostname) {
-    if (useDashInHostname) {
-      return getControllerNamePrefix(appName, serviceName, envName);
-    }
-    String separator = isStatefulSet ? DASH : DOT;
+      String appName, String serviceName, String envName, boolean useDashInHostname) {
+    String separator = useDashInHostname ? DASH : DOT;
     return normalize(appName + separator + serviceName + separator + envName);
   }
 
-  public static String getControllerNamePrefix(String appName, String serviceName, String envName) {
-    String separator = DASH;
-    return normalize(appName + separator + serviceName + separator + envName);
+  public static String getPrefixFromControllerName(String controllerName, boolean useDashInHostname) {
+    String separator = useDashInHostname ? DASH : DOT;
+    return controllerName.substring(0, controllerName.lastIndexOf(separator));
   }
 
-  // TODO(brett) Stateful Sets are no longer versioned. Remove statefulSet param after 6/1/18
-  public static String getPrefixFromControllerName(
-      String controllerName, boolean isStatefulSet, boolean useDashInHostname) {
-    if (useDashInHostname) {
-      getPrefixFromControllerName(controllerName);
-    }
-    String versionSeparator = isStatefulSet ? DASH : DOT;
-    return controllerName.substring(0, controllerName.lastIndexOf(versionSeparator) + versionSeparator.length());
-  }
-
-  public static String getPrefixFromControllerName(String controllerName) {
-    String versionSeparator = DASH;
-    return controllerName.substring(0, controllerName.lastIndexOf(versionSeparator));
-  }
-
-  // TODO(brett) Stateful Sets are no longer versioned. Remove statefulSet param after 6/1/18
-  public static String getServiceNameFromControllerName(
-      String controllerName, boolean isStatefulSet, boolean useDashInHostname) {
-    if (useDashInHostname) {
-      return getServiceNameFromControllerName(controllerName);
-    }
-    String versionSeparator = isStatefulSet ? DASH : DOT;
-    return noDot(controllerName.substring(0, controllerName.lastIndexOf(versionSeparator)));
-  }
-
-  public static String getServiceNameFromControllerName(String controllerName) {
-    String versionSeparator = DASH;
-    return noDot(controllerName.substring(0, controllerName.lastIndexOf(versionSeparator)));
+  public static String getServiceNameFromControllerName(String controllerName, boolean useDashInHostname) {
+    String separator = useDashInHostname ? DASH : DOT;
+    return noDot(controllerName.substring(0, controllerName.lastIndexOf(separator)));
   }
 
   public static String getKubernetesServiceName(String controllerNamePrefix) {
@@ -117,13 +80,11 @@ public class KubernetesConvention {
     return SECRET_PREFIX + name + SECRET_SUFFIX;
   }
 
-  // TODO(brett) Stateful Sets are no longer versioned. Remove statefulSet param after 6/1/18
-  public static Optional<Integer> getRevisionFromControllerName(
-      String name, boolean isStatefulSet, boolean useDashInHostname) {
+  public static Optional<Integer> getRevisionFromControllerName(String name, boolean useDashInHostname) {
     if (useDashInHostname) {
       return getRevisionFromControllerName(name);
     }
-    String versionSeparator = isStatefulSet ? DASH : DOT;
+    String versionSeparator = DOT;
     if (name != null) {
       int index = name.lastIndexOf(versionSeparator);
       if (index >= 0) {
@@ -138,7 +99,7 @@ public class KubernetesConvention {
     return Optional.empty();
   }
 
-  public static Optional<Integer> getRevisionFromControllerName(String name) {
+  private static Optional<Integer> getRevisionFromControllerName(String name) {
     String versionSeparator = DASH;
     if (name != null) {
       int index = name.lastIndexOf(versionSeparator);
@@ -161,7 +122,7 @@ public class KubernetesConvention {
   }
 
   // ToDo(anshul) method needs to be deprecated once we completely remove the DOT.
-  public static Optional<Integer> getRevisionFromControllerNameWithDot(String name) {
+  private static Optional<Integer> getRevisionFromControllerNameWithDot(String name) {
     String versionSeparator = DOT;
     if (name != null) {
       int index = name.lastIndexOf(versionSeparator);

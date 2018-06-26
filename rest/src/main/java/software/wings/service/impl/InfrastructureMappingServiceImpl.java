@@ -1453,6 +1453,18 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       KubernetesContainerTask kubernetesContainerTask = (KubernetesContainerTask) containerTask;
       isStatefulSet = kubernetesContainerTask.checkStatefulSet();
     }
+
+    String kubernetesName;
+    String controllerNamePrefix;
+    if (isNotBlank(serviceNameExpression)) {
+      controllerNamePrefix = KubernetesConvention.normalize(evaluator.substitute(serviceNameExpression, context));
+    } else {
+      controllerNamePrefix = KubernetesConvention.getControllerNamePrefix(
+          app.getName(), service.getName(), env.getName(), useDashInHostName);
+    }
+    kubernetesName = isStatefulSet ? KubernetesConvention.getKubernetesServiceName(controllerNamePrefix)
+                                   : controllerNamePrefix + (useDashInHostName ? DASH : DOT + "0");
+
     if (containerInfraMapping instanceof DirectKubernetesInfrastructureMapping) {
       DirectKubernetesInfrastructureMapping directInfraMapping =
           (DirectKubernetesInfrastructureMapping) containerInfraMapping;
@@ -1460,33 +1472,19 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           ? aSettingAttribute().withValue(directInfraMapping.createKubernetesConfig()).build()
           : settingsService.get(directInfraMapping.getComputeProviderSettingId());
       namespace = directInfraMapping.getNamespace();
-      containerServiceName =
-          (isNotBlank(serviceNameExpression)
-                  ? KubernetesConvention.normalize(evaluator.substitute(serviceNameExpression, context))
-                  : KubernetesConvention.getControllerNamePrefix(
-                        app.getName(), service.getName(), env.getName(), isStatefulSet, useDashInHostName))
-          + (useDashInHostName ? DASH : (isStatefulSet ? DASH : DOT)) + "0";
+
+      containerServiceName = kubernetesName;
     } else {
       settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
       clusterName = containerInfraMapping.getClusterName();
       if (containerInfraMapping instanceof GcpKubernetesInfrastructureMapping) {
         namespace = containerInfraMapping.getNamespace();
-        containerServiceName =
-            (isNotBlank(serviceNameExpression)
-                    ? KubernetesConvention.normalize(evaluator.substitute(serviceNameExpression, context))
-                    : KubernetesConvention.getControllerNamePrefix(
-                          app.getName(), service.getName(), env.getName(), isStatefulSet, useDashInHostName))
-            + (useDashInHostName ? DASH : (isStatefulSet ? DASH : DOT)) + "0";
+        containerServiceName = kubernetesName;
       } else if (containerInfraMapping instanceof AzureKubernetesInfrastructureMapping) {
         namespace = containerInfraMapping.getNamespace();
         subscriptionId = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getSubscriptionId();
         resourceGroup = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getResourceGroup();
-        containerServiceName =
-            (isNotBlank(serviceNameExpression)
-                    ? KubernetesConvention.normalize(evaluator.substitute(serviceNameExpression, context))
-                    : KubernetesConvention.getControllerNamePrefix(
-                          app.getName(), service.getName(), env.getName(), isStatefulSet, useDashInHostName))
-            + (useDashInHostName ? DASH : (isStatefulSet ? DASH : DOT)) + "0";
+        containerServiceName = kubernetesName;
 
       } else if (containerInfraMapping instanceof EcsInfrastructureMapping) {
         region = ((EcsInfrastructureMapping) containerInfraMapping).getRegion();

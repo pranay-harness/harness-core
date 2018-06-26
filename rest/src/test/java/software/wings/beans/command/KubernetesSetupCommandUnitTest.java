@@ -191,7 +191,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
         new ReplicationControllerBuilder()
             .withNewMetadata()
             .withName(KubernetesConvention.getControllerName(
-                KubernetesConvention.getControllerNamePrefix("app", "service", "env", false, false), 1, false, false))
+                KubernetesConvention.getControllerNamePrefix("app", "service", "env", false), 1, false))
             .withCreationTimestamp(new Date().toString())
             .endMetadata()
             .build();

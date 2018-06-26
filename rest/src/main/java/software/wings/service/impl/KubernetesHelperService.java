@@ -10,6 +10,8 @@ import static java.util.Arrays.asList;
 import static okhttp3.ConnectionSpec.CLEARTEXT;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.common.Constants.HARNESS_REVISION;
+import static software.wings.utils.KubernetesConvention.DASH;
+import static software.wings.utils.KubernetesConvention.DOT;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -149,8 +151,8 @@ public class KubernetesHelperService {
     return new IstioClient(new KubernetesAdapter(getKubernetesClient(kubernetesConfig, encryptedDataDetails)));
   }
 
-  public static void printRouteRuleWeights(
-      IstioResource routeRule, String controllerPrefix, ExecutionLogCallback executionLogCallback) {
+  public static void printRouteRuleWeights(IstioResource routeRule, String controllerPrefix, boolean useDashInHostName,
+      ExecutionLogCallback executionLogCallback) {
     RouteRule routeRuleSpec = (RouteRule) routeRule.getSpec();
     if (isNotEmpty(routeRuleSpec.getRoute())) {
       List<DestinationWeight> sorted = new ArrayList<>(routeRuleSpec.getRoute());
@@ -158,7 +160,8 @@ public class KubernetesHelperService {
       for (DestinationWeight destinationWeight : sorted) {
         int weight = destinationWeight.getWeight();
         String rev = destinationWeight.getLabels().get(HARNESS_REVISION);
-        executionLogCallback.saveExecutionLog(format("   %s%s: %d%%", controllerPrefix, rev, weight));
+        executionLogCallback.saveExecutionLog(
+            format("   %s%s%s: %d%%", controllerPrefix, useDashInHostName ? DASH : DOT, rev, weight));
       }
     } else {
       executionLogCallback.saveExecutionLog("   None specified");

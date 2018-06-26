@@ -22,8 +22,6 @@ import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.container.ContainerTask;
-import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.common.Constants;
 import software.wings.exception.InvalidRequestException;
@@ -87,13 +85,6 @@ public class GcpClusterSetup extends State {
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(
         (Encryptable) computeProviderSetting.getValue(), context.getAppId(), context.getWorkflowExecutionId());
     String serviceName = serviceResourceService.get(app.getUuid(), serviceId).getName();
-    boolean isStatefulSet = false;
-    ContainerTask containerTask = serviceResourceService.getContainerTaskByDeploymentType(
-        app.getUuid(), serviceId, infrastructureMapping.getDeploymentType());
-    if (containerTask instanceof KubernetesContainerTask) {
-      KubernetesContainerTask kubernetesContainerTask = (KubernetesContainerTask) containerTask;
-      isStatefulSet = kubernetesContainerTask.checkStatefulSet();
-    }
     if (isEmpty(zone)) {
       zone = "us-west1-a";
     }
@@ -106,8 +97,8 @@ public class GcpClusterSetup extends State {
 
     boolean useDashInHostName = featureFlagService.isEnabled(FeatureName.USE_DASH_IN_HOSTNAME, app.getAccountId());
     String clusterName = "harness-"
-        + KubernetesConvention.getKubernetesServiceName(KubernetesConvention.getControllerNamePrefix(
-              app.getName(), serviceName, env, isStatefulSet, useDashInHostName));
+        + KubernetesConvention.getKubernetesServiceName(
+              KubernetesConvention.getControllerNamePrefix(app.getName(), serviceName, env, useDashInHostName));
     String zoneCluster = zone + "/" + clusterName;
 
     gkeClusterService.createCluster(computeProviderSetting, encryptionDetails, zoneCluster,
