@@ -1259,12 +1259,13 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       ExecutionLogCallback executionLogCallback) {
     String containerName = KubernetesConvention.getContainerName(setupParams.getImageDetails().getName());
     String imageNameTag = setupParams.getImageDetails().getName() + ":" + setupParams.getImageDetails().getTag();
+    String domainName = setupParams.getImageDetails().getDomainName();
 
     String configMapName = configMap != null ? configMap.getMetadata().getName() : "no-config-map";
     String secretMapName = secretMap != null ? secretMap.getMetadata().getName() : "no-secret-map";
 
     HasMetadata controller = kubernetesContainerTask.createController(
-        containerName, imageNameTag, registrySecretName, configMapName, secretMapName);
+        containerName, imageNameTag, registrySecretName, configMapName, secretMapName, domainName);
 
     KubernetesHelper.setName(controller, controllerName);
     KubernetesHelper.setNamespace(controller, setupParams.getNamespace());

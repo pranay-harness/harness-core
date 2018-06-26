@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.container;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
@@ -18,7 +19,6 @@ import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuild
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.data.structure.EmptyPredicate;
 import org.mongodb.morphia.Key;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,6 +79,7 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -103,7 +104,7 @@ public class ContainerDeploymentManagerHelper {
   public List<InstanceStatusSummary> getInstanceStatusSummaryFromContainerInfoList(
       List<ContainerInfo> containerInfos, ServiceTemplateElement serviceTemplateElement) {
     List<InstanceStatusSummary> instanceStatusSummaries = new ArrayList<>();
-    if (EmptyPredicate.isNotEmpty(containerInfos)) {
+    if (isNotEmpty(containerInfos)) {
       for (ContainerInfo containerInfo : containerInfos) {
         HostElement hostElement = aHostElement()
                                       .withHostName(containerInfo.getHostName())
@@ -197,11 +198,16 @@ public class ContainerDeploymentManagerHelper {
       DockerConfig dockerConfig = (DockerConfig) settingsService.get(settingId).getValue();
       encryptionService.decrypt(
           dockerConfig, secretManager.getEncryptionDetails(dockerConfig, appId, workflowExecutionId));
-      imageDetails.name(dockerArtifactStream.getImageName())
+
+      String domainName = getDomainName(dockerConfig.getDockerRegistryUrl());
+      String imageName = dockerArtifactStream.getImageName();
+
+      imageDetails.name(imageName)
           .sourceName(dockerArtifactStream.getSourceName())
           .registryUrl(dockerConfig.getDockerRegistryUrl())
           .username(dockerConfig.getUsername())
-          .password(new String(dockerConfig.getPassword()));
+          .password(new String(dockerConfig.getPassword()))
+          .domainName(domainName);
     } else if (artifactStream.getArtifactStreamType().equals(ECR.name())) {
       EcrArtifactStream ecrArtifactStream = (EcrArtifactStream) artifactStream;
       String imageUrl = getImageUrl(ecrArtifactStream, workflowExecutionId);
@@ -332,6 +338,22 @@ public class ContainerDeploymentManagerHelper {
     } catch (Exception e) {
       logger.warn(Misc.getMessage(e), e);
       throw new InvalidRequestException(Misc.getMessage(e), USER);
+    }
+  }
+
+  private String getDomainName(String registryUrl) {
+    try {
+      URI uri = new URI(registryUrl);
+      String hostName = uri.getHost();
+
+      if (isNotEmpty(hostName) && uri.getPort() > 0) {
+        hostName += ":" + uri.getPort();
+      }
+
+      return hostName;
+    } catch (Exception e) {
+      logger.warn("Bad URI syntax", e);
+      return null;
     }
   }
 }

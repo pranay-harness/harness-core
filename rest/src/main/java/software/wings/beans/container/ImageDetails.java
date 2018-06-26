@@ -18,4 +18,5 @@ public class ImageDetails {
   private String registryUrl;
   private String username;
   private String password;
+  private String domainName;
 }

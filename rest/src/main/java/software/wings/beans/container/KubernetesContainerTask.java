@@ -42,6 +42,7 @@ import java.io.StringReader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -179,10 +180,20 @@ public class KubernetesContainerTask extends ContainerTask {
     return isNotBlank(getAdvancedConfig()) && STATEFUL_SET_PATTERN.matcher(getAdvancedConfig()).find();
   }
 
-  public HasMetadata createController(
-      String containerName, String imageNameTag, String secretName, String configMapName, String secretMapName) {
+  public HasMetadata createController(String containerName, String imageNameTag, String secretName,
+      String configMapName, String secretMapName, String domainName) {
     try {
       String configTemplate = isNotBlank(getAdvancedConfig()) ? getAdvancedConfig() : fetchYamlConfig();
+
+      if (isNotEmpty(domainName)) {
+        Pattern pattern = ContainerTask.getRegexPattern(domainName);
+        Matcher matcher = pattern.matcher(configTemplate);
+        if (!matcher.find()) {
+          imageNameTag = domainName + "/" + imageNameTag;
+          imageNameTag = imageNameTag.replaceAll("//", "/");
+        }
+      }
+
       String controllerYaml = configTemplate.replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX, imageNameTag)
                                   .replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, containerName)
                                   .replaceAll(SECRET_NAME_PLACEHOLDER_REGEX, secretName)

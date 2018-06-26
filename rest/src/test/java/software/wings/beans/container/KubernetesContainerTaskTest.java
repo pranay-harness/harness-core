@@ -4,7 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class KubernetesContainerTaskTest {
+  static final String DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX = "\\$\\{DOCKER_IMAGE_NAME}";
+  static final String DOCKER_IMAGE_NAME_REGEX = "(\\s*\"?image\"?\\s*:\\s*\"?)";
+
   @Test
   public void shouldCheckDaemonSet() {
     KubernetesContainerTask kubernetesContainerTask = new KubernetesContainerTask();
@@ -40,5 +46,78 @@ public class KubernetesContainerTaskTest {
 
     kubernetesContainerTask.setAdvancedConfig("a    \n b   \n  c");
     assertThat(kubernetesContainerTask.getAdvancedConfig()).isEqualTo("a\n b\n  c");
+  }
+
+  @Test
+  public void validateDomainNameReplacement() {
+    String domainName = "abc.xyz.com";
+    Pattern pattern = ContainerTask.getRegexPattern(domainName);
+
+    String imageNameText = "   image: abc.xyz.com/${DOCKER_IMAGE_NAME}";
+    Matcher matcher = pattern.matcher(imageNameText);
+    assertThat(matcher.find()).isEqualTo(true);
+
+    imageNameText = "   image: \"abc.xyz.com/${DOCKER_IMAGE_NAME}\"";
+    matcher = pattern.matcher(imageNameText);
+    assertThat(matcher.find()).isEqualTo(true);
+
+    imageNameText = "   \"image\": \"abc.xyz.com/${DOCKER_IMAGE_NAME}\"";
+    matcher = pattern.matcher(imageNameText);
+    assertThat(matcher.find()).isEqualTo(true);
+
+    imageNameText = "   \"image\": abc.xyz.com/${DOCKER_IMAGE_NAME}";
+    matcher = pattern.matcher(imageNameText);
+    assertThat(matcher.find()).isEqualTo(true);
+
+    imageNameText = "   \"image\": abcdxyz.com/${DOCKER_IMAGE_NAME}";
+    matcher = pattern.matcher(imageNameText);
+    assertThat(matcher.find()).isEqualTo(false);
+
+    imageNameText = "   \"image\": pqr*/${DOCKER_IMAGE_NAME}";
+    matcher = pattern.matcher(imageNameText);
+    assertThat(matcher.find()).isEqualTo(false);
+
+    imageNameText = "   \"image\": abc.xyz.com/(+/)/${DOCKER_IMAGE_NAME}";
+    matcher = pattern.matcher(imageNameText);
+    assertThat(matcher.find()).isEqualTo(false);
+
+    imageNameText = "   image: ${DOCKER_IMAGE_NAME}";
+    matcher = pattern.matcher(imageNameText);
+    assertThat(matcher.find()).isEqualTo(false);
+
+    imageNameText = "   image: \"${DOCKER_IMAGE_NAME}\"";
+    matcher = pattern.matcher(imageNameText);
+    assertThat(matcher.find()).isEqualTo(false);
+
+    imageNameText = "   \"image\": \"${DOCKER_IMAGE_NAME}\"";
+    matcher = pattern.matcher(imageNameText);
+    assertThat(matcher.find()).isEqualTo(false);
+
+    imageNameText = "   \"image\": ${DOCKER_IMAGE_NAME}";
+    matcher = pattern.matcher(imageNameText);
+    assertThat(matcher.find()).isEqualTo(false);
+
+    domainName = "abc*";
+    pattern = ContainerTask.getRegexPattern(domainName);
+
+    imageNameText = "   image: abc*/${DOCKER_IMAGE_NAME}";
+    matcher = pattern.matcher(imageNameText);
+    assertThat(matcher.find()).isEqualTo(true);
+
+    imageNameText = "   image: abc/${DOCKER_IMAGE_NAME}";
+    matcher = pattern.matcher(imageNameText);
+    assertThat(matcher.find()).isEqualTo(false);
+
+    imageNameText = "   image: \"abc.xyz.com/${DOCKER_IMAGE_NAME}\"";
+    matcher = pattern.matcher(imageNameText);
+    assertThat(matcher.find()).isEqualTo(false);
+
+    imageNameText = "   \"image\": \"abc.xyz.com/${DOCKER_IMAGE_NAME}\"";
+    matcher = pattern.matcher(imageNameText);
+    assertThat(matcher.find()).isEqualTo(false);
+
+    imageNameText = "   image: abc.xyz.com/${DOCKER_IMAGE_NAME}";
+    matcher = pattern.matcher(imageNameText);
+    assertThat(matcher.find()).isEqualTo(false);
   }
 }

@@ -38,6 +38,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -140,7 +141,8 @@ public class EcsContainerTask extends ContainerTask {
     }
   }
 
-  public TaskDefinition createTaskDefinition(String containerName, String imageName, String executionRole) {
+  public TaskDefinition createTaskDefinition(
+      String containerName, String imageName, String executionRole, String domainName) {
     String configTemplate;
     if (isNotEmpty(getAdvancedConfig())) {
       configTemplate = fetchAdvancedConfigNoComments();
@@ -150,6 +152,15 @@ public class EcsContainerTask extends ContainerTask {
 
     if (executionRole == null) {
       executionRole = "null";
+    }
+
+    if (isNotEmpty(domainName)) {
+      Pattern pattern = ContainerTask.getRegexPattern(domainName);
+      Matcher matcher = pattern.matcher(configTemplate);
+      if (!matcher.find()) {
+        imageName = domainName + "/" + imageName;
+        imageName = imageName.replaceAll("//", "/");
+      }
     }
 
     String config = configTemplate.replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX, imageName)

@@ -91,6 +91,7 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
       EcsSetupParams setupParams = (EcsSetupParams) containerSetupParams;
       String dockerImageName = setupParams.getImageDetails().getName() + ":" + setupParams.getImageDetails().getTag();
       String containerName = EcsConvention.getContainerName(dockerImageName);
+      String domainName = setupParams.getImageDetails().getDomainName();
 
       EcsContainerTask ecsContainerTask = (EcsContainerTask) setupParams.getContainerTask();
       ecsContainerTask = createEcsContainerTaskIfNull(ecsContainerTask);
@@ -102,7 +103,7 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
       // create Task definition and register it with AWS
       TaskDefinition taskDefinition =
           createTaskDefinition(ecsContainerTask, containerName, dockerImageName, setupParams, cloudProviderSetting,
-              serviceVariables, safeDisplayServiceVariables, encryptedDataDetails, executionLogCallback);
+              serviceVariables, safeDisplayServiceVariables, encryptedDataDetails, executionLogCallback, domainName);
 
       String containerServiceName =
           EcsConvention.getServiceName(setupParams.getTaskFamily(), taskDefinition.getRevision());
@@ -352,9 +353,9 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
   private TaskDefinition createTaskDefinition(EcsContainerTask ecsContainerTask, String containerName,
       String dockerImageName, EcsSetupParams ecsSetupParams, SettingAttribute settingAttribute,
       Map<String, String> serviceVariables, Map<String, String> safeDisplayServiceVariables,
-      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
-    TaskDefinition taskDefinition =
-        ecsContainerTask.createTaskDefinition(containerName, dockerImageName, ecsSetupParams.getExecutionRoleArn());
+      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback, String domainName) {
+    TaskDefinition taskDefinition = ecsContainerTask.createTaskDefinition(
+        containerName, dockerImageName, ecsSetupParams.getExecutionRoleArn(), domainName);
     // For Fargate we need to make sure NetworkConfiguration is provided
     String validationMessage = isValidateSetupParamasForECS(taskDefinition, ecsSetupParams);
     if (!isEmptyOrBlank(validationMessage)) {
