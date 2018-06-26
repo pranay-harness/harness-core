@@ -541,6 +541,7 @@ public abstract class AbstractAnalysisState extends State {
   }
 
   @Override
+  @SchemaIgnore
   public Integer getTimeoutMillis() {
     if (!isEmpty(timeDuration)) {
       return 60 * 1000 * (Integer.parseInt(timeDuration) + TIMEOUT_BUFFER);
