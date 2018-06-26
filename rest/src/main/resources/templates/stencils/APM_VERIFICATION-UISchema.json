@@ -1,6 +1,6 @@
 {
   "ui:order" : [
-    "analysisServerConfigId", "hostnameTemplate", "timeDuration", "comparisonStrategy", "analysisTolerance"
+    "analysisServerConfigId", "hostnameTemplate", "timeDuration", "comparisonStrategy", "analysisTolerance", "*"
   ],
   "metricInfoList" : {
     "ui:widget" : "textarea"

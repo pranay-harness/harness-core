@@ -1,5 +1,5 @@
 {
   "ui:order" : [
-    "analysisServerConfigId", "applicationId", "timeDuration"
+    "analysisServerConfigId", "applicationId", "timeDuration", "*"
   ]
 }
