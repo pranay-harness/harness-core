@@ -6,6 +6,7 @@ import migrations.all.AddUsersToAdminUserGroup;
 import migrations.all.AddValidUntilToActivity;
 import migrations.all.AddValidUntilToAlert;
 import migrations.all.AddValidUntilToDelegateTask;
+import migrations.all.DropStringCollectionMigration;
 import migrations.all.EntityNameValidationMigration_All_00;
 import migrations.all.EntityNameValidationMigration_All_01;
 import migrations.all.EntityNameValidationMigration_All_02;
@@ -70,6 +71,7 @@ public class MigrationList {
         .add(Pair.of(158, EntityNameValidationMigration_All_02.class))
         .add(Pair.of(159, SecretTextFilterMigration.class))
         .add(Pair.of(160, EntityNameValidationMigration_All_03.class))
+        .add(Pair.of(161, DropStringCollectionMigration.class))
         .build();
   }
 }

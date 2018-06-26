@@ -6,6 +6,7 @@ import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.logging.MorphiaLoggerFactory.registerLogger;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
@@ -223,6 +224,7 @@ public class DatabaseModule extends AbstractModule {
           } catch (MongoCommandException mex) {
             if (mex.getErrorCode() == 85) {
               try {
+                logger.warn("Drop index: {}.{}", collection.getName(), name);
                 collection.dropIndex(name);
               } catch (RuntimeException ex) {
                 logger.error("Failed to drop index {}", name, mex);
@@ -234,6 +236,32 @@ public class DatabaseModule extends AbstractModule {
         }
       });
     });
+
+    Set<String> whitelistCollections = ImmutableSet.<String>of(
+        // Files and chinks
+        "artifacts.chunks", "artifacts.files", "audits.chunks", "audits.files", "configs.chunks", "configs.files",
+        "platforms.chunks", "platforms.files",
+        // Quartz
+        "quartz_calendars", "quartz_jobs", "quartz_locks", "quartz_schedulers", "quartz_triggers",
+        // Quartz Verification
+        "quartz_verification_calendars", "quartz_verification_jobs", "quartz_verification_locks",
+        "quartz_verification_schedulers", "quartz_verification_triggers",
+        // Persistent locks
+        "locks");
+
+    final List<String> obsoleteCollections = primaryDatastore.getDB()
+                                                 .getCollectionNames()
+                                                 .stream()
+                                                 .filter(name -> !processedCollections.contains(name))
+                                                 .filter(name -> !whitelistCollections.contains(name))
+                                                 .filter(name -> !name.startsWith("!!!test"))
+                                                 .collect(toList());
+
+    if (isNotEmpty(obsoleteCollections)) {
+      logger.error("Unknown mongo collections detected: {}\n"
+              + "Please create migration to delete them or add them to the whitelist.",
+          Joiner.on(", ").join(obsoleteCollections));
+    }
   }
 
   /* (non-Javadoc)

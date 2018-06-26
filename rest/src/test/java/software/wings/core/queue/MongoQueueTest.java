@@ -549,7 +549,7 @@ public class MongoQueueTest extends WingsBaseTest {
   /**
    * The Class TestQueuableWithEntity.
    */
-  @Entity(value = "testEntityQueue", noClassnameStored = true)
+  @Entity(value = "!!!testEntityQueue", noClassnameStored = true)
   public static class TestQueuableWithEntity extends Queuable {
     @Reference private TestEntity entity;
 

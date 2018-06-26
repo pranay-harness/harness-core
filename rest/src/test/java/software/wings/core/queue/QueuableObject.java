@@ -11,7 +11,7 @@ import java.util.Objects;
  * Created by peeyushaggarwal on 4/13/16.
  */
 @Ignore
-@Entity(value = "testQueue", noClassnameStored = true)
+@Entity(value = "!!!testQueue", noClassnameStored = true)
 public class QueuableObject extends Queuable {
   private int data;
 

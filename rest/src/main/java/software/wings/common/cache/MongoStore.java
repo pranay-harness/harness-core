@@ -24,7 +24,7 @@ import java.util.Date;
 @Singleton
 public class MongoStore implements DistributedStore {
   private static final Logger logger = LoggerFactory.getLogger(MongoStore.class);
-  private static String collectionName = "cache";
+  private static final String collectionName = "cache";
 
   @Inject WingsPersistence wingsPersistence;
 
