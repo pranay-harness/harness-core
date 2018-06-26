@@ -346,7 +346,7 @@ public class InfrastructureMappingResource {
       @QueryParam("accessKey") String accessKey, @QueryParam("secretKey") String secretKey,
       @QueryParam("region") String region) {
     return new RestResponse<>(
-        infrastructureMappingService.listElasticLoadBalancer(accessKey, secretKey.toCharArray(), region));
+        infrastructureMappingService.listElasticLoadBalancer(accessKey, secretKey.toCharArray(), region, accountId));
   }
 
   @GET

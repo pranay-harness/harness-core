@@ -7,6 +7,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -63,11 +64,14 @@ import software.wings.beans.infrastructure.instance.info.Ec2InstanceInfo;
 import software.wings.beans.infrastructure.instance.key.ContainerInstanceKey;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.cloudprovider.aws.AwsCodeDeployService;
+import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.PageResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.AwsInfrastructureProvider;
+import software.wings.service.impl.AwsUtils;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.AwsEc2Service;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -90,6 +94,9 @@ public class AwsInstanceHandlerTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock EnvironmentService environmentService;
   @Mock ServiceResourceService serviceResourceService;
+  @Mock private AwsUtils mockAwsUtils;
+  @Mock private DelegateProxyFactory mockDelegateProxyFactory;
+  @Mock private AwsEc2Service mockAwsEc2Service;
   @InjectMocks @Inject AwsInstanceHandler awsInstanceHandler;
   @InjectMocks @Spy InstanceHelper instanceHelper;
   @InjectMocks @Spy AwsInfrastructureProvider awsInfrastructureProvider;
@@ -155,6 +162,7 @@ public class AwsInstanceHandlerTest extends WingsBaseTest {
         .get(anyString(), anyString(), anyBoolean());
 
     doReturn(Service.builder().name(SERVICE_NAME).build()).when(serviceResourceService).get(anyString(), anyString());
+    doReturn(mockAwsEc2Service).when(mockDelegateProxyFactory).get(eq(AwsEc2Service.class), any());
   }
 
   // 3 existing instances, 1 EC2, 2 AMI,
@@ -218,6 +226,7 @@ public class AwsInstanceHandlerTest extends WingsBaseTest {
     reservations.add(new Reservation().withInstances(new com.amazonaws.services.ec2.model.Instance[] {instance1}));
     result.setReservations(reservations);
     doReturn(result).when(awsHelperService).describeEc2Instances(any(), any(), any(), any());
+    doReturn(result).when(mockAwsEc2Service).describeEc2Instances(any(), any(), any(), any());
 
     awsInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID);
 

@@ -407,3 +407,10 @@ software.wings.api.ExecutionDataValue, 5368
 software.wings.service.impl.WorkflowExecutionServiceImpl$Tree, 5369
 software.wings.beans.container.EcsSteadyStateCheckParams, 5370
 software.wings.beans.container.EcsSteadyStateCheckResponse, 5371
+com.amazonaws.services.ec2.model.DescribeInstancesResult, 5372
+com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup, 5373
+com.amazonaws.services.autoscaling.model.AutoScalingGroup, 5374
+com.amazonaws.services.autoscaling.model.Instance, 5375
+com.amazonaws.services.autoscaling.model.TagDescription, 5376
+com.amazonaws.services.autoscaling.model.EnabledMetric, 5377
+com.amazonaws.services.elasticloadbalancingv2.model.Matcher, 5378
