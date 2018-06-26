@@ -20,9 +20,9 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
-import com.mongodb.MongoClientOptions.Builder;
 import com.mongodb.MongoClientURI;
 import com.mongodb.MongoCommandException;
+import com.mongodb.ReadPreference;
 import io.harness.exception.UnexpectedException;
 import io.harness.logging.MorphiaLoggerFactory;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -53,6 +53,15 @@ public class DatabaseModule extends AbstractModule {
   private DistributedLockSvc distributedLockSvc;
   private Map<ReadPref, AdvancedDatastore> datastoreMap = Maps.newHashMap();
 
+  public static final MongoClientOptions.Builder mongoClientOptions =
+      MongoClientOptions.builder()
+          .retryWrites(true)
+          .readPreference(ReadPreference.secondaryPreferred())
+          .connectTimeout(30000)
+          .serverSelectionTimeout(90000)
+          .maxConnectionIdleTime(600000)
+          .connectionsPerHost(300);
+
   /**
    * Creates a guice module for portal app.
    *
@@ -66,12 +75,6 @@ public class DatabaseModule extends AbstractModule {
     morphia.getMapper().getOptions().setObjectFactory(new NoDefaultConstructorMorphiaObjectFactory());
     morphia.getMapper().getOptions().setMapSubPackages(true);
 
-    Builder mongoClientOptions = MongoClientOptions.builder()
-                                     .retryWrites(true)
-                                     .connectTimeout(30000)
-                                     .serverSelectionTimeout(90000)
-                                     .maxConnectionIdleTime(600000)
-                                     .connectionsPerHost(300);
     MongoClientURI uri = new MongoClientURI(mongoConfig.getUri(), mongoClientOptions);
     MongoClient mongoClient = new MongoClient(uri);
 
@@ -240,7 +243,7 @@ public class DatabaseModule extends AbstractModule {
     Set<String> whitelistCollections = ImmutableSet.<String>of(
         // Files and chinks
         "artifacts.chunks", "artifacts.files", "audits.chunks", "audits.files", "configs.chunks", "configs.files",
-        "platforms.chunks", "platforms.files",
+        "platforms.chunks", "platforms.files", "terraform_state.chunks", "terraform_state.files",
         // Quartz
         "quartz_calendars", "quartz_jobs", "quartz_locks", "quartz_schedulers", "quartz_triggers",
         // Quartz Verification

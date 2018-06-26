@@ -2,6 +2,7 @@ package software.wings.rules;
 
 import static java.util.Arrays.asList;
 import static org.mockito.Mockito.mock;
+import static software.wings.app.DatabaseModule.mongoClientOptions;
 import static software.wings.app.LoggingInitializer.initializeLogging;
 import static software.wings.core.maintenance.MaintenanceController.forceMaintenance;
 import static software.wings.utils.WingsTestConstants.PORTAL_URL;
@@ -175,8 +176,8 @@ public class WingsRule implements MethodRule {
       mongoClient = getRandomPortMongoClient();
     } else if (annotations.stream().anyMatch(Integration.class ::isInstance) || doesExtendBaseIntegrationTest) {
       try {
-        MongoClientURI clientUri =
-            new MongoClientURI(System.getProperty("mongoUri", "mongodb://localhost:27017/" + dbName));
+        MongoClientURI clientUri = new MongoClientURI(
+            System.getProperty("mongoUri", "mongodb://localhost:27017/" + dbName), mongoClientOptions);
         if (!clientUri.getURI().startsWith("mongodb://localhost:")) {
           forceMaintenance(true);
           // Protection against running tests on non-local databases such as prod or qa.
