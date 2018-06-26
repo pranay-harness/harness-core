@@ -7,6 +7,7 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.inject.Inject;
 
 import org.mongodb.morphia.Key;
+import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
@@ -25,6 +26,7 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author rktummala on 10/15/17
@@ -91,11 +93,20 @@ public abstract class InfraMappingYamlHandler<Y extends InfrastructureMapping.Ya
   public void delete(ChangeContext<Y> changeContext) throws HarnessException {
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
-    String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-    notNullCheck("Application can't be found for yaml file:" + yamlFilePath, appId, USER);
-    InfrastructureMapping infraMapping = yamlHelper.getInfraMapping(accountId, yamlFilePath);
+    Optional<Application> optionalApplication = yamlHelper.getApplicationIfPresent(accountId, yamlFilePath);
+    if (!optionalApplication.isPresent()) {
+      return;
+    }
+
+    Optional<Environment> optionalEnvironment =
+        yamlHelper.getEnvIfPresent(optionalApplication.get().getUuid(), yamlFilePath);
+    if (!optionalEnvironment.isPresent()) {
+      return;
+    }
+    InfrastructureMapping infraMapping = yamlHelper.getInfraMappingByAppIdYamlPath(
+        optionalApplication.get().getUuid(), optionalEnvironment.get().getUuid(), yamlFilePath);
     if (infraMapping != null) {
-      infraMappingService.delete(appId, infraMapping.getUuid());
+      infraMappingService.delete(optionalApplication.get().getUuid(), infraMapping.getUuid());
     }
   }
 

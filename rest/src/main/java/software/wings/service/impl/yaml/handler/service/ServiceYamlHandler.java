@@ -14,6 +14,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AppContainer;
+import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.Service;
@@ -37,6 +38,7 @@ import software.wings.utils.Util;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -267,9 +269,20 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
 
   @Override
   public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
-    Service service = get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
-    if (service != null) {
-      serviceResourceService.delete(service.getAppId(), service.getUuid());
+    String accountId = changeContext.getChange().getAccountId();
+    String yamlFilePath = changeContext.getChange().getFilePath();
+    Optional<Application> optionalApplication = yamlHelper.getApplicationIfPresent(accountId, yamlFilePath);
+    if (!optionalApplication.isPresent()) {
+      return;
     }
+
+    Application application = optionalApplication.get();
+    Optional<Service> serviceOptional = yamlHelper.getServiceIfPresent(application.getUuid(), yamlFilePath);
+    if (!serviceOptional.isPresent()) {
+      return;
+    }
+
+    Service service = serviceOptional.get();
+    serviceResourceService.delete(service.getAppId(), service.getUuid());
   }
 }

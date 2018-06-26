@@ -15,6 +15,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.Key;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
@@ -200,10 +201,20 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
 
   @Override
   public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
-    Environment environment = get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
-    if (environment != null) {
-      environmentService.delete(environment.getAppId(), environment.getUuid());
+    String accountId = changeContext.getChange().getAccountId();
+    String yamlFilePath = changeContext.getChange().getFilePath();
+    Optional<Application> optionalApplication = yamlHelper.getApplicationIfPresent(accountId, yamlFilePath);
+    if (!optionalApplication.isPresent()) {
+      return;
     }
+
+    Optional<Environment> optionalEnvironment =
+        yamlHelper.getEnvIfPresent(optionalApplication.get().getUuid(), yamlFilePath);
+    if (!optionalEnvironment.isPresent()) {
+      return;
+    }
+
+    environmentService.delete(optionalApplication.get().getUuid(), optionalEnvironment.get().getUuid());
   }
 
   @SuppressFBWarnings({"UC_USELESS_OBJECT", "UC_USELESS_OBJECT"})

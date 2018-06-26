@@ -7,6 +7,7 @@ import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 
+import software.wings.beans.Application;
 import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.InfrastructureProvisioner.Yaml;
@@ -24,6 +25,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.Util;
 
 import java.util.List;
+import java.util.Optional;
 
 public abstract class InfrastructureProvisionerYamlHandler<Y extends Yaml, B extends InfrastructureProvisioner>
     extends BaseYamlHandler<Y, B> {
@@ -147,12 +149,15 @@ public abstract class InfrastructureProvisionerYamlHandler<Y extends Yaml, B ext
   public void delete(ChangeContext<Y> changeContext) throws HarnessException {
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
-    String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-    notNullCheck("Application can't be found for yaml file:" + yamlFilePath, appId, USER);
+    Optional<Application> optionalApplication = yamlHelper.getApplicationIfPresent(accountId, yamlFilePath);
+    if (!optionalApplication.isPresent()) {
+      return;
+    }
+
     InfrastructureProvisioner infrastructureProvisioner =
-        yamlHelper.getInfrastructureProvisioner(accountId, yamlFilePath);
+        yamlHelper.getInfrastructureProvisionerByAppIdYamlPath(optionalApplication.get().getUuid(), yamlFilePath);
     if (infrastructureProvisioner != null) {
-      infrastructureProvisionerService.delete(appId, infrastructureProvisioner.getUuid());
+      infrastructureProvisionerService.delete(optionalApplication.get().getUuid(), infrastructureProvisioner.getUuid());
     }
   }
 }

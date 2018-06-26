@@ -35,7 +35,11 @@ public class DefaultVariablesYamlHandler extends BaseYamlHandler<Yaml, List<Sett
     String appId;
     switch (yamlType) {
       case APPLICATION_DEFAULTS:
-        appId = yamlHelper.getAppId(accountId, changeContext.getChange().getFilePath());
+        Application application = yamlHelper.getApp(accountId, changeContext.getChange().getFilePath());
+        if (application == null) {
+          return;
+        }
+        appId = application.getUuid();
         break;
       case ACCOUNT_DEFAULTS:
         appId = GLOBAL_APP_ID;

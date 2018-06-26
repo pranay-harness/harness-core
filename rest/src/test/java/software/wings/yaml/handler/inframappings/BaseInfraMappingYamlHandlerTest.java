@@ -46,6 +46,8 @@ import software.wings.utils.ArtifactType;
 import software.wings.yaml.BaseYaml;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
 
+import java.util.Optional;
+
 public class BaseInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   protected Service service =
       Service.builder().name(SERVICE_NAME).appId(APP_ID).uuid(SERVICE_ID).artifactType(ArtifactType.DOCKER).build();
@@ -80,6 +82,10 @@ public class BaseInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
         .thenReturn(anApplication().withName(APP_NAME).withUuid(APP_ID).build());
 
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(APP_ID);
+    when(yamlHelper.getApplicationIfPresent(anyString(), anyString()))
+        .thenReturn(Optional.of(anApplication().withUuid(APP_ID).build()));
+    when(yamlHelper.getEnvIfPresent(anyString(), anyString()))
+        .thenReturn(Optional.of(anEnvironment().withUuid(ENV_ID).build()));
     when(yamlHelper.getEnvironmentId(anyString(), anyString())).thenReturn(ENV_ID);
     when(yamlHelper.getNameFromYamlFilePath(yamlFilePath)).thenReturn(infraMappingName);
     when(yamlHelper.extractEntityNameFromYamlPath(

@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 
 import lombok.Builder;
 import lombok.Data;
+import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
@@ -47,6 +48,7 @@ import software.wings.yaml.workflow.WorkflowYaml;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -424,7 +426,14 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
 
   @Override
   public void delete(ChangeContext<Y> changeContext) throws HarnessException {
-    Workflow workflow = get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
+    String accountId = changeContext.getChange().getAccountId();
+    String yamlFilePath = changeContext.getChange().getFilePath();
+    Optional<Application> optionalApplication = yamlHelper.getApplicationIfPresent(accountId, yamlFilePath);
+    if (!optionalApplication.isPresent()) {
+      return;
+    }
+
+    Workflow workflow = yamlHelper.getWorkflowByAppIdYamlPath(optionalApplication.get().getUuid(), yamlFilePath);
     if (workflow != null) {
       workflowService.deleteWorkflow(workflow.getAppId(), workflow.getUuid());
     }

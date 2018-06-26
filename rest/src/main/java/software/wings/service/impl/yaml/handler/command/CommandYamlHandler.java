@@ -12,11 +12,13 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.data.structure.UUIDGenerator;
+import software.wings.beans.Application;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.Environment;
 import software.wings.beans.Graph;
 import software.wings.beans.GraphLink;
 import software.wings.beans.GraphNode;
+import software.wings.beans.Service;
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.AbstractCommandUnit.Yaml;
 import software.wings.beans.command.Command;
@@ -39,6 +41,8 @@ import software.wings.yaml.command.CommandYaml;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+
 /**
  *  @author rktummala on 11/13/17
  */
@@ -225,10 +229,30 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
     return serviceResourceService.getCommandByName(appId, serviceId, commandName);
   }
 
+  private ServiceCommand getServiceCommand(String applicationId, String serviceId, String yamlFilePath) {
+    String commandName =
+        yamlHelper.extractEntityNameFromYamlPath(YamlType.COMMAND.getPathExpression(), yamlFilePath, PATH_DELIMITER);
+    notNullCheck("commandName is null for given yamlFilePath: " + yamlFilePath, commandName, USER);
+    return serviceResourceService.getCommandByName(applicationId, serviceId, commandName);
+  }
+
   @Override
   public void delete(ChangeContext<CommandYaml> changeContext) throws HarnessException {
+    String yamlFilePath = changeContext.getChange().getFilePath();
+    String accountId = changeContext.getChange().getAccountId();
+    Optional<Application> optionalApplication = yamlHelper.getApplicationIfPresent(accountId, yamlFilePath);
+    if (!optionalApplication.isPresent()) {
+      return;
+    }
+
+    Optional<Service> serviceOptional =
+        yamlHelper.getServiceIfPresent(optionalApplication.get().getUuid(), yamlFilePath);
+    if (!serviceOptional.isPresent()) {
+      return;
+    }
+
     ServiceCommand serviceCommand =
-        get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
+        getServiceCommand(optionalApplication.get().getUuid(), serviceOptional.get().getUuid(), yamlFilePath);
     if (serviceCommand != null) {
       serviceResourceService.deleteCommand(
           serviceCommand.getAppId(), serviceCommand.getServiceId(), serviceCommand.getUuid());

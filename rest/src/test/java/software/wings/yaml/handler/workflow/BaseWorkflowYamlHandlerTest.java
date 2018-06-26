@@ -3,6 +3,7 @@ package software.wings.yaml.handler.workflow;
 import static java.util.Arrays.asList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -21,7 +22,6 @@ import com.google.inject.Inject;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.api.DeploymentType;
-import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
@@ -60,6 +60,7 @@ import software.wings.yaml.BaseYaml;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
 
 import java.io.IOException;
+import java.util.Optional;
 
 /**
  * @author rktummala on 1/11/18
@@ -96,9 +97,11 @@ public abstract class BaseWorkflowYamlHandlerTest extends BaseYamlHandlerTest {
 
   protected void setup(String yamlFilePath, String workflowName) {
     when(appService.getAppByName(anyString(), anyString()))
-        .thenReturn(Application.Builder.anApplication().withName(APP_NAME).withUuid(APP_ID).build());
+        .thenReturn(anApplication().withName(APP_NAME).withUuid(APP_ID).build());
 
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(APP_ID);
+    when(yamlHelper.getApplicationIfPresent(anyString(), anyString()))
+        .thenReturn(Optional.of(anApplication().withUuid(APP_ID).build()));
     when(yamlHelper.getNameFromYamlFilePath(yamlFilePath)).thenReturn(workflowName);
     when(yamlHelper.extractEntityNameFromYamlPath(YamlType.WORKFLOW.getPathExpression(), yamlFilePath, PATH_DELIMITER))
         .thenReturn(workflowName);

@@ -14,12 +14,14 @@ import com.google.inject.Singleton;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Application;
 import software.wings.beans.ChecksumType;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ConfigFile.Yaml;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.Environment;
+import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
@@ -54,13 +56,21 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
   public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
     String accountId = changeContext.getChange().getAccountId();
     String yamlFilePath = changeContext.getChange().getFilePath();
-    String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-    notNullCheck("Invalid Application for the yaml file:" + yamlFilePath, appId, USER);
-    String serviceId = yamlHelper.getServiceId(appId, yamlFilePath);
-    notNullCheck("Invalid Service for the yaml file:" + yamlFilePath, serviceId, USER);
+    Optional<Application> optionalApplication = yamlHelper.getApplicationIfPresent(accountId, yamlFilePath);
+    if (!optionalApplication.isPresent()) {
+      return;
+    }
+
+    Application application = optionalApplication.get();
+    Optional<Service> serviceOptional = yamlHelper.getServiceIfPresent(application.getUuid(), yamlFilePath);
+    if (!serviceOptional.isPresent()) {
+      return;
+    }
+
     Yaml yaml = changeContext.getYaml();
     String targetFilePath = yaml.getTargetFilePath();
-    configService.delete(appId, serviceId, EntityType.SERVICE, targetFilePath);
+    configService.delete(
+        optionalApplication.get().getUuid(), serviceOptional.get().getUuid(), EntityType.SERVICE, targetFilePath);
   }
 
   @Override

@@ -27,6 +27,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.Validator;
 
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -235,5 +236,66 @@ public class YamlHelper {
    */
   public String getNameFromYamlFilePath(String yamlFilePath) {
     return extractEntityNameFromYamlPath(YamlConstants.YAML_FILE_NAME_PATTERN, yamlFilePath, PATH_DELIMITER);
+  }
+
+  public Optional<Application> getApplicationIfPresent(String accountId, String yamlFilePath) {
+    Application application = getApp(accountId, yamlFilePath);
+    if (application == null) {
+      return Optional.empty();
+    } else {
+      return Optional.of(application);
+    }
+  }
+
+  public Optional<Service> getServiceIfPresent(String applicationId, String yamlFilePath) {
+    Service service = getService(applicationId, yamlFilePath);
+    if (service != null) {
+      return Optional.of(service);
+    }
+    return Optional.empty();
+  }
+
+  public Optional<Environment> getEnvIfPresent(String applicationId, String yamlFilePath) {
+    Environment environment = getEnvironment(applicationId, yamlFilePath);
+    if (environment != null) {
+      return Optional.of(environment);
+    }
+    return Optional.empty();
+  }
+
+  public InfrastructureMapping getInfraMappingByAppIdYamlPath(String applicationId, String envId, String yamlFilePath) {
+    String infraMappingName =
+        extractEntityNameFromYamlPath(YamlType.INFRA_MAPPING.getPathExpression(), yamlFilePath, PATH_DELIMITER);
+    Validator.notNullCheck("Inframapping with name: " + infraMappingName, infraMappingName);
+    return infraMappingService.getInfraMappingByName(applicationId, envId, infraMappingName);
+  }
+
+  public InfrastructureProvisioner getInfrastructureProvisionerByAppIdYamlPath(
+      String applicationId, String yamlFilePath) {
+    String provisionerName = getNameFromYamlFilePath(yamlFilePath);
+    Validator.notNullCheck(
+        "InfrastructureProvisioner name null in the given yaml file: " + yamlFilePath, provisionerName);
+    return infrastructureProvisionerService.getByName(applicationId, provisionerName);
+  }
+
+  public Pipeline getPipelineByAppIdYamlPath(String applicationId, String yamlFilePath) {
+    String pipelineName =
+        extractEntityNameFromYamlPath(YamlType.PIPELINE.getPathExpression(), yamlFilePath, PATH_DELIMITER);
+    Validator.notNullCheck("Pipeline name null in the given yaml file: " + yamlFilePath, pipelineName);
+    return pipelineService.getPipelineByName(applicationId, pipelineName);
+  }
+
+  public Workflow getWorkflowByAppIdYamlPath(String applicationId, String yamlFilePath) {
+    String workflowName =
+        extractEntityNameFromYamlPath(YamlType.WORKFLOW.getPathExpression(), yamlFilePath, PATH_DELIMITER);
+    Validator.notNullCheck("Workflow name null in the given yaml file: " + yamlFilePath, workflowName);
+    return workflowService.readWorkflowByName(applicationId, workflowName);
+  }
+
+  public ArtifactStream getArtifactStream(String applicationId, String serviceId, String yamlFilePath) {
+    String artifactStreamName =
+        extractEntityNameFromYamlPath(YamlType.ARTIFACT_STREAM.getPathExpression(), yamlFilePath, PATH_DELIMITER);
+    Validator.notNullCheck("Artifact stream name null in the given yaml file: " + yamlFilePath, artifactStreamName);
+    return artifactStreamService.getArtifactStreamByName(applicationId, serviceId, artifactStreamName);
   }
 }
