@@ -9,7 +9,6 @@ import static software.wings.exception.WingsException.USER_ADMIN;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
@@ -25,6 +24,7 @@ import software.wings.service.intfc.UserService;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -100,10 +100,9 @@ public class AuthenticationManager {
         .withTwoFactorJwtToken(jwtToken)
         .build();
   }
-  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   public User defaultLogin(String basicToken) {
     try {
-      String[] decryptedData = new String(Base64.getDecoder().decode(basicToken)).split(":");
+      String[] decryptedData = new String(Base64.getDecoder().decode(basicToken), StandardCharsets.UTF_8).split(":");
       if (decryptedData.length < 2) {
         throw new WingsException(INVALID_CREDENTIAL, USER);
       }
@@ -138,12 +137,12 @@ public class AuthenticationManager {
     }
   }
 
-  @SuppressFBWarnings({"DM_DEFAULT_ENCODING", "DM_DEFAULT_ENCODING"})
   public Response samlLogin(String... credentials) throws URISyntaxException {
     try {
       User user = samlBasedAuthHandler.authenticate(credentials);
       String jwtToken = userService.generateJWTToken(user.getEmail(), JWT_CATEGORY.SSO_REDIRECT);
-      String encodedApiUrl = new String(Base64.getEncoder().encode(configuration.getPortal().getUrl().getBytes()));
+      String encodedApiUrl =
+          Base64.getEncoder().encodeToString(configuration.getPortal().getUrl().getBytes(StandardCharsets.UTF_8));
       Map<String, String> params = new HashMap<>();
       params.put("token", jwtToken);
       params.put("apiurl", encodedApiUrl);
