@@ -22,7 +22,6 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 import com.mongodb.MongoCommandException;
-import com.mongodb.ReadPreference;
 import io.harness.exception.UnexpectedException;
 import io.harness.logging.MorphiaLoggerFactory;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -56,7 +55,8 @@ public class DatabaseModule extends AbstractModule {
   public static final MongoClientOptions.Builder mongoClientOptions =
       MongoClientOptions.builder()
           .retryWrites(true)
-          .readPreference(ReadPreference.secondaryPreferred())
+          // TODO: Using secondaryPreferred creates issues that need to be investigated
+          //.readPreference(ReadPreference.secondaryPreferred())
           .connectTimeout(30000)
           .serverSelectionTimeout(90000)
           .maxConnectionIdleTime(600000)
