@@ -417,6 +417,7 @@ public class AwsAmiServiceDeployState extends State {
             .map(instance -> {
               HostElement hostElement = aHostElement()
                                             .withPublicDns(instance.getPublicDnsName())
+                                            .withIp(instance.getPrivateIpAddress())
                                             .withEc2Instance(instance)
                                             .withInstanceId(instance.getInstanceId())
                                             .build();

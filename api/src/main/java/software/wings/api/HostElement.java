@@ -24,6 +24,7 @@ import java.util.Map;
 public class HostElement implements ContextElement {
   private String uuid;
   private String hostName;
+  private String ip;
   private String instanceId;
   private String publicDns;
   private Instance ec2Instance;
@@ -33,22 +34,20 @@ public class HostElement implements ContextElement {
     return hostName;
   }
 
-  /**
-   * Gets host name.
-   *
-   * @return the host name
-   */
   public String getHostName() {
     return hostName;
   }
 
-  /**
-   * Sets host name.
-   *
-   * @param hostName the host name
-   */
   public void setHostName(String hostName) {
     this.hostName = hostName;
+  }
+
+  public String getIp() {
+    return ip;
+  }
+
+  public void setIp(String ip) {
+    this.ip = ip;
   }
 
   public String getPublicDns() {
@@ -63,11 +62,6 @@ public class HostElement implements ContextElement {
     return uuid;
   }
 
-  /**
-   * Sets uuid.
-   *
-   * @param uuid the uuid
-   */
   public void setUuid(String uuid) {
     this.uuid = uuid;
   }
@@ -97,6 +91,7 @@ public class HostElement implements ContextElement {
     return MoreObjects.toStringHelper(this)
         .add("uuid", uuid)
         .add("hostName", hostName)
+        .add("ip", ip)
         .add("instanceId", instanceId)
         .toString();
   }
@@ -124,6 +119,7 @@ public class HostElement implements ContextElement {
     return aHostElement()
         .withUuid(uuid)
         .withHostName(hostName)
+        .withIp(ip)
         .withPublicDns(publicDns)
         .withInstanceId(instanceId)
         //        .withEc2Instance(ec2Instance)
@@ -133,6 +129,7 @@ public class HostElement implements ContextElement {
   public static final class Builder {
     private String uuid;
     private String hostName;
+    private String ip;
     private String instanceId;
     private String publicDns;
     private Instance ec2Instance;
@@ -150,6 +147,11 @@ public class HostElement implements ContextElement {
 
     public Builder withHostName(String hostName) {
       this.hostName = hostName;
+      return this;
+    }
+
+    public Builder withIp(String ip) {
+      this.ip = ip;
       return this;
     }
 
@@ -172,6 +174,7 @@ public class HostElement implements ContextElement {
       HostElement hostElement = new HostElement();
       hostElement.setUuid(uuid);
       hostElement.setHostName(hostName);
+      hostElement.setIp(ip);
       hostElement.setInstanceId(instanceId);
       hostElement.setPublicDns(publicDns);
       hostElement.setEc2Instance(ec2Instance);

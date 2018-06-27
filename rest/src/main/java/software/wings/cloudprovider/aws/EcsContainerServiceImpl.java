@@ -1066,6 +1066,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                                             .status(Status.SUCCESS)
                                             .containerId(container.getContainerArn())
                                             .hostName(privateIpv4AddressForENI)
+                                            .ip(privateIpv4AddressForENI)
                                             .build();
           containerInfos.add(containerInfo);
         });
@@ -1124,6 +1125,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                   StringUtils.substring(optionalTask.get().getContainers().get(0).getDockerId(), 0, 12);
               ContainerInfo containerInfo = ContainerInfo.builder()
                                                 .hostName(containerId)
+                                                .ip(ipAddress)
                                                 .containerId(containerId)
                                                 .ec2Instance(ec2Instance)
                                                 .status(Status.SUCCESS)
@@ -1139,6 +1141,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
               }
               containerInfos.add(ContainerInfo.builder()
                                      .hostName(ipAddress)
+                                     .ip(ipAddress)
                                      .containerId(ipAddress)
                                      .ec2Instance(ec2Instance)
                                      .status(Status.SUCCESS)
@@ -1153,6 +1156,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
             logger.error("Container meta data fetch failed on EC2 host: " + ipAddress, ex);
             containerInfos.add(ContainerInfo.builder()
                                    .hostName(ipAddress)
+                                   .ip(ipAddress)
                                    .containerId(ipAddress)
                                    .ec2Instance(ec2Instance)
                                    .status(Status.SUCCESS)
@@ -1169,6 +1173,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
           }
           containerInfos.add(ContainerInfo.builder()
                                  .hostName(ipAddress)
+                                 .ip(ipAddress)
                                  .containerId(ipAddress)
                                  .ec2Instance(ec2Instance)
                                  .status(Status.SUCCESS)

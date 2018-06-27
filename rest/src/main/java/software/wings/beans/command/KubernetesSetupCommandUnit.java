@@ -1029,8 +1029,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE).addParam("message", "Pods failed to reach desired count");
     }
     executionLogCallback.saveExecutionLog("\nContainer IDs:");
-    containerInfos.forEach(
-        info -> executionLogCallback.saveExecutionLog("  " + info.getHostName() + " - " + info.getContainerId()));
+    containerInfos.forEach(info
+        -> executionLogCallback.saveExecutionLog(
+            "  " + info.getHostName() + " - " + info.getIp() + " - " + info.getContainerId()));
     executionLogCallback.saveExecutionLog("");
     if (!isRollback) {
       executionLogCallback.saveExecutionLog(format("Completed operation%n%s%n", DASH_STRING));

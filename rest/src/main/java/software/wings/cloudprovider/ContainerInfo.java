@@ -17,6 +17,7 @@ public class ContainerInfo {
   public enum Status { SUCCESS, FAILURE }
 
   private String hostName;
+  private String ip;
   private String containerId;
   private Instance ec2Instance;
   private Status status;
