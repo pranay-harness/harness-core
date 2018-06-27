@@ -46,6 +46,7 @@ public class Pipeline extends Base {
   private transient boolean hasSshInfraMapping;
   private List<FailureStrategy> failureStrategies = new ArrayList<>();
   private transient List<Variable> pipelineVariables = new ArrayList<>();
+  private transient List<String> envIds = new ArrayList<>();
 
   @Builder
   public Pipeline(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,

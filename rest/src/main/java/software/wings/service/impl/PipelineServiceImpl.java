@@ -345,10 +345,15 @@ public class PipelineServiceImpl implements PipelineService {
    */
   @Override
   public Pipeline readPipeline(String appId, String pipelineId, boolean withServices) {
+    return readPipeline(appId, pipelineId, withServices, false);
+  }
+
+  @Override
+  public Pipeline readPipeline(String appId, String pipelineId, boolean withServices, boolean withEnvironments) {
     Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
     notNullCheck("Pipeline was deleted", pipeline, USER);
     if (withServices) {
-      populateAssociatedWorkflowServices(pipeline);
+      resolveServicesAndEnvs(pipeline, withEnvironments);
     }
     return pipeline;
   }
@@ -406,14 +411,10 @@ public class PipelineServiceImpl implements PipelineService {
     }
   }
 
-  private void populateAssociatedWorkflowServices(Pipeline pipeline) {
-    List<Service> services = getResolvedServices(pipeline);
-    pipeline.setServices(services);
-  }
-
-  public List<Service> getResolvedServices(Pipeline pipeline) {
+  private void resolveServicesAndEnvs(Pipeline pipeline, boolean resolveEnv) {
     List<Service> services = new ArrayList<>();
     List<String> serviceIds = new ArrayList<>();
+    List<String> envIds = new ArrayList<>();
     pipeline.getPipelineStages()
         .stream()
         .flatMap(pipelineStage -> pipelineStage.getPipelineStageElements().stream())
@@ -423,12 +424,22 @@ public class PipelineServiceImpl implements PipelineService {
             Workflow workflow =
                 workflowService.readWorkflow(pipeline.getAppId(), (String) pse.getProperties().get("workflowId"));
             resolveServicesOfWorkflow(services, serviceIds, pse, workflow);
-
+            if (resolveEnv) {
+              resolveEnvIds(envIds, pse, workflow);
+            }
           } catch (Exception ex) {
             logger.warn("Exception occurred while reading workflow associated to the pipeline {}", pipeline);
           }
         });
-    return services;
+    pipeline.setServices(services);
+    pipeline.setEnvIds(envIds);
+  }
+
+  private void resolveEnvIds(List<String> envIds, PipelineStageElement pse, Workflow workflow) {
+    String envId = workflowService.resolveEnvironmentId(workflow, pse.getWorkflowVariables());
+    if (envId != null) {
+      envIds.add(envId);
+    }
   }
 
   private void resolveServicesOfWorkflow(

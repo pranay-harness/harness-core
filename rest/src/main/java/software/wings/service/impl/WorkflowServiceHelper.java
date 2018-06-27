@@ -107,6 +107,24 @@ public class WorkflowServiceHelper {
     }
   }
 
+  public String resolveEnvironmentId(Workflow workflow, Map<String, String> workflowVariables) {
+    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+    if (!workflow.checkEnvironmentTemplatized()) {
+      return workflow.getEnvId();
+    } else {
+      if (isNotEmpty(workflowVariables)) {
+        String envName = getTemplatizedEnvVariableName(orchestrationWorkflow);
+        if (envName != null) {
+          if (workflowVariables.get(envName) != null) {
+            return workflowVariables.get(envName);
+          }
+        }
+      }
+    }
+    throw new WingsException(
+        "Workflow [" + workflow.getName() + "] environment parameterized. However, the value not supplied");
+  }
+
   @SuppressFBWarnings("WMI_WRONG_MAP_ITERATOR")
   private List<String> getTemplatizedIds(Map<String, String> workflowVariables, List<String> entityNames) {
     List<String> entityIds = new ArrayList<>();

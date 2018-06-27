@@ -3149,4 +3149,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                 "No workflow execution found with deployed nodes for this workflow. Please run the workflow to get deployed nodes")
             .build());
   }
+
+  @Override
+  public String resolveEnvironmentId(Workflow workflow, Map<String, String> workflowVariables) {
+    return workflowServiceHelper.resolveEnvironmentId(workflow, workflowVariables);
+  }
 }

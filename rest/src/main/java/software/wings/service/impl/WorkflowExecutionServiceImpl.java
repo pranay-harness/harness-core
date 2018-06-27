@@ -815,7 +815,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    */
   public WorkflowExecution triggerPipelineExecution(
       String appId, String pipelineId, ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate) {
-    Pipeline pipeline = pipelineService.readPipeline(appId, pipelineId, true);
+    Pipeline pipeline = pipelineService.readPipeline(appId, pipelineId, true, true);
     if (pipeline == null) {
       throw new WingsException(ErrorCode.NON_EXISTING_PIPELINE);
     }
@@ -884,20 +884,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       workflowExecution.setServiceExecutionSummaries(serviceExecutionSummaries);
       workflowExecution.setServiceIds(pipeline.getServices().stream().map(Service::getUuid).collect(toList()));
     }
-
-    Set<String> envIds = new HashSet<>();
-    pipeline.getPipelineStages()
-        .stream()
-        .flatMap(pipelineStage -> pipelineStage.getPipelineStageElements().stream())
-        .forEach(pipelineStageElement -> {
-          if (pipelineStageElement.getType().equals(ENV_STATE.name())) {
-            if (pipelineStageElement.getProperties() != null
-                && pipelineStageElement.getProperties().get("envId") != null) {
-              envIds.add(String.valueOf(pipelineStageElement.getProperties().get("envId")));
-            }
-          }
-        });
-    workflowExecution.setEnvIds(new ArrayList<>(envIds));
+    workflowExecution.setEnvIds(pipeline.getEnvIds());
     return triggerExecution(workflowExecution, stateMachine, workflowExecutionUpdate, stdParams);
   }
 
@@ -937,9 +924,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     WorkflowExecution workflowExecution = new WorkflowExecution();
     workflowExecution.setAppId(appId);
-    if (envId != null) {
-      workflowExecution.setEnvId(envId);
-      workflowExecution.setEnvIds(Collections.singletonList(envId));
+    String resolveEnvId = workflowService.resolveEnvironmentId(workflow, executionArgs.getWorkflowVariables());
+    if (resolveEnvId != null) {
+      workflowExecution.setEnvId(resolveEnvId);
+      workflowExecution.setEnvIds(Collections.singletonList(resolveEnvId));
     }
     workflowExecution.setWorkflowId(workflowId);
     workflowExecution.setName(workflow.getName());
