@@ -54,6 +54,9 @@ import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mongodb.morphia.query.FieldEnd;
+import org.mongodb.morphia.query.MorphiaIterator;
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
@@ -107,6 +110,10 @@ public class PipelineServiceTest extends WingsBaseTest {
   @Mock private HQuery<Pipeline> pipelineQuery;
   @Mock private JobScheduler jobScheduler;
   @Mock private YamlDirectoryService yamlDirectoryService;
+  @Mock private MorphiaIterator<Pipeline, Pipeline> pipelineIterator;
+
+  @Mock Query<Pipeline> pquery;
+  @Mock private FieldEnd end;
 
   @Inject @InjectMocks private PipelineService pipelineService;
 
@@ -472,7 +479,23 @@ public class PipelineServiceTest extends WingsBaseTest {
     Pipeline pipeline =
         Pipeline.builder().name("pipeline1").appId(APP_ID).pipelineStages(pipelineStages).uuid(PIPELINE_ID).build();
 
-    pipelineService.isEnvironmentReferenced(APP_ID, ENV_ID);
+    when(wingsPersistence.createQuery(eq(Pipeline.class))).thenReturn(pquery);
+
+    when(pquery.field(any())).thenReturn(end);
+    when(end.in(any())).thenReturn(pquery);
+    when(pquery.filter(any(), any())).thenReturn(pquery);
+    when(wingsPersistence.createQuery(Pipeline.class).filter(any(), any()).get()).thenReturn(pipeline);
+
+    when(wingsPersistence.saveAndGet(eq(Pipeline.class), eq(pipeline))).thenReturn(pipeline);
+
+    when(pquery.fetch()).thenReturn(pipelineIterator);
+
+    when(pipelineIterator.hasNext()).thenReturn(true).thenReturn(false);
+
+    when(pipelineIterator.next()).thenReturn(pipeline);
+
+    List<String> refPipelines = pipelineService.isEnvironmentReferenced(APP_ID, ENV_ID);
+    assertThat(!refPipelines.isEmpty() && refPipelines.size() > 0);
   }
 
   @Test

@@ -241,15 +241,14 @@ public class TriggerServiceImpl implements TriggerService {
     List<String> referencedTriggers = new ArrayList<>();
     try (HIterator<Trigger> triggerHIterator =
              new HIterator<>(wingsPersistence.createQuery(Trigger.class).filter(APP_ID_KEY, appId).fetch())) {
-      while (triggerHIterator.hasNext()) {
-        Trigger trigger = triggerHIterator.next();
-        if (trigger.getWorkflowVariables() != null && trigger.getWorkflowVariables().values().contains(envId)) {
-          referencedTriggers.add(trigger.getName());
+      if (triggerHIterator != null) {
+        while (triggerHIterator.hasNext()) {
+          Trigger trigger = triggerHIterator.next();
+          if (trigger.getWorkflowVariables() != null && trigger.getWorkflowVariables().values().contains(envId)) {
+            referencedTriggers.add(trigger.getName());
+          }
         }
       }
-
-    } catch (Exception ex) {
-      logger.error("Exception in TriggerServiceImpl::isEnvironmentReferenced: ", ex.getMessage());
     }
     return referencedTriggers;
   }
