@@ -210,15 +210,7 @@ public enum TaskType {
   AWS_GET_ECR_IMAGE_URL(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   AWS_GET_ECR_AUTH_TOKEN(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   AWS_GET_SUBNETS(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
-  AWS_GET_SGS(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
-  AWS_GET_TAGS(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
-  AWS_DESCRIBE_AUTO_SCALING_GROUP_INSTANCES(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
-  AWS_DESCRIBE_EC2_INSTANCES(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
-  AWS_GET_IAM_INSTANCE_ROLES(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
-  AWS_GET_APP_LBS(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
-  AWS_GET_CLASSIC_LBS(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
-  AWS_GET_TARGET_GROUPS_FOR_ALBS(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
-  AWS_GET_AUTO_SCALING_GROUPS(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class);
+  AWS_GET_SGS(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;
