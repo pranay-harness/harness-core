@@ -23,6 +23,7 @@ import migrations.all.MetricMLAnalysisRecordGroupNameMigration;
 import migrations.all.NewRelicMetricAnalysisRecordsMigration;
 import migrations.all.NewRelicMetricDataGroupNameMigration;
 import migrations.all.NewRelicMetricDataRecordsMigration;
+import migrations.all.PreferenceUserIdRemoveDollarSignMigration;
 import migrations.all.RemoveResizeFromStatefulSetWorkflows;
 import migrations.all.RenameProvisionNodeToInfrastructureNodeWorkflows;
 import migrations.all.SecretTextFilterMigration;
@@ -74,6 +75,7 @@ public class MigrationList {
         .add(Pair.of(160, EntityNameValidationMigration_All_03.class))
         .add(Pair.of(161, DropStringCollectionMigration.class))
         .add(Pair.of(162, DropDelegateScopeCollectionMigration.class))
+        .add(Pair.of(163, PreferenceUserIdRemoveDollarSignMigration.class))
         .build();
   }
 }
