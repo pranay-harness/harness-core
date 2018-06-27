@@ -141,13 +141,7 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
                 String searchQuery = query + hostStr + " | timeslice 1m";
 
                 final long endTime = collectionStartTime + TimeUnit.MINUTES.toMillis(1) - 1;
-                ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.builder()
-                                                      .accountId(getAccountId())
-                                                      .appId(getAppId())
-                                                      .delegateId(getDelegateId())
-                                                      .delegateTaskId(getTaskId())
-                                                      .stateExecutionId(dataCollectionInfo.getStateExecutionId())
-                                                      .build();
+                ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
                 apiCallLog.setRequest("triggering sumo query startTime: " + collectionStartTime + " endTime: " + endTime
                     + " query: " + searchQuery + " url: " + dataCollectionInfo.getSumoConfig().getSumoUrl());
                 apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());

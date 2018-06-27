@@ -21,7 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.exception.WingsException;
-import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.newrelic.NewRelicApdex;
@@ -136,13 +135,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       this.taskResult = taskResult;
       this.allTxns = newRelicDelegateService.getTxnNameToCollect(dataCollectionInfo.getNewRelicConfig(),
           dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(),
-          ThirdPartyApiCallLog.builder()
-              .accountId(getAccountId())
-              .appId(getAppId())
-              .delegateId(getDelegateId())
-              .delegateTaskId(getTaskId())
-              .stateExecutionId(dataCollectionInfo.getStateExecutionId())
-              .build());
+          createApiCallLog(dataCollectionInfo.getStateExecutionId()));
 
       logger.info("NewRelic collector initialized : managerAnalysisStartTime - {}, windowStartTimeManager {}",
           managerAnalysisStartTime, windowStartTimeManager);
@@ -172,13 +165,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
           NewRelicMetricData metricData = newRelicDelegateService.getMetricDataApplicationInstance(
               dataCollectionInfo.getNewRelicConfig(), dataCollectionInfo.getEncryptedDataDetails(),
               dataCollectionInfo.getNewRelicAppId(), node.getId(), metricNames, windowStartTimeManager, endTime,
-              ThirdPartyApiCallLog.builder()
-                  .accountId(getAccountId())
-                  .appId(getAppId())
-                  .delegateId(getDelegateId())
-                  .delegateTaskId(getTaskId())
-                  .stateExecutionId(dataCollectionInfo.getStateExecutionId())
-                  .build());
+              createApiCallLog(dataCollectionInfo.getStateExecutionId()));
 
           for (NewRelicMetricSlice metric : metricData.getMetrics()) {
             for (NewRelicMetricTimeSlice timeSlice : metric.getTimeslices()) {
@@ -236,17 +223,10 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       int retry = 0;
       while (retry < RETRIES) {
         try {
-          NewRelicMetricData metricData =
-              newRelicDelegateService.getMetricDataApplicationInstance(dataCollectionInfo.getNewRelicConfig(),
-                  dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(), node.getId(),
-                  getErrorMetricNames(metricNames), windowStartTimeManager, endTime,
-                  ThirdPartyApiCallLog.builder()
-                      .accountId(getAccountId())
-                      .appId(getAppId())
-                      .delegateId(getDelegateId())
-                      .delegateTaskId(getTaskId())
-                      .stateExecutionId(dataCollectionInfo.getStateExecutionId())
-                      .build());
+          NewRelicMetricData metricData = newRelicDelegateService.getMetricDataApplicationInstance(
+              dataCollectionInfo.getNewRelicConfig(), dataCollectionInfo.getEncryptedDataDetails(),
+              dataCollectionInfo.getNewRelicAppId(), node.getId(), getErrorMetricNames(metricNames),
+              windowStartTimeManager, endTime, createApiCallLog(dataCollectionInfo.getStateExecutionId()));
           for (NewRelicMetricSlice metric : metricData.getMetrics()) {
             for (NewRelicMetricTimeSlice timeslice : metric.getTimeslices()) {
               long timeStamp = TimeUnit.SECONDS.toMillis(OffsetDateTime.parse(timeslice.getFrom()).toEpochSecond());
@@ -281,17 +261,10 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       int retry = 0;
       while (retry < RETRIES) {
         try {
-          NewRelicMetricData metricData =
-              newRelicDelegateService.getMetricDataApplicationInstance(dataCollectionInfo.getNewRelicConfig(),
-                  dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(), node.getId(),
-                  getApdexMetricNames(metricNames), windowStartTimeManager, endTime,
-                  ThirdPartyApiCallLog.builder()
-                      .accountId(getAccountId())
-                      .appId(getAppId())
-                      .delegateId(getDelegateId())
-                      .delegateTaskId(getTaskId())
-                      .stateExecutionId(dataCollectionInfo.getStateExecutionId())
-                      .build());
+          NewRelicMetricData metricData = newRelicDelegateService.getMetricDataApplicationInstance(
+              dataCollectionInfo.getNewRelicConfig(), dataCollectionInfo.getEncryptedDataDetails(),
+              dataCollectionInfo.getNewRelicAppId(), node.getId(), getApdexMetricNames(metricNames),
+              windowStartTimeManager, endTime, createApiCallLog(dataCollectionInfo.getStateExecutionId()));
           for (NewRelicMetricSlice metric : metricData.getMetrics()) {
             for (NewRelicMetricTimeSlice timeslice : metric.getTimeslices()) {
               long timeStamp = TimeUnit.SECONDS.toMillis(OffsetDateTime.parse(timeslice.getFrom()).toEpochSecond());
@@ -325,13 +298,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       logger.info("all txns far {}", allTxns.size());
       Set<NewRelicMetric> newTxns = newRelicDelegateService.getTxnNameToCollect(dataCollectionInfo.getNewRelicConfig(),
           dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(),
-          ThirdPartyApiCallLog.builder()
-              .accountId(getAccountId())
-              .appId(getAppId())
-              .delegateId(getDelegateId())
-              .delegateTaskId(getTaskId())
-              .stateExecutionId(dataCollectionInfo.getStateExecutionId())
-              .build());
+          createApiCallLog(dataCollectionInfo.getStateExecutionId()));
       newTxns.removeAll(allTxns);
       logger.info("new txns {}", newTxns.size());
       Set<NewRelicMetric> txnsWithData = getTxnsWithDataInLastHour(allTxns);
@@ -369,16 +336,9 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
               logger.info("Found 0 total new relic metrics ");
               return;
             }
-            List<NewRelicApplicationInstance> instances =
-                newRelicDelegateService.getApplicationInstances(dataCollectionInfo.getNewRelicConfig(),
-                    dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(),
-                    ThirdPartyApiCallLog.builder()
-                        .accountId(getAccountId())
-                        .appId(getAppId())
-                        .delegateId(getDelegateId())
-                        .delegateTaskId(getTaskId())
-                        .stateExecutionId(dataCollectionInfo.getStateExecutionId())
-                        .build());
+            List<NewRelicApplicationInstance> instances = newRelicDelegateService.getApplicationInstances(
+                dataCollectionInfo.getNewRelicConfig(), dataCollectionInfo.getEncryptedDataDetails(),
+                dataCollectionInfo.getNewRelicAppId(), createApiCallLog(dataCollectionInfo.getStateExecutionId()));
             logger.info("Got {} new relic nodes.", instances.size());
 
             lastCollectionTime = System.currentTimeMillis();
@@ -544,17 +504,10 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
     private Set<String> getMetricsWithNoData(Set<String> metricNames) throws IOException {
       final long currentTime = System.currentTimeMillis();
       Set<String> metricsWithNoData = Sets.newHashSet(metricNames);
-      NewRelicMetricData metricData =
-          newRelicDelegateService.getMetricDataApplication(dataCollectionInfo.getNewRelicConfig(),
-              dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(), metricNames,
-              currentTime - TimeUnit.HOURS.toMillis(1), currentTime, true,
-              ThirdPartyApiCallLog.builder()
-                  .accountId(getAccountId())
-                  .appId(getAppId())
-                  .delegateId(getDelegateId())
-                  .delegateTaskId(getTaskId())
-                  .stateExecutionId(dataCollectionInfo.getStateExecutionId())
-                  .build());
+      NewRelicMetricData metricData = newRelicDelegateService.getMetricDataApplication(
+          dataCollectionInfo.getNewRelicConfig(), dataCollectionInfo.getEncryptedDataDetails(),
+          dataCollectionInfo.getNewRelicAppId(), metricNames, currentTime - TimeUnit.HOURS.toMillis(1), currentTime,
+          true, createApiCallLog(dataCollectionInfo.getStateExecutionId()));
 
       if (metricData == null) {
         throw new WingsException("Unable to get NewRelic metric data for metric name collection " + dataCollectionInfo);
@@ -566,13 +519,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
           newRelicDelegateService.getMetricDataApplication(dataCollectionInfo.getNewRelicConfig(),
               dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(),
               getErrorMetricNames(metricNames), currentTime - TimeUnit.HOURS.toMillis(1), currentTime, true,
-              ThirdPartyApiCallLog.builder()
-                  .accountId(getAccountId())
-                  .appId(getAppId())
-                  .delegateId(getDelegateId())
-                  .delegateTaskId(getTaskId())
-                  .stateExecutionId(dataCollectionInfo.getStateExecutionId())
-                  .build());
+              createApiCallLog(dataCollectionInfo.getStateExecutionId()));
 
       if (metricData == null) {
         throw new WingsException("Unable to get NewRelic metric data for metric name collection " + dataCollectionInfo);

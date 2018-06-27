@@ -98,6 +98,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
     apiCallLog.setStatusCode(response.code());
     if (response.isSuccessful()) {
       apiCallLog.setJsonResponse(response.body());
+      delegateLogService.save(elkConfig.getAccountId(), apiCallLog);
       return response.body();
     }
 

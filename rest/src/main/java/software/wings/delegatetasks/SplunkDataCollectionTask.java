@@ -245,13 +245,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
       jobargs.setLatestTime(String.valueOf(TimeUnit.MILLISECONDS.toSeconds(endTime)));
 
       // A blocking search returns the job when the search is done
-      ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.builder()
-                                            .accountId(getAccountId())
-                                            .appId(getAppId())
-                                            .delegateId(getDelegateId())
-                                            .delegateTaskId(getTaskId())
-                                            .stateExecutionId(dataCollectionInfo.getStateExecutionId())
-                                            .build();
+      ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
       apiCallLog.setRequest("triggering splunk query startTime: " + collectionStartTime + " endTime: " + endTime
           + " query: " + searchQuery + " url: " + dataCollectionInfo.getSplunkConfig().getSplunkUrl());
       apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());

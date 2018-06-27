@@ -198,13 +198,7 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
             END_TIME_PLACE_HOLDER, String.valueOf(System.currentTimeMillis() / TimeUnit.SECONDS.toMillis(1)));
 
         try {
-          ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.builder()
-                                                .accountId(getAccountId())
-                                                .appId(getAppId())
-                                                .delegateId(getDelegateId())
-                                                .delegateTaskId(getTaskId())
-                                                .stateExecutionId(dataCollectionInfo.getStateExecutionId())
-                                                .build();
+          ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
           PrometheusMetricDataResponse response =
               prometheusDelegateService.fetchMetricData(dataCollectionInfo.getPrometheusConfig(), url, apiCallLog);
           TreeBasedTable<String, Long, NewRelicMetricDataRecord> metricRecords = response.getMetricRecords(

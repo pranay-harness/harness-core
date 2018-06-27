@@ -1,5 +1,6 @@
 package software.wings.service.impl.dynatrace;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import io.harness.network.Http;
@@ -10,13 +11,16 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.DynaTraceConfig;
+import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.dynatrace.DynaTraceRestClient;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.intfc.dynatrace.DynaTraceDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.IOException;
+import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
 
@@ -26,6 +30,7 @@ import java.util.List;
 public class DynaTraceDelegateServiceImpl implements DynaTraceDelegateService {
   private static final Logger logger = LoggerFactory.getLogger(DynaTraceDelegateServiceImpl.class);
   @Inject private EncryptionService encryptionService;
+  @Inject private DelegateLogService delegateLogService;
 
   @Override
   public boolean validateConfig(DynaTraceConfig dynaTraceConfig) throws IOException {
@@ -43,14 +48,24 @@ public class DynaTraceDelegateServiceImpl implements DynaTraceDelegateService {
 
   @Override
   public DynaTraceMetricDataResponse fetchMetricData(DynaTraceConfig dynaTraceConfig,
-      DynaTraceMetricDataRequest dataRequest, List<EncryptedDataDetail> encryptedDataDetails) throws IOException {
+      DynaTraceMetricDataRequest dataRequest, List<EncryptedDataDetail> encryptedDataDetails,
+      ThirdPartyApiCallLog apiCallLog) throws IOException {
+    Preconditions.checkNotNull(apiCallLog);
+    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
+    apiCallLog.setRequest("url: " + dynaTraceConfig.getDynaTraceUrl() + " request: " + dataRequest);
     final Call<DynaTraceMetricDataResponse> request =
         getDynaTraceRestClient(dynaTraceConfig)
             .fetchMetricData(getHeaderWithCredentials(dynaTraceConfig, encryptedDataDetails), dataRequest);
     final Response<DynaTraceMetricDataResponse> response = request.execute();
+    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
+    apiCallLog.setStatusCode(response.code());
     if (response.isSuccessful()) {
+      apiCallLog.setJsonResponse(response.body());
+      delegateLogService.save(dynaTraceConfig.getAccountId(), apiCallLog);
       return response.body();
     } else {
+      apiCallLog.setJsonResponse(response.errorBody());
+      delegateLogService.save(dynaTraceConfig.getAccountId(), apiCallLog);
       logger.error("Request not successful. Reason: {}, request: {}", response, dataRequest);
       throw new WingsException(response.errorBody().string());
     }
