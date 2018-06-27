@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.DelegateTask;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
@@ -108,15 +107,8 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
       final List<EncryptedDataDetail> encryptionDetails = dataCollectionInfo.getEncryptedDataDetails();
       final long appId = dataCollectionInfo.getAppId();
       final long tierId = dataCollectionInfo.getTierId();
-      final List<AppdynamicsMetric> tierMetrics =
-          appdynamicsDelegateService.getTierBTMetrics(appDynamicsConfig, appId, tierId, encryptionDetails,
-              ThirdPartyApiCallLog.builder()
-                  .accountId(getAccountId())
-                  .appId(getAppId())
-                  .delegateId(getDelegateId())
-                  .delegateTaskId(getTaskId())
-                  .stateExecutionId(dataCollectionInfo.getStateExecutionId())
-                  .build());
+      final List<AppdynamicsMetric> tierMetrics = appdynamicsDelegateService.getTierBTMetrics(appDynamicsConfig, appId,
+          tierId, encryptionDetails, createApiCallLog(dataCollectionInfo.getStateExecutionId()));
 
       final List<AppdynamicsMetricData> metricsData = new ArrayList<>();
       List<Callable<List<AppdynamicsMetricData>>> callables = new ArrayList<>();
@@ -127,27 +119,15 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
               callables.add(()
                                 -> appdynamicsDelegateService.getTierBTMetricData(appDynamicsConfig, appId, tierId,
                                     appdynamicsMetric.getName(), hostName, DURATION_TO_ASK_MINUTES, encryptionDetails,
-                                    ThirdPartyApiCallLog.builder()
-                                        .accountId(getAccountId())
-                                        .appId(getAppId())
-                                        .delegateId(getDelegateId())
-                                        .delegateTaskId(getTaskId())
-                                        .stateExecutionId(dataCollectionInfo.getStateExecutionId())
-                                        .build()));
+                                    createApiCallLog(dataCollectionInfo.getStateExecutionId())));
             }
             break;
           case PREDICTIVE:
-            callables.add(()
-                              -> appdynamicsDelegateService.getTierBTMetricData(appDynamicsConfig, appId, tierId,
-                                  appdynamicsMetric.getName(), null,
-                                  PREDECTIVE_HISTORY_MINUTES + DURATION_TO_ASK_MINUTES, encryptionDetails,
-                                  ThirdPartyApiCallLog.builder()
-                                      .accountId(getAccountId())
-                                      .appId(getAppId())
-                                      .delegateId(getDelegateId())
-                                      .delegateTaskId(getTaskId())
-                                      .stateExecutionId(dataCollectionInfo.getStateExecutionId())
-                                      .build()));
+            callables.add(
+                ()
+                    -> appdynamicsDelegateService.getTierBTMetricData(appDynamicsConfig, appId, tierId,
+                        appdynamicsMetric.getName(), null, PREDECTIVE_HISTORY_MINUTES + DURATION_TO_ASK_MINUTES,
+                        encryptionDetails, createApiCallLog(dataCollectionInfo.getStateExecutionId())));
             break;
 
           default:

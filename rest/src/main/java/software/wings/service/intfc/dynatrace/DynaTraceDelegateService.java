@@ -4,6 +4,7 @@ import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.dynatrace.DynaTraceMetricDataRequest;
 import software.wings.service.impl.dynatrace.DynaTraceMetricDataResponse;
 
@@ -19,6 +20,6 @@ public interface DynaTraceDelegateService {
   boolean validateConfig(@NotNull DynaTraceConfig dynaTraceConfig) throws IOException;
 
   DynaTraceMetricDataResponse fetchMetricData(@NotNull DynaTraceConfig dynaTraceConfig,
-      @NotNull DynaTraceMetricDataRequest dataRequest, @NotNull List<EncryptedDataDetail> encryptedDataDetails)
-      throws IOException;
+      @NotNull DynaTraceMetricDataRequest dataRequest, @NotNull List<EncryptedDataDetail> encryptedDataDetails,
+      ThirdPartyApiCallLog apiCallLog) throws IOException;
 }

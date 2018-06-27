@@ -187,8 +187,8 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
                                                            .endTimestamp(System.currentTimeMillis())
                                                            .build();
 
-              DynaTraceMetricDataResponse metricDataResponse =
-                  dynaTraceDelegateService.fetchMetricData(dynaTraceConfig, dataRequest, encryptionDetails);
+              DynaTraceMetricDataResponse metricDataResponse = dynaTraceDelegateService.fetchMetricData(dynaTraceConfig,
+                  dataRequest, encryptionDetails, createApiCallLog(dataCollectionInfo.getStateExecutionId()));
               metricDataResponse.getResult().setHost(DynatraceState.TEST_HOST_NAME);
               return metricDataResponse;
             });
@@ -214,7 +214,8 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
                                                              .build();
 
                 DynaTraceMetricDataResponse metricDataResponse =
-                    dynaTraceDelegateService.fetchMetricData(dynaTraceConfig, dataRequest, encryptionDetails);
+                    dynaTraceDelegateService.fetchMetricData(dynaTraceConfig, dataRequest, encryptionDetails,
+                        createApiCallLog(dataCollectionInfo.getStateExecutionId()));
                 metricDataResponse.getResult().setHost(hostName);
                 return metricDataResponse;
               });

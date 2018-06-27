@@ -7,6 +7,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.ErrorNotifyResponseData;
 import software.wings.waitnotify.NotifyResponseData;
@@ -113,5 +114,15 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
 
   public void setAsync(boolean async) {
     isAsync = async;
+  }
+
+  protected ThirdPartyApiCallLog createApiCallLog(String stateExecutionId) {
+    return ThirdPartyApiCallLog.builder()
+        .accountId(getAccountId())
+        .appId(getAppId())
+        .delegateId(getDelegateId())
+        .delegateTaskId(getTaskId())
+        .stateExecutionId(stateExecutionId)
+        .build();
   }
 }
