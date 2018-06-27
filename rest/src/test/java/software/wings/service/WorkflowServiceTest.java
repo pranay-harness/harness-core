@@ -3677,6 +3677,108 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .contains(INFRA_MAPPING_ID);
   }
 
+  @Test
+  public void shouldGetResolvedEnvironmentId() {
+    Workflow workflow =
+        aWorkflow()
+            .withEnvId(ENV_ID)
+            .withName(WORKFLOW_NAME)
+            .withAppId(APP_ID)
+            .withServiceId(SERVICE_ID)
+            .withInfraMappingId(INFRA_MAPPING_ID)
+            .withOrchestrationWorkflow(
+                aBasicOrchestrationWorkflow()
+                    .withWorkflowPhases(
+                        asList(aWorkflowPhase().withServiceId(SERVICE_ID).withInfraMappingId(INFRA_MAPPING_ID).build()))
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .build())
+
+            .build();
+
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(anAwsInfrastructureMapping()
+                        .withUuid(INFRA_MAPPING_ID)
+                        .withDeploymentType(SSH.name())
+                        .withComputeProviderType(SettingVariableTypes.AWS.name())
+                        .build());
+
+    Role role = aRole()
+                    .withRoleType(RoleType.ACCOUNT_ADMIN)
+                    .withUuid(ROLE_ID)
+                    .withAccountId(application.getAccountId())
+                    .build();
+    List<NotificationGroup> notificationGroups = asList(aNotificationGroup()
+                                                            .withUuid(NOTIFICATION_GROUP_ID)
+                                                            .withAccountId(application.getAccountId())
+                                                            .withRole(role)
+                                                            .build());
+    when(notificationSetupService.listNotificationGroups(
+             application.getAccountId(), RoleType.ACCOUNT_ADMIN.getDisplayName()))
+        .thenReturn(notificationGroups);
+
+    Workflow workflow2 = workflowService.createWorkflow(workflow);
+    assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
+
+    assertThat(workflowService.resolveEnvironmentId(workflow2, ImmutableMap.of("Environment", ENV_ID)))
+        .isNotNull()
+        .isEqualTo(ENV_ID);
+  }
+
+  @Test
+  public void shouldGetResolvedEnvironmentIdForTemplatizedWorkflow() {
+    TemplateExpression envExpression = aTemplateExpression()
+                                           .withFieldName("envId")
+                                           .withExpression("${Environment}")
+                                           .withMetadata(ImmutableMap.of("entityType", "ENVIRONMENT"))
+                                           .build();
+
+    Workflow workflow =
+        aWorkflow()
+            .withEnvId(ENV_ID)
+            .withName(WORKFLOW_NAME)
+            .withAppId(APP_ID)
+            .withServiceId(SERVICE_ID)
+            .withInfraMappingId(INFRA_MAPPING_ID)
+            .withOrchestrationWorkflow(
+                aBasicOrchestrationWorkflow()
+                    .withWorkflowPhases(
+                        asList(aWorkflowPhase().withServiceId(SERVICE_ID).withInfraMappingId(INFRA_MAPPING_ID).build()))
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .build())
+            .withTemplateExpressions(asList(envExpression))
+            .build();
+
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(anAwsInfrastructureMapping()
+                        .withUuid(INFRA_MAPPING_ID)
+                        .withDeploymentType(SSH.name())
+                        .withComputeProviderType(SettingVariableTypes.AWS.name())
+                        .build());
+
+    Role role = aRole()
+                    .withRoleType(RoleType.ACCOUNT_ADMIN)
+                    .withUuid(ROLE_ID)
+                    .withAccountId(application.getAccountId())
+                    .build();
+    List<NotificationGroup> notificationGroups = asList(aNotificationGroup()
+                                                            .withUuid(NOTIFICATION_GROUP_ID)
+                                                            .withAccountId(application.getAccountId())
+                                                            .withRole(role)
+                                                            .build());
+    when(notificationSetupService.listNotificationGroups(
+             application.getAccountId(), RoleType.ACCOUNT_ADMIN.getDisplayName()))
+        .thenReturn(notificationGroups);
+
+    Workflow workflow2 = workflowService.createWorkflow(workflow);
+    assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
+
+    assertThat(workflowService.resolveEnvironmentId(workflow2, ImmutableMap.of("Environment", ENV_ID_CHANGED)))
+        .isNotNull()
+        .isEqualTo(ENV_ID_CHANGED);
+  }
+
   private PhaseStep createPhaseStep(String uuid) {
     return aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
         .addStep(aGraphNode()

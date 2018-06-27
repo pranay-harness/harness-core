@@ -328,6 +328,38 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldGetPipelineWithServicesAndEnvs() {
+    when(wingsPersistence.get(Pipeline.class, APP_ID, PIPELINE_ID))
+        .thenReturn(Pipeline.builder()
+                        .appId(APP_ID)
+                        .uuid(PIPELINE_ID)
+                        .pipelineStages(
+                            asList(PipelineStage.builder()
+                                       .pipelineStageElements(asList(
+                                           PipelineStageElement.builder()
+                                               .name("SE")
+                                               .type(ENV_STATE.name())
+                                               .properties(ImmutableMap.of("envId", ENV_ID, "workflowId", WORKFLOW_ID))
+                                               .build()))
+                                       .build()))
+                        .build());
+
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID))
+        .thenReturn(
+            aWorkflow()
+                .withServices(asList(Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build()))
+                .build());
+
+    when(workflowService.resolveEnvironmentId(any(), any())).thenReturn(ENV_ID);
+
+    Pipeline pipeline = pipelineService.readPipeline(APP_ID, PIPELINE_ID, true, true);
+    assertThat(pipeline).isNotNull().hasFieldOrPropertyWithValue("uuid", PIPELINE_ID);
+    assertThat(pipeline.getServices()).hasSize(1).extracting("uuid").isEqualTo(asList(SERVICE_ID));
+    assertThat(pipeline.getEnvIds()).hasSize(1).contains(ENV_ID);
+    verify(wingsPersistence).get(Pipeline.class, APP_ID, PIPELINE_ID);
+  }
+
+  @Test
   public void shouldGetPipelineWithTemplatizedServices() {
     when(wingsPersistence.get(Pipeline.class, APP_ID, PIPELINE_ID))
         .thenReturn(
@@ -361,7 +393,10 @@ public class PipelineServiceTest extends WingsBaseTest {
 
     when(workflowService.getResolvedServices(any(Workflow.class), any()))
         .thenReturn(asList(Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build()));
+    when(workflowService.resolveEnvironmentId(any(), any())).thenReturn(ENV_ID);
+
     Pipeline pipeline = pipelineService.readPipeline(APP_ID, PIPELINE_ID, true);
+
     assertThat(pipeline).isNotNull().hasFieldOrPropertyWithValue("uuid", PIPELINE_ID);
     assertThat(pipeline.getServices()).hasSize(1).extracting("uuid").isEqualTo(asList(SERVICE_ID));
 
