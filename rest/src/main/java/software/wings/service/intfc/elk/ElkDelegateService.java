@@ -4,6 +4,7 @@ import software.wings.beans.ElkConfig;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.elk.ElkIndexTemplate;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
 
@@ -21,11 +22,11 @@ public interface ElkDelegateService {
 
   @DelegateTaskType(TaskType.ELK_COLLECT_LOG_DATA)
   Object search(@NotNull ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      ElkLogFetchRequest logFetchRequest) throws IOException;
+      ElkLogFetchRequest logFetchRequest, ThirdPartyApiCallLog apiCallLog) throws IOException;
 
   @DelegateTaskType(TaskType.ELK_COLLECT_INDICES)
-  Map<String, ElkIndexTemplate> getIndices(ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails)
-      throws IOException;
+  Map<String, ElkIndexTemplate> getIndices(ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      ThirdPartyApiCallLog apiCallLog) throws IOException;
 
   @DelegateTaskType(TaskType.ELK_GET_LOG_SAMPLE)
   Object getLogSample(ElkConfig elkConfig, String index, List<EncryptedDataDetail> encryptedDataDetails)

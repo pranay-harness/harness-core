@@ -7,6 +7,7 @@ import static io.harness.network.Http.getOkHttpClientBuilderWithReadtimeOut;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
 
 import com.google.inject.Inject;
 
@@ -22,10 +23,12 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.ElkConfig;
+import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.elk.ElkRestClient;
 import software.wings.helpers.ext.elk.KibanaRestClient;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.ElkValidationType;
 import software.wings.service.intfc.elk.ElkDelegateService;
@@ -36,6 +39,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -54,6 +58,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
   private static final Logger logger = LoggerFactory.getLogger(ElkDelegateServiceImpl.class);
 
   @Inject private EncryptionService encryptionService;
+  @Inject private DelegateLogService delegateLogService;
 
   @Override
   public boolean validateConfig(ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails) {
@@ -74,7 +79,14 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
 
   @Override
   public Object search(ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      ElkLogFetchRequest logFetchRequest) throws IOException {
+      ElkLogFetchRequest logFetchRequest, ThirdPartyApiCallLog apiCallLog) throws IOException {
+    if (apiCallLog == null) {
+      apiCallLog = apiCallLogWithDummyStateExecution(elkConfig.getAccountId());
+    }
+
+    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
+    apiCallLog.setRequest("connector: " + elkConfig.getElkConnector() + " url: " + elkConfig.getElkUrl()
+        + " request: " + logFetchRequest.toElasticSearchJsonObject());
     final Call<Object> request = elkConfig.getElkConnector() == ElkConnector.KIBANA_SERVER
         ? getKibanaRestClient(elkConfig, encryptedDataDetails)
               .getLogSample(format(KibanaRestClient.searchPathPattern, logFetchRequest.getIndices(), 10000),
@@ -82,25 +94,41 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
         : getElkRestClient(elkConfig, encryptedDataDetails)
               .search(logFetchRequest.getIndices(), logFetchRequest.toElasticSearchJsonObject());
     final Response<Object> response = request.execute();
+    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
+    apiCallLog.setStatusCode(response.code());
     if (response.isSuccessful()) {
+      apiCallLog.setJsonResponse(response.body());
       return response.body();
     }
 
+    apiCallLog.setJsonResponse(response.errorBody());
+    delegateLogService.save(elkConfig.getAccountId(), apiCallLog);
     throw new WingsException(response.errorBody().string());
   }
 
   @Override
-  public Map<String, ElkIndexTemplate> getIndices(ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails)
-      throws IOException {
+  public Map<String, ElkIndexTemplate> getIndices(ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      ThirdPartyApiCallLog apiCallLog) throws IOException {
+    if (apiCallLog == null) {
+      apiCallLog = apiCallLogWithDummyStateExecution(elkConfig.getAccountId());
+    }
+    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
+    apiCallLog.setRequest(
+        "connector: " + elkConfig.getElkConnector() + " url: " + elkConfig.getElkUrl() + "/_template");
     final Call<Map<String, Map<String, Object>>> request = elkConfig.getElkConnector() == ElkConnector.KIBANA_SERVER
         ? getKibanaRestClient(elkConfig, encryptedDataDetails).template()
         : getElkRestClient(elkConfig, encryptedDataDetails).template();
     final Response<Map<String, Map<String, Object>>> response = request.execute();
 
+    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
+    apiCallLog.setStatusCode(response.code());
     if (!response.isSuccessful()) {
+      apiCallLog.setJsonResponse(response.errorBody());
+      delegateLogService.save(elkConfig.getAccountId(), apiCallLog);
       throw new WingsException(response.errorBody().string());
     }
 
+    apiCallLog.setJsonResponse(response.body());
     final Map<String, ElkIndexTemplate> rv = new HashMap<>();
     for (Entry<String, Map<String, Object>> indexEntry : response.body().entrySet()) {
       if (indexEntry.getKey().charAt(0) != '.') {
@@ -127,6 +155,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
         }
       }
     }
+    delegateLogService.save(elkConfig.getAccountId(), apiCallLog);
     return rv;
   }
 
@@ -144,19 +173,6 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
       return response.body();
     }
     throw new WingsException(response.errorBody().string());
-  }
-
-  private Object validate(ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails) throws IOException {
-    if (elkConfig.getElkConnector() == ElkConnector.KIBANA_SERVER) {
-      final Call<Object> request = getKibanaRestClient(elkConfig, encryptedDataDetails).validate();
-      final Response<Object> response = request.execute();
-      if (response.isSuccessful()) {
-        return response.body();
-      }
-      throw new WingsException(response.errorBody().string());
-    }
-
-    throw new WingsException("Validate call not supported for " + elkConfig.getElkConnector());
   }
 
   @Override

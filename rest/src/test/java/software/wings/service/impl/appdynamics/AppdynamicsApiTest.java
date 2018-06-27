@@ -8,11 +8,13 @@ import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
+import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
 import static software.wings.service.impl.appdynamics.AppdynamicsDelegateServiceImpl.BT_PERFORMANCE_PATH_PREFIX;
 import static software.wings.service.impl.appdynamics.AppdynamicsDelegateServiceImpl.EXTERNAL_CALLS;
 
@@ -35,11 +37,13 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
+import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.appdynamics.AppdynamicsRestClient;
 import software.wings.resources.AppdynamicsResource;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric.AppdynamicsMetricType;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
@@ -66,6 +70,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   @Inject private EncryptionService encryptionService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private AppdynamicsRestClient appdynamicsRestClient;
+  @Mock private DelegateLogService delegateLogService;
 
   private AppdynamicsDelegateServiceImpl delegateService;
   private String accountId;
@@ -76,10 +81,12 @@ public class AppdynamicsApiTest extends WingsBaseTest {
     doReturn(appdynamicsRestClient).when(delegateService).getAppdynamicsRestClient(any(AppDynamicsConfig.class));
     when(delegateProxyFactory.get(eq(AppdynamicsDelegateService.class), any(SyncTaskContext.class)))
         .thenReturn(delegateService);
+    doNothing().when(delegateLogService).save(anyString(), any(ThirdPartyApiCallLog.class));
 
     setInternalState(appdynamicsService, "delegateProxyFactory", delegateProxyFactory);
     setInternalState(appdynamicsResource, "appdynamicsService", appdynamicsService);
     setInternalState(delegateService, "encryptionService", encryptionService);
+    setInternalState(delegateService, "delegateLogService", delegateLogService);
     accountId = UUID.randomUUID().toString();
   }
 
@@ -215,7 +222,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   }
 
   @Test
-  public void testGetBTs() throws IOException {
+  public void testGetBTs() throws IOException, CloneNotSupportedException {
     Call<List<AppdynamicsTier>> tierRestCall = mock(Call.class);
     AppdynamicsTier tier =
         AppdynamicsTier.builder().name(UUID.randomUUID().toString()).id(new Random().nextInt()).build();
@@ -237,8 +244,8 @@ public class AppdynamicsApiTest extends WingsBaseTest {
                                               .password(UUID.randomUUID().toString().toCharArray())
                                               .accountname(UUID.randomUUID().toString())
                                               .build();
-    List<AppdynamicsMetric> tierBTMetrics = delegateService.getTierBTMetrics(
-        appDynamicsConfig, new Random().nextLong(), new Random().nextLong(), Collections.emptyList());
+    List<AppdynamicsMetric> tierBTMetrics = delegateService.getTierBTMetrics(appDynamicsConfig, new Random().nextLong(),
+        new Random().nextLong(), Collections.emptyList(), apiCallLogWithDummyStateExecution(accountId));
     assertEquals(2, tierBTMetrics.size());
     assertEquals(bts, tierBTMetrics);
   }
@@ -330,7 +337,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
                                               .build();
     List<AppdynamicsMetricData> tierBTMetricData = delegateService.getTierBTMetricData(appDynamicsConfig,
         new Random().nextLong(), new Random().nextLong(), UUID.randomUUID().toString(), UUID.randomUUID().toString(),
-        new Random().nextInt(), Collections.emptyList());
+        new Random().nextInt(), Collections.emptyList(), apiCallLogWithDummyStateExecution(accountId));
     assertEquals(2, tierBTMetricData.size());
     assertEquals(btData, tierBTMetricData);
   }
