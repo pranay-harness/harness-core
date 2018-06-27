@@ -233,8 +233,6 @@ public class PipelineServiceImpl implements PipelineService {
           }
         }
       }
-    } catch (Exception ex) {
-      logger.error("Exception in PipelineServiceImpl::isEnvironmentReferenced: ", ex.getMessage());
     }
     return referencedPipelines;
   }
