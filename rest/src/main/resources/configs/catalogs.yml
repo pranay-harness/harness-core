@@ -429,6 +429,10 @@ EXECUTION_STATUS:
       value: SUCCESS
     - name: Waiting
       value: WAITING
+    - name: Rejected
+      value: REJECTED
+    - name: Expired
+      value: EXPIRED
 
 ELK_CONNECTOR_TYPE:
     - name: Elastic Search Server
