@@ -51,7 +51,7 @@ public class KubernetesContainerTaskTest {
   @Test
   public void validateDomainNameReplacement() {
     String domainName = "abc.xyz.com";
-    Pattern pattern = ContainerTask.getRegexPattern(domainName);
+    Pattern pattern = ContainerTask.compileRegexPattern(domainName);
 
     String imageNameText = "   image: abc.xyz.com/${DOCKER_IMAGE_NAME}";
     Matcher matcher = pattern.matcher(imageNameText);
@@ -98,7 +98,7 @@ public class KubernetesContainerTaskTest {
     assertThat(matcher.find()).isEqualTo(false);
 
     domainName = "abc*";
-    pattern = ContainerTask.getRegexPattern(domainName);
+    pattern = ContainerTask.compileRegexPattern(domainName);
 
     imageNameText = "   image: abc*/${DOCKER_IMAGE_NAME}";
     matcher = pattern.matcher(imageNameText);
