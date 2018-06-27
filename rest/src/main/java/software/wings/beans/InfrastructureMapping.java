@@ -27,6 +27,7 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
+import software.wings.annotation.Encryptable;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.SettingsService;
@@ -53,7 +54,7 @@ import javax.annotation.Nullable;
     fields = { @Field("appId")
                , @Field("envId"), @Field("name") }))
 @JsonIgnoreProperties(ignoreUnknown = true)
-public abstract class InfrastructureMapping extends Base {
+public abstract class InfrastructureMapping extends Base implements Encryptable {
   public static final String ENV_ID_KEY = "envId";
   public static final String NAME_KEY = "name";
   public static final String PROVISIONER_ID_KEY = "provisionerId";
@@ -292,6 +293,11 @@ public abstract class InfrastructureMapping extends Base {
 
   public void setProvisionerId(String provisionerId) {
     this.provisionerId = provisionerId;
+  }
+
+  @Override
+  public SettingVariableTypes getSettingType() {
+    return SettingVariableTypes.INFRASTRUCTURE_MAPPING;
   }
 
   @JsonInclude(Include.NON_EMPTY) public abstract String getHostConnectionAttrs();
