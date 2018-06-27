@@ -89,6 +89,7 @@ public abstract class ExpressionBuilder {
 
   protected static final String HOST_NAME = "host.name";
   protected static final String HOST_HOSTNAME = "host.hostName";
+  protected static final String HOST_IP = "host.ip";
   protected static final String HOST_PUBLICDNS = "host.publicDns";
   protected static final String HOST_INSTANCE_ID = "host.ec2Instance.instanceId";
   protected static final String HOST_INSTANCE_TYPE = "host.ec2Instance.instanceType";
@@ -153,7 +154,7 @@ public abstract class ExpressionBuilder {
 
     expressions.addAll(asList(INSTANCE_NAME, INSTANCE_HOSTNAME, INSTANCE_HOST_PUBLICDNS));
 
-    expressions.addAll(asList(HOST_NAME, HOST_HOSTNAME, HOST_PUBLICDNS, HOST_INSTANCE_ID, HOST_INSTANCE_TYPE,
+    expressions.addAll(asList(HOST_NAME, HOST_HOSTNAME, HOST_IP, HOST_PUBLICDNS, HOST_INSTANCE_ID, HOST_INSTANCE_TYPE,
         HOST_INSTANCE_IMAGEID, HOST_INSTANCE_ARCH, HOST_INSTANCE_KERNELID, HOST_INSTANCE_KEY_NAME, HOST_INSTANCE_PVTDNS,
         HOST_INSTANCE_PRIVATEIP, HOST_INSTANCE_PUBLICDNS, HOST_INSTANCE_PUBLICIP, HOST_INSTANCE_SUBNETID,
         HOST_INSTANCE_VPCID));

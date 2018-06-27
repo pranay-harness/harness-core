@@ -108,6 +108,7 @@ public class ContainerDeploymentManagerHelper {
       for (ContainerInfo containerInfo : containerInfos) {
         HostElement hostElement = aHostElement()
                                       .withHostName(containerInfo.getHostName())
+                                      .withIp(containerInfo.getIp())
                                       .withEc2Instance(containerInfo.getEc2Instance())
                                       .build();
         InstanceElement instanceElement = anInstanceElement()
