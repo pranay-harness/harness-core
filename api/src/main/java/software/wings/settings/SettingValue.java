@@ -297,7 +297,9 @@ public abstract class SettingValue implements ExtensionPoint {
 
     WINRM_SESSION_CONFIG,
 
-    PROMETHEUS("Prometheus");
+    PROMETHEUS("Prometheus"),
+
+    INFRASTRUCTURE_MAPPING;
 
     private String displayName;
 
