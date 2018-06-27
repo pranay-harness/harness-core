@@ -4,6 +4,7 @@ import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
@@ -33,11 +34,12 @@ public interface AppdynamicsDelegateService {
   boolean validateConfig(AppDynamicsConfig appDynamicsConfig) throws IOException;
 
   List<AppdynamicsMetric> getTierBTMetrics(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId,
-      List<EncryptedDataDetail> encryptionDetails) throws IOException;
+      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog)
+      throws IOException, CloneNotSupportedException;
 
   List<AppdynamicsMetricData> getTierBTMetricData(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
-      long tierId, String btName, String hostName, int durantionInMinutes, List<EncryptedDataDetail> encryptionDetails)
-      throws IOException;
+      long tierId, String btName, String hostName, int durantionInMinutes, List<EncryptedDataDetail> encryptionDetails,
+      ThirdPartyApiCallLog apiCallLog) throws IOException;
 
   AppdynamicsTier getAppdynamicsTier(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId,
       List<EncryptedDataDetail> encryptionDetails) throws IOException;

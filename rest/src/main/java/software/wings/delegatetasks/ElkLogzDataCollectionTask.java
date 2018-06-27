@@ -12,6 +12,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.analysis.LogDataCollectionInfo;
@@ -128,7 +129,14 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                             .build();
                     logger.info("running elk query: " + JsonUtils.asJson(elkFetchRequest.toElasticSearchJsonObject()));
                     searchResponse = elkDelegateService.search(elkDataCollectionInfo.getElkConfig(),
-                        elkDataCollectionInfo.getEncryptedDataDetails(), elkFetchRequest);
+                        elkDataCollectionInfo.getEncryptedDataDetails(), elkFetchRequest,
+                        ThirdPartyApiCallLog.builder()
+                            .accountId(getAccountId())
+                            .appId(getAppId())
+                            .delegateId(getDelegateId())
+                            .delegateTaskId(getTaskId())
+                            .stateExecutionId(dataCollectionInfo.getStateExecutionId())
+                            .build());
                     hostnameField = elkDataCollectionInfo.getHostnameField();
                     messageField = elkDataCollectionInfo.getMessageField();
                     timestampField = elkDataCollectionInfo.getTimestampField();

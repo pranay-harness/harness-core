@@ -15,6 +15,7 @@ import io.harness.time.Timestamp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.analysis.LogElement;
@@ -25,6 +26,7 @@ import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -40,6 +42,7 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
   private SumoLogicClient sumoClient;
 
   @Inject private LogAnalysisStoreService logAnalysisStoreService;
+  @Inject private DelegateLogService delegateLogService;
 
   public SumoDataCollectionTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> consumer,
       Supplier<Boolean> preExecute) {
@@ -138,13 +141,21 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
                 String searchQuery = query + hostStr + " | timeslice 1m";
 
                 final long endTime = collectionStartTime + TimeUnit.MINUTES.toMillis(1) - 1;
-                logger.info("triggering sumo query startTime: " + collectionStartTime + " endTime: " + endTime
-                    + " query: " + searchQuery);
+                ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.builder()
+                                                      .accountId(getAccountId())
+                                                      .appId(getAppId())
+                                                      .delegateId(getDelegateId())
+                                                      .delegateTaskId(getTaskId())
+                                                      .stateExecutionId(dataCollectionInfo.getStateExecutionId())
+                                                      .build();
+                apiCallLog.setRequest("triggering sumo query startTime: " + collectionStartTime + " endTime: " + endTime
+                    + " query: " + searchQuery + " url: " + dataCollectionInfo.getSumoConfig().getSumoUrl());
+                apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
+                logger.info(apiCallLog.getRequest());
                 String searchJobId = sumoClient.createSearchJob(
                     searchQuery, Long.toString(collectionStartTime), Long.toString(endTime), "UTC");
 
-                int messageCount = 0;
-                int recordCount = 0;
+                int messageCount;
                 GetSearchJobStatusResponse getSearchJobStatusResponse = null;
                 // We will loop until the search job status
                 // is either "DONE GATHERING RESULTS" or
@@ -160,11 +171,14 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
                       "Waiting on search job ID: " + searchJobId + " status: " + getSearchJobStatusResponse.getState());
                 }
 
+                apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
+                apiCallLog.setJsonResponse(getSearchJobStatusResponse);
                 // If the last search job status indicated
                 // that the search job was "CANCELLED", we
                 // can't get messages or records.
                 if (getSearchJobStatusResponse.getState().equals("CANCELLED")) {
                   logger.info("Ugh. Search job was cancelled. Retrying ...");
+                  delegateLogService.save(getAccountId(), apiCallLog);
                   if (++retry == RETRIES) {
                     taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
                     taskResult.setErrorMessage("Sumo Logic cancelled search job " + RETRIES + " times");
@@ -174,6 +188,7 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
                   continue;
                 }
 
+                delegateLogService.save(getAccountId(), apiCallLog);
                 messageCount = getSearchJobStatusResponse.getMessageCount();
 
                 int clusterLabel = 0;

@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.DelegateTask;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
@@ -102,13 +103,20 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
       this.taskResult = taskResult;
     }
 
-    private List<AppdynamicsMetricData> getMetricsData() throws IOException {
+    private List<AppdynamicsMetricData> getMetricsData() throws IOException, CloneNotSupportedException {
       final AppDynamicsConfig appDynamicsConfig = dataCollectionInfo.getAppDynamicsConfig();
       final List<EncryptedDataDetail> encryptionDetails = dataCollectionInfo.getEncryptedDataDetails();
       final long appId = dataCollectionInfo.getAppId();
       final long tierId = dataCollectionInfo.getTierId();
       final List<AppdynamicsMetric> tierMetrics =
-          appdynamicsDelegateService.getTierBTMetrics(appDynamicsConfig, appId, tierId, encryptionDetails);
+          appdynamicsDelegateService.getTierBTMetrics(appDynamicsConfig, appId, tierId, encryptionDetails,
+              ThirdPartyApiCallLog.builder()
+                  .accountId(getAccountId())
+                  .appId(getAppId())
+                  .delegateId(getDelegateId())
+                  .delegateTaskId(getTaskId())
+                  .stateExecutionId(dataCollectionInfo.getStateExecutionId())
+                  .build());
 
       final List<AppdynamicsMetricData> metricsData = new ArrayList<>();
       List<Callable<List<AppdynamicsMetricData>>> callables = new ArrayList<>();
@@ -118,14 +126,28 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
             for (String hostName : dataCollectionInfo.getHosts()) {
               callables.add(()
                                 -> appdynamicsDelegateService.getTierBTMetricData(appDynamicsConfig, appId, tierId,
-                                    appdynamicsMetric.getName(), hostName, DURATION_TO_ASK_MINUTES, encryptionDetails));
+                                    appdynamicsMetric.getName(), hostName, DURATION_TO_ASK_MINUTES, encryptionDetails,
+                                    ThirdPartyApiCallLog.builder()
+                                        .accountId(getAccountId())
+                                        .appId(getAppId())
+                                        .delegateId(getDelegateId())
+                                        .delegateTaskId(getTaskId())
+                                        .stateExecutionId(dataCollectionInfo.getStateExecutionId())
+                                        .build()));
             }
             break;
           case PREDICTIVE:
             callables.add(()
                               -> appdynamicsDelegateService.getTierBTMetricData(appDynamicsConfig, appId, tierId,
                                   appdynamicsMetric.getName(), null,
-                                  PREDECTIVE_HISTORY_MINUTES + DURATION_TO_ASK_MINUTES, encryptionDetails));
+                                  PREDECTIVE_HISTORY_MINUTES + DURATION_TO_ASK_MINUTES, encryptionDetails,
+                                  ThirdPartyApiCallLog.builder()
+                                      .accountId(getAccountId())
+                                      .appId(getAppId())
+                                      .delegateId(getDelegateId())
+                                      .delegateTaskId(getTaskId())
+                                      .stateExecutionId(dataCollectionInfo.getStateExecutionId())
+                                      .build()));
             break;
 
           default:

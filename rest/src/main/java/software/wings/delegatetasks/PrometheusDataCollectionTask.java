@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.exception.WingsException;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
@@ -197,8 +198,15 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
             END_TIME_PLACE_HOLDER, String.valueOf(System.currentTimeMillis() / TimeUnit.SECONDS.toMillis(1)));
 
         try {
+          ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.builder()
+                                                .accountId(getAccountId())
+                                                .appId(getAppId())
+                                                .delegateId(getDelegateId())
+                                                .delegateTaskId(getTaskId())
+                                                .stateExecutionId(dataCollectionInfo.getStateExecutionId())
+                                                .build();
           PrometheusMetricDataResponse response =
-              prometheusDelegateService.fetchMetricData(dataCollectionInfo.getPrometheusConfig(), url);
+              prometheusDelegateService.fetchMetricData(dataCollectionInfo.getPrometheusConfig(), url, apiCallLog);
           TreeBasedTable<String, Long, NewRelicMetricDataRecord> metricRecords = response.getMetricRecords(
               timeSeries.getTxnName(), timeSeries.getMetricName(), dataCollectionInfo.getApplicationId(),
               dataCollectionInfo.getWorkflowId(), dataCollectionInfo.getWorkflowExecutionId(),

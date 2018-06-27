@@ -44,7 +44,7 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
     SyncTaskContext elkTaskContext =
         aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
     return delegateProxyFactory.get(ElkDelegateService.class, elkTaskContext)
-        .getIndices(elkConfig, encryptedDataDetails);
+        .getIndices(elkConfig, encryptedDataDetails, null);
   }
 
   @Override

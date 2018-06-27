@@ -1,5 +1,8 @@
 package software.wings.service.impl.prometheus;
 
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+
 import io.harness.network.Http;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,18 +11,22 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.PrometheusConfig;
+import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.prometheus.PrometheusRestClient;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.intfc.prometheus.PrometheusDelegateService;
 import software.wings.utils.Misc;
 
 import java.io.IOException;
+import java.time.OffsetDateTime;
 
 /**
  * Created by rsingh on 3/14/18.
  */
 public class PrometheusDelegateServiceImpl implements PrometheusDelegateService {
   private static final Logger logger = LoggerFactory.getLogger(PrometheusDelegateServiceImpl.class);
+  @Inject private DelegateLogService delegateLogService;
 
   @Override
   public boolean validateConfig(PrometheusConfig prometheusConfig) throws IOException {
@@ -39,13 +46,22 @@ public class PrometheusDelegateServiceImpl implements PrometheusDelegateService 
   }
 
   @Override
-  public PrometheusMetricDataResponse fetchMetricData(PrometheusConfig prometheusConfig, String url)
-      throws IOException {
+  public PrometheusMetricDataResponse fetchMetricData(
+      PrometheusConfig prometheusConfig, String url, ThirdPartyApiCallLog apiCallLog) throws IOException {
+    Preconditions.checkNotNull(apiCallLog);
+    apiCallLog.setRequest(url);
+    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
     final Call<PrometheusMetricDataResponse> request = getRestClient(prometheusConfig).fetchMetricData(url);
     final Response<PrometheusMetricDataResponse> response = request.execute();
+    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
+    apiCallLog.setStatusCode(response.code());
     if (response.isSuccessful()) {
+      apiCallLog.setJsonResponse(response.body());
+      delegateLogService.save(prometheusConfig.getAccountId(), apiCallLog);
       return response.body();
     } else {
+      apiCallLog.setJsonResponse(response.errorBody());
+      delegateLogService.save(prometheusConfig.getAccountId(), apiCallLog);
       logger.error("Request not successful. Reason: {}, url: {}", response, url);
       throw new WingsException(response.errorBody().string());
     }

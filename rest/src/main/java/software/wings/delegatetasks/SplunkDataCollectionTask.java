@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.SplunkConfig;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.analysis.LogElement;
@@ -31,6 +32,7 @@ import java.net.URI;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +56,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
   private SplunkDataCollectionInfo dataCollectionInfo;
 
   @Inject private LogAnalysisStoreService logAnalysisStoreService;
+  @Inject private DelegateLogService delegateLogService;
 
   public SplunkDataCollectionTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> consumer,
       Supplier<Boolean> preExecute) {
@@ -242,11 +245,23 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
       jobargs.setLatestTime(String.valueOf(TimeUnit.MILLISECONDS.toSeconds(endTime)));
 
       // A blocking search returns the job when the search is done
-      logger.info("triggering splunk query startTime: " + collectionStartTime + " endTime: " + endTime
-          + " query: " + searchQuery);
+      ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.builder()
+                                            .accountId(getAccountId())
+                                            .appId(getAppId())
+                                            .delegateId(getDelegateId())
+                                            .delegateTaskId(getTaskId())
+                                            .stateExecutionId(dataCollectionInfo.getStateExecutionId())
+                                            .build();
+      apiCallLog.setRequest("triggering splunk query startTime: " + collectionStartTime + " endTime: " + endTime
+          + " query: " + searchQuery + " url: " + dataCollectionInfo.getSplunkConfig().getSplunkUrl());
+      apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
+      logger.info(apiCallLog.getRequest());
       Job job = splunkService.getJobs().create(searchQuery, jobargs);
       logger.info("splunk query done. Num of events: " + job.getEventCount() + " application: "
           + dataCollectionInfo.getApplicationId() + " stateExecutionId: " + dataCollectionInfo.getStateExecutionId());
+      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
+      apiCallLog.setResponse("splunk query done. Num of events: " + job.getEventCount());
+      delegateLogService.save(getAccountId(), apiCallLog);
 
       JobResultsArgs resultsArgs = new JobResultsArgs();
       resultsArgs.setOutputMode(JobResultsArgs.OutputMode.JSON);

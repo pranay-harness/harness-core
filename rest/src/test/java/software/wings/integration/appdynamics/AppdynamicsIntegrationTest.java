@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
 
 import com.google.inject.Inject;
 
@@ -122,7 +123,8 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
 
       for (AppdynamicsTier tier : tierRestResponse.getResource()) {
         List<AppdynamicsMetric> btMetrics = appdynamicsDelegateService.getTierBTMetrics(appDynamicsConfig,
-            application.getId(), tier.getId(), secretManager.getEncryptionDetails(appDynamicsConfig, null, null));
+            application.getId(), tier.getId(), secretManager.getEncryptionDetails(appDynamicsConfig, null, null),
+            apiCallLogWithDummyStateExecution(accountId));
 
         assertFalse(btMetrics.isEmpty());
 
