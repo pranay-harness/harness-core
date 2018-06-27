@@ -186,7 +186,7 @@ public class KubernetesContainerTask extends ContainerTask {
       String configTemplate = isNotBlank(getAdvancedConfig()) ? getAdvancedConfig() : fetchYamlConfig();
 
       if (isNotEmpty(domainName)) {
-        Pattern pattern = ContainerTask.getRegexPattern(domainName);
+        Pattern pattern = ContainerTask.compileRegexPattern(domainName);
         Matcher matcher = pattern.matcher(configTemplate);
         if (!matcher.find()) {
           imageNameTag = domainName + "/" + imageNameTag;

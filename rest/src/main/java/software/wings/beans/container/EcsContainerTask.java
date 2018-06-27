@@ -155,7 +155,7 @@ public class EcsContainerTask extends ContainerTask {
     }
 
     if (isNotEmpty(domainName)) {
-      Pattern pattern = ContainerTask.getRegexPattern(domainName);
+      Pattern pattern = ContainerTask.compileRegexPattern(domainName);
       Matcher matcher = pattern.matcher(configTemplate);
       if (!matcher.find()) {
         imageName = domainName + "/" + imageName;

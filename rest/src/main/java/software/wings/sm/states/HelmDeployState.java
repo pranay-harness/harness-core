@@ -244,7 +244,7 @@ public class HelmDeployState extends State {
 
   private String getImageName(String yamlFileContent, String imageNameTag, String domainName) {
     if (isNotEmpty(domainName)) {
-      Pattern pattern = ContainerTask.getRegexPattern(domainName);
+      Pattern pattern = ContainerTask.compileRegexPattern(domainName);
       Matcher matcher = pattern.matcher(yamlFileContent);
       if (!matcher.find()) {
         imageNameTag = domainName + "/" + imageNameTag;

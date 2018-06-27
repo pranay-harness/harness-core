@@ -76,7 +76,7 @@ public abstract class ContainerTask extends DeploymentSpecification {
     this.advancedConfig = trimYaml(advancedConfig);
   }
 
-  public static Pattern getRegexPattern(String domainName) {
+  public static Pattern compileRegexPattern(String domainName) {
     return Pattern.compile(
         DOCKER_IMAGE_NAME_REGEX + "(" + Pattern.quote(domainName) + "\\/)" + DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX);
   }
