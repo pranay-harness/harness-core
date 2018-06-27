@@ -1,0 +1,15 @@
+harnessApiVersion: '1.0'
+type: PIPELINE
+pipelineStages:
+- type: ENV_STATE
+  name: Install Manager
+  parallel: false
+  workflowName: Install Manager
+- type: ENV_STATE
+  name: Install UI (Workflow Template)
+  parallel: true
+  workflowName: Install UI
+- type: ENV_STATE
+  name: Install Learning Engine (Workflow Template)
+  parallel: true
+  workflowName: Install Learning Engine

@@ -108,5 +108,9 @@ variableOverrides:
     value: <HOST2_PLACEHOLDER>
     valueType: TEXT
   - name: FEATURES
-    value: RBAC
+    value: RBAC,HELM
+    valueType: TEXT
+  - name: UI_SERVER_URL
+    serviceName: Manager
+    value: ${serviceVariable.LOAD_BALANCER_URL}
     valueType: TEXT
