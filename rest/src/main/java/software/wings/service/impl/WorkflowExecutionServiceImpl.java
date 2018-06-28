@@ -659,6 +659,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private Tree currentTree(WorkflowExecution workflowExecution) {
+    if (workflowExecution == null) {
+      return null;
+    }
     final StateExecutionInstance last =
         wingsPersistence.createQuery(StateExecutionInstance.class)
             .filter(StateExecutionInstance.APP_ID_KEY, workflowExecution.getAppId())
@@ -667,6 +670,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .project(StateExecutionInstance.LAST_UPDATED_AT_KEY, true)
             .get();
 
+    if (last == null) {
+      return null;
+    }
     return mongoStore.<Tree>get(last.getLastUpdatedAt() + workflowExecution.getLastUpdatedAt(),
         GraphRenderer.algorithmId, Tree.structureHash, workflowExecution.getUuid());
   }
