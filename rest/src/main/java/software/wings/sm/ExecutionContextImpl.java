@@ -3,6 +3,8 @@ package software.wings.sm;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
+import static software.wings.common.Constants.ARTIFACT_FILE_NAME_VARIABLE;
+import static software.wings.sm.ContextElement.ARTIFACT;
 import static software.wings.sm.ContextElement.SAFE_DISPLAY_SERVICE_VARIABLE;
 import static software.wings.sm.ContextElement.SERVICE_VARIABLE;
 
@@ -30,6 +32,7 @@ import software.wings.common.Constants;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ExpressionEvaluator;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue;
@@ -60,6 +63,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   @Inject @Transient private SettingsService settingsService;
   @Inject @Transient private ServiceTemplateService serviceTemplateService;
   @Inject @Transient private ArtifactService artifactService;
+  @Inject private transient ArtifactStreamService artifactStreamService;
   private StateMachine stateMachine;
   private StateExecutionInstance stateExecutionInstance;
   @Transient private transient Map<String, Object> contextMap;
@@ -98,58 +102,62 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     }
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  public static void addArtifactToContext(
+      ArtifactStreamService artifactStreamService, String accountId, Map<String, Object> map, Artifact artifact) {
+    if (artifact != null) {
+      artifact.setSource(artifactStreamService.fetchArtifactSourceProperties(
+          accountId, artifact.getAppId(), artifact.getArtifactStreamId()));
+      map.put(ARTIFACT, artifact);
+      String artifactFileName = null;
+      if (isNotEmpty(artifact.getArtifactFiles())) {
+        artifactFileName = artifact.getArtifactFiles().get(0).getName();
+      } else if (artifact.getMetadata() != null) {
+        artifactFileName = artifact.getArtifactFileName();
+      }
+      if (isNotEmpty(artifactFileName)) {
+        map.put(ARTIFACT_FILE_NAME_VARIABLE, artifactFileName);
+      }
+    }
+  }
+
   @Override
   public String renderExpression(String expression) {
     Map<String, Object> context = prepareContext();
     return renderExpression(expression, context);
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
-  public String renderExpression(String expression, List<ContextElement> contextElements) {
-    Map<String, Object> context = new HashMap<>();
-    context.putAll(prepareContext());
-    for (ContextElement contextElement : contextElements) {
-      context.putAll(contextElement.paramMap(this));
+  public String renderExpression(String expression, Object addition) {
+    Map<String, Object> context = null;
+    if (addition instanceof List) {
+      List<ContextElement> contextElements = (List<ContextElement>) addition;
+      context = new HashMap<>();
+      context.putAll(prepareContext());
+      for (ContextElement contextElement : contextElements) {
+        context.putAll(contextElement.paramMap(this));
+      }
+    } else if (addition instanceof StateExecutionData) {
+      context = prepareContext((StateExecutionData) addition);
+    } else if (addition instanceof Artifact) {
+      context = prepareContext();
+      Artifact artifact = (Artifact) addition;
+      addArtifactToContext(artifactStreamService, getApp().getAccountId(), context, artifact);
     }
     return renderExpression(expression, context);
   }
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public String renderExpression(String expression, StateExecutionData stateExecutionData) {
-    Map<String, Object> context = prepareContext(stateExecutionData);
-    return renderExpression(expression, context);
-  }
-
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public Object evaluateExpression(String expression) {
     Map<String, Object> context = prepareContext();
     return evaluateExpression(expression, context);
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public Object evaluateExpression(String expression, Object stateExecutionData) {
     Map<String, Object> context = prepareContext(stateExecutionData);
     return evaluateExpression(expression, context);
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public StateExecutionData getStateExecutionData() {
     return stateExecutionInstance.getStateExecutionMap().get(stateExecutionInstance.getDisplayName());
@@ -159,17 +167,11 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     return stateExecutionInstance.getStateExecutionMap().get(stateName);
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public <T extends ContextElement> T getContextElement() {
     return (T) stateExecutionInstance.getContextElement();
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public <T extends ContextElement> T getContextElement(ContextElementType contextElementType) {
     return (T) stateExecutionInstance.getContextElements()
@@ -179,9 +181,6 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
         .orElse(null);
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public <T extends ContextElement> T getContextElement(ContextElementType contextElementType, String name) {
     return (T) stateExecutionInstance.getContextElements()
@@ -192,9 +191,6 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
         .orElse(null);
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public <T extends ContextElement> List<T> getContextElementList(ContextElementType contextElementType) {
     return stateExecutionInstance.getContextElements()
@@ -204,9 +200,6 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
         .collect(toList());
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public List<Artifact> getArtifacts() {
     WorkflowStandardParams workflowStandardParams = getContextElement(ContextElementType.STANDARD);
@@ -221,9 +214,6 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     return list;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public Artifact getArtifactForService(String serviceId) {
     WorkflowStandardParams workflowStandardParams = getContextElement(ContextElementType.STANDARD);
@@ -506,7 +496,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   @Override
   public String getAppId() {
     final ContextElement contextElement = getContextElement(ContextElementType.STANDARD);
-    if (contextElement == null || !(contextElement instanceof WorkflowStandardParams)) {
+    if (!(contextElement instanceof WorkflowStandardParams)) {
       return null;
     }
     return ((WorkflowStandardParams) contextElement).getAppId();

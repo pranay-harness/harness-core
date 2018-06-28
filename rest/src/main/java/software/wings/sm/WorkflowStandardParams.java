@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.RandomUtils.nextInt;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
-import static software.wings.common.Constants.ARTIFACT_FILE_NAME_VARIABLE;
 import static software.wings.common.Constants.PHASE_PARAM;
 
 import com.google.inject.Inject;
@@ -120,11 +119,11 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     if (serviceElement == null) {
       if (isNotEmpty(artifactIds)) {
         artifact = artifactService.get(appId, artifactIds.get(0));
-        addArtifactToContext(map, artifact);
+        ExecutionContextImpl.addArtifactToContext(artifactStreamService, getApp().getAccountId(), map, artifact);
       }
     } else {
       artifact = getArtifactForService(serviceElement.getUuid());
-      addArtifactToContext(map, artifact);
+      ExecutionContextImpl.addArtifactToContext(artifactStreamService, getApp().getAccountId(), map, artifact);
 
       List<Key<ServiceTemplate>> templateRefKeysByService =
           serviceTemplateService.getTemplateRefKeysByService(appId, serviceElement.getUuid(), envId);
@@ -155,23 +154,6 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     }
 
     return map;
-  }
-
-  private void addArtifactToContext(Map<String, Object> map, Artifact artifact) {
-    if (artifact != null) {
-      artifact.setSource(artifactStreamService.fetchArtifactSourceProperties(
-          getApp().getAccountId(), artifact.getAppId(), artifact.getArtifactStreamId()));
-      map.put(ARTIFACT, artifact);
-      String artifactFileName = null;
-      if (isNotEmpty(artifact.getArtifactFiles())) {
-        artifactFileName = artifact.getArtifactFiles().get(0).getName();
-      } else if (artifact.getMetadata() != null) {
-        artifactFileName = artifact.getArtifactFileName();
-      }
-      if (isNotEmpty(artifactFileName)) {
-        map.put(ARTIFACT_FILE_NAME_VARIABLE, artifactFileName);
-      }
-    }
   }
 
   private String buildAbsoluteUrl(String fragment) {

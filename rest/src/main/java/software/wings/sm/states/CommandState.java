@@ -368,7 +368,7 @@ public class CommandState extends State {
 
       executionDataBuilder.withActivityId(activityId);
       expandCommand(serviceInstance, command, service.getUuid(), envId);
-      renderCommandString(command, context);
+      renderCommandString(command, context, artifact);
       CommandExecutionContext commandExecutionContext =
           commandExecutionContextBuilder.withActivityId(activityId)
               .withDeploymentType(infrastructureMapping.getDeploymentType())
@@ -409,10 +409,10 @@ public class CommandState extends State {
         .build();
   }
 
-  static void renderCommandString(Command command, ExecutionContext context) {
+  static void renderCommandString(Command command, ExecutionContext context, Artifact artifact) {
     for (CommandUnit commandUnit : command.getCommandUnits()) {
       if (CommandUnitType.COMMAND.equals(commandUnit.getCommandUnitType())) {
-        renderCommandString((Command) commandUnit, context);
+        renderCommandString((Command) commandUnit, context, artifact);
         continue;
       }
 
@@ -428,7 +428,7 @@ public class CommandState extends State {
       if (isEmpty(execCommandUnit.getCommandString())) {
         continue;
       }
-      execCommandUnit.setCommandString(context.renderExpression(execCommandUnit.getCommandString()));
+      execCommandUnit.setCommandString(context.renderExpression(execCommandUnit.getCommandString(), artifact));
     }
   }
 
