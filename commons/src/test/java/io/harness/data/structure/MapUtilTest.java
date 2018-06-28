@@ -12,14 +12,14 @@ public class MapUtilTest {
   @Test
   public void shouldPutIfNotEmpty() {
     Map<String, String> input = new HashMap<>();
-    MapUtil.putIfNotEmpty("key", "value", input);
+    MapUtils.putIfNotEmpty("key", "value", input);
     assertNotNull(input.get("key"));
   }
 
   @Test
   public void shouldNotPutIfEmpty() {
     Map<String, String> input = new HashMap<>();
-    MapUtil.putIfNotEmpty("key", "", input);
+    MapUtils.putIfNotEmpty("key", "", input);
     assertNull(input.get("key"));
   }
 }

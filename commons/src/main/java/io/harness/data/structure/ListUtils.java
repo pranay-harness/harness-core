@@ -5,7 +5,7 @@ import static java.util.stream.Collectors.toList;
 
 import java.util.List;
 
-public class ListUtil {
+public class ListUtils {
   public static List<String> trimList(List<Object> objects) {
     if (objects == null) {
       return null;
