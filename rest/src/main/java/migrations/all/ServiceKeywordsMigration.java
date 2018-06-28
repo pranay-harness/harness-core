@@ -5,7 +5,7 @@ import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
-import io.harness.data.structure.ListUtil;
+import io.harness.data.structure.ListUtils;
 import migrations.Migration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +40,7 @@ public class ServiceKeywordsMigration implements Migration {
         bulkWriteOperation
             .find(
                 wingsPersistence.createQuery(Service.class).filter(Service.ID_KEY, service.getUuid()).getQueryObject())
-            .updateOne(new BasicDBObject("$set", new BasicDBObject("keywords", ListUtil.trimList(keywords))));
+            .updateOne(new BasicDBObject("$set", new BasicDBObject("keywords", ListUtils.trimList(keywords))));
       }
     }
     if (i % BATCH_SIZE != 1) {

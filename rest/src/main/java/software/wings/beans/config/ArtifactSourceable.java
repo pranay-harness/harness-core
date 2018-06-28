@@ -1,6 +1,6 @@
 package software.wings.beans.config;
 
-import static io.harness.data.structure.MapUtil.putIfNotEmpty;
+import static io.harness.data.structure.MapUtils.putIfNotEmpty;
 import static software.wings.common.Constants.ARTIFACT_SOURCE_REGISTRY_URL_KEY;
 import static software.wings.common.Constants.ARTIFACT_SOURCE_REPOSITORY_NAME_KEY;
 import static software.wings.common.Constants.ARTIFACT_SOURCE_USER_NAME_KEY;
