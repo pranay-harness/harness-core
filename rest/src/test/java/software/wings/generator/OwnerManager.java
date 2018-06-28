@@ -119,12 +119,11 @@ public class OwnerManager {
     }
 
     public InfrastructureProvisioner obtainInfrastructureProvisioner() {
-      InfrastructureProvisioner infrastructureProvisioner = objects.stream()
-                                                                .filter(obj -> obj instanceof InfrastructureProvisioner)
-                                                                .findFirst()
-                                                                .map(obj -> (InfrastructureProvisioner) obj)
-                                                                .orElse(null);
-      return infrastructureProvisioner;
+      return objects.stream()
+          .filter(obj -> obj instanceof InfrastructureProvisioner)
+          .findFirst()
+          .map(obj -> (InfrastructureProvisioner) obj)
+          .orElse(null);
     }
   }
 }

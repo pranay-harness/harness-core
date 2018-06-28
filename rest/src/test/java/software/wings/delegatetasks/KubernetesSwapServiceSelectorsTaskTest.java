@@ -41,9 +41,7 @@ public class KubernetesSwapServiceSelectorsTaskTest extends WingsBaseTest {
   private Service createService(String serviceName, Map<String, String> labelSelectors) {
     ServiceSpecBuilder spec = new ServiceSpecBuilder().withSelector(labelSelectors);
 
-    Service service =
-        new ServiceBuilder().withNewMetadata().withName(serviceName).endMetadata().withSpec(spec.build()).build();
-    return service;
+    return new ServiceBuilder().withNewMetadata().withName(serviceName).endMetadata().withSpec(spec.build()).build();
   }
 
   @Test

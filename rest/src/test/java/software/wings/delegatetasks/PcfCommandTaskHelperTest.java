@@ -89,7 +89,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
     String line;
     StringBuilder stringBuilder = new StringBuilder(128);
     while ((line = bufferedReader.readLine()) != null) {
-      stringBuilder.append(line).append("\n");
+      stringBuilder.append(line).append('\n');
     }
 
     assertEquals(MANIFEST_YAML_1, stringBuilder.toString());

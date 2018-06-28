@@ -200,7 +200,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
           .thenReturn(appTxnCall);
       Call<List<AppdynamicsMetric>> externalMetricsCall = mock(Call.class);
       AppdynamicsMetric externalCallMetric =
-          AppdynamicsMetric.builder().name("txn-" + i + "-" + EXTERNAL_CALLS + String.valueOf(i)).build();
+          AppdynamicsMetric.builder().name("txn-" + i + "-" + EXTERNAL_CALLS + i).build();
       when(externalMetricsCall.execute()).thenReturn(Response.success(Lists.newArrayList(externalCallMetric)));
 
       when(appdynamicsRestClient.listMetrices(anyString(), anyLong(),

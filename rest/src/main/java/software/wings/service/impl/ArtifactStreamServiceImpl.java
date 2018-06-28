@@ -281,7 +281,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       return artifactSourceProperties;
     }
     SettingValue settingValue = settingsService.getSettingValueById(accountId, artifactStream.getSettingId());
-    if (settingValue != null && settingValue instanceof ArtifactSourceable) {
+    if (settingValue instanceof ArtifactSourceable) {
       artifactSourceProperties.putAll(((ArtifactSourceable) settingValue).fetchArtifactSourceProperties());
     }
     artifactSourceProperties.putAll(artifactStream.fetchArtifactSourceProperties());

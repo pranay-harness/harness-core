@@ -132,7 +132,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
       phaseExecutionDataBuilder.withServiceId(service.getUuid()).withServiceName(service.getName());
     }
     PhaseExecutionData phaseExecutionData = phaseExecutionDataBuilder.build();
-    if (infrastructureMapping != null && infrastructureMapping instanceof ContainerInfrastructureMapping) {
+    if (infrastructureMapping instanceof ContainerInfrastructureMapping) {
       phaseExecutionData.setClusterName(((ContainerInfrastructureMapping) infrastructureMapping).getClusterName());
 
       StateExecutionData stateExecutionData = context.getStateExecutionData();

@@ -454,7 +454,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                         .build();
             StateExecutionData stateExecutionData = stateExecutionInstance.getStateExecutionData();
 
-            if (stateExecutionData != null && stateExecutionData instanceof ApprovalStateExecutionData) {
+            if (stateExecutionData instanceof ApprovalStateExecutionData) {
               stageExecution.setStateExecutionData(stateExecutionData);
             }
             stageExecutionDataList.add(stageExecution);
@@ -469,7 +469,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                         .build();
             StateExecutionData stateExecutionData = stateExecutionInstance.getStateExecutionData();
 
-            if (stateExecutionData != null && stateExecutionData instanceof EnvStateExecutionData) {
+            if (stateExecutionData instanceof EnvStateExecutionData) {
               EnvStateExecutionData envStateExecutionData = (EnvStateExecutionData) stateExecutionData;
               if (envStateExecutionData.getWorkflowExecutionId() != null) {
                 WorkflowExecution workflowExecution2 = getExecutionDetailsWithoutGraph(
@@ -2008,7 +2008,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     for (StateExecutionInstance stateExecutionInstance : allStateExecutionInstances) {
       StateExecutionData stateExecutionData = stateExecutionInstance.getStateExecutionData();
-      if (stateExecutionData == null || !(stateExecutionData instanceof PhaseExecutionData)) {
+      if (!(stateExecutionData instanceof PhaseExecutionData)) {
         continue;
       }
       PhaseExecutionData phaseExecutionData = (PhaseExecutionData) stateExecutionData;
