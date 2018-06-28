@@ -6,6 +6,7 @@ import migrations.all.AddUsersToAdminUserGroup;
 import migrations.all.AddValidUntilToActivity;
 import migrations.all.AddValidUntilToAlert;
 import migrations.all.AddValidUntilToDelegateTask;
+import migrations.all.DirectKubernetesOrphanRemoval;
 import migrations.all.DirectKubernetesOrphanRemovalMirgation;
 import migrations.all.DropDelegateScopeCollectionMigration;
 import migrations.all.DropStringCollectionMigration;
@@ -80,6 +81,7 @@ public class MigrationList {
         .add(Pair.of(163, PreferenceUserIdRemoveDollarSignMigration.class))
         .add(Pair.of(164, DirectKubernetesOrphanRemovalMirgation.class))
         .add(Pair.of(165, DropYamlGitSyncCollectionMigration.class))
+        .add(Pair.of(166, DirectKubernetesOrphanRemoval.class))
         .build();
   }
 }
