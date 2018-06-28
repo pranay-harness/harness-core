@@ -16,7 +16,7 @@ public class DataCollectionExecutorServiceTest extends APMStateVerificationTestB
   @Inject private DataCollectionExecutorService executorService;
 
   @Test(expected = IOException.class)
-  public void executeParrallelWithException() throws IOException {
+  public void executeParallelWithException() throws IOException {
     List<Callable<Boolean>> callables = new ArrayList<>();
     callables.add(() -> true);
     callables.add(() -> { throw new RuntimeException("fail on purpose"); });
@@ -24,14 +24,15 @@ public class DataCollectionExecutorServiceTest extends APMStateVerificationTestB
   }
 
   @Test
-  public void executeParrallel() throws IOException {
+  public void executeParallel() throws IOException {
     List<Callable<Boolean>> callables = new ArrayList<>();
     callables.add(() -> true);
     callables.add(() -> { throw new RuntimeException("fail on purpose"); });
     try {
       executorService.executeParrallel(callables);
       fail();
-    } catch (IOException ex) {
+    } catch (IOException ignore) {
+      // do nothing
     }
     callables.remove(1);
     executorService.executeParrallel(callables);

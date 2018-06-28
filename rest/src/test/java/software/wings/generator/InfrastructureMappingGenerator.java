@@ -303,8 +303,6 @@ public class InfrastructureMappingGenerator {
 
         if (infrastructureMapping != null && infrastructureMapping.getProvisionerId() != null) {
           builder.withProvisionerId(infrastructureMapping.getProvisionerId());
-        } else {
-          // throw new UnsupportedOperationException();
         }
 
         newInfrastructureMapping = builder.build();

@@ -46,7 +46,7 @@ public class MongoDBTest extends WingsBaseTest {
           assertThat(mongoEntity.getData()).isEqualTo(data);
         }
       } catch (RuntimeException e) {
-        e.printStackTrace();
+        logger.error("", e);
       }
     });
   }

@@ -273,7 +273,7 @@ public class PcfInstanceHandler extends InstanceHandler {
     }
 
     for (StepExecutionSummary stepExecutionSummary : stepExecutionSummaryList) {
-      if (stepExecutionSummary != null && stepExecutionSummary instanceof PcfDeployExecutionSummary) {
+      if (stepExecutionSummary instanceof PcfDeployExecutionSummary) {
         PcfDeployExecutionSummary pcfDeployExecutionSummary = (PcfDeployExecutionSummary) stepExecutionSummary;
 
         List<PcfServiceData> pcfServiceDatas = pcfDeployExecutionSummary.getInstaceData();

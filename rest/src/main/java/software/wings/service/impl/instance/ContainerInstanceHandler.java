@@ -489,7 +489,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
             stepExecutionSummaryList, "stepExecutionSummaryList null for " + phaseStepExecutionSummary);
 
         for (StepExecutionSummary stepExecutionSummary : stepExecutionSummaryList) {
-          if (stepExecutionSummary != null && stepExecutionSummary instanceof CommandStepExecutionSummary) {
+          if (stepExecutionSummary instanceof CommandStepExecutionSummary) {
             CommandStepExecutionSummary commandStepExecutionSummary =
                 (CommandStepExecutionSummary) stepExecutionSummary;
             if (commandStepExecutionSummary.getOldInstanceData() != null) {
