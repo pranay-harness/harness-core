@@ -521,8 +521,8 @@ public class CommandStateTest extends WingsBaseTest {
             .addCommandUnits(
                 aCommand().addCommandUnits(anExecCommandUnit().withCommandString("${var2}").build()).build())
             .build();
-    CommandState.renderCommandString(command, context);
-    verify(context, times(1)).renderExpression("${var1}");
-    verify(context, times(1)).renderExpression("${var2}");
+    CommandState.renderCommandString(command, context, null);
+    verify(context, times(1)).renderExpression("${var1}", null);
+    verify(context, times(1)).renderExpression("${var2}", null);
   }
 }

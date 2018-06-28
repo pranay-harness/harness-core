@@ -28,9 +28,7 @@ public interface ExecutionContext {
 
   String renderExpression(String expression);
 
-  String renderExpression(String expression, List<ContextElement> contextElements);
-
-  String renderExpression(String expression, StateExecutionData stateExecutionData);
+  String renderExpression(String expression, Object addition);
 
   <T extends ContextElement> T getContextElement();
 

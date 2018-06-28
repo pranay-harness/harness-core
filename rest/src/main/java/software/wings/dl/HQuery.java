@@ -35,14 +35,10 @@ public class HQuery<T> extends QueryImpl<T> {
 
   public enum QueryChecks { VALIDATE, AUTHORITY, COUNT }
 
-  @SuppressFBWarnings("MS_SHOULD_BE_FINAL")
-  public static Set<QueryChecks> allChecks = EnumSet.<QueryChecks>of(VALIDATE, AUTHORITY, COUNT);
-  @SuppressFBWarnings("MS_SHOULD_BE_FINAL")
-  public static Set<QueryChecks> excludeValidate = EnumSet.<QueryChecks>of(AUTHORITY, COUNT);
-  @SuppressFBWarnings("MS_SHOULD_BE_FINAL")
-  public static Set<QueryChecks> excludeAuthority = EnumSet.<QueryChecks>of(VALIDATE, COUNT);
-  @SuppressFBWarnings("MS_SHOULD_BE_FINAL")
-  public static Set<QueryChecks> excludeCount = EnumSet.<QueryChecks>of(AUTHORITY, VALIDATE);
+  public static final Set<QueryChecks> allChecks = EnumSet.<QueryChecks>of(VALIDATE, AUTHORITY, COUNT);
+  public static final Set<QueryChecks> excludeValidate = EnumSet.<QueryChecks>of(AUTHORITY, COUNT);
+  public static final Set<QueryChecks> excludeAuthority = EnumSet.<QueryChecks>of(VALIDATE, COUNT);
+  public static final Set<QueryChecks> excludeCount = EnumSet.<QueryChecks>of(AUTHORITY, VALIDATE);
 
   private Set<QueryChecks> queryChecks = allChecks;
 
