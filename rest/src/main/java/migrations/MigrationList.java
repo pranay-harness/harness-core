@@ -9,6 +9,7 @@ import migrations.all.AddValidUntilToDelegateTask;
 import migrations.all.DirectKubernetesOrphanRemovalMirgation;
 import migrations.all.DropDelegateScopeCollectionMigration;
 import migrations.all.DropStringCollectionMigration;
+import migrations.all.DropYamlGitSyncCollectionMigration;
 import migrations.all.EntityNameValidationMigration_All_00;
 import migrations.all.EntityNameValidationMigration_All_01;
 import migrations.all.EntityNameValidationMigration_All_02;
@@ -78,6 +79,7 @@ public class MigrationList {
         .add(Pair.of(162, DropDelegateScopeCollectionMigration.class))
         .add(Pair.of(163, PreferenceUserIdRemoveDollarSignMigration.class))
         .add(Pair.of(164, DirectKubernetesOrphanRemovalMirgation.class))
+        .add(Pair.of(165, DropYamlGitSyncCollectionMigration.class))
         .build();
   }
 }
