@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <groupId>com.github.reinert</groupId>
+  <artifactId>jjschema</artifactId>
+  <versioning>
+    <versions>
+      <version>0.9-SNAPSHOT</version>
+    </versions>
+    <lastUpdated>20160610190711</lastUpdated>
+  </versioning>
+</metadata>

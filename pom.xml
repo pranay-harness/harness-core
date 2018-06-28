@@ -417,7 +417,7 @@
             <dependency>
                 <groupId>com.github.reinert</groupId>
                 <artifactId>jjschema</artifactId>
-                <version>1.12</version>
+                <version>1.0</version>
                 <exclusions>
                     <exclusion>
                         <groupId>javax.ws.rs</groupId>
