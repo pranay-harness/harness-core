@@ -142,6 +142,8 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       context = prepareContext();
       Artifact artifact = (Artifact) addition;
       addArtifactToContext(artifactStreamService, getApp().getAccountId(), context, artifact);
+    } else {
+      context = prepareContext();
     }
     return renderExpression(expression, context);
   }
