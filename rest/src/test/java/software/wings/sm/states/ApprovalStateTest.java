@@ -9,7 +9,6 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.api.ApprovalStateExecutionData.Builder.anApprovalStateExecutionData;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.common.Constants.DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS;
@@ -37,6 +36,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.api.ApprovalStateExecutionData;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationRule;
@@ -157,11 +157,11 @@ public class ApprovalStateTest extends WingsBaseTest {
 
     when(notificationMessageResolver.getApprovalType(any())).thenReturn(WorkflowType.PIPELINE.name());
 
-    when(context.getStateExecutionData())
-        .thenReturn(anApprovalStateExecutionData()
-                        .withApprovalId("APPROVAL_ID")
-                        .withStartTs((long) (System.currentTimeMillis() - (0.6 * TimeUnit.HOURS.toMillis(1))))
-                        .build());
+    ApprovalStateExecutionData approvalStateExecutionData =
+        ApprovalStateExecutionData.builder().approvalId("APPROVAL_ID").build();
+    approvalStateExecutionData.setStartTs((long) (System.currentTimeMillis() - (0.6 * TimeUnit.HOURS.toMillis(1))));
+    when(context.getStateExecutionData()).thenReturn(approvalStateExecutionData);
+
     approvalState.handleAbortEvent(context);
     assertThat(context.getStateExecutionData()).isNotNull();
     assertThat(context.getStateExecutionData().getErrorMsg()).contains("Pipeline was not approved within 36m");
@@ -179,11 +179,10 @@ public class ApprovalStateTest extends WingsBaseTest {
 
     when(notificationMessageResolver.getApprovalType(any())).thenReturn(WorkflowType.ORCHESTRATION.name());
 
-    when(context.getStateExecutionData())
-        .thenReturn(anApprovalStateExecutionData()
-                        .withApprovalId("APPROVAL_ID")
-                        .withStartTs((long) (System.currentTimeMillis() - (0.6 * TimeUnit.HOURS.toMillis(1))))
-                        .build());
+    ApprovalStateExecutionData approvalStateExecutionData =
+        ApprovalStateExecutionData.builder().approvalId("APPROVAL_ID").build();
+    approvalStateExecutionData.setStartTs((long) (System.currentTimeMillis() - (0.6 * TimeUnit.HOURS.toMillis(1))));
+    when(context.getStateExecutionData()).thenReturn(approvalStateExecutionData);
     approvalState.handleAbortEvent(context);
     assertThat(context.getStateExecutionData()).isNotNull();
     assertThat(context.getStateExecutionData().getErrorMsg()).contains("Workflow was not approved within 36m");
@@ -201,11 +200,11 @@ public class ApprovalStateTest extends WingsBaseTest {
 
     when(notificationMessageResolver.getApprovalType(any())).thenReturn(WorkflowType.PIPELINE.name());
 
-    when(context.getStateExecutionData())
-        .thenReturn(anApprovalStateExecutionData()
-                        .withApprovalId("APPROVAL_ID")
-                        .withStartTs(System.currentTimeMillis())
-                        .build());
+    ApprovalStateExecutionData approvalStateExecutionData =
+        ApprovalStateExecutionData.builder().approvalId("APPROVAL_ID").build();
+    approvalStateExecutionData.setStartTs(System.currentTimeMillis());
+
+    when(context.getStateExecutionData()).thenReturn(approvalStateExecutionData);
     approvalState.handleAbortEvent(context);
     assertThat(context.getStateExecutionData()).isNotNull();
     assertThat(context.getStateExecutionData().getErrorMsg()).contains("Pipeline was aborted");
@@ -222,11 +221,11 @@ public class ApprovalStateTest extends WingsBaseTest {
 
     when(notificationMessageResolver.getApprovalType(any())).thenReturn(WorkflowType.ORCHESTRATION.name());
 
-    when(context.getStateExecutionData())
-        .thenReturn(anApprovalStateExecutionData()
-                        .withApprovalId("APPROVAL_ID")
-                        .withStartTs(System.currentTimeMillis())
-                        .build());
+    ApprovalStateExecutionData approvalStateExecutionData =
+        ApprovalStateExecutionData.builder().approvalId("APPROVAL_ID").build();
+    approvalStateExecutionData.setStartTs(System.currentTimeMillis());
+
+    when(context.getStateExecutionData()).thenReturn(approvalStateExecutionData);
     approvalState.handleAbortEvent(context);
     assertThat(context.getStateExecutionData()).isNotNull();
     assertThat(context.getStateExecutionData().getErrorMsg()).contains("Workflow was aborted");
@@ -235,7 +234,10 @@ public class ApprovalStateTest extends WingsBaseTest {
 
   @Test
   public void testGetPlaceholderValues() {
-    when(context.getStateExecutionData()).thenReturn(anApprovalStateExecutionData().withStartTs(100L).build());
+    ApprovalStateExecutionData approvalStateExecutionData = ApprovalStateExecutionData.builder().build();
+    approvalStateExecutionData.setStartTs(100L);
+
+    when(context.getStateExecutionData()).thenReturn(approvalStateExecutionData);
 
     approvalState.getPlaceholderValues(context, USER_NAME_1_KEY, ABORTED);
     verify(notificationMessageResolver)

@@ -49,6 +49,9 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import software.wings.WingsBaseTest;
+import software.wings.api.ApprovalStateExecutionData;
+import software.wings.beans.ApprovalDetails;
+import software.wings.beans.ApprovalDetails.Action;
 import software.wings.beans.EntityType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionArgs;
@@ -68,6 +71,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachineExecutionSimulator;
 import software.wings.waitnotify.NotifyEventListener;
 
@@ -108,6 +112,8 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   @Mock private UpdateOperations<WorkflowExecution> updateOperations;
   @Mock private UpdateResults updateResults;
   @Mock WriteResult writeResult;
+  @Mock Query<StateExecutionInstance> statequery;
+  @Mock StateExecutionInstance stateExecutionInstance;
 
   /**
    * test setup.
@@ -128,6 +134,8 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     when(wingsPersistence.update(query, updateOperations)).thenReturn(updateResults);
     when(updateResults.getWriteResult()).thenReturn(writeResult);
     when(writeResult.getN()).thenReturn(1);
+
+    when(wingsPersistence.createQuery(eq(StateExecutionInstance.class))).thenReturn(statequery);
   }
 
   @Test
@@ -312,6 +320,86 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     HIterator<WorkflowExecution> executionIterator =
         workflowExecutionService.obtainWorkflowExecutionIterator(Arrays.asList(APP_ID), fromDateEpochMilli);
     assertNotNull(executionIterator);
+  }
+
+  @Test
+  public void shouldTestWorkflowApproval() {
+    String workflowExecutionId = generateUuid();
+    WorkflowExecution workflowExecution = aWorkflowExecution()
+                                              .withAppId(APP_ID)
+                                              .withAppName(APP_NAME)
+                                              .withEnvType(NON_PROD)
+                                              .withStatus(ExecutionStatus.PAUSED)
+                                              .withWorkflowType(WorkflowType.ORCHESTRATION)
+                                              .withUuid(workflowExecutionId)
+                                              .build();
+
+    when(workflowExecutionService.getWorkflowExecution(APP_ID, workflowExecutionId)).thenReturn(workflowExecution);
+
+    String approvalId = generateUuid();
+    ApprovalDetails approvalDetails = new ApprovalDetails();
+    approvalDetails.setApprovalId(approvalId);
+    approvalDetails.setAction(Action.APPROVE);
+
+    String stateExecutionId = generateUuid();
+    ApprovalStateExecutionData approvalStateExecutionData =
+        ApprovalStateExecutionData.builder().status(ExecutionStatus.PAUSED).approvalId(approvalId).build();
+
+    when(stateExecutionInstance.getStateExecutionData()).thenReturn(approvalStateExecutionData);
+
+    // Return mock StateExecutionInstance object
+    when(statequery.field(any())).thenReturn(end);
+    when(end.in(any())).thenReturn(statequery);
+    when(end.greaterThanOrEq(any())).thenReturn(statequery);
+    when(end.hasAnyOf(any())).thenReturn(statequery);
+    when(end.doesNotExist()).thenReturn(statequery);
+    when(statequery.filter(any(), any())).thenReturn(statequery);
+    when(wingsPersistence.createQuery(StateExecutionInstance.class).filter(any(), any()).get())
+        .thenReturn(stateExecutionInstance);
+
+    boolean success = workflowExecutionService.approveOrRejectExecution(
+        APP_ID, workflowExecutionId, stateExecutionId, approvalDetails);
+    assertThat(success == true);
+  }
+
+  @Test
+  public void shouldTestWorkflowReject() {
+    String workflowExecutionId = generateUuid();
+    WorkflowExecution workflowExecution = aWorkflowExecution()
+                                              .withAppId(APP_ID)
+                                              .withAppName(APP_NAME)
+                                              .withEnvType(NON_PROD)
+                                              .withStatus(ExecutionStatus.PAUSED)
+                                              .withWorkflowType(WorkflowType.ORCHESTRATION)
+                                              .withUuid(workflowExecutionId)
+                                              .build();
+
+    when(workflowExecutionService.getWorkflowExecution(APP_ID, workflowExecutionId)).thenReturn(workflowExecution);
+
+    String approvalId = generateUuid();
+    ApprovalDetails approvalDetails = new ApprovalDetails();
+    approvalDetails.setApprovalId(approvalId);
+    approvalDetails.setAction(Action.REJECT);
+
+    String stateExecutionId = generateUuid();
+    ApprovalStateExecutionData approvalStateExecutionData =
+        ApprovalStateExecutionData.builder().status(ExecutionStatus.PAUSED).approvalId(approvalId).build();
+
+    when(stateExecutionInstance.getStateExecutionData()).thenReturn(approvalStateExecutionData);
+
+    // Return mock StateExecutionInstance object
+    when(statequery.field(any())).thenReturn(end);
+    when(end.in(any())).thenReturn(statequery);
+    when(end.greaterThanOrEq(any())).thenReturn(statequery);
+    when(end.hasAnyOf(any())).thenReturn(statequery);
+    when(end.doesNotExist()).thenReturn(statequery);
+    when(statequery.filter(any(), any())).thenReturn(statequery);
+    when(wingsPersistence.createQuery(StateExecutionInstance.class).filter(any(), any()).get())
+        .thenReturn(stateExecutionInstance);
+
+    boolean success = workflowExecutionService.approveOrRejectExecution(
+        APP_ID, workflowExecutionId, stateExecutionId, approvalDetails);
+    assertThat(success == true);
   }
 
   @Test

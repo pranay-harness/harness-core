@@ -4,7 +4,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
-import static software.wings.api.ApprovalStateExecutionData.Builder.anApprovalStateExecutionData;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
@@ -83,7 +82,7 @@ public class ApprovalState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     String approvalId = generateUuid();
-    ApprovalStateExecutionData executionData = anApprovalStateExecutionData().withApprovalId(approvalId).build();
+    ApprovalStateExecutionData executionData = ApprovalStateExecutionData.builder().approvalId(approvalId).build();
 
     if (disable) {
       return anExecutionResponse()
