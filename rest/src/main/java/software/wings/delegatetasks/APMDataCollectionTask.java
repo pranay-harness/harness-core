@@ -40,6 +40,7 @@ import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -403,24 +404,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
             });
 
             dataCollectionMinute = currentElapsedTime - 1;
-            int heartbeatCounter = 0;
-            for (String group : groupNameSet) {
-              // HeartBeat
-              records.put(HARNESS_HEARTBEAT_METRIC_NAME + group, (long) heartbeatCounter++,
-                  NewRelicMetricDataRecord.builder()
-                      .stateType(getStateType())
-                      .name(HARNESS_HEARTBEAT_METRIC_NAME)
-                      .workflowId(dataCollectionInfo.getWorkflowId())
-                      .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
-                      .serviceId(dataCollectionInfo.getServiceId())
-                      .stateExecutionId(dataCollectionInfo.getStateExecutionId())
-                      .appId(dataCollectionInfo.getApplicationId())
-                      .dataCollectionMinute(dataCollectionMinute)
-                      .timeStamp(collectionStartTime)
-                      .level(ClusterLevel.H0)
-                      .groupName(group)
-                      .build());
-            }
+            addHeartbeatRecords(groupNameSet, records);
             List<NewRelicMetricDataRecord> allMetricRecords = getAllMetricRecords(records);
 
             if (!saveMetrics(dataCollectionInfo.getAccountId(), dataCollectionInfo.getApplicationId(),
@@ -465,6 +449,31 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
         logger.info(dataCollectionInfo.getStateType() + ": Shutting down apm data collection");
         shutDownCollection();
         return;
+      }
+    }
+
+    private void addHeartbeatRecords(
+        Set<String> groupNameSet, TreeBasedTable<String, Long, NewRelicMetricDataRecord> records) {
+      if (isEmpty(groupNameSet)) {
+        groupNameSet = new HashSet<>(Arrays.asList(NewRelicMetricDataRecord.DEFAULT_GROUP_NAME));
+      }
+      for (String group : groupNameSet) {
+        // HeartBeat
+        int heartbeatCounter = 0;
+        records.put(HARNESS_HEARTBEAT_METRIC_NAME + group, (long) heartbeatCounter++,
+            NewRelicMetricDataRecord.builder()
+                .stateType(getStateType())
+                .name(HARNESS_HEARTBEAT_METRIC_NAME)
+                .workflowId(dataCollectionInfo.getWorkflowId())
+                .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
+                .serviceId(dataCollectionInfo.getServiceId())
+                .stateExecutionId(dataCollectionInfo.getStateExecutionId())
+                .appId(dataCollectionInfo.getApplicationId())
+                .dataCollectionMinute(dataCollectionMinute)
+                .timeStamp(collectionStartTime)
+                .level(ClusterLevel.H0)
+                .groupName(group)
+                .build());
       }
     }
   }
