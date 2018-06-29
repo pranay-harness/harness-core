@@ -114,6 +114,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Consumer;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -576,26 +577,12 @@ public class StateMachineExecutor {
         break;
       }
       case PAUSE: {
-        UpdateOperations<StateExecutionInstance> ops =
-            wingsPersistence.createUpdateOperations(StateExecutionInstance.class);
-        ops.set(StateExecutionInstance.STATUS_KEY, WAITING);
+        updateStatus(stateExecutionInstance, WAITING, brokeStatuses(), null, ops -> {
+          if (executionEventAdvice.getStateParams() != null) {
+            ops.set("stateParams", executionEventAdvice.getStateParams());
+          }
+        });
 
-        if (executionEventAdvice.getStateParams() != null) {
-          ops.set("stateParams", executionEventAdvice.getStateParams());
-        }
-
-        Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
-                                                  .filter("appId", stateExecutionInstance.getAppId())
-                                                  .filter(ID_KEY, stateExecutionInstance.getUuid())
-                                                  .field(StateExecutionInstance.STATUS_KEY)
-                                                  .in(brokeStatuses());
-        UpdateResults updateResult = wingsPersistence.update(query, ops);
-        if (updateResult == null || updateResult.getWriteResult() == null
-            || updateResult.getWriteResult().getN() != 1) {
-          logger.error(
-              "StateExecutionInstance status could not be updated- stateExecutionInstance: {}, status: {}, existingExecutionStatus: {}, stateParams: {}",
-              stateExecutionInstance.getUuid(), status, brokeStatuses(), executionEventAdvice.getStateParams());
-        }
         // Open an alert
         openAnAlert(context, stateExecutionInstance);
         sendManualInterventionNeededNotification(context);
@@ -969,34 +956,36 @@ public class StateMachineExecutor {
   }
 
   private boolean updateStartStatus(StateExecutionInstance stateExecutionInstance, ExecutionStatus status,
-      List<ExecutionStatus> existingExecutionStatus, ExecutionInterrupt reason) {
+      Collection<ExecutionStatus> existingExecutionStatus, ExecutionInterrupt reason) {
     stateExecutionInstance.setStartTs(System.currentTimeMillis());
-    return updateStatus(stateExecutionInstance, "startTs", stateExecutionInstance.getStartTs(), status,
-        existingExecutionStatus, reason);
+    return updateStatus(stateExecutionInstance, status, existingExecutionStatus, reason,
+        ops -> { ops.set("startTs", stateExecutionInstance.getStartTs()); });
   }
 
   private boolean updateEndStatus(StateExecutionInstance stateExecutionInstance, ExecutionStatus status,
-      List<ExecutionStatus> existingExecutionStatus) {
+      Collection<ExecutionStatus> existingExecutionStatus) {
     stateExecutionInstance.setEndTs(System.currentTimeMillis());
-    return updateStatus(
-        stateExecutionInstance, "endTs", stateExecutionInstance.getStartTs(), status, existingExecutionStatus, null);
+    return updateStatus(stateExecutionInstance, status, existingExecutionStatus, null,
+        ops -> { ops.set("endTs", stateExecutionInstance.getEndTs()); });
   }
 
   private boolean updateStatus(StateExecutionInstance stateExecutionInstance, ExecutionStatus status,
-      List<ExecutionStatus> existingExecutionStatus, ExecutionInterrupt reason) {
-    return updateStatus(stateExecutionInstance, null, null, status, existingExecutionStatus, reason);
+      Collection<ExecutionStatus> existingExecutionStatus, ExecutionInterrupt reason) {
+    return updateStatus(stateExecutionInstance, status, existingExecutionStatus, reason, null);
   }
 
-  private boolean updateStatus(StateExecutionInstance stateExecutionInstance, String tsField, Long tsValue,
-      ExecutionStatus status, List<ExecutionStatus> existingExecutionStatus, ExecutionInterrupt reason) {
+  private boolean updateStatus(StateExecutionInstance stateExecutionInstance, ExecutionStatus status,
+      Collection<ExecutionStatus> existingExecutionStatus, ExecutionInterrupt reason,
+      Consumer<UpdateOperations<StateExecutionInstance>> more) {
     UpdateOperations<StateExecutionInstance> ops =
         wingsPersistence.createUpdateOperations(StateExecutionInstance.class);
 
     statusUpdateOperation(stateExecutionInstance, status, ops);
 
-    if (tsField != null) {
-      ops.set(tsField, tsValue);
+    if (more != null) {
+      more.accept(ops);
     }
+
     if (reason != null) {
       if (stateExecutionInstance.getUuid().equals(reason.getStateExecutionInstanceId())) {
         logger.error(
@@ -1017,9 +1006,9 @@ public class StateMachineExecutor {
             .in(existingExecutionStatus);
     UpdateResults updateResult = wingsPersistence.update(query, ops);
     if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() != 1) {
-      logger.warn("StateExecutionInstance status could not be updated - "
-              + "stateExecutionInstance: {}, tsField: {}, tsValue: {}, status: {}, existingExecutionStatus: {}, ",
-          stateExecutionInstance.getUuid(), tsField, tsValue, status, existingExecutionStatus);
+      logger.error("StateExecutionInstance status could not be updated - "
+              + "stateExecutionInstance: {},  status: {}, existingExecutionStatus: {}, ",
+          stateExecutionInstance.getUuid(), status, existingExecutionStatus);
       return false;
     }
     return true;
@@ -1427,6 +1416,7 @@ public class StateMachineExecutor {
 
     UpdateOperations<StateExecutionInstance> ops =
         wingsPersistence.createUpdateOperations(StateExecutionInstance.class);
+
     ops.set(StateExecutionInstance.STATUS_KEY, DISCONTINUING);
 
     if (workflowExecutionInterrupt != null) {
