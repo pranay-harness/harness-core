@@ -30,6 +30,7 @@ import java.util.List;
 @JsonSubTypes({
   @Type(value = BasicWorkflowYaml.class, name = "BASIC")
   , @Type(value = RollingWorkflowYaml.class, name = "ROLLING"),
+      @Type(value = BlueGreenWorkflowYaml.class, name = "BLUE_GREEN"),
       @Type(value = CanaryWorkflowYaml.class, name = "CANARY"), @Type(value = BuildWorkflowYaml.class, name = "BUILD"),
       @Type(value = MultiServiceWorkflowYaml.class, name = "MULTI_SERVICE")
 })
