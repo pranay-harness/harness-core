@@ -250,10 +250,11 @@ public class ExecutionResource {
   @ExceptionMetered
   @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
   public RestResponse approveOrRejectExecution(@QueryParam("appId") String appId,
+      @QueryParam("stateExecutionId") String stateExecutionId,
       @PathParam("workflowExecutionId") String workflowExecutionId, ApprovalDetails approvalDetails) {
     authorize(appId, workflowExecutionId, EXECUTE);
-    return new RestResponse<>(
-        workflowExecutionService.approveOrRejectExecution(appId, workflowExecutionId, approvalDetails));
+    return new RestResponse<>(workflowExecutionService.approveOrRejectExecution(
+        appId, workflowExecutionId, stateExecutionId, approvalDetails));
   }
 
   /**

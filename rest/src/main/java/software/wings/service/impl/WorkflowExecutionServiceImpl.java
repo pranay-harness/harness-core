@@ -20,7 +20,6 @@ import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.api.ApprovalStateExecutionData.Builder.anApprovalStateExecutionData;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.ApprovalDetails.Action.APPROVE;
 import static software.wings.beans.ApprovalDetails.Action.REJECT;
@@ -359,41 +358,72 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
-  public boolean approveOrRejectExecution(String appId, String workflowExecutionId, ApprovalDetails approvalDetails) {
+  public boolean approveOrRejectExecution(
+      String appId, String workflowExecutionId, String stateExecutionId, ApprovalDetails approvalDetails) {
     notNullCheck("ApprovalDetails", approvalDetails, USER);
     String approvalId = approvalDetails.getApprovalId();
 
     WorkflowExecution workflowExecution = getWorkflowExecution(appId, workflowExecutionId);
     notNullCheck("workflowExecution", workflowExecution, USER);
 
-    if (!isPipelineWaitingApproval(workflowExecution.getPipelineExecution(), approvalId)) {
-      throw new WingsException(INVALID_ARGUMENT, USER)
-          .addParam("args",
-              "No Pipeline execution [" + workflowExecutionId
-                  + "] waiting for approval id: " + approvalDetails.getApprovalId());
+    notNullCheck("appId", appId, USER);
+    notNullCheck("workflowExecutionId", workflowExecutionId, USER);
+
+    // Pipeline approval
+    if (workflowExecution.getWorkflowType().equals(WorkflowType.PIPELINE)) {
+      if (!isPipelineWaitingApproval(workflowExecution.getPipelineExecution(), approvalId)) {
+        throw new WingsException(INVALID_ARGUMENT, USER)
+            .addParam("args",
+                "No Pipeline execution [" + workflowExecutionId
+                    + "] waiting for approval id: " + approvalDetails.getApprovalId());
+      }
     }
+
+    // Workflow approval
+    if (workflowExecution.getWorkflowType().equals(WorkflowType.ORCHESTRATION)) {
+      if (!isWorkflowWaitingApproval(workflowExecution, workflowExecutionId, stateExecutionId, approvalDetails)) {
+        throw new WingsException(INVALID_ARGUMENT, USER)
+            .addParam("args",
+                "No Workflow execution [" + workflowExecutionId
+                    + "] waiting for approval id: " + approvalDetails.getApprovalId());
+      }
+    }
+
     User user = UserThreadLocal.get();
     if (user != null) {
       approvalDetails.setApprovedBy(EmbeddedUser.builder().email(user.getEmail()).name(user.getName()).build());
     }
     ApprovalStateExecutionData executionData = null;
     if (approvalDetails.getAction() == null || approvalDetails.getAction().equals(APPROVE)) {
-      logger.debug("Notifying to approve the pipeline execution {} for approval id {} ", workflowExecutionId,
-          approvalDetails.getApprovalId());
-      executionData = anApprovalStateExecutionData()
-                          .withApprovalId(approvalDetails.getApprovalId())
-                          .withStatus(ExecutionStatus.SUCCESS)
-                          .withApprovedBy(approvalDetails.getApprovedBy())
-                          .withComments(approvalDetails.getComments())
+      if (WorkflowType.PIPELINE.equals(workflowExecution.getWorkflowType())) {
+        logger.debug("Notifying to approve the pipeline execution {} for approval id {} ", workflowExecutionId,
+            approvalDetails.getApprovalId());
+      }
+      if (WorkflowType.ORCHESTRATION.equals(workflowExecution.getWorkflowType())) {
+        logger.debug("Notifying to approve the workflow execution {} for approval id {} ", workflowExecutionId,
+            approvalDetails.getApprovalId());
+      }
+      executionData = ApprovalStateExecutionData.builder()
+                          .approvalId(approvalDetails.getApprovalId())
+                          .approvedBy(approvalDetails.getApprovedBy())
+                          .comments(approvalDetails.getComments())
+                          .status(ExecutionStatus.SUCCESS)
                           .build();
+
     } else if (approvalDetails.getAction().equals(REJECT)) {
-      logger.debug("Notifying to reject the pipeline execution {} for approval id {} ", workflowExecutionId,
-          approvalDetails.getApprovalId());
-      executionData = anApprovalStateExecutionData()
-                          .withApprovalId(approvalDetails.getApprovalId())
-                          .withStatus(ExecutionStatus.REJECTED)
-                          .withApprovedBy(approvalDetails.getApprovedBy())
-                          .withComments(approvalDetails.getComments())
+      if (WorkflowType.PIPELINE.equals(workflowExecution.getWorkflowType())) {
+        logger.debug("Notifying to reject the pipeline execution {} for approval id {} ", workflowExecutionId,
+            approvalDetails.getApprovalId());
+      }
+      if (WorkflowType.ORCHESTRATION.equals(workflowExecution.getWorkflowType())) {
+        logger.debug("Notifying to reject the workflow execution {} for approval id {} ", workflowExecutionId,
+            approvalDetails.getApprovalId());
+      }
+      executionData = ApprovalStateExecutionData.builder()
+                          .approvalId(approvalDetails.getApprovalId())
+                          .approvedBy(approvalDetails.getApprovedBy())
+                          .comments(approvalDetails.getComments())
+                          .status(ExecutionStatus.REJECTED)
                           .build();
     }
     waitNotifyEngine.notify(approvalDetails.getApprovalId(), executionData);
@@ -408,6 +438,40 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return pipelineExecution.getPipelineStageExecutions().stream().anyMatch(pe
         -> pe.getStatus() == PAUSED && pe.getStateExecutionData() instanceof ApprovalStateExecutionData
             && approvalId.equals(((ApprovalStateExecutionData) pe.getStateExecutionData()).getApprovalId()));
+  }
+
+  private boolean isWorkflowWaitingApproval(WorkflowExecution workflowExecution, String workflowExecutionId,
+      String stateExecutionId, ApprovalDetails approvalDetails) {
+    if (workflowExecution == null || approvalDetails == null || workflowExecutionId == null) {
+      return false;
+    }
+    if (stateExecutionId != null) {
+      StateExecutionInstance stateExecutionInstance =
+          wingsPersistence.createQuery(StateExecutionInstance.class).filter(ID_KEY, stateExecutionId).get();
+
+      ApprovalStateExecutionData approvalStateExecutionData =
+          (ApprovalStateExecutionData) stateExecutionInstance.getStateExecutionData();
+      // Check for Approval Id in PAUSED status
+      if (approvalStateExecutionData != null) {
+        return approvalStateExecutionData.getStatus().equals(ExecutionStatus.PAUSED)
+            && approvalStateExecutionData.getApprovalId().equals(approvalDetails.getApprovalId());
+      }
+    } else {
+      List<StateExecutionInstance> stateExecutionInstances = getStateExecutionInstances(workflowExecution);
+      for (StateExecutionInstance stateExecutionInstance : stateExecutionInstances) {
+        if (stateExecutionInstance.getStateExecutionData() instanceof ApprovalStateExecutionData) {
+          ApprovalStateExecutionData approvalStateExecutionData =
+              (ApprovalStateExecutionData) stateExecutionInstance.getStateExecutionData();
+          // Check for Approval Id in PAUSED status
+          if (approvalStateExecutionData != null
+              && approvalStateExecutionData.getStatus().equals(ExecutionStatus.PAUSED)
+              && approvalStateExecutionData.getApprovalId().equals(approvalDetails.getApprovalId())) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
   }
 
   private void refreshPipelineExecution(WorkflowExecution workflowExecution) {

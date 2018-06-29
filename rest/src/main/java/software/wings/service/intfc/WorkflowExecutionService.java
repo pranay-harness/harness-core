@@ -109,7 +109,8 @@ public interface WorkflowExecutionService {
 
   boolean updateNotes(String appId, String workflowExecutionId, ExecutionArgs executionArgs);
 
-  boolean approveOrRejectExecution(String appId, String workflowExecutionId, ApprovalDetails approvalDetails);
+  boolean approveOrRejectExecution(
+      String appId, String workflowExecutionId, String stateExecutionId, ApprovalDetails approvalDetails);
 
   List<Artifact> getArtifactsCollected(String appId, String executionUuid);
 
