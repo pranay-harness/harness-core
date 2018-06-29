@@ -1057,15 +1057,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
-      try {
-        SyncTaskContext syncTaskContext = aContext().withAccountId(computeProviderSetting.getAccountId()).build();
-        AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-        return delegateProxyFactory.get(AwsEc2Service.class, syncTaskContext)
-            .getTags(awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
-      } catch (Exception e) {
-        logger.warn(Misc.getMessage(e), e);
-        throw new InvalidRequestException(Misc.getMessage(e), USER);
-      }
+      AwsInfrastructureProvider infrastructureProvider =
+          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
+      return infrastructureProvider.listTags(computeProviderSetting, region);
     }
     return Collections.emptySet();
   }
@@ -1323,10 +1317,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public List<String> listElasticLoadBalancer(String accessKey, char[] secretKey, String region, String accountId) {
+  public List<String> listElasticLoadBalancer(String accessKey, char[] secretKey, String region) {
     AwsInfrastructureProvider infrastructureProvider =
         (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
-    return infrastructureProvider.listClassicLoadBalancers(accessKey, secretKey, region, accountId);
+    return infrastructureProvider.listClassicLoadBalancers(accessKey, secretKey, region);
   }
 
   @Override

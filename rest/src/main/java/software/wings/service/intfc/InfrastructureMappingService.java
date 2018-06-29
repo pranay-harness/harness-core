@@ -89,8 +89,7 @@ public interface InfrastructureMappingService extends OwnedByEnvironment, OwnedB
 
   List<HostValidationResponse> validateHost(@Valid HostValidationRequest validationRequest);
 
-  List<String> listElasticLoadBalancer(
-      @NotNull String accessKey, @NotNull char[] secretKey, @NotNull String region, @NotEmpty String accountId);
+  List<String> listElasticLoadBalancer(@NotNull String accessKey, @NotNull char[] secretKey, @NotNull String region);
 
   List<String> listCodeDeployApplicationNames(String computeProviderId, String region);
 
