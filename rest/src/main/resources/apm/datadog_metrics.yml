@@ -65,4 +65,22 @@ Kubernetes:
       displayName: K8 Filesystem usage
 
 
+Docker:
+  -
+      metricName: docker.cpu.usage
+      mlMetricType: INFRA
+      datadogMetricType: Docker
+      displayName: Docker CPU Usage
 
+  -
+      metricName: docker.mem.rss
+      mlMetricType: INFRA
+      datadogMetricType: Docker
+      displayName: Docker RSS Memory (%)
+      transformation: /docker.mem.limit{$harness_batch{pod_name:${host}, '|'}}.rollup(avg,60)*100
+
+  -
+      metricName: docker.cpu.throttled
+      mlMetricType: INFRA
+      datadogMetricType: Docker
+      displayName: Docker CPU Throttled

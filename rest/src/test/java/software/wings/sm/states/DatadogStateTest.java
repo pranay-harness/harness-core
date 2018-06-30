@@ -75,6 +75,20 @@ public class DatadogStateTest extends WingsBaseTest {
         JsonUtils.asJson(apmMetricInfos));
   }
 
+  @Test
+  public void metricEndpointsInfoDocker() {
+    Map<String, List<APMMetricInfo>> metricEndpointsInfo =
+        DatadogState.metricEndpointsInfo("todolist", Lists.newArrayList("docker.cpu.usage"));
+    assertEquals(1, metricEndpointsInfo.size());
+    List<APMMetricInfo> apmMetricInfos = metricEndpointsInfo.values().iterator().next();
+    String query =
+        "query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=docker.cpu.usage{$harness_batch{pod_name:${host}, '|'}}by{pod_name}.rollup(avg,60)";
+    assertEquals("Transformed query must be same", query, metricEndpointsInfo.keySet().iterator().next());
+    assertEquals(
+        "[{\"metricName\":\"Docker CPU Usage\",\"responseMappers\":{\"host\":{\"fieldName\":\"host\",\"jsonPath\":\"series[*].scope\",\"regexs\":[\"((?<=pod_name:)([^,]*))\"]},\"value\":{\"fieldName\":\"value\",\"jsonPath\":\"series[*].pointlist[*].[1]\"},\"txnName\":{\"fieldName\":\"txnName\",\"jsonPath\":\"series[*].metric\",\"regexs\":[\"((?<=[(]|^)[^(]([^ /|+|-|*]*))\"]},\"timestamp\":{\"fieldName\":\"timestamp\",\"jsonPath\":\"series[*].pointlist[*].[0]\"}},\"metricType\":{},\"tag\":\"Docker\"}]",
+        JsonUtils.asJson(apmMetricInfos));
+  }
+
   @Test(expected = WingsException.class)
   public void testBadMetric() {
     Map<String, List<APMMetricInfo>> metricEndpointsInfo =
