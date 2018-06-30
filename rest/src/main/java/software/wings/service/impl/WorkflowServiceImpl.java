@@ -2258,11 +2258,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                                     .build())
                                        .build());
       }
+
+      Map<String, Object> defaultKubernetesSetupServices = new HashMap<>();
+      defaultKubernetesSetupServices.put("replicationControllerName", "${app.name}-${service.name}-${env.name}");
+
       workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
                                      .addStep(aGraphNode()
                                                   .withId(generateUuid())
                                                   .withType(KUBERNETES_SETUP.name())
                                                   .withName(Constants.KUBERNETES_SERVICE_SETUP)
+                                                  .withProperties(defaultKubernetesSetupServices)
                                                   .build())
                                      .build());
     }
