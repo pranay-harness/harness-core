@@ -57,6 +57,8 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.observer.Subject;
+import lombok.Getter;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
@@ -125,6 +127,9 @@ import javax.validation.constraints.NotNull;
 @Singleton
 public class StateMachineExecutor {
   private static final Logger logger = LoggerFactory.getLogger(StateMachineExecutor.class);
+
+  @Getter private Subject<StateStatusUpdate> statusUpdateSubject = new Subject<>();
+
   @Inject private ExecutorService executorService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WaitNotifyEngine waitNotifyEngine;
@@ -1011,6 +1016,9 @@ public class StateMachineExecutor {
           stateExecutionInstance.getUuid(), status, existingExecutionStatus);
       return false;
     }
+
+    statusUpdateSubject.fireInform(StateStatusUpdate::stateExecutionStatusUpdated,
+        stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getUuid(), status);
     return true;
   }
 
@@ -1110,16 +1118,17 @@ public class StateMachineExecutor {
     ops.set("stateExecutionMap", stateExecutionInstance.getStateExecutionMap());
 
     UpdateResults updateResult = wingsPersistence.update(query, ops);
-    boolean updated = true;
     if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() != 1) {
       logger.warn("StateExecutionInstance status could not be updated -"
               + " stateExecutionInstance: {}, stateExecutionData: {}, status: {}, errorMsg: {}, ",
           stateExecutionInstance.getUuid(), stateExecutionData, status, errorMsg);
 
-      updated = false;
+      return false;
     }
 
-    return updated;
+    statusUpdateSubject.fireInform(StateStatusUpdate::stateExecutionStatusUpdated,
+        stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getUuid(), status);
+    return true;
   }
 
   /**
@@ -1387,6 +1396,8 @@ public class StateMachineExecutor {
     if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() != 1) {
       throw new WingsException(ErrorCode.RETRY_FAILED).addParam("displayName", stateExecutionInstance.getDisplayName());
     }
+    statusUpdateSubject.fireInform(StateStatusUpdate::stateExecutionStatusUpdated,
+        stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getUuid(), NEW);
   }
 
   @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE") // TODO

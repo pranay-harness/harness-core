@@ -76,6 +76,7 @@ import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.MigrationService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.StateMachineExecutor;
 import software.wings.utils.JsonSubtypeResolver;
 import software.wings.waitnotify.Notifier;
 import software.wings.waitnotify.NotifyResponseCleanupHandler;
@@ -331,8 +332,11 @@ public class WingsApplication extends Application<MainConfiguration> {
   public static void registerObservers(Injector injector) {
     SettingsServiceImpl settingsService = (SettingsServiceImpl) injector.getInstance(Key.get(SettingsService.class));
     WorkflowServiceImpl workflowService = (WorkflowServiceImpl) injector.getInstance(Key.get(WorkflowService.class));
+    StateMachineExecutor stateMachineExecutor = injector.getInstance(Key.get(StateMachineExecutor.class));
 
     settingsService.getManipulationSubject().register(workflowService);
+
+    stateMachineExecutor.getStatusUpdateSubject().register(workflowService);
   }
 
   private void registerCronJobs(Injector injector) {

@@ -28,9 +28,11 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.BarrierService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionInterruptManager;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateMachineExecutionCallback;
 import software.wings.sm.states.EnvState.EnvExecutionResponseData;
@@ -55,6 +57,8 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   @Inject private AlertService alertService;
   @Inject private TriggerService triggerService;
   @Inject private BarrierService barrierService;
+  @Inject private StateExecutionService stateExecutionService;
+  @Inject private ExecutionInterruptManager executionInterruptManager;
 
   /**
    * Instantiates a new workflow execution update.
