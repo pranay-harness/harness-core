@@ -259,7 +259,7 @@ public class
         newMetricInfoBuilder.responseMappers(metricInfo.responseMapperMap());
         newMetricInfoBuilder.metricName(metric.getDisplayName());
 
-        if (Arrays.asList("System", "Kubernetes").contains(metric.getDatadogMetricType())) {
+        if (Arrays.asList("System", "Kubernetes", "Docker").contains(metric.getDatadogMetricType())) {
           metricUrl = metricUrl.replace("${query}", metric.getMetricName());
           if (EmptyPredicate.isEmpty(metric.getTransformation())) {
             metricUrl = metricUrl.replace("${transformUnits}", "");
