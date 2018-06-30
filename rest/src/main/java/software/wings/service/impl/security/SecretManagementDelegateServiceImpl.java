@@ -186,6 +186,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     if (data.getEncryptedValue() == null) {
       return null;
     }
+    logger.info("reading secret {} from vault {}", data.getEncryptionKey(), vaultConfig.getVaultUrl());
     Call<VaultReadResponse> request =
         getVaultRestClient(vaultConfig).readSecret(String.valueOf(vaultConfig.getAuthToken()), data.getEncryptionKey());
 
