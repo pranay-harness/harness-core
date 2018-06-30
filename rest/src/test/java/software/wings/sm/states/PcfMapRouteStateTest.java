@@ -183,7 +183,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
                   .tempRouteMap(Arrays.asList("R3"))
                   .appsToBeDownsized(Arrays.asList("APP_NAME_SERVICE_NAME_ENV_NAME__1"))
                   .build())
-          .addStateExecutionData(new PhaseStepExecutionData())
+          .withStateExecutionData(new PhaseStepExecutionData())
           .build();
 
   private Application app = anApplication().withUuid(APP_ID).withName(APP_NAME).build();

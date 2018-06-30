@@ -96,7 +96,7 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
       object.setDecrypted(true);
     } catch (UncheckedTimeoutException ex) {
       logger.warn("Timed out decrypting value", ex);
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR).addParam("reason", "Timed out decrypting value");
+      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, ex).addParam("reason", "Timed out decrypting value");
     } catch (Exception e) {
       throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, e).addParam("reason", Misc.getMessage(e));
     }

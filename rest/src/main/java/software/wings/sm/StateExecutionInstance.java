@@ -47,6 +47,7 @@ public class StateExecutionInstance extends Base {
   public static final String PIPELINE_STATE_ELEMENT_ID_KEY = "pipelineStateElementId";
   public static final String PREV_INSTANCE_ID_KEY = "prevInstanceId";
   public static final String ROLLBACK_KEY = "rollback";
+  public static final String STATE_EXECUTION_DATA_KEY = "stateExecutionData";
   public static final String STATE_EXECUTION_DATA_HISTORY_KEY = "stateExecutionDataHistory";
   public static final String STATE_EXECUTION_MAP_KEY = "stateExecutionMap";
   public static final String STATE_NAME_KEY = "stateName";
@@ -67,6 +68,8 @@ public class StateExecutionInstance extends Base {
   private String rollbackPhaseName;
 
   private WingsDeque<ContextElement> contextElements = new WingsDeque<>();
+
+  private StateExecutionData stateExecutionData;
   private Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
   private List<StateExecutionData> stateExecutionDataHistory = new ArrayList<>();
 
@@ -114,10 +117,6 @@ public class StateExecutionInstance extends Base {
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 
-  public StateExecutionData getStateExecutionData() {
-    return stateExecutionMap.get(displayName);
-  }
-
   @Override
   @JsonIgnore
   public Map<String, Object> getShardKeys() {
@@ -138,6 +137,7 @@ public class StateExecutionInstance extends Base {
     private ContextElement contextElement;
     private boolean contextTransition;
     private WingsDeque<ContextElement> contextElements = new WingsDeque<>();
+    private StateExecutionData stateExecutionData;
     private Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
     private List<StateExecutionData> stateExecutionDataHistory = new ArrayList<>();
     private List<ContextElement> notifyElements;
@@ -212,13 +212,8 @@ public class StateExecutionInstance extends Base {
       return this;
     }
 
-    public Builder addStateExecutionData(String stateName, StateExecutionData stateExecutionData) {
-      this.stateExecutionMap.put(stateName, stateExecutionData);
-      return this;
-    }
-
-    public Builder addStateExecutionData(StateExecutionData stateExecutionData) {
-      this.stateExecutionMap.put(displayName, stateExecutionData);
+    public Builder withStateExecutionData(StateExecutionData stateExecutionData) {
+      this.stateExecutionData = stateExecutionData;
       return this;
     }
 
@@ -341,6 +336,7 @@ public class StateExecutionInstance extends Base {
           .withContextElement(contextElement)
           .withContextTransition(contextTransition)
           .withContextElements(contextElements)
+          .withStateExecutionData(stateExecutionData)
           .withStateExecutionMap(stateExecutionMap)
           .withStateExecutionDataHistory(stateExecutionDataHistory)
           .withNotifyElements(notifyElements)
@@ -375,6 +371,7 @@ public class StateExecutionInstance extends Base {
       stateExecutionInstance.setContextElement(contextElement);
       stateExecutionInstance.setContextTransition(contextTransition);
       stateExecutionInstance.setContextElements(contextElements);
+      stateExecutionInstance.setStateExecutionData(stateExecutionData);
       stateExecutionInstance.setStateExecutionMap(stateExecutionMap);
       stateExecutionInstance.setStateExecutionDataHistory(stateExecutionDataHistory);
       stateExecutionInstance.setNotifyElements(notifyElements);
