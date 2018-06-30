@@ -1242,6 +1242,7 @@
                     <artifactId>maven-pmd-plugin</artifactId>
                     <version>3.9.0</version>
                     <configuration>
+                        <includeTests>true</includeTests>
                         <rulesets>harness_pmd_ruleset.xml</rulesets>
                         <analysisCache>true</analysisCache>
                         <analysisCacheLocation>${project.build.directory}/pmd/pmd.cache</analysisCacheLocation>
@@ -1378,6 +1379,7 @@
                 <artifactId>maven-pmd-plugin</artifactId>
                 <version>3.6</version>
                 <configuration>
+                    <includeTests>true</includeTests>
                     <sourceEncoding>utf-8</sourceEncoding>
                     <sourceEncoding>utf-8</sourceEncoding>
                     <minimumTokens>100</minimumTokens>

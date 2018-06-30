@@ -13,6 +13,8 @@ import io.harness.rule.RepeatRule.Repeat;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
@@ -33,6 +35,8 @@ import javax.ws.rs.core.GenericType;
  * Created by rsingh on 5/11/17.
  */
 public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
+  private static final Logger logger = LoggerFactory.getLogger(AppdynamicsIntegrationTest.class);
+
   @Inject private AppdynamicsDelegateService appdynamicsDelegateService;
 
   private String appdynamicsSettingId;
@@ -169,7 +173,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
         RestResponse<Set<AppdynamicsTier>> dependentTierResponse =
             getRequestBuilderWithAuthHeader(dependentTarget).get(new GenericType<RestResponse<Set<AppdynamicsTier>>>() {
             });
-        System.out.println(dependentTierResponse.getResource());
+        logger.info("" + dependentTierResponse.getResource());
       }
     }
   }

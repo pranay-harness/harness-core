@@ -1453,7 +1453,7 @@ public class SecretTextTest extends WingsBaseTest {
     for (int i = 0; i < numOfServices; i++) {
       for (int j = 0; j < numOfServiceVariables; j++) {
         int serviceVariableIndex = i * numOfServiceVariables + j + 1;
-        System.out.println("loop i: " + i + " j: " + j + " index: " + serviceVariableIndex);
+        logger.info("loop i: " + i + " j: " + j + " index: " + serviceVariableIndex);
         String serviceVariableId = serviceVariableIds.get(serviceVariableIndex - 1);
         ServiceVariable serviceVariable = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
         serviceVariable.setValue(newSecretId.toCharArray());
@@ -1497,7 +1497,7 @@ public class SecretTextTest extends WingsBaseTest {
     for (int i = 0; i < numOfServices; i++) {
       for (int j = 0; j < numOfServiceVariables; j++) {
         int serviceVariableIndex = i * numOfServiceVariables + j + 1;
-        System.out.println("loop i: " + i + " j: " + j + " index: " + serviceVariableIndex);
+        logger.info("loop i: " + i + " j: " + j + " index: " + serviceVariableIndex);
         String serviceVariableId = serviceVariableIds.get(serviceVariableIndex - 1);
         ServiceVariable serviceVariable = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
         serviceVariable.setValue(newSecretId.toCharArray());
@@ -1631,7 +1631,7 @@ public class SecretTextTest extends WingsBaseTest {
       for (int j = 0; j < numOfEnvs; j++) {
         for (int k = 0; k < numOfServiceVariables; k++) {
           int serviceVariableIndex = i * numOfEnvs * numOfServiceVariables + j * numOfServiceVariables + k + 1;
-          System.out.println("loop i: " + i + " j: " + j + " k: " + k + " index: " + serviceVariableIndex);
+          logger.info("loop i: " + i + " j: " + j + " k: " + k + " index: " + serviceVariableIndex);
           String serviceVariableId = serviceVariableIds.get(serviceVariableIndex - 1);
           ServiceVariable serviceVariable = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
           serviceVariable.setValue(newSecretId.toCharArray());
@@ -1675,7 +1675,7 @@ public class SecretTextTest extends WingsBaseTest {
       for (int j = 0; j < numOfEnvs; j++) {
         for (int k = 0; k < numOfServiceVariables; k++) {
           int serviceVariableIndex = i * numOfEnvs * numOfServiceVariables + j * numOfServiceVariables + k + 1;
-          System.out.println("loop i: " + i + " j: " + j + " k: " + k + " index: " + serviceVariableIndex);
+          logger.info("loop i: " + i + " j: " + j + " k: " + k + " index: " + serviceVariableIndex);
           String serviceVariableId = serviceVariableIds.get(serviceVariableIndex - 1);
           ServiceVariable serviceVariable = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
           serviceVariable.setValue(newSecretId.toCharArray());
@@ -1778,7 +1778,7 @@ public class SecretTextTest extends WingsBaseTest {
     for (int j = 0; j < numOfEnvs; j++) {
       for (int k = 0; k < numOfServiceVariables; k++) {
         int serviceVariableIndex = j * numOfServiceVariables + k + 1;
-        System.out.println("loop j: " + j + " k: " + k + " index: " + serviceVariableIndex);
+        logger.info("loop j: " + j + " k: " + k + " index: " + serviceVariableIndex);
         String serviceVariableId = serviceVariableIds.get(serviceVariableIndex - 1);
         ServiceVariable serviceVariable = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
         serviceVariable.setValue(newSecretId.toCharArray());
@@ -1814,7 +1814,7 @@ public class SecretTextTest extends WingsBaseTest {
     for (int j = 0; j < numOfEnvs; j++) {
       for (int k = 0; k < numOfServiceVariables; k++) {
         int serviceVariableIndex = j * numOfServiceVariables + k + 1;
-        System.out.println("loop  j: " + j + " k: " + k + " index: " + serviceVariableIndex);
+        logger.info("loop  j: " + j + " k: " + k + " index: " + serviceVariableIndex);
         String serviceVariableId = serviceVariableIds.get(serviceVariableIndex - 1);
         ServiceVariable serviceVariable = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
         serviceVariable.setValue(newSecretId.toCharArray());
