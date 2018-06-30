@@ -5,14 +5,12 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.function.BiFunction;
-
 public class SubjectTest {
   private static final String OBSERVER_KEY = "observer";
   private static final String OBSERVER_1_KEY = "observer1";
   private Subject<String> subject;
 
-  private BiFunction<String, String, Rejection> testFunc = (s, t) -> s.equals(t) ? null : (Rejection) () -> s;
+  private Subject.Approver<String, String, Rejection> testFunc = (s, t) -> s.equals(t) ? null : (Rejection) () -> s;
 
   @Before
   public void initialize() {
