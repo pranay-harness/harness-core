@@ -169,7 +169,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
                                  .infraMappingId(INFRA_MAPPING_ID)
                                  .deploymentType(DeploymentType.PCF)
                                  .build())
-          .addStateExecutionData(aCommandStateExecutionData().build())
+          .withStateExecutionData(aCommandStateExecutionData().build())
           .build();
 
   private Application app = anApplication().withUuid(APP_ID).withName(APP_NAME).withAccountId(ACCOUNT_ID).build();

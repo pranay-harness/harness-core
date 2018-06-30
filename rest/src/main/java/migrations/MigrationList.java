@@ -3,6 +3,7 @@ package migrations;
 import com.google.common.collect.ImmutableList;
 
 import migrations.all.AddReplCtrlNameToKubeSetupProperties;
+import migrations.all.AddSeparateDataInStateExecutionInstance;
 import migrations.all.AddUsersToAdminUserGroup;
 import migrations.all.AddValidUntilToActivity;
 import migrations.all.AddValidUntilToAlert;
@@ -84,6 +85,7 @@ public class MigrationList {
         .add(Pair.of(165, DropYamlGitSyncCollectionMigration.class))
         .add(Pair.of(166, DirectKubernetesOrphanRemoval.class))
         .add(Pair.of(167, AddReplCtrlNameToKubeSetupProperties.class))
+        .add(Pair.of(168, AddSeparateDataInStateExecutionInstance.class))
         .build();
   }
 }

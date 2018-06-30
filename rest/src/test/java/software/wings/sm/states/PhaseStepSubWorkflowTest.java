@@ -68,7 +68,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
                                                         .withDisplayName(STATE_NAME)
                                                         .addContextElement(workflowStandardParams)
                                                         .addContextElement(phaseElement)
-                                                        .addStateExecutionData(new PhaseStepExecutionData())
+                                                        .withStateExecutionData(new PhaseStepExecutionData())
                                                         .build();
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
@@ -98,7 +98,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
                                                                                .uuid(serviceElement.getUuid())
                                                                                .resizeStrategy(RESIZE_NEW_FIRST)
                                                                                .build())
-                                                        .addStateExecutionData(new PhaseStepExecutionData())
+                                                        .withStateExecutionData(new PhaseStepExecutionData())
                                                         .build();
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
@@ -156,7 +156,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
                                                         .withDisplayName(STATE_NAME)
                                                         .addContextElement(workflowStandardParams)
                                                         .addContextElement(phaseElement)
-                                                        .addStateExecutionData(new PhaseStepExecutionData())
+                                                        .withStateExecutionData(new PhaseStepExecutionData())
                                                         .build();
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
@@ -193,7 +193,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
                                                         .withDisplayName(STATE_NAME)
                                                         .addContextElement(workflowStandardParams)
                                                         .addContextElement(phaseElement)
-                                                        .addStateExecutionData(new PhaseStepExecutionData())
+                                                        .withStateExecutionData(new PhaseStepExecutionData())
                                                         .build();
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
@@ -225,7 +225,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
                                                         .withDisplayName(STATE_NAME)
                                                         .addContextElement(workflowStandardParams)
                                                         .addContextElement(phaseElement)
-                                                        .addStateExecutionData(new PhaseStepExecutionData())
+                                                        .withStateExecutionData(new PhaseStepExecutionData())
                                                         .build();
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
@@ -260,7 +260,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
                                                         .withDisplayName(STATE_NAME)
                                                         .addContextElement(workflowStandardParams)
                                                         .addContextElement(phaseElement)
-                                                        .addStateExecutionData(new PhaseStepExecutionData())
+                                                        .withStateExecutionData(new PhaseStepExecutionData())
                                                         .build();
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
@@ -292,7 +292,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
                                                         .withDisplayName(STATE_NAME)
                                                         .addContextElement(workflowStandardParams)
                                                         .addContextElement(phaseElement)
-                                                        .addStateExecutionData(new PhaseStepExecutionData())
+                                                        .withStateExecutionData(new PhaseStepExecutionData())
                                                         .build();
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);

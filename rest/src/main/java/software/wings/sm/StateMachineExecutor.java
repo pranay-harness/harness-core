@@ -110,7 +110,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -721,6 +720,10 @@ public class StateMachineExecutor {
     if (executionEventAdvice.getRollbackPhaseName() != null) {
       cloned.setRollbackPhaseName(executionEventAdvice.getRollbackPhaseName());
     }
+    if (context.getStateExecutionInstance().getStateExecutionData() != null) {
+      cloned.getStateExecutionMap().put(context.getStateExecutionInstance().getDisplayName(),
+          context.getStateExecutionInstance().getStateExecutionData());
+    }
     return triggerExecution(sm, cloned);
   }
 
@@ -773,6 +776,10 @@ public class StateMachineExecutor {
       endTransition(context, stateExecutionInstance, SUCCESS, null);
     } else {
       StateExecutionInstance cloned = clone(stateExecutionInstance, nextState);
+      if (stateExecutionInstance.getStateExecutionData() != null) {
+        cloned.getStateExecutionMap().put(
+            stateExecutionInstance.getDisplayName(), stateExecutionInstance.getStateExecutionData());
+      }
       return triggerExecution(sm, cloned);
     }
 
@@ -942,6 +949,7 @@ public class StateMachineExecutor {
   private StateExecutionInstance clone(StateExecutionInstance stateExecutionInstance, State nextState) {
     StateExecutionInstance cloned = KryoUtils.clone(stateExecutionInstance);
     cloned.setInterruptHistory(null);
+    cloned.setStateExecutionData(null);
     cloned.setStateExecutionDataHistory(null);
     cloned.setDedicatedInterruptCount(null);
     cloned.setUuid(null);
@@ -1054,14 +1062,8 @@ public class StateMachineExecutor {
       StateExecutionData stateExecutionData, ExecutionStatus status, String errorMsg,
       Collection<ExecutionStatus> runningStatusLists, List<ContextElement> contextElements,
       List<ContextElement> notifyElements, String delegateTaskId) {
-    Map<String, StateExecutionData> stateExecutionMap = stateExecutionInstance.getStateExecutionMap();
-    if (stateExecutionMap == null) {
-      stateExecutionMap = new HashMap<>();
-      stateExecutionInstance.setStateExecutionMap(stateExecutionMap);
-    }
-
     if (stateExecutionData == null) {
-      stateExecutionData = stateExecutionMap.get(stateExecutionInstance.getDisplayName());
+      stateExecutionData = stateExecutionInstance.getStateExecutionData();
       if (stateExecutionData == null) {
         stateExecutionData = new StateExecutionData();
       }
@@ -1069,7 +1071,7 @@ public class StateMachineExecutor {
 
     stateExecutionData.setStateName(stateExecutionInstance.getDisplayName());
     stateExecutionData.setStateType(stateExecutionInstance.getStateType());
-    stateExecutionMap.put(stateExecutionInstance.getDisplayName(), stateExecutionData);
+    stateExecutionInstance.setStateExecutionData(stateExecutionData);
 
     UpdateOperations<StateExecutionInstance> ops =
         wingsPersistence.createUpdateOperations(StateExecutionInstance.class);
@@ -1114,7 +1116,7 @@ public class StateMachineExecutor {
                                               .field(StateExecutionInstance.STATUS_KEY)
                                               .in(runningStatusLists);
 
-    ops.set("stateExecutionMap", stateExecutionInstance.getStateExecutionMap());
+    ops.set(StateExecutionInstance.STATE_EXECUTION_DATA_KEY, stateExecutionInstance.getStateExecutionData());
 
     UpdateResults updateResult = wingsPersistence.update(query, ops);
     if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() != 1) {
@@ -1348,20 +1350,18 @@ public class StateMachineExecutor {
 
   protected void clearStateExecutionData(
       StateExecutionInstance stateExecutionInstance, Map<String, Object> stateParams) {
-    Map<String, StateExecutionData> stateExecutionMap = stateExecutionInstance.getStateExecutionMap();
-    if (stateExecutionMap == null) {
-      return;
-    }
+    StateExecutionData stateExecutionData = stateExecutionInstance.getStateExecutionData();
 
     UpdateOperations<StateExecutionInstance> ops =
         wingsPersistence.createUpdateOperations(StateExecutionInstance.class);
 
-    StateExecutionData stateExecutionData = stateExecutionMap.get(stateExecutionInstance.getDisplayName());
-    ops.addToSet("stateExecutionDataHistory", stateExecutionData);
-    stateExecutionInstance.getStateExecutionDataHistory().add(stateExecutionData);
+    if (stateExecutionData != null) {
+      ops.addToSet("stateExecutionDataHistory", stateExecutionData);
+      stateExecutionInstance.getStateExecutionDataHistory().add(stateExecutionData);
+    }
 
-    stateExecutionMap.remove(stateExecutionInstance.getDisplayName());
-    ops.set("stateExecutionMap", stateExecutionMap);
+    ops.unset(StateExecutionInstance.STATE_EXECUTION_DATA_KEY);
+    stateExecutionInstance.setStateExecutionData(null);
 
     List<ContextElement> notifyElements = new ArrayList<>();
     final String prevInstanceId = stateExecutionInstance.getPrevInstanceId();
@@ -1619,9 +1619,14 @@ public class StateMachineExecutor {
     public void run() {
       try {
         if (asyncError) {
-          StateExecutionData stateExecutionData = context.getStateExecutionInstance().getStateExecutionData();
           ErrorNotifyResponseData errorNotifyResponseData =
               (ErrorNotifyResponseData) response.values().iterator().next();
+
+          StateExecutionData stateExecutionData = context.getStateExecutionInstance().getStateExecutionData();
+          if (stateExecutionData == null) {
+            stateExecutionData = new StateExecutionData();
+          }
+
           stateExecutionData.setErrorMsg(errorNotifyResponseData.getErrorMessage());
           stateExecutionData.setStatus(ERROR);
           stateMachineExecutor.handleExecuteResponse(context,

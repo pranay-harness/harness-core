@@ -63,7 +63,6 @@ import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.ExecutionStatus;
-import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
@@ -237,9 +236,8 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
     stateExecutionInstance.setStatus(ExecutionStatus.SUCCESS);
     stateExecutionInstance.setAppId(appId);
     stateExecutionInstance.setDisplayName("Relic_Fail");
-    Map<String, StateExecutionData> hashMap = new HashMap();
-    hashMap.put("Relic_Fail", LogAnalysisExecutionData.builder().serverConfigId(serverConfigId).build());
-    stateExecutionInstance.setStateExecutionMap(hashMap);
+    stateExecutionInstance.setStateExecutionData(
+        LogAnalysisExecutionData.builder().serverConfigId(serverConfigId).build());
     wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(stateExecutionInstance));
 
     int numOfTestClusters = 1 + r.nextInt(10);
@@ -306,9 +304,8 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
     stateExecutionInstance.setStatus(ExecutionStatus.FAILED);
     stateExecutionInstance.setAppId(appId);
     stateExecutionInstance.setDisplayName("Relic_Fail");
-    Map<String, StateExecutionData> hashMap = new HashMap();
-    hashMap.put("Relic_Fail", LogAnalysisExecutionData.builder().serverConfigId(serverConfigId).build());
-    stateExecutionInstance.setStateExecutionMap(hashMap);
+    stateExecutionInstance.setStateExecutionData(
+        LogAnalysisExecutionData.builder().serverConfigId(serverConfigId).build());
     wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(stateExecutionInstance));
 
     int numOfTestClusters = 1 + r.nextInt(10);
