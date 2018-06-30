@@ -56,7 +56,6 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.observer.Subject;
 import lombok.Getter;
 import org.mongodb.morphia.query.Query;
@@ -1400,9 +1399,8 @@ public class StateMachineExecutor {
         stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getUuid(), NEW);
   }
 
-  @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE") // TODO
-  private boolean markAbortingState(ExecutionInterrupt workflowExecutionInterrupt, WorkflowExecution workflowExecution,
-      Collection<ExecutionStatus> statuses) {
+  private boolean markAbortingState(@NotNull ExecutionInterrupt workflowExecutionInterrupt,
+      WorkflowExecution workflowExecution, Collection<ExecutionStatus> statuses) {
     // Get all that are eligible for discontinuing
 
     List<StateExecutionInstance> allStateExecutionInstances =
@@ -1430,19 +1428,18 @@ public class StateMachineExecutor {
 
     ops.set(StateExecutionInstance.STATUS_KEY, DISCONTINUING);
 
-    if (workflowExecutionInterrupt != null) {
-      ops.addToSet("interruptHistory",
-          ExecutionInterruptEffect.builder()
-              .interruptId(workflowExecutionInterrupt.getUuid())
-              .tookEffectAt(new Date())
-              .build());
-    }
+    ops.addToSet(StateExecutionInstance.INTERRUPT_HISTORY_KEY,
+        ExecutionInterruptEffect.builder()
+            .interruptId(workflowExecutionInterrupt.getUuid())
+            .tookEffectAt(new Date())
+            .build());
 
-    Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
-                                              .filter("appId", workflowExecutionInterrupt.getAppId())
-                                              .filter("executionUuid", workflowExecutionInterrupt.getExecutionUuid())
-                                              .field("uuid")
-                                              .in(leafInstanceIds);
+    Query<StateExecutionInstance> query =
+        wingsPersistence.createQuery(StateExecutionInstance.class)
+            .filter(StateExecutionInstance.APP_ID_KEY, workflowExecutionInterrupt.getAppId())
+            .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflowExecutionInterrupt.getExecutionUuid())
+            .field(StateExecutionInstance.ID_KEY)
+            .in(leafInstanceIds);
     // Set the status to DISCONTINUING
     UpdateResults updateResult = wingsPersistence.update(query, ops);
     if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() == 0) {

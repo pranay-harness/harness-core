@@ -6,6 +6,8 @@ import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.TaskType;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -22,6 +24,8 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class APMDataCollectionTaskTest {
+  private static final Logger logger = LoggerFactory.getLogger(APMDataCollectionTaskTest.class);
+
   APMDataCollectionInfo dataCollectionInfo;
   private APMDataCollectionTask dataCollectionTask;
 
@@ -56,7 +60,7 @@ public class APMDataCollectionTaskTest {
   }
   private Method useReflectionToMakeInnerClassVisible() throws Exception {
     Class[] innerClasses = dataCollectionTask.getClass().getDeclaredClasses();
-    System.out.print(innerClasses);
+    logger.info("" + innerClasses);
     Class[] parameterTypes = new Class[1];
     parameterTypes[0] = java.lang.String.class;
     Method m = innerClasses[0].getDeclaredMethod("resolveBatchHosts", parameterTypes);

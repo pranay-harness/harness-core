@@ -1046,18 +1046,18 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   @Test
   public void formatDate() throws Exception {
     ZonedDateTime zdt = ZonedDateTime.parse("2018-05-10T16:35:27.044Z");
-    System.out.println(zdt.toEpochSecond());
+    logger.info("" + zdt.toEpochSecond());
 
     zdt = ZonedDateTime.parse("2018-04-27T23:11:23.628Z");
-    System.out.println(zdt.toEpochSecond());
+    logger.info("" + zdt.toEpochSecond());
 
     DateTimeFormatter df1 = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX");
-    System.out.println(Instant.from(df1.parse("2018-04-27T23:11:23.628Z")).toEpochMilli());
+    logger.info("" + Instant.from(df1.parse("2018-04-27T23:11:23.628Z")).toEpochMilli());
 
     df1 = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSSX");
-    System.out.println(Instant.from(df1.parse("2018-04-27T23:11:23.628456789Z")).toEpochMilli());
+    logger.info("" + Instant.from(df1.parse("2018-04-27T23:11:23.628456789Z")).toEpochMilli());
 
     DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSSXXX");
-    System.out.println(Instant.from(df.parse("2018-05-03T00:15:12.618905414+00:00")).toEpochMilli());
+    logger.info("" + Instant.from(df.parse("2018-05-03T00:15:12.618905414+00:00")).toEpochMilli());
   }
 }
