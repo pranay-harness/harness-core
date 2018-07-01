@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Base;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Status;
+import software.wings.beans.DelegateConnectionHeartbeat;
 import software.wings.beans.ErrorCode;
 import software.wings.common.cache.ResponseCodeCache;
 import software.wings.exception.WingsException;
@@ -42,6 +43,7 @@ import java.util.List;
 public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
   public static final Splitter SPLITTER = Splitter.on("/").omitEmptyStrings();
   private static final Logger logger = LoggerFactory.getLogger(DelegateStreamHandler.class);
+
   @Inject private AuthService authService;
   @Inject private DelegateService delegateService;
 
@@ -56,17 +58,27 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
         authService.validateDelegateToken(accountId, req.getParameter("token"));
 
         String delegateId = req.getParameter("delegateId");
+        String delegateConnectionId = req.getParameter("delegateConnectionId");
+        String delegateVersion = req.getHeader("Version");
 
         Delegate delegate = delegateService.get(accountId, delegateId);
         delegate.setStatus(Status.ENABLED);
         delegate.setConnected(true);
         delegateService.register(delegate);
+        delegateService.doConnectionHeartbeat(accountId, delegateId,
+            DelegateConnectionHeartbeat.builder()
+                .delegateConnectionId(delegateConnectionId)
+                .version(delegateVersion)
+                .alive(true)
+                .build());
+
         resource.addEventListener(new AtmosphereResourceEventListenerAdapter() {
           @Override
           public void onDisconnect(AtmosphereResourceEvent event) {
             Delegate delegate = delegateService.get(accountId, delegateId);
             delegate.setConnected(false);
             delegateService.register(delegate);
+            delegateService.removeDelegateConnection(accountId, delegateConnectionId);
           }
         });
       } catch (WingsException e) {
@@ -78,11 +90,23 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
       }
       resource.suspend();
     } else if (req.getMethod().equalsIgnoreCase("POST")) {
+      List<String> pathSegments = SPLITTER.splitToList(req.getPathInfo());
+      String accountId = pathSegments.get(1);
+      String delegateId = req.getParameter("delegateId");
+      String delegateConnectionId = req.getParameter("delegateConnectionId");
+      String delegateVersion = req.getHeader("Version");
+
       Delegate delegate = JsonUtils.asObject(CharStreams.toString(req.getReader()), Delegate.class);
       if (delegate.getAppId() == null) {
         delegate.setAppId(Base.GLOBAL_APP_ID);
       }
       delegateService.register(delegate);
+      delegateService.doConnectionHeartbeat(accountId, delegateId,
+          DelegateConnectionHeartbeat.builder()
+              .delegateConnectionId(delegateConnectionId)
+              .version(delegateVersion)
+              .alive(true)
+              .build());
     }
   }
 

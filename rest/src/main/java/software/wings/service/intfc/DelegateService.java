@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import freemarker.template.TemplateException;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Delegate;
+import software.wings.beans.DelegateConnectionHeartbeat;
 import software.wings.beans.DelegateScripts;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskAbortEvent;
@@ -50,6 +51,10 @@ public interface DelegateService {
   void delete(String accountId, String delegateId);
 
   Delegate register(@Valid Delegate delegate);
+
+  void removeDelegateConnection(String accountId, String delegateConnectionId);
+
+  void doConnectionHeartbeat(String accountId, String delegateId, DelegateConnectionHeartbeat heartbeat);
 
   @ValidationGroups(Create.class) String queueTask(@Valid DelegateTask task);
 

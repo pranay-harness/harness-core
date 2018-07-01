@@ -2,6 +2,7 @@ package software.wings.delegate.service;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.network.Localhost.getLocalHostAddress;
 import static io.harness.network.Localhost.getLocalHostName;
 import static io.harness.threading.Morpheus.sleep;
@@ -82,6 +83,7 @@ import retrofit2.Response;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Builder;
 import software.wings.beans.Delegate.Status;
+import software.wings.beans.DelegateConnectionHeartbeat;
 import software.wings.beans.DelegateScripts;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskAbortEvent;
@@ -189,6 +191,9 @@ public class DelegateServiceImpl implements DelegateService {
   private HttpHost httpProxyHost;
   private List<String> nonProxyHosts;
 
+  private final String delegateConnectionId = generateUuid();
+  private DelegateConnectionHeartbeat connectionHeartbeat;
+
   public static String getHostName() {
     return hostName;
   }
@@ -207,6 +212,12 @@ public class DelegateServiceImpl implements DelegateService {
       hostName = getLocalHostName();
 
       accountId = delegateConfiguration.getAccountId();
+
+      connectionHeartbeat = DelegateConnectionHeartbeat.builder()
+                                .delegateConnectionId(delegateConnectionId)
+                                .version(getVersion())
+                                .alive(true)
+                                .build();
 
       if (watched) {
         logger.info("[New] Delegate process started. Sending confirmation");
@@ -281,6 +292,7 @@ public class DelegateServiceImpl implements DelegateService {
                 .method(METHOD.GET)
                 .uri(uri.getScheme() + "://" + uri.getHost() + ":" + uri.getPort() + "/stream/delegate/" + accountId)
                 .queryString("delegateId", delegateId)
+                .queryString("delegateConnectionId", delegateConnectionId)
                 .queryString("token", tokenGenerator.getToken("https", "localhost", 9090, hostName))
                 .header("Version", getVersion());
         if (delegateConfiguration.isProxy()) {
@@ -824,6 +836,13 @@ public class DelegateServiceImpl implements DelegateService {
         lastHeartbeatSentAt.set(clock.millis());
         lastHeartbeatReceivedAt.set(clock.millis());
       }
+
+      timeLimiter.callWithTimeout(
+          ()
+              -> execute(managerClient.doConnectionHeartbeat(delegateId, accountId, connectionHeartbeat)),
+          15L, TimeUnit.SECONDS, true);
+      lastHeartbeatSentAt.set(clock.millis());
+
     } catch (UncheckedTimeoutException ex) {
       logger.warn("Timed out sending heartbeat");
     } catch (Exception e) {
