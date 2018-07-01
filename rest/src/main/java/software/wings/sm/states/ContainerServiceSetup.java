@@ -178,6 +178,17 @@ public abstract class ContainerServiceSetup extends State {
                                                     .withActivityId(activity.getUuid())
                                                     .build();
 
+      Map<String, String> serviceVariables = context.getServiceVariables();
+      Map<String, String> safeDisplayServiceVariables = context.getSafeDisplayServiceVariables();
+
+      if (serviceVariables != null) {
+        serviceVariables.replaceAll((name, value) -> context.renderExpression(value));
+      }
+
+      if (safeDisplayServiceVariables != null) {
+        safeDisplayServiceVariables.replaceAll((name, value) -> context.renderExpression(value));
+      }
+
       CommandExecutionContext commandExecutionContext =
           aCommandExecutionContext()
               .withAccountId(app.getAccountId())
@@ -188,8 +199,8 @@ public abstract class ContainerServiceSetup extends State {
               .withActivityId(activity.getUuid())
               .withCloudProviderSetting(settingAttribute)
               .withCloudProviderCredentials(encryptedDataDetails)
-              .withServiceVariables(context.getServiceVariables())
-              .withSafeDisplayServiceVariables(context.getSafeDisplayServiceVariables())
+              .withServiceVariables(serviceVariables)
+              .withSafeDisplayServiceVariables(safeDisplayServiceVariables)
               .build();
 
       String delegateTaskId =
