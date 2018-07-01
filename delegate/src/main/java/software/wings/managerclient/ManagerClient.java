@@ -15,6 +15,7 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Delegate;
+import software.wings.beans.DelegateConnectionHeartbeat;
 import software.wings.beans.DelegateScripts;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskEvent;
@@ -40,6 +41,10 @@ import java.util.List;
 public interface ManagerClient {
   @POST("delegates/register")
   Call<RestResponse<Delegate>> registerDelegate(@Query("accountId") String accountId, @Body Delegate delegate);
+
+  @POST("delegates/connectionHeartbeat/{delegateId}")
+  Call<RestResponse> doConnectionHeartbeat(@Path("delegateId") String delegateId, @Query("accountId") String accountId,
+      @Body DelegateConnectionHeartbeat heartbeat);
 
   @Headers({"Content-Type: application/x-kryo"})
   @KryoRequest

@@ -16,6 +16,7 @@ import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.DelegateConnection.defaultExpiryTimeInMinutes;
 import static software.wings.beans.DelegateTask.Status.ABORTED;
 import static software.wings.beans.DelegateTask.Status.ERROR;
 import static software.wings.beans.DelegateTask.Status.FINISHED;
@@ -70,12 +71,15 @@ import org.atteo.evo.inflector.English;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Status;
+import software.wings.beans.DelegateConnection;
+import software.wings.beans.DelegateConnectionHeartbeat;
 import software.wings.beans.DelegateScripts;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskAbortEvent;
@@ -115,7 +119,9 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.time.Clock;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -645,6 +651,37 @@ public class DelegateServiceImpl implements DelegateService {
     }
     alertService.activeDelegateUpdated(registeredDelegate.getAccountId(), registeredDelegate.getUuid());
     return registeredDelegate;
+  }
+
+  @Override
+  public void removeDelegateConnection(String accountId, String delegateConnectionId) {
+    logger.info(
+        "Removing delegate connection for account {}: delegateConnectionId: {}", accountId, delegateConnectionId);
+    wingsPersistence.delete(accountId, DelegateConnection.class, delegateConnectionId);
+  }
+
+  @Override
+  public void doConnectionHeartbeat(String accountId, String delegateId, DelegateConnectionHeartbeat heartbeat) {
+    UpdateResults updated = wingsPersistence.update(wingsPersistence.createQuery(DelegateConnection.class)
+                                                        .filter("accountId", accountId)
+                                                        .filter(ID_KEY, heartbeat.getDelegateConnectionId()),
+        wingsPersistence.createUpdateOperations(DelegateConnection.class)
+            .set("lastHeartbeat", System.currentTimeMillis())
+            .set("validUntil", Date.from(OffsetDateTime.now().plusMinutes(defaultExpiryTimeInMinutes).toInstant())));
+
+    if (updated != null && updated.getWriteResult() != null && updated.getWriteResult().getN() == 0) {
+      // connection does not exist. Create one.
+      DelegateConnection connection =
+          DelegateConnection.builder()
+              .accountId(accountId)
+              .delegateId(delegateId)
+              .version(heartbeat.getVersion())
+              .lastHeartbeat(System.currentTimeMillis())
+              .validUntil(Date.from(OffsetDateTime.now().plusMinutes(defaultExpiryTimeInMinutes).toInstant()))
+              .build();
+      connection.setUuid(heartbeat.getDelegateConnectionId());
+      wingsPersistence.saveAndGet(DelegateConnection.class, connection);
+    }
   }
 
   @Override

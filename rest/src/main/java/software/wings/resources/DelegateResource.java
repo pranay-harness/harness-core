@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Base;
 import software.wings.beans.Delegate;
+import software.wings.beans.DelegateConnectionHeartbeat;
 import software.wings.beans.DelegateScripts;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskEvent;
@@ -221,6 +222,16 @@ public class DelegateResource {
     Delegate register = delegateService.register(delegate);
     logger.info("Delegate registration took {} in ms", System.currentTimeMillis() - startTime);
     return new RestResponse<>(register);
+  }
+
+  @DelegateAuth
+  @POST
+  @Path("connectionHeartbeat/{delegateId}")
+  @Timed
+  @ExceptionMetered
+  public void connectionHeartbeat(@QueryParam("accountId") @NotEmpty String accountId,
+      @PathParam("delegateId") String delegateId, DelegateConnectionHeartbeat connectionHeartbeat) {
+    delegateService.doConnectionHeartbeat(accountId, delegateId, connectionHeartbeat);
   }
 
   @POST
