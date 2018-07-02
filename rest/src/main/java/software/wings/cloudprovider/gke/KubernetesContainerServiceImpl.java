@@ -1,5 +1,6 @@
 package software.wings.cloudprovider.gke;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
@@ -10,6 +11,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.command.ContainerApiVersions.KUBERNETES_V1;
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.common.Constants.HARNESS_REVISION;
 import static software.wings.exception.WingsException.USER;
@@ -82,7 +84,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Log.LogLevel;
-import software.wings.beans.command.ContainerApiVersions;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.ContainerInfo.ContainerInfoBuilder;
@@ -274,7 +275,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       }
       String api = kubernetesHelperService.trimVersion(hpa.getApiVersion());
 
-      if (ContainerApiVersions.KUBERNETES_V1.getVersionName().equals(api)) {
+      if (KUBERNETES_V1.getVersionName().equals(api)) {
         return kubernetesHelperService.hpaOperations(kubernetesConfig, encryptedDataDetails).createOrReplace(hpa);
       } else {
         return kubernetesHelperService.hpaOperationsForCustomMetricHPA(kubernetesConfig, encryptedDataDetails, api)
@@ -287,7 +288,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Override
   public HorizontalPodAutoscaler getAutoscaler(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String name, String apiVersion) {
-    if (ContainerApiVersions.KUBERNETES_V1.getVersionName().equals(apiVersion) || StringUtils.isEmpty(apiVersion)) {
+    if (KUBERNETES_V1.getVersionName().equals(apiVersion) || isEmpty(apiVersion)) {
       return kubernetesHelperService.hpaOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
     } else {
       return kubernetesHelperService.hpaOperationsForCustomMetricHPA(kubernetesConfig, encryptedDataDetails, apiVersion)
