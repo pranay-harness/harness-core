@@ -36,7 +36,6 @@ import software.wings.beans.alert.GitConnectionErrorAlert;
 import software.wings.beans.alert.GitSyncErrorAlert;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.Change.ChangeType;
-import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitCommand.GitCommandType;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
@@ -592,6 +591,8 @@ public class YamlGitServiceImpl implements YamlGitService {
 
   @Override
   public RestResponse fixGitSyncErrors(String accountId, String yamlFilePath, String newYamlContent) {
+    logger.info(
+        GIT_YAML_LOG_PREFIX + "Fixing git sync errors for account {} and yaml file {}", accountId, yamlFilePath);
     RestResponse<List<GitSyncError>> listRestResponse = listGitSyncErrors(accountId);
     List<GitSyncError> syncErrorList = listRestResponse.getResource();
     if (isEmpty(syncErrorList)) {
@@ -621,8 +622,9 @@ public class YamlGitServiceImpl implements YamlGitService {
     });
 
     try {
-      List<ChangeContext> fileChangeContexts = yamlService.processChangeSet(gitFileChangeList);
-      logger.info(GIT_YAML_LOG_PREFIX + "Processed ChangeSet: [{}]", fileChangeContexts);
+      logger.info(GIT_YAML_LOG_PREFIX + "Processing fix Git Sync Errors for account {}", accountId);
+      yamlService.processChangeSet(gitFileChangeList);
+      logger.info(GIT_YAML_LOG_PREFIX + "Processed fix Git Sync Errors for account {}", accountId);
       removeGitSyncErrors(accountId, gitFileChangeList, false);
     } catch (YamlProcessingException ex) {
       logger.warn(GIT_YAML_LOG_PREFIX + "Unable to process Git sync errors for account {}", accountId, ex);
