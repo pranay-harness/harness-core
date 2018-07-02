@@ -986,7 +986,18 @@ public class DelegateServiceImpl implements DelegateService {
                                     .filter(ID_KEY, taskId);
     UpdateOperations<DelegateTask> updateOperations =
         wingsPersistence.createUpdateOperations(DelegateTask.class).set("delegateId", delegateId);
-    return wingsPersistence.getDatastore().findAndModify(query, updateOperations);
+    DelegateTask task = wingsPersistence.getDatastore().findAndModify(query, updateOperations);
+    // If the task wasn't updated because delegateId already exists then query for the task with the delegateId in case
+    // client is retrying the request
+    if (task == null) {
+      task = wingsPersistence.createQuery(DelegateTask.class)
+                 .filter("accountId", delegateTask.getAccountId())
+                 .filter("status", QUEUED)
+                 .filter("delegateId", delegateId)
+                 .filter(ID_KEY, taskId)
+                 .get();
+    }
+    return task;
   }
 
   @Override
