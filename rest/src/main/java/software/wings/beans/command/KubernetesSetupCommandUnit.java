@@ -14,6 +14,7 @@ import static org.atteo.evo.inflector.English.plural;
 import static software.wings.beans.command.ContainerResizeCommandUnit.DASH_STRING;
 import static software.wings.beans.container.KubernetesContainerTask.CONFIG_MAP_NAME_PLACEHOLDER_REGEX;
 import static software.wings.beans.container.KubernetesContainerTask.SECRET_MAP_NAME_PLACEHOLDER_REGEX;
+import static software.wings.beans.container.KubernetesServiceType.None;
 import static software.wings.common.Constants.HARNESS_APP;
 import static software.wings.common.Constants.HARNESS_ENV;
 import static software.wings.common.Constants.HARNESS_REVISION;
@@ -328,8 +329,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       }
 
       // Create new autoscaler
-      HorizontalPodAutoscaler hpa = prepareHorizontalPodAutoscaler(
-          setupParams, containerServiceName, controller.getKind(), controllerLabels, executionLogCallback);
+      HorizontalPodAutoscaler hpa = prepareHorizontalPodAutoscaler(setupParams, containerServiceName,
+          controller.getKind(), controller.getApiVersion(), controllerLabels, executionLogCallback);
 
       commandExecutionDataBuilder.autoscalerYaml(toYaml(hpa));
 
@@ -385,7 +386,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   }
 
   private void validateBlueGreenConfig(KubernetesSetupParams setupParams) {
-    if (setupParams.getServiceType() != null && setupParams.getServiceType() != KubernetesServiceType.None) {
+    if (setupParams.getServiceType() != null && setupParams.getServiceType() != None) {
       throw new InvalidRequestException("Service cannot be specified for Blue/Green deployment setup");
     }
 
@@ -394,12 +395,12 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
 
     if (setupParams.getBlueGreenConfig().getPrimaryService() == null
-        || setupParams.getBlueGreenConfig().getPrimaryService().getServiceType() == KubernetesServiceType.None) {
+        || setupParams.getBlueGreenConfig().getPrimaryService().getServiceType() == None) {
       throw new InvalidRequestException("PrimaryService is not specified in BlueGreenConfig");
     }
 
     if (setupParams.getBlueGreenConfig().getStageService() == null
-        || setupParams.getBlueGreenConfig().getStageService().getServiceType() == KubernetesServiceType.None) {
+        || setupParams.getBlueGreenConfig().getStageService().getServiceType() == None) {
       throw new InvalidRequestException("StageService is not specified in BlueGreenConfig");
     }
   }
@@ -423,7 +424,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     spec.setTargetPort(setupParams.getTargetPort());
     spec.setServiceYaml(setupParams.getServiceYaml());
 
-    if (!setupParams.isBlueGreen() && setupParams.getServiceType() != KubernetesServiceType.None) {
+    if (!setupParams.isBlueGreen() && setupParams.getServiceType() != null && setupParams.getServiceType() != None) {
       executionLogCallback.saveExecutionLog(
           format("Setting Service with name %s with Type %s", kubernetesServiceName, setupParams.getServiceType()),
           LogLevel.INFO);
@@ -557,7 +558,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
 
     if (serviceSpecification == null || serviceSpecification.getServiceType() == null
-        || serviceSpecification.getServiceType() == KubernetesServiceType.None) {
+        || serviceSpecification.getServiceType() == None) {
       if (service != null) {
         try {
           if (service.getSpec().getSelector().containsKey(HARNESS_APP)) {
@@ -620,10 +621,10 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   }
 
   private HorizontalPodAutoscaler prepareHorizontalPodAutoscaler(KubernetesSetupParams setupParams, String name,
-      String kind, Map<String, String> controllerLabels, ExecutionLogCallback executionLogCallback) {
+      String kind, String apiVersion, Map<String, String> controllerLabels, ExecutionLogCallback executionLogCallback) {
     if (setupParams.isUseAutoscaler()) {
-      HorizontalPodAutoscaler autoscalerDefinition =
-          createAutoscaler(name, kind, setupParams.getNamespace(), controllerLabels, setupParams, executionLogCallback);
+      HorizontalPodAutoscaler autoscalerDefinition = createAutoscaler(
+          name, kind, apiVersion, setupParams.getNamespace(), controllerLabels, setupParams, executionLogCallback);
 
       if (autoscalerDefinition != null) {
         executionLogCallback.saveExecutionLog(
@@ -887,13 +888,13 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     return null;
   }
 
-  private HorizontalPodAutoscaler createAutoscaler(String name, String kind, String namespace,
+  private HorizontalPodAutoscaler createAutoscaler(String name, String kind, String apiVersion, String namespace,
       Map<String, String> serviceLabels, KubernetesSetupParams setupParams, ExecutionLogCallback executionLogCallback) {
     HorizontalPodAutoscaler horizontalPodAutoscaler;
 
     if (isNotBlank(setupParams.getCustomMetricYamlConfig())) {
       horizontalPodAutoscaler =
-          getCustomMetricHorizontalPodAutoscaler(name, kind, namespace, serviceLabels, setupParams);
+          getCustomMetricHorizontalPodAutoscaler(name, kind, apiVersion, namespace, serviceLabels, setupParams);
     } else {
       executionLogCallback.saveExecutionLog(
           format("Setting autoscaler min instances %d, max instances %d, with target CPU utilization %d%%",
@@ -901,7 +902,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
               setupParams.getTargetCpuUtilizationPercentage()),
           LogLevel.INFO);
 
-      horizontalPodAutoscaler = getBasicHorizontalPodAutoscaler(name, kind, namespace, serviceLabels, setupParams);
+      horizontalPodAutoscaler =
+          getBasicHorizontalPodAutoscaler(name, kind, apiVersion, namespace, serviceLabels, setupParams);
     }
 
     executionLogCallback.saveExecutionLog(
@@ -909,8 +911,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     return horizontalPodAutoscaler;
   }
 
-  private HorizontalPodAutoscaler getCustomMetricHorizontalPodAutoscaler(String name, String kind, String namespace,
-      Map<String, String> serviceLabels, KubernetesSetupParams setupParams) {
+  private HorizontalPodAutoscaler getCustomMetricHorizontalPodAutoscaler(String name, String kind, String apiVersion,
+      String namespace, Map<String, String> serviceLabels, KubernetesSetupParams setupParams) {
     try {
       HorizontalPodAutoscaler horizontalPodAutoscaler =
           KubernetesHelper.loadYaml(setupParams.getCustomMetricYamlConfig());
@@ -920,9 +922,10 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             .addParam(
                 "args", "Couldn't parse Horizontal Pod Autoscaler YAML: " + setupParams.getCustomMetricYamlConfig());
       }
-      // set kind/name to none
+      // set kind/name
       horizontalPodAutoscaler.getSpec().getScaleTargetRef().setName(name);
       horizontalPodAutoscaler.getSpec().getScaleTargetRef().setKind(kind);
+      horizontalPodAutoscaler.getSpec().getScaleTargetRef().setApiVersion(apiVersion);
 
       // create metadata
       ObjectMeta objectMeta = horizontalPodAutoscaler.getMetadata();
@@ -942,8 +945,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
   }
 
-  private HorizontalPodAutoscaler getBasicHorizontalPodAutoscaler(String name, String kind, String namespace,
-      Map<String, String> serviceLabels, KubernetesSetupParams setupParams) {
+  private HorizontalPodAutoscaler getBasicHorizontalPodAutoscaler(String name, String kind, String apiVersion,
+      String namespace, Map<String, String> serviceLabels, KubernetesSetupParams setupParams) {
     HorizontalPodAutoscalerSpecBuilder spec =
         new HorizontalPodAutoscalerSpecBuilder()
             .withMinReplicas(setupParams.getMinAutoscaleInstances())
@@ -952,6 +955,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             .withNewScaleTargetRef()
             .withKind(kind)
             .withName(name)
+            .withApiVersion(apiVersion)
             .endScaleTargetRef();
     return new HorizontalPodAutoscalerBuilder()
         .withNewMetadata()

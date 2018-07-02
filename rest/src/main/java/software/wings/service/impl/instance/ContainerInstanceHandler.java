@@ -520,7 +520,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
 
   public List<ContainerInfo> getContainerInfoForService(
       Set<String> containerSvcNames, ExecutionContext context, String infrastructureMappingId, String serviceId) {
-    Preconditions.checkState(!containerSvcNames.isEmpty(), "empty for " + context);
+    Preconditions.checkState(!containerSvcNames.isEmpty(), "empty for " + context.getWorkflowExecutionId());
     InfrastructureMapping infrastructureMapping = infraMappingService.get(context.getAppId(), infrastructureMappingId);
     InstanceType instanceType = instanceUtil.getInstanceType(infrastructureMapping.getInfraMappingType());
     Preconditions.checkNotNull(instanceType, "Null for " + infrastructureMappingId);
