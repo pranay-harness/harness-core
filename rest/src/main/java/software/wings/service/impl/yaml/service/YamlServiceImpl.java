@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml.service;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
+import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 import static software.wings.beans.yaml.YamlType.ACCOUNT_DEFAULTS;
 import static software.wings.beans.yaml.YamlType.APPLICATION;
@@ -261,6 +262,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
   private <T extends BaseYamlHandler> List<ChangeContext> validate(List<Change> changeList)
       throws YamlProcessingException {
+    logger.info(GIT_YAML_LOG_PREFIX + "Validating changeset");
     List<ChangeContext> changeContextList = Lists.newArrayList();
     Map<Change, String> failedChangeErrorMsgMap = Maps.newHashMap();
 
@@ -337,6 +339,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
           "Error while processing some yaml files in the changeset", failedChangeErrorMsgMap);
     }
 
+    logger.info(GIT_YAML_LOG_PREFIX + "Validated changeset");
     return changeContextList;
   }
 
@@ -358,11 +361,11 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     for (ChangeContext changeContext : changeContextList) {
       String yamlFilePath = changeContext.getChange().getFilePath();
       try {
-        logger.info("Processing change [{}]", changeContext.getChange());
+        logger.info("Processing file: [{}]", changeContext.getChange().getFilePath());
         processYamlChange(changeContext, changeContextList);
         yamlGitService.discardGitSyncError(changeContext.getChange().getAccountId(), yamlFilePath);
         processedChangeSet.add(changeContext);
-        logger.info("Processing done for change [{}]", changeContext.getChange());
+        logger.info("Processing done for file [{}]", changeContext.getChange().getFilePath());
       } catch (Exception ex) {
         logger.warn("Exception while processing yaml file {}", yamlFilePath, ex);
         // We continue processing the yaml files we understand, the failures are reported at the end
