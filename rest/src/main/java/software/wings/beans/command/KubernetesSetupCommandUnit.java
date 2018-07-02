@@ -11,6 +11,7 @@ import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
+import static software.wings.beans.command.ContainerApiVersions.KUBERNETES_V1;
 import static software.wings.beans.command.ContainerResizeCommandUnit.DASH_STRING;
 import static software.wings.beans.container.KubernetesContainerTask.CONFIG_MAP_NAME_PLACEHOLDER_REGEX;
 import static software.wings.beans.container.KubernetesContainerTask.SECRET_MAP_NAME_PLACEHOLDER_REGEX;
@@ -276,6 +277,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       Map<String, Integer> activeServiceCounts = new HashMap<>();
       Map<String, Integer> trafficWeights = new HashMap<>();
       String previousAutoscalerYaml = null;
+      String lastAutoscaler = null;
 
       if (isNotVersioned) {
         yamlConfigBuilder.controllerYaml(
@@ -285,13 +287,21 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         yamlConfigBuilder.configMapYaml(getConfigMapYaml(kubernetesConfig, encryptedDataDetails, containerServiceName));
         yamlConfigBuilder.secretMapYaml(getSecretMapYaml(kubernetesConfig, encryptedDataDetails, containerServiceName));
         previousAutoscalerYaml = getAutoscalerYaml(kubernetesConfig, encryptedDataDetails, containerServiceName);
+        if (isNotBlank(previousAutoscalerYaml)) {
+          lastAutoscaler = containerServiceName;
+        }
       } else {
         activeServiceCounts = kubernetesContainerService.getActiveServiceCounts(
             kubernetesConfig, encryptedDataDetails, containerServiceName, useDashInHostname);
         trafficWeights = kubernetesContainerService.getTrafficWeights(
             kubernetesConfig, encryptedDataDetails, containerServiceName, useDashInHostname);
         if (isNotBlank(lastCtrlName)) {
-          previousAutoscalerYaml = getAutoscalerYaml(kubernetesConfig, encryptedDataDetails, lastCtrlName);
+          String previousAutoscalerName = lastAutoscaler(
+              kubernetesConfig, encryptedDataDetails, setupParams.getControllerNamePrefix(), useDashInHostname);
+          previousAutoscalerYaml = getAutoscalerYaml(kubernetesConfig, encryptedDataDetails, previousAutoscalerName);
+          if (isNotBlank(previousAutoscalerYaml)) {
+            lastAutoscaler = previousAutoscalerName;
+          }
         }
       }
 
@@ -324,9 +334,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                   setupParams, registrySecretName, configMap, secretMap, originalPods, executionLogCallback));
 
       // Delete old autoscaler
-      if (isNotBlank(previousAutoscalerYaml)) {
-        kubernetesContainerService.deleteAutoscaler(
-            kubernetesConfig, encryptedDataDetails, isNotVersioned ? containerServiceName : lastCtrlName);
+      if (isNotBlank(lastAutoscaler)) {
+        kubernetesContainerService.deleteAutoscaler(kubernetesConfig, encryptedDataDetails, lastAutoscaler);
       }
 
       // Create new autoscaler
@@ -346,7 +355,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       }
 
       setupServiceAndIngressAndIstioRouteRule(setupParams, kubernetesConfig, encryptedDataDetails, containerServiceName,
-          activeServiceCounts, isStatefulSet, executionLogCallback, summaryOutput);
+          activeServiceCounts, executionLogCallback, summaryOutput);
 
       setupServiceAndIngressForBlueGreen(setupParams, kubernetesConfig, encryptedDataDetails, containerServiceName,
           Integer.toString(revision), executionLogCallback, summaryOutput);
@@ -408,8 +417,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
   private void setupServiceAndIngressAndIstioRouteRule(KubernetesSetupParams setupParams,
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName,
-      Map<String, Integer> activeServiceCounts, boolean isStatefulSet, ExecutionLogCallback executionLogCallback,
-      StringBuffer summaryOutput) {
+      Map<String, Integer> activeServiceCounts, ExecutionLogCallback executionLogCallback, StringBuffer summaryOutput) {
     String kubernetesServiceName = getKubernetesServiceName(setupParams.getControllerNamePrefix());
     Map<String, String> labels = getLabels(setupParams);
 
@@ -452,7 +460,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         kubernetesServiceName, labels, executionLogCallback, summaryOutput);
 
     prepareRouteRule(encryptedDataDetails, kubernetesConfig, setupParams, kubernetesServiceName, service,
-        activeServiceCounts, containerServiceName, executionLogCallback, isStatefulSet, summaryOutput);
+        activeServiceCounts, containerServiceName, executionLogCallback, summaryOutput);
   }
 
   private void setupServiceAndIngressForBlueGreen(KubernetesSetupParams setupParams, KubernetesConfig kubernetesConfig,
@@ -639,7 +647,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   private IstioResource prepareRouteRule(List<EncryptedDataDetail> encryptedDataDetails,
       KubernetesConfig kubernetesConfig, KubernetesSetupParams setupParams, String routeRuleName, Service service,
       Map<String, Integer> activeControllers, String containerServiceName, ExecutionLogCallback executionLogCallback,
-      boolean isStatefulSet, StringBuffer summaryOutput) {
+      StringBuffer summaryOutput) {
     IstioResource routeRule = null;
     try {
       routeRule = kubernetesContainerService.getRouteRule(kubernetesConfig, encryptedDataDetails, routeRuleName);
@@ -650,8 +658,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     if (setupParams.isUseIstioRouteRule() && service != null) {
       if (routeRule == null || routeRule.getSpec() == null || isEmpty(((RouteRule) routeRule.getSpec()).getRoute())
           || !((RouteRule) routeRule.getSpec()).getRoute().get(0).getLabels().containsKey(HARNESS_REVISION)) {
-        IstioResource routeRuleDefinition = createRouteRuleDefinition(setupParams, routeRuleName,
-            service.getSpec().getSelector(), activeControllers, isStatefulSet, executionLogCallback);
+        IstioResource routeRuleDefinition = createRouteRuleDefinition(
+            setupParams, routeRuleName, service.getSpec().getSelector(), activeControllers, executionLogCallback);
         routeRule = kubernetesContainerService.createOrReplaceRouteRule(
             kubernetesConfig, encryptedDataDetails, routeRuleDefinition);
       } else {
@@ -854,8 +862,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
   private String getAutoscalerYaml(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName) {
-    HorizontalPodAutoscaler hpa = kubernetesContainerService.getAutoscaler(kubernetesConfig, encryptedDataDetails,
-        containerServiceName, ContainerApiVersions.KUBERNETES_V1.getVersionName());
+    HorizontalPodAutoscaler hpa = kubernetesContainerService.getAutoscaler(
+        kubernetesConfig, encryptedDataDetails, containerServiceName, KUBERNETES_V1.getVersionName());
     if (hpa != null) {
       try {
         return toYaml(hpa);
@@ -969,7 +977,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   }
 
   private IstioResource createRouteRuleDefinition(KubernetesSetupParams setupParams, String kubernetesServiceName,
-      Map<String, String> serviceLabels, Map<String, Integer> activeControllers, boolean isStatefulSet,
+      Map<String, String> serviceLabels, Map<String, Integer> activeControllers,
       ExecutionLogCallback executionLogCallback) {
     RouteRuleSpecNested<IstioResourceBuilder> routeRuleSpecNested = new IstioResourceBuilder()
                                                                         .withNewMetadata()
@@ -1173,7 +1181,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
   }
 
-  public String getApiVersionForHPA(String yamlConfig) {
+  private String getApiVersionForHPA(String yamlConfig) {
     return isBlank(yamlConfig) ? ContainerApiVersions.KUBERNETES_V1.getVersionName()
                                : ContainerApiVersions.KUBERNETES_V2_BETA1.getVersionName();
   }
@@ -1257,6 +1265,25 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           }
         });
     return lastController.get() != null ? lastController.get().getMetadata().getName() : null;
+  }
+
+  private String lastAutoscaler(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      String controllerNamePrefix, boolean useDashInHostName) {
+    final AtomicReference<HorizontalPodAutoscaler> lastHpa = new AtomicReference<>();
+    final AtomicInteger lastRevision = new AtomicInteger();
+    kubernetesContainerService.listControllers(kubernetesConfig, encryptedDataDetails)
+        .stream()
+        .filter(ctrl -> ctrl.getMetadata().getName().startsWith(controllerNamePrefix))
+        .forEach(ctrl -> {
+          HorizontalPodAutoscaler hpa = kubernetesContainerService.getAutoscaler(
+              kubernetesConfig, encryptedDataDetails, ctrl.getMetadata().getName(), KUBERNETES_V1.getVersionName());
+          Optional<Integer> revision = getRevisionFromControllerName(ctrl.getMetadata().getName(), useDashInHostName);
+          if (hpa != null && revision.isPresent() && (lastHpa.get() == null || revision.get() > lastRevision.get())) {
+            lastHpa.set(hpa);
+            lastRevision.set(revision.get());
+          }
+        });
+    return lastHpa.get() != null ? lastHpa.get().getMetadata().getName() : null;
   }
 
   private HasMetadata createKubernetesControllerDefinition(KubernetesContainerTask kubernetesContainerTask,
