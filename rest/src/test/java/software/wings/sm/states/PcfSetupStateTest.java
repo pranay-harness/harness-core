@@ -171,7 +171,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
                                  .infraMappingId(INFRA_MAPPING_ID)
                                  .deploymentType(DeploymentType.PCF)
                                  .build())
-          .withStateExecutionData(aCommandStateExecutionData().build())
+          .addStateExecutionData(aCommandStateExecutionData().build())
           .build();
 
   private Application app = anApplication().withUuid(APP_ID).withName(APP_NAME).build();

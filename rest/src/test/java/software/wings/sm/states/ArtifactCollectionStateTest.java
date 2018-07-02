@@ -11,6 +11,7 @@ import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.common.Constants.DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
+import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -171,8 +172,8 @@ public class ArtifactCollectionStateTest {
 
   @Test
   public void shouldHandleAbort() {
-    executionContext.getStateExecutionInstance().setStateExecutionData(
-        ArtifactCollectionExecutionData.builder().build());
+    executionContext.getStateExecutionInstance().setStateExecutionMap(
+        ImmutableMap.of(ARTIFACT_COLLECTION.name(), ArtifactCollectionExecutionData.builder().build()));
     artifactCollectionState.handleAbortEvent(executionContext);
     assertThat(executionContext.getStateExecutionData()).isNotNull();
     assertThat(executionContext.getStateExecutionData().getErrorMsg()).isNotBlank();

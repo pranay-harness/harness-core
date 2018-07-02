@@ -162,13 +162,10 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
   @Override
   public StateExecutionData getStateExecutionData() {
-    return stateExecutionInstance.getStateExecutionData();
+    return stateExecutionInstance.getStateExecutionMap().get(stateExecutionInstance.getDisplayName());
   }
 
   public StateExecutionData getStateExecutionData(String stateName) {
-    if (stateExecutionInstance.getDisplayName().equals(stateName)) {
-      return getStateExecutionData();
-    }
     return stateExecutionInstance.getStateExecutionMap().get(stateName);
   }
 
@@ -433,10 +430,6 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   @SuppressWarnings("unchecked")
   private Map<String, Object> prepareContext(Map<String, Object> context) {
     // add state execution data
-    if (stateExecutionInstance.getStateExecutionData() != null) {
-      context.put(
-          normalizeStateName(stateExecutionInstance.getDisplayName()), stateExecutionInstance.getStateExecutionData());
-    }
     stateExecutionInstance.getStateExecutionMap().forEach((key, value) -> context.put(normalizeStateName(key), value));
 
     // add context params

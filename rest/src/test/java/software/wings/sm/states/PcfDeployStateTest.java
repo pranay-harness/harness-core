@@ -154,7 +154,7 @@ public class PcfDeployStateTest extends WingsBaseTest {
                   .resizeStrategy(RESIZE_NEW_FIRST)
                   .routeMaps(Arrays.asList("R1", "R2"))
                   .build())
-          .withStateExecutionData(new PhaseStepExecutionData())
+          .addStateExecutionData(new PhaseStepExecutionData())
           .build();
 
   private Application app = anApplication().withUuid(APP_ID).withName(APP_NAME).build();
