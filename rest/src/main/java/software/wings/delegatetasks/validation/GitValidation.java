@@ -37,7 +37,15 @@ public class GitValidation extends AbstractDelegateValidateTask {
     GitConfig gitConfig = (GitConfig) getParameters()[1];
     logger.info("Running validation for task {} for repo {}", delegateTaskId, gitConfig.getRepoUrl());
     List<EncryptedDataDetail> encryptionDetails = (List<EncryptedDataDetail>) getParameters()[2];
-    encryptionService.decrypt(gitConfig, encryptionDetails);
+    try {
+      encryptionService.decrypt(gitConfig, encryptionDetails);
+    } catch (Exception e) {
+      logger.info("Failed to decrypt " + gitConfig, e);
+      return singletonList(DelegateConnectionResult.builder()
+                               .criteria(encryptionDetails.get(0).getEncryptionConfig().toString())
+                               .validated(false)
+                               .build());
+    }
 
     return singletonList(
         DelegateConnectionResult.builder()
