@@ -166,7 +166,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
                                  .infraMappingId(INFRA_MAPPING_ID)
                                  .deploymentType(DeploymentType.KUBERNETES)
                                  .build())
-          .addStateExecutionData(new PhaseStepExecutionData())
+          .withStateExecutionData(new PhaseStepExecutionData())
           .build();
 
   private Application app = anApplication().withUuid(APP_ID).withName(APP_NAME).build();
@@ -262,8 +262,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
     Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
     notifyResponse.put("key", aCommandExecutionResult().withStatus(CommandExecutionStatus.SUCCESS).build());
 
-    stateExecutionInstance.getStateExecutionMap().put(
-        stateExecutionInstance.getDisplayName(), aCommandStateExecutionData().build());
+    stateExecutionInstance.setStateExecutionData(aCommandStateExecutionData().build());
 
     ExecutionResponse response = kubernetesDeploy.handleAsyncResponse(context, notifyResponse);
     assertThat(response)
@@ -278,8 +277,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
     on(context).set("evaluator", evaluator);
     Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
     notifyResponse.put("key", aCommandExecutionResult().withStatus(CommandExecutionStatus.SUCCESS).build());
-    stateExecutionInstance.getStateExecutionMap().put(
-        stateExecutionInstance.getDisplayName(), aCommandStateExecutionData().build());
+    stateExecutionInstance.setStateExecutionData(aCommandStateExecutionData().build());
 
     ExecutionResponse response = kubernetesDeploy.handleAsyncResponse(context, notifyResponse);
     assertThat(response)

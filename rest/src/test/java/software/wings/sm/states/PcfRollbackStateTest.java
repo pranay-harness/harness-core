@@ -114,7 +114,7 @@ public class PcfRollbackStateTest extends WingsBaseTest {
                                                               .addContextElement(workflowStandardParams)
                                                               .addContextElement(phaseElement)
                                                               .addContextElement(pcfDeployContextElement)
-                                                              .addStateExecutionData(new PhaseStepExecutionData())
+                                                              .withStateExecutionData(new PhaseStepExecutionData())
                                                               .build();
 
   private Application app = anApplication().withUuid(APP_ID).withName(APP_NAME).build();

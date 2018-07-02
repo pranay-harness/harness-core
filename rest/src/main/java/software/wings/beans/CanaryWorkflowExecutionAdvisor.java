@@ -53,7 +53,6 @@ import software.wings.sm.states.PhaseSubWorkflow;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Created by rishi on 1/24/17.
@@ -360,11 +359,11 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
   public String computeDisplayName(StateExecutionInstance stateExecutionInstance) {
     if (stateExecutionInstance.getOrchestrationWorkflowType() == ROLLING
         && PHASE.name().equals(stateExecutionInstance.getStateType()) && !stateExecutionInstance.isRollback()) {
-      List<String> phaseNames = stateExecutionInstance.getStateExecutionMap()
+      List<String> phaseNames = stateExecutionInstance.allStateExecutionMap()
                                     .keySet()
                                     .stream()
                                     .filter(key -> key.startsWith(ROLLING_PHASE_PREFIX))
-                                    .collect(Collectors.toList());
+                                    .collect(toList());
       return ROLLING_PHASE_PREFIX + (phaseNames.size() + 1);
     }
     return null;

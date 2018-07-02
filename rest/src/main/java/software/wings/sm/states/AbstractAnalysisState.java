@@ -367,7 +367,7 @@ public abstract class AbstractAnalysisState extends State {
     Set<String> hosts = new HashSet<>();
     StateExecutionInstance stateExecutionInstance = ((ExecutionContextImpl) context).getStateExecutionInstance();
     Preconditions.checkNotNull(stateExecutionInstance);
-    Map<String, StateExecutionData> stateExecutionMap = stateExecutionInstance.getStateExecutionMap();
+    Map<String, StateExecutionData> stateExecutionMap = stateExecutionInstance.allStateExecutionMap();
 
     if (stateExecutionMap == null) {
       return hosts;
