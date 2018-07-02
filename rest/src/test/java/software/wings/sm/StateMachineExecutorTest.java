@@ -828,7 +828,6 @@ public class StateMachineExecutorTest extends WingsBaseTest {
 
     HashMap<String, StateExecutionData> stateExecutionMap = new HashMap<>();
     stateExecutionMap.put("state0", new StateExecutionData());
-    stateExecutionMap.put("state1", new StateExecutionData());
 
     List<ContextElement> notifyElements =
         asList(anInstanceElement().withDisplayName("bar").build(), originalNotifyElements.get(0));
@@ -836,6 +835,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
                                                         .withAppId("appId")
                                                         .withDisplayName("state1")
+                                                        .withStateExecutionData(new StateExecutionData())
                                                         .withStateExecutionMap(stateExecutionMap)
                                                         .withPrevInstanceId(prevStateExecutionInstanceId)
                                                         .withStatus(FAILED)

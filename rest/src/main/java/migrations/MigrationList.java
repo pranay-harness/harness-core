@@ -3,6 +3,7 @@ package migrations;
 import com.google.common.collect.ImmutableList;
 
 import migrations.all.AddReplCtrlNameToKubeSetupProperties;
+import migrations.all.AddSeparateDataInStateExecutionInstance;
 import migrations.all.AddUsersToAdminUserGroup;
 import migrations.all.AddValidUntilToActivity;
 import migrations.all.AddValidUntilToAlert;
@@ -87,6 +88,7 @@ public class MigrationList {
         .add(Pair.of(167, AddReplCtrlNameToKubeSetupProperties.class))
         .add(Pair.of(168, BaseMigration.class))
         .add(Pair.of(169, AddValidUntilToDelegateConnectionResults.class))
+        .add(Pair.of(170, AddSeparateDataInStateExecutionInstance.class))
         .build();
   }
 }

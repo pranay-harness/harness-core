@@ -23,6 +23,7 @@ import static software.wings.beans.DirectKubernetesInfrastructureMapping.Builder
 import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
+import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
 import static software.wings.beans.PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
@@ -217,7 +218,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
             .withDeploymentType(DeploymentType.SSH.name())
             .withServiceTemplateId(TEMPLATE_ID)
             .withHostNames(singletonList(HOST_NAME))
-            .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
+            .withInfraMappingType(PHYSICAL_DATA_CENTER_SSH.name())
             .build();
 
     PhysicalInfrastructureMapping savedPhysicalInfrastructureMapping =
@@ -235,7 +236,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
             .withAccountId(ACCOUNT_ID)
             .withServiceTemplateId(TEMPLATE_ID)
             .withHostNames(singletonList(HOST_NAME))
-            .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
+            .withInfraMappingType(PHYSICAL_DATA_CENTER_SSH.name())
             .build();
 
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
@@ -291,7 +292,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
                                                    .withUuid(INFRA_MAPPING_ID)
                                                    .withServiceTemplateId(TEMPLATE_ID)
                                                    .withHostNames(singletonList(HOST_NAME))
-                                                   .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
+                                                   .withInfraMappingType(PHYSICAL_DATA_CENTER_SSH.name())
                                                    .build();
 
     PhysicalInfrastructureMapping updatedInfra = aPhysicalInfrastructureMapping()
@@ -308,7 +309,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
                                                      .withServiceId(SERVICE_ID)
                                                      .withServiceTemplateId(TEMPLATE_ID)
                                                      .withHostNames(singletonList("HOST_NAME_1"))
-                                                     .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
+                                                     .withInfraMappingType(PHYSICAL_DATA_CENTER_SSH.name())
                                                      .build();
 
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
@@ -344,7 +345,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
                                                    .withUuid(INFRA_MAPPING_ID)
                                                    .withServiceTemplateId(TEMPLATE_ID)
                                                    .withHostNames(singletonList(HOST_NAME))
-                                                   .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
+                                                   .withInfraMappingType(PHYSICAL_DATA_CENTER_SSH.name())
                                                    .build();
 
     PhysicalInfrastructureMapping updatedInfra = aPhysicalInfrastructureMapping()
@@ -362,7 +363,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
                                                      .withServiceId(SERVICE_ID)
                                                      .withServiceTemplateId(TEMPLATE_ID)
                                                      .withHostNames(singletonList(HOST_NAME))
-                                                     .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
+                                                     .withInfraMappingType(PHYSICAL_DATA_CENTER_SSH.name())
                                                      .build();
 
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
