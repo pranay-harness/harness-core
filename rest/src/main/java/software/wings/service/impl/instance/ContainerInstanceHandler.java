@@ -473,7 +473,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
         context.getWorkflowExecutionId(), serviceId, infraMappingId, StateType.PHASE_STEP, Constants.DEPLOY_CONTAINERS);
     executionDataList.forEach(stateExecutionData -> {
       List<StateExecutionData> deployPhaseStepList =
-          stateExecutionData.allStateExecutionMap()
+          stateExecutionData.getStateExecutionMap()
               .entrySet()
               .stream()
               .filter(entry -> entry.getKey().equals(Constants.DEPLOY_CONTAINERS))

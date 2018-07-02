@@ -6,7 +6,6 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
-import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServiceInstanceSelectionParams;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -100,7 +99,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
             .withHostConnectionAttrs(hostConnectionAttr.getUuid())
             .withComputeProviderSettingId(computeProviderSetting.getUuid())
             .withHostNames(asList("host1", "host2"))
-            .withInfraMappingType(PHYSICAL_DATA_CENTER_SSH.name())
+            .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
             .build();
     PhysicalInfrastructureMapping infrastructureMapping =
         (PhysicalInfrastructureMapping) infrastructureMappingService.save(physicalInfrastructureMapping);
