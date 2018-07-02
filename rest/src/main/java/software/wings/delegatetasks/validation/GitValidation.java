@@ -41,21 +41,18 @@ public class GitValidation extends AbstractDelegateValidateTask {
       encryptionService.decrypt(gitConfig, encryptionDetails);
     } catch (Exception e) {
       logger.info("Failed to decrypt " + gitConfig, e);
-      return singletonList(DelegateConnectionResult.builder()
-                               .criteria(encryptionDetails.get(0).getEncryptionConfig().toString())
-                               .validated(false)
-                               .build());
+      return singletonList(DelegateConnectionResult.builder().criteria(getCriteria().get(0)).validated(false).build());
     }
 
     return singletonList(
         DelegateConnectionResult.builder()
-            .criteria(gitConfig.getRepoUrl())
+            .criteria(getCriteria().get(0))
             .validated(!startsWith(gitClient.validate(gitConfig, false), UNREACHABLE_HOST.getDescription()))
             .build());
   }
 
   @Override
   public List<String> getCriteria() {
-    return singletonList(((GitConfig) getParameters()[1]).getRepoUrl());
+    return singletonList("GIT:" + ((GitConfig) getParameters()[1]).getRepoUrl());
   }
 }
