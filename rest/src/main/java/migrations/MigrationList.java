@@ -84,6 +84,7 @@ public class MigrationList {
         .add(Pair.of(165, DropYamlGitSyncCollectionMigration.class))
         .add(Pair.of(166, DirectKubernetesOrphanRemoval.class))
         .add(Pair.of(167, AddReplCtrlNameToKubeSetupProperties.class))
+        .add(Pair.of(168, BaseMigration.class))
         .build();
   }
 }
