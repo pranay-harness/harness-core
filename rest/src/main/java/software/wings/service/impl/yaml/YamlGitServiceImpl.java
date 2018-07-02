@@ -56,7 +56,7 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
@@ -104,7 +104,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   @Inject private DelegateService delegateService;
   @Inject private AlertService alertService;
   @Inject private SettingsService settingsService;
-  @Inject private EncryptionService encryptionService;
+  @Inject private ManagerDecryptionService managerDecryptionService;
 
   /**
    * Gets the yaml git sync info by entityId
@@ -141,7 +141,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       HostConnectionAttributes attributeValue = (HostConnectionAttributes) settingAttribute.getValue();
       List<EncryptedDataDetail> encryptionDetails =
           secretManager.getEncryptionDetails(attributeValue, GLOBAL_APP_ID, null);
-      encryptionService.decrypt(attributeValue, encryptionDetails);
+      managerDecryptionService.decrypt(attributeValue, encryptionDetails);
     }
 
     return ygs.getGitConfig(settingAttribute);
