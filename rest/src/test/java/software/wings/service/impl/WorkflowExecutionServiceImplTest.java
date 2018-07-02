@@ -18,7 +18,6 @@ import static software.wings.beans.CustomOrchestrationWorkflow.CustomOrchestrati
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.GraphLink.Builder.aLink;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
-import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -32,6 +31,7 @@ import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
+import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
 import static software.wings.sm.ExecutionStatus.WAITING;
 import static software.wings.sm.StateType.ENV_STATE;
@@ -1824,7 +1824,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                               .withComputeProviderType(computeProvider.getValue().getType())
                                               .withDeploymentType(SSH.name())
                                               .withHostConnectionAttrs(AccessType.KEY.name())
-                                              .withInfraMappingType(PHYSICAL_DATA_CENTER_SSH.name())
+                                              .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
                                               .build());
 
     triggerWorkflow(app.getAppId(), env, service, infrastructureMapping);
@@ -1862,7 +1862,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                               .withComputeProviderType(computeProvider.getValue().getType())
                                               .withDeploymentType(SSH.name())
                                               .withHostConnectionAttrs(AccessType.KEY.name())
-                                              .withInfraMappingType(PHYSICAL_DATA_CENTER_SSH.name())
+                                              .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
                                               .build());
 
     InfrastructureMapping templateInfraMapping =
@@ -1877,7 +1877,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                               .withComputeProviderType(computeProvider.getValue().getType())
                                               .withDeploymentType(SSH.name())
                                               .withHostConnectionAttrs(AccessType.KEY.name())
-                                              .withInfraMappingType(PHYSICAL_DATA_CENTER_SSH.name())
+                                              .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
                                               .build());
 
     triggerTemplateWorkflow(app.getAppId(), env, service, infrastructureMapping, templateService, templateInfraMapping);

@@ -176,7 +176,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
                                  .infraMappingId(INFRA_MAPPING_ID)
                                  .deploymentType(DeploymentType.KUBERNETES)
                                  .build())
-          .withStateExecutionData(aCommandStateExecutionData().build())
+          .addStateExecutionData(aCommandStateExecutionData().build())
           .build();
 
   private Application app = anApplication().withUuid(APP_ID).withName(APP_NAME).build();
@@ -414,7 +414,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
             .addContextElement(workflowStandardParams)
             .addContextElement(phaseElement)
             .addContextElement(serviceElementBuilder.build())
-            .withStateExecutionData(aCommandStateExecutionData().withContainerSetupParams(setupParams).build())
+            .addStateExecutionData(aCommandStateExecutionData().withContainerSetupParams(setupParams).build())
             .build();
     ExecutionContext context = new ExecutionContextImpl(stateExecutionInstance);
     on(context).set("variableProcessor", variableProcessor);

@@ -2226,7 +2226,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .project(StateExecutionInstance.DISPLAY_NAME_KEY, true)
             .project(StateExecutionInstance.ID_KEY, true)
             .project(StateExecutionInstance.PARENT_INSTANCE_ID_KEY, true)
-            .project(StateExecutionInstance.STATE_EXECUTION_DATA_KEY, true)
+            .project(StateExecutionInstance.STATE_EXECUTION_MAP_KEY, true)
             .project(StateExecutionInstance.STATE_TYPE_KEY, true)
             .project(StateExecutionInstance.STATUS_KEY, true)
             .asList();
@@ -2266,7 +2266,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
               .project(StateExecutionInstance.DISPLAY_NAME_KEY, true)
               .project(StateExecutionInstance.ID_KEY, true)
               .project(StateExecutionInstance.PARENT_INSTANCE_ID_KEY, true)
-              .project(StateExecutionInstance.STATE_EXECUTION_DATA_KEY, true)
+              .project(StateExecutionInstance.STATE_EXECUTION_MAP_KEY, true)
               .project(StateExecutionInstance.STATE_TYPE_KEY, true)
               .project(StateExecutionInstance.STATUS_KEY, true)
               .asList();

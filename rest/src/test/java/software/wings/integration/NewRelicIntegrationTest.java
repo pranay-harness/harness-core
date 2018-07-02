@@ -59,6 +59,7 @@ import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.states.AbstractAnalysisState;
@@ -72,6 +73,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
@@ -267,8 +269,9 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     stateExecutionInstance.setStatus(ExecutionStatus.SUCCESS);
     stateExecutionInstance.setStateType(StateType.NEW_RELIC.name());
     stateExecutionInstance.setDisplayName("Relic_Fail");
-    stateExecutionInstance.setStateExecutionData(
-        MetricAnalysisExecutionData.builder().serverConfigId(serverConfigId).build());
+    Map<String, StateExecutionData> hashMap = new HashMap();
+    hashMap.put("Relic_Fail", MetricAnalysisExecutionData.builder().serverConfigId(serverConfigId).build());
+    stateExecutionInstance.setStateExecutionMap(hashMap);
     stateExecutionInstance.setAppId(appId);
     wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(stateExecutionInstance));
 
@@ -327,8 +330,9 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     stateExecutionInstance.setAppId(appId);
     stateExecutionInstance.setStateType(StateType.NEW_RELIC.name());
     stateExecutionInstance.setDisplayName("Relic_Fail");
-    stateExecutionInstance.setStateExecutionData(
-        MetricAnalysisExecutionData.builder().serverConfigId(serverConfigId).build());
+    Map<String, StateExecutionData> hashMap = new HashMap();
+    hashMap.put("Relic_Fail", MetricAnalysisExecutionData.builder().serverConfigId(serverConfigId).build());
+    stateExecutionInstance.setStateExecutionMap(hashMap);
     wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(stateExecutionInstance));
 
     final NewRelicMetricAnalysisRecord record = NewRelicMetricAnalysisRecord.builder()
