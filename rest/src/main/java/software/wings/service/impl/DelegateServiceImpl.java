@@ -980,6 +980,10 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public void processDelegateResponse(
       String accountId, String delegateId, String taskId, DelegateTaskResponse response) {
+    if (response == null) {
+      logger.info("null response received from {} for task {}", delegateId, taskId);
+      return;
+    }
     logger.info("Delegate [{}], response received for taskId [{}]", delegateId, taskId);
 
     DelegateTask delegateTask = wingsPersistence.createQuery(DelegateTask.class)
