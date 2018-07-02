@@ -325,7 +325,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
       // Delete old autoscaler
       if (isNotBlank(previousAutoscalerYaml)) {
-        kubernetesContainerService.deleteAutoscaler(kubernetesConfig, encryptedDataDetails, lastCtrlName);
+        kubernetesContainerService.deleteAutoscaler(
+            kubernetesConfig, encryptedDataDetails, isNotVersioned ? containerServiceName : lastCtrlName);
       }
 
       // Create new autoscaler
