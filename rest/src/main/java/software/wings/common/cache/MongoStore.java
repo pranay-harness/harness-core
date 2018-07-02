@@ -1,11 +1,14 @@
 package software.wings.common.cache;
 
+import static com.mongodb.ErrorCategory.DUPLICATE_KEY;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.DuplicateKeyException;
+import com.mongodb.ErrorCategory;
+import com.mongodb.MongoCommandException;
 import io.harness.cache.Distributable;
 import io.harness.cache.DistributedStore;
 import org.mongodb.morphia.Datastore;
@@ -71,6 +74,10 @@ public class MongoStore implements DistributedStore {
           datastore.createQuery(CacheEntity.class).filter(CacheEntity.CANONICAL_KEY_KEY, canonicalKey);
 
       datastore.findAndModify(query, updateOperations, false, true);
+    } catch (MongoCommandException exception) {
+      if (ErrorCategory.fromErrorCode(exception.getErrorCode()) != DUPLICATE_KEY) {
+        logger.error("Failed to update cache for key {}, hash {}", canonicalKey, entity.contextHash(), exception);
+      }
     } catch (DuplicateKeyException ignore) {
       // Unfortunately mongo does not seem to support atomic upsert. It is atomic update and the unique index will
       // prevent second record being stored, but competing calls will occasionally throw duplicate exception
