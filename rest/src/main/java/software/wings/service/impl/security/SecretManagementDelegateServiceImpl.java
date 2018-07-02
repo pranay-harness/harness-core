@@ -15,6 +15,7 @@ import com.amazonaws.services.kms.model.DecryptRequest;
 import com.amazonaws.services.kms.model.GenerateDataKeyRequest;
 import com.amazonaws.services.kms.model.GenerateDataKeyResult;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.network.Http;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Call;
@@ -38,6 +39,7 @@ import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.HashSet;
+import java.util.concurrent.TimeUnit;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -147,38 +149,51 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
           .kmsId(vaultConfig.getUuid())
           .build();
     }
-    if (savedEncryptedData != null && isNotBlank(value)) {
-      getVaultRestClient(vaultConfig)
-          .deleteSecret(String.valueOf(vaultConfig.getAuthToken()), savedEncryptedData.getEncryptionKey())
-          .execute();
-    }
-    Call<Void> request = getVaultRestClient(vaultConfig)
-                             .writeSecret(String.valueOf(vaultConfig.getAuthToken()), name, settingType,
-                                 VaultSecretValue.builder().value(value).build());
+    for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
+      try {
+        if (savedEncryptedData != null && isNotBlank(value)) {
+          getVaultRestClient(vaultConfig)
+              .deleteSecret(String.valueOf(vaultConfig.getAuthToken()), savedEncryptedData.getEncryptionKey())
+              .execute();
+        }
+        Call<Void> request = getVaultRestClient(vaultConfig)
+                                 .writeSecret(String.valueOf(vaultConfig.getAuthToken()), name, settingType,
+                                     VaultSecretValue.builder().value(value).build());
 
-    Response<Void> response = request.execute();
-    if (response.isSuccessful()) {
-      return EncryptedData.builder()
-          .encryptionKey(keyUrl)
-          .encryptedValue(keyUrl.toCharArray())
-          .encryptionType(EncryptionType.VAULT)
-          .enabled(true)
-          .accountId(accountId)
-          .parentIds(new HashSet<>())
-          .kmsId(vaultConfig.getUuid())
-          .build();
-    } else {
-      String errorMsg = new StringBuilder()
-                            .append("Request not successful. Reason: {")
-                            .append(response)
-                            .append("}")
-                            .append(" headers: {")
-                            .append(response.raw().request().headers())
-                            .append("}")
-                            .toString();
-      logger.error(errorMsg);
-      throw new IOException(errorMsg);
+        Response<Void> response = request.execute();
+        if (response.isSuccessful()) {
+          return EncryptedData.builder()
+              .encryptionKey(keyUrl)
+              .encryptedValue(keyUrl.toCharArray())
+              .encryptionType(EncryptionType.VAULT)
+              .enabled(true)
+              .accountId(accountId)
+              .parentIds(new HashSet<>())
+              .kmsId(vaultConfig.getUuid())
+              .build();
+        } else {
+          String errorMsg = new StringBuilder()
+                                .append("Request not successful. Reason: {")
+                                .append(response)
+                                .append("}")
+                                .append(" headers: {")
+                                .append(response.raw().request().headers())
+                                .append("}")
+                                .toString();
+          logger.error(errorMsg);
+          throw new IOException(errorMsg);
+        }
+      } catch (Exception e) {
+        if (retry < NUM_OF_RETRIES) {
+          logger.warn("encryption failed. trial num: {}", retry, e);
+          sleep(ofMillis(100));
+        } else {
+          logger.error("encryption failed after {} retries ", retry, e);
+          throw new IOException("Decryption failed after " + NUM_OF_RETRIES + " retries", e);
+        }
+      }
     }
+    throw new IllegalStateException("Encryption failed. This state should never have been reached");
   }
 
   @Override
@@ -186,26 +201,40 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     if (data.getEncryptedValue() == null) {
       return null;
     }
-    logger.info("reading secret {} from vault {}", data.getEncryptionKey(), vaultConfig.getVaultUrl());
-    Call<VaultReadResponse> request =
-        getVaultRestClient(vaultConfig).readSecret(String.valueOf(vaultConfig.getAuthToken()), data.getEncryptionKey());
+    for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
+      try {
+        logger.info("reading secret {} from vault {}", data.getEncryptionKey(), vaultConfig.getVaultUrl());
+        Call<VaultReadResponse> request =
+            getVaultRestClient(vaultConfig)
+                .readSecret(String.valueOf(vaultConfig.getAuthToken()), data.getEncryptionKey());
 
-    Response<VaultReadResponse> response = request.execute();
+        Response<VaultReadResponse> response = request.execute();
 
-    if (response.isSuccessful()) {
-      return response.body().getData().getValue().toCharArray();
-    } else {
-      String errorMsg = new StringBuilder()
-                            .append("Request not successful. Reason: {")
-                            .append(response)
-                            .append("}")
-                            .append(" headers: {")
-                            .append(response.raw().request().headers())
-                            .append("}")
-                            .toString();
-      logger.error(errorMsg);
-      throw new IOException(errorMsg);
+        if (response.isSuccessful()) {
+          return response.body().getData().getValue().toCharArray();
+        } else {
+          String errorMsg = new StringBuilder()
+                                .append("Request not successful. Reason: {")
+                                .append(response)
+                                .append("}")
+                                .append(" headers: {")
+                                .append(response.raw().request().headers())
+                                .append("}")
+                                .toString();
+          logger.error(errorMsg);
+          throw new IOException(errorMsg);
+        }
+      } catch (Exception e) {
+        if (retry < NUM_OF_RETRIES) {
+          logger.warn("decryption failed. trial num: {}", retry, e);
+          sleep(ofMillis(100));
+        } else {
+          logger.error("decryption failed after {} retries ", retry, e);
+          throw new IOException("Decryption failed after " + NUM_OF_RETRIES + " retries", e);
+        }
+      }
     }
+    throw new IllegalStateException("Decryption failed. This state should never have been reached");
   }
 
   @Override
@@ -249,6 +278,9 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     final Retrofit retrofit = new Retrofit.Builder()
                                   .baseUrl(vaultConfig.getVaultUrl())
                                   .addConverterFactory(JacksonConverterFactory.create())
+                                  .client(Http.getOkHttpClientWithNoProxyValueSet(vaultConfig.getVaultUrl())
+                                              .readTimeout(10, TimeUnit.SECONDS)
+                                              .build())
                                   .build();
     return retrofit.create(VaultRestClient.class);
   }
