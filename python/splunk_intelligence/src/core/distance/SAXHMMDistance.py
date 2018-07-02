@@ -89,12 +89,13 @@ class SAXHMMDistance(object):
         return thresholds
 
     @staticmethod
-    def get_adjusted_distance(metric_deviation_type, min_threshold_delta, min_threshold_ratio, apply_sax, x, y, a, b):
+    def get_adjusted_distance(metric_deviation_type, min_threshold_delta, min_threshold_ratio, abs_dev_range,
+                              apply_sax, x, y, a, b):
         """
 
         The distance is adjusted based on high and low deviation notions, to safe guard against
         control and test belonging to different distributions, and to apply minimum thresholds based
-        on domain knowledge.
+        on domain knowledge. It also uses user defined custom thresholds as override
 
         :param metric_deviation_type:
         :param min_threshold_delta: absolute difference should be greater than this
@@ -106,6 +107,8 @@ class SAXHMMDistance(object):
         :param b: the letter from the Alphabet for the y value
         :return: the adjusted distance
         """
+        if SAXHMMDistance.user_defined_override(metric_deviation_type, abs_dev_range[0], abs_dev_range[1], y):
+            return 0
         if SAXHMMDistance.low_deviation(metric_deviation_type, min_threshold_delta, min_threshold_ratio, x, y):
             return 0
         if SAXHMMDistance.high_deviation(metric_deviation_type, x, y):
@@ -141,7 +144,21 @@ class SAXHMMDistance(object):
             return False
 
     @staticmethod
-    def low_deviation(metric_deviation_type, min_threshold_delta, min_threshold_ratio,  x, y):
+    def user_defined_override(metric_deviation_type, min_threshold, max_threshold, y):
+        if not np.isnan(y):
+            if metric_deviation_type == MetricToDeviationType.HIGHER:
+                return y < max_threshold
+            # Lower is bad
+            elif metric_deviation_type == MetricToDeviationType.LOWER:
+                return y > min_threshold
+            # Both are bad
+            else:
+                return min_threshold < y < max_threshold
+        else:
+            return False
+
+    @staticmethod
+    def low_deviation(metric_deviation_type, min_threshold_delta, min_threshold_ratio, x, y):
         """
             Apply the distribution to compute distance only if the difference is above a specified
             minimum threshold. This information is derived from domain knowledge.
@@ -227,8 +244,9 @@ class SAXHMMDistance(object):
 
 
 class SAXHMMDistanceFinder(object):
-    def __init__(self, metric_name, smooth_window, tolerance, control_data_dict, test_data_dict, metric_template,
+    def __init__(self, transaction_name, metric_name, smooth_window, tolerance, control_data_dict, test_data_dict, metric_template,
                  comparison_unit_window):
+        self.transaction_name = transaction_name
         self.metric_name = metric_name
         self.smooth_window = smooth_window
         self.thresholds = SAXHMMDistance.thresholds
@@ -270,10 +288,11 @@ class SAXHMMDistanceFinder(object):
         :return:
         """
         return SAXHMMDistance.get_adjusted_distance(self.metric_template.get_deviation_type(self.metric_name),
-                                                    self.metric_template.get_deviation_min_threshold(self.metric_name,
-                                                                                                     ThresholdComparisonType.DELTA),
-                                                    self.metric_template.get_deviation_min_threshold(self.metric_name,
-                                                                                                     ThresholdComparisonType.RATIO),
+                                                    self.metric_template.get_deviation_threshold(self.metric_name,
+                                                                                                 ThresholdComparisonType.DELTA),
+                                                    self.metric_template.get_deviation_threshold(self.metric_name,
+                                                                                                 ThresholdComparisonType.RATIO),
+                                                    self.metric_template.get_abs_deviation_range(self.transaction_name, self.metric_name),
                                                     self.apply_sax,
                                                     control_val, test_val,
                                                     control_letter,

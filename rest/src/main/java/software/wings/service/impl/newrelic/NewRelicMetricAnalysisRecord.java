@@ -171,6 +171,8 @@ public class NewRelicMetricAnalysisRecord extends Base implements Comparable<New
   @Builder
   public static class NewRelicMetricAnalysisValue {
     private String name;
+    private String type;
+    private String alertType;
     private RiskLevel riskLevel;
     private double testValue;
     private double controlValue;

@@ -17,6 +17,7 @@ import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.TSRequest;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLScores;
+import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricHostAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
@@ -182,10 +183,12 @@ public class TimeSeriesResource {
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
-  public RestResponse<Map<String, TimeSeriesMetricDefinition>> getMetricTemplate(
+  public RestResponse<Map<String, Map<String, TimeSeriesMetricDefinition>>> getMetricTemplate(
       @QueryParam("accountId") String accountId, @QueryParam("stateType") StateType stateType,
-      @QueryParam("stateExecutionId") String stateExecutionId) {
-    return new RestResponse<>(metricDataAnalysisService.getMetricTemplate(stateType, stateExecutionId));
+      @QueryParam("stateExecutionId") String stateExecutionId, @QueryParam("serviceId") String serviceId,
+      @QueryParam("groupName") String groupName) {
+    return new RestResponse<>(
+        metricDataAnalysisService.getMetricTemplate(stateType, stateExecutionId, serviceId, groupName));
   }
 
   @POST
@@ -195,5 +198,29 @@ public class TimeSeriesResource {
   public RestResponse<String> fetch(@QueryParam("accountId") String accountId,
       @QueryParam("serverConfigId") String serverConfigId, APMFetchConfig fetchConfig) {
     return new RestResponse<>(newRelicService.fetch(accountId, serverConfigId, fetchConfig));
+  }
+
+  @POST
+  @Path("/threshold")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> saveCustomThreshold(@QueryParam("accountId") String accountId,
+      @QueryParam("stateType") StateType stateType, @QueryParam("serviceId") String serviceId,
+      @QueryParam("groupName") String groupName, @QueryParam("transactionName") String transactionName,
+      TimeSeriesMetricDefinition timeSeriesMetricDefinition) {
+    return new RestResponse<>(metricDataAnalysisService.saveCustomThreshold(
+        stateType, serviceId, groupName, transactionName, timeSeriesMetricDefinition));
+  }
+
+  @GET
+  @Path("/threshold")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<TimeSeriesMLTransactionThresholds> getCustomThreshold(@QueryParam("accountId") String accountId,
+      @QueryParam("stateType") StateType stateType, @QueryParam("serviceId") String serviceId,
+      @QueryParam("groupName") String groupName, @QueryParam("transactionName") String transactionName,
+      @QueryParam("metricName") String metricName) {
+    return new RestResponse<>(
+        metricDataAnalysisService.getCustomThreshold(stateType, serviceId, groupName, transactionName, metricName));
   }
 }

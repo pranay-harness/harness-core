@@ -10,6 +10,8 @@ import java.util.Map;
 @Data
 public class TimeSeriesMLMetricSummary {
   private String metric_name;
+  private String metric_type;
+  private String alert_type;
   private TimeSeriesMLDataSummary control;
   private TimeSeriesMLDataSummary test;
   private Map<String, TimeSeriesMLHostSummary> results;

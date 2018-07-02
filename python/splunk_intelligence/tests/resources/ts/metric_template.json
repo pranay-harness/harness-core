@@ -1,82 +1,123 @@
 {
-  "averageResponseTime": {
-    "metricName": "averageResponseTime",
-    "thresholds": [
-      {
-        "thresholdType": "ALERT_WHEN_HIGHER",
-        "comparisonType": "RATIO",
-        "high": 1.5,
-        "medium": 1.25,
-        "min": 0.5
-      },
-      {
-        "thresholdType": "ALERT_WHEN_HIGHER",
-        "comparisonType": "DELTA",
-        "high": 10,
-        "medium": 5,
-        "min": 50
-      }
-    ],
-    "metricType": "RESP_TIME"
+  "default": {
+    "averageResponseTime": {
+      "metricName": "averageResponseTime",
+      "thresholds": [
+        {
+          "thresholdType": "ALERT_WHEN_HIGHER",
+          "comparisonType": "RATIO",
+          "ml": 0.5
+        },
+        {
+          "thresholdType": "ALERT_WHEN_HIGHER",
+          "comparisonType": "DELTA",
+          "ml": 50
+        }
+      ],
+      "metricType": "RESP_TIME"
+    },
+    "requestsPerMinute": {
+      "metricName": "requestsPerMinute",
+      "thresholds": [
+        {
+          "thresholdType": "ALERT_WHEN_LOWER",
+          "comparisonType": "RATIO",
+          "ml": 0.5
+        },
+        {
+          "thresholdType": "ALERT_WHEN_HIGHER",
+          "comparisonType": "DELTA",
+          "ml": 20
+        }
+      ],
+      "metricType": "THROUGHPUT"
+    },
+    "error": {
+      "metricName": "error",
+      "thresholds": [
+        {
+          "thresholdType": "ALERT_WHEN_HIGHER",
+          "comparisonType": "RATIO",
+          "ml": 0.5
+        },
+        {
+          "thresholdType": "ALERT_WHEN_HIGHER",
+          "comparisonType": "DELTA",
+          "ml": 0
+        },
+        {
+          "thresholdType": "ALERT_WHEN_HIGHER",
+          "comparisonType": "ABSOLUTE",
+          "ml": 0
+        },
+        {
+          "thresholdType": "ALERT_WHEN_LOWER",
+          "comparisonType": "ABSOLUTE",
+          "ml": 0
+        }
+      ],
+      "metricType": "ERROR"
+    },
+    "apdexScore": {
+      "metricName": "apdexScore",
+      "thresholds": [
+        {
+          "thresholdType": "ALERT_WHEN_LOWER",
+          "comparisonType": "RATIO",
+          "ml": 0.5
+        },
+        {
+          "thresholdType": "ALERT_WHEN_LOWER",
+          "comparisonType": "DELTA",
+          "ml": 0.3
+        }
+      ],
+      "metricType": "VALUE"
+    }
   },
-  "requestsPerMinute": {
-    "metricName": "requestsPerMinute",
-    "thresholds": [
-      {
-        "thresholdType": "ALERT_WHEN_LOWER",
-        "comparisonType": "RATIO",
-        "high": 0.5,
-        "medium": 0.75,
-        "min": 0.5
-      },
-      {
-        "thresholdType": "ALERT_WHEN_HIGHER",
-        "comparisonType": "DELTA",
-        "high": 100,
-        "medium": 50,
-        "min": 20
-      }
-    ],
-    "metricType": "THROUGHPUT"
-  },
-  "error": {
-    "metricName": "error",
-    "thresholds": [
-      {
-        "thresholdType": "ALERT_WHEN_HIGHER",
-        "comparisonType": "RATIO",
-        "high": 1.5,
-        "medium": 1.25,
-        "min": 0.5
-      },
-      {
-        "thresholdType": "ALERT_WHEN_HIGHER",
-        "comparisonType": "DELTA",
-        "high": 10,
-        "medium": 5,
-        "min": 0
-      }
-    ],
-    "metricType": "ERROR"
-  },
-  "apdexScore": {
-    "metricName": "apdexScore",
-    "thresholds": [
-      {
-        "thresholdType": "ALERT_WHEN_LOWER",
-        "comparisonType": "RATIO",
-        "high": 0.5,
-        "medium": 0.75,
-        "min": 0.5
-      },
-      {
-        "thresholdType": "ALERT_WHEN_LOWER",
-        "comparisonType": "DELTA",
-        "high": 0.5,
-        "medium": 0.3,
-        "min": 0.3
-      }
-    ],
-    "metricType": "VALUE"
+  "txn1": {
+    "averageResponseTime": {
+      "metricName": "averageResponseTime",
+      "customThresholds": [
+        {
+          "thresholdType": "ALERT_WHEN_LOWER",
+          "comparisonType": "ABSOLUTE",
+          "ml": 0.55
+        },
+        {
+          "thresholdType": "ALERT_WHEN_HIGHER",
+          "comparisonType": "ABSOLUTE",
+          "ml": 500
+        }
+      ],
+      "metricType": "RESP_TIME"
+    },
+    "requestsPerMinute": {
+      "metricName": "requestsPerMinute",
+      "customThresholds": [
+        {
+          "thresholdType": "ALERT_WHEN_LOWER",
+          "comparisonType": "ABSOLUTE",
+          "ml": 20
+        }
+      ],
+      "metricType": "THROUGHPUT"
+    },
+    "error": {
+      "metricName": "error",
+      "customThresholds": [
+        {
+          "thresholdType": "ALERT_WHEN_LOWER",
+          "comparisonType": "ABSOLUTE",
+          "ml": 0.511
+        },
+        {
+          "thresholdType": "ALERT_WHEN_HIGHER",
+          "comparisonType": "ABSOLUTE",
+          "ml": 10
+        }
+      ],
+      "metricType": "ERROR"
+    }
   }
 }

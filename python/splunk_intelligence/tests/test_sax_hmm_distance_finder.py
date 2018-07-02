@@ -53,7 +53,8 @@ def run_analysis(filename, make_nan=False, comparison_unit_window=1):
                 create_nan(metric_data['control'])
                 create_nan(metric_data['test'])
 
-            shd = SAXHMMDistanceFinder(metric_data['metric_name'], 3, 1,
+            shd = SAXHMMDistanceFinder(txn_data['txn_name'],
+                                       metric_data['metric_name'], 3, 1,
                                        metric_data['control'],
                                        metric_data['test'],
                                        metric_template, comparison_unit_window)
@@ -97,7 +98,7 @@ def test_4():
 
 
 def main(args):
-    test_4()
+    test_3()
 
 
 if __name__ == "__main__":

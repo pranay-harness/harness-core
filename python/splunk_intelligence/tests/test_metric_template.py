@@ -19,15 +19,23 @@ def test_load_metric_template():
     assert metric_template.get_metric_type('apdexScore') == MetricType.VALUE
     assert metric_template.get_metric_type('error') == MetricType.ERROR
 
-    assert metric_template.get_deviation_min_threshold('averageResponseTime', ThresholdComparisonType.DELTA) == 50
-    assert metric_template.get_deviation_min_threshold('requestsPerMinute', ThresholdComparisonType.DELTA) == 20
-    assert metric_template.get_deviation_min_threshold('apdexScore', ThresholdComparisonType.DELTA) == 0.3
-    assert metric_template.get_deviation_min_threshold('error', ThresholdComparisonType.DELTA) == 0
+    assert metric_template.get_deviation_threshold('averageResponseTime', ThresholdComparisonType.DELTA) == 50
+    assert metric_template.get_deviation_threshold('requestsPerMinute', ThresholdComparisonType.DELTA) == 20
+    assert metric_template.get_deviation_threshold('apdexScore', ThresholdComparisonType.DELTA) == 0.3
+    assert metric_template.get_deviation_threshold('error', ThresholdComparisonType.DELTA) == 0
 
-    assert metric_template.get_deviation_min_threshold('averageResponseTime', ThresholdComparisonType.RATIO) == 0.5
-    assert metric_template.get_deviation_min_threshold('requestsPerMinute', ThresholdComparisonType.RATIO) == 0.5
-    assert metric_template.get_deviation_min_threshold('apdexScore', ThresholdComparisonType.RATIO) == 0.5
-    assert metric_template.get_deviation_min_threshold('error', ThresholdComparisonType.RATIO) == 0.5
+    assert metric_template.get_deviation_threshold('averageResponseTime', ThresholdComparisonType.RATIO) == 0.5
+    assert metric_template.get_deviation_threshold('requestsPerMinute', ThresholdComparisonType.RATIO) == 0.5
+    assert metric_template.get_deviation_threshold('apdexScore', ThresholdComparisonType.RATIO) == 0.5
+    assert metric_template.get_deviation_threshold('error', ThresholdComparisonType.RATIO) == 0.5
+
+    assert metric_template.get_abs_deviation_range('txn1', 'averageResponseTime',
+                                                   ) == [0.55, 500]
+    assert metric_template.get_abs_deviation_range('txn2', 'averageResponseTime',
+                                                   ) == [float('inf'), float('-inf')]
+    assert metric_template.get_abs_deviation_range('txn1', 'requestsPerMinute') == [20, float('-inf')]
+    assert metric_template.get_abs_deviation_range('txn1', 'apdexScore') == [float('inf'), float('-inf')]
+    assert metric_template.get_abs_deviation_range('txn1', 'error') == [0.511, 10]
 
     assert metric_template.get_metric_name(MetricType.THROUGHPUT) == 'requestsPerMinute'
 

@@ -282,9 +282,9 @@ public class MetricAnalysisJob implements Job {
               .test_input_url(testInputUrl)
               .control_input_url(controlInputUrl)
               .analysis_save_url(logAnalysisSaveUrl)
-              .metric_template_url("/api/" + MetricDataAnalysisService.RESOURCE_URL
-                  + "/get-metric-template?accountId=" + context.getAccountId() + "&stateType=" + context.getStateType()
-                  + "&stateExecutionId=" + context.getStateExecutionId())
+              .metric_template_url("/api/" + MetricDataAnalysisService.RESOURCE_URL + "/get-metric-template?accountId="
+                  + context.getAccountId() + "&stateType=" + context.getStateType() + "&stateExecutionId="
+                  + context.getStateExecutionId() + "&serviceId=" + context.getServiceId() + "&groupName=" + groupName)
               .control_nodes(controlNodes)
               .test_nodes(
                   mlAnalysisType.equals(TimeSeriesMlAnalysisType.PREDICTIVE) ? Sets.newHashSet(groupName) : testNodes)
