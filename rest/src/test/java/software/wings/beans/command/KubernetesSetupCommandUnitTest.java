@@ -240,7 +240,8 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
 
     HorizontalPodAutoscaler horizontalPodAutoscaler =
         (HorizontalPodAutoscaler) MethodUtils.invokeMethod(kubernetesSetupCommandUnit, true, "createAutoscaler",
-            new Object[] {"autoScalerName", "Deployment", "default", labels, setupParams, executionLogCallback});
+            new Object[] {"autoScalerName", "Deployment", "extensions/v1beta1", "default", labels, setupParams,
+                executionLogCallback});
 
     assertEquals("autoscaling/v2beta1", horizontalPodAutoscaler.getApiVersion());
     assertNotNull(horizontalPodAutoscaler.getSpec());
@@ -279,9 +280,10 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
                                             .withTargetCpuUtilizationPercentage(20)
                                             .build();
 
-    HorizontalPodAutoscaler horizontalPodAutoscaler = (HorizontalPodAutoscaler) MethodUtils.invokeMethod(
-        kubernetesSetupCommandUnit, true, "createAutoscaler",
-        new Object[] {"abaris.hpanormal.prod.0", "Deployment", "default", labels, setupParams, executionLogCallback});
+    HorizontalPodAutoscaler horizontalPodAutoscaler =
+        (HorizontalPodAutoscaler) MethodUtils.invokeMethod(kubernetesSetupCommandUnit, true, "createAutoscaler",
+            new Object[] {"abaris.hpanormal.prod.0", "Deployment", "extensions/v1beta1", "default", labels, setupParams,
+                executionLogCallback});
 
     assertEquals("autoscaling/v1", horizontalPodAutoscaler.getApiVersion());
     assertNotNull(horizontalPodAutoscaler.getSpec());
@@ -308,9 +310,10 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
                       .withTargetCpuUtilizationPercentage(30)
                       .build();
 
-    horizontalPodAutoscaler = (HorizontalPodAutoscaler) MethodUtils.invokeMethod(kubernetesSetupCommandUnit, true,
-        "createAutoscaler",
-        new Object[] {"abaris.hpanormal.prod.0", "Deployment", "default", labels, setupParams, executionLogCallback});
+    horizontalPodAutoscaler =
+        (HorizontalPodAutoscaler) MethodUtils.invokeMethod(kubernetesSetupCommandUnit, true, "createAutoscaler",
+            new Object[] {"abaris.hpanormal.prod.0", "Deployment", "extensions/v1beta1", "default", labels, setupParams,
+                executionLogCallback});
 
     assertEquals("autoscaling/v1", horizontalPodAutoscaler.getApiVersion());
     assertNotNull(horizontalPodAutoscaler.getSpec());
