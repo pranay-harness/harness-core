@@ -49,6 +49,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -108,6 +109,8 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
+import software.wings.sm.DelegateMetaInfo;
+import software.wings.waitnotify.DelegateTaskNotifyResponseData;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
@@ -128,6 +131,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.validation.executable.ValidateOnExecution;
+import javax.ws.rs.NotFoundException;
 
 /**
  * Created by peeyushaggarwal on 11/28/16.
@@ -139,6 +143,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   private static final String ACCOUNT_ID = "accountId";
   private static final Configuration cfg = new Configuration(VERSION_2_3_23);
+  private static final int MAX_DELEGATE_META_INFO_ENTRIES = 10000;
   public static final int DELEGATE_METADATA_HTTP_CALL_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(10);
 
   static {
@@ -171,6 +176,31 @@ public class DelegateServiceImpl implements DelegateService {
               return fetchAccountDelegateMetadataFromS3(accountId);
             }
           });
+
+  private LoadingCache<String, DelegateMetaInfo> delegateMetaInfoCache =
+      CacheBuilder.newBuilder()
+          .maximumSize(MAX_DELEGATE_META_INFO_ENTRIES)
+          .build(new CacheLoader<String, DelegateMetaInfo>() {
+            public DelegateMetaInfo load(String delegateId) throws NotFoundException {
+              Delegate delegate = wingsPersistence.createQuery(Delegate.class)
+                                      .filter(ID_KEY, delegateId)
+                                      .project(ID_KEY, true)
+                                      .project(Delegate.VERSION_KEY, true)
+                                      .project(Delegate.HOST_NAME_KEY, true)
+                                      .get();
+
+              if (delegate != null) {
+                return DelegateMetaInfo.builder()
+                    .id(delegate.getUuid())
+                    .hostName(delegate.getHostName())
+                    .version(delegate.getVersion())
+                    .build();
+              } else {
+                throw new NotFoundException("Delegate with id " + delegateId + " not found");
+              }
+            }
+          });
+
   @Override
   public PageResponse<Delegate> list(PageRequest<Delegate> pageRequest) {
     return wingsPersistence.query(Delegate.class, pageRequest);
@@ -995,6 +1025,7 @@ public class DelegateServiceImpl implements DelegateService {
       if (delegateTask.isAsync()) {
         String waitId = delegateTask.getWaitId();
         if (waitId != null) {
+          applyDelegateInfoToStateExecutionData(delegateId, response);
           waitNotifyEngine.notify(waitId, response.getResponse());
         } else {
           logger.error("Async task {} has no wait ID", taskId);
@@ -1192,5 +1223,19 @@ public class DelegateServiceImpl implements DelegateService {
 
   private String getVersion() {
     return versionInfoManager.getVersionInfo().getVersion();
+  }
+
+  private void applyDelegateInfoToStateExecutionData(String delegateId, DelegateTaskResponse response) {
+    if (response != null && response.getResponse() instanceof DelegateTaskNotifyResponseData) {
+      try {
+        DelegateTaskNotifyResponseData delegateTaskNotifyResponseData =
+            (DelegateTaskNotifyResponseData) response.getResponse();
+        delegateTaskNotifyResponseData.setDelegateMetaInfo(delegateMetaInfoCache.get(delegateId));
+      } catch (ExecutionException e) {
+        logger.error("Execution exception", e);
+      } catch (UncheckedExecutionException e) {
+        logger.error("Delegate not found exception", e);
+      }
+    }
   }
 }

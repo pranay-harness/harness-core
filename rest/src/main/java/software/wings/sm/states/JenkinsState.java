@@ -20,6 +20,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -52,6 +53,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
+import software.wings.waitnotify.DelegateTaskNotifyResponseData;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
@@ -288,6 +290,8 @@ public class JenkinsState extends State {
     jenkinsExecutionData.setBuildFullDisplayName(jenkinsExecutionResponse.getBuildFullDisplayName());
     jenkinsExecutionData.setDescription(jenkinsExecutionResponse.getDescription());
     jenkinsExecutionData.setMetadata(jenkinsExecutionResponse.getMetadata());
+    jenkinsExecutionData.setDelegateMetaInfo(jenkinsExecutionResponse.getDelegateMetaInfo());
+
     return anExecutionResponse()
         .withExecutionStatus(jenkinsExecutionResponse.getExecutionStatus())
         .withStateExecutionData(jenkinsExecutionData)
@@ -379,7 +383,8 @@ public class JenkinsState extends State {
   @Data
   @NoArgsConstructor
   @AllArgsConstructor
-  public static final class JenkinsExecutionResponse implements NotifyResponseData {
+  @EqualsAndHashCode(callSuper = false)
+  public static final class JenkinsExecutionResponse extends DelegateTaskNotifyResponseData {
     private ExecutionStatus executionStatus;
     private String jenkinsResult;
     private String errorMessage;

@@ -18,6 +18,8 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class Delegate extends Base {
   public static final String ACCOUNT_ID_KEY = "accountId";
+  public static final String HOST_NAME_KEY = "hostName";
+  public static final String VERSION_KEY = "version";
 
   @NotEmpty private String accountId;
   private Status status = Status.ENABLED;
