@@ -298,9 +298,11 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         if (isNotBlank(lastCtrlName)) {
           String previousAutoscalerName = lastAutoscaler(
               kubernetesConfig, encryptedDataDetails, setupParams.getControllerNamePrefix(), useDashInHostname);
-          previousAutoscalerYaml = getAutoscalerYaml(kubernetesConfig, encryptedDataDetails, previousAutoscalerName);
-          if (isNotBlank(previousAutoscalerYaml)) {
-            lastAutoscaler = previousAutoscalerName;
+          if (isNotBlank(previousAutoscalerName)) {
+            previousAutoscalerYaml = getAutoscalerYaml(kubernetesConfig, encryptedDataDetails, previousAutoscalerName);
+            if (isNotBlank(previousAutoscalerYaml)) {
+              lastAutoscaler = previousAutoscalerName;
+            }
           }
         }
       }
