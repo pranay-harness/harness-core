@@ -247,7 +247,7 @@ class TSAnomlyDetector(object):
             txn_data_dict['weights_type'] = txn_data_dict['weights_type'].value
         return txn_data_dict
 
-    def fast_analysis_metric(self, num_point_per_bucket, metric_name, control_data_dict, test_data_dict):
+    def fast_analysis_metric(self, num_point_per_bucket, transaction_name, metric_name, control_data_dict, test_data_dict):
             num_points = len(control_data_dict['data'][0])
             control_data_2d = np.array(control_data_dict['data'])
             test_data_2d = np.array(test_data_dict['data'])
@@ -279,8 +279,8 @@ class TSAnomlyDetector(object):
             #  derived from domain knowledge. For instance, if the difference in average response time is less than
             # 50 ms, then it is acceptable regardless of what the distribution tells us.
             # Also, its low deviation if the % change is within a specified value. For now its at 50%
-            min_delta = self.metric_template.get_deviation_min_threshold(metric_name, ThresholdComparisonType.DELTA)
-            min_ratio = self.metric_template.get_deviation_min_threshold(metric_name, ThresholdComparisonType.RATIO)
+            min_delta = self.metric_template.get_deviation_threshold(metric_name, ThresholdComparisonType.DELTA)
+            min_ratio = self.metric_template.get_deviation_threshold(metric_name, ThresholdComparisonType.RATIO)
             dist_2d_data[np.logical_or(abs(dist_2d_data) < min_delta,
                                        abs(dist_2d_data) < min_ratio * np.minimum(test_data_2d, base_array))] = 0
             # normalizing distances
@@ -347,8 +347,8 @@ class TSAnomlyDetector(object):
                         std = 0 if np.isnan(std) else std
                     # let 95% in
                     threshold = 1.96 * std
-                    min_delta = self.metric_template.get_deviation_min_threshold(metric_name, ThresholdComparisonType.DELTA)
-                    min_ratio = self.metric_template.get_deviation_min_threshold(metric_name, ThresholdComparisonType.RATIO)
+                    min_delta = self.metric_template.get_deviation_threshold(metric_name, ThresholdComparisonType.DELTA)
+                    min_ratio = self.metric_template.get_deviation_threshold(metric_name, ThresholdComparisonType.RATIO)
                     y = input_data[pred_ind]
                     dist = y - y_hat
                     dist = 0 if abs(dist) < min_delta or abs(dist) < min_ratio * min(y, y_hat) else dist
@@ -399,96 +399,6 @@ class TSAnomlyDetector(object):
         for i in range(len(data) - window_size):
             reshaped_data.append(data[i:i+window_size])
         return np.array(reshaped_data)
-    #
-    # def nn_predictive_anlaysis(self, txn_name, metric_name, txn_data_dict):
-    #
-    #     data_dict = self.get_metrics_data(metric_name, self.metric_template, txn_data_dict)
-    #     response = {'results': {}, 'max_risk': -1, 'contro l_avg': -1, 'test_avg': -1}
-    #     num_points = len(data_dict['data'][0])
-    #     deployment_index = self._options.deployment_time + 1
-    #     all_data = np.copy(data_dict['data'])[0]
-    #
-    #     # TODO: should remove 0 index input should be 1d
-    #     if self.validate_prediction_input(txn_name, metric_name, np.copy(all_data)[0:deployment_index]):
-    #
-    #         input_data = np.copy(all_data)
-    #
-    #
-    #         input_data[np.isnan(input_data)] = 0
-    #         train = input_data[0:deployment_index]
-    #
-    #         scaler0 = np.nanmean(train)
-    #         scaler1 = np.nanstd(train)
-    #         scaler1 = 1 if scaler1 == 0 else scaler1
-    #         train = (train - scaler0)/scaler1
-    #         train_data = self.reshape_data(train, self._options.time_step_in)
-    #         # analysis_length = num_points - deployment_index
-    #         start = deployment_index
-    #         end = deployment_index + self._options.time_step_in
-    #         aut_enc = AutoEncoder(train_data, self._options.time_step_in, epochs=1000)
-    #         model, _ = aut_enc.train(train_data)
-    #         mean, std = aut_enc.get_error_stats(model, train_data)
-    #
-    #         pred_len = num_points - deployment_index
-    #
-    #         if pred_len % self._options.time_step_in > 0:
-    #             pad_len = self._options.time_step_in - (pred_len % self._options.time_step_in)
-    #
-    #             input_data = np.pad(input_data, ((0, pad_len)), 'constant',
-    #                                                constant_values=0)
-    #
-    #
-    #     # TODO if time_step_out is greater than it should predict more points and append to end
-    #         ## need zero pad for trainin gand replace nan
-    #         weighted_dist = 0
-    #         weight = 0
-    #         anomalies = [0] * len(input_data)
-    #         predicted = np.zeros([1, len(input_data)])
-    #
-    #         while(end < len(input_data)):
-    #             y = input_data[start:end].reshape(1,-1)
-    #             n_y=  1.*(y - scaler0)/ scaler1
-    #             y_hat_inv = aut_enc.predict(model, n_y)
-    #             y_hat = y_hat_inv * scaler1 + scaler0
-    #             min_delta = self.metric_template.get_deviation_min_threshold(metric_name, ThresholdComparisonType.DELTA)
-    #             min_ratio = self.metric_template.get_deviation_min_threshold(metric_name, ThresholdComparisonType.RATIO)
-    #             dist = y - y_hat
-    #             # remove oulier for next time prediction
-    #
-    #             dist[np.logical_or(abs(dist) < min_delta,
-    #                                        abs(dist) < min_ratio * np.minimum(y, y_hat))] = 0
-    #             metric_deviation_type = self.metric_template.get_deviation_type(metric_name)
-    #             adjusted_dist = self.adjust_numeric_dist(metric_deviation_type, dist)
-    #             # # for points where predicted is nan but y has value distance is set to  max dist.
-    #             # nan_pred_valid_test = np.isnan(y_hat) and not np.isnan(y)
-    #             # adjusted_dist = threshold + 0.1 if nan_pred_valid_test else adjusted_dist
-    #             # need to normalize the dist to have std =1
-    #             adjusted_dist = adjusted_dist*1./std if std!=0 else adjusted_dist
-    #             # clipping distances at threshold and remove ouliers for next time prediction, assuming after normalization std =1
-    #
-    #             ## if any find the indices
-    #             predicted[0, start:end] = y_hat.flatten()
-    #             for ind in range(self._options.time_step_in):
-    #                 if adjusted_dist[0, ind] > 2:
-    #                     adjusted_dist[0, ind] = 2.5
-    #                     anomalies[start + ind] = 1
-    #                 if not np.isnan(all_data[start + ind]):
-    #                     weight += 1
-    #                     weighted_dist += adjusted_dist[0, ind] * weight
-    #             end += self._options.time_step_in
-    #             start += self._options.time_step_in
-    #             # keep distance if both predicted and measured have values
-    #
-    #
-    #         if weight != 0:
-    #             weighted_dist /= ((weight * (weight+1))/2) * 1.
-    #         risk = 0 if weighted_dist <= 2 else 1
-    #         response['results'] = dict(score=weighted_dist, risk=risk, data=np.ma.masked_array(all_data[:num_points],
-    #                                                                         np.isnan(all_data[:num_points])).filled(-1).tolist(), anomaly_data=anomalies[:num_points], predicted=predicted[0,:num_points].tolist())
-    #     ## TODO what you need to return?
-    #     response['metric_name'] = metric_name
-    #
-    #     return response
 
     def analyze_metric(self, txn_name, metric_name, control_txn_data_dict, test_txn_data_dict, max_nodes_threshold,
                        fast_analysis=None):
@@ -503,7 +413,7 @@ class TSAnomlyDetector(object):
                 fast_analysis = True if len(control_data_dict['data']) > max_nodes_threshold else False
 
             if fast_analysis:
-                analysis_output = self.fast_analysis_metric(self._options.smooth_window, metric_name, control_data_dict,
+                analysis_output = self.fast_analysis_metric(self._options.smooth_window, txn_name, metric_name, control_data_dict,
                                                             test_data_dict)
             else:
                 data_len = (self._options.analysis_minute - self._options.analysis_start_min) + 1
@@ -513,7 +423,8 @@ class TSAnomlyDetector(object):
                                                        constant_values=np.nan)
                     test_data_dict['data'] = np.pad(test_data_dict['data'], ((0, 0), (0, pad_len)), 'constant',
                                                     constant_values=np.nan)
-                shdf = SAXHMMDistanceFinder(metric_name=metric_name,
+                shdf = SAXHMMDistanceFinder(transaction_name=txn_name,
+                                            metric_name=metric_name,
                                             smooth_window=self._options.smooth_window,
                                             tolerance=self._options.tolerance,
                                             control_data_dict=control_data_dict,
@@ -624,6 +535,8 @@ class TSAnomlyDetector(object):
             response['test'] = self.make_jsonable(test_data_dict)
 
         response['metric_name'] = metric_name
+        response['metric_type'] = self.metric_template.get_metric_type(metric_name).value
+        response['alert_type'] = self.metric_template.get_deviation_type(metric_name).value
 
         return response
 

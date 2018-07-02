@@ -12,7 +12,6 @@ import software.wings.beans.SortOrder;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.RiskLevel;
-import software.wings.metrics.Threshold;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.appdynamics.AppdynamicsTimeSeries;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
@@ -102,29 +101,11 @@ public class NewRelicMetricValueDefinition {
     double testValue = getValueForComparison(testRecords);
     double controlValue = getValueForComparison(controlRecords);
 
-    if (controlValue < 0.0 || testValue < 0.0) {
-      return NewRelicMetricAnalysisValue.builder()
-          .name(metricValueName)
-          .riskLevel(RiskLevel.NA)
-          .controlValue(controlValue)
-          .testValue(testValue)
-          .build();
-    }
-
-    RiskLevel riskLevel = RiskLevel.HIGH;
-
-    for (Threshold threshold : metricType.getThresholds()) {
-      RiskLevel currentRiskLevel = threshold.getRiskLevel(testValue, controlValue);
-      if (currentRiskLevel.compareTo(riskLevel) > 0) {
-        riskLevel = currentRiskLevel;
-      }
-    }
-
     return NewRelicMetricAnalysisValue.builder()
-        .riskLevel(riskLevel)
         .name(metricValueName)
-        .testValue(testValue)
+        .riskLevel(RiskLevel.NA)
         .controlValue(controlValue)
+        .testValue(testValue)
         .build();
   }
 

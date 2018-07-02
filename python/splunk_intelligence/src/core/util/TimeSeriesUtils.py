@@ -10,6 +10,7 @@ class RiskLevel(Enum):
 class ThresholdComparisonType(Enum):
     DELTA = 'DELTA'
     RATIO = 'RATIO'
+    ABSOLUTE = 'ABSOLUTE'
 
 
 class MetricType(Enum):

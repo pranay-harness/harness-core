@@ -4,6 +4,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLScores;
+import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricHostAnalysisValue;
@@ -71,7 +72,10 @@ public interface MetricDataAnalysisService {
   List<NewRelicMetricHostAnalysisValue> getToolTip(String stateExecutionId, String workflowExecutionId,
       int analysisMinute, String transactionName, String metricName, String groupName);
 
-  Map<String, TimeSeriesMetricDefinition> getMetricTemplate(StateType stateType, String stateExecutionId);
+  Map<String, Map<String, TimeSeriesMetricDefinition>> getMetricTemplate(
+      StateType stateType, String stateExecutionId, String serviceId, String groupName);
+  Map<String, Map<String, TimeSeriesMetricDefinition>> getCustomMetricTemplates(
+      StateType stateType, String serviceId, String groupName);
 
   NewRelicMetricDataRecord getAnalysisMinute(StateType stateType, String appId, String stateExecutionId,
       String workflowExecutionId, String serviceId, String groupName);
@@ -90,4 +94,10 @@ public interface MetricDataAnalysisService {
 
   List<NewRelicMetricAnalysisRecord> getMetricsAnalysisForDemo(
       String appId, String stateExecutionId, String workflowExecutionId);
+
+  boolean saveCustomThreshold(StateType stateType, String serviceId, String groupName, String transactionName,
+      TimeSeriesMetricDefinition metricDefinition);
+
+  TimeSeriesMLTransactionThresholds getCustomThreshold(
+      StateType stateType, String serviceId, String groupName, String transactionName, String metricName);
 }

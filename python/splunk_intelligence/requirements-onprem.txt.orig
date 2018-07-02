@@ -1,0 +1,10 @@
+pyopenssl
+numpy
+pandas
+nltk
+scipy
+sklearn
+cython
+statsmodels
+pyJWT
+urllib3

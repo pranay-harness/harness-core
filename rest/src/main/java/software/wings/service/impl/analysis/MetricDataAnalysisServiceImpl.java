@@ -413,22 +413,62 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   }
 
   @Override
-  public Map<String, TimeSeriesMetricDefinition> getMetricTemplate(StateType stateType, String stateExecutionId) {
+  public boolean saveCustomThreshold(StateType stateType, String serviceId, String groupName, String transactionName,
+      TimeSeriesMetricDefinition metricDefinition) {
+    wingsPersistence.delete(wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
+                                .filter("stateType", stateType)
+                                .filter("serviceId", serviceId)
+                                .filter("groupName", groupName)
+                                .filter("transactionName", transactionName)
+                                .filter("metricName", metricDefinition.getMetricName()));
+    wingsPersistence.save(TimeSeriesMLTransactionThresholds.builder()
+                              .stateType(stateType)
+                              .groupName(groupName)
+                              .serviceId(serviceId)
+                              .transactionName(transactionName)
+                              .metricName(metricDefinition.getMetricName())
+                              .thresholds(metricDefinition)
+                              .build());
+    return true;
+  }
+
+  @Override
+  public TimeSeriesMLTransactionThresholds getCustomThreshold(
+      StateType stateType, String serviceId, String groupName, String transactionName, String metricName) {
+    return wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
+        .filter("stateType", stateType)
+        .filter("serviceId", serviceId)
+        .filter("groupName", groupName)
+        .filter("transactionName", transactionName)
+        .filter("metricName", metricName)
+        .get();
+  }
+
+  @Override
+  public Map<String, Map<String, TimeSeriesMetricDefinition>> getMetricTemplate(
+      StateType stateType, String stateExecutionId, String serviceId, String groupName) {
+    Map<String, Map<String, TimeSeriesMetricDefinition>> result = new HashMap<>();
     switch (stateType) {
       case NEW_RELIC:
-        return NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE;
+        result.put("default", NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE);
+        break;
       case APP_DYNAMICS:
-        return NewRelicMetricValueDefinition.APP_DYNAMICS_VALUES_TO_ANALYZE;
+        result.put("default", NewRelicMetricValueDefinition.APP_DYNAMICS_VALUES_TO_ANALYZE);
+        break;
       case DYNA_TRACE:
-        return DynaTraceTimeSeries.getDefinitionsToAnalyze();
+        result.put("default", DynaTraceTimeSeries.getDefinitionsToAnalyze());
+        break;
       case PROMETHEUS:
       case CLOUD_WATCH:
       case DATA_DOG:
       case APM_VERIFICATION:
-        return getMetricTemplates(stateType, stateExecutionId);
+        result.put("default", getMetricTemplates(stateType, stateExecutionId));
+        break;
       default:
         throw new WingsException("Invalid Verification StateType.");
     }
+    result.putAll(getCustomMetricTemplates(stateType, serviceId, groupName));
+    return result;
   }
 
   @SuppressFBWarnings("NP_LOAD_OF_KNOWN_NULL_VALUE")
@@ -499,6 +539,8 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
             }
             metricsList.add(NewRelicMetricAnalysisValue.builder()
                                 .name(mlMetricSummary.getMetric_name())
+                                .type(mlMetricSummary.getMetric_type())
+                                .alertType(mlMetricSummary.getAlert_type())
                                 .riskLevel(riskLevel)
                                 .controlValue(mlMetricSummary.getControl_avg())
                                 .testValue(mlMetricSummary.getTest_avg())
@@ -696,13 +738,36 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
 
   @Override
   public Map<String, TimeSeriesMetricDefinition> getMetricTemplates(StateType stateType, String stateExecutionId) {
-    TimeSeriesMetricTemplates newRelicMetricDataRecord = wingsPersistence.createQuery(TimeSeriesMetricTemplates.class)
-                                                             .field("stateType")
-                                                             .equal(stateType)
-                                                             .field("stateExecutionId")
-                                                             .equal(stateExecutionId)
-                                                             .get();
-    return newRelicMetricDataRecord == null ? null : newRelicMetricDataRecord.getMetricTemplates();
+    TimeSeriesMetricTemplates newRelicMetricTemplates = wingsPersistence.createQuery(TimeSeriesMetricTemplates.class)
+                                                            .field("stateType")
+                                                            .equal(stateType)
+                                                            .field("stateExecutionId")
+                                                            .equal(stateExecutionId)
+                                                            .get();
+    return newRelicMetricTemplates == null ? null : newRelicMetricTemplates.getMetricTemplates();
+  }
+
+  @Override
+  public Map<String, Map<String, TimeSeriesMetricDefinition>> getCustomMetricTemplates(
+      StateType stateType, String serviceId, String groupName) {
+    TimeSeriesMLTransactionThresholds newRelicMetricTemplates =
+        wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
+            .field("stateType")
+            .equal(stateType)
+            .field("serviceId")
+            .equal(serviceId)
+            .field("groupName")
+            .equal(groupName)
+            .get();
+    Map<String, Map<String, TimeSeriesMetricDefinition>> customThresholds = new HashMap<>();
+    if (newRelicMetricTemplates != null) {
+      if (!customThresholds.containsKey(newRelicMetricTemplates.getTransactionName())) {
+        customThresholds.put(newRelicMetricTemplates.getTransactionName(), new HashMap<>());
+      }
+      customThresholds.get(newRelicMetricTemplates.getTransactionName())
+          .put(newRelicMetricTemplates.getMetricName(), newRelicMetricTemplates.getThresholds());
+    }
+    return newRelicMetricTemplates == null ? new HashMap<>() : customThresholds;
   }
 
   @Override

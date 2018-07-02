@@ -16,6 +16,7 @@ public class TimeSeriesMetricDefinition {
   private String metricName;
   private MetricType metricType;
   private Set<String> tags;
+  private List<Threshold> customThresholds;
 
   @JsonProperty("metricType")
   public String getMetricTypeName() {
