@@ -103,9 +103,9 @@ public class DelegateQueueTask implements Runnable {
               wingsPersistence.getDatastore().findAndModify(updateQuery, updateOperations);
 
           if (updatedDelegateTask == null) {
-            logger.error("Long running delegate task {} could not be updated to ERROR status", delegateTask.getUuid());
+            logger.info("Long running delegate task {} could not be updated to ERROR status", delegateTask.getUuid());
           } else if (isBlank(updatedDelegateTask.getWaitId())) {
-            logger.error("Long running delegate task {} with type {} has no wait ID. Nothing to notify",
+            logger.info("Long running delegate task {} with type {} has no wait ID. Nothing to notify",
                 delegateTask.getUuid(), delegateTask.getTaskType());
           } else {
             logger.info("Long running delegate task {} is terminated", updatedDelegateTask.getUuid());
