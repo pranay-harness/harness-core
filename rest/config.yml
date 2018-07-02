@@ -56,7 +56,7 @@ logging:
       logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %n"
     - type: rest-log
       threshold: TRACE
-      logFormat: "%green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %n"
+      logFormat: "%blue([${VERSION}]) %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %n"
       key: 9a3e6eac4dcdbdc41a93ca99100537df
       programName: manager-saas
 
