@@ -6,6 +6,7 @@ import migrations.all.AddReplCtrlNameToKubeSetupProperties;
 import migrations.all.AddUsersToAdminUserGroup;
 import migrations.all.AddValidUntilToActivity;
 import migrations.all.AddValidUntilToAlert;
+import migrations.all.AddValidUntilToDelegateConnectionResults;
 import migrations.all.AddValidUntilToDelegateTask;
 import migrations.all.DirectKubernetesOrphanRemoval;
 import migrations.all.DirectKubernetesOrphanRemovalMirgation;
@@ -85,6 +86,7 @@ public class MigrationList {
         .add(Pair.of(166, DirectKubernetesOrphanRemoval.class))
         .add(Pair.of(167, AddReplCtrlNameToKubeSetupProperties.class))
         .add(Pair.of(168, BaseMigration.class))
+        .add(Pair.of(169, AddValidUntilToDelegateConnectionResults.class))
         .build();
   }
 }
