@@ -17,6 +17,7 @@ import migrations.all.EntityNameValidationMigration_All_00;
 import migrations.all.EntityNameValidationMigration_All_01;
 import migrations.all.EntityNameValidationMigration_All_02;
 import migrations.all.EntityNameValidationMigration_All_03;
+import migrations.all.EntityNameValidationMigration_All_04;
 import migrations.all.FixInstanceData;
 import migrations.all.FixInstanceDataForAwsSSH;
 import migrations.all.GitSyncToAllAccounts;
@@ -87,6 +88,7 @@ public class MigrationList {
         .add(Pair.of(167, AddReplCtrlNameToKubeSetupProperties.class))
         .add(Pair.of(168, BaseMigration.class))
         .add(Pair.of(169, AddValidUntilToDelegateConnectionResults.class))
+        .add(Pair.of(170, EntityNameValidationMigration_All_04.class))
         .build();
   }
 }
