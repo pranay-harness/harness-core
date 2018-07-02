@@ -996,6 +996,9 @@ public class DelegateServiceImpl implements DelegateService {
                  .filter("delegateId", delegateId)
                  .filter(ID_KEY, taskId)
                  .get();
+      if (task != null) {
+        logger.info("Returning previously assigned task {} to delegate {}", taskId, delegateId);
+      }
     }
     return task;
   }
