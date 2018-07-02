@@ -1,7 +1,10 @@
 package software.wings.delegatetasks.validation;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -12,6 +15,9 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
+
+import java.time.OffsetDateTime;
+import java.util.Date;
 
 @Data
 @Builder
@@ -29,4 +35,10 @@ public class DelegateConnectionResult extends Base {
   @Indexed @NotEmpty private String criteria;
   private boolean validated;
   private long duration;
+
+  @SchemaIgnore
+  @JsonIgnore
+  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
+  @Default
+  private Date validUntil = Date.from(OffsetDateTime.now().plusHours(6).toInstant());
 }
