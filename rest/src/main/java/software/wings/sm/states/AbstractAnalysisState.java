@@ -84,6 +84,7 @@ import software.wings.stencils.DefaultValue;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -230,6 +231,12 @@ public abstract class AbstractAnalysisState extends State {
     if (containerInstanceHandler.isContainerDeployment(infrastructureMapping)) {
       Set<String> containerServiceNames =
           containerInstanceHandler.getContainerServiceNames(context, serviceId, infraMappingId);
+
+      if (isEmpty(containerServiceNames)) {
+        getLogger().info("state {} has no containers deployed for service {} infra {}. Returning empty",
+            context.getStateExecutionInstanceId(), serviceId, infraMappingId);
+        return Collections.emptySet();
+      }
 
       if (infrastructureMapping instanceof EcsInfrastructureMapping) {
         Set<String> hosts =
