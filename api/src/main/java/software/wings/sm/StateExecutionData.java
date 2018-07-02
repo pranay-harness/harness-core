@@ -27,6 +27,7 @@ public class StateExecutionData {
   private Integer waitInterval;
   private ContextElement element;
   private Map<String, Object> stateParams;
+  private DelegateMetaInfo delegateMetaInfo;
 
   /**
    * Gets state name.
@@ -127,6 +128,10 @@ public class StateExecutionData {
     return errorMsg;
   }
 
+  public DelegateMetaInfo getDelegateMetaInfo() {
+    return delegateMetaInfo;
+  }
+
   /**
    * Sets error msg.
    *
@@ -158,6 +163,10 @@ public class StateExecutionData {
 
   public void setStateParams(Map<String, Object> stateParams) {
     this.stateParams = stateParams;
+  }
+
+  public void setDelegateMetaInfo(DelegateMetaInfo delegateMetaInfo) {
+    this.delegateMetaInfo = delegateMetaInfo;
   }
 
   /**
@@ -222,6 +231,14 @@ public class StateExecutionData {
     putNotNull(
         executionDetails, "startTs", ExecutionDataValue.builder().displayName("Started At").value(startTs).build());
     putNotNull(executionDetails, "endTs", ExecutionDataValue.builder().displayName("Ended At").value(endTs).build());
+
+    if (getDelegateMetaInfo() != null) {
+      putNotNull(executionDetails, "delegateName",
+          ExecutionDataValue.builder()
+              .displayName("Delegate Name")
+              .value(this.getDelegateMetaInfo().getHostName())
+              .build());
+    }
 
     return executionDetails;
   }
