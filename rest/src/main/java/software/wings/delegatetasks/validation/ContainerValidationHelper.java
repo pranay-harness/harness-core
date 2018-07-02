@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.validation;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.network.Http.connectableHttpUrl;
 import static software.wings.common.Constants.ALWAYS_TRUE_CRITERIA;
 
@@ -7,6 +8,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.mongodb.morphia.annotations.Transient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import software.wings.annotation.Encryptable;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.ErrorCode;
@@ -20,17 +24,30 @@ import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.ContainerServiceParams;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
 
 import java.util.List;
 
 @Singleton
 public class ContainerValidationHelper {
+  private static final Logger logger = LoggerFactory.getLogger(ContainerValidationHelper.class);
   @Inject @Transient private transient GkeClusterService gkeClusterService;
   @Inject @Transient private transient AzureHelperService azureHelperService;
+  @Inject @Transient private transient EncryptionService encryptionService;
 
   public boolean validateContainerServiceParams(ContainerServiceParams containerServiceParams) {
     SettingValue value = containerServiceParams.getSettingAttribute().getValue();
+
+    // see of we can decrypt from this delegate
+    if (Encryptable.class.isInstance(value) && !isEmpty(containerServiceParams.getEncryptionDetails())) {
+      try {
+        encryptionService.decrypt((Encryptable) value, containerServiceParams.getEncryptionDetails());
+      } catch (Exception e) {
+        logger.info("failed to decrypt " + value, e);
+        return false;
+      }
+    }
 
     boolean validated;
     if (value instanceof AwsConfig) {
