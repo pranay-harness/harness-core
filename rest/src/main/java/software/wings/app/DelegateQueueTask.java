@@ -55,15 +55,28 @@ public class DelegateQueueTask implements Runnable {
       return;
     }
 
-    try (AcquiredLock lock = persistentLocker.acquireLock(
+    try (AcquiredLock ignore = persistentLocker.acquireLock(
              DelegateQueueTask.class, DelegateQueueTask.class.getName(), Duration.ofMinutes(1))) {
-      // Release tasks acquired by delegate but not started execution. Introduce "ACQUIRED" status may be ?
+      // Release async tasks acquired by delegate but not started execution. Introduce "ACQUIRED" status may be ?
       Query<DelegateTask> releaseLongQueuedTasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
                                                        .filter("status", Status.QUEUED)
+                                                       .filter("async", true)
                                                        .field("delegateId")
                                                        .exists()
                                                        .field("lastUpdatedAt")
-                                                       .lessThan(clock.millis() - TimeUnit.MINUTES.toMillis(5));
+                                                       .lessThan(clock.millis() - TimeUnit.MINUTES.toMillis(2));
+
+      wingsPersistence.update(
+          releaseLongQueuedTasks, wingsPersistence.createUpdateOperations(DelegateTask.class).unset("delegateId"));
+
+      // Release sync tasks acquired by delegate but not started execution.
+      releaseLongQueuedTasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
+                                   .filter("status", Status.QUEUED)
+                                   .filter("async", false)
+                                   .field("delegateId")
+                                   .exists()
+                                   .field("lastUpdatedAt")
+                                   .lessThan(clock.millis() - TimeUnit.SECONDS.toMillis(10));
 
       wingsPersistence.update(
           releaseLongQueuedTasks, wingsPersistence.createUpdateOperations(DelegateTask.class).unset("delegateId"));
