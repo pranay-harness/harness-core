@@ -92,6 +92,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.scheduler.JobScheduler;
 import software.wings.scheduler.ScheduledTriggerJob;
+import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -102,6 +103,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -120,6 +122,7 @@ public class TriggerServiceTest extends WingsBaseTest {
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private ArtifactService artifactService;
+  @Mock private ArtifactCollectionService artifactCollectionService;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private WorkflowService workflowService;
   @Mock private InfrastructureMappingService infrastructureMappingService;
@@ -1057,6 +1060,35 @@ public class TriggerServiceTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldTriggerArtifactCollectionForWebhookTrigger() {
+    Artifact artifact = anArtifact()
+                            .withAppId(APP_ID)
+                            .withUuid(ARTIFACT_ID)
+                            .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                            .withServiceIds(singletonList(SERVICE_ID))
+                            .withMetadata(ImmutableMap.of("buildNo", ARTIFACT_FILTER))
+                            .build();
+
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setArtifacts(singletonList(artifact));
+
+    setArtifactSelectionsForWebhookTrigger();
+
+    when(wingsPersistence.saveAndGet(any(), any(Trigger.class))).thenReturn(webhookConditionTrigger);
+
+    webhookConditionTrigger = triggerService.save(webhookConditionTrigger);
+
+    when(wingsPersistence.get(Trigger.class, APP_ID, TRIGGER_ID)).thenReturn(webhookConditionTrigger);
+    when(wingsPersistence.query(any(), any(PageRequest.class)))
+        .thenReturn(aPageResponse().withResponse(asList(webhookConditionTrigger)).build());
+    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
+    triggerService.triggerExecutionByWebHook(
+        APP_ID, webhookConditionTrigger.getWebHookToken(), ImmutableMap.of("Catalog", "123"), new HashMap<>());
+    when(artifactCollectionService.collectNewArtifacts(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(Arrays.asList(artifact));
+    verify(artifactCollectionService).collectNewArtifacts(APP_ID, ARTIFACT_STREAM_ID);
+  }
+
+  @Test
   public void shouldTriggerExecutionByWebhookWithNoBuildNumber() {
     Artifact artifact = anArtifact()
                             .withAppId(APP_ID)
@@ -1068,18 +1100,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setArtifacts(singletonList(artifact));
 
-    webhookConditionTrigger.setArtifactSelections(asList(ArtifactSelection.builder()
-                                                             .type(WEBHOOK_VARIABLE)
-                                                             .serviceId(SERVICE_ID)
-                                                             .artifactStreamId(ARTIFACT_STREAM_ID)
-                                                             .build(),
-        ArtifactSelection.builder()
-            .type(LAST_COLLECTED)
-            .serviceId(SERVICE_ID)
-            .artifactStreamId(ARTIFACT_STREAM_ID)
-            .artifactFilter(ARTIFACT_FILTER)
-            .build(),
-        ArtifactSelection.builder().type(LAST_DEPLOYED).serviceId(SERVICE_ID).workflowId(PIPELINE_ID).build()));
+    setArtifactSelectionsForWebhookTrigger();
 
     when(wingsPersistence.saveAndGet(any(), any(Trigger.class))).thenReturn(webhookConditionTrigger);
 
@@ -1114,18 +1135,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     verify(artifactService).getArtifactByBuildNumber(any(), any(), anyString());
   }
 
-  @Test
-  public void shouldTriggerExecutionByWebhookWithBuildNumber() {
-    Artifact artifact = anArtifact()
-                            .withAppId(APP_ID)
-                            .withUuid(ARTIFACT_ID)
-                            .withArtifactStreamId(ARTIFACT_STREAM_ID)
-                            .withServiceIds(singletonList(SERVICE_ID))
-                            .withMetadata(ImmutableMap.of("buildNo", ARTIFACT_FILTER))
-                            .build();
-    ExecutionArgs executionArgs = new ExecutionArgs();
-    executionArgs.setArtifacts(singletonList(artifact));
-
+  private void setArtifactSelectionsForWebhookTrigger() {
     webhookConditionTrigger.setArtifactSelections(asList(ArtifactSelection.builder()
                                                              .type(WEBHOOK_VARIABLE)
                                                              .serviceId(SERVICE_ID)
@@ -1138,6 +1148,21 @@ public class TriggerServiceTest extends WingsBaseTest {
             .artifactFilter(ARTIFACT_FILTER)
             .build(),
         ArtifactSelection.builder().type(LAST_DEPLOYED).serviceId(SERVICE_ID).workflowId(PIPELINE_ID).build()));
+  }
+
+  @Test
+  public void shouldTriggerExecutionByWebhookWithBuildNumber() {
+    Artifact artifact = anArtifact()
+                            .withAppId(APP_ID)
+                            .withUuid(ARTIFACT_ID)
+                            .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                            .withServiceIds(singletonList(SERVICE_ID))
+                            .withMetadata(ImmutableMap.of("buildNo", ARTIFACT_FILTER))
+                            .build();
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setArtifacts(singletonList(artifact));
+
+    setArtifactSelectionsForWebhookTrigger();
 
     when(wingsPersistence.saveAndGet(any(), any(Trigger.class))).thenReturn(webhookConditionTrigger);
 
