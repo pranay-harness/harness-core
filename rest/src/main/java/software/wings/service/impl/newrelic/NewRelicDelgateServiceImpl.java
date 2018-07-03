@@ -89,7 +89,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
           rv.addAll(applications);
         }
       } else {
-        apiCallLog.setJsonResponse(response.errorBody());
+        apiCallLog.setResponse(response.errorBody().string());
         JSONObject errorObject = new JSONObject(response.errorBody().string());
         delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
         throw new WingsException(errorObject.getJSONObject("error").getString("title"));
@@ -131,7 +131,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
           rv.addAll(applicationInstances);
         }
       } else {
-        apiCallLog.setJsonResponse(response.errorBody());
+        apiCallLog.setResponse(response.errorBody().string());
         JSONObject errorObject = new JSONObject(response.errorBody().string());
         delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
         throw new WingsException(errorObject.getJSONObject("error").getString("title"));
@@ -172,7 +172,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
             });
           }
         } else if (response.code() != HttpServletResponse.SC_NOT_FOUND) {
-          apiCallLog.setJsonResponse(response.errorBody());
+          apiCallLog.setResponse(response.errorBody().string());
           JSONObject errorObject = new JSONObject(response.errorBody().string());
           throw new WingsException(errorObject.getJSONObject("error").getString("title"));
         }
@@ -242,7 +242,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       return response.body().getMetric_data();
     }
 
-    apiCallLog.setJsonResponse(response.errorBody());
+    apiCallLog.setResponse(response.errorBody().string());
     JSONObject errorObject = new JSONObject(response.errorBody().string());
     delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
     throw new WingsException(errorObject.getJSONObject("error").getString("title"));
@@ -270,7 +270,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       return "Successfully posted deployment marker to NewRelic";
     }
 
-    apiCallLog.setJsonResponse(response.errorBody());
+    apiCallLog.setResponse(response.errorBody().string());
     JSONObject errorObject = new JSONObject(response.errorBody().string());
     delegateLogService.save(config.getAccountId(), apiCallLog);
     throw new WingsException(errorObject.getJSONObject("error").getString("title"));

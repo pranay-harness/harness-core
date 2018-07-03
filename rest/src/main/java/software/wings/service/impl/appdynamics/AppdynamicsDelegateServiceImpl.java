@@ -191,7 +191,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
     apiCallLog.setStatusCode(tierBTResponse.code());
     if (!tierBTResponse.isSuccessful()) {
-      apiCallLog.setJsonResponse(tierBTResponse.errorBody());
+      apiCallLog.setResponse(tierBTResponse.errorBody().string());
       delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
       logger.info("Request not successful. Reason: {}", tierBTResponse);
       throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
@@ -244,7 +244,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
       return tierBTMResponse.body();
     } else {
       logger.info("Request not successful. Reason: {}", tierBTMResponse);
-      apiCallLog.setJsonResponse(tierBTMResponse.errorBody());
+      apiCallLog.setResponse(tierBTMResponse.errorBody().string());
       delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
       throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
           .addParam("reason", "could not fetch Appdynamics metric data : " + tierBTMResponse);
@@ -316,9 +316,9 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
       }
       return allMetrices;
     } else {
-      apiCallLog.setJsonResponse(response.errorBody());
-      delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
       logger.info("Request not successful. Reason: {}", response);
+      apiCallLog.setResponse(response.errorBody().string());
+      delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
       throw new WingsException("could not get appdynami's metrics : " + response);
     }
   }
@@ -359,9 +359,9 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
       }
       return allMetrices;
     } else {
-      apiCallLog.setJsonResponse(response.errorBody());
-      delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
       logger.info("Request not successful. Reason: {}", response);
+      apiCallLog.setResponse(response.errorBody().string());
+      delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
       throw new WingsException("could not get appdynami's metrics : " + response);
     }
   }
