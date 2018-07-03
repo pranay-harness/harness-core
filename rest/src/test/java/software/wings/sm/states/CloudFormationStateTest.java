@@ -8,6 +8,7 @@ import static org.joor.Reflect.on;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
@@ -244,7 +245,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
     when(settingsService.get(any())).thenReturn(awsConfig);
 
     setInternalState(cloudFormationCreateStackState, "secretManager", secretManager);
-    when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anySet()))
+    when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean(), anySet()))
         .thenReturn(aWorkflowExecution().build());
     context = new ExecutionContextImpl(stateExecutionInstance);
     on(context).set("variableProcessor", variableProcessor);

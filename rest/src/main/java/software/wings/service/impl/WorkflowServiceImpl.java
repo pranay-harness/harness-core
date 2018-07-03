@@ -3037,12 +3037,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   @Override
-  public void stateExecutionStatusUpdated(
-      String workflowExecution, String stateExecutionInstanceId, ExecutionStatus status) {
-    logger.info("[STATE_UPDATE]: {}, {}, {}", workflowExecution, stateExecutionInstanceId, status);
-  }
-
-  @Override
   public Rejection settingsServiceDeleting(SettingAttribute settingAttribute) {
     List<Workflow> workflows = new ArrayList<>();
     StringBuilder sb = new StringBuilder();

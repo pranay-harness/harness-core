@@ -144,7 +144,7 @@ public class ExecutionResource {
       @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId,
       @QueryParam("excludeFromAggregation") Set<String> excludeFromAggregation) {
     return new RestResponse<>(
-        workflowExecutionService.getExecutionDetails(appId, workflowExecutionId, excludeFromAggregation));
+        workflowExecutionService.getExecutionDetails(appId, workflowExecutionId, false, excludeFromAggregation));
   }
 
   /**

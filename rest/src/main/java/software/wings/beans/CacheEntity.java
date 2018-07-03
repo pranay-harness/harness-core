@@ -23,12 +23,12 @@ import java.util.Date;
 @Value
 @Builder
 public class CacheEntity {
-  public static final String CONTEXT_HASH_KEY = "contextHash";
+  public static final String CONTEXT_VALUE_KEY = "contextValue";
   public static final String CANONICAL_KEY_KEY = "canonicalKey";
   public static final String ENTITY_KEY = "entity";
   public static final String VALID_UNTIL_KEY = "validUntil";
 
-  private long contextHash;
+  private long contextValue;
   @Id private String canonicalKey;
 
   private byte[] entity;
