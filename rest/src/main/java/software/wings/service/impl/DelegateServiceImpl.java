@@ -976,8 +976,8 @@ public class DelegateServiceImpl implements DelegateService {
     // Clear pending validations. No longer need to track since we're assigning.
     clearFromValidationCache(delegateTask);
 
-    logger.info(
-        "Assigning task {} to delegate {} {}", taskId, delegateId, delegateTask.isAsync() ? "(async)" : "(sync)");
+    logger.info("Assigning {} task {} to delegate {} {}", delegateTask.getTaskType(), taskId, delegateId,
+        delegateTask.isAsync() ? "(async)" : "(sync)");
     Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
                                     .filter("accountId", delegateTask.getAccountId())
                                     .filter("status", QUEUED)
@@ -998,7 +998,11 @@ public class DelegateServiceImpl implements DelegateService {
                  .get();
       if (task != null) {
         logger.info("Returning previously assigned task {} to delegate {}", taskId, delegateId);
+      } else {
+        logger.info("Task {} no longer available for delegate {}", taskId, delegateId);
       }
+    } else {
+      logger.info("Task {} assigned to delegate {}", taskId, delegateId);
     }
     return task;
   }
