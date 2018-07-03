@@ -66,8 +66,8 @@ import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.security.EncryptionConfig;
-import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -103,7 +103,7 @@ public class SecretManagerImpl implements SecretManager {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private KmsService kmsService;
   @Inject private VaultService vaultService;
-  @Inject private EncryptionService encryptionService;
+  @Inject private ManagerDecryptionService managerDecryptionService;
   @Inject private TimeLimiter timeLimiter;
   @Inject private AlertService alertService;
   @Inject private FileService fileService;
@@ -457,11 +457,11 @@ public class SecretManagerImpl implements SecretManager {
 
     EncryptionConfig encryptionConfig =
         getEncryptionConfig(encryptedData.getAccountId(), encryptedData.getKmsId(), encryptedData.getEncryptionType());
-    return encryptionService.getDecryptedValue(EncryptedDataDetail.builder()
-                                                   .encryptedData(encryptedData)
-                                                   .encryptionConfig(encryptionConfig)
-                                                   .encryptionType(encryptedData.getEncryptionType())
-                                                   .build());
+    return managerDecryptionService.getDecryptedValue(EncryptedDataDetail.builder()
+                                                          .encryptedData(encryptedData)
+                                                          .encryptionConfig(encryptionConfig)
+                                                          .encryptionType(encryptedData.getEncryptionType())
+                                                          .build());
   }
 
   @Override

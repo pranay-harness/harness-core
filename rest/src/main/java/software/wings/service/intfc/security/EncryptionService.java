@@ -15,5 +15,6 @@ public interface EncryptionService {
   @DelegateTaskType(TaskType.SECRET_DECRYPT)
   Encryptable decrypt(Encryptable object, List<EncryptedDataDetail> encryptedDataDetails);
 
+  @DelegateTaskType(TaskType.SECRET_DECRYPT_REF)
   char[] getDecryptedValue(EncryptedDataDetail encryptedDataDetail) throws IOException;
 }

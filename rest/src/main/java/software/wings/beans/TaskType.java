@@ -218,7 +218,8 @@ public enum TaskType {
   AWS_GET_APP_LBS(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   AWS_GET_CLASSIC_LBS(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   AWS_GET_TARGET_GROUPS_FOR_ALBS(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
-  AWS_GET_AUTO_SCALING_GROUPS(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class);
+  AWS_GET_AUTO_SCALING_GROUPS(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
+  SECRET_DECRYPT_REF(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;
