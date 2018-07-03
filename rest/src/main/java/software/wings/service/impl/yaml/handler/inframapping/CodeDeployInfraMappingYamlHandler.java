@@ -54,12 +54,7 @@ public class CodeDeployInfraMappingYamlHandler
     CodeDeployInfrastructureMapping previous =
         (CodeDeployInfrastructureMapping) infraMappingService.getInfraMappingByName(appId, envId, name);
 
-    if (previous != null) {
-      current.setUuid(previous.getUuid());
-      return (CodeDeployInfrastructureMapping) infraMappingService.update(current);
-    } else {
-      return (CodeDeployInfrastructureMapping) infraMappingService.save(current);
-    }
+    return upsertInfrastructureMapping(current, previous);
   }
 
   private void toBean(CodeDeployInfrastructureMapping bean, ChangeContext<Yaml> context, String appId, String envId,

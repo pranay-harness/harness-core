@@ -54,12 +54,7 @@ public class PhysicalInfraMappingYamlHandler
     PhysicalInfrastructureMapping previous =
         (PhysicalInfrastructureMapping) infraMappingService.getInfraMappingByName(appId, envId, name);
 
-    if (previous != null) {
-      current.setUuid(previous.getUuid());
-      return (PhysicalInfrastructureMapping) infraMappingService.update(current);
-    } else {
-      return (PhysicalInfrastructureMapping) infraMappingService.save(current);
-    }
+    return upsertInfrastructureMapping(current, previous);
   }
 
   protected void toBean(ChangeContext<Yaml> changeContext, PhysicalInfrastructureMapping bean, String appId,

@@ -132,4 +132,13 @@ public abstract class InfraMappingYamlHandler<Y extends InfrastructureMapping.Ya
     String name = yamlHelper.getNameFromYamlFilePath(context.getChange().getFilePath());
     bean.setName(name);
   }
+
+  protected <T extends InfrastructureMapping> T upsertInfrastructureMapping(T current, T previous) {
+    if (previous != null) {
+      current.setUuid(previous.getUuid());
+      return (T) infraMappingService.update(current);
+    } else {
+      return (T) infraMappingService.save(current);
+    }
+  }
 }

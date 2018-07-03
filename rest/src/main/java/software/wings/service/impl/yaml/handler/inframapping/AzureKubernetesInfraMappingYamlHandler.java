@@ -50,12 +50,7 @@ public class AzureKubernetesInfraMappingYamlHandler
     AzureKubernetesInfrastructureMapping previous =
         (AzureKubernetesInfrastructureMapping) infraMappingService.getInfraMappingByName(appId, envId, name);
 
-    if (previous != null) {
-      current.setUuid(previous.getUuid());
-      return (AzureKubernetesInfrastructureMapping) infraMappingService.update(current);
-    } else {
-      return (AzureKubernetesInfrastructureMapping) infraMappingService.save(current);
-    }
+    return upsertInfrastructureMapping(current, previous);
   }
 
   private void toBean(AzureKubernetesInfrastructureMapping bean, ChangeContext<Yaml> changeContext, String appId,
