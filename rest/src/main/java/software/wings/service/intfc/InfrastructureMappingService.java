@@ -35,10 +35,14 @@ public interface InfrastructureMappingService extends OwnedByEnvironment, OwnedB
       PageRequest<InfrastructureMapping> pageRequest, Set<QueryChecks> queryChecks);
 
   @ValidationGroups(Create.class) InfrastructureMapping save(@Valid InfrastructureMapping infrastructureMapping);
+  @ValidationGroups(Create.class)
+  InfrastructureMapping save(@Valid InfrastructureMapping infrastructureMapping, boolean fromYaml);
 
   InfrastructureMapping get(String appId, String infraMappingId);
 
   @ValidationGroups(Update.class) InfrastructureMapping update(@Valid InfrastructureMapping infrastructureMapping);
+  @ValidationGroups(Update.class)
+  InfrastructureMapping update(@Valid InfrastructureMapping infrastructureMapping, boolean fromYaml);
 
   void ensureSafeToDelete(@NotEmpty String appId, @NotEmpty String infraMappingId);
 

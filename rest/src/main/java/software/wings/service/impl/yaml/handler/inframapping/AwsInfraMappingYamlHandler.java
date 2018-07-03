@@ -100,12 +100,7 @@ public class AwsInfraMappingYamlHandler
     AwsInfrastructureMapping previous =
         (AwsInfrastructureMapping) infraMappingService.getInfraMappingByName(appId, envId, name);
 
-    if (previous != null) {
-      current.setUuid(previous.getUuid());
-      return (AwsInfrastructureMapping) infraMappingService.update(current);
-    } else {
-      return (AwsInfrastructureMapping) infraMappingService.save(current);
-    }
+    return upsertInfrastructureMapping(current, previous);
   }
 
   private List<NameValuePair.Yaml> getTagsYaml(List<Tag> tagList) {

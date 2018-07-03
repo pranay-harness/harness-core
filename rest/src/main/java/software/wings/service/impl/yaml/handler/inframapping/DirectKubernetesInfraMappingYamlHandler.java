@@ -96,12 +96,7 @@ public class DirectKubernetesInfraMappingYamlHandler
     DirectKubernetesInfrastructureMapping previous =
         (DirectKubernetesInfrastructureMapping) infraMappingService.getInfraMappingByName(appId, envId, name);
 
-    if (previous != null) {
-      current.setUuid(previous.getUuid());
-      return (DirectKubernetesInfrastructureMapping) infraMappingService.update(current);
-    } else {
-      return (DirectKubernetesInfrastructureMapping) infraMappingService.save(current);
-    }
+    return upsertInfrastructureMapping(current, previous);
   }
 
   private void toBean(DirectKubernetesInfrastructureMapping bean, ChangeContext<Yaml> changeContext, String appId,

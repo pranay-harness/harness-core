@@ -55,12 +55,7 @@ public class AwsAmiInfraMappingYamlHandler
     AwsAmiInfrastructureMapping previous =
         (AwsAmiInfrastructureMapping) infraMappingService.getInfraMappingByName(appId, envId, name);
 
-    if (previous != null) {
-      current.setUuid(previous.getUuid());
-      return (AwsAmiInfrastructureMapping) infraMappingService.update(current);
-    } else {
-      return (AwsAmiInfrastructureMapping) infraMappingService.save(current);
-    }
+    return upsertInfrastructureMapping(current, previous);
   }
 
   private void toBean(AwsAmiInfrastructureMapping bean, ChangeContext<Yaml> changeContext, String appId, String envId,

@@ -50,12 +50,7 @@ public class PcfInfraMappingYamlHandler
     PcfInfrastructureMapping previous =
         (PcfInfrastructureMapping) infraMappingService.getInfraMappingByName(appId, envId, name);
 
-    if (previous != null) {
-      current.setUuid(previous.getUuid());
-      return (PcfInfrastructureMapping) infraMappingService.update(current);
-    } else {
-      return (PcfInfrastructureMapping) infraMappingService.save(current);
-    }
+    return upsertInfrastructureMapping(current, previous);
   }
 
   private void toBean(PcfInfrastructureMapping bean, ChangeContext<Yaml> changeContext, String appId, String envId,

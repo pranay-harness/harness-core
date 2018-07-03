@@ -54,12 +54,7 @@ public class PhysicalInfraMappingWinRmYamlHandler
     PhysicalInfrastructureMappingWinRm previous =
         (PhysicalInfrastructureMappingWinRm) infraMappingService.getInfraMappingByName(appId, envId, name);
 
-    if (previous != null) {
-      current.setUuid(previous.getUuid());
-      return (PhysicalInfrastructureMappingWinRm) infraMappingService.update(current);
-    } else {
-      return (PhysicalInfrastructureMappingWinRm) infraMappingService.save(current);
-    }
+    return upsertInfrastructureMapping(current, previous);
   }
 
   public void toBean(ChangeContext<Yaml> changeContext, PhysicalInfrastructureMappingWinRm bean, String appId,
