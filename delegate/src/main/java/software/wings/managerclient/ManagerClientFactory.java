@@ -1,5 +1,6 @@
 package software.wings.managerclient;
 
+import com.google.inject.Inject;
 import com.google.inject.Provider;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,6 +9,7 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.network.FibonacciBackOff;
+import io.harness.version.VersionInfoManager;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
 import okhttp3.OkHttpClient.Builder;
@@ -39,6 +41,8 @@ class ManagerClientX509TrustManager implements X509TrustManager {
 public class ManagerClientFactory implements Provider<ManagerClient> {
   @SuppressFBWarnings("MS_MUTABLE_ARRAY")
   public static final TrustManager[] TRUST_ALL_CERTS = new X509TrustManager[] {new ManagerClientX509TrustManager()};
+
+  @Inject private VersionInfoManager versionInfoManager;
 
   private static final Logger logger = LoggerFactory.getLogger("http");
   private String baseUrl;
@@ -78,10 +82,12 @@ public class ManagerClientFactory implements Provider<ManagerClient> {
           .addInterceptor(new DelegateAuthInterceptor(tokenGenerator))
           .sslSocketFactory(sslSocketFactory, (X509TrustManager) TRUST_ALL_CERTS[0])
           .addInterceptor(chain
-              -> chain.proceed(chain.request()
-                                   .newBuilder()
-                                   .addHeader("User-Agent", "delegate/" + System.getProperty("version"))
-                                   .build()))
+              -> chain.proceed(
+                  chain.request()
+                      .newBuilder()
+                      .addHeader("User-Agent", "delegate/" + versionInfoManager.getVersionInfo().getVersion())
+                      .addHeader("Version", versionInfoManager.getVersionInfo().getVersion())
+                      .build()))
           .addInterceptor(chain -> FibonacciBackOff.executeForEver(() -> chain.proceed(chain.request())))
           .hostnameVerifier((hostname, session) -> true)
           .build();
