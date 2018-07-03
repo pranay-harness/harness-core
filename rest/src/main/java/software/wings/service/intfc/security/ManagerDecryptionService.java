@@ -10,4 +10,6 @@ import java.util.List;
  */
 public interface ManagerDecryptionService {
   void decrypt(Encryptable object, List<EncryptedDataDetail> encryptedDataDetails);
+
+  char[] getDecryptedValue(EncryptedDataDetail encryptedDataDetail);
 }

@@ -186,7 +186,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       } catch (Exception e) {
         if (retry < NUM_OF_RETRIES) {
           logger.warn("encryption failed. trial num: {}", retry, e);
-          sleep(ofMillis(100));
+          sleep(ofMillis(1000));
         } else {
           logger.error("encryption failed after {} retries ", retry, e);
           throw new IOException("Decryption failed after " + NUM_OF_RETRIES + " retries", e);
@@ -227,7 +227,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       } catch (Exception e) {
         if (retry < NUM_OF_RETRIES) {
           logger.warn("decryption failed. trial num: {}", retry, e);
-          sleep(ofMillis(100));
+          sleep(ofMillis(1000));
         } else {
           logger.error("decryption failed after {} retries ", retry, e);
           throw new IOException("Decryption failed after " + NUM_OF_RETRIES + " retries", e);
