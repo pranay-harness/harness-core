@@ -9,6 +9,7 @@ import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.GitFileChange;
+import software.wings.exception.YamlProcessingException.ChangeWithErrorMsg;
 import software.wings.service.impl.yaml.YamlWebHookPayload;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
@@ -127,7 +128,8 @@ public interface YamlGitService {
    * @param accountId
    * @param failedChangeErrorMsgMap
    */
-  void processFailedChanges(String accountId, Map<Change, String> failedChangeErrorMsgMap, boolean gitToHarness);
+  void processFailedChanges(
+      String accountId, Map<String, ChangeWithErrorMsg> failedChangeErrorMsgMap, boolean gitToHarness);
 
   /**
    * Remove git sync errors.

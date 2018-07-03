@@ -2,6 +2,8 @@ package software.wings.service.impl.yaml.service;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.threading.Morpheus.quietSleep;
+import static java.time.Duration.ofMillis;
 import static java.util.Arrays.asList;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
@@ -33,6 +35,7 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -61,10 +64,10 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
-import software.wings.dl.WingsPersistence;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.exception.YamlProcessingException;
+import software.wings.exception.YamlProcessingException.ChangeWithErrorMsg;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.intfc.AuthService;
@@ -86,7 +89,10 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -103,10 +109,11 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   private static final Logger logger = LoggerFactory.getLogger(YamlServiceImpl.class);
 
   @Inject private YamlHandlerFactory yamlHandlerFactory;
-  @Inject private YamlHelper yamlHelper;
-  @Inject private WingsPersistence wingsPersistence;
+
   @Inject private transient YamlGitService yamlGitService;
   @Inject private AuthService authService;
+  @Inject private ExecutorService executorService;
+  @Inject private TimeLimiter timeLimiter;
 
   private final List<YamlType> yamlProcessingOrder = getEntityProcessingOrder();
 
@@ -157,10 +164,15 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
             rr, ErrorCode.GENERAL_YAML_INFO, Level.ERROR, "Update yaml failed. Reason: " + yamlPayload.getName());
       }
     } catch (YamlProcessingException ex) {
-      Map<Change, String> failedChangeErrorMsgMap = ex.getFailedChangeErrorMsgMap();
+      Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap = ex.getFailedYamlFileChangeMap();
       String errorMsg;
-      if (isNotEmpty(failedChangeErrorMsgMap)) {
-        errorMsg = failedChangeErrorMsgMap.get(change);
+      if (isNotEmpty(failedYamlFileChangeMap)) {
+        ChangeWithErrorMsg changeWithErrorMsg = failedYamlFileChangeMap.get(change.getFilePath());
+        if (changeWithErrorMsg != null) {
+          errorMsg = changeWithErrorMsg.getErrorMsg();
+        } else {
+          errorMsg = "Internal error";
+        }
       } else {
         errorMsg = "Internal error";
       }
@@ -185,7 +197,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         } catch (YamlProcessingException ex) {
           logger.warn("Unable to process zip upload for account {}. ", accountId, ex);
           // gitToHarness is false, as this is not initiated from git
-          yamlGitService.processFailedChanges(accountId, ex.getFailedChangeErrorMsgMap(), false);
+          yamlGitService.processFailedChanges(accountId, ex.getFailedYamlFileChangeMap(), false);
         }
         return Builder.aRestResponse()
             .withResponseMessages(asList(
@@ -264,7 +276,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       throws YamlProcessingException {
     logger.info(GIT_YAML_LOG_PREFIX + "Validating changeset");
     List<ChangeContext> changeContextList = Lists.newArrayList();
-    Map<Change, String> failedChangeErrorMsgMap = Maps.newHashMap();
+    Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap = Maps.newConcurrentMap();
 
     for (Change change : changeList) {
       String yamlFilePath = change.getFilePath();
@@ -289,7 +301,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
             ChangeContext changeContext = changeContextBuilder.build();
             changeContextList.add(changeContext);
           } else {
-            failedChangeErrorMsgMap.put(change, "Unsupported type: " + yamlType);
+            addToFailedYamlMap(failedYamlFileChangeMap, change, "Unsupported type: " + yamlType);
           }
         } else if (yamlFilePath.contains(YamlConstants.CONFIG_FILES_FOLDER)) {
           // Special handling for config files
@@ -299,7 +311,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
                 ChangeContext.Builder.aChangeContext().withChange(change).withYamlType(yamlType);
             changeContextList.add(changeContextBuilder.build());
           } else {
-            failedChangeErrorMsgMap.put(change, "Unsupported type: " + yamlType);
+            addToFailedYamlMap(failedYamlFileChangeMap, change, "Unsupported type: " + yamlType);
           }
         }
       } catch (ScannerException ex) {
@@ -317,30 +329,36 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
           message = Misc.getMessage(ex);
         }
         logger.warn(message, ex);
-        failedChangeErrorMsgMap.put(change, message);
+        addToFailedYamlMap(failedYamlFileChangeMap, change, message);
       } catch (UnrecognizedPropertyException ex) {
         String propertyName = ex.getPropertyName();
         if (propertyName != null) {
           String error = "Unrecognized field: " + propertyName;
           logger.warn(error, ex);
-          failedChangeErrorMsgMap.put(change, error);
+          addToFailedYamlMap(failedYamlFileChangeMap, change, error);
         } else {
           logger.warn("Unable to load yaml from string for file: " + yamlFilePath, ex);
-          failedChangeErrorMsgMap.put(change, Misc.getMessage(ex));
+          addToFailedYamlMap(failedYamlFileChangeMap, change, Misc.getMessage(ex));
         }
       } catch (Exception ex) {
         logger.warn("Unable to load yaml from string for file: " + yamlFilePath, ex);
-        failedChangeErrorMsgMap.put(change, Misc.getMessage(ex));
+        addToFailedYamlMap(failedYamlFileChangeMap, change, Misc.getMessage(ex));
       }
     }
 
-    if (failedChangeErrorMsgMap.size() > 0) {
+    if (failedYamlFileChangeMap.size() > 0) {
       throw new YamlProcessingException(
-          "Error while processing some yaml files in the changeset", failedChangeErrorMsgMap);
+          "Error while processing some yaml files in the changeset", failedYamlFileChangeMap);
     }
 
     logger.info(GIT_YAML_LOG_PREFIX + "Validated changeset");
     return changeContextList;
+  }
+
+  private void addToFailedYamlMap(
+      Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap, Change change, String errorMsg) {
+    ChangeWithErrorMsg changeWithErrorMsg = ChangeWithErrorMsg.builder().change(change).errorMsg(errorMsg).build();
+    failedYamlFileChangeMap.put(change.getFilePath(), changeWithErrorMsg);
   }
 
   /**
@@ -362,46 +380,63 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     }
 
     String accountId = changeContextList.get(0).getChange().getAccountId();
+    Queue<Future> futures = new ConcurrentLinkedQueue<>();
 
-    Map<Change, String> failedChangeErrorMsgMap = Maps.newHashMap();
+    Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap = Maps.newConcurrentMap();
     Set<ChangeContext> processedChangeSet = Sets.newHashSet();
-
+    YamlType previousYamlType = null;
     for (ChangeContext changeContext : changeContextList) {
       String yamlFilePath = changeContext.getChange().getFilePath();
       YamlType yamlType = changeContext.getYamlType();
-      try {
-        logger.info("Processing file: [{}]", changeContext.getChange().getFilePath());
-        processYamlChange(changeContext, changeContextList);
-        yamlGitService.discardGitSyncError(changeContext.getChange().getAccountId(), yamlFilePath);
-        processedChangeSet.add(changeContext);
+      if (previousYamlType == null) {
+        previousYamlType = yamlType;
+      }
+      if (previousYamlType == yamlType) {
+        futures.add(executorService.submit(() -> {
+          try {
+            logger.info("Processing file: [{}]", changeContext.getChange().getFilePath());
+            processYamlChange(changeContext, changeContextList);
+            yamlGitService.discardGitSyncError(changeContext.getChange().getAccountId(), yamlFilePath);
+            processedChangeSet.add(changeContext);
 
-        if (EntityType.APPLICATION.name().equals(yamlType.getEntityType())) {
-          authService.evictAccountUserPermissionInfoCache(accountId, true);
-        }
-
-        logger.info("Processing done for file [{}]", changeContext.getChange().getFilePath());
-      } catch (Exception ex) {
-        logger.warn("Exception while processing yaml file {}", yamlFilePath, ex);
-        // We continue processing the yaml files we understand, the failures are reported at the end
-        failedChangeErrorMsgMap.put(changeContext.getChange(), Misc.getMessage(ex));
+            logger.info("Processing done for file [{}]", changeContext.getChange().getFilePath());
+          } catch (Exception ex) {
+            logger.warn("Exception while processing yaml file {}", yamlFilePath, ex);
+            ChangeWithErrorMsg changeWithErrorMsg =
+                ChangeWithErrorMsg.builder().change(changeContext.getChange()).errorMsg(Misc.getMessage(ex)).build();
+            // We continue processing the yaml files we understand, the failures are reported at the end
+            failedYamlFileChangeMap.put(changeContext.getChange().getFilePath(), changeWithErrorMsg);
+          }
+        }));
+      } else {
+        checkFuturesAndEvictCache(futures, previousYamlType, accountId);
+        previousYamlType = yamlType;
       }
     }
 
-    // Handles eviction in both success and failure cases.
-    checkAndInvalidateUserCache(accountId, processedChangeSet);
+    checkFuturesAndEvictCache(futures, previousYamlType, accountId);
 
-    if (failedChangeErrorMsgMap.size() > 0) {
+    if (failedYamlFileChangeMap.size() > 0) {
       throw new YamlProcessingException(
-          "Error while processing some yaml files in the changeset", failedChangeErrorMsgMap);
+          "Error while processing some yaml files in the changeset", failedYamlFileChangeMap);
     }
   }
 
-  private void checkAndInvalidateUserCache(String accountId, Set<ChangeContext> processedChangeSet) {
-    if (isNotEmpty(processedChangeSet)) {
-      if (processedChangeSet.stream().anyMatch(
-              context -> shouldInvalidateCache(context.getYamlType().getEntityType()))) {
-        authService.evictAccountUserPermissionInfoCache(accountId, false);
+  private void checkFuturesAndEvictCache(Queue<Future> futures, YamlType yamlType, String accountId) {
+    while (!futures.isEmpty()) {
+      try {
+        if (futures.peek().isDone()) {
+          futures.poll().get();
+        }
+      } catch (Exception e) {
+        logger.error("Error while waiting for processing of entities of type {} for account {} ",
+            yamlType != null ? yamlType.name() : "", accountId);
       }
+      quietSleep(ofMillis(10));
+    }
+
+    if (yamlType != null && shouldInvalidateCache(yamlType.getEntityType())) {
+      authService.evictAccountUserPermissionInfoCache(accountId, true);
     }
   }
 
