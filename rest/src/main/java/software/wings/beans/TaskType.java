@@ -61,6 +61,7 @@ import software.wings.delegatetasks.validation.LogzValidation;
 import software.wings.delegatetasks.validation.NewRelicValidation;
 import software.wings.delegatetasks.validation.NexusValidation;
 import software.wings.delegatetasks.validation.PrometheusValidation;
+import software.wings.delegatetasks.validation.SecretManagerDecryptValidation;
 import software.wings.delegatetasks.validation.SecretManagerValidation;
 import software.wings.delegatetasks.validation.ShellScriptValidation;
 import software.wings.delegatetasks.validation.SplunkValidation;
@@ -219,7 +220,7 @@ public enum TaskType {
   AWS_GET_CLASSIC_LBS(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   AWS_GET_TARGET_GROUPS_FOR_ALBS(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   AWS_GET_AUTO_SCALING_GROUPS(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
-  SECRET_DECRYPT_REF(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class);
+  SECRET_DECRYPT_REF(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerDecryptValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;
