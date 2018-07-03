@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import com.j256.twofactorauth.TimeBasedOneTimePasswordUtil;
+import io.harness.rule.RepeatRule.Repeat;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -34,6 +35,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   @Inject @InjectMocks TwoFactorAuthenticationManager twoFactorAuthenticationManager;
 
   @Test
+  @Repeat(times = 5, successes = 1)
   public void testTwoFactorAuthenticationUsingTOTP() {
     try {
       TwoFactorAuthHandler handler =
