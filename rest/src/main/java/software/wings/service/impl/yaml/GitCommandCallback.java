@@ -136,7 +136,7 @@ public class GitCommandCallback implements NotifyCallback {
           logger.warn("Unable to process git commit {} for account {}. ", gitDiffResult.getCommitId(), accountId, ex);
           // this is for GitCommandType.DIFF, where we set gitToHarness = true explicitly as we are responding to
           // webhook invocation
-          yamlGitService.processFailedChanges(accountId, ex.getFailedChangeErrorMsgMap(), true);
+          yamlGitService.processFailedChanges(accountId, ex.getFailedYamlFileChangeMap(), true);
         }
       } else {
         logger.warn("Unexpected commandType result: [{}] for changeSetId [{}] for account {}",

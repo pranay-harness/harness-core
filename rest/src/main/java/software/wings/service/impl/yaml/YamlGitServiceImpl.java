@@ -51,6 +51,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.exception.YamlProcessingException;
+import software.wings.exception.YamlProcessingException.ChangeWithErrorMsg;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
@@ -455,10 +456,10 @@ public class YamlGitServiceImpl implements YamlGitService {
 
   @Override
   public void processFailedChanges(
-      String accountId, Map<Change, String> failedChangeErrorMsgMap, boolean gitToHarness) {
-    if (failedChangeErrorMsgMap.size() > 0) {
-      failedChangeErrorMsgMap.forEach((change, msg) -> upsertGitSyncErrors(change, msg, false));
-
+      String accountId, Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap, boolean gitToHarness) {
+    if (failedYamlFileChangeMap.size() > 0) {
+      failedYamlFileChangeMap.values().forEach(changeWithErrorMsg
+          -> upsertGitSyncErrors(changeWithErrorMsg.getChange(), changeWithErrorMsg.getErrorMsg(), false));
       alertService.openAlert(
           accountId, GLOBAL_APP_ID, AlertType.GitSyncError, getGitSyncErrorAlert(accountId, gitToHarness));
     }
@@ -629,7 +630,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     } catch (YamlProcessingException ex) {
       logger.warn(GIT_YAML_LOG_PREFIX + "Unable to process Git sync errors for account {}", accountId, ex);
       // gitToHarness is false, as this action is initiated from UI
-      processFailedChanges(accountId, ex.getFailedChangeErrorMsgMap(), false);
+      processFailedChanges(accountId, ex.getFailedYamlFileChangeMap(), false);
     }
 
     return RestResponse.Builder.aRestResponse().build();

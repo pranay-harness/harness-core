@@ -12,15 +12,23 @@ import java.util.Map;
 @Data
 @EqualsAndHashCode(callSuper = false)
 public class YamlProcessingException extends HarnessException {
-  private Map<Change, String> failedChangeErrorMsgMap;
+  private Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap;
 
-  public YamlProcessingException(String message, Map<Change, String> failedChangeErrorMsgMap) {
+  public YamlProcessingException(String message, Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap) {
     super(message);
-    this.failedChangeErrorMsgMap = failedChangeErrorMsgMap;
+    this.failedYamlFileChangeMap = failedYamlFileChangeMap;
   }
 
-  public YamlProcessingException(String message, Throwable cause, Map<Change, String> failedChangeErrorMsgMap) {
+  public YamlProcessingException(
+      String message, Throwable cause, Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap) {
     super(message, cause);
-    this.failedChangeErrorMsgMap = failedChangeErrorMsgMap;
+    this.failedYamlFileChangeMap = failedYamlFileChangeMap;
+  }
+
+  @Data
+  @lombok.Builder
+  public static class ChangeWithErrorMsg {
+    private Change change;
+    private String errorMsg;
   }
 }
