@@ -280,6 +280,7 @@ public abstract class ContainerServiceSetup extends State {
       if (setupExecutionData != null) {
         executionData.setPreviousYamlConfig(setupExecutionData.getPreviousYamlConfig());
       }
+      executionData.setDelegateMetaInfo(executionResult.getDelegateMetaInfo());
     }
 
     return anExecutionResponse()

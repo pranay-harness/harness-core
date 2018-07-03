@@ -118,6 +118,7 @@ public class KubernetesSwapServiceSelectors extends State {
     KubernetesSwapServiceSelectorsExecutionData stateExecutionData =
         (KubernetesSwapServiceSelectorsExecutionData) context.getStateExecutionData();
     stateExecutionData.setStatus(executionResponse.getExecutionStatus());
+    stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
 
     return anExecutionResponse()
         .withExecutionStatus(executionResponse.getExecutionStatus())

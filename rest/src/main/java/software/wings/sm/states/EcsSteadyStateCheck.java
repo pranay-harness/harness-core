@@ -144,6 +144,8 @@ public class EcsSteadyStateCheck extends State {
       activityService.updateStatus(activityId, appId, ecsSteadyStateCheckResponse.getExecutionStatus());
       ScriptStateExecutionData stateExecutionData = (ScriptStateExecutionData) context.getStateExecutionData();
       stateExecutionData.setStatus(ecsSteadyStateCheckResponse.getExecutionStatus());
+      stateExecutionData.setDelegateMetaInfo(ecsSteadyStateCheckResponse.getDelegateMetaInfo());
+
       List<InstanceStatusSummary> instanceStatusSummaries = containerDeploymentManagerHelper.getInstanceStatusSummaries(
           context, ecsSteadyStateCheckResponse.getContainerInfoList());
       List<InstanceElement> instanceElements =

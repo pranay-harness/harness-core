@@ -258,6 +258,7 @@ public abstract class ContainerServiceDeploy extends State {
         executionData.setNewInstanceData(resizeExecutionData.getNewInstanceData());
         executionData.setOldInstanceData(resizeExecutionData.getOldInstanceData());
       }
+      executionData.setDelegateMetaInfo(executionResult.getDelegateMetaInfo());
     }
 
     return anExecutionResponse()

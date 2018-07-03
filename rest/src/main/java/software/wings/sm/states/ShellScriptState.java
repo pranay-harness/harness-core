@@ -152,9 +152,9 @@ public class ShellScriptState extends State {
     NotifyResponseData data = response.values().iterator().next();
 
     if (data instanceof CommandExecutionResult) {
-      CommandExecutionResult executionData = (CommandExecutionResult) data;
+      CommandExecutionResult commandExecutionResult = (CommandExecutionResult) data;
 
-      switch (executionData.getStatus()) {
+      switch (commandExecutionResult.getStatus()) {
         case SUCCESS:
           executionResponse.setExecutionStatus(ExecutionStatus.SUCCESS);
           break;
@@ -168,9 +168,14 @@ public class ShellScriptState extends State {
           executionResponse.setExecutionStatus(ExecutionStatus.QUEUED);
           break;
         default:
-          throw new WingsException("Unhandled type CommandExecutionStatus: " + executionData.getStatus().name());
+          throw new WingsException(
+              "Unhandled type CommandExecutionStatus: " + commandExecutionResult.getStatus().name());
       }
-      executionResponse.setErrorMessage(executionData.getErrorMessage());
+      executionResponse.setErrorMessage(commandExecutionResult.getErrorMessage());
+
+      ScriptStateExecutionData scriptStateExecutionData = (ScriptStateExecutionData) context.getStateExecutionData();
+      scriptStateExecutionData.setDelegateMetaInfo(commandExecutionResult.getDelegateMetaInfo());
+      executionResponse.setStateExecutionData(scriptStateExecutionData);
     } else if (data instanceof ErrorNotifyResponseData) {
       ErrorNotifyResponseData executionData = (ErrorNotifyResponseData) data;
       executionResponse.setExecutionStatus(ExecutionStatus.FAILED);

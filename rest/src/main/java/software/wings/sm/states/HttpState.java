@@ -18,6 +18,11 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.apache.commons.jexl3.JexlException;
 import org.apache.commons.jexl3.JexlException.Parsing;
 import org.apache.commons.jexl3.JexlException.Property;
@@ -49,6 +54,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.Misc;
+import software.wings.waitnotify.DelegateTaskNotifyResponseData;
 import software.wings.waitnotify.ErrorNotifyResponseData;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -339,8 +345,18 @@ public class HttpState extends State {
       executionResponse.setExecutionStatus(ExecutionStatus.FAILED);
       executionResponse.setErrorMessage(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
     } else {
-      HttpStateExecutionData executionData = (HttpStateExecutionData) notifyResponseData;
-      String errorMessage = executionData.getErrorMsg();
+      HttpStateExecutionData executionData = (HttpStateExecutionData) context.getStateExecutionData();
+      HttpStateExecutionResponse httpStateExecutionResponse = (HttpStateExecutionResponse) notifyResponseData;
+
+      executionData.setHttpResponseCode(httpStateExecutionResponse.getHttpResponseCode());
+      executionData.setHttpResponseBody(httpStateExecutionResponse.getHttpResponseBody());
+      executionData.setHttpMethod(httpStateExecutionResponse.getHttpMethod());
+      executionData.setHttpUrl(httpStateExecutionResponse.getHttpUrl());
+      executionData.setStatus(httpStateExecutionResponse.getExecutionStatus());
+      executionData.setErrorMsg(httpStateExecutionResponse.getErrorMessage());
+      executionData.setDelegateMetaInfo(httpStateExecutionResponse.getDelegateMetaInfo());
+
+      String errorMessage = httpStateExecutionResponse.getErrorMessage();
       executionData.setAssertionStatement(assertion);
       ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
       boolean assertionStatus = true;
@@ -595,5 +611,19 @@ public class HttpState extends State {
       httpState.setSocketTimeoutMillis(socketTimeoutMillis);
       return httpState;
     }
+  }
+
+  @lombok.Builder
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @EqualsAndHashCode(callSuper = false)
+  public static final class HttpStateExecutionResponse extends DelegateTaskNotifyResponseData {
+    private ExecutionStatus executionStatus;
+    private String errorMessage;
+    private String httpResponseBody;
+    private int httpResponseCode;
+    private String httpMethod;
+    private String httpUrl;
   }
 }

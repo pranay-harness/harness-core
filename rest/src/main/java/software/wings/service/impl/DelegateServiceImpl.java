@@ -1043,7 +1043,7 @@ public class DelegateServiceImpl implements DelegateService {
       if (delegateTask.isAsync()) {
         String waitId = delegateTask.getWaitId();
         if (waitId != null) {
-          applyDelegateInfoToStateExecutionData(delegateId, response);
+          applyDelegateInfoToDelegateTaskResponse(delegateId, response);
           waitNotifyEngine.notify(waitId, response.getResponse());
         } else {
           logger.error("Async task {} has no wait ID", taskId);
@@ -1243,7 +1243,7 @@ public class DelegateServiceImpl implements DelegateService {
     return versionInfoManager.getVersionInfo().getVersion();
   }
 
-  private void applyDelegateInfoToStateExecutionData(String delegateId, DelegateTaskResponse response) {
+  private void applyDelegateInfoToDelegateTaskResponse(String delegateId, DelegateTaskResponse response) {
     if (response != null && response.getResponse() instanceof DelegateTaskNotifyResponseData) {
       try {
         DelegateTaskNotifyResponseData delegateTaskNotifyResponseData =

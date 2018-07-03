@@ -133,6 +133,8 @@ public class KubernetesSteadyStateCheck extends State {
     InstanceElementListParam instanceElementListParam =
         InstanceElementListParamBuilder.anInstanceElementListParam().withInstanceElements(instanceElements).build();
 
+    stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
+
     return anExecutionResponse()
         .withExecutionStatus(executionResponse.getExecutionStatus())
         .withStateExecutionData(context.getStateExecutionData())
