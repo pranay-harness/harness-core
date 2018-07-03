@@ -92,6 +92,14 @@ public class MigrationServiceImpl implements MigrationService {
               wingsPersistence.update(wingsPersistence.createQuery(Schema.class), updateOperations);
             }
 
+            // If the current version is bigger from the code version, we probably downgrading.
+            // Restore the max version to the previous
+            if (currentBackgroundVersion > maxBackgroundVersion) {
+              final UpdateOperations<Schema> updateOperations = wingsPersistence.createUpdateOperations(Schema.class);
+              updateOperations.set(Schema.BACKGROUND_VERSION_KEY, maxBackgroundVersion);
+              wingsPersistence.update(wingsPersistence.createQuery(Schema.class), updateOperations);
+            }
+
             logger.info("[Migration] - Background migration complete");
             return true;
           }, 2, TimeUnit.HOURS, true);
@@ -112,6 +120,14 @@ public class MigrationServiceImpl implements MigrationService {
             updateOperations.set(Schema.VERSION_KEY, i);
             wingsPersistence.update(wingsPersistence.createQuery(Schema.class), updateOperations);
           }
+        }
+
+        // If the current version is bigger from the code version, we probably downgrading.
+        // Restore the max version to the previous
+        if (schema.getVersion() > maxVersion) {
+          final UpdateOperations<Schema> updateOperations = wingsPersistence.createUpdateOperations(Schema.class);
+          updateOperations.set(Schema.VERSION_KEY, maxVersion);
+          wingsPersistence.update(wingsPersistence.createQuery(Schema.class), updateOperations);
         }
 
         logger.info("[Migration] - Migration complete");
