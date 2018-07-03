@@ -77,6 +77,7 @@ import software.wings.service.intfc.MigrationService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateMachineExecutor;
+import software.wings.utils.CacheHelper;
 import software.wings.utils.JsonSubtypeResolver;
 import software.wings.waitnotify.Notifier;
 import software.wings.waitnotify.NotifyResponseCleanupHandler;
@@ -256,6 +257,14 @@ public class WingsApplication extends Application<MainConfiguration> {
     initializeServiceSecretKeys(injector);
 
     runMigrations(injector);
+
+    // Access all caches before coming out of maintenance
+    CacheHelper cacheHelper = injector.getInstance(CacheHelper.class);
+
+    cacheHelper.getUserCache();
+    cacheHelper.getUserPermissionInfoCache();
+    cacheHelper.getNewRelicApplicationCache();
+    cacheHelper.getWhitelistConfigCache();
 
     logger.info("Leaving startup maintenance mode");
     MaintenanceController.resetForceMaintenance();

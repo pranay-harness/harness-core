@@ -804,6 +804,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void sendHeartbeat(Builder builder, Socket socket) {
+    logCurrentTasks();
     if (socket.status() == STATUS.OPEN || socket.status() == STATUS.REOPENED) {
       logger.info("Sending heartbeat...");
       try {
@@ -828,6 +829,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void sendHeartbeat() {
+    logCurrentTasks();
     logger.info("Sending heartbeat...");
     try {
       Delegate response = timeLimiter.callWithTimeout(
@@ -848,6 +850,16 @@ public class DelegateServiceImpl implements DelegateService {
     } catch (Exception e) {
       logger.error("Error sending heartbeat", e);
     }
+  }
+
+  private void logCurrentTasks() {
+    logger.info("Currently validating tasks: {}", currentlyValidatingTasks.keySet());
+    logger.info("Currently executing tasks: {}", currentlyExecutingTasks.keySet());
+    logger.info("Currently executing futures: {}",
+        currentlyExecutingFutures.entrySet()
+            .stream()
+            .map(entry -> entry.getKey() + ":" + entry.getValue())
+            .collect(toList()));
   }
 
   private void abortDelegateTask(DelegateTaskAbortEvent delegateTaskEvent) {
@@ -893,9 +905,6 @@ public class DelegateServiceImpl implements DelegateService {
       if (delegateTask == null) {
         logger.info("DelegateTask not available for validation - uuid: {}, accountId: {}", delegateTaskId,
             delegateTaskEvent.getAccountId());
-        logger.info("Currently validating tasks: {}", currentlyValidatingTasks.keySet());
-        logger.info("Currently executing tasks: {}", currentlyExecutingTasks.keySet());
-        logger.info("Currently executing futures: {}", currentlyExecutingFutures.keySet());
         return;
       }
 
