@@ -520,6 +520,7 @@ public class CommandState extends State {
     on(commandStateExecutionData).set("activityService", activityService);
     commandStateExecutionData.setCountsByStatuses(
         (CountsByStatuses) commandStateExecutionData.getExecutionSummary().get("breakdown").getValue());
+    commandStateExecutionData.setDelegateMetaInfo(commandExecutionResult.getDelegateMetaInfo());
 
     return anExecutionResponse()
         .withExecutionStatus(executionStatus)

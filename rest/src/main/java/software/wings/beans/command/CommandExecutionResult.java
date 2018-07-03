@@ -3,14 +3,14 @@ package software.wings.beans.command;
 import com.google.common.base.MoreObjects;
 
 import software.wings.sm.ExecutionStatus;
-import software.wings.waitnotify.NotifyResponseData;
+import software.wings.waitnotify.DelegateTaskNotifyResponseData;
 
 import java.util.Objects;
 
 /**
  * Created by anubhaw on 2/28/17.
  */
-public class CommandExecutionResult implements NotifyResponseData {
+public class CommandExecutionResult extends DelegateTaskNotifyResponseData {
   private CommandExecutionStatus status;
   private CommandExecutionData commandExecutionData;
   private String errorMessage;

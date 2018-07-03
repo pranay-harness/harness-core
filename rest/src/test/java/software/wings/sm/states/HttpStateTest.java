@@ -60,11 +60,13 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -123,6 +125,11 @@ public class HttpStateTest extends WingsBaseTest {
   public void setupContext() {
     StateExecutionInstance stateExecutionInstance =
         aStateExecutionInstance().withDisplayName("healthCheck1").withUuid(STATE_EXECUTION_ID).build();
+
+    Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
+    stateExecutionMap.put("healthCheck1", aHttpStateExecutionData().build());
+    stateExecutionInstance.setStateExecutionMap(stateExecutionMap);
+
     when(workflowStandardParams.getApp()).thenReturn(anApplication().withUuid(APP_ID).withName(APP_NAME).build());
     when(workflowStandardParams.getEnv())
         .thenReturn(

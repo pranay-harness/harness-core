@@ -2,7 +2,6 @@ package software.wings.delegatetasks;
 
 import static com.google.common.base.Ascii.toUpperCase;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
-import static software.wings.api.HttpStateExecutionData.Builder.aHttpStateExecutionData;
 
 import com.google.common.base.Splitter;
 
@@ -24,9 +23,9 @@ import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.api.HttpStateExecutionData;
 import software.wings.beans.DelegateTask;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
@@ -54,14 +53,17 @@ public class HttpTask extends AbstractDelegateRunnableTask {
   }
 
   @Override
-  public HttpStateExecutionData run(Object[] parameters) {
+  public HttpStateExecutionResponse run(Object[] parameters) {
     return run((String) parameters[0], (String) parameters[1], (String) parameters[2], (String) parameters[3],
         (Integer) parameters[4]);
   }
 
-  public HttpStateExecutionData run(String method, String url, String body, String headers, int socketTimeoutMillis) {
-    HttpStateExecutionData.Builder executionDataBuilder =
-        aHttpStateExecutionData().withHttpUrl(url).withHttpMethod(method);
+  public HttpStateExecutionResponse run(
+      String method, String url, String body, String headers, int socketTimeoutMillis) {
+    HttpStateExecutionResponse httpStateExecutionResponse = new HttpStateExecutionResponse();
+
+    httpStateExecutionResponse.setHttpUrl(url);
+    httpStateExecutionResponse.setHttpMethod(method);
 
     SSLContextBuilder builder = new SSLContextBuilder();
     try {
@@ -121,22 +123,22 @@ public class HttpTask extends AbstractDelegateRunnableTask {
       }
     }
 
-    executionDataBuilder.withStatus(ExecutionStatus.SUCCESS);
+    httpStateExecutionResponse.setExecutionStatus(ExecutionStatus.SUCCESS);
     try {
       HttpResponse httpResponse = httpclient.execute(httpUriRequest);
-      executionDataBuilder.withHttpResponseCode(httpResponse.getStatusLine().getStatusCode());
+      httpStateExecutionResponse.setHttpResponseCode(httpResponse.getStatusLine().getStatusCode());
       HttpEntity entity = httpResponse.getEntity();
-      executionDataBuilder.withHttpResponseBody(
+      httpStateExecutionResponse.setHttpResponseBody(
           entity != null ? EntityUtils.toString(entity, ContentType.getOrDefault(entity).getCharset()) : "");
     } catch (IOException e) {
       logger.error("Exception occurred during HTTP task execution", e);
-      executionDataBuilder.withHttpResponseCode(500)
-          .withHttpResponseBody(getMessage(e))
-          .withErrorMsg(getMessage(e))
-          .withStatus(ExecutionStatus.ERROR);
+      httpStateExecutionResponse.setHttpResponseCode(500);
+      httpStateExecutionResponse.setHttpResponseBody(getMessage(e));
+      httpStateExecutionResponse.setErrorMessage(getMessage(e));
+      httpStateExecutionResponse.setExecutionStatus(ExecutionStatus.ERROR);
     }
 
-    return executionDataBuilder.build();
+    return httpStateExecutionResponse;
   }
 
   public static final class Builder {

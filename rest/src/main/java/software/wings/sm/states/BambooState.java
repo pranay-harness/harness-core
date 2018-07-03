@@ -19,6 +19,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -47,6 +48,7 @@ import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
+import software.wings.waitnotify.DelegateTaskNotifyResponseData;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
@@ -227,6 +229,8 @@ public class BambooState extends State {
     bambooExecutionData.setErrorMsg(bambooExecutionResponse.getErrorMessage());
     bambooExecutionData.setParameters(bambooExecutionResponse.getParameters());
     bambooExecutionData.setFilePathAssertionEntries(bambooExecutionResponse.getFilePathAssertionMap());
+    bambooExecutionData.setDelegateMetaInfo(bambooExecutionResponse.getDelegateMetaInfo());
+
     return anExecutionResponse()
         .withExecutionStatus(bambooExecutionResponse.getExecutionStatus())
         .withStateExecutionData(bambooExecutionData)
@@ -303,7 +307,8 @@ public class BambooState extends State {
   @Data
   @NoArgsConstructor
   @AllArgsConstructor
-  public static final class BambooExecutionResponse implements NotifyResponseData {
+  @EqualsAndHashCode(callSuper = false)
+  public static final class BambooExecutionResponse extends DelegateTaskNotifyResponseData {
     private String projectName;
     private String planName;
     private String planUrl;

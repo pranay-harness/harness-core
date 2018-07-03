@@ -234,10 +234,7 @@ public class StateExecutionData {
 
     if (getDelegateMetaInfo() != null) {
       putNotNull(executionDetails, "delegateName",
-          ExecutionDataValue.builder()
-              .displayName("Delegate Name")
-              .value(this.getDelegateMetaInfo().getHostName())
-              .build());
+          ExecutionDataValue.builder().displayName("Delegate").value(this.getDelegateMetaInfo().getHostName()).build());
     }
 
     return executionDetails;

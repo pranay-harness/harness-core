@@ -307,6 +307,7 @@ public class HelmDeployState extends State {
     HelmDeployStateExecutionData stateExecutionData = (HelmDeployStateExecutionData) context.getStateExecutionData();
     stateExecutionData.setStatus(executionStatus);
     stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
+    stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
 
     HelmInstallCommandResponse helmInstallCommandResponse =
         (HelmInstallCommandResponse) executionResponse.getHelmCommandResponse();
