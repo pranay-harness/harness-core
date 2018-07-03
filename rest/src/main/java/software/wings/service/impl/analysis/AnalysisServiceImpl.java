@@ -7,8 +7,10 @@ import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
+import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkResponse;
 import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -43,6 +45,8 @@ import software.wings.exception.WingsException;
 import software.wings.metrics.RiskLevel;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.DelegateServiceImpl;
+import software.wings.service.impl.elk.ElkLogFetchRequest;
+import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 import software.wings.service.impl.splunk.LogMLClusterScores;
@@ -64,6 +68,7 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.utils.Misc;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -75,6 +80,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -938,6 +944,63 @@ public class AnalysisServiceImpl implements AnalysisService {
     } catch (Exception e) {
       throw new WingsException(errorCode).addParam("reason", Misc.getMessage(e));
     }
+  }
+
+  public Object getHostLogRecords(String accountId, String analysisServerConfigId, String index, ElkQueryType queryType,
+      String query, String timeStampField, String timeStampFieldFormat, String messageField, String hostNameField,
+      String hostName, StateType stateType) {
+    final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
+    if (settingAttribute == null) {
+      throw new WingsException("No " + stateType + " setting with id: " + analysisServerConfigId + " found");
+    }
+    List<EncryptedDataDetail> encryptedDataDetails =
+        secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
+    ErrorCode errorCode = null;
+    final ElkLogFetchRequest elkFetchRequest =
+        ElkLogFetchRequest.builder()
+            .query(query)
+            .indices(index)
+            .hostnameField(hostNameField)
+            .messageField(messageField)
+            .timestampField(timeStampField)
+            .hosts(Sets.newHashSet(hostName))
+            .startTime(TimeUnit.SECONDS.toMillis(OffsetDateTime.now().minusMinutes(15).toEpochSecond()))
+            .endTime(TimeUnit.SECONDS.toMillis(OffsetDateTime.now().toEpochSecond()))
+            .queryType(queryType)
+            .build();
+    Object searchResponse;
+    try {
+      switch (stateType) {
+        case ELK:
+          errorCode = ErrorCode.ELK_CONFIGURATION_ERROR;
+          SyncTaskContext elkTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
+          searchResponse = delegateProxyFactory.get(ElkDelegateService.class, elkTaskContext)
+                               .search((ElkConfig) settingAttribute.getValue(), encryptedDataDetails, elkFetchRequest,
+                                   apiCallLogWithDummyStateExecution(accountId));
+          break;
+        case LOGZ:
+          errorCode = ErrorCode.LOGZ_CONFIGURATION_ERROR;
+          SyncTaskContext logzTaskContext =
+              aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+          searchResponse = delegateProxyFactory.get(LogzDelegateService.class, logzTaskContext)
+                               .search((LogzConfig) settingAttribute.getValue(), encryptedDataDetails, elkFetchRequest,
+                                   apiCallLogWithDummyStateExecution(accountId));
+          break;
+        default:
+          errorCode = ErrorCode.DEFAULT_ERROR_CODE;
+          throw new IllegalStateException("Invalid state type: " + stateType);
+      }
+    } catch (Exception e) {
+      throw new WingsException(errorCode, e).addParam("reason", Misc.getMessage(e));
+    }
+
+    try {
+      parseElkResponse(
+          searchResponse, query, timeStampField, timeStampFieldFormat, hostNameField, hostName, messageField, 0, false);
+    } catch (Exception e) {
+      throw new WingsException("Data fetch successful but date parsing failed.", e);
+    }
+    return searchResponse;
   }
 
   private List<LogMLClusterSummary> computeCluster(Map<String, Map<String, SplunkAnalysisCluster>> cluster,

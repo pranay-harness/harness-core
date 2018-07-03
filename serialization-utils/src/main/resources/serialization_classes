@@ -412,3 +412,5 @@ software.wings.sm.DelegateMetaInfo, 5372
 software.wings.waitnotify.DelegateTaskNotifyResponseData, 5373
 software.wings.sm.states.BambooState$BambooExecutionResponse, 5374
 software.wings.sm.states.HttpState$HttpStateExecutionResponse, 5375
+software.wings.service.impl.elk.ElkLogFetchRequest, 5376
+software.wings.service.impl.ThirdPartyApiCallLog, 5377

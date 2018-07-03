@@ -33,6 +33,7 @@ import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.ElkValidationType;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 
 import java.io.IOException;
@@ -85,8 +86,8 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
     }
 
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
-    apiCallLog.setRequest("connector: " + elkConfig.getElkConnector() + " url: " + elkConfig.getElkUrl()
-        + " request: " + logFetchRequest.toElasticSearchJsonObject());
+    apiCallLog.setRequest("connector: " + elkConfig.getElkConnector() + " url: " + elkConfig.getElkUrl() + "/"
+        + logFetchRequest.getIndices() + " request: " + JsonUtils.asJson(logFetchRequest.toElasticSearchJsonObject()));
     final Call<Object> request = elkConfig.getElkConnector() == ElkConnector.KIBANA_SERVER
         ? getKibanaRestClient(elkConfig, encryptedDataDetails)
               .getLogSample(format(KibanaRestClient.searchPathPattern, logFetchRequest.getIndices(), 10000),

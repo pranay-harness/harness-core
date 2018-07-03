@@ -2,6 +2,7 @@ package software.wings.delegatetasks;
 
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
+import static software.wings.sm.states.ElkAnalysisState.DEFAULT_TIME_FIELD;
 
 import com.google.inject.Inject;
 
@@ -12,6 +13,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.analysis.LogDataCollectionInfo;
@@ -30,9 +32,7 @@ import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -105,7 +105,6 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
             int retry = 0;
             while (!completed.get() && retry < RETRIES) {
               try {
-                Map<String, LogElement> heartBeatMap = new HashMap<>();
                 Object searchResponse;
                 String hostnameField;
                 String messageField;
@@ -153,7 +152,8 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                     logger.info(
                         "running logz query: " + JsonUtils.asJson(logzFetchRequest.toElasticSearchJsonObject()));
                     searchResponse = logzDelegateService.search(logzDataCollectionInfo.getLogzConfig(),
-                        logzDataCollectionInfo.getEncryptedDataDetails(), logzFetchRequest);
+                        logzDataCollectionInfo.getEncryptedDataDetails(), logzFetchRequest,
+                        createApiCallLog(dataCollectionInfo.getStateExecutionId()));
                     hostnameField = logzDataCollectionInfo.getHostnameField();
                     messageField = logzDataCollectionInfo.getMessageField();
                     timestampField = logzDataCollectionInfo.getTimestampField();
@@ -168,82 +168,26 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                 if (hits == null) {
                   continue;
                 }
-
-                DateTimeFormatter df = DateTimeFormatter.ofPattern(timestampFieldFormat);
-                JSONArray logHits = hits.getJSONArray("hits");
-                final List<LogElement> logElements = new ArrayList<>();
-
+                List<LogElement> logElements;
+                try {
+                  logElements = parseElkResponse(searchResponse, query, timestampField, timestampFieldFormat,
+                      hostnameField, hostName, messageField, logCollectionMinute, true);
+                } catch (Exception pe) {
+                  retry = RETRIES;
+                  throw pe;
+                }
                 /**
                  * Heart beat.
                  */
-                final LogElement elkHeartBeatElement = new LogElement();
-                elkHeartBeatElement.setQuery(query);
-                elkHeartBeatElement.setClusterLabel("-1");
-                elkHeartBeatElement.setHost(hostName);
-                elkHeartBeatElement.setCount(0);
-                elkHeartBeatElement.setLogMessage("");
-                elkHeartBeatElement.setTimeStamp(0);
-                elkHeartBeatElement.setLogCollectionMinute(logCollectionMinute);
-
-                logElements.add(elkHeartBeatElement);
-
-                for (int i = 0; i < logHits.length(); i++) {
-                  JSONObject source = logHits.optJSONObject(i).getJSONObject("_source");
-                  if (source == null) {
-                    continue;
-                  }
-
-                  JSONObject hostObject = null;
-                  String[] hostPaths = hostnameField.split("\\.");
-                  for (int j = 0; j < hostPaths.length - 1; ++j) {
-                    hostObject = source.getJSONObject(hostPaths[j]);
-                  }
-                  final String host = hostObject == null ? source.getString(hostnameField)
-                                                         : hostObject.getString(hostPaths[hostPaths.length - 1]);
-
-                  // if this elkResponse doesn't belong to this host, ignore it.
-                  // We ignore case because we don't know if elasticsearch might just lowercase everything in the index.
-                  if (!hostName.trim().equalsIgnoreCase(host.trim())) {
-                    continue;
-                  }
-
-                  JSONObject messageObject = null;
-                  String[] messagePaths = messageField.split("\\.");
-                  for (int j = 0; j < messagePaths.length - 1; ++j) {
-                    messageObject = source.getJSONObject(messagePaths[j]);
-                  }
-                  final String logMessage = messageObject == null
-                      ? source.getString(messageField)
-                      : messageObject.getString(messagePaths[messagePaths.length - 1]);
-
-                  JSONObject timeStampObject = null;
-                  String[] timeStampPaths = timestampField.split("\\.");
-                  for (int j = 0; j < timeStampPaths.length - 1; ++j) {
-                    timeStampObject = source.getJSONObject(timeStampPaths[j]);
-                  }
-                  final String timeStamp = timeStampObject == null
-                      ? source.getString("@timestamp")
-                      : timeStampObject.getString(timeStampPaths[timeStampPaths.length - 1]);
-                  long timeStampValue = 0;
-                  try {
-                    timeStampValue = Instant.from(df.parse(timeStamp)).toEpochMilli();
-                  } catch (Exception pe) {
-                    logger.warn("Failed to parse time stamp : " + timeStamp + ", " + timestampFieldFormat);
-                    retry = RETRIES;
-                    throw pe;
-                  }
-
-                  final LogElement elkLogElement = new LogElement();
-                  elkLogElement.setQuery(query);
-                  elkLogElement.setClusterLabel(String.valueOf(i));
-                  elkLogElement.setHost(host);
-                  elkLogElement.setCount(1);
-                  elkLogElement.setLogMessage(logMessage);
-                  elkLogElement.setTimeStamp(timeStampValue);
-                  elkLogElement.setLogCollectionMinute(logCollectionMinute);
-                  logElements.add(elkLogElement);
-                }
-
+                logElements.add(LogElement.builder()
+                                    .query(query)
+                                    .clusterLabel("-1")
+                                    .host(hostName)
+                                    .count(0)
+                                    .logMessage("")
+                                    .timeStamp(0)
+                                    .logCollectionMinute(logCollectionMinute)
+                                    .build());
                 boolean response =
                     logAnalysisStoreService.save(dataCollectionInfo.getStateType(), dataCollectionInfo.getAccountId(),
                         dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(),
@@ -301,5 +245,76 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
         shutDownCollection();
       }
     }
+  }
+
+  public static List<LogElement> parseElkResponse(Object searchResponse, String query, String timestampField,
+      String timestampFieldFormat, String hostnameField, String hostName, String messageField, int logCollectionMinute,
+      boolean validateHost) {
+    List<LogElement> logElements = new ArrayList<>();
+    JSONObject responseObject = new JSONObject(JsonUtils.asJson(searchResponse));
+    JSONObject hits = responseObject.getJSONObject("hits");
+    if (hits == null) {
+      return logElements;
+    }
+
+    DateTimeFormatter df = DateTimeFormatter.ofPattern(timestampFieldFormat);
+    JSONArray logHits = hits.getJSONArray("hits");
+
+    for (int i = 0; i < logHits.length(); i++) {
+      JSONObject source = logHits.optJSONObject(i).getJSONObject("_source");
+      if (source == null) {
+        continue;
+      }
+
+      JSONObject hostObject = null;
+      String[] hostPaths = hostnameField.split("\\.");
+      for (int j = 0; j < hostPaths.length - 1; ++j) {
+        hostObject = source.getJSONObject(hostPaths[j]);
+      }
+      final String host =
+          hostObject == null ? source.getString(hostnameField) : hostObject.getString(hostPaths[hostPaths.length - 1]);
+
+      // if this elkResponse doesn't belong to this host, ignore it.
+      // We ignore case because we don't know if elasticsearch might just lowercase everything in the index.
+      if (validateHost && !hostName.trim().equalsIgnoreCase(host.trim())) {
+        continue;
+      }
+
+      JSONObject messageObject = null;
+      String[] messagePaths = messageField.split("\\.");
+      for (int j = 0; j < messagePaths.length - 1; ++j) {
+        messageObject = source.getJSONObject(messagePaths[j]);
+      }
+      final String logMessage = messageObject == null ? source.getString(messageField)
+                                                      : messageObject.getString(messagePaths[messagePaths.length - 1]);
+
+      JSONObject timeStampObject = null;
+      String[] timeStampPaths = timestampField.split("\\.");
+      for (int j = 0; j < timeStampPaths.length - 1; ++j) {
+        timeStampObject = source.getJSONObject(timeStampPaths[j]);
+      }
+      final String timeStamp = timeStampObject == null
+          ? source.getString(DEFAULT_TIME_FIELD)
+          : timeStampObject.getString(timeStampPaths[timeStampPaths.length - 1]);
+      long timeStampValue;
+      try {
+        timeStampValue = Instant.from(df.parse(timeStamp)).toEpochMilli();
+      } catch (Exception pe) {
+        throw new WingsException(
+            "Failed to parse time stamp : " + timeStamp + ", with format: " + timestampFieldFormat, pe);
+      }
+
+      final LogElement elkLogElement = new LogElement();
+      elkLogElement.setQuery(query);
+      elkLogElement.setClusterLabel(String.valueOf(i));
+      elkLogElement.setHost(host);
+      elkLogElement.setCount(1);
+      elkLogElement.setLogMessage(logMessage);
+      elkLogElement.setTimeStamp(timeStampValue);
+      elkLogElement.setLogCollectionMinute(logCollectionMinute);
+      logElements.add(elkLogElement);
+    }
+
+    return logElements;
   }
 }

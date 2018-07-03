@@ -33,7 +33,7 @@ import javax.ws.rs.QueryParam;
 
 /**
  * Created by rsingh on 08/04/17.
- *
+ * <p>
  * For api versioning see documentation of {@link NewRelicResource}.
  */
 @Api(LogAnalysisResource.ELK_RESOURCE_BASE_URL)
@@ -61,6 +61,21 @@ public class ElkResource implements LogAnalysisResource {
       logger.warn("Failed to get elk sample record " + result, ex);
     }
     return new RestResponse<>();
+  }
+
+  @GET
+  @Path(LogAnalysisResource.ANALYSIS_STATE_GET_HOST_RECORD_URL)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Object> getHostLogRecord(@QueryParam("accountId") String accountId,
+      @QueryParam("serverConfigId") String analysisServerConfigId, @QueryParam("index") String index,
+      @QueryParam("hostNameField") String hostNameField, @QueryParam("hostName") String hostName,
+      @QueryParam("queryType") ElkQueryType queryType, @QueryParam("query") String query,
+      @QueryParam("timeStampField") String timeStampField,
+      @QueryParam("timeStampFieldFormat") String timeStampFieldFormat,
+      @QueryParam("messageField") String messageField) {
+    return new RestResponse<>(analysisService.getHostLogRecords(accountId, analysisServerConfigId, index, queryType,
+        query, timeStampField, timeStampFieldFormat, messageField, hostNameField, hostName, StateType.ELK));
   }
 
   @GET

@@ -2,6 +2,7 @@ package software.wings.service.impl.logz;
 
 import static io.harness.network.Http.getOkHttpClientBuilder;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import okhttp3.OkHttpClient;
@@ -11,9 +12,11 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.config.LogzConfig;
+import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.logz.LogzRestClient;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
 import software.wings.service.intfc.logz.LogzDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -21,6 +24,7 @@ import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 
 import java.io.IOException;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 /**
@@ -31,6 +35,8 @@ public class LogzDelegateServiceImpl implements LogzDelegateService {
       "{ \"size\": 0, \"query\": { \"bool\": { \"must\": [{ \"range\": { \"@timestamp\": { \"gte\": \"now-5m\", \"lte\": \"now\" } } }] } }, \"aggs\": { \"byType\": { \"terms\": { \"field\": \"type\", \"size\": 5 } } } }",
       Object.class);
   @Inject private EncryptionService encryptionService;
+  @Inject private DelegateLogService delegateLogService;
+
   @Override
   public boolean validateConfig(LogzConfig logzConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     try {
@@ -47,14 +53,25 @@ public class LogzDelegateServiceImpl implements LogzDelegateService {
 
   @Override
   public Object search(LogzConfig logzConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      ElkLogFetchRequest logFetchRequest) throws IOException {
+      ElkLogFetchRequest logFetchRequest, ThirdPartyApiCallLog apiCallLog) throws IOException {
+    Preconditions.checkNotNull(apiCallLog);
+
+    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
+    apiCallLog.setRequest(logzConfig.getLogzUrl() + "/v1/search?size=10000"
+        + " request: " + JsonUtils.asJson(logFetchRequest.toElasticSearchJsonObject()));
     final Call<Object> request =
         getLogzRestClient(logzConfig, encryptedDataDetails).search(logFetchRequest.toElasticSearchJsonObject());
     final Response<Object> response = request.execute();
+    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
+    apiCallLog.setStatusCode(response.code());
     if (response.isSuccessful()) {
+      apiCallLog.setJsonResponse(response.body());
+      delegateLogService.save(logzConfig.getAccountId(), apiCallLog);
       return response.body();
     }
 
+    apiCallLog.setResponse(response.errorBody().string());
+    delegateLogService.save(logzConfig.getAccountId(), apiCallLog);
     throw new WingsException(response.errorBody().string());
   }
 
