@@ -62,7 +62,7 @@ public class AuthResponseFilter implements ContainerResponseFilter {
 
         accountId = isEmpty(accountId) ? appService.getAccountIdByAppId(appId) : accountId;
         String finalAccountId = accountId;
-        authService.evictAccountUserPermissionInfoCache(finalAccountId);
+        authService.evictAccountUserPermissionInfoCache(finalAccountId, false);
       }
     } catch (Exception ex) {
       logger.error("Cache eviction failed", ex);
