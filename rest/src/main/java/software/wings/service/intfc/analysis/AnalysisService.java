@@ -12,6 +12,7 @@ import software.wings.service.impl.analysis.LogMLExpAnalysisInfo;
 import software.wings.service.impl.analysis.LogMLFeedback;
 import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.impl.analysis.LogRequest;
+import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.sm.StateType;
 import software.wings.utils.validation.Create;
 
@@ -95,4 +96,8 @@ public interface AnalysisService {
   boolean deleteFeedback(String feedbackId) throws IOException;
 
   LogMLAnalysisSummary getAnalysisSummaryForDemo(String stateExecutionId, String applicationId, StateType stateType);
+
+  Object getHostLogRecords(String accountId, String analysisServerConfigId, String index, ElkQueryType queryType,
+      String query, String timeStampField, String timeStampFieldFormat, String messageField, String hostNameField,
+      String hostName, StateType stateType);
 }

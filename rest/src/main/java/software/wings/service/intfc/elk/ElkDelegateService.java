@@ -20,7 +20,7 @@ public interface ElkDelegateService {
   @DelegateTaskType(TaskType.ELK_CONFIGURATION_VALIDATE_TASK)
   boolean validateConfig(@NotNull ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails);
 
-  @DelegateTaskType(TaskType.ELK_COLLECT_LOG_DATA)
+  @DelegateTaskType(TaskType.ELK_GET_HOST_RECORDS)
   Object search(@NotNull ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails,
       ElkLogFetchRequest logFetchRequest, ThirdPartyApiCallLog apiCallLog) throws IOException;
 

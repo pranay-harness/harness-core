@@ -55,7 +55,7 @@ import java.util.concurrent.TimeUnit;
  */
 @SuppressFBWarnings("MF_CLASS_MASKS_FIELD")
 public class ElkAnalysisState extends AbstractLogAnalysisState {
-  @SchemaIgnore @Transient protected static final String DEFAULT_TIME_FIELD = "@timestamp";
+  @SchemaIgnore @Transient public static final String DEFAULT_TIME_FIELD = "@timestamp";
 
   @SchemaIgnore @Transient protected static final String DEFAULT_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSX";
 

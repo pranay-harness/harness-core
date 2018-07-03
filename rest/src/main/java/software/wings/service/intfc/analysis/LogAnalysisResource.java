@@ -45,14 +45,14 @@ public interface LogAnalysisResource {
   String ELK_GET_INDICES_URL = "/get-indices";
 
   /**
-   * url for UI to get lits of indices
+   * url for UI to get sample record
    */
-  String KIBANA_GET_VERSION_URL = "/version";
+  String ANALYSIS_STATE_GET_SAMPLE_RECORD_URL = "/get-sample-record";
 
   /**
    * url for UI to get sample record
    */
-  String ANALYSIS_STATE_GET_SAMPLE_RECORD_URL = "/get-sample-record";
+  String ANALYSIS_STATE_GET_HOST_RECORD_URL = "/get-host-records";
 
   /**
    * Ignore feedback from the user

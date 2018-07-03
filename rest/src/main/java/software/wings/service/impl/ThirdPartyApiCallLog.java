@@ -29,7 +29,7 @@ import java.util.List;
 @ToString(exclude = {"validUntil"})
 public class ThirdPartyApiCallLog extends Base implements Cloneable {
   private static final String NO_STATE_EXECUTION_ID = "NO_STATE_EXECUTION";
-  private static final int MAX_JSON_RESPONSE_LENGTH = 512;
+  private static final int MAX_JSON_RESPONSE_LENGTH = 1024;
   private @NotEmpty @Indexed String stateExecutionId;
   private @NotEmpty @Indexed String accountId;
   private @NotEmpty String delegateId;
