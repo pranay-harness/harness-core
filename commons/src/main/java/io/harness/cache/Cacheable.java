@@ -14,7 +14,4 @@ package io.harness.cache;
 public interface Cacheable {
   // Returns a key that represents the object
   String key();
-
-  // Returns a hash of the context in which the object was prepared.
-  long contextHash();
 }

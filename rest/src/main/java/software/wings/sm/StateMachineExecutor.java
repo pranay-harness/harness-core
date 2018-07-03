@@ -642,7 +642,7 @@ public class StateMachineExecutor {
 
   private Map<String, String> getManualInterventionPlaceholderValues(ExecutionContextImpl context) {
     WorkflowExecution workflowExecution = workflowExecutionService.getExecutionDetails(
-        context.getApp().getUuid(), context.getWorkflowExecutionId(), emptySet());
+        context.getApp().getUuid(), context.getWorkflowExecutionId(), false, emptySet());
     String artifactsMessage =
         workflowNotificationHelper.getArtifactsMessage(context, workflowExecution, WORKFLOW, null);
 
@@ -1016,7 +1016,7 @@ public class StateMachineExecutor {
       return false;
     }
 
-    statusUpdateSubject.fireInform(StateStatusUpdate::stateExecutionStatusUpdated,
+    statusUpdateSubject.fireInform(StateStatusUpdate::stateExecutionStatusUpdated, stateExecutionInstance.getAppId(),
         stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getUuid(), status);
     return true;
   }
@@ -1125,7 +1125,7 @@ public class StateMachineExecutor {
       return false;
     }
 
-    statusUpdateSubject.fireInform(StateStatusUpdate::stateExecutionStatusUpdated,
+    statusUpdateSubject.fireInform(StateStatusUpdate::stateExecutionStatusUpdated, stateExecutionInstance.getAppId(),
         stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getUuid(), status);
     return true;
   }
@@ -1395,7 +1395,7 @@ public class StateMachineExecutor {
     if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() != 1) {
       throw new WingsException(ErrorCode.RETRY_FAILED).addParam("displayName", stateExecutionInstance.getDisplayName());
     }
-    statusUpdateSubject.fireInform(StateStatusUpdate::stateExecutionStatusUpdated,
+    statusUpdateSubject.fireInform(StateStatusUpdate::stateExecutionStatusUpdated, stateExecutionInstance.getAppId(),
         stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getUuid(), NEW);
   }
 

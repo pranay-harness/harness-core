@@ -7,6 +7,7 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
@@ -218,7 +219,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
         .thenReturn(emptyList());
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
     setInternalState(kubernetesDeploy, "secretManager", secretManager);
-    when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anySet()))
+    when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean(), anySet()))
         .thenReturn(aWorkflowExecution().build());
     context = new ExecutionContextImpl(stateExecutionInstance);
 

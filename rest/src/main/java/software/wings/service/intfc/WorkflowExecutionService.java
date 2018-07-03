@@ -25,6 +25,7 @@ import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateStatusUpdate;
 import software.wings.sm.StateType;
 
 import java.util.List;
@@ -32,7 +33,7 @@ import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
-public interface WorkflowExecutionService {
+public interface WorkflowExecutionService extends StateStatusUpdate {
   void trigger(
       @NotNull String appId, @NotNull String stateMachineId, @NotNull String executionUuid, String executionName);
 
@@ -55,7 +56,7 @@ public interface WorkflowExecutionService {
       WorkflowExecutionUpdate workflowExecutionUpdate);
 
   WorkflowExecution getExecutionDetails(
-      @NotNull String appId, @NotNull String workflowExecutionId, Set<String> excludeFromAggregation);
+      @NotNull String appId, @NotNull String workflowExecutionId, boolean upToDate, Set<String> excludeFromAggregation);
 
   WorkflowExecution getExecutionWithoutSummary(@NotNull String appId, @NotNull String workflowExecutionId);
 

@@ -12,7 +12,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static java.time.Duration.ofDays;
-import static java.time.Duration.ofHours;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
@@ -79,6 +78,7 @@ import com.google.inject.Singleton;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.cache.Distributable;
+import io.harness.cache.Ordinal;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -325,7 +325,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
       if (!runningOnly || workflowExecution.isRunningStatus() || workflowExecution.isPausedStatus()) {
         try {
-          populateNodeHierarchy(workflowExecution, includeGraph, includeStatus, emptySet());
+          populateNodeHierarchy(workflowExecution, includeGraph, includeStatus, false, emptySet());
         } catch (Exception e) {
           logger.error("Failed to populate node hierarchy for the workflow execution {} ", res, e);
         }
@@ -644,7 +644,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    */
   @Override
   public WorkflowExecution getExecutionDetails(
-      String appId, String workflowExecutionId, Set<String> excludeFromAggregation) {
+      String appId, String workflowExecutionId, boolean upToDate, Set<String> excludeFromAggregation) {
     WorkflowExecution workflowExecution = getExecutionDetailsWithoutGraph(appId, workflowExecutionId);
 
     if (workflowExecution.getWorkflowType() == PIPELINE) {
@@ -652,7 +652,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     if (workflowExecution != null) {
-      populateNodeHierarchyWithGraph(workflowExecution, excludeFromAggregation);
+      populateNodeHierarchy(workflowExecution, true, false, upToDate, excludeFromAggregation);
     }
     return workflowExecution;
   }
@@ -690,15 +690,25 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return workflowExecution;
   }
 
+  @Override
+  public void stateExecutionStatusUpdated(
+      String appId, String workflowExecution, String stateExecutionInstanceId, ExecutionStatus status) {
+    // Starting is always followed with running. No need to force calculation for it.
+    if (status == STARTING) {
+      return;
+    }
+    executorService.submit(() -> { final Tree ignore = calculateTree(appId, workflowExecution); });
+  }
+
   @Value
   @Builder
-  static class Tree implements Distributable {
+  static class Tree implements Distributable, Ordinal {
     public static final long structureHash = ObjectStreamClass.lookup(Tree.class).getSerialVersionUID();
 
-    private long contextHash;
+    private long contextOrder;
     private String key;
 
-    private ExecutionStatus status;
+    private ExecutionStatus overrideStatus;
     private GraphNode graph;
 
     @Override
@@ -712,8 +722,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     @Override
-    public long contextHash() {
-      return contextHash;
+    public long contextOrder() {
+      return contextOrder;
     }
 
     @Override
@@ -722,23 +732,46 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
   }
 
-  private Tree currentTree(WorkflowExecution workflowExecution) {
-    if (workflowExecution == null) {
-      return null;
-    }
-    final StateExecutionInstance last =
-        wingsPersistence.createQuery(StateExecutionInstance.class)
-            .filter(StateExecutionInstance.APP_ID_KEY, workflowExecution.getAppId())
-            .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflowExecution.getUuid())
-            .order(Sort.descending(StateExecutionInstance.LAST_UPDATED_AT_KEY))
-            .project(StateExecutionInstance.LAST_UPDATED_AT_KEY, true)
-            .get();
+  private Tree calculateTree(String appId, String workflowExecutionId) {
+    Map<String, StateExecutionInstance> allInstancesIdMap =
+        stateExecutionService.executionStatesMap(appId, workflowExecutionId);
 
-    if (last == null) {
-      return null;
+    Long lastUpdate =
+        allInstancesIdMap.values().stream().map(StateExecutionInstance::getLastUpdatedAt).max(Long::compare).get();
+
+    Tree tree = mongoStore.get(GraphRenderer.algorithmId, Tree.structureHash, workflowExecutionId);
+    if (tree != null && tree.getContextOrder() >= lastUpdate) {
+      return tree;
     }
-    return mongoStore.<Tree>get(last.getLastUpdatedAt() + workflowExecution.getLastUpdatedAt(),
-        GraphRenderer.algorithmId, Tree.structureHash, workflowExecution.getUuid());
+
+    TreeBuilder treeBuilder = Tree.builder().key(workflowExecutionId).contextOrder(lastUpdate);
+    if (allInstancesIdMap.values().stream().anyMatch(
+            i -> i.getStatus() == ExecutionStatus.PAUSED || i.getStatus() == ExecutionStatus.PAUSING)) {
+      treeBuilder.overrideStatus(ExecutionStatus.PAUSED);
+    } else if (allInstancesIdMap.values().stream().anyMatch(i -> i.getStatus() == ExecutionStatus.WAITING)) {
+      treeBuilder.overrideStatus(ExecutionStatus.WAITING);
+    } else {
+      if (allInstancesIdMap.values().stream().anyMatch(
+              i -> i.getStatus() == ExecutionStatus.PAUSED || i.getStatus() == ExecutionStatus.PAUSING)) {
+        treeBuilder.overrideStatus(ExecutionStatus.PAUSED);
+      } else if (allInstancesIdMap.values().stream().anyMatch(i -> i.getStatus() == ExecutionStatus.WAITING)) {
+        treeBuilder.overrideStatus(ExecutionStatus.WAITING);
+      } else {
+        List<ExecutionInterrupt> executionInterrupts =
+            executionInterruptManager.checkForExecutionInterrupt(appId, workflowExecutionId);
+        if (executionInterrupts != null
+            && executionInterrupts.stream().anyMatch(
+                   e -> e.getExecutionInterruptType() == ExecutionInterruptType.PAUSE_ALL)) {
+          treeBuilder.overrideStatus(ExecutionStatus.PAUSED);
+        }
+      }
+    }
+
+    treeBuilder.graph(graphRenderer.generateHierarchyNode(allInstancesIdMap, emptySet()));
+
+    final Tree cacheTree = treeBuilder.build();
+    executorService.submit(() -> { mongoStore.upsert(cacheTree, ofDays(30)); });
+    return cacheTree;
   }
 
   @Override
@@ -748,7 +781,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private void populateNodeHierarchy(WorkflowExecution workflowExecution, boolean includeGraph, boolean includeStatus,
-      Set<String> excludeFromAggregation) {
+      boolean upToDate, Set<String> excludeFromAggregation) {
     if (includeGraph) {
       includeStatus = true;
     }
@@ -757,73 +790,20 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       return;
     }
 
-    // TODO: So far do not cache with aggregation
-    Tree tree = excludeFromAggregation.size() == 0 ? currentTree(workflowExecution) : null;
-
-    boolean cached =
-        tree != null && (tree.getStatus() != null || !includeStatus) && (tree.getGraph() != null || !includeGraph);
-
-    if (cached) {
-      logger.info("CACHED: WorkflowExecution {} graph was cached", workflowExecution.getUuid());
+    Tree tree = null;
+    if (!upToDate) {
+      mongoStore.<Tree>get(GraphRenderer.algorithmId, Tree.structureHash, workflowExecution.getUuid());
+    }
+    if (tree == null) {
+      tree = calculateTree(workflowExecution.getAppId(), workflowExecution.getUuid());
     }
 
-    Map<String, StateExecutionInstance> allInstancesIdMap = cached
-        ? null
-        : stateExecutionService.executionStatesMap(workflowExecution.getAppId(), workflowExecution.getUuid());
-
-    if (includeStatus) {
-      if (tree != null && tree.getStatus() != null) {
-        workflowExecution.setStatus(tree.getStatus());
-      } else {
-        if (!ExecutionStatus.isFinalStatus(workflowExecution.getStatus())) {
-          if (allInstancesIdMap.values().stream().anyMatch(
-                  i -> i.getStatus() == ExecutionStatus.PAUSED || i.getStatus() == ExecutionStatus.PAUSING)) {
-            workflowExecution.setStatus(ExecutionStatus.PAUSED);
-          } else if (allInstancesIdMap.values().stream().anyMatch(i -> i.getStatus() == ExecutionStatus.WAITING)) {
-            workflowExecution.setStatus(ExecutionStatus.WAITING);
-          } else {
-            List<ExecutionInterrupt> executionInterrupts = executionInterruptManager.checkForExecutionInterrupt(
-                workflowExecution.getAppId(), workflowExecution.getUuid());
-            if (executionInterrupts != null
-                && executionInterrupts.stream().anyMatch(
-                       e -> e.getExecutionInterruptType() == ExecutionInterruptType.PAUSE_ALL)) {
-              workflowExecution.setStatus(ExecutionStatus.PAUSING);
-            }
-          }
-        }
-      }
+    if (includeStatus && tree.getOverrideStatus() != null) {
+      workflowExecution.setStatus(tree.getOverrideStatus());
     }
-
     if (includeGraph) {
-      if (tree != null && tree.getGraph() != null) {
-        workflowExecution.setExecutionNode(tree.getGraph());
-      } else {
-        final GraphNode graphNode = graphRenderer.generateHierarchyNode(allInstancesIdMap, excludeFromAggregation);
-        workflowExecution.setExecutionNode(graphNode);
-      }
+      workflowExecution.setExecutionNode(tree.getGraph());
     }
-
-    if (!cached) {
-      TreeBuilder treeBuilder = Tree.builder().key(workflowExecution.getUuid());
-      if (includeStatus) {
-        treeBuilder.status(workflowExecution.getStatus());
-      }
-      if (includeGraph) {
-        treeBuilder.graph(workflowExecution.getExecutionNode());
-      }
-
-      long workflowLastUpdate = workflowExecution.getLastUpdatedAt();
-      executorService.submit(() -> {
-        Long lastUpdate =
-            allInstancesIdMap.values().stream().map(StateExecutionInstance::getLastUpdatedAt).max(Long::compare).get();
-        final Tree cacheTree = treeBuilder.contextHash(lastUpdate + workflowLastUpdate).build();
-        mongoStore.upsert(cacheTree, ExecutionStatus.isFinalStatus(cacheTree.status) ? ofHours(12) : ofDays(30));
-      });
-    }
-  }
-
-  private void populateNodeHierarchyWithGraph(WorkflowExecution workflowExecution, Set<String> excludeFromAggregation) {
-    populateNodeHierarchy(workflowExecution, true, false, excludeFromAggregation);
   }
 
   /**

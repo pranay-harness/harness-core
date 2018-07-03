@@ -70,11 +70,13 @@ import software.wings.security.AuthResponseFilter;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.AuthenticationFilter;
 import software.wings.service.impl.SettingsServiceImpl;
+import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.WorkflowServiceImpl;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.MigrationService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateMachineExecutor;
 import software.wings.utils.CacheHelper;
@@ -340,12 +342,13 @@ public class WingsApplication extends Application<MainConfiguration> {
 
   public static void registerObservers(Injector injector) {
     SettingsServiceImpl settingsService = (SettingsServiceImpl) injector.getInstance(Key.get(SettingsService.class));
-    WorkflowServiceImpl workflowService = (WorkflowServiceImpl) injector.getInstance(Key.get(WorkflowService.class));
     StateMachineExecutor stateMachineExecutor = injector.getInstance(Key.get(StateMachineExecutor.class));
+    WorkflowServiceImpl workflowService = (WorkflowServiceImpl) injector.getInstance(Key.get(WorkflowService.class));
+    WorkflowExecutionServiceImpl workflowExecutionService =
+        (WorkflowExecutionServiceImpl) injector.getInstance(Key.get(WorkflowExecutionService.class));
 
     settingsService.getManipulationSubject().register(workflowService);
-
-    stateMachineExecutor.getStatusUpdateSubject().register(workflowService);
+    stateMachineExecutor.getStatusUpdateSubject().register(workflowExecutionService);
   }
 
   private void registerCronJobs(Injector injector) {

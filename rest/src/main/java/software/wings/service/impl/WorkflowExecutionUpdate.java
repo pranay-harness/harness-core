@@ -166,7 +166,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   protected void handlePostExecution(ExecutionContext context) {
     try {
       WorkflowExecution workflowExecution =
-          workflowExecutionService.getExecutionDetails(appId, workflowExecutionId, emptySet());
+          workflowExecutionService.getExecutionDetails(appId, workflowExecutionId, true, emptySet());
       if (context.getWorkflowType() == WorkflowType.ORCHESTRATION) {
         executionEventQueue.send(
             anExecutionEvent().withAppId(context.getAppId()).withWorkflowId(workflowExecution.getWorkflowId()).build());

@@ -6,6 +6,7 @@ import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.RandomUtils.nextInt;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -868,7 +869,8 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     when(context.getWorkflowExecutionId()).thenReturn(PIPELINE_WORKFLOW_EXECUTION_ID);
     when(mockWorkflowService.readWorkflow(any(), any())).thenReturn(workflow);
     when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
-    when(workflowExecutionService.getExecutionDetails(eq(APP_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any()))
+    when(workflowExecutionService.getExecutionDetails(
+             eq(APP_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), anyBoolean(), any()))
         .thenReturn(WorkflowExecutionBuilder.aWorkflowExecution()
                         .withTriggeredBy(EmbeddedUser.builder().name(USER_NAME).uuid(USER_NAME).build())
                         .withStartTs(70L)

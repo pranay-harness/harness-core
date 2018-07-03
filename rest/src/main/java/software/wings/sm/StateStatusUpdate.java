@@ -1,5 +1,6 @@
 package software.wings.sm;
 
 public interface StateStatusUpdate {
-  void stateExecutionStatusUpdated(String workflowExecution, String stateExecutionInstanceId, ExecutionStatus status);
+  void stateExecutionStatusUpdated(
+      String appId, String workflowExecution, String stateExecutionInstanceId, ExecutionStatus status);
 }

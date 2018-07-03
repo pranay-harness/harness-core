@@ -9,6 +9,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
@@ -259,7 +260,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
         .thenReturn(safeDisplayServiceVariableList);
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
     setInternalState(pcfRouteSwapState, "secretManager", secretManager);
-    when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anySet()))
+    when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean(), anySet()))
         .thenReturn(aWorkflowExecution().build());
     context = new ExecutionContextImpl(stateExecutionInstance);
     on(context).set("variableProcessor", variableProcessor);
