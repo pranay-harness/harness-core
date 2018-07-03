@@ -60,9 +60,9 @@ public class PrometheusDelegateServiceImpl implements PrometheusDelegateService 
       delegateLogService.save(prometheusConfig.getAccountId(), apiCallLog);
       return response.body();
     } else {
-      apiCallLog.setJsonResponse(response.errorBody());
-      delegateLogService.save(prometheusConfig.getAccountId(), apiCallLog);
       logger.error("Request not successful. Reason: {}, url: {}", response, url);
+      apiCallLog.setResponse(response.errorBody().string());
+      delegateLogService.save(prometheusConfig.getAccountId(), apiCallLog);
       throw new WingsException(response.errorBody().string());
     }
   }
