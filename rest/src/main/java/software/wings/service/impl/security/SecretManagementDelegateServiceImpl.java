@@ -152,6 +152,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
       try {
         if (savedEncryptedData != null && isNotBlank(value)) {
+          logger.info("deleting vault secret {} for {}", savedEncryptedData.getEncryptionKey(), savedEncryptedData);
           getVaultRestClient(vaultConfig)
               .deleteSecret(String.valueOf(vaultConfig.getAuthToken()), savedEncryptedData.getEncryptionKey())
               .execute();
@@ -162,6 +163,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
 
         Response<Void> response = request.execute();
         if (response.isSuccessful()) {
+          logger.info("saving vault secret {} for {}", keyUrl, savedEncryptedData);
           return EncryptedData.builder()
               .encryptionKey(keyUrl)
               .encryptedValue(keyUrl.toCharArray())
@@ -229,7 +231,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
           logger.warn("decryption failed. trial num: {}", retry, e);
           sleep(ofMillis(1000));
         } else {
-          logger.error("decryption failed after {} retries ", retry, e);
+          logger.error("decryption failed after {} retries for {}", retry, data, e);
           throw new IOException("Decryption failed after " + NUM_OF_RETRIES + " retries", e);
         }
       }
