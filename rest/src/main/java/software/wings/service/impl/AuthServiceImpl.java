@@ -501,8 +501,16 @@ public class AuthServiceImpl implements AuthService {
     return accountId + "~" + userId;
   }
 
+  private String getUserId(String cacheKey, String accountId) {
+    if (isEmpty(cacheKey)) {
+      return null;
+    }
+    String prefix = accountId + "~";
+    return cacheKey.replace(prefix, "");
+  }
+
   @Override
-  public void evictAccountUserPermissionInfoCache(String accountId) {
+  public void evictAccountUserPermissionInfoCache(String accountId, boolean rebuild) {
     boolean rbacEnabled = featureFlagService.isEnabled(FeatureName.RBAC, accountId);
     if (!rbacEnabled) {
       return;
@@ -518,6 +526,24 @@ public class AuthServiceImpl implements AuthService {
         }
       });
       cache.removeAll(keys);
+
+      if (rebuild) {
+        keys.forEach(key -> {
+          String userId = getUserId(key, accountId);
+          if (userId == null) {
+            return;
+          }
+
+          User user = cacheHelper.getUserCache().get(userId);
+          if (user == null) {
+            return;
+          }
+
+          // This call reloads the cache from db, if some user request does that first, this simply makes sure the cache
+          // is rebuilt.
+          getUserPermissionInfo(accountId, user);
+        });
+      }
     }
   }
 

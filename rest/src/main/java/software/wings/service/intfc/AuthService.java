@@ -85,7 +85,7 @@ public interface AuthService {
 
   AppPermissionSummary getAppPermissionSummaryForUser(String userId, String accountId, String appId);
 
-  void evictAccountUserPermissionInfoCache(String accountId);
+  void evictAccountUserPermissionInfoCache(String accountId, boolean rebuild);
 
   void evictAccountUserPermissionInfoCache(String accountId, List<String> memberIds);
 

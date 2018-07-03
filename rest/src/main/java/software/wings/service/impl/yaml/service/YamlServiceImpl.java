@@ -356,15 +356,29 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   }
 
   private void process(List<ChangeContext> changeContextList) throws YamlProcessingException {
+    if (isEmpty(changeContextList)) {
+      logger.info("No changes to process in the change set");
+      return;
+    }
+
+    String accountId = changeContextList.get(0).getChange().getAccountId();
+
     Map<Change, String> failedChangeErrorMsgMap = Maps.newHashMap();
     Set<ChangeContext> processedChangeSet = Sets.newHashSet();
+
     for (ChangeContext changeContext : changeContextList) {
       String yamlFilePath = changeContext.getChange().getFilePath();
+      YamlType yamlType = changeContext.getYamlType();
       try {
         logger.info("Processing file: [{}]", changeContext.getChange().getFilePath());
         processYamlChange(changeContext, changeContextList);
         yamlGitService.discardGitSyncError(changeContext.getChange().getAccountId(), yamlFilePath);
         processedChangeSet.add(changeContext);
+
+        if (EntityType.APPLICATION.name().equals(yamlType.getEntityType())) {
+          authService.evictAccountUserPermissionInfoCache(accountId, true);
+        }
+
         logger.info("Processing done for file [{}]", changeContext.getChange().getFilePath());
       } catch (Exception ex) {
         logger.warn("Exception while processing yaml file {}", yamlFilePath, ex);
@@ -373,10 +387,9 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       }
     }
 
-    if (isNotEmpty(changeContextList)) {
-      String accountId = changeContextList.get(0).getChange().getAccountId();
-      checkAndInvalidateUserCache(accountId, processedChangeSet);
-    }
+    // Handles eviction in both success and failure cases.
+    checkAndInvalidateUserCache(accountId, processedChangeSet);
+
     if (failedChangeErrorMsgMap.size() > 0) {
       throw new YamlProcessingException(
           "Error while processing some yaml files in the changeset", failedChangeErrorMsgMap);
@@ -387,14 +400,15 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     if (isNotEmpty(processedChangeSet)) {
       if (processedChangeSet.stream().anyMatch(
               context -> shouldInvalidateCache(context.getYamlType().getEntityType()))) {
-        authService.evictAccountUserPermissionInfoCache(accountId);
+        authService.evictAccountUserPermissionInfoCache(accountId, false);
       }
     }
   }
 
   private boolean shouldInvalidateCache(String entityType) {
     return EntityType.SERVICE.name().equals(entityType) || EntityType.ENVIRONMENT.name().equals(entityType)
-        || EntityType.WORKFLOW.name().equals(entityType) || EntityType.PIPELINE.name().equals(entityType);
+        || EntityType.WORKFLOW.name().equals(entityType) || EntityType.PIPELINE.name().equals(entityType)
+        || EntityType.PROVISIONER.name().equals(entityType);
   }
 
   private void processYamlChange(ChangeContext changeContext, List<ChangeContext> changeContextList)
