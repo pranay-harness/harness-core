@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
@@ -20,9 +19,7 @@ import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
@@ -218,10 +215,8 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
-import software.wings.api.DeploymentType;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
-import software.wings.beans.AwsInstanceFilter;
 import software.wings.beans.EcrConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.SettingAttribute;
@@ -258,6 +253,7 @@ public class AwsHelperService {
   @Inject private EncryptionService encryptionService;
   @Inject private TimeLimiter timeLimiter;
   @Inject private ExpressionEvaluator expressionEvaluator;
+  @Inject private AwsUtils awsUtils;
 
   private static final long AUTOSCALING_REQUEST_STATUS_CHECK_INTERVAL = TimeUnit.SECONDS.toSeconds(15);
 
@@ -2072,34 +2068,8 @@ public class AwsHelperService {
     }
   }
 
-  public List<Filter> getAwsFilters(AwsInfrastructureMapping awsInfrastructureMapping) {
-    AwsInstanceFilter instanceFilter = awsInfrastructureMapping.getAwsInstanceFilter();
-    List<Filter> filters = new ArrayList<>();
-    filters.add(new Filter("instance-state-name").withValues("running"));
-    if (instanceFilter != null) {
-      if (isNotEmpty(instanceFilter.getVpcIds())) {
-        filters.add(new Filter("vpc-id", instanceFilter.getVpcIds()));
-      }
-      if (isNotEmpty(instanceFilter.getSecurityGroupIds())) {
-        filters.add(new Filter("instance.group-id", instanceFilter.getSecurityGroupIds()));
-      }
-      if (isNotEmpty(instanceFilter.getSubnetIds())) {
-        filters.add(new Filter("network-interface.subnet-id", instanceFilter.getSubnetIds()));
-      }
-      if (isNotEmpty(instanceFilter.getTags())) {
-        Multimap<String, String> tags = ArrayListMultimap.create();
-        instanceFilter.getTags().forEach(tag -> tags.put(tag.getKey(), tag.getValue()));
-        tags.keySet().forEach(key -> filters.add(new Filter("tag:" + key, new ArrayList<>(tags.get(key)))));
-      }
-      if (StringUtils.equals(awsInfrastructureMapping.getDeploymentType(), DeploymentType.WINRM.toString())) {
-        filters.add(new Filter("platform", asList("windows")));
-      }
-    }
-    return filters;
-  }
-
   public List<Filter> getAwsFiltersForRunningState() {
-    return getAwsFilters(AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping().build());
+    return awsUtils.getAwsFilters(AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping().build());
   }
 
   public DescribeInstancesRequest getDescribeInstancesRequestWithRunningFilter() {
