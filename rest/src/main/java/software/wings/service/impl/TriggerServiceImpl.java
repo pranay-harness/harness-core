@@ -88,6 +88,7 @@ import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.scheduler.ScheduledTriggerJob;
+import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -126,6 +127,7 @@ public class TriggerServiceImpl implements TriggerService {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ArtifactService artifactService;
   @Inject private ArtifactStreamService artifactStreamService;
+  @Inject ArtifactCollectionService artifactCollectionService;
   @Inject private PipelineService pipelineService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private WorkflowService workflowService;
@@ -469,8 +471,20 @@ public class TriggerServiceImpl implements TriggerService {
             if (artifact != null) {
               artifacts.add(artifact);
             } else {
-              logger.warn("Artifact not yet collect for the build number {} of stream id {}", buildNumber,
-                  artifactSelection.getArtifactStreamId());
+              // Collect artifact
+              artifactCollectionService.collectNewArtifacts(
+                  trigger.getAppId(), artifactSelection.getArtifactStreamId());
+              artifact = artifactService.getArtifactByBuildNumber(
+                  trigger.getAppId(), artifactSelection.getArtifactStreamId(), buildNumber);
+              if (artifact != null) {
+                artifacts.add(artifact);
+                logger.info("Artifact collected for the build number {} of stream id {}", buildNumber,
+                    artifactSelection.getArtifactStreamId());
+              } else {
+                logger.warn(
+                    "Artifact collection invoked. However, Artifact not yet collected for the build number {} of stream id {}",
+                    buildNumber, artifactSelection.getArtifactStreamId());
+              }
             }
           }
         });
