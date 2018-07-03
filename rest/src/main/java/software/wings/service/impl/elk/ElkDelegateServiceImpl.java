@@ -102,7 +102,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
       return response.body();
     }
 
-    apiCallLog.setJsonResponse(response.errorBody());
+    apiCallLog.setResponse(response.errorBody().string());
     delegateLogService.save(elkConfig.getAccountId(), apiCallLog);
     throw new WingsException(response.errorBody().string());
   }
@@ -124,7 +124,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
     apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
     apiCallLog.setStatusCode(response.code());
     if (!response.isSuccessful()) {
-      apiCallLog.setJsonResponse(response.errorBody());
+      apiCallLog.setResponse(response.errorBody().string());
       delegateLogService.save(elkConfig.getAccountId(), apiCallLog);
       throw new WingsException(response.errorBody().string());
     }

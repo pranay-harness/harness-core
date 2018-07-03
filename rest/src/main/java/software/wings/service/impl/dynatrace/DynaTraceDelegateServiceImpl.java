@@ -64,9 +64,9 @@ public class DynaTraceDelegateServiceImpl implements DynaTraceDelegateService {
       delegateLogService.save(dynaTraceConfig.getAccountId(), apiCallLog);
       return response.body();
     } else {
-      apiCallLog.setJsonResponse(response.errorBody());
-      delegateLogService.save(dynaTraceConfig.getAccountId(), apiCallLog);
       logger.error("Request not successful. Reason: {}, request: {}", response, dataRequest);
+      apiCallLog.setResponse(response.errorBody().string());
+      delegateLogService.save(dynaTraceConfig.getAccountId(), apiCallLog);
       throw new WingsException(response.errorBody().string());
     }
   }
