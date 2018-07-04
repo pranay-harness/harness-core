@@ -868,6 +868,7 @@ public class DelegateServiceImpl implements DelegateService {
         .ifPresent(future -> future.cancel(true));
     currentlyExecutingTasks.remove(delegateTaskEvent.getDelegateTaskId());
     currentlyExecutingFutures.remove(delegateTaskEvent.getDelegateTaskId());
+    logger.info("Removed {} from executing futures", delegateTaskEvent.getDelegateTaskId());
   }
 
   private void dispatchDelegateTask(DelegateTaskEvent delegateTaskEvent) {
@@ -933,6 +934,7 @@ public class DelegateServiceImpl implements DelegateService {
       String taskId = delegateTask.getUuid();
       currentlyValidatingTasks.remove(taskId);
       currentlyExecutingFutures.remove(taskId);
+      logger.info("Removed {} from executing futures", taskId);
       List<DelegateConnectionResult> results = Optional.ofNullable(delegateConnectionResults).orElse(emptyList());
       boolean validated = results.stream().anyMatch(DelegateConnectionResult::isValidated);
       logger.info("Validation {} for task {}", validated ? "succeeded" : "failed", taskId);
@@ -979,7 +981,14 @@ public class DelegateServiceImpl implements DelegateService {
             .getDelegateRunnableTask(delegateId, delegateTask, getPostExecutionFunction(delegateTask),
                 getPreExecutionFunction(delegateTaskEvent, delegateTask));
     injector.injectMembers(delegateRunnableTask);
-    currentlyExecutingFutures.put(delegateTask.getUuid(), executorService.submit(delegateRunnableTask));
+    Future<?> future = executorService.submit(delegateRunnableTask);
+    logger.info("Task [{}] execution future: {}", delegateTask.getUuid(), future);
+    currentlyExecutingFutures.put(delegateTask.getUuid(), future);
+    logger.info("Currently executing futures: {}",
+        currentlyExecutingFutures.entrySet()
+            .stream()
+            .map(entry -> entry.getKey() + ":" + entry.getValue())
+            .collect(toList()));
     executorService.submit(() -> enforceDelegateTaskTimeout(delegateTask));
     logger.info("Task [{}] submitted for execution", delegateTask.getUuid());
   }
@@ -1026,6 +1035,7 @@ public class DelegateServiceImpl implements DelegateService {
       } finally {
         currentlyExecutingTasks.remove(delegateTask.getUuid());
         currentlyExecutingFutures.remove(delegateTask.getUuid());
+        logger.info("Removed {} from executing futures", delegateTask.getUuid());
         if (response != null && response.errorBody() != null && !response.isSuccessful()) {
           response.errorBody().close();
         }
@@ -1052,6 +1062,7 @@ public class DelegateServiceImpl implements DelegateService {
     }
     currentlyExecutingTasks.remove(delegateTask.getUuid());
     currentlyExecutingFutures.remove(delegateTask.getUuid());
+    logger.info("Removed {} from executing futures", delegateTask.getUuid());
   }
 
   private void replaceRunScripts(DelegateScripts delegateScripts) throws IOException {
