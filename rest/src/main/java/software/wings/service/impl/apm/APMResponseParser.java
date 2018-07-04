@@ -6,6 +6,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.time.Timestamp;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -78,6 +79,7 @@ public class APMResponseParser {
   public static Collection<NewRelicMetricDataRecord> extract(List<APMResponseData> apmResponseData) {
     Map<String, NewRelicMetricDataRecord> resultMap = new HashMap<>();
     for (APMResponseData data : apmResponseData) {
+      logger.info("RESPONSE DATA: {}", data);
       for (APMMetricInfo metricInfo : data.getMetricInfos()) {
         APMResponseParser apmResponseParser = new APMResponseParser();
         for (APMMetricInfo.ResponseMapper responseMapper : metricInfo.getResponseMappers().values()) {
@@ -86,7 +88,13 @@ public class APMResponseParser {
                 responseMapper.getJsonPath().split("\\."), responseMapper.getFieldName(), responseMapper.getRegexs());
           }
         }
-        List<Multimap<String, Object>> output = apmResponseParser.extract(data.text);
+        List<Multimap<String, Object>> output = null;
+        try {
+          output = apmResponseParser.extract(data.text);
+        } catch (Exception ex) {
+          logger.warn("Unable to extract data in APM ResponseParser {}", data.text);
+          continue;
+        }
         createRecords(metricInfo.getResponseMappers().get("txnName").getFieldValue(), metricInfo.getMetricName(),
             data.hostName, metricInfo.getTag(), output, resultMap);
       }
@@ -161,6 +169,11 @@ public class APMResponseParser {
       Iterator<Object> values = record.get("value").iterator();
       while (timestamps.hasNext()) {
         long timestamp = (long) cast(timestamps.next(), "timestamp");
+        long now = Timestamp.currentMinuteBoundary();
+        if (String.valueOf(timestamp).length() < String.valueOf(now).length()) {
+          // Timestamp is in seconds. Convert to millis
+          timestamp = timestamp * 1000;
+        }
         txnName = record.containsKey("txnName") ? (String) record.get("txnName").iterator().next() : txnName;
         hostName = record.containsKey("host") ? (String) record.get("host").iterator().next() : hostName;
         String key = timestamp + ":" + txnName + ":" + hostName;
