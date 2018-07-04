@@ -20,6 +20,7 @@ import java.util.Date;
         @Field("running"), @Field("priority"), @Field("created"), @Field("earliestGet")
       })
 })
+
 public abstract class Queuable {
   @Id private String id;
   @Indexed private boolean running;

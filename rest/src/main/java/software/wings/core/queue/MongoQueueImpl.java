@@ -4,6 +4,7 @@ import static org.joor.Reflect.on;
 
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,8 +80,7 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
                          .filter("running", false)
                          .field("earliestGet")
                          .lessThanOrEq(new Date())
-                         .order("priority")
-                         .order("created");
+                         .order(Sort.descending("priority"), Sort.ascending("created"));
 
     Date resetTimestamp = new Date(System.currentTimeMillis() + resetDurationMillis());
 
