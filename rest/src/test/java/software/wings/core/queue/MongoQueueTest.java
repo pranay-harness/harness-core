@@ -1,6 +1,8 @@
 package software.wings.core.queue;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.threading.Morpheus.sleep;
+import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
@@ -90,8 +92,10 @@ public class MongoQueueTest extends WingsBaseTest {
     QueuableObject messageThree = new QueuableObject(3);
     messageThree.setPriority(0.3);
 
-    queue.send(messageOne);
     queue.send(messageTwo);
+    sleep(ofMillis(2));
+    queue.send(messageOne);
+    sleep(ofMillis(2));
     queue.send(messageThree);
 
     assertThat(queue.get()).isEqualTo(messageOne);
