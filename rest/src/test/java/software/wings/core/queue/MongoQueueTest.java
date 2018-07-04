@@ -83,10 +83,10 @@ public class MongoQueueTest extends WingsBaseTest {
    */
   @Test
   public void shouldReturnMessageBasedOnPriority() {
-    QueuableObject messageOne = new QueuableObject(1);
-    messageOne.setPriority(0.5);
     QueuableObject messageTwo = new QueuableObject(2);
     messageTwo.setPriority(0.4);
+    QueuableObject messageOne = new QueuableObject(1);
+    messageOne.setPriority(0.5);
     QueuableObject messageThree = new QueuableObject(3);
     messageThree.setPriority(0.3);
 
