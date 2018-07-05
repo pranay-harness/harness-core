@@ -61,6 +61,9 @@ def run_learning_engine(parameters): #
                 options_dict['analysis_save_url'] = complete_url(parameters.server_url, options_dict['analysis_save_url'])
                 options_dict['metric_template_url'] = complete_url(parameters.server_url,
                                                                  options_dict['metric_template_url'])
+                if options_dict.get('feedback_url'):
+                    options_dict['feedback_url'] = complete_url(parameters.server_url,
+                                                                options_dict['feedback_url'])
 
                 if options_dict['ml_analysis_type'] != 'TIME_SERIES':
                     options_dict['application_id'] = options_dict['appId']

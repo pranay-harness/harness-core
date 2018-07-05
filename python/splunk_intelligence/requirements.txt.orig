@@ -11,3 +11,4 @@ jupyter; sys_platform == 'darwin'
 logdna
 newrelic
 mock
+gensim

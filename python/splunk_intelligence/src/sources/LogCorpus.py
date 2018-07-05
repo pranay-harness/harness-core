@@ -298,6 +298,21 @@ class LogCorpus(object):
 
         return np.array(texts)
 
+    def get_combined_matrix(self, cluster_vecs_dict):
+        com_mat = []
+        for key in self.control_clusters.keys():
+            com_mat.append(cluster_vecs_dict['control'][key])
+
+        for key in self.test_clusters.keys():
+            com_mat.append(cluster_vecs_dict['test'][key])
+
+        for key in self.anom_clusters.keys():
+            com_mat.append(cluster_vecs_dict['unknown'][key])
+
+        for key in self.ignore_clusters.keys():
+            com_mat.append(cluster_vecs_dict['control'][key])
+        return com_mat
+
     def get_events_for_xy(self):
         texts = []
         for key, value in self.control_clusters.items():
@@ -334,9 +349,9 @@ class LogCorpus(object):
 
     def get_cluster_tags(self, cluster_id, centroids, feature_names, max_terms):
         tags = []
-        for i in centroids[cluster_id, :max_terms]:
-            tags.append(feature_names[i])
-
+        if feature_names:
+            for i in centroids[cluster_id, :max_terms]:
+                tags.append(feature_names[i])
         return tags
 
     def set_xy(self, dist_matrix):
@@ -529,6 +544,18 @@ class LogCorpus(object):
                                cluster_scores=self.cluster_scores,
                                score=self.score
                                ))
+
+    def get_output_as_json(self, options):
+        out_dict = dict(analysisSummaryMessage=self.analysis_summary_message,
+                               query=options.query, control_events=self.control_events, test_events=self.test_events,
+                               unknown_events=self.anomalies, ignore_clusters=self.ignore_clusters,
+                               control_clusters=self.control_clusters, test_clusters=self.test_clusters,
+                               unknown_clusters=self.anom_clusters,
+                               cluster_scores=self.cluster_scores,
+                               score=self.score)
+        if hasattr(options, 'experiment_name'):
+            out_dict['experiment_name'] = options.experiment_name
+        return json.dumps(out_dict)
 
 
     def get_output_for_notebook_as_json(self):

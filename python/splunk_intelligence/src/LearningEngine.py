@@ -1,6 +1,7 @@
 import argparse
-import os
 import sys
+import os
+import subprocess
 import threading
 import time
 import json
@@ -63,7 +64,7 @@ def run_learning_engine(parameters): #
             learning_api_url = complete_url(parameters.server_url, '/api/learning/get-next-task')
             try:
                 text, status_code = HarnessLoader.get_request(learning_api_url, VERSIONFILEPATH, parameters.service_secret)
-                version =  HarnessLoader.get_accept_header(VERSIONFILEPATH)
+                version = HarnessLoader.get_accept_header(VERSIONFILEPATH)
                 logger.info(str(status_code))
                 logger.info('url is ' + str(learning_api_url) + ' and header is ' + str(version))
                 if (status_code == 200) and text.get('resource'):
@@ -92,13 +93,21 @@ def run_learning_engine(parameters): #
                         options_dict['log_analysis_save_url'] = options_dict['analysis_save_url']
 
                     options = Struct(**options_dict)
-
-
                     # process the task
                     logger.info('Executing the task')
                     if options_dict['ml_analysis_type'] == 'LOG_ML':
-                        SplunkIntelOptimized.main(options)
-                        options.log_analysis_save_url = options.analysis_save_url
+                        if str(options_dict.get('feature_name')).lower() =='neural_net' and str(os.environ.get('learning_env')).lower()!='on_prem':
+                            options_dict['sim_threshold'] = 0.96
+                            options = json.dumps(options_dict)
+                            if os.environ.get('learning_env'):
+                                child_file_name = 'LogNeuralNet.pyc'
+                            else:
+                                child_file_name = 'LogNeuralNet.py'
+                            logger.info('Starting neural nets analysis')
+                            dtv_child = subprocess.Popen(['python', child_file_name, options])
+                            dtv_child.wait()
+                        else:
+                            SplunkIntelOptimized.main(options)
                     elif options_dict['ml_analysis_type'] == 'TIME_SERIES':
                         TimeSeriesML.main(options)
                     elif options_dict['ml_analysis_type'] == 'LOG_CLUSTER':
@@ -144,4 +153,4 @@ if __name__ == "__main__":
     main(sys.argv)
 
 
-## python LearningEngine.py --https_port 18080  --server_url 'https://127.0.0.1:9090' --service_secret '22ef5a98920448e7d3c70d9fc9566085'
+## python LearningEngine.py --https_port 18080  --server_url 'https://127.0.0.1:9090' --service_secret '645bfccbab762e12e74645d04bf19c61'
