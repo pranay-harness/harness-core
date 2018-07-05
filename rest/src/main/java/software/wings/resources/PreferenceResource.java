@@ -59,7 +59,8 @@ public class PreferenceResource {
   @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<PageResponse<Preference>> listPreferences(
       @QueryParam("accountId") @NotEmpty String accountId, @BeanParam PageRequest<Preference> pageRequest) {
-    return new RestResponse<>(prefService.list(pageRequest));
+    User user = UserThreadLocal.get();
+    return new RestResponse<>(prefService.list(pageRequest, user.getUuid()));
   }
 
   /**
