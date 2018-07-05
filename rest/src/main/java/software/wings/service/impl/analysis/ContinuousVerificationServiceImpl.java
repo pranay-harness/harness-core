@@ -182,6 +182,10 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       pipelinePermissions = pipelinePermissionsByApp.get(applicationId);
       envPermissions = envPermissionsByApp.get(applicationId);
       wfPermissions = workflowPermissionsByApp.get(applicationId);
+      logger.info("Service permissions for user {} are {}", user.getName(), servicePermissions);
+      logger.info("Pipeline permissions for user {} are {}", user.getName(), pipelinePermissions);
+      logger.info("environment permissions for user {} are {}", user.getName(), envPermissions);
+      logger.info("workflow permissions for user {} are {}", user.getName(), wfPermissions);
 
       if (!checkEmptyOrNotContains(servicePermissions, executionMetaData.getServiceId())
           && !checkEmptyOrNotContains(pipelinePermissions, executionMetaData.getPipelineId())
@@ -191,6 +195,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       } else {
         logger.info("User {} does not have permissions to view the execution data {} and {} and {}", user.getName(),
             executionMetaData.getServiceName(), executionMetaData.getWorkflowName(), executionMetaData.getEnvName());
+        logger.info("User {} does not have permissions to view the execution data {} and {} and {}", user.getName(),
+            executionMetaData.getServiceId(), executionMetaData.getWorkflowId(), executionMetaData.getEnvId());
       }
     }
     return finalList;
@@ -215,6 +221,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   private List<String> getAllowedApplicationsForUser(final User user, final String accountId) {
     Map<String, AppPermissionSummary> userApps =
         authService.getUserPermissionInfo(accountId, user).getAppPermissionMapInternal();
+    logger.info("Applications allowed for user {} are {}", user.getName(), userApps.keySet());
     return new ArrayList<>(userApps.keySet());
   }
 }
