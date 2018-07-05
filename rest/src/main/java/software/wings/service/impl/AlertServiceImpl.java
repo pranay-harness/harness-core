@@ -130,7 +130,7 @@ public class AlertServiceImpl implements AlertService {
         accountId, GLOBAL_APP_ID, NoActiveDelegates, NoActiveDelegatesAlert.builder().accountId(accountId).build())
         .ifPresent(this ::close);
     wingsPersistence.createQuery(Alert.class)
-        .filter("accountId", accountId)
+        .filter(Alert.ACCOUNT_ID_KEY, accountId)
         .filter("type", NoEligibleDelegates)
         .filter("status", Open)
         .asList()
@@ -167,7 +167,7 @@ public class AlertServiceImpl implements AlertService {
     }
     injector.injectMembers(alertData);
     Query<Alert> query = wingsPersistence.createQuery(Alert.class).filter("type", alertType).filter("status", Open);
-    query = appId == null || appId.equals(GLOBAL_APP_ID) ? query.filter("accountId", accountId)
+    query = appId == null || appId.equals(GLOBAL_APP_ID) ? query.filter(Alert.ACCOUNT_ID_KEY, accountId)
                                                          : query.filter(Alert.APP_ID_KEY, appId);
     return query.asList()
         .stream()
@@ -180,7 +180,7 @@ public class AlertServiceImpl implements AlertService {
 
   private List<Alert> findExistingAlertsOfType(String accountId, String appId, AlertType alertType) {
     Query<Alert> query = wingsPersistence.createQuery(Alert.class).filter("type", alertType).filter("status", Open);
-    query = appId == null || appId.equals(GLOBAL_APP_ID) ? query.filter("accountId", accountId)
+    query = appId == null || appId.equals(GLOBAL_APP_ID) ? query.filter(Alert.ACCOUNT_ID_KEY, accountId)
                                                          : query.filter(Alert.APP_ID_KEY, appId);
     return query.asList();
   }
@@ -191,7 +191,7 @@ public class AlertServiceImpl implements AlertService {
     alertUpdateOperations.set(Alert.CLOSED_AT_KEY, System.currentTimeMillis());
     alertUpdateOperations.set(Alert.VALID_UNTIL_KEY, Date.from(OffsetDateTime.now().plusDays(7).toInstant()));
     wingsPersistence.update(wingsPersistence.createQuery(Alert.class)
-                                .filter("accountId", alert.getAccountId())
+                                .filter(Alert.ACCOUNT_ID_KEY, alert.getAccountId())
                                 .filter(ID_KEY, alert.getUuid()),
         alertUpdateOperations);
     logger.info("Alert closed: {}", alert);
@@ -199,7 +199,7 @@ public class AlertServiceImpl implements AlertService {
 
   @Override
   public void deleteByAccountId(String accountId) {
-    List<Alert> alerts = wingsPersistence.createQuery(Alert.class).filter("accountId", accountId).asList();
+    List<Alert> alerts = wingsPersistence.createQuery(Alert.class).filter(Alert.ACCOUNT_ID_KEY, accountId).asList();
     alerts.forEach(alert -> wingsPersistence.delete(alert));
   }
 
