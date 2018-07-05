@@ -7,11 +7,14 @@ import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by rsingh on 10/18/17.
  */
 public interface EncryptionService {
+  long DECRYPTION_DELEGATE_TASK_TIMEOUT = TimeUnit.SECONDS.toMillis(30);
+  long DECRYPTION_DELEGATE_TIMEOUT = 3 * DECRYPTION_DELEGATE_TASK_TIMEOUT + TimeUnit.SECONDS.toMillis(10);
   @DelegateTaskType(TaskType.SECRET_DECRYPT)
   Encryptable decrypt(Encryptable object, List<EncryptedDataDetail> encryptedDataDetails);
 
