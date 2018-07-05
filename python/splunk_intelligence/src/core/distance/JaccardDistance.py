@@ -1,4 +1,5 @@
 import numpy as np
+import difflib
 
 from core.feature.Tokenizer import Tokenizer
 
@@ -71,6 +72,29 @@ def jaccard_difference(control_text, test_text):
     test_tokens = Tokenizer.default_tokenizer(test_text)
     control_tokens = Tokenizer.default_tokenizer(control_text)
     return list((set(control_tokens) - set(test_tokens)).union(set(test_tokens) - set(control_tokens)))
+
+
+def jaccard_pairwise_difference(control_tokens, test_tokens):
+    """
+    Return tokens in control_text that is absent from test_text and
+    vice versa.
+    """
+    control_diff = []
+    test_diff = []
+    groups = list(difflib.SequenceMatcher(None, control_tokens, test_tokens).get_opcodes())
+    for tag, i1, i2, j1, j2 in groups:
+        if tag == 'replace':
+            control_diff.extend(control_tokens[i1:i2])
+            test_diff.extend(test_tokens[j1:j2])
+
+        elif tag == 'delete':
+            control_diff.extend(control_tokens[i1:i2])
+            test_diff.extend([' ']*len(control_tokens[i1:i2]))
+        elif tag == 'insert':
+            control_diff.extend([' '] * len(test_tokens[j1:j2]))
+            test_diff.extend(test_tokens[j1:j2])
+
+    return control_diff, test_diff
 
 
 
