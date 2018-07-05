@@ -79,8 +79,8 @@ public class EmailState extends State {
       emailStateExecutionData.setCcAddress(evaluatedCc);
       logger.debug("Email Notification - subject:{}, body:{}", evaluatedSubject, evaluatedBody);
       emailNotificationService.send(EmailData.builder()
-                                        .to(getEmailAddressList(toAddress))
-                                        .cc(getEmailAddressList(ccAddress))
+                                        .to(getEmailAddressList(evaluatedTo))
+                                        .cc(getEmailAddressList(evaluatedCc))
                                         .subject(evaluatedSubject)
                                         .body(evaluatedBody)
                                         .accountId(((ExecutionContextImpl) context).getApp().getAccountId())
