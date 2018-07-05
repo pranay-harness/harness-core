@@ -2,6 +2,7 @@ package software.wings.scheduler;
 
 import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
 
+import com.google.common.util.concurrent.RateLimiter;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
@@ -45,6 +46,7 @@ import software.wings.service.intfc.WorkflowService;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Date;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
 public class PruneEntityJob implements Job {
@@ -69,8 +71,11 @@ public class PruneEntityJob implements Job {
   @Inject private PipelineService pipelineService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private WorkflowService workflowService;
+  @Inject private ExecutorService executorService;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+
+  static RateLimiter pruneRateLimiter = RateLimiter.create(5);
 
   public static Trigger defaultTrigger(String id, Duration delay) {
     final TriggerBuilder<SimpleTrigger> builder = TriggerBuilder.newTrigger().withIdentity(id, GROUP).withSchedule(
@@ -185,7 +190,17 @@ public class PruneEntityJob implements Job {
             + "The only case this warning should show is if there was a crash or network disconnect in the race of "
             + "the prune job schedule and the parent entity deletion.");
 
-      } else if (!prune(className, appId, entityId)) {
+      } else if (pruneRateLimiter.tryAcquire()) {
+        if (!prune(className, appId, entityId)) {
+          return;
+        }
+      } else {
+        executorService.submit(() -> {
+          pruneRateLimiter.acquire();
+          if (prune(className, appId, entityId)) {
+            jobScheduler.deleteJob(entityId, GROUP);
+          }
+        });
         return;
       }
     } catch (ClassNotFoundException e) {
