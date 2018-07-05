@@ -30,7 +30,7 @@ class TSAnomlyDetector(object):
         self.raw_test_txns = test_txns
         self.min_rpm = options.min_rpm
 
-    def group_txns(self, transactions):
+    def group_txns(self, transactions, type=None):
         """
         The input is a list of records collected by the delegate and sent to the harness server.
         Sample input record:
@@ -88,7 +88,8 @@ class TSAnomlyDetector(object):
                 if tag not in self.metric_names:
                     tag = 'default'
                 for metric_name in self.metric_names[tag]:
-                    if metric_name in transaction.get('values'):
+                    if metric_name in transaction.get('values') or \
+                            (type=='control' and self.metric_template.get_metric_type(metric_name) == MetricType.ERROR):
                         txn_metrics[txn_name].append(metric_name)
 
         for transaction in transactions:
@@ -99,7 +100,8 @@ class TSAnomlyDetector(object):
             if txn_name not in result:
                 result[txn_name] = OrderedDict({})
                 for metric_name in txn_metrics[txn_name]:
-                    if metric_name in transaction.get('values'):
+                    if metric_name in transaction.get('values') or \
+                            (type=='control' and self.metric_template.get_metric_type(metric_name) == MetricType.ERROR):
                         result[txn_name][metric_name] = OrderedDict({})
             for metric_name in txn_metrics[txn_name]:
                 if host not in result[txn_name][metric_name]:
@@ -565,8 +567,8 @@ class TSAnomlyDetector(object):
         start_time = time.time()
         result = {'transactions': {}}
 
-        control_txn_groups = self.group_txns(self.raw_control_txns)
-        test_txn_groups = self.group_txns(self.raw_test_txns)
+        control_txn_groups = self.group_txns(self.raw_control_txns, type='control')
+        test_txn_groups = self.group_txns(self.raw_test_txns, type='test')
 
         test_txn_meta_data_dict = self.txn_meta_data_dict(self.raw_test_txns)
 

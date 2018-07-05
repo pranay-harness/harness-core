@@ -1,0 +1,132 @@
+[
+    {
+        "stateType": "NEW_RELIC",
+        "name": "Go/word",
+        "applicationId": "rCth6EJcS1KZMflrjBIM4g",
+        "workflowId": "rCth6EJcS1KZMflrjBIM4g",
+        "workflowExecutionId": "63S99iWXQeie5NHZJ1bDaQ",
+        "serviceId": "rPm7GRI8TWS5LFtxrf9Z4Q",
+        "stateExecutionId": "alNpp9GTRTGx88hRMWpoXw",
+        "timeStamp": 1519841520000,
+        "dataCollectionMinute": 0,
+        "host": "harness-29-7fc979c7f4-b978f",
+        "values": {
+            "averageResponseTime": 0.0228,
+            "callCount": 1650.0,
+            "throughput": 27.5,
+            "requestsPerMinute": 1650.0,
+
+            "apdexScore": 0.99
+        },
+        "createdAt": 0,
+        "lastUpdatedAt": 0
+    },
+    {
+        "stateType": "NEW_RELIC",
+        "name": "Go/word",
+        "applicationId": "rCth6EJcS1KZMflrjBIM4g",
+        "workflowId": "rCth6EJcS1KZMflrjBIM4g",
+        "workflowExecutionId": "63S99iWXQeie5NHZJ1bDaQ",
+        "serviceId": "rPm7GRI8TWS5LFtxrf9Z4Q",
+        "stateExecutionId": "alNpp9GTRTGx88hRMWpoXw",
+        "timeStamp": 1519841580000,
+        "dataCollectionMinute": 1,
+        "host": "harness-29-7fc979c7f4-b978f",
+        "values": {
+            "averageResponseTime": 0.0247,
+            "callCount": 1685.0,
+            "throughput": 28.1,
+            "requestsPerMinute": 1690.0,
+
+            "apdexScore": 0.99
+        },
+        "createdAt": 0,
+        "lastUpdatedAt": 0
+    },
+    {
+        "stateType": "NEW_RELIC",
+        "name": "Go/word",
+        "applicationId": "rCth6EJcS1KZMflrjBIM4g",
+        "workflowId": "rCth6EJcS1KZMflrjBIM4g",
+        "workflowExecutionId": "63S99iWXQeie5NHZJ1bDaQ",
+        "serviceId": "rPm7GRI8TWS5LFtxrf9Z4Q",
+        "stateExecutionId": "alNpp9GTRTGx88hRMWpoXw",
+        "timeStamp": 1519841640000,
+        "dataCollectionMinute": 2,
+        "host": "harness-29-7fc979c7f4-b978f",
+        "values": {
+            "averageResponseTime": 0.0225,
+            "callCount": 1660.0,
+            "throughput": 27.7,
+            "requestsPerMinute": 1660.0
+
+        },
+        "createdAt": 0,
+        "lastUpdatedAt": 0
+    },
+    {
+        "stateType": "NEW_RELIC",
+        "name": "Go/word",
+        "applicationId": "rCth6EJcS1KZMflrjBIM4g",
+        "workflowId": "rCth6EJcS1KZMflrjBIM4g",
+        "workflowExecutionId": "63S99iWXQeie5NHZJ1bDaQ",
+        "serviceId": "rPm7GRI8TWS5LFtxrf9Z4Q",
+        "stateExecutionId": "alNpp9GTRTGx88hRMWpoXw",
+        "timeStamp": 1519841520000,
+        "dataCollectionMinute": 0,
+        "host": "harness-29-7fc979c7f4-fz5vv",
+        "values": {
+            "averageResponseTime": 0.0183,
+            "callCount": 1622.0,
+            "throughput": 27.0,
+            "requestsPerMinute": 1620.0,
+
+            "apdexScore": 0.99
+        },
+        "createdAt": 0,
+        "lastUpdatedAt": 0
+    },
+    {
+        "stateType": "NEW_RELIC",
+        "name": "Go/word",
+        "applicationId": "rCth6EJcS1KZMflrjBIM4g",
+        "workflowId": "rCth6EJcS1KZMflrjBIM4g",
+        "workflowExecutionId": "63S99iWXQeie5NHZJ1bDaQ",
+        "serviceId": "rPm7GRI8TWS5LFtxrf9Z4Q",
+        "stateExecutionId": "alNpp9GTRTGx88hRMWpoXw",
+        "timeStamp": 1519841640000,
+        "dataCollectionMinute": 2,
+        "host": "harness-29-7fc979c7f4-fz5vv",
+        "values": {
+            "averageResponseTime": 0.0642,
+            "callCount": 1662.0,
+            "throughput": 27.7,
+            "requestsPerMinute": 1660.0
+
+        },
+        "createdAt": 0,
+        "lastUpdatedAt": 0
+    },
+    {
+        "stateType": "NEW_RELIC",
+        "name": "Go/word",
+        "applicationId": "rCth6EJcS1KZMflrjBIM4g",
+        "workflowId": "rCth6EJcS1KZMflrjBIM4g",
+        "workflowExecutionId": "63S99iWXQeie5NHZJ1bDaQ",
+        "serviceId": "rPm7GRI8TWS5LFtxrf9Z4Q",
+        "stateExecutionId": "alNpp9GTRTGx88hRMWpoXw",
+        "timeStamp": 1519841580000,
+        "dataCollectionMinute": 1,
+        "host": "harness-29-7fc979c7f4-fz5vv",
+        "values": {
+            "averageResponseTime": 0.0398,
+            "callCount": 1684.0,
+            "throughput": 28.1,
+            "requestsPerMinute": 1680.0,
+
+            "apdexScore": 0.99
+        },
+        "createdAt": 0,
+        "lastUpdatedAt": 0
+    }
+]
