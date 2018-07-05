@@ -201,7 +201,7 @@ public class DelegateModule extends AbstractModule {
 
     int cores = Runtime.getRuntime().availableProcessors();
     int corePoolSize = 20 * cores;
-    int maxPoolSize = Math.max(corePoolSize, 500);
+    int maxPoolSize = Math.max(corePoolSize, 100);
     bind(ExecutorService.class)
         .toInstance(ThreadPool.create(corePoolSize, maxPoolSize, 0, TimeUnit.MILLISECONDS,
             new ThreadFactoryBuilder().setNameFormat("task-%d").setPriority(Thread.MIN_PRIORITY).build()));
