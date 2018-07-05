@@ -92,11 +92,15 @@ public class APMDataCollectionTaskTest {
     String batchUrl = "urlData{$harness_batch{pod_name:${host},'|'}}";
     List<String> batchedHosts =
         (List<String>) useReflectionToMakeInnerClassVisible().invoke(dataCollectionTask.getDataCollector(tr), batchUrl);
-    assertEquals("batched hosts should have 2 items", 2, batchedHosts.size());
+    assertEquals("batched hosts should have 2 items", 4, batchedHosts.size());
     // Since hostList in the CollectionTask class is a set, the order isn't maintained. So wecant compare directly.
     int occuranceCount1 = StringUtils.countMatches(batchedHosts.get(0), "test.host.node");
     int occuranceCount2 = StringUtils.countMatches(batchedHosts.get(1), "test.host.node");
-    assertTrue("Firstbatch has 50 hosts", occuranceCount1 == 50);
-    assertTrue("Second batch has 2 hosts", occuranceCount2 == 2);
+    int occuranceCount3 = StringUtils.countMatches(batchedHosts.get(2), "test.host.node");
+    int occuranceCount4 = StringUtils.countMatches(batchedHosts.get(3), "test.host.node");
+    assertTrue("Firstbatch has 15 hosts", occuranceCount1 == 15);
+    assertTrue("Second batch has 15 hosts", occuranceCount2 == 15);
+    assertTrue("Third batch has 15 hosts", occuranceCount3 == 15);
+    assertTrue("Fourth batch has 15 hosts", occuranceCount4 == 7);
   }
 }

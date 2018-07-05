@@ -63,7 +63,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
 
   private static final String BATCH_REGEX = "\\$harness_batch\\{([^,]*),([^}]*)\\}";
   private static final String BATCH_TEXT = "$harness_batch";
-  private static final int MAX_HOSTS_PER_BATCH = 50;
+  private static final int MAX_HOSTS_PER_BATCH = 15;
   private static Pattern pattern = Pattern.compile("\\$\\{(.*?)\\}");
 
   @Inject private NewRelicDelegateService newRelicDelegateService;
@@ -334,7 +334,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
         String batchedHosts = "";
         for (int i = 0; i < hostList.size(); i++) {
           batchedHosts += hostString.replace("${host}", hostList.get(i));
-          if (i == MAX_HOSTS_PER_BATCH - 1 || i == hostList.size() - 1) {
+          if (((i + 1) % MAX_HOSTS_PER_BATCH) == 0 || i == hostList.size() - 1) {
             String curUrl = batchUrl.replace(fullBatchToken, batchedHosts);
             batchResolvedUrls.add(curUrl);
             batchedHosts = "";
