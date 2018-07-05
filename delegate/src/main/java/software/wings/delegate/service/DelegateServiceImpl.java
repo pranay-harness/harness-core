@@ -171,6 +171,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   private final Map<String, DelegateTask> currentlyValidatingTasks = new ConcurrentHashMap<>();
   private final Map<String, DelegateTask> currentlyExecutingTasks = new ConcurrentHashMap<>();
+  private final Map<String, Future<?>> currentlyValidatingFutures = new ConcurrentHashMap<>();
   private final Map<String, Future<?>> currentlyExecutingFutures = new ConcurrentHashMap<>();
 
   private final AtomicLong lastHeartbeatSentAt = new AtomicLong(System.currentTimeMillis());
@@ -725,6 +726,7 @@ public class DelegateServiceImpl implements DelegateService {
       } catch (Exception e) {
         logger.error("Exception while scheduling local heartbeat", e);
       }
+      logCurrentTasks();
     }, 0, 10, TimeUnit.SECONDS);
   }
 
@@ -804,7 +806,6 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void sendHeartbeat(Builder builder, Socket socket) {
-    logCurrentTasks();
     if (socket.status() == STATUS.OPEN || socket.status() == STATUS.REOPENED) {
       logger.info("Sending heartbeat...");
       try {
@@ -829,7 +830,6 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void sendHeartbeat() {
-    logCurrentTasks();
     logger.info("Sending heartbeat...");
     try {
       Delegate response = timeLimiter.callWithTimeout(
@@ -854,21 +854,36 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void logCurrentTasks() {
     logger.info("Currently validating tasks: {}", currentlyValidatingTasks.keySet());
+    logger.info("Currently validating futures: {}",
+        currentlyValidatingFutures.entrySet()
+            .stream()
+            .map(entry
+                -> entry.getKey() + "[done:" + entry.getValue().isDone() + ",canceled:" + entry.getValue().isCancelled()
+                    + "]")
+            .collect(toList()));
     logger.info("Currently executing tasks: {}", currentlyExecutingTasks.keySet());
     logger.info("Currently executing futures: {}",
         currentlyExecutingFutures.entrySet()
             .stream()
-            .map(entry -> entry.getKey() + ":" + entry.getValue())
+            .map(entry
+                -> entry.getKey() + "[done:" + entry.getValue().isDone() + ",canceled:" + entry.getValue().isCancelled()
+                    + "]")
             .collect(toList()));
   }
 
   private void abortDelegateTask(DelegateTaskAbortEvent delegateTaskEvent) {
     logger.info("Aborting task {}", delegateTaskEvent);
+    Optional.ofNullable(currentlyValidatingFutures.get(delegateTaskEvent.getDelegateTaskId()))
+        .ifPresent(future -> future.cancel(true));
+    currentlyValidatingTasks.remove(delegateTaskEvent.getDelegateTaskId());
+    currentlyValidatingFutures.remove(delegateTaskEvent.getDelegateTaskId());
+    logger.info("Removed {} from validating futures on abort", delegateTaskEvent.getDelegateTaskId());
+
     Optional.ofNullable(currentlyExecutingFutures.get(delegateTaskEvent.getDelegateTaskId()))
         .ifPresent(future -> future.cancel(true));
     currentlyExecutingTasks.remove(delegateTaskEvent.getDelegateTaskId());
     currentlyExecutingFutures.remove(delegateTaskEvent.getDelegateTaskId());
-    logger.info("Removed {} from executing futures", delegateTaskEvent.getDelegateTaskId());
+    logger.info("Removed {} from executing futures on abort", delegateTaskEvent.getDelegateTaskId());
   }
 
   private void dispatchDelegateTask(DelegateTaskEvent delegateTaskEvent) {
@@ -916,7 +931,7 @@ public class DelegateServiceImpl implements DelegateService {
                                                             getPostValidationFunction(delegateTaskEvent, delegateTask));
         injector.injectMembers(delegateValidateTask);
         currentlyValidatingTasks.put(delegateTask.getUuid(), delegateTask);
-        currentlyExecutingFutures.put(delegateTask.getUuid(), executorService.submit(delegateValidateTask));
+        currentlyValidatingFutures.put(delegateTask.getUuid(), executorService.submit(delegateValidateTask));
         logger.info("Task [{}] submitted for validation", delegateTask.getUuid());
       } else if (delegateId.equals(delegateTask.getDelegateId())) {
         // Whitelisted. Proceed immediately.
@@ -933,8 +948,8 @@ public class DelegateServiceImpl implements DelegateService {
     return delegateConnectionResults -> {
       String taskId = delegateTask.getUuid();
       currentlyValidatingTasks.remove(taskId);
-      currentlyExecutingFutures.remove(taskId);
-      logger.info("Removed {} from executing futures", taskId);
+      currentlyValidatingFutures.remove(taskId);
+      logger.info("Removed {} from validating futures on post validation", taskId);
       List<DelegateConnectionResult> results = Optional.ofNullable(delegateConnectionResults).orElse(emptyList());
       boolean validated = results.stream().anyMatch(DelegateConnectionResult::isValidated);
       logger.info("Validation {} for task {}", validated ? "succeeded" : "failed", taskId);
@@ -982,13 +997,9 @@ public class DelegateServiceImpl implements DelegateService {
                 getPreExecutionFunction(delegateTaskEvent, delegateTask));
     injector.injectMembers(delegateRunnableTask);
     Future<?> future = executorService.submit(delegateRunnableTask);
-    logger.info("Task [{}] execution future: {}", delegateTask.getUuid(), future);
+    logger.info("Task [{}] execution future: done:{} canceled:{}", delegateTask.getUuid(), future.isDone(),
+        future.isCancelled());
     currentlyExecutingFutures.put(delegateTask.getUuid(), future);
-    logger.info("Currently executing futures: {}",
-        currentlyExecutingFutures.entrySet()
-            .stream()
-            .map(entry -> entry.getKey() + ":" + entry.getValue())
-            .collect(toList()));
     executorService.submit(() -> enforceDelegateTaskTimeout(delegateTask));
     logger.info("Task [{}] submitted for execution", delegateTask.getUuid());
   }
@@ -1035,7 +1046,7 @@ public class DelegateServiceImpl implements DelegateService {
       } finally {
         currentlyExecutingTasks.remove(delegateTask.getUuid());
         currentlyExecutingFutures.remove(delegateTask.getUuid());
-        logger.info("Removed {} from executing futures", delegateTask.getUuid());
+        logger.info("Removed {} from executing futures on post execution", delegateTask.getUuid());
         if (response != null && response.errorBody() != null && !response.isSuccessful()) {
           response.errorBody().close();
         }
@@ -1062,7 +1073,7 @@ public class DelegateServiceImpl implements DelegateService {
     }
     currentlyExecutingTasks.remove(delegateTask.getUuid());
     currentlyExecutingFutures.remove(delegateTask.getUuid());
-    logger.info("Removed {} from executing futures", delegateTask.getUuid());
+    logger.info("Removed {} from executing futures on timeout", delegateTask.getUuid());
   }
 
   private void replaceRunScripts(DelegateScripts delegateScripts) throws IOException {

@@ -418,8 +418,7 @@ public class InstanceHelper {
     }
 
     if (!deploymentEvent.isRollback()) {
-      deploymentSummaries.forEach(
-          deploymentSummary -> saveDeploymentSummary(deploymentSummary, deploymentEvent.isRollback()));
+      deploymentSummaries.forEach(deploymentSummary -> saveDeploymentSummary(deploymentSummary, false));
     }
 
     processDeploymentSummaries(deploymentSummaries, deploymentEvent.isRollback());
