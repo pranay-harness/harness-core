@@ -14,7 +14,6 @@ import io.harness.network.Http;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.apache.commons.lang3.StringUtils;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Call;
@@ -90,9 +89,8 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
         }
       } else {
         apiCallLog.setResponse(response.errorBody().string());
-        JSONObject errorObject = new JSONObject(response.errorBody().string());
         delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
-        throw new WingsException(errorObject.getJSONObject("error").getString("title"));
+        throw new WingsException(response.errorBody().string());
       }
 
       pageCount++;
@@ -132,9 +130,8 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
         }
       } else {
         apiCallLog.setResponse(response.errorBody().string());
-        JSONObject errorObject = new JSONObject(response.errorBody().string());
         delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
-        throw new WingsException(errorObject.getJSONObject("error").getString("title"));
+        throw new WingsException(response.errorBody().string());
       }
 
       pageCount++;
@@ -173,8 +170,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
           }
         } else if (response.code() != HttpServletResponse.SC_NOT_FOUND) {
           apiCallLog.setResponse(response.errorBody().string());
-          JSONObject errorObject = new JSONObject(response.errorBody().string());
-          throw new WingsException(errorObject.getJSONObject("error").getString("title"));
+          throw new WingsException(response.errorBody().string());
         }
         return newRelicMetrics;
       } catch (Exception e) {
@@ -243,9 +239,8 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     }
 
     apiCallLog.setResponse(response.errorBody().string());
-    JSONObject errorObject = new JSONObject(response.errorBody().string());
     delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
-    throw new WingsException(errorObject.getJSONObject("error").getString("title"));
+    throw new WingsException(response.errorBody().string());
   }
 
   @Override
@@ -271,9 +266,8 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     }
 
     apiCallLog.setResponse(response.errorBody().string());
-    JSONObject errorObject = new JSONObject(response.errorBody().string());
     delegateLogService.save(config.getAccountId(), apiCallLog);
-    throw new WingsException(errorObject.getJSONObject("error").getString("title"));
+    throw new WingsException(response.errorBody().string());
   }
 
   private NewRelicRestClient getNewRelicRestClient(
