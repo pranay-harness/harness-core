@@ -11,6 +11,7 @@ import migrations.all.AddValidUntilToDelegateTask;
 import migrations.all.DirectKubernetesOrphanRemoval;
 import migrations.all.DirectKubernetesOrphanRemovalMirgation;
 import migrations.all.DropDelegateScopeCollectionMigration;
+import migrations.all.DropOldCollectionMigration;
 import migrations.all.DropStringCollectionMigration;
 import migrations.all.DropYamlGitSyncCollectionMigration;
 import migrations.all.EntityNameValidationMigration_All_00;
@@ -89,6 +90,7 @@ public class MigrationList {
         .add(Pair.of(168, BaseMigration.class))
         .add(Pair.of(169, AddValidUntilToDelegateConnectionResults.class))
         .add(Pair.of(170, EntityNameValidationMigration_All_04.class))
+        .add(Pair.of(171, DropOldCollectionMigration.class))
         .build();
   }
 }
