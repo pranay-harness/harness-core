@@ -60,8 +60,6 @@ public interface DelegateService {
 
   <T extends NotifyResponseData> T executeTask(DelegateTask task) throws InterruptedException;
 
-  PageResponse<DelegateTask> getDelegateTasks(String accountId, String delegateId);
-
   DelegateTask acquireDelegateTask(String accountId, String delegateId, String taskId);
 
   DelegateTask reportConnectionResults(

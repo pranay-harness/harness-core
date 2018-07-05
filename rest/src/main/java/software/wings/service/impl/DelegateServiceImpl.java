@@ -14,8 +14,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.Delegate.HOST_NAME_KEY;
 import static software.wings.beans.DelegateConnection.defaultExpiryTimeInMinutes;
 import static software.wings.beans.DelegateTask.Status.ABORTED;
 import static software.wings.beans.DelegateTask.Status.ERROR;
@@ -28,8 +28,6 @@ import static software.wings.beans.ErrorCode.UNAVAILABLE_DELEGATES;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
-import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 import static software.wings.beans.alert.NoEligibleDelegatesAlert.NoEligibleDelegatesAlertBuilder.aNoEligibleDelegatesAlert;
 import static software.wings.common.Constants.DELEGATE_DIR;
@@ -39,7 +37,6 @@ import static software.wings.common.Constants.MAX_DELEGATE_LAST_HEARTBEAT;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.ALL_DELEGATE_DOWN_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.DELEGATE_STATE_NOTIFICATION;
 import static software.wings.dl.MongoHelper.setUnset;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.exception.WingsException.USER_ADMIN;
 import static software.wings.utils.KubernetesConvention.getAccountIdentifier;
 
@@ -65,7 +62,6 @@ import org.apache.commons.compress.archivers.zip.AsiExtraField;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.fluent.Request;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.atteo.evo.inflector.English;
@@ -186,7 +182,7 @@ public class DelegateServiceImpl implements DelegateService {
                                       .filter(ID_KEY, delegateId)
                                       .project(ID_KEY, true)
                                       .project(Delegate.VERSION_KEY, true)
-                                      .project(Delegate.HOST_NAME_KEY, true)
+                                      .project(HOST_NAME_KEY, true)
                                       .get();
 
               if (delegate != null) {
@@ -236,7 +232,6 @@ public class DelegateServiceImpl implements DelegateService {
     setUnset(updateOperations, "status", delegate.getStatus());
     setUnset(updateOperations, "lastHeartBeat", delegate.getLastHeartBeat());
     setUnset(updateOperations, "connected", delegate.isConnected());
-    setUnset(updateOperations, "supportedTaskTypes", delegate.getSupportedTaskTypes());
     setUnset(updateOperations, "version", delegate.getVersion());
     setUnset(updateOperations, "description", delegate.getDescription());
 
@@ -627,12 +622,12 @@ public class DelegateServiceImpl implements DelegateService {
   @SuppressWarnings("unchecked")
   public void delete(String accountId, String delegateId) {
     logger.info("Deleting delegate: {}", delegateId);
-    Delegate existingDelegate = wingsPersistence.get(Delegate.class,
-        aPageRequest()
-            .addFilter("accountId", EQ, accountId)
-            .addFilter(ID_KEY, EQ, delegateId)
-            .addFieldsExcluded("supportedTaskTypes")
-            .build());
+    Delegate existingDelegate = wingsPersistence.createQuery(Delegate.class)
+                                    .filter("accountId", accountId)
+                                    .filter(ID_KEY, delegateId)
+                                    .project("ip", true)
+                                    .project(HOST_NAME_KEY, true)
+                                    .get();
 
     if (existingDelegate != null) {
       // before deleting delegate, check if any alert is open for delegate, if yes, close it.
@@ -659,10 +654,6 @@ public class DelegateServiceImpl implements DelegateService {
     // We ignore IP address because that can change with every restart of the pod.
     if (!delegate.getHostName().contains(getAccountIdentifier(delegate.getAccountId()))) {
       delegateQuery.filter("ip", delegate.getIp());
-    }
-
-    if (featureFlagService.isEnabled(FeatureName.DELEGATE_TASK_VERSIONING, delegate.getAccountId())) {
-      delegateQuery.filter("version", delegate.getVersion());
     }
 
     Delegate existingDelegate = delegateQuery.project("status", true).get();
@@ -712,13 +703,6 @@ public class DelegateServiceImpl implements DelegateService {
       connection.setUuid(heartbeat.getDelegateConnectionId());
       wingsPersistence.saveAndGet(DelegateConnection.class, connection);
     }
-  }
-
-  @Override
-  @SuppressWarnings("unchecked")
-  public PageResponse<DelegateTask> getDelegateTasks(String accountId, String delegateId) {
-    return wingsPersistence.query(DelegateTask.class,
-        aPageRequest().addFilter("accountId", EQ, accountId).addFilter("delegateId", EQ, delegateId).build());
   }
 
   @Override
@@ -801,8 +785,6 @@ public class DelegateServiceImpl implements DelegateService {
                                        .filter("accountId", task.getAccountId())
                                        .filter("connected", true)
                                        .filter("status", Status.ENABLED)
-                                       .field("supportedTaskTypes")
-                                       .hasAllOf(singletonList(task.getTaskType()))
                                        .field("lastHeartBeat")
                                        .greaterThan(clock.millis() - MAX_DELEGATE_LAST_HEARTBEAT)
                                        .asKeyList()
@@ -1063,35 +1045,21 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public boolean filter(String delegateId, DelegateTask task) {
-    boolean qualifies = false;
-    Delegate delegate = wingsPersistence.get(Delegate.class,
-        aPageRequest()
-            .addFilter("accountId", IN, task.getAccountId(), GLOBAL_ACCOUNT_ID)
-            .addFilter(ID_KEY, EQ, delegateId)
-            .addFilter("status", EQ, Status.ENABLED)
-            .build());
-
-    if (delegate != null && delegate.getSupportedTaskTypes().contains(task.getTaskType())) {
-      qualifies = true;
-
-      if (featureFlagService.isEnabled(FeatureName.DELEGATE_TASK_VERSIONING, delegate.getAccountId())) {
-        if (!StringUtils.equals(delegate.getVersion(), task.getVersion())) {
-          qualifies = false;
-        }
-      }
-    }
-
-    return qualifies;
+    return wingsPersistence.createQuery(Delegate.class)
+               .filter("accountId", task.getAccountId())
+               .filter(ID_KEY, delegateId)
+               .filter("status", Status.ENABLED)
+               .getKey()
+        != null;
   }
 
   @Override
   public boolean filter(String delegateId, DelegateTaskAbortEvent taskAbortEvent) {
-    return wingsPersistence.get(DelegateTask.class,
-               aPageRequest()
-                   .addFilter(ID_KEY, EQ, taskAbortEvent.getDelegateTaskId())
-                   .addFilter("delegateId", EQ, delegateId)
-                   .addFilter("accountId", EQ, taskAbortEvent.getAccountId())
-                   .build())
+    return wingsPersistence.createQuery(DelegateTask.class)
+               .filter(ID_KEY, taskAbortEvent.getDelegateTaskId())
+               .filter("delegateId", delegateId)
+               .filter("accountId", taskAbortEvent.getAccountId())
+               .getKey()
         != null;
   }
 
@@ -1127,19 +1095,23 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private List<DelegateTaskEvent> getQueuedEvents(String accountId, boolean sync) {
-    return wingsPersistence.createQuery(DelegateTask.class)
-        .filter("accountId", accountId)
-        .filter("status", QUEUED)
-        .filter("async", !sync)
-        .field("delegateId")
-        .doesNotExist()
-        .project("accountId", true)
-        .asList()
+    Query<DelegateTask> delegateTaskQuery = wingsPersistence.createQuery(DelegateTask.class)
+                                                .filter("accountId", accountId)
+                                                .filter("status", QUEUED)
+                                                .filter("async", !sync)
+                                                .field("delegateId")
+                                                .doesNotExist();
+
+    if (featureFlagService.isEnabled(FeatureName.DELEGATE_TASK_VERSIONING, accountId)) {
+      delegateTaskQuery.filter("version", versionInfoManager.getVersionInfo().getVersion());
+    }
+
+    return delegateTaskQuery.asKeyList()
         .stream()
-        .map(delegateTask
+        .map(taskKey
             -> aDelegateTaskEvent()
-                   .withAccountId(delegateTask.getAccountId())
-                   .withDelegateTaskId(delegateTask.getUuid())
+                   .withAccountId(accountId)
+                   .withDelegateTaskId(taskKey.getId().toString())
                    .withSync(sync)
                    .build())
         .collect(toList());

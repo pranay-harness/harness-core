@@ -1,29 +1,51 @@
 package software.wings.app;
 
+import static software.wings.app.DelegateStreamHandler.SPLITTER;
 import static software.wings.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aDelegateTaskEvent;
 
 import com.google.inject.Inject;
 
+import org.apache.commons.lang3.StringUtils;
+import org.atmosphere.cpr.AtmosphereRequest;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.BroadcastFilter.BroadcastAction.ACTION;
 import org.atmosphere.cpr.BroadcastFilterAdapter;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskAbortEvent;
+import software.wings.beans.FeatureName;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.utils.JsonUtils;
+
+import java.util.List;
 
 /**
  * Created by peeyushaggarwal on 1/23/17.
  */
 public class DelegateEventFilter extends BroadcastFilterAdapter {
   @Inject private DelegateService delegateService;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Override
   public BroadcastAction filter(String broadcasterId, AtmosphereResource r, Object originalMessage, Object message) {
+    AtmosphereRequest req = r.getRequest();
+    List<String> pathSegments = SPLITTER.splitToList(req.getPathInfo());
+    String accountId = pathSegments.get(1);
+    String delegateId = req.getParameter("delegateId");
+    String version = req.getHeader("Version");
+
     if (message instanceof DelegateTask) {
-      String delegateId = r.getRequest().getParameter("delegateId");
       DelegateTask task = (DelegateTask) message;
-      if (delegateService.filter(delegateId, task)) {
+
+      boolean versionMatched = true;
+
+      if (featureFlagService.isEnabled(FeatureName.DELEGATE_TASK_VERSIONING, accountId)) {
+        if (!StringUtils.equals(version, task.getVersion())) {
+          versionMatched = false;
+        }
+      }
+
+      if (versionMatched && delegateService.filter(delegateId, task)) {
         return new BroadcastAction(JsonUtils.asJson(aDelegateTaskEvent()
                                                         .withDelegateTaskId(task.getUuid())
                                                         .withSync(!task.isAsync())
@@ -33,7 +55,6 @@ public class DelegateEventFilter extends BroadcastFilterAdapter {
         return new BroadcastAction(ACTION.ABORT, message);
       }
     } else if (message instanceof DelegateTaskAbortEvent) {
-      String delegateId = r.getRequest().getParameter("delegateId");
       DelegateTaskAbortEvent abortEvent = (DelegateTaskAbortEvent) message;
       if (delegateService.filter(delegateId, abortEvent)) {
         return new BroadcastAction(message);
