@@ -506,8 +506,8 @@ public class SecretManagerImpl implements SecretManager {
 
         SettingVariableTypes settingVariableType = encryptedData.getType();
         String keyName = settingVariableType + "/" + encryptedData.getName();
-        encrypted = vaultService.encrypt(keyName, String.valueOf(decrypted), accountId, settingVariableType,
-            (VaultConfig) toConfig, EncryptedData.builder().encryptionKey(encryptionKey).build());
+        encrypted = vaultService.encrypt(keyName, decrypted == null ? null : String.valueOf(decrypted), accountId,
+            settingVariableType, (VaultConfig) toConfig, EncryptedData.builder().encryptionKey(encryptionKey).build());
         break;
       default:
         throw new IllegalStateException("Invalid type : " + toEncryptionType);
