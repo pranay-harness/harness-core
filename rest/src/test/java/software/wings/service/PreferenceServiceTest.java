@@ -2,6 +2,7 @@ package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
+import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.service.impl.PreferenceServiceImpl.USER_ID_KEY;
 
@@ -53,8 +54,11 @@ public class PreferenceServiceTest extends WingsBaseTest {
   public void shouldList() {
     preference.setAppId(Base.GLOBAL_APP_ID);
     preference.setAccountId(TEST_ACCOUNT_ID);
+    preference.setUserId(TEST_USER_ID);
     Preference savedPreference = wingsPersistence.saveAndGet(Preference.class, preference);
-    assertThat(preferenceService.list(aPageRequest().build())).hasSize(1).containsExactly(savedPreference);
+    assertThat(preferenceService.list(aPageRequest().addFilter("accountId", EQ, TEST_ACCOUNT_ID).build(), TEST_USER_ID))
+        .hasSize(1)
+        .containsExactly(savedPreference);
   }
 
   @Test

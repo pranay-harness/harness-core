@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
+import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.dl.MongoHelper.setUnset;
 
 import com.google.inject.Inject;
@@ -45,7 +46,8 @@ public class PreferenceServiceImpl implements PreferenceService {
   }
 
   @Override
-  public PageResponse<Preference> list(PageRequest<Preference> pageRequest) {
+  public PageResponse<Preference> list(PageRequest<Preference> pageRequest, String userId) {
+    pageRequest.addFilter(USER_ID_KEY, EQ, userId);
     return wingsPersistence.query(Preference.class, pageRequest);
   }
 

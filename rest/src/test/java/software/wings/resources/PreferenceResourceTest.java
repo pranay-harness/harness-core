@@ -16,7 +16,6 @@ import static software.wings.utils.WingsTestConstants.USER_ID;
 
 import org.junit.After;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.DeploymentPreference;
@@ -81,7 +80,7 @@ public class PreferenceResourceTest extends WingsBaseTest {
     deployPref.setUuid(PREFERENCE_ID);
     PageResponse<Preference> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(deployPref));
-    when(preferenceService.list(any(PageRequest.class))).thenReturn(pageResponse);
+    when(preferenceService.list(any(PageRequest.class), any())).thenReturn(pageResponse);
     RestResponse<PageResponse<Preference>> restResponse =
         RESOURCES.client()
             .target("/preference?accountId=" + ACCOUNT_ID)
@@ -138,10 +137,12 @@ public class PreferenceResourceTest extends WingsBaseTest {
    * Test DELETE preference
    */
   @Test
-  @Ignore
   public void shouldDeletePreference() {
     Preference deployPref = new DeploymentPreference();
     deployPref.setUuid(ID_KEY);
+
+    User user = User.Builder.anUser().withUuid(UUID.randomUUID().toString()).withName("USER_ID").build();
+    UserThreadLocal.set(user);
 
     Response restResponse =
         RESOURCES.client().target(format("/preference/%s?accountId=%s&", PREFERENCE_ID, ACCOUNT_ID)).request().delete();
