@@ -24,6 +24,7 @@ import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLClusterGenerator;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
@@ -50,6 +51,8 @@ public class LogAnalysisManagerJob implements Job {
 
   @Transient @Inject private LearningEngineService learningEngineService;
 
+  @Transient @Inject private FeatureFlagService featureFlagService;
+
   @Override
   public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
     try {
@@ -59,7 +62,7 @@ public class LogAnalysisManagerJob implements Job {
       AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
       logger.info("Starting log analysis cron " + JsonUtils.asJson(context));
       new LogAnalysisTask(analysisService, waitNotifyEngine, delegateService, context, jobExecutionContext,
-          delegateTaskId, learningEngineService)
+          delegateTaskId, learningEngineService, featureFlagService)
           .run();
       logger.info("Finish log analysis cron " + context.getStateExecutionId());
     } catch (Exception ex) {
@@ -83,6 +86,7 @@ public class LogAnalysisManagerJob implements Job {
     private JobExecutionContext jobExecutionContext;
     private String delegateTaskId;
     private LearningEngineService learningEngineService;
+    private FeatureFlagService featureFlagService;
 
     protected void preProcess(int logAnalysisMinute, String query, Set<String> nodes) {
       if (context.getTestNodes() == null) {
@@ -173,8 +177,8 @@ public class LogAnalysisManagerJob implements Job {
              * the test events are saved for future processing.
              */
             createExperiment = logAnalysisMinute >= context.getTimeDuration() - 1;
-            new LogMLAnalysisGenerator(
-                context, logAnalysisMinute, createExperiment, analysisService, learningEngineService)
+            new LogMLAnalysisGenerator(context, logAnalysisMinute, createExperiment, analysisService,
+                learningEngineService, featureFlagService)
                 .run();
 
           } else {

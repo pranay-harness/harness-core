@@ -2,6 +2,7 @@ package software.wings.service.impl.analysis;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static software.wings.beans.FeatureName.LOGML_NEURAL_NET;
 
 import com.google.common.collect.Lists;
 
@@ -14,6 +15,7 @@ import software.wings.service.impl.newrelic.LearningEngineAnalysisTask.LearningE
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask.LearningEngineExperimentalAnalysisTaskBuilder;
 import software.wings.service.impl.newrelic.MLExperiments;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
@@ -41,9 +43,11 @@ public class LogMLAnalysisGenerator implements Runnable {
   private int logAnalysisMinute;
   private AnalysisService analysisService;
   private LearningEngineService learningEngineService;
+  private FeatureFlagService featureFlagService;
 
   public LogMLAnalysisGenerator(AnalysisContext context, int logAnalysisMinute, boolean createExperiment,
-      AnalysisService analysisService, LearningEngineService learningEngineService) {
+      AnalysisService analysisService, LearningEngineService learningEngineService,
+      FeatureFlagService featureFlagService) {
     this.context = context;
     this.analysisService = analysisService;
     this.applicationId = context.getAppId();
@@ -56,6 +60,7 @@ public class LogMLAnalysisGenerator implements Runnable {
     this.logAnalysisMinute = logAnalysisMinute;
     this.learningEngineService = learningEngineService;
     this.createExperiment = createExperiment;
+    this.featureFlagService = featureFlagService;
   }
 
   @Override
@@ -167,6 +172,8 @@ public class LogMLAnalysisGenerator implements Runnable {
         }
       }
 
+      String featureName = featureFlagService.isEnabled(LOGML_NEURAL_NET, accountId) ? "NEURAL_NET" : null;
+
       LearningEngineAnalysisTaskBuilder analysisTaskBuilder =
           LearningEngineAnalysisTask.builder()
               .query(Lists.newArrayList(query.split(" ")))
@@ -179,6 +186,7 @@ public class LogMLAnalysisGenerator implements Runnable {
               .analysis_save_url(logAnalysisSaveUrl)
               .log_analysis_get_url(logAnalysisGetUrl)
               .ml_analysis_type(MLAnalysisType.LOG_ML)
+              .feature_name(featureName)
               .stateType(context.getStateType());
 
       if (!isEmpty(feedback_url)) {
