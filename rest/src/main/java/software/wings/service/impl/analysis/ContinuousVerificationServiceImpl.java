@@ -193,10 +193,12 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           && !checkEmptyOrNotContains(envPermissions, executionMetaData.getEnvId())) {
         finalList.add(executionMetaData);
       } else {
-        logger.info("User {} does not have permissions to view the execution data {} and {} and {}", user.getName(),
-            executionMetaData.getServiceName(), executionMetaData.getWorkflowName(), executionMetaData.getEnvName());
-        logger.info("User {} does not have permissions to view the execution data {} and {} and {}", user.getName(),
-            executionMetaData.getServiceId(), executionMetaData.getWorkflowId(), executionMetaData.getEnvId());
+        logger.info("User {} does not have permissions to view the execution data {} and {} and {} and {}",
+            user.getName(), executionMetaData.getServiceName(), executionMetaData.getWorkflowName(),
+            executionMetaData.getEnvName(), executionMetaData.getPipelineName());
+        logger.info("User {} does not have permissions to view the execution data {} and {} and {} and {}",
+            user.getName(), executionMetaData.getServiceId(), executionMetaData.getWorkflowId(),
+            executionMetaData.getEnvId(), executionMetaData.getPipelineId());
       }
     }
     return finalList;
@@ -208,6 +210,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
    * @return True if set is either empty or it does not contain value. False otherwise.
    */
   private boolean checkEmptyOrNotContains(final Set<String> setToCheck, final String value) {
+    logger.info("Validating with Set: {} and value: {}", setToCheck, value);
     if (EmptyPredicate.isEmpty(value)) {
       return false;
     }
