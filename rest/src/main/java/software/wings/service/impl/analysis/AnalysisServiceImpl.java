@@ -185,7 +185,8 @@ public class AnalysisServiceImpl implements AnalysisService {
         return true;
       }
 
-      boolean hasHeartBeat = Integer.parseInt(logData.get(0).getClusterLabel()) < 0;
+      boolean hasHeartBeat =
+          logData.stream().anyMatch((LogElement data) -> Integer.parseInt(data.getClusterLabel()) < 0);
 
       /*
        * LOGZ, ELK, SUMO report cluster level L0. This is then clustered twice
