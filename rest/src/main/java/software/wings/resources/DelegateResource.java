@@ -240,15 +240,6 @@ public class DelegateResource {
     return new RestResponse<>(delegateService.add(delegate));
   }
 
-  @Produces("application/x-kryo")
-  @DelegateAuth
-  @GET
-  @Path("{delegateId}/tasks")
-  public RestResponse<PageResponse<DelegateTask>> getTasks(
-      @PathParam("delegateId") String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
-    return new RestResponse<>(delegateService.getDelegateTasks(accountId, delegateId));
-  }
-
   @GET
   @Path("downloadUrl")
   @Timed

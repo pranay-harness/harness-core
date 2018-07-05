@@ -6,7 +6,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.head;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
@@ -55,6 +54,7 @@ import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateScripts;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.Event.Type;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.TaskType;
@@ -75,6 +75,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by peeyushaggarwal on 11/28/16.
@@ -87,7 +88,6 @@ public class DelegateServiceTest extends WingsBaseTest {
                                                       .withHostName("localhost")
                                                       .withVersion("1.0.0")
                                                       .withStatus(Status.ENABLED)
-                                                      .withSupportedTaskTypes(singletonList(TaskType.HTTP.name()))
                                                       .withLastHeartBeat(System.currentTimeMillis());
   @Mock private WaitNotifyEngine waitNotifyEngine;
   @Mock private AccountService accountService;
@@ -182,19 +182,21 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldGetDelegateTasks() {
+  public void shouldGetDelegateTaskEvents() {
     String delegateId = generateUuid();
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(ACCOUNT_ID)
                                     .withWaitId(generateUuid())
                                     .withTaskType(TaskType.HTTP)
                                     .withAppId(APP_ID)
+                                    .withStatus(DelegateTask.Status.QUEUED)
                                     .withParameters(new Object[] {})
                                     .withTags(new ArrayList<>())
-                                    .withDelegateId(delegateId)
                                     .build();
     wingsPersistence.save(delegateTask);
-    assertThat(delegateService.getDelegateTasks(ACCOUNT_ID, delegateId)).hasSize(1).containsExactly(delegateTask);
+    List<DelegateTaskEvent> delegateTaskEvents = delegateService.getDelegateTaskEvents(ACCOUNT_ID, delegateId, false);
+    assertThat(delegateTaskEvents).hasSize(1);
+    assertThat(delegateTaskEvents.get(0).getDelegateTaskId()).isEqualTo(delegateTask.getUuid());
   }
 
   @Test
@@ -229,7 +231,9 @@ public class DelegateServiceTest extends WingsBaseTest {
             .withAccountId(ACCOUNT_ID)
             .withResponse(anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build())
             .build());
-    assertThat(delegateService.getDelegateTasks(ACCOUNT_ID, generateUuid())).isEmpty();
+    assertThat(wingsPersistence.get(DelegateTask.class,
+                   aPageRequest().addFilter(DelegateTask.ID_KEY, Operator.EQ, delegateTask.getUuid()).build()))
+        .isEqualTo(null);
     verify(waitNotifyEngine)
         .notify(delegateTask.getWaitId(), anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build());
   }
@@ -249,7 +253,9 @@ public class DelegateServiceTest extends WingsBaseTest {
             .withAccountId(ACCOUNT_ID)
             .withResponse(anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build())
             .build());
-    assertThat(delegateService.getDelegateTasks(ACCOUNT_ID, generateUuid())).isEmpty();
+    assertThat(wingsPersistence.get(DelegateTask.class,
+                   aPageRequest().addFilter(DelegateTask.ID_KEY, Operator.EQ, delegateTask.getUuid()).build()))
+        .isEqualTo(null);
   }
 
   @Test

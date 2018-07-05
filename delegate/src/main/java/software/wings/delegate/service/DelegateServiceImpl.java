@@ -114,7 +114,6 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.time.Clock;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -269,10 +268,7 @@ public class DelegateServiceImpl implements DelegateService {
                                      .withHostName(hostName)
                                      .withDelegateName(delegateName)
                                      .withDescription(description)
-                                     .withVersion(getVersion())
-                                     .withSupportedTaskTypes(getSupportedTaskTypes())
-                                     .withIncludeScopes(new ArrayList<>())
-                                     .withExcludeScopes(new ArrayList<>());
+                                     .withVersion(getVersion());
 
       delegateId = registerDelegate(builder);
       logger.info("[New] Delegate registered in {} ms", clock.millis() - start);
@@ -413,10 +409,6 @@ public class DelegateServiceImpl implements DelegateService {
     } catch (Exception e) {
       logger.error("Error updating config.", e);
     }
-  }
-
-  private List<String> getSupportedTaskTypes() {
-    return Arrays.stream(TaskType.values()).map(TaskType::name).collect(toList());
   }
 
   private void handleClose(Object o) {

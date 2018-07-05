@@ -30,7 +30,7 @@ public class Delegate extends Base {
   private String delegateName;
   private long lastHeartBeat;
   private String version;
-  private List<String> supportedTaskTypes;
+  @Deprecated private List<String> supportedTaskTypes;
 
   @Transient private List<DelegateTask> currentlyExecutingDelegateTasks;
 
@@ -49,7 +49,6 @@ public class Delegate extends Base {
     private String delegateName;
     private long lastHeartBeat;
     private String version;
-    private List<String> supportedTaskTypes;
     private List<DelegateScope> includeScopes;
     private List<DelegateScope> excludeScopes;
     private List<DelegateTask> currentlyExecutingDelegateTasks;
@@ -111,11 +110,6 @@ public class Delegate extends Base {
       return this;
     }
 
-    public Builder withSupportedTaskTypes(List<String> supportedTaskTypes) {
-      this.supportedTaskTypes = supportedTaskTypes;
-      return this;
-    }
-
     public Builder withIncludeScopes(List<DelegateScope> includeScopes) {
       this.includeScopes = includeScopes;
       return this;
@@ -172,7 +166,6 @@ public class Delegate extends Base {
           .withDelegateName(delegateName)
           .withLastHeartBeat(lastHeartBeat)
           .withVersion(version)
-          .withSupportedTaskTypes(supportedTaskTypes)
           .withIncludeScopes(includeScopes)
           .withExcludeScopes(excludeScopes)
           .withCurrentlyExecutingDelegateTasks(currentlyExecutingDelegateTasks)
@@ -195,7 +188,6 @@ public class Delegate extends Base {
       delegate.setDelegateName(delegateName);
       delegate.setLastHeartBeat(lastHeartBeat);
       delegate.setVersion(version);
-      delegate.setSupportedTaskTypes(supportedTaskTypes);
       delegate.setIncludeScopes(includeScopes);
       delegate.setExcludeScopes(excludeScopes);
       delegate.setCurrentlyExecutingDelegateTasks(currentlyExecutingDelegateTasks);

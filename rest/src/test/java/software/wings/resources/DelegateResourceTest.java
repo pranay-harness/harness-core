@@ -12,13 +12,9 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Delegate.Builder.aDelegate;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskResponse;
-import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
-
-import com.google.common.collect.Lists;
 
 import org.apache.commons.io.IOUtils;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
@@ -36,7 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Delegate;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.RestResponse;
 import software.wings.common.Constants;
@@ -273,22 +268,5 @@ public class DelegateResourceTest {
     logger.info(response1.toString());
 
     verify(DELEGATE_SERVICE, atLeastOnce()).processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, "1", response);
-  }
-
-  @Test
-  @Ignore
-  public void shouldReturnDelegateTasks() {
-    DelegateTask task = aDelegateTask().build();
-
-    when(DELEGATE_SERVICE.getDelegateTasks(ACCOUNT_ID, ID_KEY))
-        .thenReturn(aPageResponse().withTotal(1).withResponse(Lists.newArrayList(task)).build());
-    RestResponse<PageResponse<DelegateTask>> restResponse =
-        RESOURCES.client()
-            .target("/delegates/" + ID_KEY + "/tasks?accountId=" + ACCOUNT_ID)
-            .request()
-            .get(new GenericType<RestResponse<PageResponse<DelegateTask>>>() {});
-
-    verify(DELEGATE_SERVICE, atLeastOnce()).getDelegateTasks(ACCOUNT_ID, ID_KEY);
-    assertThat(restResponse.getResource()).hasSize(1).containsExactly(task);
   }
 }
