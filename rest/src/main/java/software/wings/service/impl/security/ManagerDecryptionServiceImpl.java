@@ -4,6 +4,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
+import static software.wings.service.intfc.security.EncryptionService.DECRYPTION_DELEGATE_TASK_TIMEOUT;
+import static software.wings.service.intfc.security.EncryptionService.DECRYPTION_DELEGATE_TIMEOUT;
 import static software.wings.utils.WingsReflectionUtils.getFieldByName;
 
 import com.google.common.util.concurrent.TimeLimiter;
@@ -72,7 +74,7 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
     SyncTaskContext syncTaskContext = aContext()
                                           .withAccountId(object.getAccountId())
                                           .withAppId(Base.GLOBAL_APP_ID)
-                                          .withTimeout(TimeUnit.SECONDS.toMillis(60L))
+                                          .withTimeout(DECRYPTION_DELEGATE_TASK_TIMEOUT)
                                           .build();
     try {
       Encryptable decrypted = timeLimiter.callWithTimeout(() -> {
@@ -85,7 +87,7 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
             sleep(ofMillis(200));
           }
         }
-      }, 200, TimeUnit.SECONDS, true);
+      }, DECRYPTION_DELEGATE_TIMEOUT, TimeUnit.MILLISECONDS, true);
       for (EncryptedDataDetail encryptedDataDetail : nonLocalEncryptedDetails) {
         Field f = getFieldByName(object.getClass(), encryptedDataDetail.getFieldName());
         if (f != null) {
@@ -117,7 +119,7 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
         SyncTaskContext syncTaskContext = aContext()
                                               .withAccountId(encryptedDataDetail.getEncryptedData().getAccountId())
                                               .withAppId(Base.GLOBAL_APP_ID)
-                                              .withTimeout(TimeUnit.SECONDS.toMillis(60L))
+                                              .withTimeout(DECRYPTION_DELEGATE_TASK_TIMEOUT)
                                               .build();
         try {
           return timeLimiter.callWithTimeout(() -> {
@@ -128,10 +130,10 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
               } catch (Exception e) {
                 logger.warn("Error decrypting value. Retrying. Account ID: {}",
                     encryptedDataDetail.getEncryptedData().getAccountId(), e);
-                sleep(ofMillis(2000));
+                sleep(ofMillis(1000));
               }
             }
-          }, 200, TimeUnit.SECONDS, true);
+          }, DECRYPTION_DELEGATE_TIMEOUT, TimeUnit.MILLISECONDS, true);
         } catch (UncheckedTimeoutException ex) {
           logger.warn("Timed out decrypting value", ex);
           throw new WingsException(ErrorCode.KMS_OPERATION_ERROR).addParam("reason", "Timed out decrypting value");
