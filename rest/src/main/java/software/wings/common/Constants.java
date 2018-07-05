@@ -845,6 +845,7 @@ public interface Constants {
   String ROUTE_UPDATE = "Route Update";
   String UPGRADE_STAGE_CONTAINERS = "Upgrade Stage Containers";
   String KUBERNETES_SWAP_SERVICES_PRIMARY_STAGE = "Swap Primary with Stage";
+  String VERIFY_STAGE_SERVICE = "Verify Stage Service";
 
   // Expression Builder Constants
   String ARTIFACT_SOURCE_USER_NAME_KEY = "username";

@@ -2337,7 +2337,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                                 .build())
                                    .build());
 
-    workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+    workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_STAGE_SERVICE)
                                    .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
                                    .build());
 
