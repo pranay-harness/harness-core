@@ -643,7 +643,7 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
     new LogAnalysisTask(analysisService, waitNotifyEngine, delegateService, analysisContext, jobExecutionContext,
-        delegateTaskId, learningEngineService)
+        delegateTaskId, learningEngineService, featureFlagService)
         .run();
     Thread.sleep(TimeUnit.SECONDS.toMillis(20));
     LogMLAnalysisSummary logMLAnalysisSummary =
@@ -762,7 +762,7 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
     new LogAnalysisTestJob(analysisService, waitNotifyEngine, delegateService, analysisContext, jobExecutionContext,
-        delegateTaskId, learningEngineService)
+        delegateTaskId, learningEngineService, featureFlagService)
         .run();
     Thread.sleep(TimeUnit.SECONDS.toMillis(10));
     LogMLAnalysisSummary logMLAnalysisSummary =
@@ -896,7 +896,7 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
     new LogAnalysisTask(analysisService, waitNotifyEngine, delegateService, analysisContext, jobExecutionContext,
-        delegateTaskId, learningEngineService)
+        delegateTaskId, learningEngineService, featureFlagService)
         .run();
     LogMLAnalysisSummary logMLAnalysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.ELK);
@@ -1028,7 +1028,7 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
 
     for (int i = 0; i < 5; ++i) {
       new LogAnalysisTestJob(analysisService, waitNotifyEngine, delegateService, analysisContext, jobExecutionContext,
-          delegateTaskId, learningEngineService)
+          delegateTaskId, learningEngineService, featureFlagService)
           .run();
       Thread.sleep(TimeUnit.SECONDS.toMillis(10));
     }
@@ -1229,9 +1229,9 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
   private static class LogAnalysisTestJob extends LogAnalysisTask {
     LogAnalysisTestJob(AnalysisService analysisService, WaitNotifyEngine waitNotifyEngine,
         DelegateService delegateService, AnalysisContext context, JobExecutionContext jobExecutionContext,
-        String delegateTaskId, LearningEngineService learningEngineService) {
+        String delegateTaskId, LearningEngineService learningEngineService, FeatureFlagService featureFlagService) {
       super(analysisService, waitNotifyEngine, delegateService, context, jobExecutionContext, delegateTaskId,
-          learningEngineService);
+          learningEngineService, featureFlagService);
     }
 
     @Override
