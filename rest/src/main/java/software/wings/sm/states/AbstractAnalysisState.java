@@ -205,7 +205,8 @@ public abstract class AbstractAnalysisState extends State {
             executionContext.getAppId(), workflowExecution.getPipelineExecutionId(), true, emptySet());
         cvExecutionMetaDataBuilder.pipelineName(pipelineExecutionDetails.getName())
             .pipelineStartTs(pipelineExecutionDetails.getStartTs())
-            .pipelineId(workflowExecution.getPipelineExecutionId());
+            .pipelineExecutionId(workflowExecution.getPipelineExecutionId())
+            .pipelineId(workflowExecution.getExecutionArgs().getPipelineId());
       }
 
       continuousVerificationService.saveCVExecutionMetaData(cvExecutionMetaDataBuilder.build());

@@ -216,6 +216,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     }
 
     if (EmptyPredicate.isEmpty(setToCheck) || !setToCheck.contains(value)) {
+      logger.info("Permissions rejected for value {} in set {}", value, setToCheck);
       return true;
     }
     return false;
