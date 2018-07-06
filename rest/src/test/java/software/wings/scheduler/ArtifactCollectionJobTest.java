@@ -1,5 +1,6 @@
 package software.wings.scheduler;
 
+import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -27,7 +28,7 @@ public class ArtifactCollectionJobTest extends WingsBaseTest {
 
     ArtifactCollectionJob.addDefaultJob(jobScheduler, appId, artifactScreamId);
 
-    listener.waitToSatisfy(5000);
+    listener.waitToSatisfy(ofSeconds(5));
 
     assertThat(jobScheduler.deleteJob(artifactScreamId, ArtifactCollectionJob.GROUP)).isFalse();
   }

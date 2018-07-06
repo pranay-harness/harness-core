@@ -12,6 +12,7 @@ import org.quartz.TriggerBuilder;
 import software.wings.WingsBaseTest;
 import software.wings.rules.SetupScheduler;
 
+import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 
 @SetupScheduler
@@ -34,7 +35,7 @@ public class ScheduledTriggerJobTest extends WingsBaseTest {
 
     ScheduledTriggerJob.add(jobScheduler, appId, triggerId, trigger);
 
-    listener.waitToSatisfy(5000);
+    listener.waitToSatisfy(Duration.ofSeconds(5));
 
     assertThat(jobScheduler.deleteJob(triggerId, ScheduledTriggerJob.GROUP)).isFalse();
   }

@@ -6,6 +6,7 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.JobListener;
 
+import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 
 public class TestJobListener implements JobListener {
@@ -46,8 +47,8 @@ public class TestJobListener implements JobListener {
     }
   }
 
-  public void waitToSatisfy(int timeoutMillis) throws InterruptedException, TimeoutException {
-    final long end = monotonicTimestamp() + timeoutMillis;
+  public void waitToSatisfy(Duration timeout) throws InterruptedException, TimeoutException {
+    final long end = monotonicTimestamp() + timeout.toMillis();
 
     synchronized (this) {
       while (!satisfied) {

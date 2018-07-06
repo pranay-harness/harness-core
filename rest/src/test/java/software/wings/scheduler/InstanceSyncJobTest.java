@@ -9,6 +9,7 @@ import org.quartz.SchedulerException;
 import software.wings.WingsBaseTest;
 import software.wings.rules.SetupScheduler;
 
+import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 
 @SetupScheduler
@@ -24,7 +25,7 @@ public class InstanceSyncJobTest extends WingsBaseTest {
 
     InstanceSyncJob.add(jobScheduler, appId);
 
-    listener.waitToSatisfy(5000);
+    listener.waitToSatisfy(Duration.ofSeconds(5));
 
     assertThat(jobScheduler.deleteJob(appId, InstanceSyncJob.GROUP)).isFalse();
   }
