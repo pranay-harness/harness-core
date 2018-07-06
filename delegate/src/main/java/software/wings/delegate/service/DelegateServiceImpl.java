@@ -8,6 +8,7 @@ import static io.harness.network.Localhost.getLocalHostName;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
@@ -173,7 +174,6 @@ public class DelegateServiceImpl implements DelegateService {
 
   private final Map<String, DelegateTask> currentlyValidatingTasks = new ConcurrentHashMap<>();
   private final Map<String, DelegateTask> currentlyExecutingTasks = new ConcurrentHashMap<>();
-  private final Map<String, Future<?>> currentlyValidatingFutures = new ConcurrentHashMap<>();
   private final Map<String, Future<?>> currentlyExecutingFutures = new ConcurrentHashMap<>();
 
   private final AtomicLong lastHeartbeatSentAt = new AtomicLong(System.currentTimeMillis());
@@ -849,13 +849,6 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void logCurrentTasks() {
     logger.info("Currently validating tasks: {}", currentlyValidatingTasks.keySet());
-    logger.info("Currently validating futures: {}",
-        currentlyValidatingFutures.entrySet()
-            .stream()
-            .map(entry
-                -> entry.getKey() + "[done:" + entry.getValue().isDone() + ",canceled:" + entry.getValue().isCancelled()
-                    + "]")
-            .collect(toList()));
     logger.info("Currently executing tasks: {}", currentlyExecutingTasks.keySet());
     logger.info("Currently executing futures: {}",
         currentlyExecutingFutures.entrySet()
@@ -868,11 +861,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void abortDelegateTask(DelegateTaskAbortEvent delegateTaskEvent) {
     logger.info("Aborting task {}", delegateTaskEvent);
-    Optional.ofNullable(currentlyValidatingFutures.get(delegateTaskEvent.getDelegateTaskId()))
-        .ifPresent(future -> future.cancel(true));
     currentlyValidatingTasks.remove(delegateTaskEvent.getDelegateTaskId());
-    currentlyValidatingFutures.remove(delegateTaskEvent.getDelegateTaskId());
-    logger.info("Removed {} from validating futures on abort", delegateTaskEvent.getDelegateTaskId());
 
     Optional.ofNullable(currentlyExecutingFutures.get(delegateTaskEvent.getDelegateTaskId()))
         .ifPresent(future -> future.cancel(true));
@@ -909,8 +898,10 @@ public class DelegateServiceImpl implements DelegateService {
     }
 
     try {
-      logger.info("Validating DelegateTask - uuid: {}, accountId: {}", delegateTaskId, accountId);
+      int active = currentlyExecutingTasks.size() + currentlyValidatingTasks.size();
+      sleep(ofMillis(50 * Math.min(active, 20)));
 
+      logger.info("Validating DelegateTask - uuid: {}, accountId: {}", delegateTaskId, accountId);
       DelegateTask delegateTask = execute(managerClient.acquireTask(delegateId, delegateTaskId, accountId));
 
       if (delegateTask == null) {
@@ -929,8 +920,7 @@ public class DelegateServiceImpl implements DelegateService {
         ExecutorService executorService = delegateTask.isAsync()
             ? asyncExecutorService
             : delegateTask.getTaskType().contains("BUILD") ? artifactExecutorService : syncExecutorService;
-        Future<?> validatingFuture = executorService.submit(delegateValidateTask);
-        currentlyValidatingFutures.put(delegateTask.getUuid(), validatingFuture);
+        executorService.submit(delegateValidateTask);
         logger.info("Task [{}] submitted for validation", delegateTask.getUuid());
       } else if (delegateId.equals(delegateTask.getDelegateId())) {
         // Whitelisted. Proceed immediately.
@@ -947,7 +937,6 @@ public class DelegateServiceImpl implements DelegateService {
     return delegateConnectionResults -> {
       String taskId = delegateTask.getUuid();
       currentlyValidatingTasks.remove(taskId);
-      currentlyValidatingFutures.remove(taskId);
       logger.info("Removed {} from validating futures on post validation", taskId);
       List<DelegateConnectionResult> results = Optional.ofNullable(delegateConnectionResults).orElse(emptyList());
       boolean validated = results.stream().anyMatch(DelegateConnectionResult::isValidated);
