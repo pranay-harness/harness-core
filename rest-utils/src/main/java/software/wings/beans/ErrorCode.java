@@ -258,7 +258,9 @@ public enum ErrorCode {
 
   SSL_HANDSHAKE_FAILED,
 
-  NO_APPS_ASSIGNED("No apps are assigned to the user or no apps exist in the account");
+  NO_APPS_ASSIGNED("No apps are assigned to the user or no apps exist in the account"),
+
+  INVALID_INFRA_CONFIGURATION;
 
   private Status status = BAD_REQUEST;
   private String description;
