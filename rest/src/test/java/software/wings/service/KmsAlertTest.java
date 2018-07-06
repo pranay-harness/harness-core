@@ -64,8 +64,8 @@ public class KmsAlertTest extends WingsBaseTest {
   @Before
   public void setup() throws IOException, NoSuchFieldException, IllegalAccessException {
     initMocks(this);
-    setStaticTimeOut("DECRYPTION_DELEGATE_TASK_TIMEOUT", 100);
-    setStaticTimeOut("DECRYPTION_DELEGATE_TIMEOUT", 200);
+    setStaticTimeOut("DECRYPTION_DELEGATE_TASK_TIMEOUT", 100L);
+    setStaticTimeOut("DECRYPTION_DELEGATE_TIMEOUT", 200L);
     when(mockDelegateServiceOK.encrypt(anyString(), anyString(), anyString(), anyObject(), anyObject(), anyObject()))
         .thenReturn(null);
     when(mockDelegateServiceOK.encrypt(anyString(), anyObject(), anyObject())).thenReturn(null);
@@ -158,7 +158,7 @@ public class KmsAlertTest extends WingsBaseTest {
     return kmsConfig;
   }
 
-  private void setStaticTimeOut(String name, int value) throws NoSuchFieldException, IllegalAccessException {
+  private void setStaticTimeOut(String name, long value) throws NoSuchFieldException, IllegalAccessException {
     Field field = EncryptionService.class.getDeclaredField(name);
     field.setAccessible(true); // Suppress Java language access checking
 
