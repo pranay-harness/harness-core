@@ -28,7 +28,7 @@ function stopDockerContainer(){
     CONTAINERNAME=$1
     if [[ $(checkDockerImageRunning "$CONTAINERNAME") -eq 0 ]]; then
         echo "Killing container "$CONTAINERNAME
-        sudo docker kill $CONTAINERNAME
+        docker kill $CONTAINERNAME
     fi
 
 }
@@ -45,7 +45,6 @@ function stopContainers(){
 
 function checkDockerImageRunning(){
     name=$1
-    #echo "name is "$name
     if [ "$(docker ps -q -f name=$name)" ]; then
         echo 0
     else
