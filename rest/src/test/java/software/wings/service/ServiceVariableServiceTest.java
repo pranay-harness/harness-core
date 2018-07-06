@@ -39,6 +39,7 @@ import software.wings.beans.ServiceVariable;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
@@ -218,6 +219,93 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     serviceVariableService.update(variable);
     verify(wingsPersistence, times(0))
         .updateFields(ServiceVariable.class, SERVICE_VARIABLE_ID, ImmutableMap.of("type", TEXT));
+  }
+
+  /**
+   * Should override service variable.
+   */
+  @Test
+  public void shouldUpdateServiceVariable() {
+    ServiceVariable variable = ServiceVariable.builder()
+                                   .name(SERVICE_VARIABLE_NAME)
+                                   .entityType(EntityType.SERVICE_TEMPLATE)
+                                   .value("test".toCharArray())
+                                   .build();
+
+    variable.setAppId(APP_ID);
+    variable.setUuid(SERVICE_VARIABLE_ID);
+    when(wingsPersistence.get(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(variable);
+    serviceVariableService.update(variable);
+
+    verify(wingsPersistence, times(0))
+        .updateFields(
+            ServiceVariable.class, SERVICE_VARIABLE_ID, ImmutableMap.of("value", variable.getValue().toString()));
+  }
+
+  /**
+   * Should override service variable (Name null).
+   */
+  @Test
+  public void shouldAllowUpdateServiceVariableWhenNameNull() {
+    ServiceVariable variable = ServiceVariable.builder()
+                                   .name(null)
+                                   .entityType(EntityType.SERVICE_TEMPLATE)
+                                   .value("test".toCharArray())
+                                   .build();
+
+    variable.setAppId(APP_ID);
+    variable.setUuid(SERVICE_VARIABLE_ID);
+    when(wingsPersistence.get(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(variable);
+    serviceVariableService.update(variable);
+
+    verify(wingsPersistence, times(0))
+        .updateFields(
+            ServiceVariable.class, SERVICE_VARIABLE_ID, ImmutableMap.of("value", variable.getValue().toString()));
+  }
+
+  /**
+   * Should Allow service variable override (Saved name = current name).
+   */
+  @Test
+  public void shouldAllowUpdateServiceVariable() {
+    ServiceVariable variable =
+        ServiceVariable.builder().name(SERVICE_VARIABLE_NAME).entityType(EntityType.SERVICE_TEMPLATE).build();
+
+    variable.setAppId(APP_ID);
+    variable.setUuid(SERVICE_VARIABLE_ID);
+    when(wingsPersistence.get(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(variable);
+
+    String secondVariableId = "SERVICE_VARIABLE_ID";
+    ServiceVariable variable2 =
+        ServiceVariable.builder().name(SERVICE_VARIABLE_NAME).entityType(EntityType.SERVICE_TEMPLATE).build();
+
+    variable.setAppId(APP_ID);
+    variable.setUuid(secondVariableId);
+    when(wingsPersistence.get(ServiceVariable.class, APP_ID, secondVariableId)).thenReturn(variable2);
+    serviceVariableService.update(variable);
+  }
+
+  /**
+   * Should Throw exception for service variable override.
+   */
+  @Test(expected = InvalidRequestException.class)
+  public void shouldThrowExceptionUpdateServiceVariable() {
+    ServiceVariable variable =
+        ServiceVariable.builder().name(SERVICE_VARIABLE_NAME).entityType(EntityType.SERVICE_TEMPLATE).build();
+
+    variable.setAppId(APP_ID);
+    variable.setUuid(SERVICE_VARIABLE_ID);
+    when(wingsPersistence.get(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(variable);
+
+    String secondVariableName = "SERVICE_VARIABLE_NAME_2";
+    String secondVariableId = "SERVICE_VARIABLE_ID";
+    ServiceVariable variable2 =
+        ServiceVariable.builder().name(secondVariableName).entityType(EntityType.SERVICE_TEMPLATE).build();
+
+    variable.setAppId(APP_ID);
+    variable.setUuid(secondVariableId);
+    when(wingsPersistence.get(ServiceVariable.class, APP_ID, secondVariableId)).thenReturn(variable2);
+    serviceVariableService.update(variable);
   }
 
   /**
