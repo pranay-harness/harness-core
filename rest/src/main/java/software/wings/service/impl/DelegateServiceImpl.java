@@ -1065,6 +1065,10 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public void abortTask(String accountId, String delegateTaskId) {
+    if (delegateTaskId == null) {
+      logger.warn("Delegate task id was null", new IllegalArgumentException());
+      return;
+    }
     logger.info("Aborting delegate task {}", delegateTaskId);
     Query<DelegateTask> delegateTaskQuery = wingsPersistence.createQuery(DelegateTask.class)
                                                 .filter(ID_KEY, delegateTaskId)

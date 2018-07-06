@@ -109,8 +109,8 @@ public class WebHookServiceImpl implements WebHookService {
   }
 
   private WebHookResponse constructWebhookResponse(String token, Exception ex) {
-    logger.warn("WebHook call failed [%s]", token, ex);
-    return WebHookResponse.builder().error(Misc.getMessage(ex).toLowerCase()).build();
+    logger.warn("WebHook call failed [{}]", token, ex);
+    return WebHookResponse.builder().error(Misc.getMessage(ex)).build();
   }
 
   @SuppressFBWarnings("WMI_WRONG_MAP_ITERATOR")
