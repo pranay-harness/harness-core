@@ -19,7 +19,6 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -294,14 +293,19 @@ public class HttpState extends State {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
 
-    String delegateTaksId = delegateService.queueTask(
+    Integer stateTimeout = getTimeoutMillis();
+    int taskSocketTimeout = socketTimeoutMillis;
+    if (stateTimeout != null && taskSocketTimeout > stateTimeout) {
+      taskSocketTimeout = stateTimeout - 1000;
+    }
+    String delegateTaskId = delegateService.queueTask(
         aDelegateTask()
             .withTaskType(getTaskType())
             .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
             .withWaitId(activityId)
             .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
             .withParameters(
-                new Object[] {evaluatedMethod, evaluatedUrl, evaluatedBody, evaluatedHeader, socketTimeoutMillis})
+                new Object[] {evaluatedMethod, evaluatedUrl, evaluatedBody, evaluatedHeader, taskSocketTimeout})
             .withEnvId(envId)
             .withInfrastructureMappingId(infrastructureMappingId)
             .build());
@@ -313,7 +317,7 @@ public class HttpState extends State {
         .withAsync(true)
         .withCorrelationIds(Collections.singletonList(activityId))
         .withStateExecutionData(executionDataBuilder.build())
-        .withDelegateTaskId(delegateTaksId)
+        .withDelegateTaskId(delegateTaskId)
         .build();
   }
 
