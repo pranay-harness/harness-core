@@ -187,10 +187,10 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       logger.info("environment permissions for user {} are {}", user.getName(), envPermissions);
       logger.info("workflow permissions for user {} are {}", user.getName(), wfPermissions);
 
-      if (!checkEmptyOrNotContains(servicePermissions, executionMetaData.getServiceId())
-          && !checkEmptyOrNotContains(pipelinePermissions, executionMetaData.getPipelineId())
-          && !checkEmptyOrNotContains(wfPermissions, executionMetaData.getWorkflowId())
-          && !checkEmptyOrNotContains(envPermissions, executionMetaData.getEnvId())) {
+      if (checkIfPermissionsApproved(servicePermissions, executionMetaData.getServiceId())
+          && checkIfPermissionsApproved(pipelinePermissions, executionMetaData.getPipelineId())
+          && checkIfPermissionsApproved(wfPermissions, executionMetaData.getWorkflowId())
+          && checkIfPermissionsApproved(envPermissions, executionMetaData.getEnvId())) {
         finalList.add(executionMetaData);
       } else {
         logger.info("User {} does not have permissions to view the execution data {} and {} and {} and {}",
@@ -203,23 +203,24 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     }
     return finalList;
   }
+
   /**
    *
    * @param setToCheck
    * @param value
-   * @return True if set is either empty or it does not contain value. False otherwise.
+   * @return False if set is either empty or it does not contain value. True otherwise.
    */
-  private boolean checkEmptyOrNotContains(final Set<String> setToCheck, final String value) {
+  private boolean checkIfPermissionsApproved(final Set<String> setToCheck, final String value) {
     logger.info("Validating with Set: {} and value: {}", setToCheck, value);
     if (EmptyPredicate.isEmpty(value)) {
-      return false;
+      return true;
     }
 
     if (EmptyPredicate.isEmpty(setToCheck) || !setToCheck.contains(value)) {
       logger.info("Permissions rejected for value {} in set {}", value, setToCheck);
-      return true;
+      return false;
     }
-    return false;
+    return true;
   }
 
   private List<String> getAllowedApplicationsForUser(final User user, final String accountId) {
