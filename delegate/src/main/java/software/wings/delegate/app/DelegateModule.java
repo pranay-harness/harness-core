@@ -208,6 +208,13 @@ public class DelegateModule extends AbstractModule {
         .toInstance(ThreadPool.create(10, 10, 1, TimeUnit.SECONDS,
             new ThreadFactoryBuilder().setNameFormat("async-task-%d").setPriority(Thread.MIN_PRIORITY).build()));
     bind(ExecutorService.class)
+        .annotatedWith(Names.named("artifactExecutor"))
+        .toInstance(ThreadPool.create(20, 20, 1, TimeUnit.SECONDS,
+            new ThreadFactoryBuilder()
+                .setNameFormat("artifact-collection-%d")
+                .setPriority(Thread.MIN_PRIORITY)
+                .build()));
+    bind(ExecutorService.class)
         .toInstance(ThreadPool.create(20, 20, 1, TimeUnit.SECONDS,
             new ThreadFactoryBuilder().setNameFormat("sync-task-%d").setPriority(Thread.NORM_PRIORITY).build()));
 
