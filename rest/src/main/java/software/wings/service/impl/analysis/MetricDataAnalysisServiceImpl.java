@@ -417,29 +417,34 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   }
 
   @Override
-  public boolean saveCustomThreshold(StateType stateType, String serviceId, String groupName, String transactionName,
-      TimeSeriesMetricDefinition metricDefinition) {
+  public boolean saveCustomThreshold(String appId, StateType stateType, String serviceId, String groupName,
+      String transactionName, TimeSeriesMetricDefinition metricDefinition) {
     wingsPersistence.delete(wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
+                                .filter("appId", appId)
                                 .filter("stateType", stateType)
                                 .filter("serviceId", serviceId)
                                 .filter("groupName", groupName)
                                 .filter("transactionName", transactionName)
                                 .filter("metricName", metricDefinition.getMetricName()));
-    wingsPersistence.save(TimeSeriesMLTransactionThresholds.builder()
-                              .stateType(stateType)
-                              .groupName(groupName)
-                              .serviceId(serviceId)
-                              .transactionName(transactionName)
-                              .metricName(metricDefinition.getMetricName())
-                              .thresholds(metricDefinition)
-                              .build());
+    TimeSeriesMLTransactionThresholds timeSeriesMLTransactionThresholds =
+        TimeSeriesMLTransactionThresholds.builder()
+            .stateType(stateType)
+            .groupName(groupName)
+            .serviceId(serviceId)
+            .transactionName(transactionName)
+            .metricName(metricDefinition.getMetricName())
+            .thresholds(metricDefinition)
+            .build();
+    timeSeriesMLTransactionThresholds.setAppId(appId);
+    wingsPersistence.save(timeSeriesMLTransactionThresholds);
     return true;
   }
 
   @Override
-  public TimeSeriesMLTransactionThresholds getCustomThreshold(
-      StateType stateType, String serviceId, String groupName, String transactionName, String metricName) {
+  public TimeSeriesMLTransactionThresholds getCustomThreshold(String appId, StateType stateType, String serviceId,
+      String groupName, String transactionName, String metricName) {
     return wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
+        .filter("appId", appId)
         .filter("stateType", stateType)
         .filter("serviceId", serviceId)
         .filter("groupName", groupName)

@@ -205,11 +205,11 @@ public class TimeSeriesResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Boolean> saveCustomThreshold(@QueryParam("accountId") String accountId,
-      @QueryParam("stateType") StateType stateType, @QueryParam("serviceId") String serviceId,
-      @QueryParam("groupName") String groupName, @QueryParam("transactionName") String transactionName,
-      TimeSeriesMetricDefinition timeSeriesMetricDefinition) {
+      @QueryParam("appId") String appId, @QueryParam("stateType") StateType stateType,
+      @QueryParam("serviceId") String serviceId, @QueryParam("groupName") String groupName,
+      @QueryParam("transactionName") String transactionName, TimeSeriesMetricDefinition timeSeriesMetricDefinition) {
     return new RestResponse<>(metricDataAnalysisService.saveCustomThreshold(
-        stateType, serviceId, groupName, transactionName, timeSeriesMetricDefinition));
+        appId, stateType, serviceId, groupName, transactionName, timeSeriesMetricDefinition));
   }
 
   @GET
@@ -217,10 +217,10 @@ public class TimeSeriesResource {
   @Timed
   @ExceptionMetered
   public RestResponse<TimeSeriesMLTransactionThresholds> getCustomThreshold(@QueryParam("accountId") String accountId,
-      @QueryParam("stateType") StateType stateType, @QueryParam("serviceId") String serviceId,
-      @QueryParam("groupName") String groupName, @QueryParam("transactionName") String transactionName,
-      @QueryParam("metricName") String metricName) {
-    return new RestResponse<>(
-        metricDataAnalysisService.getCustomThreshold(stateType, serviceId, groupName, transactionName, metricName));
+      @QueryParam("appId") String appId, @QueryParam("stateType") StateType stateType,
+      @QueryParam("serviceId") String serviceId, @QueryParam("groupName") String groupName,
+      @QueryParam("transactionName") String transactionName, @QueryParam("metricName") String metricName) {
+    return new RestResponse<>(metricDataAnalysisService.getCustomThreshold(
+        appId, stateType, serviceId, groupName, transactionName, metricName));
   }
 }

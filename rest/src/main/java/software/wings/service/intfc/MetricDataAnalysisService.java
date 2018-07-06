@@ -95,9 +95,9 @@ public interface MetricDataAnalysisService {
   List<NewRelicMetricAnalysisRecord> getMetricsAnalysisForDemo(
       String appId, String stateExecutionId, String workflowExecutionId);
 
-  boolean saveCustomThreshold(StateType stateType, String serviceId, String groupName, String transactionName,
-      TimeSeriesMetricDefinition metricDefinition);
+  boolean saveCustomThreshold(String appId, StateType stateType, String serviceId, String groupName,
+      String transactionName, TimeSeriesMetricDefinition metricDefinition);
 
   TimeSeriesMLTransactionThresholds getCustomThreshold(
-      StateType stateType, String serviceId, String groupName, String transactionName, String metricName);
+      String appId, StateType stateType, String serviceId, String groupName, String transactionName, String metricName);
 }

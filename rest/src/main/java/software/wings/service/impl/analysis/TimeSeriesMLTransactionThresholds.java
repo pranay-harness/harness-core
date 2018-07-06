@@ -17,8 +17,9 @@ import software.wings.sm.StateType;
 @Entity(value = "timeseriesTransactionThresholds", noClassnameStored = true)
 @Indexes({
   @Index(fields = {
-    @Field("appId"), @Field("serviceId"), @Field("stateType"), @Field("groupName")
-  }, options = @IndexOptions(unique = true, name = "timeseriesThresholdsUniqueIdx"))
+    @Field("appId")
+    , @Field("serviceId"), @Field("stateType"), @Field("groupName"), @Field("transactionName"), @Field("metricName")
+  }, options = @IndexOptions(unique = true, name = "timeseriesThresholdsUniqueNewIdx"))
 })
 @Data
 @Builder
