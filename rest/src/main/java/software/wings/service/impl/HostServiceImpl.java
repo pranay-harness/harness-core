@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static java.time.Duration.ofSeconds;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -29,7 +30,6 @@ import software.wings.service.intfc.ownership.OwnedByHost;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.HostCsvFileHelper;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -162,7 +162,8 @@ public class HostServiceImpl implements HostService {
       return true;
     }
 
-    PruneEntityJob.addDefaultJob(jobScheduler, Host.class, host.getAppId(), host.getUuid(), Duration.ofSeconds(5));
+    PruneEntityJob.addDefaultJob(
+        jobScheduler, Host.class, host.getAppId(), host.getUuid(), ofSeconds(5), ofSeconds(15));
     return wingsPersistence.delete(host);
   }
 

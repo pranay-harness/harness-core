@@ -80,7 +80,7 @@ public class PruneEntityJob implements Job {
   static Random randomizer = new Random();
   static RateLimiter pruneRateLimiter = RateLimiter.create(5);
 
-  public static Trigger defaultTrigger(String id, Duration delay) {
+  public static Trigger defaultTrigger(String id, Duration delay, Duration optional) {
     final TriggerBuilder<SimpleTrigger> builder = TriggerBuilder.newTrigger().withIdentity(id, GROUP).withSchedule(
         SimpleScheduleBuilder.simpleSchedule().withIntervalInHours(1).withRepeatCount(24));
 
@@ -89,7 +89,8 @@ public class PruneEntityJob implements Job {
       // Also lets add some randomization. When multiple objects from the same type are deleted,
       // randomization will allow for descending objects to handled and potentially closed, instead
       // accumulating for later handling.
-      OffsetDateTime time = OffsetDateTime.now().plus(delay).plusSeconds(randomizer.nextInt(60));
+      OffsetDateTime time =
+          OffsetDateTime.now().plus(delay).plusSeconds(randomizer.nextInt((int) optional.getSeconds()));
       builder.startAt(Date.from(time.toInstant()));
     }
 
@@ -97,8 +98,8 @@ public class PruneEntityJob implements Job {
   }
 
   public static void addDefaultJob(
-      QuartzScheduler jobScheduler, Class cls, String appId, String entityId, Duration delay) {
-    Trigger trigger = defaultTrigger(entityId, delay);
+      QuartzScheduler jobScheduler, Class cls, String appId, String entityId, Duration delay, Duration optional) {
+    Trigger trigger = defaultTrigger(entityId, delay, optional);
     Date scheduled = jobScheduler.rescheduleJob(triggerKey(entityId, GROUP), trigger);
 
     if (scheduled == null) {

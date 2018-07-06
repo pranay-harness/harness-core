@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtils.trimList;
 import static java.lang.String.format;
+import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -127,7 +128,6 @@ import software.wings.utils.validation.Create;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -496,7 +496,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     // First lets make sure that we have persisted a job that will prone the descendant objects
     PruneEntityJob.addDefaultJob(
-        jobScheduler, Service.class, service.getAppId(), service.getUuid(), Duration.ofSeconds(5));
+        jobScheduler, Service.class, service.getAppId(), service.getUuid(), ofSeconds(5), ofSeconds(15));
 
     // safe to delete
     if (wingsPersistence.delete(Service.class, service.getUuid())) {

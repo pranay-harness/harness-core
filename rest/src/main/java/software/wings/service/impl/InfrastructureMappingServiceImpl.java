@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
+import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -137,7 +138,6 @@ import software.wings.utils.Util;
 import software.wings.utils.validation.Create;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -800,7 +800,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   private void prune(String appId, String infraMappingId) {
     PruneEntityJob.addDefaultJob(
-        jobScheduler, InfrastructureMapping.class, appId, infraMappingId, Duration.ofSeconds(5));
+        jobScheduler, InfrastructureMapping.class, appId, infraMappingId, ofSeconds(5), ofSeconds(15));
 
     wingsPersistence.delete(InfrastructureMapping.class, appId, infraMappingId);
   }

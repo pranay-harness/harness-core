@@ -1,5 +1,7 @@
 package software.wings.scheduler;
 
+import static java.time.Duration.ofSeconds;
+
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
@@ -8,7 +10,10 @@ import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
+import org.quartz.SimpleScheduleBuilder;
+import org.quartz.SimpleTrigger;
 import org.quartz.Trigger;
+import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AppContainer;
@@ -18,6 +23,8 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 
 import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.util.Date;
 
 public class PruneFileJob implements Job {
   private static Logger logger = LoggerFactory.getLogger(PruneFileJob.class);
@@ -34,18 +41,26 @@ public class PruneFileJob implements Job {
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
+  public static Trigger defaultTrigger(String id, Duration delay) {
+    final TriggerBuilder<SimpleTrigger> builder = TriggerBuilder.newTrigger().withIdentity(id, GROUP).withSchedule(
+        SimpleScheduleBuilder.simpleSchedule().withIntervalInHours(1).withRepeatCount(24));
+    OffsetDateTime time = OffsetDateTime.now().plus(delay);
+    builder.startAt(Date.from(time.toInstant()));
+    return builder.build();
+  }
+
   public static void addDefaultJob(QuartzScheduler jobScheduler, Class cls, String entityId, FileBucket fileBucket) {
     // If somehow this job was scheduled from before, we would like to reset it to start counting from now.
-    jobScheduler.deleteJob(entityId, PruneFileJob.GROUP);
+    jobScheduler.deleteJob(entityId, GROUP);
 
     JobDetail details = JobBuilder.newJob(PruneFileJob.class)
-                            .withIdentity(entityId, PruneFileJob.GROUP)
-                            .usingJobData(PruneFileJob.ENTITY_CLASS_KEY, cls.getCanonicalName())
-                            .usingJobData(PruneFileJob.ENTITY_ID_KEY, entityId)
-                            .usingJobData(PruneFileJob.BUCKET_KEY, fileBucket.name())
+                            .withIdentity(entityId, GROUP)
+                            .usingJobData(ENTITY_CLASS_KEY, cls.getCanonicalName())
+                            .usingJobData(ENTITY_ID_KEY, entityId)
+                            .usingJobData(BUCKET_KEY, fileBucket.name())
                             .build();
 
-    Trigger trigger = PruneEntityJob.defaultTrigger(entityId, Duration.ofSeconds(5));
+    Trigger trigger = defaultTrigger(entityId, ofSeconds(5));
 
     jobScheduler.scheduleJob(details, trigger);
   }

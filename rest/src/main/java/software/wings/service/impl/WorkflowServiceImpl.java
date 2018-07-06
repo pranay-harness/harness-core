@@ -6,6 +6,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
+import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
@@ -220,7 +221,6 @@ import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -1251,7 +1251,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   private boolean pruneWorkflow(String appId, String workflowId) {
-    PruneEntityJob.addDefaultJob(jobScheduler, Workflow.class, appId, workflowId, Duration.ofSeconds(5));
+    PruneEntityJob.addDefaultJob(jobScheduler, Workflow.class, appId, workflowId, ofSeconds(5), ofSeconds(15));
 
     if (!wingsPersistence.delete(Workflow.class, appId, workflowId)) {
       return false;

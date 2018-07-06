@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
+import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
@@ -49,7 +50,6 @@ import software.wings.utils.Misc;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -217,7 +217,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
   private void prune(String appId, String infraProvisionerId) {
     PruneEntityJob.addDefaultJob(
-        jobScheduler, InfrastructureProvisioner.class, appId, infraProvisionerId, Duration.ofSeconds(5));
+        jobScheduler, InfrastructureProvisioner.class, appId, infraProvisionerId, ofSeconds(5), ofSeconds(15));
 
     delete(appId, infraProvisionerId);
   }
