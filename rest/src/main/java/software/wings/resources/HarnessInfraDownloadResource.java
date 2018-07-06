@@ -38,17 +38,17 @@ public class HarnessInfraDownloadResource {
 
   @GET
   @Path("default/watcher/{version}")
-  @Produces(MediaType.TEXT_PLAIN)
-  public String getWatcherDownloadUrlFromDefaultAuth(
+  @Produces(MediaType.APPLICATION_JSON)
+  public RestResponse<String> getWatcherDownloadUrlFromDefaultAuth(
       @PathParam("version") String version, @QueryParam("accountId") @NotEmpty String accountId) {
-    return infraDownloadService.getDownloadUrlForWatcher(version);
+    return new RestResponse<String>(infraDownloadService.getDownloadUrlForWatcher(version));
   }
 
   @GET
   @Path("default/delegate/{version}")
-  @Produces(MediaType.TEXT_PLAIN)
-  public String getDelegateDownloadUrlFromDefaultAuth(
+  @Produces(MediaType.APPLICATION_JSON)
+  public RestResponse<String> getDelegateDownloadUrlFromDefaultAuth(
       @PathParam("version") String version, @QueryParam("accountId") @NotEmpty String accountId) {
-    return infraDownloadService.getDownloadUrlForDelegate(version);
+    return new RestResponse<String>(infraDownloadService.getDownloadUrlForDelegate(version));
   }
 }
