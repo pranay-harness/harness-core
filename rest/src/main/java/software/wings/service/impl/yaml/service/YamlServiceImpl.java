@@ -2,6 +2,8 @@ package software.wings.service.impl.yaml.service;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.threading.Morpheus.quietSleep;
+import static java.time.Duration.ofMillis;
 import static java.util.Arrays.asList;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
@@ -90,6 +92,7 @@ import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -395,22 +398,22 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         previousYamlType = yamlType;
       }
 
-      //      futures.add(executorService.submit(() -> {
-      try {
-        logger.info("Processing file: [{}]", changeContext.getChange().getFilePath());
-        processYamlChange(changeContext, changeContextList);
-        yamlGitService.discardGitSyncError(changeContext.getChange().getAccountId(), yamlFilePath);
-        processedChangeSet.add(changeContext);
+      futures.add(executorService.submit(() -> {
+        try {
+          logger.info("Processing file: [{}]", changeContext.getChange().getFilePath());
+          processYamlChange(changeContext, changeContextList);
+          yamlGitService.discardGitSyncError(changeContext.getChange().getAccountId(), yamlFilePath);
+          processedChangeSet.add(changeContext);
 
-        logger.info("Processing done for file [{}]", changeContext.getChange().getFilePath());
-      } catch (Exception ex) {
-        logger.warn("Exception while processing yaml file {}", yamlFilePath, ex);
-        ChangeWithErrorMsg changeWithErrorMsg =
-            ChangeWithErrorMsg.builder().change(changeContext.getChange()).errorMsg(Misc.getMessage(ex)).build();
-        // We continue processing the yaml files we understand, the failures are reported at the end
-        failedYamlFileChangeMap.put(changeContext.getChange().getFilePath(), changeWithErrorMsg);
-      }
-      //      }));
+          logger.info("Processing done for file [{}]", changeContext.getChange().getFilePath());
+        } catch (Exception ex) {
+          logger.warn("Exception while processing yaml file {}", yamlFilePath, ex);
+          ChangeWithErrorMsg changeWithErrorMsg =
+              ChangeWithErrorMsg.builder().change(changeContext.getChange()).errorMsg(Misc.getMessage(ex)).build();
+          // We continue processing the yaml files we understand, the failures are reported at the end
+          failedYamlFileChangeMap.put(changeContext.getChange().getFilePath(), changeWithErrorMsg);
+        }
+      }));
     }
 
     checkFuturesAndEvictCache(futures, previousYamlType, accountId);
@@ -422,17 +425,17 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   }
 
   private void checkFuturesAndEvictCache(Queue<Future> futures, YamlType yamlType, String accountId) {
-    //    while (!futures.isEmpty()) {
-    //      try {
-    //        if (futures.peek().isDone()) {
-    //          futures.poll().get();
-    //        }
-    //      } catch (InterruptedException | ExecutionException e) {
-    //        logger.error("Error while waiting for processing of entities of type {} for account {} ",
-    //            yamlType != null ? yamlType.name() : "", accountId);
-    //      }
-    //      quietSleep(ofMillis(10));
-    //    }
+    while (!futures.isEmpty()) {
+      try {
+        if (futures.peek().isDone()) {
+          futures.poll().get();
+        }
+      } catch (InterruptedException | ExecutionException e) {
+        logger.error("Error while waiting for processing of entities of type {} for account {} ",
+            yamlType != null ? yamlType.name() : "", accountId);
+      }
+      quietSleep(ofMillis(10));
+    }
 
     if (yamlType != null && shouldInvalidateCache(yamlType.getEntityType())) {
       authService.evictAccountUserPermissionInfoCache(accountId, true);
