@@ -27,7 +27,7 @@ public class ContinuousVerificationExecutionMetaData extends Base {
   @NotEmpty @Indexed private String stateExecutionId;
   @NotEmpty @Indexed private StateType stateType;
   @Indexed private String pipelineId;
-
+  @NotEmpty private String pipelineExecutionId;
   @NotEmpty private String phaseId;
 
   @NotEmpty private String artifactName;
