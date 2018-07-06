@@ -157,6 +157,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject @Named("taskPollExecutor") private ScheduledExecutorService taskPollExecutor;
   @Inject @Named("systemExecutor") private ExecutorService systemExecutorService;
   @Inject @Named("asyncExecutor") private ExecutorService asyncExecutorService;
+  @Inject @Named("artifactExecutor") private ExecutorService artifactExecutorService;
   @Inject private ExecutorService syncExecutorService;
   @Inject private SignalService signalService;
   @Inject private MessageService messageService;
@@ -925,7 +926,9 @@ public class DelegateServiceImpl implements DelegateService {
                                                             getPostValidationFunction(delegateTaskEvent, delegateTask));
         injector.injectMembers(delegateValidateTask);
         currentlyValidatingTasks.put(delegateTask.getUuid(), delegateTask);
-        ExecutorService executorService = delegateTask.isAsync() ? asyncExecutorService : syncExecutorService;
+        ExecutorService executorService = delegateTask.isAsync()
+            ? asyncExecutorService
+            : delegateTask.getTaskType().contains("BUILD") ? artifactExecutorService : syncExecutorService;
         Future<?> validatingFuture = executorService.submit(delegateValidateTask);
         currentlyValidatingFutures.put(delegateTask.getUuid(), validatingFuture);
         logger.info("Task [{}] submitted for validation", delegateTask.getUuid());
@@ -992,7 +995,9 @@ public class DelegateServiceImpl implements DelegateService {
             .getDelegateRunnableTask(delegateId, delegateTask, getPostExecutionFunction(delegateTask),
                 getPreExecutionFunction(delegateTaskEvent, delegateTask));
     injector.injectMembers(delegateRunnableTask);
-    ExecutorService executorService = delegateTask.isAsync() ? asyncExecutorService : syncExecutorService;
+    ExecutorService executorService = delegateTask.isAsync()
+        ? asyncExecutorService
+        : delegateTask.getTaskType().contains("BUILD") ? artifactExecutorService : syncExecutorService;
     Future<?> executingFuture = executorService.submit(delegateRunnableTask);
     logger.info("Task [{}] execution future: done:{} canceled:{}", delegateTask.getUuid(), executingFuture.isDone(),
         executingFuture.isCancelled());
