@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -81,7 +82,7 @@ public class AppServicePersistenceTest extends WingsBaseTest {
     // Make sure we cannot access the application after it was deleted
     assertThat(wingsPersistence.get(Application.class, APP_ID)).isNull();
 
-    listener.waitToSatisfy(10000);
+    listener.waitToSatisfy(ofSeconds(60 + 10));
 
     // Make sure that just the alert for the application are deleted
     alerts = alertService.list(aPageRequest().addFilter(Alert.ACCOUNT_ID_KEY, EQ, ACCOUNT_ID).build());

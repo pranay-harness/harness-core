@@ -1,5 +1,6 @@
 package software.wings.scheduler;
 
+import static org.quartz.TriggerKey.triggerKey;
 import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
 
 import com.google.common.util.concurrent.RateLimiter;
@@ -46,6 +47,7 @@ import software.wings.service.intfc.WorkflowService;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Date;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
@@ -75,6 +77,7 @@ public class PruneEntityJob implements Job {
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
+  static Random randomizer = new Random();
   static RateLimiter pruneRateLimiter = RateLimiter.create(5);
 
   public static Trigger defaultTrigger(String id, Duration delay) {
@@ -83,7 +86,10 @@ public class PruneEntityJob implements Job {
 
     if (delay.toMillis() > 5) {
       // Run the job with daley. This can be used to give enough time the entity to be deleted.
-      OffsetDateTime time = OffsetDateTime.now().plus(delay);
+      // Also lets add some randomization. When multiple objects from the same type are deleted,
+      // randomization will allow for descending objects to handled and potentially closed, instead
+      // accumulating for later handling.
+      OffsetDateTime time = OffsetDateTime.now().plus(delay).plusSeconds(randomizer.nextInt(60));
       builder.startAt(Date.from(time.toInstant()));
     }
 
@@ -92,19 +98,19 @@ public class PruneEntityJob implements Job {
 
   public static void addDefaultJob(
       QuartzScheduler jobScheduler, Class cls, String appId, String entityId, Duration delay) {
-    // If somehow this job was scheduled from before, we would like to reset it to start counting from now.
-    jobScheduler.deleteJob(entityId, GROUP);
-
-    JobDetail details = JobBuilder.newJob(PruneEntityJob.class)
-                            .withIdentity(entityId, GROUP)
-                            .usingJobData(ENTITY_CLASS_KEY, cls.getCanonicalName())
-                            .usingJobData(APP_ID_KEY, appId)
-                            .usingJobData(ENTITY_ID_KEY, entityId)
-                            .build();
-
     Trigger trigger = defaultTrigger(entityId, delay);
+    Date scheduled = jobScheduler.rescheduleJob(triggerKey(entityId, GROUP), trigger);
 
-    jobScheduler.scheduleJob(details, trigger);
+    if (scheduled == null) {
+      JobDetail details = JobBuilder.newJob(PruneEntityJob.class)
+                              .withIdentity(entityId, GROUP)
+                              .usingJobData(ENTITY_CLASS_KEY, cls.getCanonicalName())
+                              .usingJobData(APP_ID_KEY, appId)
+                              .usingJobData(ENTITY_ID_KEY, entityId)
+                              .build();
+
+      jobScheduler.scheduleJob(details, trigger);
+    }
   }
 
   public static <T> void pruneDescendingEntities(Iterable<T> descendingServices, Consumer<T> lambda) {
