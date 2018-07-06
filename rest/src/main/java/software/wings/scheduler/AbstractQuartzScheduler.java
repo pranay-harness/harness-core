@@ -5,7 +5,10 @@ import static software.wings.core.maintenance.MaintenanceController.isMaintenanc
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.inject.Key;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientOptions.Builder;
 import com.mongodb.MongoClientURI;
@@ -25,6 +28,8 @@ import software.wings.beans.ErrorCode;
 import software.wings.core.maintenance.MaintenanceController;
 import software.wings.core.maintenance.MaintenanceListener;
 import software.wings.dl.MongoConfig;
+import software.wings.dl.WingsMongoPersistence;
+import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 
 import java.util.Date;
@@ -59,8 +64,25 @@ public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceList
 
   private Scheduler createScheduler() {
     try {
-      StdSchedulerFactory factory = new StdSchedulerFactory(getDefaultProperties());
+      final Properties properties = getDefaultProperties();
+      StdSchedulerFactory factory = new StdSchedulerFactory(properties);
       Scheduler scheduler = factory.getScheduler();
+
+      // by default scheduler does not create all needed mongo indexes.
+      // it is a bit hack but we are going to add them from here
+
+      WingsPersistence wingsPersistence = injector.getInstance(Key.get(WingsMongoPersistence.class));
+
+      final String prefix = properties.getProperty("org.quartz.jobStore.collectionPrefix");
+      final DBCollection triggers = wingsPersistence.getCollection(prefix + "_triggers");
+      BasicDBObject jobIdKey = new BasicDBObject("jobId", 1);
+      triggers.createIndex(jobIdKey, null, false);
+
+      BasicDBObject fireKeys = new BasicDBObject();
+      fireKeys.append("state", 1);
+      fireKeys.append("nextFireTime", 1);
+      triggers.createIndex(fireKeys, "fire", false);
+
       scheduler.setJobFactory(injector.getInstance(GuiceQuartzJobFactory.class));
       if (!isMaintenance()) {
         scheduler.start();
