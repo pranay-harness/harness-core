@@ -6,6 +6,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 
+import software.wings.common.thread.ThreadPool;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.helpers.ext.amazons3.AmazonS3Service;
@@ -41,6 +42,7 @@ import software.wings.service.intfc.sumo.SumoDelegateService;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class WingsTestModule extends AbstractModule {
   @Override
@@ -72,5 +74,13 @@ public class WingsTestModule extends AbstractModule {
                 .setNameFormat("Verification-Data-Collector-%d")
                 .setPriority(Thread.MIN_PRIORITY)
                 .build()));
+    bind(ExecutorService.class)
+        .annotatedWith(Names.named("systemExecutor"))
+        .toInstance(ThreadPool.create(2, 5, 1, TimeUnit.SECONDS,
+            new ThreadFactoryBuilder().setNameFormat("system-%d").setPriority(Thread.MAX_PRIORITY).build()));
+    bind(ExecutorService.class)
+        .annotatedWith(Names.named("asyncExecutor"))
+        .toInstance(ThreadPool.create(2, 20, 1, TimeUnit.SECONDS,
+            new ThreadFactoryBuilder().setNameFormat("async-task-%d").setPriority(Thread.MIN_PRIORITY).build()));
   }
 }
