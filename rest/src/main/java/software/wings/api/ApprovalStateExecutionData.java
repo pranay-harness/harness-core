@@ -18,7 +18,6 @@ public class ApprovalStateExecutionData extends StateExecutionData implements No
   private Long approvedOn;
   private String comments;
   private String approvalId;
-  private ExecutionStatus status;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
@@ -34,14 +33,21 @@ public class ApprovalStateExecutionData extends StateExecutionData implements No
   private Map<String, ExecutionDataValue> setExecutionData(Map<String, ExecutionDataValue> executionDetails) {
     putNotNull(executionDetails, "approvalId",
         ExecutionDataValue.builder().displayName("Approval Id").value(approvalId).build());
-    putNotNull(
-        executionDetails, "status", ExecutionDataValue.builder().displayName("Approval Status").value(status).build());
+    putNotNull(executionDetails, "status",
+        ExecutionDataValue.builder().displayName("Approval Status").value(getStatus()).build());
+
     if (approvedBy != null) {
-      putNotNull(executionDetails, "approvedBy",
-          ExecutionDataValue.builder().displayName("Approved By").value(approvedBy.getName()).build());
-      putNotNull(executionDetails, "approvedEmail",
-          ExecutionDataValue.builder().displayName("Approved Email").value(approvedBy.getEmail()).build());
+      StringBuilder approvedRejectedBy =
+          new StringBuilder(approvedBy.getName()).append(" (").append(approvedBy.getEmail()).append(")");
+      if (getStatus().equals(ExecutionStatus.SUCCESS)) {
+        putNotNull(executionDetails, "approvedBy",
+            ExecutionDataValue.builder().displayName("Approved By").value(approvedRejectedBy.toString()).build());
+      } else if (getStatus().equals(ExecutionStatus.REJECTED)) {
+        putNotNull(executionDetails, "approvedBy",
+            ExecutionDataValue.builder().displayName("Rejected By").value(approvedRejectedBy.toString()).build());
+      }
     }
+
     putNotNull(executionDetails, "approvedOn",
         ExecutionDataValue.builder().displayName("Approved On").value(approvedOn).build());
     putNotNull(

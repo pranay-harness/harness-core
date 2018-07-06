@@ -343,7 +343,9 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
 
     String stateExecutionId = generateUuid();
     ApprovalStateExecutionData approvalStateExecutionData =
-        ApprovalStateExecutionData.builder().status(ExecutionStatus.PAUSED).approvalId(approvalId).build();
+        ApprovalStateExecutionData.builder().approvalId(approvalId).build();
+
+    approvalStateExecutionData.setStatus(ExecutionStatus.PAUSED);
 
     when(stateExecutionInstance.getStateExecutionData()).thenReturn(approvalStateExecutionData);
 
@@ -383,7 +385,8 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
 
     String stateExecutionId = generateUuid();
     ApprovalStateExecutionData approvalStateExecutionData =
-        ApprovalStateExecutionData.builder().status(ExecutionStatus.PAUSED).approvalId(approvalId).build();
+        ApprovalStateExecutionData.builder().approvalId(approvalId).build();
+    approvalStateExecutionData.setStatus(ExecutionStatus.PAUSED);
 
     when(stateExecutionInstance.getStateExecutionData()).thenReturn(approvalStateExecutionData);
 
