@@ -172,9 +172,9 @@ function seedMongoDB(){
 
     docker exec mongoContainer mongo --port $mongodb_port admin --eval "db.createUser({user: '$mongodbUserName', pwd: '$mongodbPassword', roles:[{role:'$admin_user_role',db:'admin'}]});"
 
-    sudo docker exec mongoContainer bash -c "mongo  mongodb://$mongodbUserName:$mongodbPassword@$host1:$mongodb_port < /scripts/add_first_user.js"
+    docker exec mongoContainer bash -c "mongo  mongodb://$mongodbUserName:$mongodbPassword@$host1:$mongodb_port < /scripts/add_first_user.js"
 
-   sudo docker exec mongoContainer bash -c "mongo  mongodb://$mongodbUserName:$mongodbPassword@$host1:$mongodb_port < /scripts/add_learning_engine_secret.js"
+    docker exec mongoContainer bash -c "mongo  mongodb://$mongodbUserName:$mongodbPassword@$host1:$mongodb_port < /scripts/add_learning_engine_secret.js"
 
 }
 
@@ -182,7 +182,7 @@ function seedMongoDB(){
 function setUpProxy(){
     echo "################################Setting up proxy ################################"
 
-    docker run -d --net=host --name harness-proxy --rm -p $proxyPort:$proxyPort -e MANAGER1=$MANAGER1 -e UI1=$UI1 -v  $WWW_DIR_LOCATION:/www  harness/proxy:$PROXY_VERSION
+    docker run -d --name harness-proxy --rm -p $proxyPort:7143 -e MANAGER1=$MANAGER1 -e UI1=$UI1 -v  $WWW_DIR_LOCATION:/www  harness/proxy:$PROXY_VERSION
     sleep 5
 
     if [[ $(checkDockerImageRunning "harness-proxy") -eq 1 ]]; then
@@ -245,7 +245,7 @@ function setupUI(){
    echo "################################Setting up UI ################################"
    ui_version=$(getProperty "version.properties" "ui")
    UI_PORT=$(getProperty "config_template/ui/ui.properties" "ui_port")
-   sudo docker run -d --name harness_ui -p $UI_PORT:80 --rm -e API_URL="$LOAD_BALANCER_URL" harness/ui:$ui_version
+   docker run -d --name harness_ui -p $UI_PORT:80 --rm -e API_URL="$LOAD_BALANCER_URL" harness/ui:$ui_version
 
    if [[ $(checkDockerImageRunning "harness_ui") -eq 1 ]]; then
       echo "Harness UI is not running"
