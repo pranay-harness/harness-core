@@ -1,10 +1,12 @@
 package software.wings.service;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static software.wings.beans.Account.Builder.anAccount;
+import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.common.Constants.HARNESS_NAME;
 
 import com.google.inject.Inject;
@@ -14,6 +16,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
+import software.wings.beans.DelegateConfiguration;
 import software.wings.dl.WingsPersistence;
 import software.wings.licensing.LicenseManager;
 import software.wings.scheduler.JobScheduler;
@@ -72,5 +75,38 @@ public class AccountServiceTest extends WingsBaseTest {
   public void shouldGetAccount() {
     Account account = wingsPersistence.saveAndGet(Account.class, anAccount().withCompanyName(HARNESS_NAME).build());
     assertThat(accountService.get(account.getUuid())).isEqualTo(account);
+  }
+
+  @Test
+  public void shouldGetDelegateConfiguration() {
+    String accountId =
+        wingsPersistence.save(anAccount()
+                                  .withCompanyName(HARNESS_NAME)
+                                  .withDelegateConfiguration(DelegateConfiguration.builder()
+                                                                 .watcherVersion("1.0.1")
+                                                                 .delegateVersions(asList("1.0.0", "1.0.1"))
+                                                                 .build())
+                                  .build());
+    assertThat(accountService.getDelegateConfiguration(accountId))
+        .hasFieldOrPropertyWithValue("watcherVersion", "1.0.1")
+        .hasFieldOrPropertyWithValue("delegateVersions", asList("1.0.0", "1.0.1"));
+  }
+
+  @Test
+  public void shouldGetDelegateConfigurationFromGlobalAccount() {
+    wingsPersistence.save(anAccount()
+                              .withUuid(GLOBAL_ACCOUNT_ID)
+                              .withCompanyName(HARNESS_NAME)
+                              .withDelegateConfiguration(DelegateConfiguration.builder()
+                                                             .watcherVersion("globalVersion")
+                                                             .delegateVersions(asList("globalVersion"))
+                                                             .build())
+                              .build());
+
+    String accountId = wingsPersistence.save(anAccount().withCompanyName(HARNESS_NAME).build());
+
+    assertThat(accountService.getDelegateConfiguration(accountId))
+        .hasFieldOrPropertyWithValue("watcherVersion", "globalVersion")
+        .hasFieldOrPropertyWithValue("delegateVersions", asList("globalVersion"));
   }
 }

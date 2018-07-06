@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Account;
+import software.wings.beans.DelegateConfiguration;
 import software.wings.beans.User;
 import software.wings.dl.PageRequest;
 import software.wings.utils.validation.Create;
@@ -42,4 +43,6 @@ public interface AccountService {
    * @return the list of System Catalogs
    */
   List<Account> list(@NotNull PageRequest<Account> request);
+
+  DelegateConfiguration getDelegateConfiguration(String accountId);
 }
