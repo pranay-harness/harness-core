@@ -191,7 +191,6 @@ public class DelegateModule extends AbstractModule {
                 .setNameFormat("Verification-Thread-%d")
                 .setPriority(Thread.NORM_PRIORITY)
                 .build()));
-
     bind(ExecutorService.class)
         .annotatedWith(Names.named("verificationDataCollector"))
         .toInstance(Executors.newFixedThreadPool(10,
@@ -199,18 +198,13 @@ public class DelegateModule extends AbstractModule {
                 .setNameFormat("Verification-Data-Collector-%d")
                 .setPriority(Thread.MIN_PRIORITY)
                 .build()));
-    bind(ExecutorService.class)
-        .annotatedWith(Names.named("systemExecutor"))
-        .toInstance(ThreadPool.create(2, 5, 1, TimeUnit.SECONDS,
-            new ThreadFactoryBuilder().setNameFormat("system-%d").setPriority(Thread.MAX_PRIORITY).build()));
-    bind(ExecutorService.class)
-        .annotatedWith(Names.named("asyncExecutor"))
-        .toInstance(ThreadPool.create(2, 20, 1, TimeUnit.SECONDS,
-            new ThreadFactoryBuilder().setNameFormat("async-task-%d").setPriority(Thread.MIN_PRIORITY).build()));
-    bind(ExecutorService.class)
-        .toInstance(ThreadPool.create(2, 5, 1, TimeUnit.SECONDS,
-            new ThreadFactoryBuilder().setNameFormat("sync-task-%d").setPriority(Thread.NORM_PRIORITY).build()));
 
+    int cores = Runtime.getRuntime().availableProcessors();
+    int corePoolSize = 20 * cores;
+    int maxPoolSize = Math.max(corePoolSize, 100);
+    bind(ExecutorService.class)
+        .toInstance(ThreadPool.create(corePoolSize, maxPoolSize, 0, TimeUnit.MILLISECONDS,
+            new ThreadFactoryBuilder().setNameFormat("task-%d").setPriority(Thread.MIN_PRIORITY).build()));
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
     bind(DelegateFileManager.class).to(DelegateFileManagerImpl.class).asEagerSingleton();
     bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());

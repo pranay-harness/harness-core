@@ -155,9 +155,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject @Named("upgradeExecutor") private ScheduledExecutorService upgradeExecutor;
   @Inject @Named("inputExecutor") private ScheduledExecutorService inputExecutor;
   @Inject @Named("taskPollExecutor") private ScheduledExecutorService taskPollExecutor;
-  @Inject @Named("systemExecutor") private ExecutorService systemExecutorService;
-  @Inject @Named("asyncExecutor") private ExecutorService asyncExecutorService;
-  @Inject private ExecutorService syncExecutorService;
+  @Inject private ExecutorService executorService;
   @Inject private SignalService signalService;
   @Inject private MessageService messageService;
   @Inject private Injector injector;
@@ -456,7 +454,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void handleMessageSubmit(String message) {
-    systemExecutorService.submit(() -> handleMessage(message));
+    executorService.submit(() -> handleMessage(message));
   }
 
   private void handleMessage(String message) {
@@ -570,7 +568,7 @@ public class DelegateServiceImpl implements DelegateService {
       shutdownData.put(DELEGATE_SHUTDOWN_STARTED, stoppedAcquiringAt);
       messageService.putAllData(DELEGATE_DASH + getProcessId(), shutdownData);
 
-      systemExecutorService.submit(() -> {
+      executorService.submit(() -> {
         long started = clock.millis();
         long now = started;
         while (!currentlyExecutingTasks.isEmpty() && now - started < UPGRADE_TIMEOUT) {
@@ -666,7 +664,7 @@ public class DelegateServiceImpl implements DelegateService {
     logger.info("Starting heartbeat at interval {} ms", delegateConfiguration.getHeartbeatIntervalMs());
     heartbeatExecutor.scheduleAtFixedRate(() -> {
       try {
-        systemExecutorService.submit(() -> {
+        executorService.submit(() -> {
           try {
             sendHeartbeat(builder, socket);
           } catch (Exception ex) {
@@ -683,7 +681,7 @@ public class DelegateServiceImpl implements DelegateService {
     logger.info("Starting heartbeat at interval {} ms", delegateConfiguration.getHeartbeatIntervalMs());
     heartbeatExecutor.scheduleAtFixedRate(() -> {
       try {
-        systemExecutorService.submit(() -> {
+        executorService.submit(() -> {
           try {
             sendHeartbeat();
           } catch (Exception ex) {
@@ -699,7 +697,7 @@ public class DelegateServiceImpl implements DelegateService {
   private void startLocalHeartbeat() {
     localHeartbeatExecutor.scheduleAtFixedRate(() -> {
       try {
-        systemExecutorService.submit(() -> {
+        executorService.submit(() -> {
           Map<String, Object> statusData = new HashMap<>();
           statusData.put(DELEGATE_HEARTBEAT, clock.millis());
           statusData.put(DELEGATE_VERSION, getVersion());
@@ -746,7 +744,7 @@ public class DelegateServiceImpl implements DelegateService {
       String watcherProcess = messageService.getData(WATCHER_DATA, WATCHER_PROCESS, String.class);
       logger.warn("Watcher process {} needs restart", watcherProcess);
 
-      systemExecutorService.submit(() -> {
+      executorService.submit(() -> {
         try {
           new ProcessExecutor().timeout(5, TimeUnit.SECONDS).command("kill", "-9", watcherProcess).start();
           messageService.closeChannel(WATCHER, watcherProcess);
@@ -925,9 +923,7 @@ public class DelegateServiceImpl implements DelegateService {
                                                             getPostValidationFunction(delegateTaskEvent, delegateTask));
         injector.injectMembers(delegateValidateTask);
         currentlyValidatingTasks.put(delegateTask.getUuid(), delegateTask);
-        ExecutorService executorService = delegateTask.isAsync() ? asyncExecutorService : syncExecutorService;
-        Future<?> validatingFuture = executorService.submit(delegateValidateTask);
-        currentlyValidatingFutures.put(delegateTask.getUuid(), validatingFuture);
+        currentlyValidatingFutures.put(delegateTask.getUuid(), executorService.submit(delegateValidateTask));
         logger.info("Task [{}] submitted for validation", delegateTask.getUuid());
       } else if (delegateId.equals(delegateTask.getDelegateId())) {
         // Whitelisted. Proceed immediately.
@@ -992,11 +988,10 @@ public class DelegateServiceImpl implements DelegateService {
             .getDelegateRunnableTask(delegateId, delegateTask, getPostExecutionFunction(delegateTask),
                 getPreExecutionFunction(delegateTaskEvent, delegateTask));
     injector.injectMembers(delegateRunnableTask);
-    ExecutorService executorService = delegateTask.isAsync() ? asyncExecutorService : syncExecutorService;
-    Future<?> executingFuture = executorService.submit(delegateRunnableTask);
-    logger.info("Task [{}] execution future: done:{} canceled:{}", delegateTask.getUuid(), executingFuture.isDone(),
-        executingFuture.isCancelled());
-    currentlyExecutingFutures.put(delegateTask.getUuid(), executingFuture);
+    Future<?> future = executorService.submit(delegateRunnableTask);
+    logger.info("Task [{}] execution future: done:{} canceled:{}", delegateTask.getUuid(), future.isDone(),
+        future.isCancelled());
+    currentlyExecutingFutures.put(delegateTask.getUuid(), future);
     executorService.submit(() -> enforceDelegateTaskTimeout(delegateTask));
     logger.info("Task [{}] submitted for execution", delegateTask.getUuid());
   }
