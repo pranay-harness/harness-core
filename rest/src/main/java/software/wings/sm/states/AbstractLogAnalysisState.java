@@ -82,6 +82,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     getLogger().info("Executing {} state, id: {} ", getStateType(), executionContext.getStateExecutionInstanceId());
     cleanUpForRetry(executionContext);
     analysisContext = getLogAnalysisContext(executionContext, UUID.randomUUID().toString());
+    getLogger().info("id: {} context: {}", executionContext.getStateExecutionInstanceId(), analysisContext);
     saveMetaDataForDashboard(analysisContext.getAccountId(), executionContext);
 
     Set<String> canaryNewHostNames = analysisContext.getTestNodes();
@@ -98,20 +99,23 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     }
 
     if (isEmpty(canaryNewHostNames)) {
-      getLogger().warn("Could not find test nodes to compare the data");
+      getLogger().warn(
+          "id: {}, Could not find test nodes to compare the data", executionContext.getStateExecutionInstanceId());
       return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS, "Could not find hosts to analyze!");
     }
 
     Set<String> lastExecutionNodes = analysisContext.getControlNodes();
     if (isEmpty(lastExecutionNodes)) {
       if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
-        getLogger().info("No nodes with older version found to compare the logs. Skipping analysis");
+        getLogger().info("id: {}, No nodes with older version found to compare the logs. Skipping analysis",
+            executionContext.getStateExecutionInstanceId());
         return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS,
             "Skipping analysis due to lack of baseline hosts. Make sure you have at least two phases defined.");
       }
 
-      getLogger().warn("It seems that there is no successful run for this workflow yet. "
-          + "Log data will be collected to be analyzed for next deployment run");
+      getLogger().warn(
+          "id: {}, It seems that there is no successful run for this workflow yet. Log data will be collected to be analyzed for next deployment run",
+          executionContext.getStateExecutionInstanceId());
     }
 
     String responseMessage = "Log Verification running.";
@@ -122,7 +126,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           analysisContext.getServiceId());
       if (isEmpty(baselineWorkflowExecutionId)) {
         responseMessage = "No baseline was set for the workflow. Workflow running with auto baseline.";
-        getLogger().info(responseMessage);
+        getLogger().info("id: {}, {}", executionContext.getStateExecutionInstanceId(), responseMessage);
         baselineWorkflowExecutionId =
             analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(analysisContext.getStateType(),
                 analysisContext.getAppId(), analysisContext.getServiceId(), analysisContext.getWorkflowId());
@@ -133,7 +137,8 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       }
       if (baselineWorkflowExecutionId == null) {
         responseMessage += " No previous execution found. This will be the baseline run.";
-        getLogger().warn("No previous execution found. This will be the baseline run");
+        getLogger().warn("id: {}, No previous execution found. This will be the baseline run",
+            executionContext.getStateExecutionInstanceId());
       }
       getLogger().info(
           "Baseline execution for {} is {}", analysisContext.getStateExecutionId(), baselineWorkflowExecutionId);
@@ -160,8 +165,13 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     }
     try {
       hostsToBeCollected.addAll(canaryNewHostNames);
+      hostsToBeCollected.remove(null);
+      getLogger().info("triggering data collection for {} state, id: {} ", getStateType(),
+          executionContext.getStateExecutionInstanceId());
       String delegateTaskId =
           triggerAnalysisDataCollection(executionContext, analysisContext.getCorrelationId(), hostsToBeCollected);
+      getLogger().info("triggered data collection for {} state, id: {}, delgateTaskId: ", getStateType(),
+          executionContext.getStateExecutionInstanceId(), delegateTaskId);
 
       scheduleClusterCronJob(analysisContext, delegateTaskId);
       scheduleAnalysisCronJob(analysisContext, delegateTaskId);
