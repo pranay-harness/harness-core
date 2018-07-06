@@ -84,3 +84,15 @@ fi
 if [[ -v "GLOBAL_WHITELIST" ]]; then
     sed -i "s|filters: 127.0.0.1/8|filters: ${GLOBAL_WHITELIST}|" /opt/harness/config.yml
 fi
+
+if [[ -v "SMTP_HOST" ]]; then
+    sed -i "s|host_placeholder|${SMTP_HOST}|" /opt/harness/config.yml
+fi
+
+if [[ -v "SMTP_USERNAME" ]]; then
+    sed -i "s|smtp_username_placeholder|${SMTP_USERNAME}|" /opt/harness/config.yml
+fi
+
+if [[ -v "SMTP_PASSWORD" ]]; then
+    sed -i "s|smtp_password_placeholder|${SMTP_PASSWORD}|" /opt/harness/config.yml
+fi
