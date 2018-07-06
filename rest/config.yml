@@ -29,12 +29,12 @@ xxxxxxxx
 
 smtp:
   type: SMTP
-  host: smtp.gmail.com
+  host: host_placeholder
   port: 465
   fromAddress: noreply@harness.io
   useSSL: true
-  username: support@harness.io
-  password: "H@rness@987"
+  username: smtp_username_placeholder
+  password: "smtp_password_placeholder"
 
 globalWhitelistConfig:
   filters: 127.0.0.1/8
