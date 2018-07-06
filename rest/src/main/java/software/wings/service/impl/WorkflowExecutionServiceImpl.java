@@ -393,38 +393,16 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (user != null) {
       approvalDetails.setApprovedBy(EmbeddedUser.builder().email(user.getEmail()).name(user.getName()).build());
     }
-    ApprovalStateExecutionData executionData = null;
-    if (approvalDetails.getAction() == null || approvalDetails.getAction().equals(APPROVE)) {
-      if (WorkflowType.PIPELINE.equals(workflowExecution.getWorkflowType())) {
-        logger.debug("Notifying to approve the pipeline execution {} for approval id {} ", workflowExecutionId,
-            approvalDetails.getApprovalId());
-      }
-      if (WorkflowType.ORCHESTRATION.equals(workflowExecution.getWorkflowType())) {
-        logger.debug("Notifying to approve the workflow execution {} for approval id {} ", workflowExecutionId,
-            approvalDetails.getApprovalId());
-      }
-      executionData = ApprovalStateExecutionData.builder()
-                          .approvalId(approvalDetails.getApprovalId())
-                          .approvedBy(approvalDetails.getApprovedBy())
-                          .comments(approvalDetails.getComments())
-                          .status(ExecutionStatus.SUCCESS)
-                          .build();
+    ApprovalStateExecutionData executionData = ApprovalStateExecutionData.builder()
+                                                   .approvalId(approvalDetails.getApprovalId())
+                                                   .approvedBy(approvalDetails.getApprovedBy())
+                                                   .comments(approvalDetails.getComments())
+                                                   .build();
 
-    } else if (approvalDetails.getAction().equals(REJECT)) {
-      if (WorkflowType.PIPELINE.equals(workflowExecution.getWorkflowType())) {
-        logger.debug("Notifying to reject the pipeline execution {} for approval id {} ", workflowExecutionId,
-            approvalDetails.getApprovalId());
-      }
-      if (WorkflowType.ORCHESTRATION.equals(workflowExecution.getWorkflowType())) {
-        logger.debug("Notifying to reject the workflow execution {} for approval id {} ", workflowExecutionId,
-            approvalDetails.getApprovalId());
-      }
-      executionData = ApprovalStateExecutionData.builder()
-                          .approvalId(approvalDetails.getApprovalId())
-                          .approvedBy(approvalDetails.getApprovedBy())
-                          .comments(approvalDetails.getComments())
-                          .status(ExecutionStatus.REJECTED)
-                          .build();
+    if (approvalDetails.getAction() == null || approvalDetails.getAction().equals(APPROVE)) {
+      executionData.setStatus(ExecutionStatus.SUCCESS);
+    } else if (approvalDetails.getAction() == null || approvalDetails.getAction().equals(REJECT)) {
+      executionData.setStatus(ExecutionStatus.REJECTED);
     }
     waitNotifyEngine.notify(approvalDetails.getApprovalId(), executionData);
     return true;
