@@ -151,6 +151,8 @@ import software.wings.service.impl.artifact.ArtifactCollectionServiceImpl;
 import software.wings.service.impl.artifact.ArtifactServiceImpl;
 import software.wings.service.impl.elk.ElkAnalysisServiceImpl;
 import software.wings.service.impl.expression.ExpressionBuilderServiceImpl;
+import software.wings.service.impl.infra.InfraDownloadService;
+import software.wings.service.impl.infra.InfraDownloadServiceImpl;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl;
 import software.wings.service.impl.instance.DeploymentServiceImpl;
 import software.wings.service.impl.instance.InstanceServiceImpl;
@@ -423,6 +425,7 @@ public class WingsModule extends AbstractModule {
     bind(ExternalApiRateLimitingService.class).to(ExternalApiRateLimitingServiceImpl.class);
     bind(PreferenceService.class).to(PreferenceServiceImpl.class);
     bind(HarnessUserGroupService.class).to(HarnessUserGroupServiceImpl.class);
+    bind(InfraDownloadService.class).to(InfraDownloadServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);
