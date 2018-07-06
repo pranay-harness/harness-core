@@ -449,7 +449,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   public String getLastSuccessfulWorkflowExecutionIdWithLogs(
       StateType stateType, String appId, String serviceId, String workflowId) {
     // TODO should we limit the number of executions to search in ??
-    List<String> successfulExecutions = getLastSuccessfulWorkflowExecutionIds(appId, workflowId);
+    List<String> successfulExecutions = getLastSuccessfulWorkflowExecutionIds(appId, workflowId, serviceId);
     for (String successfulExecution : successfulExecutions) {
       if (wingsPersistence.createQuery(LogDataRecord.class)
               .filter("appId", appId)
@@ -467,11 +467,12 @@ public class AnalysisServiceImpl implements AnalysisService {
     return null;
   }
 
-  private List<String> getLastSuccessfulWorkflowExecutionIds(String appId, String workflowId) {
+  private List<String> getLastSuccessfulWorkflowExecutionIds(String appId, String workflowId, String serviceId) {
     final PageRequest<WorkflowExecution> pageRequest = aPageRequest()
                                                            .addFilter("appId", Operator.EQ, appId)
                                                            .addFilter("workflowId", Operator.EQ, workflowId)
                                                            .addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS)
+                                                           .addFilter("serviceIds", Operator.CONTAINS, serviceId)
                                                            .addOrder("createdAt", OrderType.DESC)
                                                            .build();
 
