@@ -550,6 +550,7 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
             .withAppId(appId)
             .withName(workflowId + "-execution-" + 0)
             .withStatus(ExecutionStatus.SUCCESS)
+            .withServiceIds(Lists.newArrayList(serviceId))
             .withBreakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
             .build();
     String workFlowExecutionId = wingsPersistence.save(workflowExecution);

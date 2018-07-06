@@ -170,7 +170,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           executionContext.getStateExecutionInstanceId());
       String delegateTaskId =
           triggerAnalysisDataCollection(executionContext, analysisContext.getCorrelationId(), hostsToBeCollected);
-      getLogger().info("triggered data collection for {} state, id: {}, delgateTaskId: ", getStateType(),
+      getLogger().info("triggered data collection for {} state, id: {}, delgateTaskId: {}", getStateType(),
           executionContext.getStateExecutionInstanceId(), delegateTaskId);
 
       scheduleClusterCronJob(analysisContext, delegateTaskId);

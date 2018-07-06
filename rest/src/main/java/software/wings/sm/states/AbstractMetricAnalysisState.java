@@ -167,7 +167,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           "triggering data collection for {} state, id: {} ", getStateType(), context.getStateExecutionInstanceId());
       hostsToCollect.remove(null);
       String delegateTaskId = triggerAnalysisDataCollection(context, executionData.getCorrelationId(), hostsToCollect);
-      getLogger().info("triggered data collection for {} state, id: {}, delgateTaskId: ", getStateType(),
+      getLogger().info("triggered data collection for {} state, id: {}, delgateTaskId: {}", getStateType(),
           context.getStateExecutionInstanceId(), delegateTaskId);
       switch (StateType.valueOf(getStateType())) {
         case CLOUD_WATCH:
