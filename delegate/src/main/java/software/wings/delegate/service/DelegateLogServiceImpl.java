@@ -13,6 +13,7 @@ import static software.wings.managerclient.SafeHttpCall.execute;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -48,7 +49,7 @@ public class DelegateLogServiceImpl implements DelegateLogService {
   private ManagerClient managerClient;
 
   @Inject
-  public DelegateLogServiceImpl(ManagerClient managerClient, ExecutorService executorService) {
+  public DelegateLogServiceImpl(ManagerClient managerClient, @Named("asyncExecutor") ExecutorService executorService) {
     this.managerClient = managerClient;
     this.cache = Caffeine.newBuilder()
                      .executor(executorService)
