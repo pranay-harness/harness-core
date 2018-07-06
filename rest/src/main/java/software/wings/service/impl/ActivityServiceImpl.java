@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static java.time.Duration.ofSeconds;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
@@ -37,7 +38,6 @@ import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ownership.OwnedByActivity;
 import software.wings.sm.ExecutionStatus;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -177,7 +177,7 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public boolean delete(String appId, String activityId) {
-    PruneEntityJob.addDefaultJob(jobScheduler, Activity.class, appId, activityId, Duration.ofSeconds(5));
+    PruneEntityJob.addDefaultJob(jobScheduler, Activity.class, appId, activityId, ofSeconds(5), ofSeconds(15));
 
     return wingsPersistence.delete(
         wingsPersistence.createQuery(Activity.class).filter(Activity.APP_ID_KEY, appId).filter(ID_KEY, activityId));

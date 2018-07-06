@@ -85,7 +85,6 @@ import software.wings.utils.validation.Create;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -380,7 +379,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
     // First lets make sure that we have persisted a job that will prone the descendant objects
     PruneEntityJob.addDefaultJob(
-        jobScheduler, Environment.class, environment.getAppId(), environment.getUuid(), Duration.ofSeconds(5));
+        jobScheduler, Environment.class, environment.getAppId(), environment.getUuid(), ofSeconds(5), ofSeconds(15));
 
     // Do not add too much between these too calls (on top and bottom). We need to persist the job
     // before we delete the object to avoid leaving the objects unpruned in case of crash. Waiting

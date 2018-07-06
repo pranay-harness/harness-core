@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtils.trimList;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.lang.String.format;
+import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -77,7 +78,6 @@ import software.wings.sm.StateMachine;
 import software.wings.utils.validation.Create;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -590,7 +590,7 @@ public class PipelineServiceImpl implements PipelineService {
 
   private boolean prunePipeline(String appId, String pipelineId) {
     // First lets make sure that we have persisted a job that will prone the descendant objects
-    PruneEntityJob.addDefaultJob(jobScheduler, Pipeline.class, appId, pipelineId, Duration.ofSeconds(5));
+    PruneEntityJob.addDefaultJob(jobScheduler, Pipeline.class, appId, pipelineId, ofSeconds(5), ofSeconds(15));
     return wingsPersistence.delete(Pipeline.class, appId, pipelineId);
   }
 }

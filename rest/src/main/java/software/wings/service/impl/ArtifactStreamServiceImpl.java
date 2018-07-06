@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
+import static java.time.Duration.ofSeconds;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.STARTS_WITH;
 import static software.wings.beans.SortOrder.OrderType.ASC;
@@ -62,7 +63,6 @@ import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -248,7 +248,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   private boolean pruneArtifactStream(String appId, String artifactStreamId) {
-    PruneEntityJob.addDefaultJob(jobScheduler, ArtifactStream.class, appId, artifactStreamId, Duration.ofSeconds(5));
+    PruneEntityJob.addDefaultJob(
+        jobScheduler, ArtifactStream.class, appId, artifactStreamId, ofSeconds(20), ofSeconds(120));
 
     return wingsPersistence.delete(ArtifactStream.class, appId, artifactStreamId);
   }
