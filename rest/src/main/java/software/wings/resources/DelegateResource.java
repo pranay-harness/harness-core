@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Base;
 import software.wings.beans.Delegate;
+import software.wings.beans.DelegateConfiguration;
 import software.wings.beans.DelegateConnectionHeartbeat;
 import software.wings.beans.DelegateScripts;
 import software.wings.beans.DelegateTask;
@@ -37,6 +38,7 @@ import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.PublicApi;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DelegateScopeService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.DownloadTokenService;
@@ -76,16 +78,18 @@ public class DelegateResource {
   private DownloadTokenService downloadTokenService;
   private MainConfiguration mainConfiguration;
   private ThirdPartyApiService thirdPartyApiService;
+  private AccountService accountService;
 
   @Inject
   public DelegateResource(DelegateService delegateService, DelegateScopeService delegateScopeService,
       DownloadTokenService downloadTokenService, MainConfiguration mainConfiguration,
-      ThirdPartyApiService thirdPartyApiService) {
+      ThirdPartyApiService thirdPartyApiService, AccountService accountService) {
     this.delegateService = delegateService;
     this.delegateScopeService = delegateScopeService;
     this.downloadTokenService = downloadTokenService;
     this.mainConfiguration = mainConfiguration;
     this.thirdPartyApiService = thirdPartyApiService;
+    this.accountService = accountService;
   }
 
   @GET
@@ -96,6 +100,16 @@ public class DelegateResource {
   public RestResponse<PageResponse<Delegate>>
   list(@BeanParam PageRequest<Delegate> pageRequest) {
     return new RestResponse<>(delegateService.list(pageRequest));
+  }
+
+  @DelegateAuth
+  @GET
+  @Path("configuration")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<DelegateConfiguration> getDelegateConfiguration(
+      @QueryParam("accountId") @NotEmpty String accountId) {
+    return new RestResponse<>(accountService.getDelegateConfiguration(accountId));
   }
 
   @GET

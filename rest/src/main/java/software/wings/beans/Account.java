@@ -38,6 +38,8 @@ public class Account extends Base {
   @JsonIgnore private EncryptionInterface encryption;
   private boolean twoFactorAdminEnforced;
 
+  private DelegateConfiguration delegateConfiguration;
+
   public void setTwoFactorAdminEnforced(boolean twoFactorAdminEnforced) {
     this.twoFactorAdminEnforced = twoFactorAdminEnforced;
   }
@@ -146,6 +148,14 @@ public class Account extends Base {
     this.authenticationMechanism = authenticationMechanism;
   }
 
+  public void setDelegateConfiguration(DelegateConfiguration delegateConfiguration) {
+    this.delegateConfiguration = delegateConfiguration;
+  }
+
+  public DelegateConfiguration getDelegateConfiguration() {
+    return delegateConfiguration;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -188,6 +198,7 @@ public class Account extends Base {
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
     private AuthenticationMechanism authenticationMechanism;
+    private DelegateConfiguration delegateConfiguration;
 
     private Builder() {}
 
@@ -250,6 +261,11 @@ public class Account extends Base {
       return this;
     }
 
+    public Builder withDelegateConfiguration(DelegateConfiguration delegateConfiguration) {
+      this.delegateConfiguration = delegateConfiguration;
+      return this;
+    }
+
     public Builder but() {
       return anAccount()
           .withCompanyName(companyName)
@@ -262,7 +278,8 @@ public class Account extends Base {
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt)
-          .withAuthenticationMechanism(authenticationMechanism);
+          .withAuthenticationMechanism(authenticationMechanism)
+          .withDelegateConfiguration(delegateConfiguration);
     }
 
     public Account build() {
@@ -278,6 +295,7 @@ public class Account extends Base {
       account.setLastUpdatedBy(lastUpdatedBy);
       account.setLastUpdatedAt(lastUpdatedAt);
       account.setAuthenticationMechanism(authenticationMechanism);
+      account.setDelegateConfiguration(delegateConfiguration);
       return account;
     }
   }

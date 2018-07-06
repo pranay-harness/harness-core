@@ -38,6 +38,7 @@ import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsExceptionMapper;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DelegateScopeService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.DownloadTokenService;
@@ -70,6 +71,7 @@ public class DelegateResourceTest {
 
   private static @Mock MainConfiguration mainConfiguration = mock(MainConfiguration.class);
   private static @Mock ThirdPartyApiService thirdPartyApiService = mock(ThirdPartyApiService.class);
+  private static @Mock AccountService accountService = mock(AccountService.class);
 
   public @Parameter String apiUrl;
 
@@ -82,7 +84,7 @@ public class DelegateResourceTest {
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
           .addResource(new DelegateResource(DELEGATE_SERVICE, DELEGATE_SCOPE_SERVICE, DOWNLOAD_TOKEN_SERVICE,
-              mainConfiguration, thirdPartyApiService))
+              mainConfiguration, thirdPartyApiService, accountService))
           .addResource(new AbstractBinder() {
             @Override
             protected void configure() {
