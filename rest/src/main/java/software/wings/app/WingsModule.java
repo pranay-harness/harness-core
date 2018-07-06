@@ -53,6 +53,8 @@ import software.wings.helpers.ext.gcr.GcrService;
 import software.wings.helpers.ext.gcr.GcrServiceImpl;
 import software.wings.helpers.ext.gcs.GcsService;
 import software.wings.helpers.ext.gcs.GcsServiceImpl;
+import software.wings.helpers.ext.helm.HelmDeployService;
+import software.wings.helpers.ext.helm.HelmDeployServiceUnsupported;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.helpers.ext.jenkins.JenkinsImpl;
@@ -467,6 +469,7 @@ public class WingsModule extends AbstractModule {
     bind(SSOService.class).to(SSOServiceImpl.class);
     bind(DeploymentService.class).to(DeploymentServiceImpl.class);
     bind(ThirdPartyApiService.class).to(ThirdPartyApiServiceImpl.class);
+    bind(HelmDeployService.class).to(HelmDeployServiceUnsupported.class).in(Singleton.class);
 
     try {
       VersionInfoManager versionInfoManager = new VersionInfoManager(IOUtils.toString(
