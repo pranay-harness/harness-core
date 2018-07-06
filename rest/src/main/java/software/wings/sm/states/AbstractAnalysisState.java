@@ -248,10 +248,13 @@ public abstract class AbstractAnalysisState extends State {
 
       List<ContainerInfo> containerInfoForService = containerInstanceHandler.getContainerInfoForService(
           containerServiceNames, context, infraMappingId, serviceId);
+      Map<String, String> podNameToIp = new HashMap<>();
       Set<String> serviceHosts = containerInfoForService.stream()
                                      .map(containerInfo -> {
                                        if (containerInfo instanceof KubernetesContainerInfo) {
-                                         return ((KubernetesContainerInfo) containerInfo).getPodName();
+                                         String podName = ((KubernetesContainerInfo) containerInfo).getPodName();
+                                         podNameToIp.put(podName, ((KubernetesContainerInfo) containerInfo).getIp());
+                                         return podName;
                                        }
 
                                        if (containerInfo instanceof EcsContainerInfo) {
@@ -266,8 +269,9 @@ public abstract class AbstractAnalysisState extends State {
         if (isEmpty(hostnameTemplate)) {
           hosts.add(serviceHost);
         } else {
-          hosts.add(context.renderExpression(
-              hostnameTemplate, Lists.newArrayList(aHostElement().withHostName(serviceHost).build())));
+          hosts.add(context.renderExpression(hostnameTemplate,
+              Lists.newArrayList(
+                  aHostElement().withHostName(serviceHost).withIp(podNameToIp.get(serviceHost)).build())));
         }
       });
       hosts.removeAll(phaseHosts);

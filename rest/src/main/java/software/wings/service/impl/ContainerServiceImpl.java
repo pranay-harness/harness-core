@@ -134,6 +134,7 @@ public class ContainerServiceImpl implements ContainerService {
             result.add(KubernetesContainerInfo.builder()
                            .clusterName(containerServiceParams.getClusterName())
                            .podName(pod.getMetadata().getName())
+                           .ip(pod.getStatus().getPodIP())
                            .controllerName(containerServiceName)
                            .serviceName(serviceName)
                            .build());

@@ -16,14 +16,16 @@ public class KubernetesContainerInfo extends ContainerInfo {
   private String controllerName;
   private String serviceName;
   private String podName;
+  private String ip;
 
   @Builder
   public KubernetesContainerInfo(
-      String clusterName, String controllerType, String controllerName, String serviceName, String podName) {
+      String clusterName, String controllerType, String controllerName, String serviceName, String podName, String ip) {
     super(clusterName);
     this.controllerType = controllerType;
     this.controllerName = controllerName;
     this.serviceName = serviceName;
     this.podName = podName;
+    this.ip = ip;
   }
 }
