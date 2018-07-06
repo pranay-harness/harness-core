@@ -63,11 +63,9 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
   private static final String ALL_WEB_TXN_NAME = "WebTransaction/all";
   private static final String ALL_ERRORS_TXN_NAME = "Errors/all";
   private static final String OVERALL_APDEX_TXN_NAME = "Apdex";
-  private static final int INITIAL_DELAY_MINUTES = 0;
+  private static final int INITIAL_DELAY_MINUTES = 2;
   private static final int PERIOD_MINS = 1;
   private static final int METRIC_DATA_QUERY_BATCH_SIZE = 50;
-  private static final int APM_COLLECTION_BUFFER = 2;
-  public static final int COLLECTION_PERIOD_MINS = 5;
   private static final int MIN_RPM = 1;
 
   @Inject private NewRelicDelegateService newRelicDelegateService;
@@ -120,7 +118,6 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
     private int dataCollectionMinute;
     private DataCollectionTaskResult taskResult;
     private final Set<NewRelicMetric> allTxns;
-    private long lastCollectionTime;
     private long analysisStartTimeDelegate;
     private long managerAnalysisStartTime;
 
@@ -130,7 +127,6 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       this.managerAnalysisStartTime = Timestamp.minuteBoundary(dataCollectionInfo.getStartTime());
       this.windowStartTimeManager = Timestamp.minuteBoundary(dataCollectionInfo.getStartTime());
       this.analysisStartTimeDelegate = System.currentTimeMillis();
-      this.lastCollectionTime = analysisStartTimeDelegate;
       this.dataCollectionMinute = 0;
       this.taskResult = taskResult;
       this.allTxns = newRelicDelegateService.getTxnNameToCollect(dataCollectionInfo.getNewRelicConfig(),
@@ -162,6 +158,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       int retry = 0;
       while (retry < RETRIES) {
         try {
+          logger.info("For datacollectionMinute {}, start and end times are {} and {}", dataCollectionMinute,
+              windowStartTimeManager, endTime);
           NewRelicMetricData metricData = newRelicDelegateService.getMetricDataApplicationInstance(
               dataCollectionInfo.getNewRelicConfig(), dataCollectionInfo.getEncryptedDataDetails(),
               dataCollectionInfo.getNewRelicAppId(), node.getId(), metricNames, windowStartTimeManager, endTime,
@@ -322,13 +320,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
           long startTime = System.currentTimeMillis();
           try {
             int totalAnalysisTime = timeDeltaInMins(System.currentTimeMillis(), analysisStartTimeDelegate);
-            int elapsedTime = timeDeltaInMins(System.currentTimeMillis(), lastCollectionTime);
 
-            if (totalAnalysisTime < dataCollectionInfo.getCollectionTime() && elapsedTime < COLLECTION_PERIOD_MINS) {
-              logger.info("elapsed time {} below collection threshold {} . skipping collection", elapsedTime,
-                  COLLECTION_PERIOD_MINS);
-              return;
-            }
             Set<NewRelicMetric> txnsToCollect = getTxnsToCollect();
             if (txnsToCollect != null) {
               logger.info("Found total new relic metrics " + txnsToCollect.size());
@@ -341,10 +333,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                 dataCollectionInfo.getNewRelicAppId(), createApiCallLog(dataCollectionInfo.getStateExecutionId()));
             logger.info("Got {} new relic nodes.", instances.size());
 
-            lastCollectionTime = System.currentTimeMillis();
-
-            final long windowEndTimeManager = windowStartTimeManager + TimeUnit.MINUTES.toMillis(totalAnalysisTime)
-                - TimeUnit.MINUTES.toMillis(dataCollectionMinute) - TimeUnit.MINUTES.toMillis(APM_COLLECTION_BUFFER);
+            final long windowEndTimeManager = windowStartTimeManager + TimeUnit.MINUTES.toMillis(totalAnalysisTime);
             final int collectionLength = timeDeltaInMins(windowEndTimeManager, windowStartTimeManager);
             int dataCollectionMinuteEnd = dataCollectionMinute + collectionLength - 1;
 

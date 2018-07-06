@@ -95,7 +95,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
     dataCollectionInfo = (APMDataCollectionInfo) parameters[0];
     collectionWindow =
         dataCollectionInfo.getDataCollectionFrequency() != 0 ? dataCollectionInfo.getDataCollectionFrequency() : 1;
-    initialDelayMins = collectionWindow <= 1 ? 2 : collectionWindow;
+    initialDelayMins = 2;
     logger.info("apm collection - dataCollectionInfo: {}", dataCollectionInfo);
     char[] decryptedValue;
     for (EncryptedDataDetail encryptedDataDetail : dataCollectionInfo.getEncryptedDataDetails()) {
@@ -354,7 +354,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
       currentElapsedTime =
           (int) ((Timestamp.currentMinuteBoundary() - collectionStartMinute) / TimeUnit.MINUTES.toMillis(1));
       boolean shouldCollectData = false;
-      if (currentElapsedTime % collectionWindow == 0
+      if (dataCollectionMinute == 0 || currentElapsedTime % collectionWindow == 0
           || currentElapsedTime == dataCollectionInfo.getDataCollectionTotalTime()) {
         shouldCollectData = true;
       }
