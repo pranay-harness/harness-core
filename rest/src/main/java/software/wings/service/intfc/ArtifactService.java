@@ -7,7 +7,7 @@ import software.wings.beans.artifact.Artifact.ContentStatus;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.service.intfc.ownership.OwnedByApplication;
+import software.wings.service.intfc.ownership.OwnedByArtifactStream;
 
 import java.io.File;
 import java.util.List;
@@ -17,7 +17,7 @@ import javax.validation.Valid;
 /**
  * The Interface ArtifactService.
  */
-public interface ArtifactService extends OwnedByApplication {
+public interface ArtifactService extends OwnedByArtifactStream {
   /**
    * List.
    *
