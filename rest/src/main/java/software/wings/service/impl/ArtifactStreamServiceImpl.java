@@ -46,6 +46,7 @@ import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -90,6 +91,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private YamlChangeSetHelper yamlChangeSetHelper;
   @Inject private SettingsService settingsService;
+  @Inject private ArtifactService artifactService; // Do not delete it is being used by Prune
 
   @Override
   public PageResponse<ArtifactStream> list(PageRequest<ArtifactStream> req) {
