@@ -89,5 +89,9 @@ public class WingsTestModule extends AbstractModule {
                 .setNameFormat("artifact-collection-%d")
                 .setPriority(Thread.MIN_PRIORITY)
                 .build()));
+    bind(ExecutorService.class)
+        .annotatedWith(Names.named("timeoutExecutor"))
+        .toInstance(ThreadPool.create(10, 150, 1, TimeUnit.SECONDS,
+            new ThreadFactoryBuilder().setNameFormat("timeout-enforcer-%d").setPriority(Thread.NORM_PRIORITY).build()));
   }
 }
