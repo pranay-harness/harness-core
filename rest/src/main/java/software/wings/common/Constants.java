@@ -851,4 +851,6 @@ public interface Constants {
   String ARTIFACT_SOURCE_USER_NAME_KEY = "username";
   String ARTIFACT_SOURCE_REGISTRY_URL_KEY = "registryUrl";
   String ARTIFACT_SOURCE_REPOSITORY_NAME_KEY = "repositoryName";
+
+  int YAML_MAX_PARALLEL_COUNT = 20;
 }

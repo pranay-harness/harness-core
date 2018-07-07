@@ -53,7 +53,6 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Base;
-import software.wings.beans.EntityType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.RestResponse;
@@ -64,6 +63,7 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
+import software.wings.common.Constants;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.exception.YamlProcessingException;
@@ -386,6 +386,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap = Maps.newConcurrentMap();
     Set<ChangeContext> processedChangeSet = Sets.newHashSet();
     YamlType previousYamlType = null;
+    int numOfParallelChanges = 0;
     for (ChangeContext changeContext : changeContextList) {
       String yamlFilePath = changeContext.getChange().getFilePath();
       YamlType yamlType = changeContext.getYamlType();
@@ -393,9 +394,10 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         previousYamlType = yamlType;
       }
 
-      if (previousYamlType != yamlType) {
+      if (previousYamlType != yamlType || (++numOfParallelChanges == Constants.YAML_MAX_PARALLEL_COUNT)) {
         checkFuturesAndEvictCache(futures, previousYamlType, accountId);
         previousYamlType = yamlType;
+        numOfParallelChanges = 0;
       }
 
       futures.add(executorService.submit(() -> {
@@ -437,15 +439,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       quietSleep(ofMillis(10));
     }
 
-    if (yamlType != null && shouldInvalidateCache(yamlType.getEntityType())) {
-      authService.evictAccountUserPermissionInfoCache(accountId, true);
-    }
-  }
-
-  private boolean shouldInvalidateCache(String entityType) {
-    return EntityType.SERVICE.name().equals(entityType) || EntityType.ENVIRONMENT.name().equals(entityType)
-        || EntityType.WORKFLOW.name().equals(entityType) || EntityType.PIPELINE.name().equals(entityType)
-        || EntityType.PROVISIONER.name().equals(entityType);
+    authService.evictAccountUserPermissionInfoCache(accountId, true);
   }
 
   private void processYamlChange(ChangeContext changeContext, List<ChangeContext> changeContextList)
