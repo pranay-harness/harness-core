@@ -7,6 +7,7 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
@@ -113,6 +114,13 @@ public class CommandRefCommandUnitYamlHandler extends CommandUnitYamlHandler<Com
     super.toYaml(yaml, bean);
     yaml.setName(bean.getReferenceId());
     return yaml;
+  }
+
+  @Override
+  public Command toBean(AbstractCommandUnit.Yaml yaml) {
+    Command commandRef = super.toBean(yaml);
+    commandRef.setReferenceId(yaml.getName());
+    return commandRef;
   }
 
   @Override

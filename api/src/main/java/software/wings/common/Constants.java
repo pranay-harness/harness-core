@@ -1,17 +1,7 @@
 package software.wings.common;
 
-import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.artifact.ArtifactStreamType.ACR;
-import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
-import static software.wings.beans.artifact.ArtifactStreamType.AMI;
-import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
-import static software.wings.beans.artifact.ArtifactStreamType.ECR;
-import static software.wings.beans.artifact.ArtifactStreamType.GCR;
-import static software.wings.beans.artifact.ArtifactStreamType.GCS;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -580,6 +570,8 @@ public interface Constants {
    */
   String PARENT_FIELDS = "parentFields";
 
+  String DEPLOYMENT_TYPE_FIELD = "deploymentType";
+
   /**
    * The constant S3.
    */
@@ -782,12 +774,6 @@ public interface Constants {
   String CORRELATION_ID = "correlationId";
 
   /**
-   * Auto downloaded
-   */
-  List<String> autoDownloaded = Collections.unmodifiableList(
-      asList(DOCKER.name(), ECR.name(), GCR.name(), ACR.name(), AMAZON_S3.name(), AMI.name(), GCS.name()));
-
-  /**
    * The constant DEPLOYMENT.
    */
   String DEPLOYMENT = "DEPLOYMENT";
@@ -843,7 +829,6 @@ public interface Constants {
 
   String KUBERNETES_SERVICE_SETUP_BLUEGREEN = "Blue/Green Service Setup";
   String ROUTE_UPDATE = "Route Update";
-  String UPGRADE_STAGE_CONTAINERS = "Upgrade Stage Containers";
   String KUBERNETES_SWAP_SERVICES_PRIMARY_STAGE = "Swap Primary with Stage";
   String VERIFY_STAGE_SERVICE = "Verify Stage Service";
 
@@ -853,4 +838,15 @@ public interface Constants {
   String ARTIFACT_SOURCE_REPOSITORY_NAME_KEY = "repositoryName";
 
   int YAML_MAX_PARALLEL_COUNT = 20;
+  /**
+   * Template VAR description
+   */
+  String ENV_VAR_DESC = "Variable for Environment entity";
+  String SERVICE_VAR_DESC = "Variable for Service entity";
+  String SERVICE_INFRA_VAR_DESC = "Variable for Service Infra-structure entity";
+  String APPD_SERVER_VAR_DESC = "Variable for AppDynamics Server entity";
+  String APPD_APP_VAR_DESC = "Variable for AppDynamics Application entity";
+  String APPD_TIER_VAR_DESC = "Variable for AppDynamics Tier entity";
+  String ELK_SERVER_VAR_DESC = "Variable for Elastic Search Server entity";
+  String ELK_INDICES_VAR_DESC = "Variable for Elastic Search Indices entity";
 }

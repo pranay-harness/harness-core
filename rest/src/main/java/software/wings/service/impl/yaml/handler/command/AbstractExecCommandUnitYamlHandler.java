@@ -10,6 +10,7 @@ import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_TAIL_FILES;
 import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_TAIL_PATTERNS;
 
 import software.wings.api.ScriptType;
+import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.ExecCommandUnit.AbstractYaml;
 import software.wings.beans.command.TailFilePatternEntry;
@@ -47,7 +48,7 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends AbstractYaml,
         .collect(toList());
   }
 
-  private List<TailFilePatternEntry> convertToBean(List<TailFilePatternEntry.Yaml> patternEntryYamlList) {
+  protected List<TailFilePatternEntry> convertToBean(List<TailFilePatternEntry.Yaml> patternEntryYamlList) {
     if (isEmpty(patternEntryYamlList)) {
       return null;
     }
@@ -72,6 +73,16 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends AbstractYaml,
     bean.setCommandString(yaml.getCommand());
     bean.setCommandPath(yaml.getWorkingDirectory());
     bean.setTailPatterns(convertToBean(yaml.getFilePatternEntryList()));
+    return bean;
+  }
+
+  @Override
+  public B toBean(AbstractCommandUnit.Yaml yaml) {
+    B bean = super.toBean(yaml);
+    final ExecCommandUnit.AbstractYaml execYaml = (ExecCommandUnit.AbstractYaml) yaml;
+    bean.setCommandString(execYaml.getCommand());
+    bean.setCommandPath(execYaml.getWorkingDirectory());
+    bean.setDeploymentType(execYaml.getDeploymentType());
     return bean;
   }
 

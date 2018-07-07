@@ -120,6 +120,15 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldEvaluateVar() {
+    Map<String, Object> context = ImmutableMap.<String, Object>builder()
+                                      .put("vare", ImmutableMap.<String, Object>builder().put("foo", "bar").build())
+                                      .build();
+    String retValue = expressionEvaluator.substitute("--- ${vare.foo} ---", context);
+    assertThat(retValue).isEqualTo("--- bar ---");
+  }
+
+  @Test
   public void shouldNotHangForCircle() {
     Host host = new Host();
     host.setHostName("${HOST}.$DOMAIN.${COM}");

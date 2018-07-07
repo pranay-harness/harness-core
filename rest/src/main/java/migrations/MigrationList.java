@@ -35,6 +35,7 @@ import migrations.all.RemoveResizeFromStatefulSetWorkflows;
 import migrations.all.RenameProvisionNodeToInfrastructureNodeWorkflows;
 import migrations.all.SecretTextFilterMigration;
 import migrations.all.SetRollbackFlagToWorkflows;
+import migrations.all.SystemTemplateGalleryMigration;
 import migrations.all.TimeSeriesAnalysisRecordsMigration;
 import migrations.all.TimeSeriesMLScoresMigration;
 import org.apache.commons.lang3.tuple.Pair;
@@ -91,6 +92,7 @@ public class MigrationList {
         .add(Pair.of(169, AddValidUntilToDelegateConnectionResults.class))
         .add(Pair.of(170, EntityNameValidationMigration_All_04.class))
         .add(Pair.of(171, DropOldCollectionMigration.class))
+        .add(Pair.of(172, SystemTemplateGalleryMigration.class))
         .build();
   }
 }

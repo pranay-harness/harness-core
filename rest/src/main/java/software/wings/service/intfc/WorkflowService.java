@@ -57,6 +57,8 @@ public interface WorkflowService extends OwnedByApplication, OwnedByEnvironment,
 
   @ValidationGroups(Update.class) Workflow updateWorkflow(@Valid Workflow workflow);
 
+  @ValidationGroups(Update.class) Workflow updateLinkedWorkflow(@Valid Workflow workflow, Workflow existingWorkflow);
+
   @ValidationGroups(Update.class)
   Workflow updateWorkflow(@Valid Workflow workflow, OrchestrationWorkflow orchestrationWorkflow);
 
@@ -127,20 +129,8 @@ public interface WorkflowService extends OwnedByApplication, OwnedByEnvironment,
 
   void loadOrchestrationWorkflow(Workflow workflow, Integer version);
 
-  /**
-   * Resolves the services from workflow variables if parameterized
-   * @param workflow
-   * @param workflowVariables
-   * @return
-   */
   List<Service> getResolvedServices(Workflow workflow, Map<String, String> workflowVariables);
 
-  /**
-   * Resolves the Inframappings from workflow variables if parameterized
-   * @param workflow
-   * @param workflowVariables
-   * @return
-   */
   List<InfrastructureMapping> getResolvedInfraMappings(Workflow workflow, Map<String, String> workflowVariables);
 
   List<InstanceElement> getDeployedNodes(String appId, String workflowId);

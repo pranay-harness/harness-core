@@ -49,7 +49,7 @@ import java.util.Map;
 /**
  * Created by rishi on 2/25/17.
  */
-public class PhaseStepSubWorkflowTest extends WingsBaseTest {
+public class StepSubWorkflowTest extends WingsBaseTest {
   private static final String STATE_NAME = "state";
   @Mock private WorkflowExecutionService workflowExecutionService;
 

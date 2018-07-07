@@ -29,7 +29,7 @@ import java.util.Map;
 public class AppDefYamlHandler extends BaseYamlHandler<Yaml, TemplateExpression> {
   @Inject YamlHandlerFactory yamlHandlerFactory;
 
-  private TemplateExpression toBean(ChangeContext<Yaml> changeContext) throws HarnessException {
+  private TemplateExpression toBean(ChangeContext<Yaml> changeContext) {
     Yaml yaml = changeContext.getYaml();
 
     Map<String, Object> properties = Maps.newHashMap();
@@ -42,10 +42,10 @@ public class AppDefYamlHandler extends BaseYamlHandler<Yaml, TemplateExpression>
       properties = Util.toProperties(nameValuePairList);
     }
 
-    return TemplateExpression.Builder.aTemplateExpression()
-        .withExpression(yaml.getExpression())
-        .withFieldName(yaml.getFieldName())
-        .withMetadata(properties)
+    return TemplateExpression.builder()
+        .expression(yaml.getExpression())
+        .fieldName(yaml.getFieldName())
+        .metadata(properties)
         .build();
   }
 

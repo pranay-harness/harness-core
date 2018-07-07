@@ -46,6 +46,12 @@ public class Base implements UuidAware {
 
   public static final String GLOBAL_ACCOUNT_ID = "__GLOBAL_ACCOUNT_ID__";
 
+  public static final String KEYWORDS_KEY = "keywords";
+
+  public static final String LINKED_TEMPLATE_UUIDS_KEY = "linkedTemplateUuids";
+
+  public static final String TEMPATE_UUID_KEY = "templateUuid";
+
   /**
    * The constant GLOBAL_ENV_ID.
    */

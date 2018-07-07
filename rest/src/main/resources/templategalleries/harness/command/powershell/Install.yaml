@@ -1,0 +1,105 @@
+name: "Install"
+gallery: "Harness"
+folderPath: "Harness/Power Shell Commands"
+version: "1"
+description: "This is a command to install service by invoking scripts over SSH to the individual instances."
+keywords: [ssh, iis, powershell, install]
+variables:
+- name: "ReleaseNo"
+  value: "${workflow.ReleaseNo}"
+  description: "ReleaseId."
+- name: "ServiceName"
+  value: "${service.Name}"
+  description: "Service Name"
+- name: "AppPoolName"
+  value: "DefaultAppPool"
+  description: "Default Application Pool"
+- name: "AppPoolDotNetVersion"
+  value: "v4.0"
+  description: "Application pool DotNet Version"
+templateObject:
+  type: "SSH"
+  commandType: "INSTALL"
+  commands:
+  - command: |-
+      $releaseId="${ReleaseNo}"
+      $serviceName="${ServiceName}"
+      $artifactFilename = $env:TEMP + "\" + $serviceName + "-release-" + $releaseId + ".zip"
+
+      Write-Host "Starting Deployment [id:" $releaseId "]"
+      Write-Host "Downloading artifact file - URL: ${artifact.url} to File: " $artifactFilename
+      Invoke-WebRequest -Uri "${artifact.url}" -OutFile $artifactFilename
+      Write-Host "Done."
+    commandUnitType: EXEC
+    deploymentType: SSH
+    name: Download Artifacts
+    scriptType: POWERSHELL
+  - command: |-
+      $serviceName="${ServiceName}"
+      $releaseId="${ReleaseNo}"
+      $artifactFilename = $env:TEMP + "\" + $serviceName + "-release-" + $releaseId + ".zip"
+      $appPhysicalDirectory=$env:SYSTEMDRIVE + "\Artifacts\" + $serviceName + "\release-" + $releaseId
+
+      Write-Host "Extracting package from" $artifactFilename "to" $appPhysicalDirectory
+      Expand-Archive -Path $artifactFilename -DestinationPath $appPhysicalDirectory -Force
+      Write-Host "Done."
+    commandUnitType: EXEC
+    deploymentType: SSH
+    name: Expand Artifacts
+    scriptType: POWERSHELL
+  - command: |-
+      Import-Module WebAdministration
+
+      $AppPoolName = "${AppPoolName}"
+      $AppPoolDotNetVersion = "${AppPoolDotNetVersion}"
+
+      if (!(Test-Path IIS:\AppPools\$AppPoolName -pathType container))
+      {
+          Write-Host "Creating AppPool:" $AppPoolName
+          $appPool = New-Item IIS:\AppPools\$AppPoolName
+      }
+      else
+      {
+          Write-Host "Updating AppPool:" $AppPoolName
+          $appPool = Get-Item IIS:\AppPools\$AppPoolName
+      }
+
+      $appPool | Set-ItemProperty -Name "managedRuntimeVersion" -Value $AppPoolDotNetVersion
+
+      Get-Item IIS:\AppPools\$AppPoolName | ft
+      Write-Host "Done."
+    commandUnitType: EXEC
+    deploymentType: SSH
+    name: Create AppPool
+    scriptType: POWERSHELL
+  - command: |-
+      Import-Module WebAdministration
+
+      $releaseId="${ReleaseNo}"
+      $SiteName = "${ServiceName}"
+      $SiteProtocol = "http"
+      $SitePort=80
+      $SiteHostName = "*"
+      $SitePhysicalDirectory = $env:SYSTEMDRIVE + "\Artifacts\" + $SiteName + "\release-" + $releaseId
+      $AppPoolName = "${AppPoolName}"
+
+      if (!(Test-Path IIS:\Sites\$SiteName -pathType container))
+      {
+          $site = New-Item IIS:\Sites\$SiteName -physicalPath $sitePhysicalDirectory -bindings @{protocol=$SiteProtocol;bindingInformation=":"+$SitePort+":"+$SiteHostName} -ApplicationPool $AppPoolName -AutoStart $true
+          Write-Host "Created Website:" $SiteName
+      }
+      else
+      {
+          $site = Get-Item IIS:\Sites\$SiteName
+          $Site | Set-ItemProperty -Name "physicalPath" -Value $sitePhysicalDirectory
+          $Site | Set-ItemProperty -Name "bindings" -Value @{protocol=$SiteProtocol;bindingInformation=":"+$SitePort+":"+$SiteHostName}
+          Write-Host "Updated Website:" $SiteName
+      }
+
+      Start-WebSite $SiteName
+      Get-Item IIS:\Sites\$SiteName
+      Write-Host "Done."
+    commandUnitType: EXEC
+    deploymentType: SSH
+    name: Create Website
+    scriptType: POWERSHELL

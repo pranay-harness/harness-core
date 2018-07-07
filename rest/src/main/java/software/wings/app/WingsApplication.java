@@ -71,7 +71,7 @@ import software.wings.security.AuthRuleFilter;
 import software.wings.security.AuthenticationFilter;
 import software.wings.service.impl.SettingsServiceImpl;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
-import software.wings.service.impl.WorkflowServiceImpl;
+import software.wings.service.impl.workflow.WorkflowServiceImpl;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.MigrationService;
@@ -186,7 +186,9 @@ public class WingsApplication extends Application<MainConfiguration> {
           }
         },
         new ValidationModule(validatorFactory), databaseModule, new WingsModule(configuration), new YamlModule(),
-        new ExecutorModule(), new QueueModule(databaseModule.getPrimaryDatastore()));
+
+        new ExecutorModule(), new QueueModule(databaseModule.getPrimaryDatastore()), new TemplateModule());
+
     Caching.getCachingProvider().getCacheManager().createCache(USER_CACHE, new Configuration<String, User>() {
       public static final long serialVersionUID = 1L;
 

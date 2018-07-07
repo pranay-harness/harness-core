@@ -309,6 +309,9 @@ public class StateMachine extends Base {
       state.setRollback(node.isRollback());
 
       state.setTemplateExpressions(node.getTemplateExpressions());
+      state.setTemplateVariables(node.getTemplateVariables());
+      state.setTemplateUuid(node.getTemplateUuid());
+      state.setTemplateVersion(node.getTemplateVersion());
 
       // populate properties
       MapperUtils.mapObject(properties, state);
@@ -318,13 +321,15 @@ public class StateMachine extends Base {
       if (isNotEmpty(node.getVariableOverrides()) && state instanceof SubWorkflowState) {
         ((SubWorkflowState) state).setVariableOverrides(node.getVariableOverrides());
       }
-
       Map<String, String> stateValidateMessages = state.validateFields();
       node.setInValidFieldMessages(stateValidateMessages);
 
       if (orchestrationWorkflow != null) {
         if (state.getTemplateExpressions() != null) {
           orchestrationWorkflow.addToUserVariables(state);
+        }
+        if (isNotEmpty(state.getTemplateUuid())) {
+          orchestrationWorkflow.addTemplateUuid(state.getTemplateUuid());
         }
       }
       addState(state);

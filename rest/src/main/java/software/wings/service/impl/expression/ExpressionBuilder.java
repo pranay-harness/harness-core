@@ -119,6 +119,9 @@ public abstract class ExpressionBuilder {
   protected static final String EMAIL_SUBJECT = "subject";
   protected static final String EMAIL_BODY = "body";
 
+  public static final String WORKFLOW_VARIABLE_PREFIX = "workflow.variables";
+  public static final String SERVICE_VARIABLE_PREFIX = "service.variables";
+
   @Inject private ServiceVariableService serviceVariablesService;
   @Inject private ServiceTemplateService serviceTemplateService;
 
@@ -141,7 +144,7 @@ public abstract class ExpressionBuilder {
     return new HashSet<>();
   }
 
-  Set<String> getStaticExpressions() {
+  public static Set<String> getStaticExpressions() {
     Set<String> expressions = new TreeSet<>();
     expressions.addAll(asList(APP_NAME, APP_DESCRIPTION));
     expressions.addAll(asList(ARTIFACT_DISPLAY_NAME, ARTIFACT_BUILDNO, ARTIFACT_REVISION, ARTIFACT_DESCRIPTION,
@@ -164,7 +167,7 @@ public abstract class ExpressionBuilder {
     return expressions;
   }
 
-  protected Set<String> getStateTypeExpressions(StateType stateType) {
+  public static Set<String> getStateTypeExpressions(StateType stateType) {
     Set<String> expressions = new TreeSet<>(asList(START_TS, END_TS, STATUS, ERROR_MSG, DEPLOYMENT_URL));
     switch (stateType) {
       case SHELL_SCRIPT:
@@ -246,5 +249,17 @@ public abstract class ExpressionBuilder {
     serviceVariables.addAll(getServiceVariables(
         appId, serviceTemplates.stream().map(ServiceTemplate::getUuid).collect(toList()), SERVICE_TEMPLATE));
     return serviceVariables;
+  }
+
+  /**
+   * All expression suggestions without context specific
+   * @return
+   */
+  public static Set<String> getExpressionSuggestions(StateType stateType) {
+    Set<String> allContextExpressions = getStaticExpressions();
+    if (stateType != null) {
+      allContextExpressions.addAll(getStateTypeExpressions(stateType));
+    }
+    return allContextExpressions;
   }
 }

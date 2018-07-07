@@ -184,6 +184,7 @@ public class CommandStateExecutionData extends StateExecutionData {
     private String codeDeployDeploymentId;
     private ContainerSetupParams containerSetupParams;
     private transient ActivityService activityService;
+    private Map<String, Object> templateVariable;
 
     private Builder() {}
 
@@ -356,6 +357,11 @@ public class CommandStateExecutionData extends StateExecutionData {
       return this;
     }
 
+    public Builder withTemplateVariable(Map<String, Object> var) {
+      this.templateVariable = var;
+      return this;
+    }
+
     public Builder but() {
       return aCommandStateExecutionData()
           .withStateName(stateName)
@@ -428,6 +434,7 @@ public class CommandStateExecutionData extends StateExecutionData {
       commandStateExecutionData.setCodeDeployDeploymentId(codeDeployDeploymentId);
       commandStateExecutionData.setContainerSetupParams(containerSetupParams);
       commandStateExecutionData.setActivityService(activityService);
+      commandStateExecutionData.setTemplateVariable(templateVariable);
       return commandStateExecutionData;
     }
   }

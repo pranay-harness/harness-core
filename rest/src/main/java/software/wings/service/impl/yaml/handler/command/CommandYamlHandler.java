@@ -12,6 +12,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.data.structure.UUIDGenerator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.Environment;
@@ -26,6 +28,7 @@ import software.wings.beans.command.Command.Builder;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.template.TemplateHelper;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
@@ -36,6 +39,7 @@ import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.template.TemplateService;
 import software.wings.utils.Util;
 import software.wings.yaml.command.CommandYaml;
 
@@ -48,16 +52,19 @@ import java.util.Optional;
  */
 @Singleton
 public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceCommand> {
+  private static final Logger logger = LoggerFactory.getLogger(CommandYamlHandler.class);
   @Inject YamlHandlerFactory yamlHandlerFactory;
   @Inject YamlHelper yamlHelper;
   @Inject ServiceResourceService serviceResourceService;
   @Inject CommandService commandService;
   @Inject EnvironmentService environmentService;
+  @Inject TemplateService templateService;
 
   private ServiceCommand toBean(ChangeContext<CommandYaml> changeContext, List<ChangeContext> changeSetContext,
       boolean isCreate) throws HarnessException {
     String accountId = changeContext.getChange().getAccountId();
     String yamlFilePath = changeContext.getChange().getFilePath();
+
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
     notNullCheck("appId is null for given yamlFilePath: " + yamlFilePath, appId, USER);
     String serviceId = yamlHelper.getServiceId(appId, yamlFilePath);
@@ -72,7 +79,6 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
 
     if (isNotEmpty(commandUnitYamlList)) {
       GraphNode previousGraphNode = null;
-
       for (Yaml commandUnitYaml : commandUnitYamlList) {
         CommandUnitYamlHandler commandUnitYamlHandler =
             yamlHandlerFactory.getYamlHandler(YamlType.COMMAND_UNIT, commandUnitYaml.getCommandUnitType());
@@ -101,12 +107,8 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
 
     CommandType commandType = Util.getEnumFromString(CommandType.class, commandYaml.getType());
 
-    Command command = Builder.aCommand()
-                          .withCommandType(commandType)
-                          //                          .withCommandUnits(commandUnitList)
-                          .withName(name)
-                          .withGraph(graphBuilder.build())
-                          .build();
+    Command command =
+        Builder.aCommand().withCommandType(commandType).withCommandUnits(commandUnitList).withName(name).build();
 
     List<String> envNameList = commandYaml.getTargetEnvs();
     Map<String, EntityVersion> envIdMap = Maps.newHashMap();
@@ -125,7 +127,19 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
       ServiceCommand existingSvcCommand = serviceResourceService.getCommandByName(appId, serviceId, name);
       notNullCheck("Service command with the given name doesn't exist: " + name, existingSvcCommand, USER);
       builder.withUuid(existingSvcCommand.getUuid());
+      builder.withTemplateUuid(existingSvcCommand.getTemplateUuid());
+      builder.withTemplateVersion(existingSvcCommand.getTemplateVersion());
+      if (isNotEmpty(commandYaml.getTemplateUri())) {
+        // Only version change for now
+        builder.withTemplateVersion(TemplateHelper.obtainTemplateVersion(commandYaml.getTemplateUri()));
+      }
+    } else {
+      if (isNotEmpty(commandYaml.getTemplateUri())) {
+        builder.withTemplateUuid(templateService.fetchTemplateIdFromUri(accountId, commandYaml.getTemplateUri()));
+      }
     }
+
+    command.setTemplateVariables(TemplateHelper.convertToEntityVariables(commandYaml.getTemplateVariables()));
 
     serviceCommand = builder.withAppId(appId)
                          .withCommand(command)
@@ -188,6 +202,18 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
         });
       }
     }
+    String templateUri = null;
+    final String templateUuid = serviceCommand.getTemplateUuid();
+    if (templateUuid != null) {
+      // Command is linked
+      templateUri = templateService.fetchTemplateUri(templateUuid);
+      if (templateUri == null) {
+        logger.error("Linked template for service command {} was deleted ", serviceCommand.getUuid());
+      }
+      if (serviceCommand.getTemplateVersion() != null) {
+        templateUri = templateUri + ":" + serviceCommand.getTemplateVersion();
+      }
+    }
 
     return CommandYaml.builder()
         .commandUnits(commandUnitYamlList)
@@ -195,6 +221,8 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
         .targetEnvs(envNameList)
         .targetToAllEnv(serviceCommand.isTargetToAllEnv())
         .type(commandType)
+        .templateUri(templateUri)
+        .templateVariables(TemplateHelper.convertToTemplateVariables(command.getTemplateVariables()))
         .harnessApiVersion(getHarnessApiVersion())
         .build();
   }

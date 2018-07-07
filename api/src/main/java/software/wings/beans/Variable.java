@@ -1,20 +1,17 @@
 package software.wings.beans;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static software.wings.common.Constants.ARTIFACT_TYPE;
-import static software.wings.common.Constants.ENTITY_TYPE;
-import static software.wings.common.Constants.RELATED_FIELD;
-import static software.wings.common.Constants.STATE_TYPE;
 
 import com.google.common.collect.Maps;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.common.Constants;
-import software.wings.utils.ArtifactType;
 import software.wings.yaml.BaseYamlWithType;
 
 import java.beans.Transient;
@@ -23,6 +20,7 @@ import java.util.Map;
 /**
  * Created by rishi on 12/21/16.
  */
+@JsonInclude(NON_NULL)
 public class Variable {
   private String name;
   private String description;
@@ -96,7 +94,7 @@ public class Variable {
     if (metadata == null) {
       return null;
     }
-    Object entityType = metadata.get(ENTITY_TYPE);
+    Object entityType = metadata.get(Constants.ENTITY_TYPE);
     if (entityType == null) {
       return null;
     }
@@ -105,16 +103,11 @@ public class Variable {
 
   @Transient
   @JsonIgnore
-  public ArtifactType getArtifactType() {
+  public Object getArtifactType() {
     if (metadata == null) {
       return null;
     }
-    Object artifactType = metadata.get(ARTIFACT_TYPE);
-    if (artifactType == null) {
-      return null;
-    }
-    return artifactType instanceof ArtifactType ? (ArtifactType) artifactType
-                                                : ArtifactType.valueOf((String) artifactType);
+    return metadata.get(Constants.ARTIFACT_TYPE);
   }
 
   @Transient
@@ -123,7 +116,7 @@ public class Variable {
     if (metadata == null) {
       return "";
     }
-    return metadata.get(RELATED_FIELD) != null ? (String) metadata.get(RELATED_FIELD) : "";
+    return metadata.get(Constants.RELATED_FIELD) != null ? (String) metadata.get(Constants.RELATED_FIELD) : "";
   }
 
   @Override
@@ -200,7 +193,7 @@ public class Variable {
 
     public VariableBuilder withEntityType(EntityType entityType) {
       if (entityType != null) {
-        this.metadata.put(ENTITY_TYPE, entityType);
+        this.metadata.put(Constants.ENTITY_TYPE, entityType);
       }
       return this;
     }
@@ -212,20 +205,20 @@ public class Variable {
 
     public VariableBuilder withArtifactType(String artifactType) {
       if (artifactType != null) {
-        this.metadata.put(ARTIFACT_TYPE, artifactType);
+        this.metadata.put(Constants.ARTIFACT_TYPE, artifactType);
       }
       return this;
     }
 
     public VariableBuilder withRelatedField(String relatedField) {
       if (relatedField != null) {
-        this.metadata.put(RELATED_FIELD, relatedField);
+        this.metadata.put(Constants.RELATED_FIELD, relatedField);
       }
       return this;
     }
 
     public VariableBuilder withStateType(String stateType) {
-      this.metadata.put(STATE_TYPE, stateType);
+      this.metadata.put(Constants.STATE_TYPE, stateType);
       return this;
     }
 

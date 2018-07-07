@@ -1,0 +1,27 @@
+name: "Basic Deployment"
+gallery: "Harness"
+namespace: "io.harness.workflow.ssh"
+version: "1"
+systemTags: [WORKFLOW, SSH, BASIC]
+templateObject:
+  type: "workflow"
+  workflowType: "BASIC"
+  phases:
+  - name: "Phase 1"
+    infraMappingName: "@input"
+    serviceName: "@input"
+    deploymentType: "SSH"
+    sections:
+    - name: "Provision Nodes"
+      steps:
+      - name: "Select Nodes"
+        type: node_select
+        instanceCount: "@input"
+        specificHosts: false
+      - name: "Install"
+        type: serviceRef
+        commandName: "Install"
+      - type: templateRef
+        gallery: "Harness"
+        name: "Start"
+        namespace: "io.harness.command.war"

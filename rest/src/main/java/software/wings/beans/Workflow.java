@@ -4,6 +4,7 @@
 
 package software.wings.beans;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -12,6 +13,7 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.data.validator.EntityName;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
 
 import java.util.ArrayList;
@@ -27,6 +29,7 @@ import javax.validation.constraints.NotNull;
 @SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 public class Workflow extends Base {
   @NotNull @EntityName private String name;
+
   private String description;
 
   private WorkflowType workflowType;
@@ -49,7 +52,17 @@ public class Workflow extends Base {
   @Transient private String serviceId; // Only for UI payload to support BasicOrchestration workflow
   @Transient private String infraMappingId; //// Only for UI payload to support BasicOrchestration workflow
 
-  @Transient private List<String> templatizedServiceIds = new ArrayList<>();
+  private transient List<String> templatizedServiceIds = new ArrayList<>();
+
+  @Indexed private List<String> linkedTemplateUuids = new ArrayList<>();
+
+  public List<String> getLinkedTemplateUuids() {
+    return linkedTemplateUuids;
+  }
+
+  public void setLinkedTemplateUuids(List<String> linkedTemplateUuids) {
+    this.linkedTemplateUuids = linkedTemplateUuids;
+  }
 
   /**
    * Get Templatized ServiceIds
@@ -219,6 +232,9 @@ public class Workflow extends Base {
     keywords.addAll(asList(name, description, workflowType, notes));
     if (orchestrationWorkflow != null) {
       keywords.add(orchestrationWorkflow.getOrchestrationWorkflowType());
+      if (isNotEmpty(orchestrationWorkflow.getLinkedTemplateUuids())) {
+        keywords.addAll(orchestrationWorkflow.getLinkedTemplateUuids());
+      }
     }
     if (templatized) {
       keywords.add("template");
@@ -250,6 +266,7 @@ public class Workflow extends Base {
     private String infraMappingId;
     private boolean templatized;
     private List<TemplateExpression> templateExpressions;
+    private List<String> linkedTemplateUuids;
 
     private WorkflowBuilder() {}
 
@@ -282,11 +299,6 @@ public class Workflow extends Base {
       return this;
     }
 
-    public WorkflowBuilder withNotes(String notes) {
-      this.notes = notes;
-      return this;
-    }
-
     public WorkflowBuilder withOrchestrationWorkflow(OrchestrationWorkflow orchestrationWorkflow) {
       this.orchestrationWorkflow = orchestrationWorkflow;
       return this;
@@ -294,11 +306,6 @@ public class Workflow extends Base {
 
     public WorkflowBuilder withServices(List<Service> services) {
       this.services = services;
-      return this;
-    }
-
-    public WorkflowBuilder withWorkflowExecutions(List<WorkflowExecution> workflowExecutions) {
-      this.workflowExecutions = workflowExecutions;
       return this;
     }
 
@@ -352,6 +359,16 @@ public class Workflow extends Base {
       return this;
     }
 
+    public WorkflowBuilder withLinkedTemplateUuids(List<String> templateUuids) {
+      this.linkedTemplateUuids = templateUuids;
+      return this;
+    }
+
+    public WorkflowBuilder withNotes(String notes) {
+      this.notes = notes;
+      return this;
+    }
+
     public Workflow build() {
       Workflow workflow = new Workflow();
       workflow.setName(name);
@@ -373,6 +390,8 @@ public class Workflow extends Base {
       workflow.setInfraMappingId(infraMappingId);
       workflow.setTemplatized(templatized);
       workflow.setTemplateExpressions(templateExpressions);
+      workflow.setNotes(notes);
+      workflow.setLinkedTemplateUuids(linkedTemplateUuids);
       return workflow;
     }
   }

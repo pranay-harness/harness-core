@@ -1,6 +1,5 @@
 package software.wings.sm.states;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static org.joor.Reflect.on;
@@ -64,6 +63,7 @@ import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.InitPowerShellCommandUnit;
 import software.wings.beans.command.InitSshCommandUnit;
+import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.infrastructure.Host;
 import software.wings.common.Constants;
@@ -237,11 +237,11 @@ public class CommandState extends State {
       ServiceCommand serviceCommand =
           serviceResourceService.getCommandByName(appId, service.getUuid(), envId, actualCommand);
       Command command = serviceCommand != null ? serviceCommand.getCommand() : null;
-
       if (command == null) {
         throw new StateExecutionException(
             format("Unable to find command %s for service %s", actualCommand, service.getUuid()));
       }
+      executionDataBuilder.withTemplateVariable(obtainVariableMap(command.getTemplateVariables()));
 
       command.setGraph(null);
 
@@ -368,7 +368,8 @@ public class CommandState extends State {
 
       executionDataBuilder.withActivityId(activityId);
       expandCommand(serviceInstance, command, service.getUuid(), envId);
-      renderCommandString(command, context, artifact);
+      renderCommandString(command, context, executionDataBuilder.build(), artifact);
+
       CommandExecutionContext commandExecutionContext =
           commandExecutionContextBuilder.withActivityId(activityId)
               .withDeploymentType(infrastructureMapping.getDeploymentType())
@@ -409,26 +410,34 @@ public class CommandState extends State {
         .build();
   }
 
-  static void renderCommandString(Command command, ExecutionContext context, Artifact artifact) {
+  static void renderCommandString(Command command, ExecutionContext context,
+      CommandStateExecutionData commandStateExecutionData, Artifact artifact) {
     for (CommandUnit commandUnit : command.getCommandUnits()) {
       if (CommandUnitType.COMMAND.equals(commandUnit.getCommandUnitType())) {
-        renderCommandString((Command) commandUnit, context, artifact);
+        renderCommandString((Command) commandUnit, context, commandStateExecutionData, artifact);
         continue;
       }
 
-      if (commandUnit.getCommandUnitType() != CommandUnitType.EXEC) {
-        continue;
+      if (commandUnit instanceof ScpCommandUnit) {
+        ScpCommandUnit scpCommandUnit = (ScpCommandUnit) commandUnit;
+        if (isNotEmpty(scpCommandUnit.getDestinationDirectoryPath())) {
+          scpCommandUnit.setDestinationDirectoryPath(context.renderExpression(
+              scpCommandUnit.getDestinationDirectoryPath(), commandStateExecutionData, artifact));
+        }
       }
 
       if (!(commandUnit instanceof ExecCommandUnit)) {
         continue;
       }
-
       ExecCommandUnit execCommandUnit = (ExecCommandUnit) commandUnit;
-      if (isEmpty(execCommandUnit.getCommandString())) {
-        continue;
+      if (isNotEmpty(execCommandUnit.getCommandPath())) {
+        execCommandUnit.setCommandPath(
+            context.renderExpression(execCommandUnit.getCommandPath(), commandStateExecutionData, artifact));
       }
-      execCommandUnit.setCommandString(context.renderExpression(execCommandUnit.getCommandString(), artifact));
+      if (isNotEmpty(execCommandUnit.getCommandString())) {
+        execCommandUnit.setCommandString(
+            context.renderExpression(execCommandUnit.getCommandString(), commandStateExecutionData, artifact));
+      }
     }
   }
 

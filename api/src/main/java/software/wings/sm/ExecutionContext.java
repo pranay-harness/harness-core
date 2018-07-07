@@ -30,6 +30,8 @@ public interface ExecutionContext {
 
   String renderExpression(String expression, Object addition);
 
+  String renderExpression(String expression, Object stateExecutionData, Object addition);
+
   <T extends ContextElement> T getContextElement();
 
   <T extends ContextElement> T getContextElement(ContextElementType contextElementType);
@@ -63,4 +65,10 @@ public interface ExecutionContext {
   Map<String, String> getSafeDisplayServiceVariables();
 
   SettingValue getGlobalSettingValue(String accountId, String settingId);
+
+  Object evaluateExpression(String expression, Map<String, Object> context);
+
+  String renderExpression(String expression, Map<String, Object> context);
+
+  Map<String, Object> prepareContext(Object stateExecutionData);
 }

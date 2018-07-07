@@ -17,6 +17,7 @@ public class CommandCategory {
   @Builder
   public static class CommandUnit {
     private String name;
+    private String uuid;
     private CommandUnitType type;
   }
 

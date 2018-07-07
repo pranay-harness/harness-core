@@ -260,7 +260,9 @@ public enum ErrorCode {
 
   NO_APPS_ASSIGNED("No apps are assigned to the user or no apps exist in the account"),
 
-  INVALID_INFRA_CONFIGURATION;
+  INVALID_INFRA_CONFIGURATION,
+
+  TEMPLATES_LINKED;
 
   private Status status = BAD_REQUEST;
   private String description;

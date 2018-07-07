@@ -30,7 +30,6 @@ import static software.wings.beans.artifact.ArtifactStream.METADATA_ONLY_KEY;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.collect.CollectEvent.Builder.aCollectEvent;
-import static software.wings.common.Constants.autoDownloaded;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
@@ -58,6 +57,7 @@ import software.wings.beans.artifact.Artifact.ContentStatus;
 import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.collect.CollectEvent;
 import software.wings.core.queue.Queue;
 import software.wings.dl.HIterator;
@@ -93,6 +93,12 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 @ValidateOnExecution
 public class ArtifactServiceImpl implements ArtifactService {
+  /**
+   * The Auto downloaded.
+   */
+  List<String> autoDownloaded =
+      asList(ArtifactStreamType.DOCKER.name(), ArtifactStreamType.ECR.name(), ArtifactStreamType.GCR.name(),
+          ArtifactStreamType.ACR.name(), ArtifactStreamType.AMAZON_S3.name(), ArtifactStreamType.AMI.name());
   private static final Logger logger = LoggerFactory.getLogger(ArtifactServiceImpl.class);
 
   private static final String DEFAULT_ARTIFACT_FILE_NAME = "ArtifactFile";

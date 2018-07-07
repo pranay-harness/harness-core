@@ -74,7 +74,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
 
     if (previous != null) {
       workflowBuilder.withUuid(previous.getUuid());
-      return workflowService.updateWorkflow(workflowBuilder.build());
+      return workflowService.updateLinkedWorkflow(workflowBuilder.build(), previous);
     } else {
       return workflowService.createWorkflow(workflowBuilder.build());
     }

@@ -128,7 +128,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
   @Override
   public String renderExpression(String expression, Object addition) {
-    Map<String, Object> context = null;
+    Map<String, Object> context;
     if (addition instanceof List) {
       List<ContextElement> contextElements = (List<ContextElement>) addition;
       context = new HashMap<>();
@@ -137,13 +137,23 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
         context.putAll(contextElement.paramMap(this));
       }
     } else if (addition instanceof StateExecutionData) {
-      context = prepareContext((StateExecutionData) addition);
+      context = prepareContext(addition);
     } else if (addition instanceof Artifact) {
       context = prepareContext();
       Artifact artifact = (Artifact) addition;
       addArtifactToContext(artifactStreamService, getApp().getAccountId(), context, artifact);
     } else {
       context = prepareContext();
+    }
+    return renderExpression(expression, context);
+  }
+
+  @Override
+  public String renderExpression(String expression, Object stateExecutionData, Object addition) {
+    Map<String, Object> context = prepareContext(stateExecutionData);
+    if (addition instanceof Artifact) {
+      Artifact artifact = (Artifact) addition;
+      addArtifactToContext(artifactStreamService, getApp().getAccountId(), context, artifact);
     }
     return renderExpression(expression, context);
   }
@@ -298,11 +308,11 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     stateExecutionInstance.getContextElements().push(contextElement);
   }
 
-  private String renderExpression(String expression, Map<String, Object> context) {
+  public String renderExpression(String expression, Map<String, Object> context) {
     return evaluator.substitute(expression, context, normalizeStateName(stateExecutionInstance.getDisplayName()));
   }
 
-  private Object evaluateExpression(String expression, Map<String, Object> context) {
+  public Object evaluateExpression(String expression, Map<String, Object> context) {
     return normalizeAndEvaluate(expression, context, normalizeStateName(stateExecutionInstance.getDisplayName()));
   }
 
@@ -399,10 +409,16 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     return evaluator.evaluate(expr, evaluatedValueMap);
   }
 
-  private Map<String, Object> prepareContext(Object stateExecutionData) {
+  public Map<String, Object> prepareContext(Object executionData) {
     Map<String, Object> context = prepareContext();
-    if (stateExecutionData != null) {
-      context.put(normalizeStateName(getStateExecutionInstance().getDisplayName()), stateExecutionData);
+    if (executionData != null) {
+      context.put(normalizeStateName(getStateExecutionInstance().getDisplayName()), executionData);
+    }
+    if (executionData instanceof StateExecutionData) {
+      StateExecutionData stateExecutionData = (StateExecutionData) executionData;
+      if (isNotEmpty(stateExecutionData.getTemplateVariable())) {
+        context.putAll(stateExecutionData.getTemplateVariable());
+      }
     }
     return context;
   }
@@ -445,13 +461,13 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
     PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     if (phaseElement != null && isNotEmpty(phaseElement.getVariableOverrides())) {
-      Map<String, String> map = (Map<String, String>) context.get(ContextElement.SERVICE_VARIABLE);
+      Map<String, String> map = (Map<String, String>) context.get(SERVICE_VARIABLE);
       if (map == null) {
         map = new HashMap<>();
       }
       map.putAll(phaseElement.getVariableOverrides().stream().collect(
           Collectors.toMap(NameValuePair::getName, NameValuePair::getValue)));
-      context.put(ContextElement.SERVICE_VARIABLE, map);
+      context.put(SERVICE_VARIABLE, map);
     }
 
     context.putAll(

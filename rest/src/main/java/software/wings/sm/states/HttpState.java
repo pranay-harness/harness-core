@@ -4,7 +4,6 @@ import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
-import static software.wings.api.HttpStateExecutionData.Builder.aHttpStateExecutionData;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
@@ -12,7 +11,6 @@ import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Splitter;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
@@ -29,6 +27,7 @@ import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.HttpStateExecutionData;
+import software.wings.api.HttpStateExecutionData.HttpStateExecutionDataBuilder;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
@@ -37,6 +36,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.TaskType;
+import software.wings.beans.Variable;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
@@ -71,10 +71,6 @@ import java.util.Map;
  */
 @Attributes
 public class HttpState extends State {
-  private static final Splitter HEADERS_SPLITTER = Splitter.on(",").trimResults().omitEmptyStrings();
-
-  private static final Splitter HEADER_SPLITTER = Splitter.on(":").trimResults();
-
   private static final Logger logger = LoggerFactory.getLogger(HttpState.class);
 
   private static final String ASSERTION_ERROR_MSG =
@@ -95,6 +91,8 @@ public class HttpState extends State {
   @Inject protected SecretManager secretManager;
 
   @Inject @Transient private transient ActivityService activityService;
+
+  public HttpState() {}
 
   /**
    * Create a new Http State with given name.
@@ -261,17 +259,16 @@ public class HttpState extends State {
   /**
    * Execute internal execution response.
    *
-   * @param context the context
+   * @param context the contextS
    * @return the execution response
    */
   protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
-    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    String envId = (workflowStandardParams == null || workflowStandardParams.getEnv() == null)
-        ? null
-        : workflowStandardParams.getEnv().getUuid();
+    HttpStateExecutionDataBuilder httpStateExecutionDataBuilder =
+        HttpStateExecutionData.builder().variables(obtainVariableMap(getTemplateVariables()));
+    String envId = obtainEnvId(context.getContextElement(ContextElementType.STANDARD));
 
     String finalUrl = getFinalUrl(context);
-    String evaluatedUrl = trim(context.renderExpression(finalUrl));
+    String evaluatedUrl = trim(context.renderExpression(finalUrl, httpStateExecutionDataBuilder.build(), null));
     logger.debug("evaluatedUrl: {}", evaluatedUrl);
     String evaluatedBody = null;
     try {
@@ -280,13 +277,13 @@ public class HttpState extends State {
       logger.error("", e);
     }
     if (evaluatedBody != null) {
-      evaluatedBody = trim(context.renderExpression(evaluatedBody));
+      evaluatedBody = trim(context.renderExpression(evaluatedBody, httpStateExecutionDataBuilder.build(), null));
       logger.debug("evaluatedBody: {}", evaluatedBody);
     }
 
     String evaluatedHeader = getFinalHeader(context);
     if (evaluatedHeader != null) {
-      evaluatedHeader = trim(context.renderExpression(evaluatedHeader));
+      evaluatedHeader = trim(context.renderExpression(evaluatedHeader, httpStateExecutionDataBuilder.build(), null));
       logger.debug("evaluatedHeader: {}", evaluatedHeader);
     }
     String evaluatedMethod = getFinalMethod(context);
@@ -310,8 +307,8 @@ public class HttpState extends State {
             .withInfrastructureMappingId(infrastructureMappingId)
             .build());
 
-    HttpStateExecutionData.Builder executionDataBuilder =
-        aHttpStateExecutionData().withHttpUrl(evaluatedUrl).withHttpMethod(evaluatedMethod);
+    HttpStateExecutionDataBuilder executionDataBuilder =
+        httpStateExecutionDataBuilder.httpUrl(evaluatedUrl).httpMethod(evaluatedMethod);
 
     return anExecutionResponse()
         .withAsync(true)
@@ -319,6 +316,12 @@ public class HttpState extends State {
         .withStateExecutionData(executionDataBuilder.build())
         .withDelegateTaskId(delegateTaskId)
         .build();
+  }
+
+  private String obtainEnvId(WorkflowStandardParams workflowStandardParams) {
+    return (workflowStandardParams == null || workflowStandardParams.getEnv() == null)
+        ? null
+        : workflowStandardParams.getEnv().getUuid();
   }
 
   protected String getFinalMethod(ExecutionContext context) {
@@ -362,15 +365,16 @@ public class HttpState extends State {
 
       String errorMessage = httpStateExecutionResponse.getErrorMessage();
       executionData.setAssertionStatement(assertion);
+      executionData.setTemplateVariable(obtainVariableMap(getTemplateVariables()));
       ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
       boolean assertionStatus = true;
       if (isNotBlank(assertion)) {
-        // check if the request failed
         if (!executionData.getStatus().equals(ExecutionStatus.ERROR)) {
           try {
+            // check if the request failed
             assertionStatus = (boolean) context.evaluateExpression(assertion, executionData);
-            logger.info("assertion status: {}", assertionStatus);
 
+            logger.info("assertion status: {}", assertionStatus);
           } catch (ClassCastException e) {
             logger.error("Invalid assertion " + Misc.getMessage(e), e);
             executionData.setErrorMsg(ASSERTION_ERROR_MSG);
@@ -492,6 +496,7 @@ public class HttpState extends State {
     private String body;
     private String assertion;
     private int socketTimeoutMillis = 10000;
+    private List<Variable> templateVariables;
 
     /**
      * Do not instantiate PageResponseBuilder.
@@ -584,6 +589,11 @@ public class HttpState extends State {
       return this;
     }
 
+    public Builder withTemplateVariables(List<Variable> templateVariables) {
+      this.templateVariables = templateVariables;
+      return this;
+    }
+
     /**
      * But builder.
      *
@@ -597,7 +607,8 @@ public class HttpState extends State {
           .withHeader(header)
           .withBody(body)
           .withAssertion(assertion)
-          .withSocketTimeoutMillis(socketTimeoutMillis);
+          .withSocketTimeoutMillis(socketTimeoutMillis)
+          .withTemplateVariables(templateVariables);
     }
 
     /**
@@ -613,6 +624,7 @@ public class HttpState extends State {
       httpState.setBody(body);
       httpState.setAssertion(assertion);
       httpState.setSocketTimeoutMillis(socketTimeoutMillis);
+      httpState.setTemplateVariables(templateVariables);
       return httpState;
     }
   }

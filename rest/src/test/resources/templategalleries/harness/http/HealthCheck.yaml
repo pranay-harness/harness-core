@@ -1,0 +1,18 @@
+name: "Health Check"
+gallery: "Harness"
+folderPath: "Harness/HTTP Verifications"
+version: "1"
+description: "This is http template for health check "
+keywords: [http, ping]
+variables:
+- name: "Url"
+  description: "Url to verify the status"
+- name: "ResponseCode"
+  value: "200"
+  description: "Response code to verify status"
+templateObject:
+  type: "HTTP"
+  url: "${Url}"
+  method: GET
+  header: 'content-type: application/json'
+  assertion: "${httpResponseCode}==${ResponseCode}"

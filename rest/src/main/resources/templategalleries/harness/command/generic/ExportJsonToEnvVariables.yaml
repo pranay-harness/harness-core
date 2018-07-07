@@ -1,0 +1,23 @@
+name: "Json to Environment Variables"
+gallery: "Harness"
+folderPath: "Harness/Generic Commands"
+version: "1"
+description: "This parses the Json content and export as environment variables"
+keywords: [ssh, exec, json]
+variables:
+- name: "RuntimePath"
+  value: "${WINGS_RUNTIME_PATH}"
+  description: "Runtime path to install binaries."
+- name: "ArtifactFileName"
+  value: "${ARTIFACT_FILE_NAME}"
+  description: "Artifact JSON file name"
+templateObject:
+  type: "SSH"
+  commandType: "START"
+  commands:
+  - command: grep -Eo '.*:.*?[^\\]"' ${ArtifactFileName} | sed 's/\"//g' | awk -F':' '{print "export " $1 "=\"" $2 "\""}' > __dummy.sh && . ./__dummy.sh && rm __dummy.sh
+    commandUnitType: EXEC
+    deploymentType: SSH
+    name: Exec
+    scriptType: BASH
+    workingDirectory: $RuntimePath

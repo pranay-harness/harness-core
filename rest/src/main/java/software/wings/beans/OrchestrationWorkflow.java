@@ -3,17 +3,8 @@ package software.wings.beans;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
-import static software.wings.beans.EntityType.APPDYNAMICS_APPID;
-import static software.wings.beans.EntityType.APPDYNAMICS_CONFIGID;
-import static software.wings.beans.EntityType.APPDYNAMICS_TIERID;
-import static software.wings.beans.EntityType.ELK_CONFIGID;
-import static software.wings.beans.EntityType.ELK_INDICES;
 import static software.wings.beans.EntityType.ENVIRONMENT;
-import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
-import static software.wings.beans.EntityType.SERVICE;
-import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
-import static software.wings.beans.OrchestrationWorkflowType.BASIC;
-import static software.wings.beans.OrchestrationWorkflowType.ROLLING;
+import static software.wings.beans.EntityType.valueOf;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.VariableType.ENTITY;
 import static software.wings.beans.VariableType.TEXT;
@@ -28,10 +19,11 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.data.structure.EmptyPredicate;
 import software.wings.beans.Variable.VariableBuilder;
 import software.wings.common.Constants;
-import software.wings.exception.WingsException;
 import software.wings.expression.ExpressionEvaluator;
+import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 import software.wings.sm.State;
 
 import java.util.ArrayList;
@@ -60,6 +52,8 @@ public abstract class OrchestrationWorkflow {
   private boolean valid;
 
   private String validationMessage;
+
+  private transient List<String> linkedTemplateUuids = new ArrayList<>();
 
   public OrchestrationWorkflowType getOrchestrationWorkflowType() {
     return orchestrationWorkflowType;
@@ -182,7 +176,7 @@ public abstract class OrchestrationWorkflow {
       Map<String, Object> metadata = templateExpression.getMetadata();
       if (metadata != null) {
         if (metadata.get(ENTITY_TYPE) != null) {
-          entityType = EntityType.valueOf((String) metadata.get(ENTITY_TYPE));
+          entityType = valueOf((String) metadata.get(ENTITY_TYPE));
         }
         if (metadata.get(ARTIFACT_TYPE) != null) {
           artifactType = (String) metadata.get(ARTIFACT_TYPE);
@@ -200,10 +194,10 @@ public abstract class OrchestrationWorkflow {
         }
       }
       if (matcher.matches()) {
-        expression = getTemplateExpressionName(
-            templateExpression, matcher.group(0).substring(2, matcher.group(0).length() - 1), entityType, stateType);
+        expression =
+            getTemplateExpressionName(matcher.group(0).substring(2, matcher.group(0).length() - 1), entityType);
       } else {
-        expression = getTemplateExpressionName(templateExpression, expression, entityType, stateType);
+        expression = getTemplateExpressionName(expression, entityType);
       }
       Variable variable = contains(getUserVariables(), expression);
       Map<String, String> parentTemplateFields =
@@ -271,24 +265,8 @@ public abstract class OrchestrationWorkflow {
         .orElse(null);
   }
 
-  private String getTemplateExpressionName(
-      TemplateExpression templateExpression, String templateVariable, EntityType entityType, String stateType) {
-    if (templateVariable != null) {
-      if (templateVariable.startsWith("workflow.variables.")) {
-        templateVariable = templateVariable.replace("workflow.variables.", "");
-      }
-    }
-    Matcher matcher = ExpressionEvaluator.variableNamePattern.matcher(templateVariable);
-    // check if template variable contains special character
-    if (entityType != null) {
-      if (!matcher.matches()) {
-        throw new WingsException(INVALID_ARGUMENT)
-            .addParam(
-                "args", "Template expression:" + templateExpression.getExpression() + " contains special characters");
-      }
-    }
-    // TODO: else if (stateType != null) check if it can contain other expressions
-    return templateVariable;
+  private String getTemplateExpressionName(String templateVariable, EntityType entityType) {
+    return WorkflowServiceTemplateHelper.validatetAndGetVariable(templateVariable, entityType);
   }
 
   /**
@@ -298,33 +276,18 @@ public abstract class OrchestrationWorkflow {
    * @param stateName
    */
   private void setVariableDescription(Variable variable, String stateName) {
-    EntityType entityType = variable.getEntityType();
-    if (entityType != null) {
-      if (entityType.equals(ENVIRONMENT)) {
-        variable.setDescription("Variable for Environment entity");
-      } else if (entityType.equals(SERVICE)) {
-        if (getOrchestrationWorkflowType().equals(BASIC) || getOrchestrationWorkflowType().equals(ROLLING)) {
-          variable.setDescription("Variable for Service entity");
-        } else {
-          variable.setDescription("Variable for Service entity in " + stateName);
-        }
-      } else if (entityType.equals(INFRASTRUCTURE_MAPPING)) {
-        if (getOrchestrationWorkflowType().equals(BASIC) || getOrchestrationWorkflowType().equals(ROLLING)) {
-          variable.setDescription("Variable for Service Infra-structure entity");
-        } else {
-          variable.setDescription("Variable for Service Infra-structure entity " + stateName);
-        }
-      } else if (entityType.equals(APPDYNAMICS_CONFIGID)) {
-        variable.setDescription("Variable for AppDynamics Server entity " + stateName);
-      } else if (entityType.equals(APPDYNAMICS_APPID)) {
-        variable.setDescription("Variable for AppDynamics Application entity " + stateName);
-      } else if (entityType.equals(APPDYNAMICS_TIERID)) {
-        variable.setDescription("Variable for AppDynamics Tier entity " + stateName);
-      } else if (entityType.equals(ELK_CONFIGID)) {
-        variable.setDescription("Variable for Elastic Search Server entity " + stateName);
-      } else if (entityType.equals(ELK_INDICES)) {
-        variable.setDescription("Variable for Elastic Search Indices entity " + stateName);
-      }
+    variable.setDescription(WorkflowServiceTemplateHelper.getVariableDescription(
+        variable.getEntityType(), getOrchestrationWorkflowType(), stateName));
+  }
+
+  public void addTemplateUuid(String templateUuid) {
+    if (EmptyPredicate.isEmpty(linkedTemplateUuids)) {
+      linkedTemplateUuids = new ArrayList<>();
     }
+    linkedTemplateUuids.add(templateUuid);
+  }
+
+  public List<String> getLinkedTemplateUuids() {
+    return linkedTemplateUuids;
   }
 }

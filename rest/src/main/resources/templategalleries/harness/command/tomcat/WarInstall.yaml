@@ -1,0 +1,67 @@
+name: "Install"
+gallery: "Harness"
+folderPath: "Harness/Tomcat Commands"
+version: "1"
+description: "This is a command to install service by invoking scripts over SSH to the individual instances."
+keywords: [ssh, war, tomcat, install]
+variables:
+- name: "RuntimePath"
+  value: "${WINGS_RUNTIME_PATH}"
+  description: "Runtime path to install binaries."
+- name: "BackupPath"
+  value: "${WINGS_BACKUP_PATH}"
+  description: "Backup path."
+- name: "StagingPath"
+  value: "${WINGS_STAGING_PATH}"
+  description: "Staging path."
+- name: "TomcatBinaryName"
+  description: "Apache tomcat 7 tar file."
+templateObject:
+  type: "SSH"
+  commandType: "INSTALL"
+  commands:
+   - command: |2-
+
+         # Execute as root and pass environment variables
+         # su -p -
+
+         # Execute as root via user credentials (with root privileges)
+         # sudo -E su -p -
+
+         # The following variables are absolute paths defined as:
+         # ${HOME}/${appName}/${serviceName}/[runtime|backup|staging]
+
+         mkdir -p "${RuntimePath}"
+         mkdir -p "${BackupPath}"
+         mkdir -p "${StagingPath}"
+     commandUnitType: SETUP_ENV
+     deploymentType: SSH
+     name: Setup Runtime Paths
+   - commandUnitType: COMMAND
+     name: Stop
+   - commandUnitType: SCP
+     deploymentType: SSH
+     destinationDirectoryPath: ${RuntimePath}
+     name: Copy App Stack
+     source: APPLICATION_STACK
+   - command: |-
+         rm -rf tomcat
+         rm -rf ${TomcatBinaryName}
+         tar xzvf ${TomcatBinaryName}.tar.gz
+         ln -s ${TomcatBinaryName} tomcat
+         chmod +x tomcat/bin/*
+     commandUnitType: EXEC
+     deploymentType: SSH
+     name: Expand App Stack
+     workingDirectory: ${RuntimePath}
+   - commandUnitType: SCP
+     deploymentType: SSH
+     destinationDirectoryPath: ${RuntimePath}/tomcat/webapps
+     name: Copy Artifact
+     source: ARTIFACTS
+   - commandUnitType: COPY_CONFIGS
+     deploymentType: SSH
+     destinationParentPath: ${RuntimePath}
+     name: Copy Configs
+   - commandUnitType: COMMAND
+     name: Start

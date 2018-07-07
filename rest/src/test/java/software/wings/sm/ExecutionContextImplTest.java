@@ -5,7 +5,6 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Mockito.when;
-import static software.wings.api.HttpStateExecutionData.Builder.aHttpStateExecutionData;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
@@ -13,6 +12,7 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -24,6 +24,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
+import software.wings.api.CommandStateExecutionData;
 import software.wings.api.HostElement;
 import software.wings.api.HttpStateExecutionData;
 import software.wings.api.ServiceElement;
@@ -213,8 +214,78 @@ public class ExecutionContextImplTest extends WingsBaseTest {
 
     String expr = "${httpResponseBody}.contains(${serviceVariable.REV})";
     HttpStateExecutionData httpStateExecutionData =
-        aHttpStateExecutionData().withHttpResponseBody("abcabcabcabcabc-123-SNAPSHOT-23423sadf").build();
+        HttpStateExecutionData.builder().httpResponseBody("abcabcabcabcabc-123-SNAPSHOT-23423sadf").build();
     boolean assertion = (boolean) context.evaluateExpression(expr, httpStateExecutionData);
     assertThat(assertion).isTrue();
+  }
+
+  /**
+   * Should evaluate indirect references
+   */
+  @Test
+  public void shouldRenderTemplateVariableExpression() {
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    stateExecutionInstance.setExecutionUuid(generateUuid());
+    stateExecutionInstance.setDisplayName("http");
+    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
+    injector.injectMembers(context);
+
+    ServiceElement svc = new ServiceElement();
+    svc.setUuid(generateUuid());
+    svc.setName("svc1");
+    context.pushContextElement(svc);
+
+    ServiceTemplateElement st = new ServiceTemplateElement();
+    st.setUuid(generateUuid());
+    st.setName("st1");
+    st.setServiceElement(aServiceElement().withUuid(generateUuid()).withName("svc2").build());
+    context.pushContextElement(st);
+
+    HostElement host = new HostElement();
+    host.setUuid(generateUuid());
+    host.setHostName("host1");
+    context.pushContextElement(host);
+
+    Application app = anApplication().withName("AppA").withAccountId(ACCOUNT_ID).build();
+    app = appService.save(app);
+
+    Environment env = anEnvironment().withAppId(app.getUuid()).withName("DEV").build();
+    env = environmentService.save(env);
+
+    WorkflowStandardParams std = new WorkflowStandardParams();
+    std.setAppId(app.getUuid());
+    std.setEnvId(env.getUuid());
+    std.setArtifactIds(asList(ARTIFACT_ID));
+
+    Artifact artifact = Artifact.Builder.anArtifact()
+                            .withServiceIds(asList(svc.getUuid()))
+                            .withMetadata(Maps.newHashMap("buildNo", "123-SNAPSHOT"))
+                            .build();
+
+    injector.injectMembers(std);
+    context.pushContextElement(std);
+
+    ServiceVariable serviceVariable = ServiceVariable.builder()
+                                          .serviceId(svc.getUuid())
+                                          .name("REV")
+                                          .value("${artifact.buildNo}".toCharArray())
+                                          .build();
+    when(serviceTemplateService.computeServiceVariables(
+             app.getUuid(), env.getUuid(), st.getUuid(), context.getWorkflowExecutionId(), false))
+        .thenReturn(asList(serviceVariable));
+    when(serviceTemplateService.getTemplateRefKeysByService(app.getUuid(), svc.getUuid(), env.getUuid()))
+        .thenReturn(asList(new Key(ServiceTemplate.class, "serviceTemplates", st.getUuid())));
+    when(artifactService.get(app.getUuid(), ARTIFACT_ID)).thenReturn(artifact);
+    on(std).set("artifactService", artifactService);
+    on(std).set("serviceTemplateService", serviceTemplateService);
+
+    CommandStateExecutionData commandStateExecutionData = CommandStateExecutionData.Builder.aCommandStateExecutionData()
+                                                              .withTemplateVariable(ImmutableMap.of("MyVar", "MyValue"))
+                                                              .build();
+    String expr = "echo ${MyVar}-${artifact.buildNo}";
+
+    String evaluatedExpression = context.renderExpression(expr, commandStateExecutionData, artifact);
+    assertThat(evaluatedExpression).isNotEmpty();
+    assertThat(evaluatedExpression).isEqualTo("echo MyValue-123-SNAPSHOT");
   }
 }

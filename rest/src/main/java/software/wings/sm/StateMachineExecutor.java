@@ -86,7 +86,7 @@ import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.scheduler.NotifyJob;
 import software.wings.scheduler.QuartzScheduler;
-import software.wings.service.impl.WorkflowNotificationHelper;
+import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.NotificationService;

@@ -1,0 +1,28 @@
+name: "War Service"
+gallery: "Harness"
+namespace: "io.harness.service.tomcat"
+version: 1
+keywords: [Service, Tomcat, War]
+templateObject:
+  type: "Service"
+  artifactType:
+    value: "WAR"
+  appContainer:
+    valueFrom:
+      var: ${ApplicationContainer}
+  commands:
+    - valueFrom:
+        templateRef:
+          gallery: "Harness"
+          name: "Stop"
+          namespace: "io.harness.command.war"
+    - valueFrom:
+        templateRef:
+          gallery: "Harness"
+          name: "Install"
+          namespace: "io.harness.command.war"
+    - valueFrom:
+        templateRef:
+          gallery: "Harness"
+          name: "Start"
+          namespace: "io.harness.command.war"

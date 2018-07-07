@@ -24,7 +24,6 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.TemplateExpression.Builder.aTemplateExpression;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
@@ -102,6 +101,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.rules.Listeners;
 import software.wings.scheduler.JobScheduler;
+import software.wings.service.impl.workflow.WorkflowServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -971,7 +971,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     triggerWorkflow(appId, env);
 
     // 2nd workflow
-    Workflow workflow = createExecutableWorkflow(appId, env);
+    createExecutableWorkflow(appId, env);
     PageRequest<Workflow> pageRequest = aPageRequest().addFilter(Workflow.APP_ID_KEY, EQ, appId).build();
     PageResponse<Workflow> res = workflowService.listWorkflows(pageRequest, null);
 
@@ -985,29 +985,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void shouldPauseAndResumeState() throws InterruptedException {
-    Graph graph = aGraph()
-                      .addNodes(aGraphNode()
-                                    .withId("wait1")
-                                    .withOrigin(true)
-                                    .withName("wait1")
-                                    .withType(StateType.WAIT.name())
-                                    .addProperty("duration", 1)
-                                    .build(),
-                          aGraphNode()
-                              .withId("pause1")
-                              .withName("pause1")
-                              .withType(StateType.PAUSE.name())
-                              .addProperty("toAddress", "to1")
-                              .build(),
-                          aGraphNode()
-                              .withId("wait2")
-                              .withName("wait2")
-                              .withType(StateType.WAIT.name())
-                              .addProperty("duration", 1)
-                              .build())
-                      .addLinks(aLink().withId("l1").withFrom("wait1").withTo("pause1").withType("success").build())
-                      .addLinks(aLink().withId("l2").withFrom("pause1").withTo("wait2").withType("success").build())
-                      .build();
+    Graph graph = getAbortedGraph();
 
     Workflow workflow =
         aWorkflow()
@@ -1095,31 +1073,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     Service service2 = wingsPersistence.saveAndGet(
         Service.class, Service.builder().uuid(generateUuid()).name("svc2").appId(app.getUuid()).build());
 
-    Graph graph =
-        aGraph()
-            .addNodes(aGraphNode()
-                          .withId("RepeatByServices")
-                          .withOrigin(true)
-                          .withName("RepeatByServices")
-                          .withType(StateType.REPEAT.name())
-                          .addProperty("repeatElementExpression", "${services()}")
-                          .addProperty("executionStrategy", ExecutionStrategy.PARALLEL)
-                          .build(),
-                aGraphNode()
-                    .withId("wait1")
-                    .withName("wait1")
-                    .withType(StateType.WAIT.name())
-                    .addProperty("duration", 1)
-                    .build(),
-                aGraphNode()
-                    .withId("wait2")
-                    .withName("wait2")
-                    .withType(StateType.WAIT.name())
-                    .addProperty("duration", 1)
-                    .build())
-            .addLinks(aLink().withId("l1").withFrom("RepeatByServices").withTo("wait1").withType("repeat").build())
-            .addLinks(aLink().withId("l2").withFrom("wait1").withTo("wait2").withType("success").build())
-            .build();
+    Graph graph = getGraph();
 
     Workflow workflow =
         aWorkflow()
@@ -1228,6 +1182,33 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .allMatch(n -> "WAIT".equals(n.getType()) && "SUCCESS".equals(n.getStatus()));
   }
 
+  private Graph getGraph() {
+    return aGraph()
+        .addNodes(aGraphNode()
+                      .withId("RepeatByServices")
+                      .withOrigin(true)
+                      .withName("RepeatByServices")
+                      .withType(StateType.REPEAT.name())
+                      .addProperty("repeatElementExpression", "${services()}")
+                      .addProperty("executionStrategy", ExecutionStrategy.PARALLEL)
+                      .build(),
+            aGraphNode()
+                .withId("wait1")
+                .withName("wait1")
+                .withType(StateType.WAIT.name())
+                .addProperty("duration", 1)
+                .build(),
+            aGraphNode()
+                .withId("wait2")
+                .withName("wait2")
+                .withType(StateType.WAIT.name())
+                .addProperty("duration", 1)
+                .build())
+        .addLinks(aLink().withId("l1").withFrom("RepeatByServices").withTo("wait1").withType("repeat").build())
+        .addLinks(aLink().withId("l2").withFrom("wait1").withTo("wait2").withType("success").build())
+        .build();
+  }
+
   /**
    * Should throw invalid argument for invalid workflow id.
    */
@@ -1260,29 +1241,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   // TODO: fix this. It seems there is production issues
   @Test
   public void shouldAbortState() throws InterruptedException {
-    Graph graph = aGraph()
-                      .addNodes(aGraphNode()
-                                    .withId("wait1")
-                                    .withOrigin(true)
-                                    .withName("wait1")
-                                    .withType(StateType.WAIT.name())
-                                    .addProperty("duration", 1)
-                                    .build(),
-                          aGraphNode()
-                              .withId("pause1")
-                              .withName("pause1")
-                              .withType(StateType.PAUSE.name())
-                              .addProperty("toAddress", "to1")
-                              .build(),
-                          aGraphNode()
-                              .withId("wait2")
-                              .withName("wait2")
-                              .withType(StateType.WAIT.name())
-                              .addProperty("duration", 1)
-                              .build())
-                      .addLinks(aLink().withId("l1").withFrom("wait1").withTo("pause1").withType("success").build())
-                      .addLinks(aLink().withId("l2").withFrom("pause1").withTo("wait2").withType("success").build())
-                      .build();
+    Graph graph = getAbortedGraph();
 
     Workflow workflow =
         aWorkflow()
@@ -1340,6 +1299,32 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertThat(execution.getExecutionNode()).isNotNull();
   }
 
+  private Graph getAbortedGraph() {
+    return aGraph()
+        .addNodes(aGraphNode()
+                      .withId("wait1")
+                      .withOrigin(true)
+                      .withName("wait1")
+                      .withType(StateType.WAIT.name())
+                      .addProperty("duration", 1)
+                      .build(),
+            aGraphNode()
+                .withId("pause1")
+                .withName("pause1")
+                .withType(StateType.PAUSE.name())
+                .addProperty("toAddress", "to1")
+                .build(),
+            aGraphNode()
+                .withId("wait2")
+                .withName("wait2")
+                .withType(StateType.WAIT.name())
+                .addProperty("duration", 1)
+                .build())
+        .addLinks(aLink().withId("l1").withFrom("wait1").withTo("pause1").withType("success").build())
+        .addLinks(aLink().withId("l2").withFrom("pause1").withTo("wait2").withType("success").build())
+        .build();
+  }
+
   /**
    * Should abort all
    *
@@ -1352,31 +1337,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     Service service2 = wingsPersistence.saveAndGet(
         Service.class, Service.builder().uuid(generateUuid()).name("svc2").appId(app.getUuid()).build());
 
-    Graph graph =
-        aGraph()
-            .addNodes(aGraphNode()
-                          .withId("RepeatByServices")
-                          .withOrigin(true)
-                          .withName("RepeatByServices")
-                          .withType(StateType.REPEAT.name())
-                          .addProperty("repeatElementExpression", "${services()}")
-                          .addProperty("executionStrategy", ExecutionStrategy.PARALLEL)
-                          .build(),
-                aGraphNode()
-                    .withId("wait1")
-                    .withName("wait1")
-                    .withType(StateType.WAIT.name())
-                    .addProperty("duration", 1)
-                    .build(),
-                aGraphNode()
-                    .withId("wait2")
-                    .withName("wait2")
-                    .withType(StateType.WAIT.name())
-                    .addProperty("duration", 1)
-                    .build())
-            .addLinks(aLink().withId("l1").withFrom("RepeatByServices").withTo("wait1").withType("repeat").build())
-            .addLinks(aLink().withId("l2").withFrom("wait1").withTo("wait2").withType("success").build())
-            .build();
+    Graph graph = getGraph();
 
     Workflow workflow =
         aWorkflow()
@@ -1612,9 +1573,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .collect(toList());
   }
 
-  private List<GraphNode> getNodes(String executionId) throws InterruptedException {
-    List<GraphNode> installNodes;
-
+  private List<GraphNode> getNodes(String executionId) {
     Puller.pullFor(ofSeconds(10), () -> {
       WorkflowExecution execution =
           workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, emptySet());
@@ -2039,16 +1998,16 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
   private Workflow createTemplateWorkflow(
       String appId, Environment env, Service service, InfrastructureMapping infrastructureMapping) {
-    TemplateExpression infraExpression = aTemplateExpression()
-                                             .withFieldName("infraMappingId")
-                                             .withExpression("${ServiceInfra_SSH}")
-                                             .withMetadata(ImmutableMap.of("entityType", "INFRASTRUCTURE_MAPPING"))
+    TemplateExpression infraExpression = TemplateExpression.builder()
+                                             .fieldName("infraMappingId")
+                                             .expression("${ServiceInfra_SSH}")
+                                             .metadata(ImmutableMap.of("entityType", "INFRASTRUCTURE_MAPPING"))
                                              .build();
 
-    TemplateExpression serviceExpression = aTemplateExpression()
-                                               .withFieldName("serviceId")
-                                               .withExpression("${Service}")
-                                               .withMetadata(ImmutableMap.of("entityType", "SERVICE"))
+    TemplateExpression serviceExpression = TemplateExpression.builder()
+                                               .fieldName("serviceId")
+                                               .expression("${Service}")
+                                               .metadata(ImmutableMap.of("entityType", "SERVICE"))
                                                .build();
 
     Workflow orchestrationWorkflow =
