@@ -21,7 +21,7 @@ class WordToVecCluster(object):
         self.control_labels = np.array([-1] * len(docs))
 
     def cluster(self):
-        workers = min(multiprocessing.cpu_count(), len(self.docs))
+        workers = min(8, len(self.docs))
         docs_batch = [[] for i in range(workers)]
         indices = [[] for i in range(workers)]
         jobs = []
@@ -115,7 +115,7 @@ class WordToVecCluster(object):
     def detect_anomaly_text_diff(self, docs_control, docs_test, tfidf_feature_matrix):
         control_tfid_mat = tfidf_feature_matrix[:len(docs_control),:]
         control_labels = self.get_clusters()
-        workers = min(multiprocessing.cpu_count(), len(docs_test))
+        workers = min(8, len(docs_test))
         test_docs_batch = [[] for i in range(workers)]
         indices = [[] for i in range(workers)]
         results = np.array([{}] * len(docs_test))
