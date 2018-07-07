@@ -81,12 +81,12 @@ public interface YamlGitService {
   List<String> getAllYamlErrorsForAllAccounts();
 
   /**
-   * Handle change set boolean.
-   *
-   * @param entityUpdateListEvent the entity update list event
-   * @return the boolean
+   *  Handle change set boolean.
+   * @param yamlChangeSet
+   * @param accountId
+   * @return
    */
-  boolean handleChangeSet(YamlChangeSet entityUpdateListEvent);
+  boolean handleChangeSet(List<YamlChangeSet> yamlChangeSet, String accountId);
 
   /**
    * Process webhook post.

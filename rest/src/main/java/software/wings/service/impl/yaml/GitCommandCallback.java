@@ -17,6 +17,7 @@ import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
 import software.wings.beans.yaml.GitCommandResult;
 import software.wings.beans.yaml.GitCommitAndPushResult;
+import software.wings.beans.yaml.GitCommitRequest;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.exception.YamlProcessingException;
@@ -89,6 +90,8 @@ public class GitCommandCallback implements NotifyCallback {
         if (yamlChangeSet != null) {
           yamlChangeSetService.updateStatus(accountId, changeSetId, Status.COMPLETED);
           if (gitCommitAndPushResult.getGitCommitResult().getCommitId() != null) {
+            List<String> yamlSetIdsProcessed =
+                ((GitCommitRequest) gitCommandExecutionResponse.getGitCommandRequest()).getYamlChangeSetIds();
             yamlGitService.saveCommit(GitCommit.builder()
                                           .accountId(accountId)
                                           .yamlChangeSet(yamlChangeSet)
@@ -96,6 +99,7 @@ public class GitCommandCallback implements NotifyCallback {
                                           .status(GitCommit.Status.COMPLETED)
                                           .commitId(gitCommitAndPushResult.getGitCommitResult().getCommitId())
                                           .gitCommandResult(gitCommitAndPushResult)
+                                          .yamlChangeSetsProcessed(yamlSetIdsProcessed)
                                           .build());
           }
           yamlGitService.removeGitSyncErrors(accountId, yamlChangeSet.getGitFileChanges(), false);

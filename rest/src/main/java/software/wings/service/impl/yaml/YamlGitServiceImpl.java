@@ -75,6 +75,7 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -246,8 +247,20 @@ public class YamlGitServiceImpl implements YamlGitService {
                                           .forcePush(forcePush)
                                           .gitFileChanges(gitFileChangeList)
                                           .appId(GLOBAL_APP_ID)
+                                          .fullSync(true)
                                           .build();
+
+        // Get all Queued. Failed tasks to be processed before this full sync one.
+        // find most recent change set with Completed status and get all changesets after that in Queued/Failed state
+        List<YamlChangeSet> yamlChangeSets = yamlChangeSetService.getChangeSetsToBeMarkedSkipped(accountId);
+        List<String> yamlChangesetIdsToBeSkipped = new ArrayList<>();
+        yamlChangesetIdsToBeSkipped.addAll(
+            yamlChangeSets.stream().map(changeSet -> changeSet.getUuid()).collect(toList()));
+
         yamlChangeSetService.save(yamlChangeSet);
+        // mark these change sets as Skipped
+        yamlChangeSetService.updateStatusForGivenYamlChangeSets(
+            accountId, Status.SKIPPED, Arrays.asList(Status.QUEUED, Status.FAILED), yamlChangesetIdsToBeSkipped);
       } catch (Exception ex) {
         logger.error(GIT_YAML_LOG_PREFIX + "Failed to sync files for account {} ", yamlGitConfig.getAccountId(), ex);
       }
@@ -309,41 +322,71 @@ public class YamlGitServiceImpl implements YamlGitService {
   }
 
   @Override
-  public boolean handleChangeSet(YamlChangeSet yamlChangeSet) {
-    YamlGitConfig yamlGitConfig = get(yamlChangeSet.getAccountId(), yamlChangeSet.getAccountId());
-    List<GitFileChange> gitFileChanges = yamlChangeSet.getGitFileChanges();
+  public boolean handleChangeSet(List<YamlChangeSet> yamlChangeSets, String accountId) {
+    YamlGitConfig yamlGitConfig = get(accountId, accountId);
     if (yamlGitConfig == null) {
-      logger.warn(GIT_YAML_LOG_PREFIX + "YamlGitConfig is null for accountId: " + yamlChangeSet.getAccountId());
+      logger.warn(GIT_YAML_LOG_PREFIX + "YamlGitConfig is null for accountId: " + accountId);
       throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR);
     }
+
+    List<String> yamlChangeSetIds =
+        yamlChangeSets.stream().map(yamlChangeSet -> yamlChangeSet.getUuid()).collect(toList());
+    String mostRecentYamlChangesetId = yamlChangeSets.get(yamlChangeSets.size() - 1).getUuid();
+    List<GitFileChange> gitFileChanges = getGitFileChangesToBeApplied(yamlChangeSets);
     checkForValidNameSyntax(gitFileChanges);
 
     // @TODO_GITLOG add accountId here
-    logger.info(GIT_YAML_LOG_PREFIX + "Creating COMMIT_AND_PUSH git delegate task for account: {}",
-        yamlChangeSet.getAccountId());
-    logger.info(GIT_YAML_LOG_PREFIX + "Change set [{}] files", yamlChangeSet.getUuid());
+    logger.info(GIT_YAML_LOG_PREFIX + "Creating COMMIT_AND_PUSH git delegate task for account: {}", accountId);
+
+    StringBuilder builder = new StringBuilder();
+    yamlChangeSets.forEach(yamlChangeSet -> builder.append(yamlChangeSet.getUuid()).append("  "));
+    logger.info(GIT_YAML_LOG_PREFIX + "Change sets [{}] files", builder.toString());
 
     String waitId = generateUuid();
     GitConfig gitConfig = getGitConfig(yamlGitConfig);
 
+    if (yamlChangeSets.size() > 1) {
+      logger.info(new StringBuilder(GIT_YAML_LOG_PREFIX)
+                      .append("Processing YamlChangeSets for account: ")
+                      .append(accountId)
+                      .append(" from ")
+                      .append(yamlChangeSets.get(0).getUuid())
+                      .append(" - ")
+                      .append(yamlChangeSets.get(yamlChangeSets.size() - 1).getUuid())
+                      .toString());
+    }
     DelegateTask delegateTask = aDelegateTask()
                                     .withTaskType(TaskType.GIT_COMMAND)
-                                    .withAccountId(yamlChangeSet.getAccountId())
+                                    .withAccountId(accountId)
                                     .withAppId(GLOBAL_APP_ID)
                                     .withWaitId(waitId)
                                     .withParameters(new Object[] {GitCommandType.COMMIT_AND_PUSH, gitConfig,
                                         secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null),
                                         GitCommitRequest.builder()
                                             .gitFileChanges(gitFileChanges)
-                                            .forcePush(yamlChangeSet.isForcePush())
+                                            .forcePush(true)
+                                            .yamlChangeSetIds(yamlChangeSetIds)
                                             .build()})
                                     .withTimeout(TimeUnit.MINUTES.toMillis(10))
                                     .build();
 
     waitNotifyEngine.waitForAll(
-        new GitCommandCallback(yamlChangeSet.getAccountId(), yamlChangeSet.getUuid(), yamlGitConfig.getUuid()), waitId);
+        new GitCommandCallback(accountId, mostRecentYamlChangesetId, yamlGitConfig.getUuid()), waitId);
     delegateService.queueTask(delegateTask);
     return true;
+  }
+
+  private List<GitFileChange> getGitFileChangesToBeApplied(List<YamlChangeSet> yamlChangeSets) {
+    Map<String, GitFileChange> gitFileChangeToFilePathMap = new HashMap<>();
+
+    // Making sure order is maintianed, so yamlChangeSets create at later point of time, replaces changes
+    // made by earlier ones
+    for (int index = 0; index < yamlChangeSets.size(); index++) {
+      yamlChangeSets.get(index).getGitFileChanges().forEach(
+          gitFileChange -> gitFileChangeToFilePathMap.put(gitFileChange.getFilePath(), gitFileChange));
+    }
+
+    return gitFileChangeToFilePathMap.values().stream().collect(toList());
   }
 
   /**

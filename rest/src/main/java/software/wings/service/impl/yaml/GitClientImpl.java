@@ -283,8 +283,8 @@ public class GitClientImpl implements GitClient {
       String timestamp = new SimpleDateFormat(COMMIT_TIMESTAMP_FORMAT).format(new java.util.Date());
       StringBuilder commitMessage = new StringBuilder("Harness IO Git Sync. \n");
 
+      String repoDirectory = getRepoDirectory(gitConfig);
       gitCommitRequest.getGitFileChanges().forEach(gitFileChange -> {
-        String repoDirectory = getRepoDirectory(gitConfig);
         String filePath = repoDirectory + "/" + gitFileChange.getFilePath();
         File file = new File(filePath);
         final ChangeType changeType = gitFileChange.getChangeType();
