@@ -367,7 +367,7 @@ public class YamlGitServiceImpl implements YamlGitService {
                                             .forcePush(true)
                                             .yamlChangeSetIds(yamlChangeSetIds)
                                             .build()})
-                                    .withTimeout(TimeUnit.MINUTES.toMillis(10))
+                                    .withTimeout(TimeUnit.MINUTES.toMillis(20))
                                     .build();
 
     waitNotifyEngine.waitForAll(
