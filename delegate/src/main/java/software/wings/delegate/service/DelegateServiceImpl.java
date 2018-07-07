@@ -901,7 +901,7 @@ public class DelegateServiceImpl implements DelegateService {
 
     try {
       // Delay response if already working on many tasks
-      sleep(ofMillis(50 * Math.min(currentlyExecutingFutures.size(), 20)));
+      sleep(ofMillis(100 * Math.min(currentlyExecutingTasks.size() + currentlyValidatingTasks.size(), 10)));
 
       logger.info("Validating DelegateTask - uuid: {}, accountId: {}", delegateTaskId, accountId);
 
