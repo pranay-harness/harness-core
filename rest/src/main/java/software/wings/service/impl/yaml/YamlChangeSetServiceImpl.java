@@ -150,7 +150,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
               .withLimit("50");
 
       if (mostRecentCompletedChangeSet != null) {
-        pageRequestBuilder.addFilter("createdAt", Operator.GT, mostRecentCompletedChangeSet.getCreatedAt());
+        pageRequestBuilder.addFilter("createdAt", Operator.GE, mostRecentCompletedChangeSet.getCreatedAt());
       }
       List<YamlChangeSet> yamlChangeSets = listYamlChangeSets(pageRequestBuilder.build()).getResponse();
 
