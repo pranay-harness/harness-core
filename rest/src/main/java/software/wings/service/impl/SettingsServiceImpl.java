@@ -448,7 +448,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Override
   public void delete(String appId, String varId, boolean pushToGit) {
     SettingAttribute settingAttribute = get(varId);
-    notNullCheck("Setting Value", settingAttribute);
+    notNullCheck("Setting Value", settingAttribute, USER);
     ensureSettingAttributeSafeToDelete(settingAttribute);
     boolean deleted = wingsPersistence.delete(settingAttribute);
     if (deleted && shouldBeSynced(settingAttribute, pushToGit)) {

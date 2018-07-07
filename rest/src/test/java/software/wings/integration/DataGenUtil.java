@@ -1,11 +1,13 @@
 package software.wings.integration;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
@@ -21,7 +23,10 @@ import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
+import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.SystemCatalog.Builder.aSystemCatalog;
+import static software.wings.beans.SystemCatalog.CatalogType.APPSTACK;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.common.Constants.HARNESS_NAME;
@@ -37,20 +42,24 @@ import static software.wings.integration.IntegrationTestUtil.randomInt;
 import static software.wings.integration.SeedData.containerNames;
 import static software.wings.integration.SeedData.envNames;
 import static software.wings.integration.SeedData.seedNames;
+import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.sm.StateType.TERRAFORM_DESTROY;
 import static software.wings.sm.StateType.TERRAFORM_PROVISION;
 import static software.wings.utils.ArtifactType.WAR;
+import static software.wings.utils.ContainerFamily.TOMCAT;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.MongoCommandException;
+import migrations.all.SystemTemplateGalleryMigration;
 import org.assertj.core.util.Lists;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -84,11 +93,13 @@ import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
+import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.SplunkConfig;
+import software.wings.beans.SystemCatalog;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowType;
@@ -127,6 +138,7 @@ import software.wings.integration.setup.rest.SettingsResourceRestClient;
 import software.wings.integration.setup.rest.WorkflowResourceRestClient;
 import software.wings.rules.SetupScheduler;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -146,6 +158,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
@@ -206,6 +220,9 @@ public class DataGenUtil extends BaseIntegrationTest {
   @Inject private EnvResourceRestClient envResourceRestClient;
   @Inject private WorkflowResourceRestClient workflowResourceRestClient;
   @Inject private UserResourceRestClient userResourceRestClient;
+  @Inject private SystemTemplateGalleryMigration systemTemplateGalleryMigration;
+
+  @Inject private AppContainerService appContainerService;
 
   /**
    * Generated Data for across the API use.
@@ -255,6 +272,9 @@ public class DataGenUtil extends BaseIntegrationTest {
 
     createTestApplication(account);
     // createSeedEntries();
+    //    systemTemplateGalleryMigration.migrate();
+    createOrUpdateSystemAppStackCatalogs();
+    createOrUpdateSystemAppContainers();
   }
 
   private void createSeedEntries() {
@@ -872,6 +892,159 @@ public class DataGenUtil extends BaseIntegrationTest {
     String name = names.get(nameIdx);
     names.remove(nameIdx);
     return name;
+  }
+
+  private static final String AWS_S3_CATALOG_TOMCAT7 =
+      "https://s3.amazonaws.com/harness-catalogs/appstack/apache-tomcat-7.0.78.tar.gz";
+  private static final String AWS_S3_CATALOG_TOMCAT8 =
+      "https://s3.amazonaws.com/harness-catalogs/appstack/apache-tomcat-8.5.15.tar.gz";
+
+  private static final String AWS_S3_CATALOG_TOMCAT7_HARDENED =
+      "https://s3.amazonaws.com/harness-catalogs/appstack/apache-tomcat-7.0.78-hardened.tar.gz";
+  private static final String AWS_S3_CATALOG_TOMCAT8_HARDENED =
+      "https://s3.amazonaws.com/harness-catalogs/appstack/apache-tomcat-8.5.15-hardened.tar.gz";
+
+  @Test
+  @Ignore
+  public void createOrUpdateSystemAppStackCatalogs() {
+    long fileSize = configuration.getFileUploadLimits().getAppContainerLimit();
+    List<SystemCatalog> systemCatalogs = systemCatalogService.list(aPageRequest()
+                                                                       .addFilter("catalogType", EQ, APPSTACK)
+                                                                       .addFilter("family", EQ, TOMCAT)
+                                                                       .addFilter("appId", EQ, Base.GLOBAL_APP_ID)
+                                                                       .build());
+    Map<String, SystemCatalog> fileToSystemCatalog =
+        systemCatalogs.stream().collect(Collectors.toMap(SystemCatalog::getFileName, Function.identity()));
+    logger.info("Creating System App Stack Catalogs");
+    // Create Tomcat 7 Standard
+    SystemCatalog systemCatalog;
+    if (!fileToSystemCatalog.containsKey("apache-tomcat-7.0.78.tar.gz")) {
+      systemCatalog = aSystemCatalog()
+                          .withCatalogType(APPSTACK)
+                          .withName("Standard Tomcat 7")
+                          .withFileName("apache-tomcat-7.0.78.tar.gz")
+                          .withAppId(Base.GLOBAL_APP_ID)
+                          .withFamily(TOMCAT)
+                          .withNotes("System created.")
+                          .withVersion("7.0.78")
+                          .build();
+      systemCatalogService.save(systemCatalog, AWS_S3_CATALOG_TOMCAT7, PLATFORMS, fileSize);
+    } else {
+      // call update --> Support the update
+      systemCatalog = fileToSystemCatalog.get("apache-tomcat-7.0.78.tar.gz");
+      systemCatalog.setVersion("7.0.78");
+      systemCatalogService.update(systemCatalog, AWS_S3_CATALOG_TOMCAT7, PLATFORMS, fileSize);
+    }
+    if (!fileToSystemCatalog.containsKey("apache-tomcat-7.0.78-hardened.tar.gz")) {
+      systemCatalog = aSystemCatalog()
+                          .withCatalogType(APPSTACK)
+                          .withName("Hardened Tomcat 7")
+                          .withFileName("apache-tomcat-7.0.78-hardened.tar.gz")
+                          .withAppId(Base.GLOBAL_APP_ID)
+                          .withFamily(TOMCAT)
+                          .withNotes("System created. Hardened Version")
+                          .withVersion("7.0.78")
+                          .withHardened(true)
+                          .build();
+      systemCatalogService.save(systemCatalog, AWS_S3_CATALOG_TOMCAT7_HARDENED, PLATFORMS, fileSize);
+    } else {
+      systemCatalog = fileToSystemCatalog.get("apache-tomcat-7.0.78-hardened.tar.gz");
+      systemCatalog.setVersion("7.0.78");
+      systemCatalog.setHardened(true);
+      systemCatalog.setStackRootDirectory("apache-tomcat-7.0.78-hardened");
+      systemCatalogService.update(systemCatalog, AWS_S3_CATALOG_TOMCAT7_HARDENED, PLATFORMS, fileSize);
+    }
+    if (!fileToSystemCatalog.containsKey("apache-tomcat-8.5.15.tar.gz")) {
+      systemCatalog = aSystemCatalog()
+                          .withCatalogType(APPSTACK)
+                          .withName("Standard Tomcat 8")
+                          .withFileName("apache-tomcat-8.5.15.tar.gz")
+                          .withAppId(Base.GLOBAL_APP_ID)
+                          .withFamily(TOMCAT)
+                          .withNotes("System created.")
+                          .withVersion("8.5.15")
+                          .build();
+      systemCatalogService.save(systemCatalog, AWS_S3_CATALOG_TOMCAT8, PLATFORMS, fileSize);
+    } else {
+      systemCatalog = fileToSystemCatalog.get("apache-tomcat-8.5.15.tar.gz");
+      systemCatalog.setVersion("8.5.15");
+      systemCatalogService.update(systemCatalog, AWS_S3_CATALOG_TOMCAT8, PLATFORMS, fileSize);
+    }
+    if (!fileToSystemCatalog.containsKey("apache-tomcat-8.5.15-hardened.tar.gz")) {
+      systemCatalog = aSystemCatalog()
+                          .withCatalogType(APPSTACK)
+                          .withName("Hardened Tomcat 8")
+                          .withFileName("apache-tomcat-8.5.15-hardened.tar.gz")
+                          .withAppId(Base.GLOBAL_APP_ID)
+                          .withFamily(TOMCAT)
+                          .withNotes("System created. Hardened Version.")
+                          .withVersion("8.5.15")
+                          .withHardened(true)
+                          .build();
+      systemCatalogService.save(systemCatalog, AWS_S3_CATALOG_TOMCAT8_HARDENED, PLATFORMS, fileSize);
+    } else {
+      systemCatalog = fileToSystemCatalog.get("apache-tomcat-8.5.15-hardened.tar.gz");
+      systemCatalog.setVersion("8.5.15");
+      systemCatalog.setHardened(true);
+      systemCatalog.setStackRootDirectory("apache-tomcat-8.5.15-hardened");
+      systemCatalogService.update(systemCatalog, AWS_S3_CATALOG_TOMCAT8_HARDENED, PLATFORMS, fileSize);
+    }
+  }
+
+  @Test
+  @Ignore
+  public void createOrUpdateSystemAppContainers() {
+    logger.info("Creating System App Containers");
+    List<Account> accounts =
+        accountService.list(aPageRequest().withLimit(PageRequest.UNLIMITED).addFieldsIncluded("uuid").build());
+    if (isEmpty(accounts)) {
+      return;
+    }
+    List<SystemCatalog> systemCatalogs = systemCatalogService.list(
+        aPageRequest().addFilter("catalogType", SearchFilter.Operator.EQ, SystemCatalog.CatalogType.APPSTACK).build());
+    accounts.forEach(account -> {
+      for (SystemCatalog systemCatalog : systemCatalogs) {
+        AppContainer appContainer = anAppContainer()
+                                        .withAccountId(account.getUuid())
+                                        .withAppId(systemCatalog.getAppId())
+                                        .withChecksum(systemCatalog.getChecksum())
+                                        .withChecksumType(systemCatalog.getChecksumType())
+                                        .withFamily(systemCatalog.getFamily())
+                                        .withStackRootDirectory(systemCatalog.getStackRootDirectory())
+                                        .withFileName(systemCatalog.getFileName())
+                                        .withFileUuid(systemCatalog.getFileUuid())
+                                        .withFileType(systemCatalog.getFileType())
+                                        .withSize(systemCatalog.getSize())
+                                        .withName(systemCatalog.getName())
+                                        .withSystemCreated(true)
+                                        .withDescription(systemCatalog.getNotes())
+                                        .withHardened(systemCatalog.isHardened())
+                                        .withVersion(systemCatalog.getVersion())
+                                        .build();
+        try {
+          PageResponse<AppContainer> pageResponse =
+              appContainerService.list(aPageRequest()
+                                           .addFilter("accountId", EQ, account.getUuid())
+                                           .addFilter("fileUuid", EQ, systemCatalog.getFileUuid())
+                                           .build());
+          if (isEmpty(pageResponse.getResponse())) {
+            appContainerService.save(appContainer);
+          } else {
+            AppContainer storedAppContainer = pageResponse.getResponse().get(0);
+            storedAppContainer.setVersion(systemCatalog.getVersion());
+            storedAppContainer.setHardened(systemCatalog.isHardened());
+            storedAppContainer.setDescription(systemCatalog.getNotes());
+            storedAppContainer.setFileName(systemCatalog.getFileName());
+            storedAppContainer.setStackRootDirectory(systemCatalog.getStackRootDirectory());
+            appContainerService.update(storedAppContainer);
+          }
+        } catch (Exception e) {
+          logger.error("", e);
+          logger.info("Error while creating system app container " + appContainer);
+        }
+      }
+    });
+    logger.info("System App Containers created successfully");
   }
 
   /**

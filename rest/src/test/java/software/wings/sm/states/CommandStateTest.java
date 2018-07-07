@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -27,6 +28,7 @@ import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.StringValue.Builder.aStringValue;
+import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
@@ -63,6 +65,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.api.CommandStateExecutionData;
 import software.wings.api.PhaseElement;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.Activity;
@@ -72,6 +75,7 @@ import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
+import software.wings.beans.Variable;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.command.AbstractCommandUnit;
@@ -101,10 +105,15 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.waitnotify.WaitNotifyEngine;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Created by peeyushaggarwal on 6/10/16.
@@ -165,9 +174,16 @@ public class CommandStateTest extends WingsBaseTest {
       aWorkflowStandardParams().withAppId(APP_ID).withEnvId(ENV_ID).build();
   private static final SimpleWorkflowParam SIMPLE_WORKFLOW_PARAM = aSimpleWorkflowParam().build();
   public static final PhaseElement PHASE_ELEMENT = aPhaseElement().withInfraMappingId(INFRA_MAPPING_ID).build();
+
   private AbstractCommandUnit commandUnit =
       anExecCommandUnit().withName(COMMAND_UNIT_NAME).withCommandString("rm -f $HOME/jetty").build();
-  private Command command = aCommand().withName(COMMAND_NAME).addCommandUnits(commandUnit).build();
+  private Command command =
+      aCommand()
+          .withName(COMMAND_NAME)
+          .addCommandUnits(commandUnit)
+          .withTemplateVariables(asList(aVariable().withName("var1").withValue("var1Value").build(),
+              aVariable().withName("var2").withValue("var2Value").build()))
+          .build();
 
   @Inject private ExecutorService executorService;
 
@@ -196,7 +212,7 @@ public class CommandStateTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Before
-  public void setUpMocks() throws Exception {
+  public void setUpMocks() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(SERVICE);
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, COMMAND_NAME))
         .thenReturn(aServiceCommand().withTargetToAllEnv(true).withCommand(command).build());
@@ -259,10 +275,11 @@ public class CommandStateTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
-  public void execute() throws Exception {
+  public void execute() {
     when(serviceCommandExecutorService.execute(eq(COMMAND), any())).thenReturn(SUCCESS);
 
     ExecutionResponse executionResponse = commandState.execute(context);
+
     when(context.getStateExecutionData()).thenReturn(executionResponse.getStateExecutionData());
     commandState.handleAsyncResponse(
         context, ImmutableMap.of(ACTIVITY_ID, aCommandExecutionResult().withStatus(SUCCESS).build()));
@@ -340,6 +357,34 @@ public class CommandStateTest extends WingsBaseTest {
 
     verifyNoMoreInteractions(serviceResourceService, serviceInstanceService, serviceCommandExecutorService,
         activityService, settingsService, workflowExecutionService, artifactStreamService);
+  }
+
+  /**
+   * Execute.
+   *
+   * @throws Exception the exception
+   */
+  @Test
+  public void shouldExecuteWithVariables() {
+    AbstractCommandUnit commandUnit = anExecCommandUnit()
+                                          .withName(COMMAND_UNIT_NAME)
+                                          .withCommandString("rm -f echo ${var.var1}\n, echo ${var.var2}\n")
+                                          .build();
+    Command command = aCommand()
+                          .withName(COMMAND_NAME)
+                          .addCommandUnits(commandUnit)
+                          .withTemplateVariables(asList(aVariable().withName("var1").withValue("var1Value").build(),
+                              aVariable().withName("var2").withValue("var2Value").build()))
+                          .build();
+
+    when(serviceCommandExecutorService.execute(eq(COMMAND), any())).thenReturn(SUCCESS);
+
+    when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START"))
+        .thenReturn(aServiceCommand().withTargetToAllEnv(true).withCommand(command).build());
+
+    //    when(context.renderExpression(any(), any()).
+
+    //    ExecutionResponse executionResponse = commandState.execute(context);
   }
 
   /**
@@ -515,14 +560,39 @@ public class CommandStateTest extends WingsBaseTest {
 
   @Test
   public void shouldRenderCommandString() {
+    CommandStateExecutionData commandStateExecutionData =
+        CommandStateExecutionData.Builder.aCommandStateExecutionData().build();
     final Command command =
         aCommand()
             .addCommandUnits(anExecCommandUnit().withCommandString("${var1}").build())
             .addCommandUnits(
                 aCommand().addCommandUnits(anExecCommandUnit().withCommandString("${var2}").build()).build())
             .build();
-    CommandState.renderCommandString(command, context, null);
-    verify(context, times(1)).renderExpression("${var1}", null);
-    verify(context, times(1)).renderExpression("${var2}", null);
+    CommandState.renderCommandString(command, context, commandStateExecutionData, null);
+    verify(context, times(1)).renderExpression("${var1}", commandStateExecutionData, null);
+    verify(context, times(1)).renderExpression("${var2}", commandStateExecutionData, null);
+  }
+
+  @Test
+  public void shouldRenderCommandStringWithVariables() {
+    Map<String, Object> stateVariables = new HashMap<>();
+    List<Variable> variables = new ArrayList<>();
+    variables.add(aVariable().withName("var1").withValue("var1Value").build());
+    variables.add(aVariable().withName("var2").withValue("var2Value").build());
+    if (isNotEmpty(command.getTemplateVariables())) {
+      stateVariables.putAll(
+          command.getTemplateVariables().stream().collect(Collectors.toMap(Variable::getName, Variable::getValue)));
+    }
+    CommandStateExecutionData commandStateExecutionData =
+        CommandStateExecutionData.Builder.aCommandStateExecutionData().withTemplateVariable(stateVariables).build();
+    final Command command =
+        aCommand()
+            .addCommandUnits(anExecCommandUnit().withCommandString("${var1}").build())
+            .addCommandUnits(
+                aCommand().addCommandUnits(anExecCommandUnit().withCommandString("${var2}").build()).build())
+            .build();
+    CommandState.renderCommandString(command, context, commandStateExecutionData, null);
+    verify(context, times(1)).renderExpression("${var1}", commandStateExecutionData, null);
+    verify(context, times(1)).renderExpression("${var2}", commandStateExecutionData, null);
   }
 }

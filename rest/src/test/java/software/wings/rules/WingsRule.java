@@ -77,6 +77,7 @@ import software.wings.app.HQueryFactory;
 import software.wings.app.LicenseModule;
 import software.wings.app.MainConfiguration;
 import software.wings.app.QueueModule;
+import software.wings.app.TemplateModule;
 import software.wings.app.WingsApplication;
 import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
@@ -245,7 +246,7 @@ public class WingsRule implements MethodRule {
         },
         new LicenseModule(), new ValidationModule(validatorFactory),
         new DatabaseModule(datastore, datastore, distributedLockSvc), new WingsModule(configuration), new YamlModule(),
-        new ExecutorModule(executorService), new WingsTestModule());
+        new ExecutorModule(executorService), new WingsTestModule(), new TemplateModule());
 
     if (fakeMongo) {
       modules.add(new QueueModuleTest(datastore));

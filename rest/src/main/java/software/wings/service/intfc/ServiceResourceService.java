@@ -174,6 +174,16 @@ public interface ServiceResourceService extends OwnedByApplication {
   Service updateCommand(String appId, String serviceId, ServiceCommand serviceCommand);
 
   /**
+   * Update command to update linked command from template
+   * @param appId
+   * @param serviceId
+   * @param serviceCommand
+   * @param fromTemplate
+   * @return
+   */
+  Service updateCommand(String appId, String serviceId, ServiceCommand serviceCommand, boolean fromTemplate);
+
+  /**
    * Delete command.
    *
    * @param appId     the app id
@@ -408,8 +418,9 @@ public interface ServiceResourceService extends OwnedByApplication {
   PcfServiceSpecification resetToDefaultPcfServiceSpecification(PcfServiceSpecification pcfServiceSpecification);
 
   PcfServiceSpecification getExistingOrDefaultPcfServiceSpecification(String appId, String serviceId);
+
   /***
-   * Get command categories
+   * Get command categories equivalent to stencils call
    * @param appId
    * @param serviceId
    * @param commandName

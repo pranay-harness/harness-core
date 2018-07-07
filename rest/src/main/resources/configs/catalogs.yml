@@ -488,3 +488,9 @@ CLOUD_FORMATION_SOURCE_TYPE:
       value: Template Body
     - name: TEMPLATE_URL
       value: Amazon S3
+
+TEMPLATE_TYPE:
+    - name: SSH Command
+      value: SSH
+    - name: HTTP
+      value: HTTP

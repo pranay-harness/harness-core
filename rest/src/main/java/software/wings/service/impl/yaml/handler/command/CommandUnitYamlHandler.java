@@ -58,6 +58,14 @@ public abstract class CommandUnitYamlHandler<Y extends AbstractCommandUnit.Yaml,
     return commandUnit;
   }
 
+  public C toBean(AbstractCommandUnit.Yaml yaml) {
+    C commandUnit = getCommandUnit();
+    commandUnit.setDeploymentType(yaml.getDeploymentType());
+    commandUnit.setCommandUnitType(Util.getEnumFromString(CommandUnitType.class, yaml.getCommandUnitType()));
+    commandUnit.setName(yaml.getName());
+    return commandUnit;
+  }
+
   protected void toYaml(Y yaml, C bean) {
     String commandUnitType = Util.getStringFromEnum(bean.getCommandUnitType());
     yaml.setCommandUnitType(commandUnitType);

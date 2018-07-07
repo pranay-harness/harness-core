@@ -42,6 +42,9 @@ public class GraphNode {
   private List<InstanceStatusSummary> instanceStatusSummary;
   private List<TemplateExpression> templateExpressions;
   private List<NameValuePair> variableOverrides;
+  private List<Variable> templateVariables;
+  private String templateUuid;
+  private String templateVersion;
 
   private Map<String, Object> properties = new HashMap<>();
 
@@ -106,6 +109,9 @@ public class GraphNode {
     private Map<String, Object> properties = new HashMap<>();
     private GraphNode next;
     private GraphGroup group;
+    private List<Variable> templateVariables;
+    private String templateUuid;
+    private String templateVersion;
 
     private GraphNodeBuilder() {}
 
@@ -203,6 +209,21 @@ public class GraphNode {
       return this;
     }
 
+    public GraphNodeBuilder withTemplateVariables(List<Variable> templateVariables) {
+      this.templateVariables = templateVariables;
+      return this;
+    }
+
+    public GraphNodeBuilder withTemplateUuid(String templateUuid) {
+      this.templateUuid = templateUuid;
+      return this;
+    }
+
+    public GraphNodeBuilder withTemplateVersion(String templateVersion) {
+      this.templateVersion = templateVersion;
+      return this;
+    }
+
     public GraphNodeBuilder addProperty(String name, Object property) {
       if (properties == null) {
         properties = new HashMap<>();
@@ -249,6 +270,9 @@ public class GraphNode {
       graphNode.setProperties(properties);
       graphNode.setNext(next);
       graphNode.setGroup(group);
+      graphNode.setTemplateVariables(templateVariables);
+      graphNode.setTemplateVersion(templateVersion);
+      graphNode.setTemplateUuid(templateUuid);
       return graphNode;
     }
   }

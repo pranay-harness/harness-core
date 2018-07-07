@@ -52,7 +52,7 @@ import software.wings.common.Constants;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.rules.SetupScheduler;
-import software.wings.service.impl.WorkflowServiceHelper;
+import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.impl.yaml.handler.workflow.PipelineStageYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.PipelineYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;

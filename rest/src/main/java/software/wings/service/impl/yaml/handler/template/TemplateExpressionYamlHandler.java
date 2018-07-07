@@ -42,10 +42,10 @@ public class TemplateExpressionYamlHandler extends BaseYamlHandler<TemplateExpre
       properties = Util.toProperties(nameValuePairList);
     }
 
-    return TemplateExpression.Builder.aTemplateExpression()
-        .withExpression(yaml.getExpression())
-        .withFieldName(yaml.getFieldName())
-        .withMetadata(properties)
+    return TemplateExpression.builder()
+        .expression(yaml.getExpression())
+        .fieldName(yaml.getFieldName())
+        .metadata(properties)
         .build();
   }
 

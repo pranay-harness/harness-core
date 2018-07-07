@@ -1,5 +1,6 @@
 package software.wings.service.impl.command;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.CommandCategory.CommandUnit;
 import static software.wings.beans.CommandCategory.Type.COMMANDS;
@@ -46,6 +47,10 @@ public class CommandHelper {
                 -> CommandUnit.builder().name(serviceCommand.getName()).type(CommandUnitType.COMMAND).build())
             .collect(toList());
 
+    return getCommandCategories(commands);
+  }
+
+  public static List<CommandCategory> getCommandCategories(List<CommandUnit> commands) {
     List<CommandCategory> categories = new ArrayList<>();
     List<CommandUnit> scripts = new ArrayList<>();
     List<CommandUnit> copyUnits = new ArrayList<>();
@@ -63,14 +68,23 @@ public class CommandHelper {
       }
     }
 
-    categories.add(
-        CommandCategory.builder().type(SCRIPTS).displayName(SCRIPTS.getDisplayName()).commandUnits(scripts).build());
+    if (isNotEmpty(scripts)) {
+      categories.add(
+          CommandCategory.builder().type(SCRIPTS).displayName(SCRIPTS.getDisplayName()).commandUnits(scripts).build());
+    }
 
-    categories.add(
-        CommandCategory.builder().type(COPY).displayName(COPY.getDisplayName()).commandUnits(copyUnits).build());
+    if (isNotEmpty(copyUnits)) {
+      categories.add(
+          CommandCategory.builder().type(COPY).displayName(COPY.getDisplayName()).commandUnits(copyUnits).build());
+    }
 
-    categories.add(
-        CommandCategory.builder().type(COMMANDS).displayName(COMMANDS.getDisplayName()).commandUnits(commands).build());
+    if (isNotEmpty(commands)) {
+      categories.add(CommandCategory.builder()
+                         .type(COMMANDS)
+                         .displayName(COMMANDS.getDisplayName())
+                         .commandUnits(commands)
+                         .build());
+    }
 
     categories.add(CommandCategory.builder()
                        .type(VERIFICATIONS)

@@ -1,0 +1,67 @@
+name: "Basic Deployment"
+gallery: "Harness"
+namespace: "io.harness.workflow.ssh"
+version: "1"
+systemTags: [WORKFLOW, SSH, BASIC]
+templateObject:
+  type: "workflow"
+  workflowType: "BASIC"
+  phases:
+  - name: "Phase 1"
+    infraMappingName: "@input{id=1, description='Enter the infra mapping for phase 1'}"
+    serviceName: "@input{2}"
+    deploymentType: "SSH"
+    sections:
+    - name: "Provision Nodes"
+      steps:
+      - value:
+         name: "Select Nodes"
+         type: node_select
+         instanceCount: 1
+         excludeSelectedHostsFromFuturePhases: true
+    - name: "Deploy Service"
+      steps:
+      - valueFrom:
+         serviceRef: Install
+  - name: "Phase 2"
+    infraMappingName: "@input{1}"
+    serviceName: "@input{3}"
+    deploymentType: "SSH"
+    sections:
+    - name: "Provision Nodes"
+      steps:
+      - value:
+         name: "Select Nodes"
+         type: node_select
+         instanceCount: 1
+         excludeSelectedHostsFromFuturePhases: true
+    - name: "Deploy Service"
+      steps:
+      - valueFrom:
+         serviceRef: Install
+
+
+         name.phases[0].serviceName
+         name.phases[1].infraMappingName
+         name.phases[2].infraMappingName
+         name.phases[2].serviceName
+
+
+         Request ->
+
+         id, decription, type
+         id, decription, type
+         id, decription, type
+         id, decription, type
+
+         id -> object<type>
+
+
+         name.phases[0].infraMappingName, "Enter the infra mapping for phase 1", InfraMappingUuid
+
+         +--------------------------------------------------------+---------------------+
+         !          Enter the infra mapping for phase 1           !      uuid           !
+         +--------------------------------------------------------+---------------------+
+
+
+         name.phases[0].infraMappingName, <uuid>

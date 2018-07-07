@@ -8,6 +8,7 @@ import com.google.common.collect.Maps;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
@@ -38,6 +39,28 @@ public class ServiceCommand extends Base {
   @Transient private String notes;
 
   @JsonIgnore private double order;
+
+  @SchemaIgnore private String templateUuid;
+
+  @SchemaIgnore private String templateVersion;
+
+  @SchemaIgnore
+  public String getTemplateVersion() {
+    return templateVersion;
+  }
+
+  public void setTemplateVersion(String templateVersion) {
+    this.templateVersion = templateVersion;
+  }
+
+  @SchemaIgnore
+  public String getTemplateUuid() {
+    return templateUuid;
+  }
+
+  public void setTemplateUuid(String templateUuid) {
+    this.templateUuid = templateUuid;
+  }
 
   /**
    * Getter for property 'name'.
@@ -262,6 +285,8 @@ public class ServiceCommand extends Base {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
+    private String templateUuid;
+    private String templateVersion;
 
     private Builder() {}
 
@@ -334,6 +359,16 @@ public class ServiceCommand extends Base {
       return this;
     }
 
+    public Builder withTemplateUuid(String templateUuid) {
+      this.templateUuid = templateUuid;
+      return this;
+    }
+
+    public Builder withTemplateVersion(String templateVersion) {
+      this.templateVersion = templateVersion;
+      return this;
+    }
+
     public Builder but() {
       return aServiceCommand()
           .withName(name)
@@ -366,6 +401,8 @@ public class ServiceCommand extends Base {
       serviceCommand.setLastUpdatedAt(lastUpdatedAt);
       serviceCommand.setSetAsDefault(setAsDefault);
       serviceCommand.targetToAllEnv = this.targetToAllEnv;
+      serviceCommand.setTemplateUuid(templateUuid);
+      serviceCommand.setTemplateVersion(templateVersion);
       return serviceCommand;
     }
   }

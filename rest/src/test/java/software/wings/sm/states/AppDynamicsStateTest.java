@@ -9,7 +9,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
-import static software.wings.beans.TemplateExpression.Builder.aTemplateExpression;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
@@ -19,11 +18,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.TemplateExpression;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
@@ -46,8 +44,6 @@ import java.util.UUID;
  * author Srinivas
  */
 public class AppDynamicsStateTest extends APMStateVerificationTestBase {
-  private static final Logger logger = LoggerFactory.getLogger(AppDynamicsStateTest.class);
-
   @Inject private TemplateExpressionProcessor templateExpressionProcessor;
   @Mock private MetricDataAnalysisService metricAnalysisService;
 
@@ -134,22 +130,21 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     wingsPersistence.save(settingAttribute);
     appDynamicsState.setAnalysisServerConfigId(settingAttribute.getUuid());
 
-    appDynamicsState.setTemplateExpressions(
-        asList(aTemplateExpression()
-                   .withFieldName("analysisServerConfigId")
-                   .withExpression("${AppDynamics_Server}")
-                   .withMetadata(ImmutableMap.of("entityType", "APPDYNAMICS_CONFIGID"))
-                   .build(),
-            aTemplateExpression()
-                .withFieldName("applicationId")
-                .withExpression("${AppDynamics_App}")
-                .withMetadata(ImmutableMap.of("entityType", "APPDYNAMICS_APPID"))
-                .build(),
-            aTemplateExpression()
-                .withFieldName("tierId")
-                .withExpression("${AppDynamics_Tier}")
-                .withMetadata(ImmutableMap.of("entityType", "APPDYNAMICS_TIERID"))
-                .build()));
+    appDynamicsState.setTemplateExpressions(asList(TemplateExpression.builder()
+                                                       .fieldName("analysisServerConfigId")
+                                                       .expression("${AppDynamics_Server}")
+                                                       .metadata(ImmutableMap.of("entityType", "APPDYNAMICS_CONFIGID"))
+                                                       .build(),
+        TemplateExpression.builder()
+            .fieldName("applicationId")
+            .expression("${AppDynamics_App}")
+            .metadata(ImmutableMap.of("entityType", "APPDYNAMICS_APPID"))
+            .build(),
+        TemplateExpression.builder()
+            .fieldName("tierId")
+            .expression("${AppDynamics_Tier}")
+            .metadata(ImmutableMap.of("entityType", "APPDYNAMICS_TIERID"))
+            .build()));
 
     AppDynamicsState spyAppDynamicsState = spy(appDynamicsState);
     doReturn(Collections.singleton("test")).when(spyAppDynamicsState).getCanaryNewHostNames(executionContext);

@@ -1,9 +1,12 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
+import static software.wings.beans.template.TemplateHelper.convertToEntityVariables;
+import static software.wings.beans.template.TemplateHelper.obtainTemplateVersion;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -12,6 +15,8 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
@@ -19,6 +24,7 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.template.TemplateHelper;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
@@ -32,6 +38,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.template.TemplateService;
 import software.wings.yaml.workflow.StepYaml;
 
 import java.util.List;
@@ -41,27 +48,29 @@ import java.util.Map;
  */
 @Singleton
 public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
+  private static final Logger logger = LoggerFactory.getLogger(StepYamlHandler.class);
   @Inject YamlHandlerFactory yamlHandlerFactory;
   @Inject YamlHelper yamlHelper;
   @Inject ServiceResourceService serviceResourceService;
   @Inject SettingsService settingsService;
   @Inject InfrastructureMappingService infraMappingService;
   @Inject ArtifactStreamService artifactStreamService;
+  @Inject private TemplateService templateService;
 
   private GraphNode toBean(ChangeContext<StepYaml> changeContext, List<ChangeContext> changeContextList)
       throws HarnessException {
-    StepYaml yaml = changeContext.getYaml();
+    StepYaml stepYaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
 
     // template expressions
     List<TemplateExpression> templateExpressions = Lists.newArrayList();
-    if (yaml.getTemplateExpressions() != null) {
+    if (stepYaml.getTemplateExpressions() != null) {
       TemplateExpressionYamlHandler templateExprYamlHandler =
           yamlHandlerFactory.getYamlHandler(YamlType.TEMPLATE_EXPRESSION);
       templateExpressions =
-          yaml.getTemplateExpressions()
+          stepYaml.getTemplateExpressions()
               .stream()
               .map(templateExpr -> {
                 try {
@@ -77,20 +86,34 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
     // properties
     Map<String, Object> outputProperties = Maps.newHashMap();
 
-    Map<String, Object> yamlProperties = yaml.getProperties();
+    Map<String, Object> yamlProperties = stepYaml.getProperties();
     if (yamlProperties != null) {
       yamlProperties.forEach(
           (name, value) -> convertNameToIdIfKnownType(name, value, outputProperties, appId, accountId, yamlProperties));
     }
 
     generateKnownProperties(outputProperties, changeContext);
-    Boolean isRollback = (Boolean) changeContext.getProperties().get(YamlConstants.IS_ROLLBACK);
+    Boolean isRollback = false;
+    if (changeContext.getProperties().get(YamlConstants.IS_ROLLBACK) != null) {
+      isRollback = (Boolean) changeContext.getProperties().get(YamlConstants.IS_ROLLBACK);
+    }
+
+    String templateUuid = null;
+    String templateVersion = null;
+    String templateUri = stepYaml.getTemplateUri();
+    if (isNotEmpty(templateUri)) {
+      templateUuid = templateService.fetchTemplateIdFromUri(accountId, templateUri);
+      templateVersion = obtainTemplateVersion(templateUri);
+    }
     return aGraphNode()
-        .withName(yaml.getName())
-        .withType(yaml.getType())
+        .withName(stepYaml.getName())
+        .withType(stepYaml.getType())
         .withTemplateExpressions(templateExpressions)
         .withRollback(isRollback)
         .withProperties(outputProperties.isEmpty() ? null : outputProperties)
+        .withTemplateUuid(templateUuid)
+        .withTemplateVersion(templateVersion)
+        .withTemplateVariables(convertToEntityVariables(stepYaml.getTemplateVariables()))
         .build();
   }
 
@@ -104,8 +127,8 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
   }
 
   @Override
-  public StepYaml toYaml(GraphNode bean, String appId) {
-    Map<String, Object> properties = bean.getProperties();
+  public StepYaml toYaml(GraphNode step, String appId) {
+    Map<String, Object> properties = step.getProperties();
     final Map<String, Object> outputProperties = Maps.newHashMap();
     if (properties != null) {
       properties.forEach((name, value) -> {
@@ -117,21 +140,36 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
 
     // template expressions
     List<TemplateExpression.Yaml> templateExprYamlList = Lists.newArrayList();
-    if (bean.getTemplateExpressions() != null) {
+    if (step.getTemplateExpressions() != null) {
       TemplateExpressionYamlHandler templateExpressionYamlHandler =
           yamlHandlerFactory.getYamlHandler(YamlType.TEMPLATE_EXPRESSION);
       templateExprYamlList =
-          bean.getTemplateExpressions()
+          step.getTemplateExpressions()
               .stream()
               .map(templateExpression -> templateExpressionYamlHandler.toYaml(templateExpression, appId))
               .collect(toList());
     }
 
+    String templateUri = null;
+    String templateUuid = step.getTemplateUuid();
+    if (templateUuid != null) {
+      // Step is linkedH
+      templateUri = templateService.fetchTemplateUri(templateUuid);
+      if (templateUri == null) {
+        logger.error("Linked template for http template  {} was deleted ", templateUuid);
+      }
+      if (step.getTemplateVersion() != null) {
+        templateUri = templateUri + ":" + step.getTemplateVersion();
+      }
+    }
+
     return StepYaml.builder()
-        .name(bean.getName())
+        .name(step.getName())
         .properties(outputProperties.isEmpty() ? null : outputProperties)
-        .type(bean.getType())
+        .type(step.getType())
         .templateExpressions(templateExprYamlList)
+        .templateUri(templateUri)
+        .templateVariables(TemplateHelper.convertToTemplateVariables(step.getTemplateVariables()))
         .build();
   }
 

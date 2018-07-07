@@ -84,15 +84,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
   @Test
   public void shouldAddJenkinsArtifactStream() {
-    JenkinsArtifactStream jenkinsArtifactStream = JenkinsArtifactStream.builder()
-                                                      .sourceName("todolistwar")
-                                                      .settingId(SETTING_ID)
-                                                      .appId(APP_ID)
-                                                      .jobname("todolistwar")
-                                                      .autoPopulate(true)
-                                                      .serviceId(SERVICE_ID)
-                                                      .artifactPaths(asList("target/todolist.war"))
-                                                      .build();
+    JenkinsArtifactStream jenkinsArtifactStream = getJenkinsStream();
     ArtifactStream savedArtifactSteam = artifactStreamService.create(jenkinsArtifactStream);
 
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
@@ -118,17 +110,21 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(appService).getAccountIdByAppId(APP_ID);
   }
 
+  private JenkinsArtifactStream getJenkinsStream() {
+    return JenkinsArtifactStream.builder()
+        .sourceName("todolistwar")
+        .settingId(SETTING_ID)
+        .appId(APP_ID)
+        .jobname("todolistwar")
+        .autoPopulate(true)
+        .serviceId(SERVICE_ID)
+        .artifactPaths(asList("target/todolist.war"))
+        .build();
+  }
+
   @Test
   public void shouldUpdateJenkinsArtifactStream() {
-    JenkinsArtifactStream jenkinsArtifactStream = JenkinsArtifactStream.builder()
-                                                      .appId(APP_ID)
-                                                      .sourceName("todolistwar")
-                                                      .settingId(SETTING_ID)
-                                                      .jobname("todolistwar")
-                                                      .autoPopulate(true)
-                                                      .serviceId(SERVICE_ID)
-                                                      .artifactPaths(asList("target/todolist.war"))
-                                                      .build();
+    JenkinsArtifactStream jenkinsArtifactStream = getJenkinsStream();
     ArtifactStream savedArtifactSteam = artifactStreamService.create(jenkinsArtifactStream);
 
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
@@ -141,6 +137,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(savedArtifactSteam).isInstanceOf(JenkinsArtifactStream.class);
     assertThat(savedArtifactSteam.getArtifactStreamAttributes().getArtifactStreamType().equals(JENKINS.name()));
     assertThat(savedArtifactSteam.getArtifactStreamAttributes().getJobName().equals("todolistwar"));
+
     JenkinsArtifactStream savedJenkinsArtifactStream = (JenkinsArtifactStream) savedArtifactSteam;
     assertThat(savedJenkinsArtifactStream.getJobname()).isEqualTo("todolistwar");
     assertThat(savedJenkinsArtifactStream.getArtifactPaths().contains("target/todolist.war"));
@@ -172,24 +169,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldAddBambooArtifactStream() {
-    BambooArtifactStream bambooArtifactStream = BambooArtifactStream.builder()
-                                                    .appId(APP_ID)
-                                                    .settingId(SETTING_ID)
-                                                    .jobname("TOD-TOD")
-                                                    .autoPopulate(true)
-                                                    .serviceId(SERVICE_ID)
-                                                    .artifactPaths(asList("artifacts/todolist.war"))
-                                                    .build();
-    ArtifactStream savedArtifactSteam = artifactStreamService.create(bambooArtifactStream);
-    assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
-    assertThat(savedArtifactSteam.getName()).isNotEmpty();
-    assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(BAMBOO.name());
-    assertThat(savedArtifactSteam.getAppId()).isEqualTo(APP_ID);
-    assertThat(savedArtifactSteam.getArtifactDisplayName("")).isNotEmpty().contains("TOD-TOD");
-    assertThat(savedArtifactSteam.getSourceName()).isEqualTo("TOD-TOD");
-    assertThat(savedArtifactSteam).isInstanceOf(BambooArtifactStream.class);
-    assertThat(savedArtifactSteam.getArtifactStreamAttributes().getArtifactStreamType().equals(BAMBOO.name()));
-    assertThat(savedArtifactSteam.getArtifactStreamAttributes().getJobName().equals("TOD-TOD"));
+    ArtifactStream savedArtifactSteam = createBambooArtifactStream();
     BambooArtifactStream savedBambooArtifactStream = (BambooArtifactStream) savedArtifactSteam;
     assertThat(savedBambooArtifactStream.getJobname()).isEqualTo("TOD-TOD");
     assertThat(savedBambooArtifactStream.getArtifactPaths().contains("artifacts/todolist.war"));
@@ -200,24 +180,8 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldUpdateBambooArtifactStream() {
-    BambooArtifactStream bambooArtifactStream = BambooArtifactStream.builder()
-                                                    .appId(APP_ID)
-                                                    .settingId(SETTING_ID)
-                                                    .jobname("TOD-TOD")
-                                                    .autoPopulate(true)
-                                                    .serviceId(SERVICE_ID)
-                                                    .artifactPaths(asList("artifacts/todolist.war"))
-                                                    .build();
-    ArtifactStream savedArtifactSteam = artifactStreamService.create(bambooArtifactStream);
-    assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
-    assertThat(savedArtifactSteam.getName()).isNotEmpty();
-    assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(BAMBOO.name());
-    assertThat(savedArtifactSteam.getAppId()).isEqualTo(APP_ID);
-    assertThat(savedArtifactSteam.getArtifactDisplayName("")).isNotEmpty().contains("TOD-TOD");
-    assertThat(savedArtifactSteam.getSourceName()).isEqualTo("TOD-TOD");
-    assertThat(savedArtifactSteam).isInstanceOf(BambooArtifactStream.class);
-    assertThat(savedArtifactSteam.getArtifactStreamAttributes().getArtifactStreamType().equals(BAMBOO.name()));
-    assertThat(savedArtifactSteam.getArtifactStreamAttributes().getJobName().equals("TOD-TOD"));
+    ArtifactStream savedArtifactSteam = createBambooArtifactStream();
+
     BambooArtifactStream savedBambooArtifactStream = (BambooArtifactStream) savedArtifactSteam;
     assertThat(savedBambooArtifactStream.getJobname()).isEqualTo("TOD-TOD");
     assertThat(savedBambooArtifactStream.getArtifactPaths().contains("artifacts/todolist.war"));
@@ -247,39 +211,39 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
         .updateYamlChangeAsync(any(ArtifactStream.class), any(ArtifactStream.class), anyString());
   }
 
-  @Test
-  public void shouldAddNexusArtifactStream() {
-    NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
-                                                  .appId(APP_ID)
-                                                  .settingId(SETTING_ID)
-                                                  .jobname("releases")
-                                                  .groupId("io.harness.test")
-                                                  .artifactPaths(asList("todolist"))
-                                                  .autoPopulate(true)
-                                                  .serviceId(SERVICE_ID)
-                                                  .build();
-    ArtifactStream savedArtifactSteam = artifactStreamService.create(nexusArtifactStream);
+  private ArtifactStream createBambooArtifactStream() {
+    BambooArtifactStream bambooArtifactStream = BambooArtifactStream.builder()
+                                                    .appId(APP_ID)
+                                                    .settingId(SETTING_ID)
+                                                    .jobname("TOD-TOD")
+                                                    .autoPopulate(true)
+                                                    .serviceId(SERVICE_ID)
+                                                    .artifactPaths(asList("artifacts/todolist.war"))
+                                                    .build();
+    ArtifactStream savedArtifactSteam = artifactStreamService.create(bambooArtifactStream);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
-    assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(NEXUS.name());
+    assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(BAMBOO.name());
     assertThat(savedArtifactSteam.getAppId()).isEqualTo(APP_ID);
-    assertThat(savedArtifactSteam.getArtifactDisplayName(""))
-        .isNotEmpty()
-        .contains("releases/io.harness.test/todolist__");
-    assertThat(savedArtifactSteam.getSourceName()).isEqualTo("releases/io.harness.test/todolist");
-    assertThat(savedArtifactSteam).isInstanceOf(NexusArtifactStream.class);
-    assertThat(savedArtifactSteam.getArtifactStreamAttributes().getArtifactStreamType().equals(NEXUS.name()));
-    assertThat(savedArtifactSteam.getArtifactStreamAttributes().getJobName().equals("releases"));
-    assertThat(savedArtifactSteam.getArtifactStreamAttributes().getGroupId().equals("io.harness.test"));
-    assertThat(savedArtifactSteam.getArtifactStreamAttributes().getArtifactName().equals("todolist"));
+    assertThat(savedArtifactSteam.getArtifactDisplayName("")).isNotEmpty().contains("TOD-TOD");
+    assertThat(savedArtifactSteam.getSourceName()).isEqualTo("TOD-TOD");
+    assertThat(savedArtifactSteam).isInstanceOf(BambooArtifactStream.class);
+    assertThat(savedArtifactSteam.getArtifactStreamAttributes().getArtifactStreamType().equals(BAMBOO.name()));
+    assertThat(savedArtifactSteam.getArtifactStreamAttributes().getJobName().equals("TOD-TOD"));
+    return savedArtifactSteam;
+  }
+
+  @Test
+  public void shouldAddNexusArtifactStream() {
+    ArtifactStream savedArtifactSteam = createNexusArtifactStream();
+
     NexusArtifactStream savedNexusArtifactStream = (NexusArtifactStream) savedArtifactSteam;
     assertThat(savedNexusArtifactStream.getJobname()).isEqualTo("releases");
     assertThat(savedNexusArtifactStream.getGroupId()).isEqualTo("io.harness.test");
     assertThat(savedNexusArtifactStream.getArtifactPaths().contains("todolist"));
   }
 
-  @Test
-  public void shouldUpdateNexusArtifactStream() {
+  private ArtifactStream createNexusArtifactStream() {
     NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
                                                   .appId(APP_ID)
                                                   .settingId(SETTING_ID)
@@ -303,6 +267,12 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(savedArtifactSteam.getArtifactStreamAttributes().getJobName().equals("releases"));
     assertThat(savedArtifactSteam.getArtifactStreamAttributes().getGroupId().equals("io.harness.test"));
     assertThat(savedArtifactSteam.getArtifactStreamAttributes().getArtifactName().equals("todolist"));
+    return savedArtifactSteam;
+  }
+
+  @Test
+  public void shouldUpdateNexusArtifactStream() {
+    ArtifactStream savedArtifactSteam = createNexusArtifactStream();
     NexusArtifactStream savedNexusArtifactStream = (NexusArtifactStream) savedArtifactSteam;
     assertThat(savedNexusArtifactStream.getJobname()).isEqualTo("releases");
     assertThat(savedNexusArtifactStream.getArtifactPaths().contains("todolist"));
@@ -1183,15 +1153,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldListArtifactStreams() {
-    JenkinsArtifactStream jenkinsArtifactStream = JenkinsArtifactStream.builder()
-                                                      .sourceName("todolistwar")
-                                                      .settingId(SETTING_ID)
-                                                      .appId(APP_ID)
-                                                      .jobname("todolistwar")
-                                                      .autoPopulate(true)
-                                                      .serviceId(SERVICE_ID)
-                                                      .artifactPaths(asList("target/todolist.war"))
-                                                      .build();
+    JenkinsArtifactStream jenkinsArtifactStream = getJenkinsStream();
     ArtifactStream savedJenkinsArtifactSteam = artifactStreamService.create(jenkinsArtifactStream);
 
     assertThat(savedJenkinsArtifactSteam).isNotNull();
@@ -1389,15 +1351,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                         .accountId(ACCOUNT_ID)
                         .build());
 
-    JenkinsArtifactStream jenkinsArtifactStream = JenkinsArtifactStream.builder()
-                                                      .sourceName("todolistwar")
-                                                      .settingId(SETTING_ID)
-                                                      .appId(APP_ID)
-                                                      .jobname("todolistwar")
-                                                      .autoPopulate(true)
-                                                      .serviceId(SERVICE_ID)
-                                                      .artifactPaths(asList("target/todolist.war"))
-                                                      .build();
+    JenkinsArtifactStream jenkinsArtifactStream = getJenkinsStream();
     ArtifactStream savedArtifactSteam = artifactStreamService.create(jenkinsArtifactStream);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
 

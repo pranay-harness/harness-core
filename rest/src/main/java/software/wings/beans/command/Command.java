@@ -3,7 +3,6 @@ package software.wings.beans.command;
 import static java.util.Arrays.asList;
 import static software.wings.beans.command.Command.Builder.aCommand;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -19,6 +18,7 @@ import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.Graph;
 import software.wings.beans.GraphNode;
+import software.wings.beans.Variable;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.service.impl.ServiceResourceServiceImpl;
 import software.wings.stencils.EnumData;
@@ -27,6 +27,7 @@ import software.wings.utils.ArtifactType;
 import software.wings.utils.ContainerFamily;
 import software.wings.utils.MapperUtils;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -59,14 +60,16 @@ public class Command extends Base implements CommandUnit {
   @EnumData(enumDataProvider = ServiceResourceServiceImpl.class)
   @Attributes(title = "Name")
   private String referenceId;
-
-  @SchemaIgnore private Graph graph;
+  private String referenceUuid;
+  @SchemaIgnore private transient Graph graph;
 
   @SchemaIgnore private Long version;
 
   @SchemaIgnore private List<CommandUnit> commandUnits = Lists.newArrayList();
 
   @SchemaIgnore private CommandType commandType = CommandType.OTHER;
+
+  @SchemaIgnore private List<Variable> templateVariables = new ArrayList<>();
 
   public Command() {
     this.commandUnitType = CommandUnitType.COMMAND;
@@ -249,6 +252,24 @@ public class Command extends Base implements CommandUnit {
     this.commandType = commandType;
   }
 
+  @SchemaIgnore
+  public String getReferenceUuid() {
+    return referenceUuid;
+  }
+
+  public void setReferenceUuid(String referenceUuid) {
+    this.referenceUuid = referenceUuid;
+  }
+
+  @SchemaIgnore
+  public List<Variable> getTemplateVariables() {
+    return templateVariables;
+  }
+
+  public void setTemplateVariables(List<Variable> templateVariables) {
+    this.templateVariables = templateVariables;
+  }
+
   /**
    * Transform graph.
    */
@@ -353,14 +374,6 @@ public class Command extends Base implements CommandUnit {
     return super.getKeywords();
   }
 
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("referenceId", referenceId)
-        .add("commandUnits", commandUnits)
-        .toString();
-  }
-
   public Command cloneInternal() {
     Command clonnedCommand = aCommand().withName(getName()).withGraph(getGraph()).build();
     if (getGraph() == null) {
@@ -382,6 +395,7 @@ public class Command extends Base implements CommandUnit {
     private CommandExecutionStatus commandExecutionStatus;
     private boolean artifactNeeded;
     private CommandType commandType = CommandType.OTHER;
+    private List<Variable> templateVariables = new ArrayList<>();
 
     private Builder() {}
 
@@ -488,6 +502,13 @@ public class Command extends Base implements CommandUnit {
     }
 
     /**
+     * With Variables
+     */
+    public Builder withTemplateVariables(List<Variable> templateVariables) {
+      this.templateVariables = templateVariables;
+      return this;
+    }
+    /**
      * But builder.
      *
      * @return the builder
@@ -518,6 +539,7 @@ public class Command extends Base implements CommandUnit {
       command.setCommandExecutionStatus(commandExecutionStatus);
       command.setArtifactNeeded(artifactNeeded);
       command.setCommandType(commandType);
+      command.setTemplateVariables(templateVariables);
       return command;
     }
   }

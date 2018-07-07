@@ -17,4 +17,16 @@ public class ListUtils {
         .distinct()
         .collect(toList());
   }
+
+  public static List<String> trimStrings(List<String> strings) {
+    if (strings == null) {
+      return null;
+    }
+    return strings.stream()
+        .filter(s -> s != null)
+        .map(s -> s.trim().toLowerCase())
+        .filter(s -> isNotEmpty(s))
+        .distinct()
+        .collect(toList());
+  }
 }

@@ -28,7 +28,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.service.impl.EnvironmentServiceImpl;
-import software.wings.service.impl.WorkflowServiceImpl;
+import software.wings.service.impl.workflow.WorkflowServiceImpl;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ContextElement;

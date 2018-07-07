@@ -4,6 +4,7 @@ import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_DESTINATION_
 
 import com.google.inject.Singleton;
 
+import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.CopyConfigCommandUnit;
 import software.wings.beans.command.CopyConfigCommandUnit.Yaml;
 import software.wings.beans.yaml.ChangeContext;
@@ -40,6 +41,14 @@ public class CopyConfigCommandUnitYamlHandler
     CopyConfigCommandUnit copyConfigCommandUnit = super.toBean(changeContext);
     Yaml yaml = changeContext.getYaml();
     copyConfigCommandUnit.setDestinationParentPath(yaml.getDestinationParentPath());
+    return copyConfigCommandUnit;
+  }
+
+  @Override
+  public CopyConfigCommandUnit toBean(AbstractCommandUnit.Yaml yaml) {
+    CopyConfigCommandUnit.Yaml copyConfigYaml = (CopyConfigCommandUnit.Yaml) yaml;
+    CopyConfigCommandUnit copyConfigCommandUnit = super.toBean(yaml);
+    copyConfigCommandUnit.setDestinationParentPath(copyConfigYaml.getDestinationParentPath());
     return copyConfigCommandUnit;
   }
 

@@ -9,6 +9,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
@@ -37,9 +38,6 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-/**
- * Created by peeyushaggarwal on 12/7/16.
- */
 public class HttpTask extends AbstractDelegateRunnableTask {
   private static final Splitter HEADERS_SPLITTER = Splitter.on(",").trimResults().omitEmptyStrings();
 
@@ -93,16 +91,12 @@ public class HttpTask extends AbstractDelegateRunnableTask {
         break;
       case "POST":
         HttpPost post = new HttpPost(url);
-        if (body != null) {
-          post.setEntity(new StringEntity(body, StandardCharsets.UTF_8));
-        }
+        setEntity(body, post);
         httpUriRequest = post;
         break;
       case "PUT":
         HttpPut put = new HttpPut(url);
-        if (body != null) {
-          put.setEntity(new StringEntity(body, StandardCharsets.UTF_8));
-        }
+        setEntity(body, put);
         httpUriRequest = put;
         break;
       case "DELETE":
@@ -141,40 +135,9 @@ public class HttpTask extends AbstractDelegateRunnableTask {
     return httpStateExecutionResponse;
   }
 
-  public static final class Builder {
-    private String delegateId;
-    private DelegateTask delegateTask;
-    private Consumer<NotifyResponseData> postExecute;
-    private Supplier<Boolean> preExecute;
-
-    private Builder() {}
-
-    public static Builder aHttpTask() {
-      return new Builder();
-    }
-
-    public Builder withDelegateId(String delegateId) {
-      this.delegateId = delegateId;
-      return this;
-    }
-
-    public Builder withDelegateTask(DelegateTask delegateTask) {
-      this.delegateTask = delegateTask;
-      return this;
-    }
-
-    public Builder withPostExecute(Consumer<NotifyResponseData> postExecute) {
-      this.postExecute = postExecute;
-      return this;
-    }
-
-    public Builder withPreExecute(Supplier<Boolean> preExecute) {
-      this.preExecute = preExecute;
-      return this;
-    }
-
-    public HttpTask build() {
-      return new HttpTask(delegateId, delegateTask, postExecute, preExecute);
+  private void setEntity(String body, HttpEntityEnclosingRequestBase entityEnclosingRequestBase) {
+    if (body != null) {
+      entityEnclosingRequestBase.setEntity(new StringEntity(body, StandardCharsets.UTF_8));
     }
   }
 }

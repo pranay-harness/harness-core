@@ -28,6 +28,32 @@ public class StateExecutionData {
   private ContextElement element;
   private Map<String, Object> stateParams;
   private DelegateMetaInfo delegateMetaInfo;
+  private Map<String, Object> templateVariable;
+
+  public StateExecutionData() {}
+
+  public StateExecutionData(String stateName, String stateType, Long startTs, Long endTs, ExecutionStatus status,
+      String errorMsg, Integer waitInterval, ContextElement element, Map<String, Object> stateParams,
+      Map<String, Object> templateVariable) {
+    this.stateName = stateName;
+    this.stateType = stateType;
+    this.startTs = startTs;
+    this.endTs = endTs;
+    this.status = status;
+    this.errorMsg = errorMsg;
+    this.waitInterval = waitInterval;
+    this.element = element;
+    this.stateParams = stateParams;
+    this.templateVariable = templateVariable;
+  }
+
+  public Map<String, Object> getTemplateVariable() {
+    return templateVariable;
+  }
+
+  public void setTemplateVariable(Map<String, Object> templateVariable) {
+    this.templateVariable = templateVariable;
+  }
 
   /**
    * Gets state name.

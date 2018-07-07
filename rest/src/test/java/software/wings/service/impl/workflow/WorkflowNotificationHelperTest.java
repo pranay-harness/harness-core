@@ -1,4 +1,4 @@
-package software.wings.service;
+package software.wings.service.impl.workflow;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
@@ -59,7 +59,6 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.HQuery;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.WorkflowNotificationHelper;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;

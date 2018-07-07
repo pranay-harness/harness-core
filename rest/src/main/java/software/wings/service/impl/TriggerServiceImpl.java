@@ -88,6 +88,7 @@ import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.scheduler.ScheduledTriggerJob;
+import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -748,7 +749,7 @@ public class TriggerServiceImpl implements TriggerService {
       Map<String, String> triggerWorkflowVariables = trigger.getWorkflowVariables();
       if (triggerWorkflowVariables != null) {
         String templatizedEnvName =
-            WorkflowServiceHelper.getTemplatizedEnvVariableName(workflow.getOrchestrationWorkflow());
+            WorkflowServiceTemplateHelper.getTemplatizedEnvVariableName(workflow.getOrchestrationWorkflow());
         if (templatizedEnvName != null) {
           envId = triggerWorkflowVariables.get(templatizedEnvName);
           if (envId == null) {

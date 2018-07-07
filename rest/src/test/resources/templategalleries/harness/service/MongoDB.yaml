@@ -1,0 +1,49 @@
+name: "MongoDB"
+gallery: "Harness"
+namespace: "io.harness.service.onprem"
+version: "1"
+systemTags: [SERVICE, MONGO, ON-PREM]
+templateObject:
+  type: "SERVICE"
+  artifactType: OTHER
+  commandReferences:
+     -
+       gallery: "Harness"
+       name: "Stop"
+       namespace: "io.harness.command.war"
+     -
+       gallery: "Harness"
+       name: "Install"
+       namespace: "io.harness.command.war"
+     -
+       gallery: "Harness"
+       name: "Start"
+       namespace: "io.harness.command.war"
+  configVariables:
+    - name: ACCOUNT_SECRET_KEY
+      value: amazonkms:GplElAdqQLuqX_htzEY89Q
+      valueType: ENCRYPTED_TEXT
+    - name: LEARNING_ENGINE_SECRET
+      value: amazonkms:bBis_vm5Q8qoR7QrVxxjIQ
+      valueType: ENCRYPTED_TEXT
+    - name: replicaset_name
+      value: rs0
+      valueType: TEXT
+    - name: mongodb_sys_log_file
+      value: mongod.log
+      valueType: TEXT
+    - name: mongodb_sys_log_dir
+      value: mongolog
+      valueType: TEXT
+    - name: mongodb_data_dir
+      value: /data/db
+      valueType: TEXT
+    - name: harness_application_db
+      value: harness
+      valueType: TEXT
+    - name: admin_db
+      value: admin
+      valueType: TEXT
+    - name: admin_user_role
+      value: root
+      valueType: TEXT

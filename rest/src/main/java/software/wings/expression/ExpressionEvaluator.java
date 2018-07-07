@@ -166,6 +166,19 @@ public class ExpressionEvaluator {
     }
   }
 
+  /**
+   * Validates and gets name from expression
+   * @param expression
+   * @return
+   */
+  public static String getName(String expression) {
+    Matcher matcher = ExpressionEvaluator.wingsVariablePattern.matcher(expression);
+    if (matcher.matches()) {
+      expression = matcher.group(0).substring(2, matcher.group(0).length() - 1);
+    }
+    return expression;
+  }
+
   @SuppressFBWarnings("WMI_WRONG_MAP_ITERATOR")
   private JexlContext prepareContext(Map<String, Object> context) {
     JexlContext jc = new MapContext();

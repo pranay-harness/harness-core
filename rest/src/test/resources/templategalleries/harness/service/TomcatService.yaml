@@ -1,0 +1,27 @@
+name: "Tomcat 7 Service"
+gallery: "Harness"
+namespace: "io.harness.service.tomcat"
+version: 1
+keywords: [Service, Tomcat, War]
+variables:
+  - type: ArtifactType
+    name: artifacttype
+templateObject:
+  type: "Service"
+  artifactType:
+    value: "WAR"
+  appContainer:
+    value: "Standard Tomcat 7"
+  commandReferences:
+     -
+       gallery: "Harness"
+       name: "Stop"
+       namespace: "io.harness.command.war"
+     -
+       gallery: "Harness"
+       name: "Install"
+       namespace: "io.harness.command.war"
+     -
+       gallery: "Harness"
+       name: "Start"
+       namespace: "io.harness.command.war"

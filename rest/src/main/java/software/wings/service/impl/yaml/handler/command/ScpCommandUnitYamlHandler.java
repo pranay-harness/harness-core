@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml.handler.command;
 
 import com.google.inject.Singleton;
 
+import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
 import software.wings.beans.command.ScpCommandUnit.Yaml;
@@ -42,6 +43,16 @@ public class ScpCommandUnitYamlHandler extends SshCommandUnitYamlHandler<Yaml, S
     Yaml yaml = changeContext.getYaml();
     scpCommandUnit.setDestinationDirectoryPath(yaml.getDestinationDirectoryPath());
     ScpFileCategory scpFileCategory = Util.getEnumFromString(ScpFileCategory.class, yaml.getSource());
+    scpCommandUnit.setFileCategory(scpFileCategory);
+    return scpCommandUnit;
+  }
+
+  @Override
+  public ScpCommandUnit toBean(AbstractCommandUnit.Yaml yaml) {
+    ScpCommandUnit.Yaml scpYaml = (ScpCommandUnit.Yaml) yaml;
+    ScpCommandUnit scpCommandUnit = super.toBean(yaml);
+    scpCommandUnit.setDestinationDirectoryPath(scpYaml.getDestinationDirectoryPath());
+    ScpFileCategory scpFileCategory = Util.getEnumFromString(ScpFileCategory.class, scpYaml.getSource());
     scpCommandUnit.setFileCategory(scpFileCategory);
     return scpCommandUnit;
   }

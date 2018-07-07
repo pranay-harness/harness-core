@@ -29,6 +29,8 @@ import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.exception.WingsException.USER;
+import static software.wings.utils.Validator.duplicateCheck;
+import static software.wings.utils.Validator.notNullCheck;
 import static software.wings.yaml.YamlHelper.trimYaml;
 
 import com.google.common.base.Joiner;
@@ -41,7 +43,6 @@ import com.google.inject.name.Named;
 
 import de.danielbechler.diff.ObjectDifferBuilder;
 import de.danielbechler.diff.node.DiffNode;
-import de.danielbechler.diff.path.NodePath;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.data.validator.EntityNameValidator;
 import org.apache.commons.lang3.StringUtils;
@@ -86,6 +87,9 @@ import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.KubernetesPayload;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
+import software.wings.beans.template.Template;
+import software.wings.beans.template.TemplateHelper;
+import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.HIterator;
@@ -114,6 +118,7 @@ import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.ownership.OwnedByService;
+import software.wings.service.intfc.template.TemplateService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionStatus;
 import software.wings.stencils.DataProvider;
@@ -122,7 +127,6 @@ import software.wings.stencils.StencilCategory;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.BoundedInputStream;
-import software.wings.utils.Validator;
 import software.wings.utils.validation.Create;
 
 import java.io.File;
@@ -169,6 +173,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private ServiceHelper serviceHelper;
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
   @Inject private CommandHelper commandHelper;
+  @Inject private TemplateService templateService;
+  @Inject private TemplateHelper templateHelper;
 
   /**
    * {@inheritDoc}
@@ -201,25 +207,29 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   public Service save(Service service, boolean createdFromYaml, boolean createDefaultCommands) {
     setKeyWords(service);
     Service savedService =
-        Validator.duplicateCheck(() -> wingsPersistence.saveAndGet(Service.class, service), "name", service.getName());
+        duplicateCheck(() -> wingsPersistence.saveAndGet(Service.class, service), "name", service.getName());
     if (createDefaultCommands && !skipDefaultCommands(service)) {
       savedService = addDefaultCommands(savedService, !createdFromYaml);
     }
 
     serviceTemplateService.createDefaultTemplatesByService(savedService);
-    notificationService.sendNotificationAsync(
-        anInformationNotification()
-            .withAppId(savedService.getAppId())
-            .withNotificationTemplateId(NotificationMessageType.ENTITY_CREATE_NOTIFICATION.name())
-            .withNotificationTemplateVariables(
-                ImmutableMap.of("ENTITY_TYPE", "Service", "ENTITY_NAME", savedService.getName()))
-            .build());
+
+    sendNotificationAsync(savedService, NotificationMessageType.ENTITY_CREATE_NOTIFICATION);
 
     if (!createdFromYaml) {
       yamlChangeSetHelper.serviceYamlChangeAsync(savedService, ChangeType.ADD);
     }
 
     return savedService;
+  }
+
+  private void sendNotificationAsync(Service savedService, NotificationMessageType entityCreateNotification) {
+    notificationService.sendNotificationAsync(anInformationNotification()
+                                                  .withAppId(savedService.getAppId())
+                                                  .withNotificationTemplateId(entityCreateNotification.name())
+                                                  .withNotificationTemplateVariables(ImmutableMap.of(
+                                                      "ENTITY_TYPE", "Service", "ENTITY_NAME", savedService.getName()))
+                                                  .build());
   }
 
   private boolean skipDefaultCommands(Service service) {
@@ -237,8 +247,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     clonedService.setName(service.getName());
     clonedService.setDescription(service.getDescription());
     setKeyWords(clonedService);
-    Service savedCloneService = Validator.duplicateCheck(
-        () -> wingsPersistence.saveAndGet(Service.class, clonedService), "name", service.getName());
+    Service savedCloneService =
+        duplicateCheck(() -> wingsPersistence.saveAndGet(Service.class, clonedService), "name", service.getName());
 
     boolean shouldPushToYaml = !hasInternalCommands(originalService);
     originalService.getServiceCommands().forEach(serviceCommand -> {
@@ -391,7 +401,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public Service update(Service service, boolean fromYaml) {
     Service savedService = get(service.getAppId(), service.getUuid(), false);
-    Validator.notNullCheck("Service", savedService);
+    notNullCheck("Service", savedService);
 
     List<String> keywords = trimList(service.generateKeywords());
     UpdateOperations<Service> updateOperations =
@@ -500,13 +510,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     // safe to delete
     if (wingsPersistence.delete(Service.class, service.getUuid())) {
-      notificationService.sendNotificationAsync(
-          anInformationNotification()
-              .withAppId(service.getAppId())
-              .withNotificationTemplateId(NotificationMessageType.ENTITY_DELETE_NOTIFICATION.name())
-              .withNotificationTemplateVariables(
-                  ImmutableMap.of("ENTITY_TYPE", "Service", "ENTITY_NAME", service.getName()))
-              .build());
+      sendNotificationAsync(service, NotificationMessageType.ENTITY_DELETE_NOTIFICATION);
     }
   }
 
@@ -520,10 +524,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   private void ensureServiceSafeToDelete(Service service) {
-    List<Workflow> workflows =
-        workflowService
-            .listWorkflows(aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, service.getAppId()).build())
-            .getResponse();
+    List<Workflow> workflows = getWorkflows(service);
 
     List<Workflow> serviceWorkflows =
         workflows.stream()
@@ -554,6 +555,12 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
   }
 
+  private List<Workflow> getWorkflows(Service service) {
+    return workflowService
+        .listWorkflows(aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, service.getAppId()).build())
+        .getResponse();
+  }
+
   private void deleteCommands(String appId, String serviceId) {
     getServiceCommands(appId, serviceId, false)
         .forEach(serviceCommand -> deleteCommand(appId, serviceId, serviceCommand.getUuid()));
@@ -565,7 +572,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public Service deleteCommand(String appId, String serviceId, String commandId) {
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
-    Validator.notNullCheck("service", service);
+    notNullCheck("service", service);
     ServiceCommand serviceCommand = wingsPersistence.get(ServiceCommand.class, service.getAppId(), commandId);
     deleteCommand(serviceCommand, service);
     return get(service.getAppId(), service.getUuid());
@@ -590,10 +597,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   private void ensureServiceCommandSafeToDelete(Service service, ServiceCommand serviceCommand) {
-    List<Workflow> workflows =
-        workflowService
-            .listWorkflows(aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, service.getAppId()).build())
-            .getResponse();
+    List<Workflow> workflows = getWorkflows(service);
     if (workflows == null) {
       return;
     }
@@ -824,7 +828,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public Service addCommand(String appId, String serviceId, ServiceCommand serviceCommand, boolean pushToYaml) {
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
-    Validator.notNullCheck("service", service);
+    notNullCheck("service", service);
 
     validateCommandName(serviceCommand.getCommand());
     addServiceCommand(appId, serviceId, serviceCommand, pushToYaml, service);
@@ -836,7 +840,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public Service updateCommandsOrder(String appId, String serviceId, List<ServiceCommand> serviceCommands) {
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
-    Validator.notNullCheck("service", service);
+    notNullCheck("service", service);
     if (isEmpty(serviceCommands)) {
       return service;
     }
@@ -867,7 +871,14 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     serviceCommand.setAppId(appId);
     String notes = serviceCommand.getNotes();
     Command command = serviceCommand.getCommand();
-    if (serviceCommand.getCommand().getGraph() != null) {
+    if (serviceCommand.getTemplateUuid() != null) {
+      command = (Command) templateService.constructEntityFromTemplate(
+          serviceCommand.getTemplateUuid(), serviceCommand.getTemplateVersion());
+      command.setAppId(appId);
+      if (isNotEmpty(serviceCommand.getName())) {
+        command.setName(serviceCommand.getName());
+      }
+    } else if (serviceCommand.getCommand().getGraph() != null) {
       if (!isLinearCommandGraph(serviceCommand)) {
         WingsException wingsException =
             new WingsException(ErrorCode.INVALID_PIPELINE, new IllegalArgumentException("Graph is not a pipeline"));
@@ -893,6 +904,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       command.setDeploymentType(command.getCommandUnits().get(0).getDeploymentType());
     }
     // TODO: Set the graph to null after backward compatible change
+    command.setGraph(null);
     commandService.save(command, pushToYaml);
     service.getServiceCommands().add(serviceCommand);
   }
@@ -906,22 +918,29 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
   }
 
+  @Override
+  public Service updateCommand(String appId, String serviceId, ServiceCommand serviceCommand) {
+    return updateCommand(appId, serviceId, serviceCommand, false);
+  }
+
   /**
    * {@inheritDoc}
    */
   @Override
-  public Service updateCommand(String appId, String serviceId, ServiceCommand serviceCommand) {
+  public Service updateCommand(String appId, String serviceId, ServiceCommand serviceCommand, boolean fromTemplate) {
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
-    Validator.notNullCheck("service", service);
+    notNullCheck("Service was deleted", service, USER);
 
     UpdateOperations<ServiceCommand> updateOperation = wingsPersistence.createUpdateOperations(ServiceCommand.class);
 
     EntityVersion lastEntityVersion =
         entityVersionService.lastEntityVersion(appId, EntityType.COMMAND, serviceCommand.getUuid(), serviceId);
+    if (updateLinkedTemplateServiceCommand(appId, serviceCommand, updateOperation, lastEntityVersion, fromTemplate)) {
+      updateCommandInternal(appId, serviceId, serviceCommand, lastEntityVersion, false, true);
 
-    if (serviceCommand.getCommand() != null) {
+    } else if (serviceCommand.getCommand() != null) {
       validateCommandName(serviceCommand.getCommand());
-      updateCommandInternal(appId, serviceId, serviceCommand, lastEntityVersion, false);
+      updateCommandInternal(appId, serviceId, serviceCommand, lastEntityVersion, false, fromTemplate);
     }
 
     setUnset(updateOperation, "envIdVersionMap", serviceCommand.getEnvIdVersionMap());
@@ -931,7 +950,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     if (serviceCommand.getName() != null) {
       updateOperation.set("name", serviceCommand.getName());
     }
-
     String accountId = appService.getAccountIdByAppId(appId);
     wingsPersistence.update(
         wingsPersistence.createQuery(ServiceCommand.class).filter(ID_KEY, serviceCommand.getUuid()), updateOperation);
@@ -943,79 +961,101 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     return get(appId, serviceId);
   }
 
-  private void updateCommandInternal(String appId, String serviceId, ServiceCommand serviceCommand,
-      EntityVersion lastEntityVersion, boolean pushToYaml) {
-    Command command = aCommand().build();
-    if (serviceCommand.getCommand().getGraph() != null) {
-      if (!isLinearCommandGraph(serviceCommand)) {
-        WingsException wingsException =
-            new WingsException(ErrorCode.INVALID_PIPELINE, new IllegalArgumentException("Graph is not a pipeline"));
-        wingsException.addParam("message", "Graph is not a linear pipeline");
-        throw wingsException;
-      }
-      command.setGraph(serviceCommand.getCommand().getGraph());
-      command.transformGraph();
-    } else {
-      command.setCommandUnits(serviceCommand.getCommand().getCommandUnits());
-      command.setName(serviceCommand.getCommand().getName());
-      command.setCommandType(serviceCommand.getCommand().getCommandType());
-      if (isEmpty(serviceCommand.getName())) {
-        serviceCommand.setName(serviceCommand.getCommand().getName());
+  private boolean updateLinkedTemplateServiceCommand(String appId, ServiceCommand serviceCommand,
+      UpdateOperations<ServiceCommand> updateOperation, EntityVersion lastEntityVersion, boolean fromTemplate) {
+    if (serviceCommand.getTemplateUuid() != null && serviceCommand.getTemplateVersion() != null) {
+      ServiceCommand oldServiceCommand = commandService.getServiceCommand(appId, serviceCommand.getUuid());
+      notNullCheck("Service command [" + serviceCommand + "] does not exist", oldServiceCommand, USER);
+      if (oldServiceCommand.getTemplateUuid() != null && oldServiceCommand.getTemplateVersion() != null) {
+        if (!serviceCommand.getTemplateVersion().equals(oldServiceCommand.getTemplateVersion())) {
+          Template template =
+              templateService.get(serviceCommand.getTemplateUuid(), serviceCommand.getTemplateVersion());
+          notNullCheck("Linked template does  not exist", template, USER);
+          SshCommandTemplate sshCommandTemplate = (SshCommandTemplate) template.getTemplateObject();
+          Command newcommand = aCommand().build();
+          newcommand.setOriginEntityId(serviceCommand.getUuid());
+          newcommand.setAppId(appId);
+          newcommand.setTemplateVariables(template.getVariables());
+          newcommand.setCommandType(sshCommandTemplate.getCommandType());
+          newcommand.setCommandUnits(sshCommandTemplate.getCommandUnits());
+          serviceCommand.setCommand(newcommand);
+          updateOperation.set("templateVersion", serviceCommand.getTemplateVersion());
+        } else {
+          if (serviceCommand.getCommand() != null) {
+            if (!fromTemplate) {
+              Command oldCommand =
+                  commandService.getCommand(appId, serviceCommand.getUuid(), lastEntityVersion.getVersion());
+              notNullCheck("Command" + serviceCommand.getName() + "] does not exist", oldCommand, USER);
+              serviceCommand.getCommand().setCommandUnits(oldCommand.getCommandUnits());
+              return false;
+            }
+          }
+        }
+        return true;
       }
     }
-    command.setOriginEntityId(serviceCommand.getUuid());
-    command.setAppId(appId);
-    command.setUuid(null);
+    return false;
+  }
+
+  private void updateCommandInternal(String appId, String serviceId, ServiceCommand serviceCommand,
+      EntityVersion lastEntityVersion, boolean pushToYaml, boolean fromTemplate) {
+    Command newcommand = aCommand().build();
+    Command command = serviceCommand.getCommand();
+
+    newcommand.setCommandUnits(command.getCommandUnits());
+    newcommand.setName(command.getName());
+    newcommand.setCommandType(command.getCommandType());
+    if (isEmpty(serviceCommand.getName())) {
+      serviceCommand.setName(command.getName());
+    }
+    newcommand.setTemplateVariables(command.getTemplateVariables());
+    newcommand.setOriginEntityId(serviceCommand.getUuid());
+    newcommand.setAppId(appId);
+    newcommand.setUuid(null);
 
     Command oldCommand = commandService.getCommand(appId, serviceCommand.getUuid(), lastEntityVersion.getVersion());
+    notNullCheck("Command" + serviceCommand.getName() + "] does not exist", oldCommand, USER);
 
     DiffNode commandUnitDiff =
-        ObjectDifferBuilder.buildDefault().compare(command.getCommandUnits(), oldCommand.getCommandUnits());
+        ObjectDifferBuilder.buildDefault().compare(newcommand.getCommandUnits(), oldCommand.getCommandUnits());
 
+    boolean variablesChanged = templateHelper.updateVariables(
+        newcommand.getTemplateVariables(), oldCommand.getTemplateVariables(), fromTemplate);
     if (commandUnitDiff.hasChanges()
-        || isCommandUnitsOrderChanged(command.getCommandUnits(), oldCommand.getCommandUnits())) {
+        || isCommandUnitsOrderChanged(newcommand.getCommandUnits(), oldCommand.getCommandUnits()) || variablesChanged
+        || fromTemplate) {
       EntityVersion entityVersion =
           entityVersionService.newEntityVersion(appId, EntityType.COMMAND, serviceCommand.getUuid(), serviceId,
               serviceCommand.getName(), EntityVersion.ChangeType.UPDATED, serviceCommand.getNotes());
-      command.setVersion(Long.valueOf(entityVersion.getVersion().intValue()));
-      if (command.getDeploymentType() == null) {
-        // Copy the old command values
-        command.setDeploymentType(oldCommand.getDeploymentType());
+      newcommand.setVersion(Long.valueOf(entityVersion.getVersion().intValue()));
+      if (newcommand.getDeploymentType() == null) {
+        // Copy the old newcommand values
+        newcommand.setDeploymentType(oldCommand.getDeploymentType());
       }
-
-      if (command.getCommandType() == null) {
-        command.setCommandType(oldCommand.getCommandType());
+      if (newcommand.getCommandType() == null) {
+        newcommand.setCommandType(oldCommand.getCommandType());
       } else {
-        command.setCommandType(serviceCommand.getCommand().getCommandType());
+        newcommand.setCommandType(command.getCommandType());
       }
-
-      if (command.getArtifactType() == null) {
-        command.setArtifactType(oldCommand.getArtifactType());
+      if (newcommand.getName() == null) {
+        newcommand.setName(oldCommand.getName());
       }
-      commandService.save(command, pushToYaml);
-
-      if (serviceCommand.getSetAsDefault()) {
+      if (newcommand.getArtifactType() == null) {
+        newcommand.setArtifactType(oldCommand.getArtifactType());
+      }
+      commandService.save(newcommand, pushToYaml);
+      if (serviceCommand.getSetAsDefault() || fromTemplate) {
         serviceCommand.setDefaultVersion(entityVersion.getVersion());
       }
     } else {
-      if (serviceCommand.getCommand().getGraph() != null) {
-        ObjectDifferBuilder builder = ObjectDifferBuilder.startBuilding();
-        builder.inclusion().exclude().node(NodePath.with("linearGraphIterator"));
-        DiffNode graphDiff = builder.build().compare(command.getGraph(), oldCommand.getGraph());
-        if (graphDiff.hasChanges()) {
-          oldCommand.setGraph(command.getGraph());
-          commandService.update(oldCommand, pushToYaml);
-        }
-      } else {
-        // Check if Name and CommandType changes
-        if (!oldCommand.getName().equals(command.getName())
-            || !oldCommand.getCommandType().equals(command.getCommandType())) {
-          UpdateOperations<Command> commandUpdateOperations = wingsPersistence.createUpdateOperations(Command.class);
-          setUnset(commandUpdateOperations, "name", command.getName());
-          setUnset(commandUpdateOperations, "commandType", command.getCommandType());
-          wingsPersistence.update(wingsPersistence.createQuery(Command.class).filter(ID_KEY, oldCommand.getUuid()),
-              commandUpdateOperations);
-        }
+      // Check if Name and CommandType changes
+      if (!oldCommand.getName().equals(newcommand.getName())
+          || !oldCommand.getCommandType().equals(newcommand.getCommandType())) {
+        UpdateOperations<Command> commandUpdateOperations = wingsPersistence.createUpdateOperations(Command.class);
+        setUnset(commandUpdateOperations, "name", newcommand.getName());
+        setUnset(commandUpdateOperations, "commandType", newcommand.getCommandType());
+        wingsPersistence.update(
+            wingsPersistence.createQuery(Command.class).filter(ID_KEY, oldCommand.getUuid()), commandUpdateOperations);
       }
     }
   }
@@ -1345,7 +1385,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public Service setConfigMapYaml(String appId, String serviceId, KubernetesPayload kubernetesPayload) {
     Service savedService = get(appId, serviceId, false);
-    Validator.notNullCheck("Service", savedService);
+    notNullCheck("Service", savedService);
 
     String configMapYaml = trimYaml(kubernetesPayload.getAdvancedConfig());
     UpdateOperations<Service> updateOperations;
@@ -1363,7 +1403,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public Service setHelmValueYaml(String appId, String serviceId, KubernetesPayload kubernetesPayload) {
     Service savedService = get(appId, serviceId, false);
-    Validator.notNullCheck("Service", savedService);
+    notNullCheck("Service", savedService);
 
     String helmValueYaml = trimYaml(kubernetesPayload.getAdvancedConfig());
     UpdateOperations<Service> updateOperations;

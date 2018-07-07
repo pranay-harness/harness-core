@@ -411,7 +411,6 @@ public class PageRequest<T> {
    * Creates and adds a new search filter to PageRequest.
    *
    * @param fieldName  name of field to apply filter on.
-   * @param fieldValue value for RHS.
    * @param op         Operator for filter.
    */
   public void addFilter(String fieldName, Operator op, Object... fieldValues) {

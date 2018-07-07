@@ -18,7 +18,6 @@ import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.Service;
-import software.wings.beans.Service.ServiceBuilder;
 import software.wings.beans.Service.Yaml;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.ServiceVariableBuilder;
@@ -87,7 +86,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
           } else if (Type.TEXT == variableType) {
             value = String.valueOf(serviceVariable.getValue());
           } else {
-            logger.warn("Value type {} not supported, skipping the processing of value", variableType);
+            logger.warn("Step type {} not supported, skipping the processing of value", variableType);
           }
 
           return NameValuePair.Yaml.builder()
@@ -111,25 +110,24 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
 
     Yaml yaml = changeContext.getYaml();
 
-    ServiceBuilder currentBuilder = Service.builder()
-                                        .appId(appId)
-                                        .name(serviceName)
-                                        .description(yaml.getDescription())
-                                        .configMapYaml(yaml.getConfigMapYaml())
-                                        .helmValueYaml(yaml.getHelmValueYaml());
+    Service currentService = new Service();
+    currentService.setAppId(appId);
+    currentService.setName(serviceName);
+    currentService.setDescription(yaml.getDescription());
+    currentService.setConfigMapYaml(yaml.getConfigMapYaml());
+    currentService.setHelmValueYaml(yaml.getHelmValueYaml());
 
     String applicationStack = yaml.getApplicationStack();
     if (StringUtils.isNotBlank(applicationStack)) {
       AppContainer appContainer = appContainerService.getByName(accountId, applicationStack);
       notNullCheck("No application stack found with the given name: " + applicationStack, appContainer, USER);
-      currentBuilder.appContainer(appContainer);
+      currentService.setAppContainer(appContainer);
     }
-    Service currentService = currentBuilder.build();
     Service previousService = get(accountId, yamlFilePath);
 
     if (previousService != null) {
-      currentBuilder.uuid(previousService.getUuid());
-      currentService = serviceResourceService.update(currentBuilder.build(), true);
+      currentService.setUuid(previousService.getUuid());
+      currentService = serviceResourceService.update(currentService, true);
       Yaml previousYaml = toYaml(previousService, previousService.getAppId());
       saveOrUpdateServiceVariables(previousYaml, yaml, previousService.getServiceVariables(), currentService.getAppId(),
           currentService.getUuid());

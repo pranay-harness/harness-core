@@ -46,7 +46,7 @@ import software.wings.common.NotificationMessageResolver;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
 import software.wings.service.StaticMap;
-import software.wings.service.impl.WorkflowNotificationHelper;
+import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;

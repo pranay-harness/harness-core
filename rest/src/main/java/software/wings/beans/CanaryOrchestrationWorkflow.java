@@ -226,7 +226,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       workflowPhase.setInfraMappingName(null);
     });
 
-    if (rollbackWorkflowPhaseIdMap == null || serviceIdMapping == null) {
+    if (rollbackWorkflowPhaseIdMap == null) {
       return;
     }
     rollbackWorkflowPhaseIdMap.values().forEach(rollbackPhase -> {
@@ -296,7 +296,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
   }
 
   /**
-   * Re orderes the user variables first by Entity - Enviroment, Service - Service Infra
+   * Re orderes the user variables first by Entity - Envirorment, Service - Service Infra
    */
   private void reorderUserVariables() {
     List<Variable> reorderVariables = new ArrayList<>();
