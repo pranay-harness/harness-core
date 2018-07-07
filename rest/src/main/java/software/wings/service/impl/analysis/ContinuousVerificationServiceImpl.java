@@ -159,8 +159,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         authService.getUserPermissionInfo(accountId, user).getAppPermissionMapInternal();
     //"Cache" it by applicationId.
     Map<String, Set<String>> servicePermissionsByApp = new HashMap<>();
-    Map<String, Set<String>> pipelinePermissionsByApp = new HashMap<>();
-    Map<String, Set<String>> workflowPermissionsByApp = new HashMap<>();
     Map<String, Set<String>> envPermissionsByApp = new HashMap<>();
 
     for (ContinuousVerificationExecutionMetaData executionMetaData : executionMetaDataList) {
@@ -171,25 +169,15 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         // If it's  not present for servicePermissions,it's not present for anything. So fill up the map.
         servicePermissionsByApp.put(
             applicationId, userAppPermissions.get(applicationId).getServicePermissions().get(Action.READ));
-        pipelinePermissionsByApp.put(
-            applicationId, userAppPermissions.get(applicationId).getPipelinePermissions().get(Action.READ));
         envPermissionsByApp.put(
             applicationId, userAppPermissions.get(applicationId).getEnvPermissions().get(Action.READ));
-        workflowPermissionsByApp.put(
-            applicationId, userAppPermissions.get(applicationId).getWorkflowPermissions().get(Action.READ));
       }
       servicePermissions = servicePermissionsByApp.get(applicationId);
-      pipelinePermissions = pipelinePermissionsByApp.get(applicationId);
       envPermissions = envPermissionsByApp.get(applicationId);
-      wfPermissions = workflowPermissionsByApp.get(applicationId);
       logger.info("Service permissions for user {} are {}", user.getName(), servicePermissions);
-      logger.info("Pipeline permissions for user {} are {}", user.getName(), pipelinePermissions);
       logger.info("environment permissions for user {} are {}", user.getName(), envPermissions);
-      logger.info("workflow permissions for user {} are {}", user.getName(), wfPermissions);
 
       if (checkIfPermissionsApproved(servicePermissions, executionMetaData.getServiceId())
-          && checkIfPermissionsApproved(pipelinePermissions, executionMetaData.getPipelineId())
-          && checkIfPermissionsApproved(wfPermissions, executionMetaData.getWorkflowId())
           && checkIfPermissionsApproved(envPermissions, executionMetaData.getEnvId())) {
         finalList.add(executionMetaData);
       } else {
@@ -211,7 +199,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
    * @return False if set is either empty or it does not contain value. True otherwise.
    */
   private boolean checkIfPermissionsApproved(final Set<String> setToCheck, final String value) {
-    logger.info("Validating with Set: {} and value: {}", setToCheck, value);
     if (EmptyPredicate.isEmpty(value)) {
       return true;
     }
@@ -226,7 +213,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   private List<String> getAllowedApplicationsForUser(final User user, final String accountId) {
     Map<String, AppPermissionSummary> userApps =
         authService.getUserPermissionInfo(accountId, user).getAppPermissionMapInternal();
-    logger.info("Applications allowed for user {} are {}", user.getName(), userApps.keySet());
     return new ArrayList<>(userApps.keySet());
   }
 }

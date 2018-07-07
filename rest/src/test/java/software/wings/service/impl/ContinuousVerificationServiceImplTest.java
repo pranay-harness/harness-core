@@ -44,6 +44,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   private String workflowId;
   private String workflowExecutionId;
   private String serviceId;
+  private String envId;
   private User user;
 
   @Mock private AuthService mockAuthService;
@@ -60,6 +61,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
     workflowId = UUID.randomUUID().toString();
     workflowExecutionId = UUID.randomUUID().toString();
     serviceId = UUID.randomUUID().toString();
+    envId = UUID.randomUUID().toString();
     user = new User();
 
     MockitoAnnotations.initMocks(this);
@@ -87,6 +89,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
         .appName("dummy")
         .artifactName("cv dummy artifact")
         .envName("cv dummy env")
+        .envId(envId)
         .phaseName("dummy phase")
         .pipelineName("dummy pipeline")
         .workflowName("dummy workflow")
@@ -105,7 +108,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
       { put(Action.READ, Sets.newHashSet(serviceId)); }
     };
     Map<Action, Set<String>> envPermissions = new HashMap<Action, Set<String>>() {
-      { put(Action.READ, Sets.newHashSet()); }
+      { put(Action.READ, Sets.newHashSet(envId)); }
     };
     Map<Action, Set<String>> pipelinePermissions = new HashMap<Action, Set<String>>() {
       { put(Action.READ, Sets.newHashSet()); }
@@ -149,10 +152,10 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  public void testNoPermissionsForWorkflow() throws ParseException {
+  public void testNoPermissionsForEnvironment() throws ParseException {
     setupMocks();
     AppPermissionSummary permissionSummary = buildAppPermissionSummary();
-    permissionSummary.setWorkflowPermissions(new HashMap<>());
+    permissionSummary.setEnvPermissions(new HashMap<>());
     when(mockUserPermissionInfo.getAppPermissionMapInternal()).thenReturn(new HashMap<String, AppPermissionSummary>() {
       { put(appId, permissionSummary); }
     });
