@@ -898,8 +898,8 @@ public class DelegateServiceImpl implements DelegateService {
     }
 
     try {
-      int active = currentlyExecutingTasks.size() + currentlyValidatingTasks.size();
-      sleep(ofMillis(50 * Math.min(active, 20)));
+      // Delay response if already working on many tasks
+      sleep(ofMillis(50 * Math.min(currentlyExecutingTasks.size() + currentlyValidatingTasks.size(), 20)));
 
       logger.info("Validating DelegateTask - uuid: {}, accountId: {}", delegateTaskId, accountId);
       DelegateTask delegateTask = execute(managerClient.acquireTask(delegateId, delegateTaskId, accountId));

@@ -205,17 +205,17 @@ public class DelegateModule extends AbstractModule {
             new ThreadFactoryBuilder().setNameFormat("system-%d").setPriority(Thread.MAX_PRIORITY).build()));
     bind(ExecutorService.class)
         .annotatedWith(Names.named("asyncExecutor"))
-        .toInstance(ThreadPool.create(5, 10, 1, TimeUnit.SECONDS,
+        .toInstance(ThreadPool.create(10, 50, 1, TimeUnit.SECONDS,
             new ThreadFactoryBuilder().setNameFormat("async-task-%d").setPriority(Thread.MIN_PRIORITY).build()));
     bind(ExecutorService.class)
         .annotatedWith(Names.named("artifactExecutor"))
-        .toInstance(ThreadPool.create(10, 20, 1, TimeUnit.SECONDS,
+        .toInstance(ThreadPool.create(10, 50, 1, TimeUnit.SECONDS,
             new ThreadFactoryBuilder()
                 .setNameFormat("artifact-collection-%d")
                 .setPriority(Thread.MIN_PRIORITY)
                 .build()));
     bind(ExecutorService.class)
-        .toInstance(ThreadPool.create(10, 20, 1, TimeUnit.SECONDS,
+        .toInstance(ThreadPool.create(10, 50, 1, TimeUnit.SECONDS,
             new ThreadFactoryBuilder().setNameFormat("sync-task-%d").setPriority(Thread.NORM_PRIORITY).build()));
 
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
