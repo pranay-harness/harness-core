@@ -47,10 +47,10 @@ class WordToVecCluster(object):
             processed = processed + 1
         # merging
         joined_indices = []
-        for idx, indices in enumerate(indices):
+        for idx, r_indices in enumerate(indices):
             if idx != 0:
-                self.merge_clusters(joined_indices, indices)
-            joined_indices.extend(indices)
+                self.merge_clusters(joined_indices, r_indices)
+            joined_indices.extend(r_indices)
 
     def parallel_cluster(self, queue, doc_batch, indices):
         queue.put(self.find_cluster(doc_batch, indices))
@@ -65,7 +65,7 @@ class WordToVecCluster(object):
                 old_label_right = right_lables[i]
                 visited[right_lables == old_label_right] = 1
                 for l in labels:
-                    c_ind = self.control_labels[self.control_labels == l][0]
+                    c_ind = np.where(self.control_labels == l)[0][0]
                     score = self.text_diff_score(self.docs[c_ind], self.docs[r_doc_idx])
                     if score >= self.threshold:
                         # update labels

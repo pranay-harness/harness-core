@@ -1,5 +1,6 @@
 import json
 import numpy as np
+import collections
 
 from FileLoader import FileLoader
 from HarnessLoader import HarnessLoader
@@ -10,8 +11,8 @@ logger = get_log(__name__)
 
 class LogCorpus(object):
     def __init__(self):
-        self.control_events = {}
-        self.test_events = {}
+        self.control_events = collections.OrderedDict({})
+        self.test_events = collections.OrderedDict({})
 
         self.control_clusters = {}
         self.test_clusters = {}
