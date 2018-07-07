@@ -865,8 +865,8 @@ public class DelegateServiceImpl implements DelegateService {
 
     Optional.ofNullable(currentlyExecutingFutures.get(delegateTaskEvent.getDelegateTaskId()))
         .ifPresent(future -> future.cancel(true));
-    currentlyExecutingTasks.remove(delegateTaskEvent.getDelegateTaskId());
     currentlyExecutingFutures.remove(delegateTaskEvent.getDelegateTaskId());
+    currentlyExecutingTasks.remove(delegateTaskEvent.getDelegateTaskId());
     logger.info("Removed {} from executing futures on abort", delegateTaskEvent.getDelegateTaskId());
   }
 
@@ -1035,8 +1035,8 @@ public class DelegateServiceImpl implements DelegateService {
       } catch (Exception e) {
         logger.error("Unable to send response to manager", e);
       } finally {
-        currentlyExecutingTasks.remove(delegateTask.getUuid());
         currentlyExecutingFutures.remove(delegateTask.getUuid());
+        currentlyExecutingTasks.remove(delegateTask.getUuid());
         logger.info("Removed {} from executing futures on post execution", delegateTask.getUuid());
         if (response != null && response.errorBody() != null && !response.isSuccessful()) {
           response.errorBody().close();
@@ -1062,8 +1062,8 @@ public class DelegateServiceImpl implements DelegateService {
       Optional.ofNullable(currentlyExecutingFutures.get(delegateTask.getUuid()))
           .ifPresent(future -> future.cancel(true));
     }
-    currentlyExecutingTasks.remove(delegateTask.getUuid());
     currentlyExecutingFutures.remove(delegateTask.getUuid());
+    currentlyExecutingTasks.remove(delegateTask.getUuid());
     logger.info("Removed {} from executing futures on timeout", delegateTask.getUuid());
   }
 
