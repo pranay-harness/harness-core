@@ -11,13 +11,16 @@ import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.FeatureName;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.utils.Misc;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -29,6 +32,7 @@ public class GitChangeSetRunnable implements Runnable {
   @Inject private YamlGitService yamlGitSyncService;
   @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Override
   public void run() {
@@ -38,9 +42,12 @@ public class GitChangeSetRunnable implements Runnable {
       }
 
       // TODO:: Use aggregate query for this group by??
-      List<String> queuedAccountIdList = wingsPersistence.getDatastore()
-                                             .getCollection(YamlChangeSet.class)
-                                             .distinct("accountId", new BasicDBObject("status", Status.QUEUED.name()));
+      List<String> queuedAccountIdList =
+          wingsPersistence.getDatastore()
+              .getCollection(YamlChangeSet.class)
+              .distinct("accountId",
+                  new BasicDBObject(
+                      "status", new BasicDBObject("$in", new String[] {Status.FAILED.name(), Status.QUEUED.name()})));
       List<String> runningAccountIdList =
           wingsPersistence.getDatastore()
               .getCollection(YamlChangeSet.class)
@@ -68,21 +75,30 @@ public class GitChangeSetRunnable implements Runnable {
 
       // nothing already in execution and lock acquired
       waitingAccountIdList.forEach(accountId -> {
-        YamlChangeSet queuedChangeSet = null;
+        List<YamlChangeSet> queuedChangeSets = new ArrayList<>();
         try {
-          queuedChangeSet = yamlChangeSetService.getQueuedChangeSet(accountId);
-          if (queuedChangeSet != null) {
-            logger.info(GIT_YAML_LOG_PREFIX + "Processing ChangeSet {}", queuedChangeSet);
-            yamlGitSyncService.handleChangeSet(queuedChangeSet);
+          if (featureFlagService.isEnabled(FeatureName.GIT_BATCH_SYNC, accountId)) {
+            queuedChangeSets = yamlChangeSetService.getChangeSetsToSync(accountId);
+          } else {
+            queuedChangeSets = yamlChangeSetService.getQueuedChangeSet(accountId);
+          }
+          if (isNotEmpty(queuedChangeSets)) {
+            StringBuilder builder =
+                new StringBuilder("Processing ChangeSets: for Account: ").append(accountId).append("\n ");
+            queuedChangeSets.forEach(yamlChangeSet -> builder.append(yamlChangeSet).append("\n"));
+            logger.info(GIT_YAML_LOG_PREFIX + builder.toString());
+            yamlGitSyncService.handleChangeSet(queuedChangeSets, accountId);
           } else {
             logger.info(GIT_YAML_LOG_PREFIX + "No change set queued to process for accountId [{}]", accountId);
           }
         } catch (Exception ex) {
           StringBuilder stringBuilder =
               new StringBuilder().append("Unexpected error while processing commit for accountId: ").append(accountId);
-          if (queuedChangeSet != null) {
-            yamlChangeSetService.updateStatus(queuedChangeSet.getAccountId(), queuedChangeSet.getUuid(), Status.FAILED);
-            stringBuilder.append(" and for changeSet: ").append(queuedChangeSet.getUuid());
+          if (queuedChangeSets != null) {
+            yamlChangeSetService.updateStatusForYamlChangeSets(accountId, Status.FAILED, Status.RUNNING);
+            StringBuilder builder = new StringBuilder();
+            queuedChangeSets.stream().map(yamlChangeSet -> builder.append(yamlChangeSet.getUuid()).append("  "));
+            stringBuilder.append(" and for changeSet: ").append(builder.toString());
           }
           stringBuilder.append(" Reason: ").append(Misc.getMessage(ex));
           logger.error(GIT_YAML_LOG_PREFIX + stringBuilder.toString(), ex);

@@ -13,6 +13,8 @@ import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.yaml.GitCommandResult;
 import software.wings.yaml.gitSync.YamlChangeSet;
 
+import java.util.List;
+
 /**
  * Created by bsollish 10/13/17
  */
@@ -31,8 +33,9 @@ public class GitCommit extends Base {
   private String commitId;
   private YamlChangeSet yamlChangeSet;
   private GitCommandResult gitCommandResult;
-  private Status status = Status.QUEUED;
+  private Status status;
   private FailureReason failureReason;
+  private List<String> yamlChangeSetsProcessed;
 
   public enum Status { QUEUED, RUNNING, COMPLETED, FAILED }
 
