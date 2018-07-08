@@ -75,7 +75,7 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -377,16 +377,25 @@ public class YamlGitServiceImpl implements YamlGitService {
   }
 
   private List<GitFileChange> getGitFileChangesToBeApplied(List<YamlChangeSet> yamlChangeSets) {
-    Map<String, GitFileChange> gitFileChangeToFilePathMap = new HashMap<>();
+    Map<String, GitFileChange> gitFileChangeToFilePathMap = new LinkedHashMap<>();
 
     // Making sure order is maintianed, so yamlChangeSets create at later point of time, replaces changes
     // made by earlier ones
     for (int index = 0; index < yamlChangeSets.size(); index++) {
       yamlChangeSets.get(index).getGitFileChanges().forEach(
-          gitFileChange -> gitFileChangeToFilePathMap.put(gitFileChange.getFilePath(), gitFileChange));
+          gitFileChange -> updateFileChangeToFilePathMap(gitFileChangeToFilePathMap, gitFileChange));
     }
 
-    return gitFileChangeToFilePathMap.values().stream().collect(toList());
+    return new ArrayList<>(gitFileChangeToFilePathMap.values());
+  }
+
+  private void updateFileChangeToFilePathMap(
+      Map<String, GitFileChange> gitFileChangeToFilePathMap, GitFileChange gitFileChange) {
+    String filePath = gitFileChange.getFilePath();
+    if (gitFileChangeToFilePathMap.containsKey(filePath)) {
+      gitFileChangeToFilePathMap.remove(filePath);
+    }
+    gitFileChangeToFilePathMap.put(filePath, gitFileChange);
   }
 
   /**
