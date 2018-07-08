@@ -17,7 +17,6 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -118,35 +117,30 @@ public class DirectKubernetesInfraMappingYamlHandler
     // no more.
     bean.setClusterName("clusterName");
 
-    char[] decryptedValue;
-    String encryptedRef = null;
-    try {
-      encryptedRef = infraMappingYaml.getPassword();
-      if (encryptedRef != null) {
-        decryptedValue = secretManager.decryptYamlRef(encryptedRef);
-        bean.setPassword(decryptedValue);
-      }
+    String encryptedRef;
 
-      encryptedRef = infraMappingYaml.getCaCert();
-      if (encryptedRef != null) {
-        decryptedValue = secretManager.decryptYamlRef(encryptedRef);
-        bean.setCaCert(decryptedValue);
-      }
+    encryptedRef = infraMappingYaml.getPassword();
+    if (encryptedRef != null) {
+      bean.setPassword(null);
+      bean.setEncryptedPassword(encryptedRef);
+    }
 
-      encryptedRef = infraMappingYaml.getClientCert();
-      if (encryptedRef != null) {
-        decryptedValue = secretManager.decryptYamlRef(encryptedRef);
-        bean.setClientCert(decryptedValue);
-      }
+    encryptedRef = infraMappingYaml.getCaCert();
+    if (encryptedRef != null) {
+      bean.setCaCert(null);
+      bean.setEncryptedCaCert(encryptedRef);
+    }
 
-      encryptedRef = infraMappingYaml.getClientKey();
-      if (encryptedRef != null) {
-        decryptedValue = secretManager.decryptYamlRef(encryptedRef);
-        bean.setClientKey(decryptedValue);
-      }
+    encryptedRef = infraMappingYaml.getClientCert();
+    if (encryptedRef != null) {
+      bean.setClientCert(null);
+      bean.setEncryptedClientCert(encryptedRef);
+    }
 
-    } catch (IllegalAccessException | IOException e) {
-      throw new HarnessException("Exception while decrypting the encrypted ref: " + encryptedRef);
+    encryptedRef = infraMappingYaml.getClientKey();
+    if (encryptedRef != null) {
+      bean.setClientKey(null);
+      bean.setEncryptedClientKey(encryptedRef);
     }
   }
 
