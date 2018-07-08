@@ -45,6 +45,8 @@ public enum ErrorCode {
 
   INVALID_TOKEN(UNAUTHORIZED),
 
+  NOT_ACCOUNT_MGR,
+
   EXPIRED_TOKEN(UNAUTHORIZED),
 
   ACCESS_DENIED(FORBIDDEN),
@@ -262,7 +264,13 @@ public enum ErrorCode {
 
   INVALID_INFRA_CONFIGURATION,
 
-  TEMPLATES_LINKED;
+  TEMPLATES_LINKED,
+
+  USER_HAS_NO_PERMISSIONS("The user doesn't have update access to any Environment"),
+
+  USER_NOT_AUTHORIZED("User not authorized to update due to usage restrictions"),
+
+  INVALID_USAGE_RESTRICTION("Invalid usage restrictions");
 
   private Status status = BAD_REQUEST;
   private String description;

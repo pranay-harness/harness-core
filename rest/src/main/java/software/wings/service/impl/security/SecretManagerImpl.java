@@ -65,12 +65,15 @@ import software.wings.security.encryption.SecretUsageLog;
 import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.FileService;
+import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.EncryptionConfig;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.UsageRestrictions;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.Validator;
 
@@ -107,6 +110,8 @@ public class SecretManagerImpl implements SecretManager {
   @Inject private TimeLimiter timeLimiter;
   @Inject private AlertService alertService;
   @Inject private FileService fileService;
+  @Inject private UsageRestrictionsService usageRestrictionsService;
+  @Inject private SettingsService settingsService;
   @Inject private Queue<KmsTransitionEvent> transitionKmsQueue;
 
   @Override
@@ -150,7 +155,7 @@ public class SecretManagerImpl implements SecretManager {
 
   @Override
   public EncryptedData encrypt(EncryptionType encryptionType, String accountId, SettingVariableTypes settingType,
-      char[] secret, EncryptedData encryptedData, String secretName) {
+      char[] secret, EncryptedData encryptedData, String secretName, UsageRestrictions usageRestrictions) {
     EncryptedData rv;
     switch (encryptionType) {
       case LOCAL:
@@ -183,12 +188,14 @@ public class SecretManagerImpl implements SecretManager {
         throw new IllegalStateException("Invalid type:  " + encryptionType);
     }
     rv.setName(secretName);
+    rv.setUsageRestrictions(usageRestrictions);
     return rv;
   }
 
-  public String encrypt(String accountId, String secret) {
-    EncryptedData encryptedData = encrypt(getEncryptionType(accountId), accountId,
-        SettingVariableTypes.APM_VERIFICATION, secret.toCharArray(), null, UUID.randomUUID().toString());
+  public String encrypt(String accountId, String secret, UsageRestrictions usageRestrictions) {
+    EncryptedData encryptedData =
+        encrypt(getEncryptionType(accountId), accountId, SettingVariableTypes.APM_VERIFICATION, secret.toCharArray(),
+            null, UUID.randomUUID().toString(), usageRestrictions);
     return wingsPersistence.save(encryptedData);
   }
 
@@ -362,7 +369,7 @@ public class SecretManagerImpl implements SecretManager {
             UuidAware parent =
                 fetchParent(data.getType(), accountId, parentId, data.getKmsId(), data.getEncryptionType());
             if (parent == null) {
-              logger.warn("No parent found for {}", data);
+              logger.info("No parent found for {}", data);
               continue;
             }
             rv.put(parentId, parent);
@@ -563,14 +570,16 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public String saveSecret(String accountId, String name, String value) {
+  public String saveSecret(String accountId, String name, String value, UsageRestrictions usageRestrictions) {
     EncryptionType encryptionType = getEncryptionType(accountId);
-    return processEncryption(accountId, name, value, encryptionType);
+    return processEncryption(accountId, name, value, encryptionType, usageRestrictions);
   }
 
-  private String processEncryption(String accountId, String name, String value, EncryptionType encryptionType) {
-    EncryptedData encryptedData =
-        encrypt(encryptionType, accountId, SettingVariableTypes.SECRET_TEXT, value.toCharArray(), null, name);
+  private String processEncryption(
+      String accountId, String name, String value, EncryptionType encryptionType, UsageRestrictions usageRestrictions) {
+    usageRestrictionsService.validateUsageRestrictions(accountId, null, usageRestrictions);
+    EncryptedData encryptedData = encrypt(encryptionType, accountId, SettingVariableTypes.SECRET_TEXT,
+        value.toCharArray(), null, name, usageRestrictions);
     String encryptedDataId;
     try {
       encryptedDataId = wingsPersistence.save(encryptedData);
@@ -596,37 +605,67 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public String saveSecretUsingLocalMode(String accountId, String name, String value) {
-    return processEncryption(accountId, name, value, EncryptionType.LOCAL);
+  public String saveSecretUsingLocalMode(
+      String accountId, String name, String value, UsageRestrictions usageRestrictions) {
+    return processEncryption(accountId, name, value, EncryptionType.LOCAL, usageRestrictions);
   }
 
   @Override
-  public boolean updateSecret(String accountId, String uuId, String name, String value) {
+  public boolean updateSecret(
+      String accountId, String uuId, String name, String value, UsageRestrictions usageRestrictions) {
     EncryptedData savedData = wingsPersistence.get(EncryptedData.class, uuId);
     if (savedData == null) {
       return false;
     }
+    usageRestrictionsService.validateUsageRestrictions(accountId, savedData.getUsageRestrictions(), usageRestrictions);
 
     String description = savedData.getName().equals(name) ? "Changed value" : "Changed name & value";
     EncryptedData encryptedData = encrypt(getEncryptionType(accountId), accountId, SettingVariableTypes.SECRET_TEXT,
-        value.toCharArray(), savedData, name);
+        value.toCharArray(), savedData, name, usageRestrictions);
     savedData.setEncryptionKey(encryptedData.getEncryptionKey());
     savedData.setEncryptedValue(encryptedData.getEncryptedValue());
     savedData.setName(name);
     savedData.setEncryptionType(encryptedData.getEncryptionType());
     savedData.setKmsId(encryptedData.getKmsId());
-    try {
-      wingsPersistence.save(savedData);
-    } catch (DuplicateKeyException e) {
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR)
-          .addParam("reason", "Variable " + name + " already exists");
-    }
+    savedData.setUsageRestrictions(usageRestrictions);
+    wingsPersistence.save(savedData);
 
     if (UserThreadLocal.get() != null) {
       wingsPersistence.save(SecretChangeLog.builder()
                                 .accountId(accountId)
                                 .encryptedDataId(uuId)
                                 .description(description)
+                                .user(EmbeddedUser.builder()
+                                          .uuid(UserThreadLocal.get().getUuid())
+                                          .email(UserThreadLocal.get().getEmail())
+                                          .name(UserThreadLocal.get().getName())
+                                          .build())
+                                .build());
+    }
+    return true;
+  }
+
+  @Override
+  public boolean updateUsageRestrictionsForSecretOrFile(
+      String accountId, String uuId, UsageRestrictions usageRestrictions) {
+    EncryptedData savedData = wingsPersistence.get(EncryptedData.class, uuId);
+    if (savedData == null) {
+      return false;
+    }
+    usageRestrictionsService.validateUsageRestrictions(accountId, savedData.getUsageRestrictions(), usageRestrictions);
+    savedData.setUsageRestrictions(usageRestrictions);
+
+    try {
+      wingsPersistence.save(savedData);
+    } catch (DuplicateKeyException e) {
+      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR).addParam("reason", "Unable to save Restrictions");
+    }
+
+    if (UserThreadLocal.get() != null) {
+      wingsPersistence.save(SecretChangeLog.builder()
+                                .accountId(accountId)
+                                .encryptedDataId(uuId)
+                                .description("Changed restrictions")
                                 .user(EmbeddedUser.builder()
                                           .uuid(UserThreadLocal.get().getUuid())
                                           .email(UserThreadLocal.get().getEmail())
@@ -653,9 +692,12 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public String saveFile(String accountId, String name, BoundedInputStream inputStream) {
+  public String saveFile(
+      String accountId, String name, UsageRestrictions usageRestrictions, BoundedInputStream inputStream) {
+    usageRestrictionsService.validateUsageRestrictions(accountId, null, usageRestrictions);
+
     EncryptionType encryptionType = getEncryptionType(accountId);
-    String recordId;
+    EncryptedData encryptedData;
     switch (encryptionType) {
       case LOCAL:
         char[] encryptedFileData = EncryptionUtils.encrypt(inputStream, accountId);
@@ -663,32 +705,38 @@ public class SecretManagerImpl implements SecretManager {
         baseFile.setFileName(name);
         String fileId = fileService.saveFile(
             baseFile, new ByteArrayInputStream(CHARSET.encode(CharBuffer.wrap(encryptedFileData)).array()), CONFIGS);
-        EncryptedData encryptedData = EncryptedData.builder()
-                                          .accountId(accountId)
-                                          .name(name)
-                                          .encryptionKey(accountId)
-                                          .encryptedValue(fileId.toCharArray())
-                                          .encryptionType(LOCAL)
-                                          .kmsId(null)
-                                          .type(SettingVariableTypes.CONFIG_FILE)
-                                          .fileSize(inputStream.getTotalBytesRead())
-                                          .enabled(true)
-                                          .build();
-        recordId = wingsPersistence.save(encryptedData);
+        encryptedData = EncryptedData.builder()
+                            .accountId(accountId)
+                            .name(name)
+                            .encryptionKey(accountId)
+                            .encryptedValue(fileId.toCharArray())
+                            .encryptionType(LOCAL)
+                            .kmsId(null)
+                            .type(SettingVariableTypes.CONFIG_FILE)
+                            .fileSize(inputStream.getTotalBytesRead())
+                            .enabled(true)
+                            .build();
         break;
 
       case KMS:
-        recordId = wingsPersistence.save(
-            kmsService.encryptFile(accountId, kmsService.getSecretConfig(accountId), name, inputStream));
+        encryptedData = kmsService.encryptFile(accountId, kmsService.getSecretConfig(accountId), name, inputStream);
         break;
 
       case VAULT:
-        recordId = wingsPersistence.save(
-            vaultService.encryptFile(accountId, vaultService.getSecretConfig(accountId), name, inputStream, null));
+        encryptedData =
+            vaultService.encryptFile(accountId, vaultService.getSecretConfig(accountId), name, inputStream, null);
         break;
 
       default:
         throw new IllegalArgumentException("Invalid type " + encryptionType);
+    }
+
+    encryptedData.setUsageRestrictions(usageRestrictions);
+    String recordId;
+    try {
+      recordId = wingsPersistence.save(encryptedData);
+    } catch (DuplicateKeyException e) {
+      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR).addParam("reason", "File " + name + " already exists");
     }
 
     if (UserThreadLocal.get() != null) {
@@ -767,14 +815,18 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public boolean updateFile(String accountId, String name, String uuid, BoundedInputStream inputStream) {
+  public boolean updateFile(
+      String accountId, String name, String uuid, UsageRestrictions usageRestrictions, BoundedInputStream inputStream) {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, uuid);
-    String oldName = encryptedData.getName();
     Preconditions.checkNotNull(encryptedData, "could not find file with id " + uuid);
+    String oldName = encryptedData.getName();
+
+    usageRestrictionsService.validateUsageRestrictions(
+        accountId, encryptedData.getUsageRestrictions(), usageRestrictions);
 
     String savedFileId = String.valueOf(encryptedData.getEncryptedValue());
     EncryptionType encryptionType = encryptedData.getEncryptionType();
-    EncryptedData encryptedFileData = null;
+    EncryptedData encryptedFileData;
     switch (encryptionType) {
       case LOCAL:
         char[] encryptedFileDataVal = EncryptionUtils.encrypt(inputStream, accountId);
@@ -805,6 +857,7 @@ public class SecretManagerImpl implements SecretManager {
     encryptedData.setEncryptedValue(encryptedFileData.getEncryptedValue());
     encryptedData.setName(name);
     encryptedData.setFileSize(inputStream.getTotalBytesRead());
+    encryptedData.setUsageRestrictions(usageRestrictions);
     wingsPersistence.save(encryptedData);
 
     // update parent's file size
@@ -868,35 +921,20 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public List<EncryptedData> listSecrets(String accountId, SettingVariableTypes type) throws IllegalAccessException {
-    List<EncryptedData> rv = new ArrayList<>();
-    try (HIterator<EncryptedData> iterator = new HIterator<>(wingsPersistence.createQuery(EncryptedData.class)
-                                                                 .filter("accountId", accountId)
-                                                                 .filter("type", type)
-                                                                 .fetch())) {
-      while (iterator.hasNext()) {
-        EncryptedData encryptedData = iterator.next();
-        encryptedData.setEncryptedValue(SECRET_MASK.toCharArray());
-        encryptedData.setEncryptionKey(SECRET_MASK);
-        encryptedData.setEncryptedBy(getSecretManagerName(
-            type, encryptedData.getUuid(), encryptedData.getKmsId(), encryptedData.getEncryptionType()));
-
-        encryptedData.setSetupUsage(getSecretUsage(accountId, encryptedData.getUuid()).size());
-        encryptedData.setRunTimeUsage(getUsageLogsSize(encryptedData.getUuid(), SettingVariableTypes.SECRET_TEXT));
-        encryptedData.setChangeLog(
-            getChangeLogs(accountId, encryptedData.getUuid(), SettingVariableTypes.SECRET_TEXT).size());
-        rv.add(encryptedData);
-      }
-    }
-
-    return rv;
-  }
-
-  @Override
-  public PageResponse<EncryptedData> listSecrets(PageRequest<EncryptedData> pageRequest) throws IllegalAccessException {
+  public PageResponse<EncryptedData> listSecrets(String accountId, PageRequest<EncryptedData> pageRequest,
+      String appIdFromRequest, String envIdFromRequest) throws IllegalAccessException {
     PageResponse<EncryptedData> pageResponse = wingsPersistence.query(EncryptedData.class, pageRequest);
 
-    for (EncryptedData encryptedData : pageResponse.getResponse()) {
+    List<EncryptedData> encryptedDataList = pageResponse.getResponse();
+
+    List<EncryptedData> filteredEncryptedDataList = Lists.newArrayList();
+
+    for (EncryptedData encryptedData : encryptedDataList) {
+      if (!usageRestrictionsService.hasAccess(
+              encryptedData.getUsageRestrictions(), accountId, appIdFromRequest, envIdFromRequest)) {
+        continue;
+      }
+
       encryptedData.setEncryptedValue(SECRET_MASK.toCharArray());
       encryptedData.setEncryptionKey(SECRET_MASK);
       encryptedData.setEncryptedBy(getSecretManagerName(encryptedData.getType(), encryptedData.getUuid(),
@@ -907,7 +945,15 @@ public class SecretManagerImpl implements SecretManager {
       encryptedData.setChangeLog(
           getChangeLogs(encryptedData.getAccountId(), encryptedData.getUuid(), SettingVariableTypes.SECRET_TEXT)
               .size());
+      if (encryptedData.getUsageRestrictions() != null) {
+        encryptedData.getUsageRestrictions().setEditable(
+            usageRestrictionsService.canUserUpdateOrDeleteEntity(accountId, encryptedData.getUsageRestrictions()));
+      }
+      filteredEncryptedDataList.add(encryptedData);
     }
+
+    pageResponse.setResponse(filteredEncryptedDataList);
+    pageResponse.setTotal(Long.valueOf(filteredEncryptedDataList.size()));
     return pageResponse;
   }
 
@@ -1034,8 +1080,7 @@ public class SecretManagerImpl implements SecretManager {
         return vaultConfig;
 
       default:
-        SettingAttribute settingAttribute =
-            wingsPersistence.createQuery(SettingAttribute.class).filter("_id", parentId).get();
+        SettingAttribute settingAttribute = settingsService.get(parentId);
         if (settingAttribute == null) {
           return null;
         }

@@ -300,17 +300,13 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   }
 
   private boolean isAuthorized(List<PermissionAttribute> permissionAttributes, Set<PermissionType> accountPermissions) {
-    return permissionAttributes.stream()
-        .filter(permissionAttribute -> accountPermissions.contains(permissionAttribute.getPermissionType()))
-        .findFirst()
-        .isPresent();
+    return permissionAttributes.stream().anyMatch(
+        permissionAttribute -> accountPermissions.contains(permissionAttribute.getPermissionType()));
   }
 
   private boolean isAccountLevelPermissions(List<PermissionAttribute> permissionAttributes) {
-    return permissionAttributes.stream()
-        .filter(permissionAttribute -> isAccountLevelPermissions(permissionAttribute.getPermissionType()))
-        .findFirst()
-        .isPresent();
+    return permissionAttributes.stream().anyMatch(
+        permissionAttribute -> isAccountLevelPermissions(permissionAttribute.getPermissionType()));
   }
 
   private boolean isAccountLevelPermissions(PermissionType permissionType) {
@@ -441,10 +437,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       return false;
     }
 
-    return requiredPermissionAttributes.stream()
-        .filter(permissionAttribute -> permissionAttribute.isSkipAuth())
-        .findFirst()
-        .isPresent();
+    return requiredPermissionAttributes.stream().anyMatch(permissionAttribute -> permissionAttribute.isSkipAuth());
   }
 
   private boolean setAppIdFilterInUserRequestContext(
@@ -514,17 +507,12 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   }
 
   private boolean isPresent(List<ResourceType> requiredResourceTypes, ResourceType resourceType) {
-    return requiredResourceTypes.stream()
-        .filter(requiredResourceType -> requiredResourceType == resourceType)
-        .findFirst()
-        .isPresent();
+    return requiredResourceTypes.stream().anyMatch(requiredResourceType -> requiredResourceType == resourceType);
   }
 
   private boolean allLoggedInScope(List<PermissionAttribute> requiredPermissionAttributes) {
-    return !requiredPermissionAttributes.parallelStream()
-                .filter(permissionAttribute -> permissionAttribute.getPermissionType() != PermissionType.LOGGED_IN)
-                .findFirst()
-                .isPresent();
+    return !requiredPermissionAttributes.parallelStream().anyMatch(
+        permissionAttribute -> permissionAttribute.getPermissionType() != PermissionType.LOGGED_IN);
   }
 
   private boolean isDelegateRequest(ContainerRequestContext requestContext) {

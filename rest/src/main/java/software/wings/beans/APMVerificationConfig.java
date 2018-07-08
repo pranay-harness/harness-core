@@ -163,7 +163,7 @@ public class APMVerificationConfig extends SettingValue implements Encryptable {
           .filter(header -> header.encrypted)
           .filter(header -> !header.value.equals(MASKED_STRING))
           .forEach(header -> {
-            header.encryptedValue = secretManager.encrypt(accountId, header.value);
+            header.encryptedValue = secretManager.encrypt(accountId, header.value, null);
             header.value = MASKED_STRING;
           });
     }
@@ -173,7 +173,7 @@ public class APMVerificationConfig extends SettingValue implements Encryptable {
           .filter(option -> option.encrypted)
           .filter(option -> !option.value.equals(MASKED_STRING))
           .forEach(option -> {
-            option.encryptedValue = secretManager.encrypt(accountId, option.value);
+            option.encryptedValue = secretManager.encrypt(accountId, option.value, null);
             option.value = MASKED_STRING;
           });
     }
