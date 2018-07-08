@@ -802,7 +802,7 @@ public class KmsTest extends WingsBaseTest {
     final String accountId = UUID.randomUUID().toString();
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
-    String secretId = secretManager.saveSecret(accountId, secretName, secretValue);
+    String secretId = secretManager.saveSecret(accountId, secretName, secretValue, null);
 
     ServiceVariable serviceVariable = ServiceVariable.builder()
                                           .templateId(UUID.randomUUID().toString())
@@ -838,7 +838,7 @@ public class KmsTest extends WingsBaseTest {
 
     secretName = UUID.randomUUID().toString();
     secretValue = UUID.randomUUID().toString();
-    secretId = secretManager.saveSecret(accountId, secretName, secretValue);
+    secretId = secretManager.saveSecret(accountId, secretName, secretValue, null);
 
     String updatedAppId = UUID.randomUUID().toString();
     String updatedName = UUID.randomUUID().toString();
@@ -1243,7 +1243,7 @@ public class KmsTest extends WingsBaseTest {
     // update to encrypt the variable
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
-    String secretId = secretManager.saveSecret(accountId, secretName, secretValue);
+    String secretId = secretManager.saveSecret(accountId, secretName, secretValue, null);
 
     Map<String, Object> keyValuePairs = new HashMap<>();
     keyValuePairs.put("type", Type.ENCRYPTED_TEXT);
@@ -1301,7 +1301,7 @@ public class KmsTest extends WingsBaseTest {
     // update to encrypt the variable
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
-    String secretId = secretManager.saveSecret(accountId, secretName, secretValue);
+    String secretId = secretManager.saveSecret(accountId, secretName, secretValue, null);
 
     Map<String, Object> keyValuePairs = new HashMap<>();
     keyValuePairs.put("type", Type.ENCRYPTED_TEXT);
@@ -1340,7 +1340,7 @@ public class KmsTest extends WingsBaseTest {
 
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
-    String secretId = secretManager.saveSecret(accountId, secretName, secretValue);
+    String secretId = secretManager.saveSecret(accountId, secretName, secretValue, null);
 
     final ServiceVariable serviceVariable = ServiceVariable.builder()
                                                 .templateId(UUID.randomUUID().toString())
@@ -1365,7 +1365,7 @@ public class KmsTest extends WingsBaseTest {
 
     secretName = UUID.randomUUID().toString();
     secretValue = UUID.randomUUID().toString();
-    secretId = secretManager.saveSecret(accountId, secretName, secretValue);
+    secretId = secretManager.saveSecret(accountId, secretName, secretValue, null);
 
     Map<String, Object> keyValuePairs = new HashMap<>();
     keyValuePairs.put("name", "newName");
@@ -1410,7 +1410,7 @@ public class KmsTest extends WingsBaseTest {
 
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
-    String secretId = secretManager.saveSecret(accountId, secretName, secretValue);
+    String secretId = secretManager.saveSecret(accountId, secretName, secretValue, null);
 
     String serviceId = wingsPersistence.save(Service.builder().name(UUID.randomUUID().toString()).build());
     String serviceTemplateId =
@@ -1451,7 +1451,7 @@ public class KmsTest extends WingsBaseTest {
 
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
-    String secretId = secretManager.saveSecret(accountId, secretName, secretValue);
+    String secretId = secretManager.saveSecret(accountId, secretName, secretValue, null);
 
     final ServiceVariable serviceVariable = ServiceVariable.builder()
                                                 .templateId(UUID.randomUUID().toString())
@@ -1488,7 +1488,7 @@ public class KmsTest extends WingsBaseTest {
     String updatedName = UUID.randomUUID().toString();
     String updatedSecretName = UUID.randomUUID().toString();
     String updatedSecretValue = UUID.randomUUID().toString();
-    String updatedSecretId = secretManager.saveSecret(accountId, updatedSecretName, updatedSecretValue);
+    String updatedSecretId = secretManager.saveSecret(accountId, updatedSecretName, updatedSecretValue, null);
 
     final Map<String, Object> keyValuePairs = new HashMap<>();
     keyValuePairs.put("name", updatedName);
@@ -2161,8 +2161,8 @@ public class KmsTest extends WingsBaseTest {
 
       String secretName = UUID.randomUUID().toString();
       File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
-      String secretFileId =
-          secretManager.saveFile(randomAccountId, secretName, new BoundedInputStream(new FileInputStream(fileToSave)));
+      String secretFileId = secretManager.saveFile(
+          randomAccountId, secretName, null, new BoundedInputStream(new FileInputStream(fileToSave)));
       String encryptedUuid =
           wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE).get().getUuid();
 
@@ -2305,8 +2305,8 @@ public class KmsTest extends WingsBaseTest {
     // now make the same file encrypted
     String secretName = UUID.randomUUID().toString();
     File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
-    String secretFileId =
-        secretManager.saveFile(renameAccountId, secretName, new BoundedInputStream(new FileInputStream(fileToUpdate)));
+    String secretFileId = secretManager.saveFile(
+        renameAccountId, secretName, null, new BoundedInputStream(new FileInputStream(fileToUpdate)));
     configFile.setEncrypted(true);
     configFile.setEncryptedFileId(secretFileId);
     configService.update(configFile, null);
@@ -2419,8 +2419,8 @@ public class KmsTest extends WingsBaseTest {
 
     String secretName = UUID.randomUUID().toString();
     File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
-    String secretFileId =
-        secretManager.saveFile(randomAccountId, secretName, new BoundedInputStream(new FileInputStream(fileToSave)));
+    String secretFileId = secretManager.saveFile(
+        randomAccountId, secretName, null, new BoundedInputStream(new FileInputStream(fileToSave)));
     String encryptedUuid =
         wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE).get().getUuid();
 
@@ -2466,7 +2466,7 @@ public class KmsTest extends WingsBaseTest {
     String newSecretName = UUID.randomUUID().toString();
     File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
     secretManager.updateFile(
-        randomAccountId, newSecretName, encryptedUuid, new BoundedInputStream(new FileInputStream(fileToUpdate)));
+        randomAccountId, newSecretName, encryptedUuid, null, new BoundedInputStream(new FileInputStream(fileToUpdate)));
 
     download = configService.download(randomAppId, configFileId);
     assertEquals(FileUtils.readFileToString(fileToUpdate, Charset.defaultCharset()),
@@ -2540,8 +2540,8 @@ public class KmsTest extends WingsBaseTest {
 
     String secretName = UUID.randomUUID().toString();
     File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
-    String secretFileId =
-        secretManager.saveFile(renameAccountId, secretName, new BoundedInputStream(new FileInputStream(fileToSave)));
+    String secretFileId = secretManager.saveFile(
+        renameAccountId, secretName, null, new BoundedInputStream(new FileInputStream(fileToSave)));
     String encryptedUuid =
         wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE).get().getUuid();
 
@@ -2586,7 +2586,7 @@ public class KmsTest extends WingsBaseTest {
     String newSecretName = UUID.randomUUID().toString();
     File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
     secretManager.updateFile(
-        renameAccountId, newSecretName, encryptedUuid, new BoundedInputStream(new FileInputStream(fileToUpdate)));
+        renameAccountId, newSecretName, encryptedUuid, null, new BoundedInputStream(new FileInputStream(fileToUpdate)));
 
     download = configService.download(renameAppId, configFileId);
     assertEquals(FileUtils.readFileToString(fileToUpdate, Charset.defaultCharset()),
@@ -2908,7 +2908,7 @@ public class KmsTest extends WingsBaseTest {
 
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
-    String secretId = secretManager.saveSecret(accountId, secretName, secretValue);
+    String secretId = secretManager.saveSecret(accountId, secretName, secretValue, null);
 
     final ServiceVariable serviceVariable = ServiceVariable.builder()
                                                 .templateId(UUID.randomUUID().toString())

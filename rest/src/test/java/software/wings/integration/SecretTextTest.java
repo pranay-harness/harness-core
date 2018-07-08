@@ -59,6 +59,7 @@ import software.wings.beans.VaultConfig;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.resources.SecretManagementResource;
@@ -691,7 +692,12 @@ public class SecretTextTest extends WingsBaseTest {
     int numOfVariable = 4;
     int numOfAccess = 3;
     int numOfUpdates = 2;
-    List<EncryptedData> secrets = secretManagementResource.listSecrets(accountId, SECRET_TEXT).getResource();
+    PageResponse<EncryptedData> pageResponse =
+        (PageResponse<EncryptedData>) secretManagementResource
+            .listSecrets(accountId, SECRET_TEXT, null, null, aPageRequest().build())
+            .getResource();
+    List<EncryptedData> secrets = pageResponse.getResponse();
+
     assertTrue(secrets.isEmpty());
     for (int i = 0; i < numOfSecrets; i++) {
       String secretName = generateUuid();
@@ -727,7 +733,10 @@ public class SecretTextTest extends WingsBaseTest {
         }
       }
 
-      secrets = secretManagementResource.listSecrets(accountId, SECRET_TEXT).getResource();
+      pageResponse = (PageResponse<EncryptedData>) secretManagementResource
+                         .listSecrets(accountId, SECRET_TEXT, null, null, aPageRequest().build())
+                         .getResource();
+      secrets = pageResponse.getResponse();
       assertEquals(i + 1, secrets.size());
 
       for (EncryptedData secret : secrets) {
@@ -742,7 +751,11 @@ public class SecretTextTest extends WingsBaseTest {
       }
     }
 
-    secrets = secretManagementResource.listSecrets(accountId, SECRET_TEXT).getResource();
+    pageResponse = (PageResponse<EncryptedData>) secretManagementResource
+                       .listSecrets(accountId, SECRET_TEXT, null, null, aPageRequest().build())
+                       .getResource();
+    secrets = pageResponse.getResponse();
+
     for (EncryptedData secret : secrets) {
       assertEquals(numOfVariable, secret.getSetupUsage());
       assertEquals(numOfAccess * numOfVariable, secret.getRunTimeUsage());
@@ -819,7 +832,7 @@ public class SecretTextTest extends WingsBaseTest {
     String secretName = generateUuid();
     File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
     String secretFileId =
-        secretManagementResource.saveFile(accountId, secretName, new FileInputStream(fileToSave)).getResource();
+        secretManagementResource.saveFile(accountId, secretName, new FileInputStream(fileToSave), null).getResource();
 
     Query<EncryptedData> query =
         wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE).filter("accountId", accountId);
@@ -896,7 +909,8 @@ public class SecretTextTest extends WingsBaseTest {
 
     String newSecretName = generateUuid();
     File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
-    secretManagementResource.updateFile(accountId, newSecretName, encryptedUuid, new FileInputStream(fileToUpdate));
+    secretManagementResource.updateFile(
+        accountId, newSecretName, null, encryptedUuid, new FileInputStream(fileToUpdate));
 
     query =
         wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE).filter("accountId", accountId);
@@ -937,7 +951,7 @@ public class SecretTextTest extends WingsBaseTest {
     File newFileToSave =
         new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
     String newSecretFileId =
-        secretManagementResource.saveFile(accountId, secretName, new FileInputStream(fileToSave)).getResource();
+        secretManagementResource.saveFile(accountId, secretName, new FileInputStream(fileToSave), null).getResource();
     configFile.setEncryptedFileId(newSecretFileId);
     configService.update(configFile, null);
 
@@ -955,7 +969,7 @@ public class SecretTextTest extends WingsBaseTest {
     String secretName = generateUuid();
     File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
     String secretFileId =
-        secretManager.saveFile(accountId, secretName, new BoundedInputStream(new FileInputStream(fileToSave)));
+        secretManager.saveFile(accountId, secretName, null, new BoundedInputStream(new FileInputStream(fileToSave)));
 
     Query<EncryptedData> query =
         wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE).filter("accountId", accountId);
@@ -1072,7 +1086,7 @@ public class SecretTextTest extends WingsBaseTest {
     String secretName = generateUuid();
     File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
     String secretFileId =
-        secretManager.saveFile(accountId, secretName, new BoundedInputStream(new FileInputStream(fileToSave)));
+        secretManager.saveFile(accountId, secretName, null, new BoundedInputStream(new FileInputStream(fileToSave)));
 
     Query<EncryptedData> query =
         wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE).filter("accountId", accountId);
@@ -1176,7 +1190,7 @@ public class SecretTextTest extends WingsBaseTest {
     String secretName = generateUuid();
     File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
     String secretFileId =
-        secretManager.saveFile(accountId, secretName, new BoundedInputStream(new FileInputStream(fileToSave)));
+        secretManager.saveFile(accountId, secretName, null, new BoundedInputStream(new FileInputStream(fileToSave)));
 
     Query<EncryptedData> query =
         wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE).filter("accountId", accountId);
@@ -1994,7 +2008,8 @@ public class SecretTextTest extends WingsBaseTest {
                                                  .addFilter("keywords", Operator.CONTAINS, appName)
                                                  .build();
     List<EncryptedData> encryptedDataList =
-        secretManagementResource.listSecrets(accountId, SettingVariableTypes.SECRET_TEXT, pageRequest).getResource();
+        secretManagementResource.listSecrets(accountId, SettingVariableTypes.SECRET_TEXT, null, null, pageRequest)
+            .getResource();
     assertEquals(numOfEnvs, encryptedDataList.size());
 
     pageRequest = aPageRequest()
@@ -2003,7 +2018,8 @@ public class SecretTextTest extends WingsBaseTest {
                       .build();
 
     encryptedDataList =
-        secretManagementResource.listSecrets(accountId, SettingVariableTypes.SECRET_TEXT, pageRequest).getResource();
+        secretManagementResource.listSecrets(accountId, SettingVariableTypes.SECRET_TEXT, null, null, pageRequest)
+            .getResource();
     assertEquals(0, encryptedDataList.size());
 
     pageRequest = aPageRequest()
@@ -2011,7 +2027,8 @@ public class SecretTextTest extends WingsBaseTest {
                       .addFilter("keywords", Operator.CONTAINS, "env")
                       .build();
     encryptedDataList =
-        secretManagementResource.listSecrets(accountId, SettingVariableTypes.SECRET_TEXT, pageRequest).getResource();
+        secretManagementResource.listSecrets(accountId, SettingVariableTypes.SECRET_TEXT, null, null, pageRequest)
+            .getResource();
     assertEquals(numOfEnvs, encryptedDataList.size());
 
     pageRequest = aPageRequest()
@@ -2019,7 +2036,8 @@ public class SecretTextTest extends WingsBaseTest {
                       .addFilter("keywords", Operator.CONTAINS, "env-0")
                       .build();
     encryptedDataList =
-        secretManagementResource.listSecrets(accountId, SettingVariableTypes.SECRET_TEXT, pageRequest).getResource();
+        secretManagementResource.listSecrets(accountId, SettingVariableTypes.SECRET_TEXT, null, null, pageRequest)
+            .getResource();
     assertEquals(numOfEnvs, encryptedDataList.size());
     for (int i = 0; i < numOfServices; i++) {
       for (int j = 0; j < numOfEnvs; j++) {
@@ -2028,7 +2046,7 @@ public class SecretTextTest extends WingsBaseTest {
                           .addFilter("keywords", Operator.CONTAINS, "env-" + i + "-" + j)
                           .build();
         encryptedDataList =
-            secretManagementResource.listSecrets(accountId, SettingVariableTypes.SECRET_TEXT, pageRequest)
+            secretManagementResource.listSecrets(accountId, SettingVariableTypes.SECRET_TEXT, null, null, pageRequest)
                 .getResource();
         assertEquals(1, encryptedDataList.size());
         assertEquals(secretTexts.get(j * numOfServiceVariables).getName(), encryptedDataList.get(0).getName());
@@ -2038,7 +2056,7 @@ public class SecretTextTest extends WingsBaseTest {
                           .addFilter("keywords", Operator.CONTAINS, "serviceTemplate-" + i + "-" + j)
                           .build();
         encryptedDataList =
-            secretManagementResource.listSecrets(accountId, SettingVariableTypes.SECRET_TEXT, pageRequest)
+            secretManagementResource.listSecrets(accountId, SettingVariableTypes.SECRET_TEXT, null, null, pageRequest)
                 .getResource();
         assertEquals(1, encryptedDataList.size());
         assertEquals(secretTexts.get(j * numOfServiceVariables).getName(), encryptedDataList.get(0).getName());

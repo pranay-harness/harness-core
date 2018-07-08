@@ -30,7 +30,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
     headers.add(APMVerificationConfig.KeyValues.builder().key("api_key_plain").value("123").encrypted(false).build());
     apmVerificationConfig.setHeadersList(headers);
     apmVerificationConfig.setAccountId("111");
-    when(secretManager.encrypt("111", "123")).thenReturn("xyz");
+    when(secretManager.encrypt("111", "123", null)).thenReturn("xyz");
     apmVerificationConfig.encryptFields(secretManager);
 
     assertEquals(2, apmVerificationConfig.getHeadersList().size());
@@ -52,7 +52,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
     headers.add(APMVerificationConfig.KeyValues.builder().key("api_key_plain").value("123").encrypted(false).build());
     apmVerificationConfig.setHeadersList(headers);
     apmVerificationConfig.setAccountId("111");
-    when(secretManager.encrypt("111", "123")).thenReturn("xyz");
+    when(secretManager.encrypt("111", "123", null)).thenReturn("xyz");
     apmVerificationConfig.encryptFields(secretManager);
     verifyZeroInteractions(secretManager);
   }
@@ -65,7 +65,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
     headers.add(APMVerificationConfig.KeyValues.builder().key("api_key_plain").value("123").encrypted(false).build());
     apmVerificationConfig.setHeadersList(headers);
     apmVerificationConfig.setAccountId("111");
-    when(secretManager.encrypt("111", "123")).thenReturn("xyz");
+    when(secretManager.encrypt("111", "123", null)).thenReturn("xyz");
     apmVerificationConfig.encryptFields(secretManager);
 
     when(secretManager.encryptedDataDetails("111", "api_key", "xyz"))
@@ -84,7 +84,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
     params.add(APMVerificationConfig.KeyValues.builder().key("api_key_plain").value("123").encrypted(false).build());
     apmVerificationConfig.setOptionsList(params);
     apmVerificationConfig.setAccountId("111");
-    when(secretManager.encrypt("111", "123")).thenReturn("xyz");
+    when(secretManager.encrypt("111", "123", null)).thenReturn("xyz");
     apmVerificationConfig.encryptFields(secretManager);
 
     assertEquals(2, apmVerificationConfig.getOptionsList().size());
@@ -102,7 +102,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
     params.add(APMVerificationConfig.KeyValues.builder().key("api_key_plain").value("123").encrypted(false).build());
     apmVerificationConfig.setOptionsList(params);
     apmVerificationConfig.setAccountId("111");
-    when(secretManager.encrypt("111", "123")).thenReturn("xyz");
+    when(secretManager.encrypt("111", "123", null)).thenReturn("xyz");
     apmVerificationConfig.encryptFields(secretManager);
 
     when(secretManager.encryptedDataDetails("111", "api_key", "xyz"))

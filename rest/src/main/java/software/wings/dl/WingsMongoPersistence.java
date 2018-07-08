@@ -678,7 +678,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
         savedObject == null ? (String) encryptedField.get(object) : (String) encryptedField.get(savedObject);
     EncryptedData encryptedData = isBlank(encryptedId) ? null : get(EncryptedData.class, encryptedId);
     EncryptedData encryptedPair = secretManager.encrypt(
-        encryptionType, accountId, object.getSettingType(), secret, encryptedData, UUID.randomUUID().toString());
+        encryptionType, accountId, object.getSettingType(), secret, encryptedData, UUID.randomUUID().toString(), null);
 
     String changeLogDescription = "";
 

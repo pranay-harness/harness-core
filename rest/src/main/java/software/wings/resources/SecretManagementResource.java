@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.data.structure.EmptyPredicate;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import retrofit2.http.Body;
@@ -26,7 +27,9 @@ import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.security.EncryptionConfig;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.UsageRestrictions;
 import software.wings.utils.BoundedInputStream;
+import software.wings.utils.JsonUtils;
 
 import java.io.InputStream;
 import java.util.Collection;
@@ -104,7 +107,8 @@ public class SecretManagementResource {
   @Timed
   @ExceptionMetered
   public RestResponse<String> saveSecret(@QueryParam("accountId") final String accountId, @Body SecretText secretText) {
-    return new RestResponse<>(secretManager.saveSecret(accountId, secretText.getName(), secretText.getValue()));
+    return new RestResponse<>(secretManager.saveSecret(
+        accountId, secretText.getName(), secretText.getValue(), secretText.getUsageRestrictions()));
   }
 
   @POST
@@ -113,8 +117,8 @@ public class SecretManagementResource {
   @ExceptionMetered
   public RestResponse<String> saveSecretUsingLocalMode(
       @QueryParam("accountId") final String accountId, @Body SecretText secretText) {
-    return new RestResponse<>(
-        secretManager.saveSecretUsingLocalMode(accountId, secretText.getName(), secretText.getValue()));
+    return new RestResponse<>(secretManager.saveSecretUsingLocalMode(
+        accountId, secretText.getName(), secretText.getValue(), secretText.getUsageRestrictions()));
   }
 
   @POST
@@ -123,7 +127,8 @@ public class SecretManagementResource {
   @ExceptionMetered
   public RestResponse<Boolean> updateSecret(@QueryParam("accountId") final String accountId,
       @QueryParam("uuid") final String uuId, @Body SecretText secretText) {
-    return new RestResponse<>(secretManager.updateSecret(accountId, uuId, secretText.getName(), secretText.getValue()));
+    return new RestResponse<>(secretManager.updateSecret(
+        accountId, uuId, secretText.getName(), secretText.getValue(), secretText.getUsageRestrictions()));
   }
 
   @DELETE
@@ -141,8 +146,19 @@ public class SecretManagementResource {
   @Consumes(MULTIPART_FORM_DATA)
   @ExceptionMetered
   public RestResponse<String> saveFile(@QueryParam("accountId") final String accountId,
-      @FormDataParam("name") final String name, @FormDataParam("file") InputStream uploadedInputStream) {
-    return new RestResponse<>(secretManager.saveFile(accountId, name,
+      @FormDataParam("name") final String name, @FormDataParam("file") InputStream uploadedInputStream,
+      @FormDataParam("usageRestrictions") final String usageRestrictionsString) {
+    // TODO use a bean param instead. It wasn't working for some reason.
+    UsageRestrictions usageRestrictions = null;
+    if (EmptyPredicate.isNotEmpty(usageRestrictionsString)) {
+      try {
+        usageRestrictions = JsonUtils.asObject(usageRestrictionsString, UsageRestrictions.class);
+      } catch (Exception ex) {
+        throw new WingsException("Invalid usage restrictions");
+      }
+    }
+
+    return new RestResponse<>(secretManager.saveFile(accountId, name, usageRestrictions,
         new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getConfigFileLimit())));
   }
 
@@ -152,9 +168,10 @@ public class SecretManagementResource {
   @Consumes(MULTIPART_FORM_DATA)
   @ExceptionMetered
   public RestResponse<Boolean> updateFile(@QueryParam("accountId") final String accountId,
-      @FormDataParam("name") final String name, @FormDataParam("uuid") final String fileId,
-      @FormDataParam("file") InputStream uploadedInputStream) {
-    return new RestResponse<>(secretManager.updateFile(accountId, name, fileId,
+      @FormDataParam("name") final String name,
+      @FormDataParam("usageRestrictions") final UsageRestrictions usageRestrictions,
+      @FormDataParam("uuid") final String fileId, @FormDataParam("file") InputStream uploadedInputStream) {
+    return new RestResponse<>(secretManager.updateFile(accountId, name, fileId, usageRestrictions,
         new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getConfigFileLimit())));
   }
 
@@ -168,28 +185,15 @@ public class SecretManagementResource {
   }
 
   @GET
-  @Path("/list-secrets")
-  @Timed
-  @ExceptionMetered
-  @Deprecated
-  public RestResponse<List<EncryptedData>> listSecrets(
-      @QueryParam("accountId") final String accountId, @QueryParam("type") final SettingVariableTypes type) {
-    try {
-      return new RestResponse<>(secretManager.listSecrets(accountId, type));
-    } catch (IllegalAccessException e) {
-      throw new WingsException(e);
-    }
-  }
-
-  @GET
   @Path("/list-secrets-page")
   @Timed
   @ExceptionMetered
   public RestResponse<PageResponse<EncryptedData>> listSecrets(@QueryParam("accountId") final String accountId,
-      @QueryParam("type") final SettingVariableTypes type, @BeanParam PageRequest<EncryptedData> pageRequest) {
+      @QueryParam("type") final SettingVariableTypes type, @QueryParam("currentAppId") String currentAppId,
+      @QueryParam("currentEnvId") String currentEnvId, @BeanParam PageRequest<EncryptedData> pageRequest) {
     try {
       pageRequest.addFilter("type", Operator.EQ, type);
-      return new RestResponse<>(secretManager.listSecrets(pageRequest));
+      return new RestResponse<>(secretManager.listSecrets(accountId, pageRequest, currentAppId, currentEnvId));
     } catch (IllegalAccessException e) {
       throw new WingsException(e);
     }
