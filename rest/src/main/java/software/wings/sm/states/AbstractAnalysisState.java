@@ -19,7 +19,6 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
-import software.wings.api.CanaryWorkflowStandardParams;
 import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
@@ -80,6 +79,7 @@ import software.wings.sm.State;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
+import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.waitnotify.WaitNotifyEngine;
 
@@ -425,14 +425,14 @@ public abstract class AbstractAnalysisState extends State {
       return getPcfHostNames(context, false);
     }
 
-    CanaryWorkflowStandardParams canaryWorkflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Set<String> rv = new HashSet<>();
-    if (isEmpty(canaryWorkflowStandardParams.getInstances())) {
+    if (isEmpty(workflowStandardParams.getInstances())) {
       getLogger().warn(
           "No test nodes found for state: {}, id: {} ", getStateType(), context.getStateExecutionInstanceId());
       return rv;
     }
-    for (InstanceElement instanceElement : canaryWorkflowStandardParams.getInstances()) {
+    for (InstanceElement instanceElement : workflowStandardParams.getInstances()) {
       if (isEmpty(getHostnameTemplate())) {
         rv.add(instanceElement.getHostName());
       } else {
