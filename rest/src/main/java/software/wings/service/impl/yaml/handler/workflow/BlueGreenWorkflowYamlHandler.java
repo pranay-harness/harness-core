@@ -4,7 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.inject.Singleton;
 
-import software.wings.beans.RollingOrchestrationWorkflow.RollingOrchestrationWorkflowBuilder;
+import software.wings.beans.BlueGreenOrchestrationWorkflow.BlueGreenOrchestrationWorkflowBuilder;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.WorkflowPhase;
@@ -16,8 +16,8 @@ import java.util.List;
 public class BlueGreenWorkflowYamlHandler extends WorkflowYamlHandler<BlueGreenWorkflowYaml> {
   @Override
   protected void setOrchestrationWorkflow(WorkflowInfo workflowInfo, WorkflowBuilder workflow) {
-    RollingOrchestrationWorkflowBuilder rollingOrchestrationWorkflowBuilder =
-        RollingOrchestrationWorkflowBuilder.aRollingOrchestrationWorkflow();
+    BlueGreenOrchestrationWorkflowBuilder blueGreenOrchestrationWorkflowBuilder =
+        BlueGreenOrchestrationWorkflowBuilder.aBlueGreenOrchestrationWorkflow();
 
     List<WorkflowPhase> phaseList = workflowInfo.getPhaseList();
     if (isNotEmpty(phaseList)) {
@@ -25,14 +25,14 @@ public class BlueGreenWorkflowYamlHandler extends WorkflowYamlHandler<BlueGreenW
       workflow.withInfraMappingId(workflowPhase.getInfraMappingId()).withServiceId(workflowPhase.getServiceId());
     }
 
-    rollingOrchestrationWorkflowBuilder.withFailureStrategies(workflowInfo.getFailureStrategies())
+    blueGreenOrchestrationWorkflowBuilder.withFailureStrategies(workflowInfo.getFailureStrategies())
         .withNotificationRules(workflowInfo.getNotificationRules())
         .withPostDeploymentSteps(workflowInfo.getPostDeploymentSteps())
         .withPreDeploymentSteps(workflowInfo.getPreDeploymentSteps())
         .withRollbackWorkflowPhaseIdMap(workflowInfo.getRollbackPhaseMap())
         .withUserVariables(workflowInfo.getUserVariables())
         .withWorkflowPhases(phaseList);
-    workflow.withOrchestrationWorkflow(rollingOrchestrationWorkflowBuilder.build());
+    workflow.withOrchestrationWorkflow(blueGreenOrchestrationWorkflowBuilder.build());
   }
 
   @Override
