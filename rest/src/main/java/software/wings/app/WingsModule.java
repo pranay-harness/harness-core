@@ -136,7 +136,6 @@ import software.wings.service.impl.StatisticsServiceImpl;
 import software.wings.service.impl.SystemCatalogSeviceImpl;
 import software.wings.service.impl.ThirdPartyApiServiceImpl;
 import software.wings.service.impl.TriggerServiceImpl;
-import software.wings.service.impl.UsageRestrictionsServiceImpl;
 import software.wings.service.impl.UserGroupServiceImpl;
 import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.impl.WebHookServiceImpl;
@@ -248,7 +247,6 @@ import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.SystemCatalogService;
 import software.wings.service.intfc.ThirdPartyApiService;
 import software.wings.service.intfc.TriggerService;
-import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WebHookService;
@@ -430,7 +428,6 @@ public class WingsModule extends AbstractModule {
     bind(PreferenceService.class).to(PreferenceServiceImpl.class);
     bind(HarnessUserGroupService.class).to(HarnessUserGroupServiceImpl.class);
     bind(InfraDownloadService.class).to(InfraDownloadServiceImpl.class);
-    bind(UsageRestrictionsService.class).to(UsageRestrictionsServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);

@@ -21,7 +21,6 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.security.EncryptionType;
 import software.wings.settings.SettingValue.SettingVariableTypes;
-import software.wings.settings.UsageRestrictions;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -72,8 +71,6 @@ public class EncryptedData extends Base {
   private Set<String> serviceVariableIds;
 
   private Map<String, AtomicInteger> searchTags;
-
-  private UsageRestrictions usageRestrictions;
 
   @SchemaIgnore @Transient private transient String encryptedBy;
 

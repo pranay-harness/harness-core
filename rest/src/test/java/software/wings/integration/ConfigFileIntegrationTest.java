@@ -158,8 +158,8 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
                             .relativeFilePath("tmp");
     String secretName = UUID.randomUUID().toString();
     InputStream inputStream = IOUtils.toInputStream(INPUT_TEXT, "ISO-8859-1");
-    String secretFileId = secretManager.saveFile(
-        accountId, secretName, null, new BoundedInputStream(new BoundedInputStream(inputStream)));
+    String secretFileId =
+        secretManager.saveFile(accountId, secretName, new BoundedInputStream(new BoundedInputStream(inputStream)));
 
     ConfigFile appConfigFile = configFileBuilder.build();
 

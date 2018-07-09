@@ -10,7 +10,6 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
 import software.wings.settings.SettingValue.SettingVariableTypes;
-import software.wings.settings.UsageRestrictions;
 import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
@@ -39,10 +38,10 @@ public interface SecretManager {
   List<SecretChangeLog> getChangeLogs(String accountId, String entityId, SettingVariableTypes variableType)
       throws IllegalAccessException;
 
-  String encrypt(String accountId, String secret, UsageRestrictions usageRestrictions);
+  String encrypt(String accountId, String secret);
 
   EncryptedData encrypt(EncryptionType encryptionType, String accountId, SettingVariableTypes settingType,
-      char[] secret, EncryptedData encryptedData, String secretName, UsageRestrictions usageRestrictions);
+      char[] secret, EncryptedData encryptedData, String secretName);
 
   Optional<EncryptedDataDetail> encryptedDataDetails(String accountId, String fieldName, String refId);
 
@@ -66,29 +65,28 @@ public interface SecretManager {
 
   void checkAndAlertForInvalidManagers();
 
-  String saveSecret(String accountId, String name, String value, UsageRestrictions usageRestrictions);
+  String saveSecret(String accountId, String name, String value);
 
-  boolean updateSecret(String accountId, String uuId, String name, String value, UsageRestrictions usageRestrictions);
-
-  boolean updateUsageRestrictionsForSecretOrFile(String accountId, String uuId, UsageRestrictions usageRestrictions);
+  boolean updateSecret(String accountId, String uuId, String name, String value);
 
   boolean deleteSecret(String accountId, String uuId);
 
-  String saveFile(String accountId, String name, UsageRestrictions usageRestrictions, BoundedInputStream inputStream);
+  String saveFile(String accountId, String name, BoundedInputStream inputStream);
 
   File getFile(String accountId, String uuId, File readInto);
 
   String getFileContents(String accountId, String uuId);
 
-  boolean updateFile(
-      String accountId, String name, String uuid, UsageRestrictions usageRestrictions, BoundedInputStream inputStream);
+  boolean updateFile(String accountId, String name, String uuid, BoundedInputStream inputStream);
 
   boolean deleteFile(String accountId, String uuId);
 
-  PageResponse<EncryptedData> listSecrets(String accountId, PageRequest<EncryptedData> pageRequest,
-      String appIdFromRequest, String envIdFromRequest) throws IllegalAccessException;
+  @Deprecated
+  List<EncryptedData> listSecrets(String accountId, SettingVariableTypes type) throws IllegalAccessException;
+
+  PageResponse<EncryptedData> listSecrets(PageRequest<EncryptedData> pageRequest) throws IllegalAccessException;
 
   List<UuidAware> getSecretUsage(String accountId, String secretTextId);
 
-  String saveSecretUsingLocalMode(String accountId, String name, String value, UsageRestrictions usageRestrictions);
+  String saveSecretUsingLocalMode(String accountId, String name, String value);
 }
