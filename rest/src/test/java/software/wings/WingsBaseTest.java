@@ -15,6 +15,8 @@ import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.HashSet;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -82,5 +84,19 @@ public abstract class WingsBaseTest extends CategoryTest {
       return null;
     }
     return data.getEncryptedValue();
+  }
+
+  protected void setStaticTimeOut(Class clazz, String name, long value)
+      throws NoSuchFieldException, IllegalAccessException {
+    Field field = clazz.getDeclaredField(name);
+    field.setAccessible(true); // Suppress Java language access checking
+
+    // Remove "final" modifier
+    Field modifiersField = Field.class.getDeclaredField("modifiers");
+    modifiersField.setAccessible(true);
+    modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+
+    // Set value
+    field.set(null, value);
   }
 }
