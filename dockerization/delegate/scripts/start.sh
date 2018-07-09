@@ -24,28 +24,37 @@ if ! `grep NO_PROXY proxy.config > /dev/null`; then
 fi
 
 source proxy.config
+PROXY_CURL=""
+  if [[ $PROXY_HOST != "" ]]
+  then
+    echo "Using $PROXY_SCHEME proxy $PROXY_HOST:$PROXY_PORT"
+    if [[ $PROXY_USER != "" ]]
+    then
+       echo "using proxy auth config"
+       PROXY_CURL="-x "$PROXY_SCHEME"://"$PROXY_USER:$PROXY_PASSWORD@$PROXY_HOST:$PROXY_PORT
+       PROXY_SYS_PROPS="-Dhttp.proxyUser=$PROXY_USER -Dhttp.proxyPassword=$PROXY_PASSWORD -Dhttps.proxyUser=$PROXY_USER -Dhttps.proxyPassword=$PROXY_PASSWORD "
+    else
+       echo "no proxy auth mentioned"
+       PROXY_CURL="-x "$PROXY_SCHEME"://"$PROXY_HOST:$PROXY_PORT
+       export http_proxy=$PROXY_HOST:$PROXY_PORT
+       export https_proxy=$PROXY_HOST:$PROXY_PORT
+    fi
+    PROXY_SYS_PROPS=$PROXY_SYS_PROPS" -DproxyScheme=$PROXY_SCHEME -Dhttp.proxyHost=$PROXY_HOST -Dhttp.proxyPort=$PROXY_PORT -Dhttps.proxyHost=$PROXY_HOST -Dhttps.proxyPort=$PROXY_PORT"
+  fi
 
-if [[ $PROXY_HOST != "" ]]
-then
-  echo "Using $PROXY_SCHEME proxy $PROXY_HOST:$PROXY_PORT"
-  export http_proxy=$PROXY_HOST:$PROXY_PORT
-  export https_proxy=$PROXY_HOST:$PROXY_PORT
-  PROXY_SYS_PROPS="-DproxyScheme=$PROXY_SCHEME -Dhttp.proxyHost=$PROXY_HOST -Dhttp.proxyPort=$PROXY_PORT -Dhttps.proxyHost=$PROXY_HOST -Dhttps.proxyPort=$PROXY_PORT"
-fi
-if [[ $NO_PROXY != "" ]]
-then
-  echo "No proxy for domain suffixes $NO_PROXY"
-  export no_proxy=$NO_PROXY
-  SYSTEM_PROPERTY_NO_PROXY=`echo $NO_PROXY | sed "s/\,/|*/g"`
-  PROXY_SYS_PROPS=$PROXY_SYS_PROPS" -Dhttp.nonProxyHosts=*$SYSTEM_PROPERTY_NO_PROXY"
-  echo $PROXY_SYS_PROPS
-fi
-
+  if [[ $NO_PROXY != "" ]]
+  then
+    echo "No proxy for domain suffixes $NO_PROXY"
+    export no_proxy=$NO_PROXY
+    SYSTEM_PROPERTY_NO_PROXY=`echo $NO_PROXY | sed "s/\,/|*/g"`
+    PROXY_SYS_PROPS=$PROXY_SYS_PROPS" -Dhttp.nonProxyHosts=*$SYSTEM_PROPERTY_NO_PROXY"
+  fi
+echo $PROXY_SYS_PROPS
 if [ ! -d $JRE_DIR  -o ! -d jre -o ! -e $JRE_BINARY ]
 then
   echo "Downloading JRE packages..."
   JVM_TAR_FILENAME=$(basename "$JVM_URL")
-  curl -#kLO $JVM_URL
+  curl $PROXY_CURL -#kLO $JVM_URL
   echo "Extracting JRE packages..."
   mkdir -p tmp
   mv $JVM_TAR_FILENAME tmp
@@ -67,7 +76,7 @@ fi
 #Install kubectl
 echo "Installing kubectl..."
 apt-get update && apt-get install -y apt-transport-https
-curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+curl $PROXY_CURL -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 cat <<EOF >/etc/apt/sources.list.d/kubernetes.list
 deb http://apt.kubernetes.io/ kubernetes-xenial main
 EOF
@@ -77,19 +86,19 @@ apt-get install -y kubectl
 DESIRED_VERSION=_helmVersion_
 export DESIRED_VERSION
 echo "Installing Helm $DESIRED_VERSION ..."
-curl -#k https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get | bash
+curl $PROXY_CURL -#k https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get | bash
 helm init --client-only
 
 echo "Checking Watcher latest version..."
 WATCHER_STORAGE_URL=_watcherStorageUrl_
-REMOTE_WATCHER_LATEST=$(curl -#k $WATCHER_STORAGE_URL/_watcherCheckLocation_)
+REMOTE_WATCHER_LATEST=$(curl $PROXY_CURL -#k $WATCHER_STORAGE_URL/_watcherCheckLocation_)
 REMOTE_WATCHER_URL=$WATCHER_STORAGE_URL/$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f2)
 REMOTE_WATCHER_VERSION=$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f1)
 
 if [ ! -e watcher.jar ]
 then
   echo "Downloading Watcher $REMOTE_WATCHER_VERSION ..."
-  curl -#k $REMOTE_WATCHER_URL -o watcher.jar
+  curl $PROXY_CURL -#k $REMOTE_WATCHER_URL -o watcher.jar
 else
   WATCHER_CURRENT_VERSION=$(unzip -c watcher.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
   if [[ $REMOTE_WATCHER_VERSION != $WATCHER_CURRENT_VERSION ]]
@@ -97,20 +106,20 @@ else
     echo "Downloading Watcher $REMOTE_WATCHER_VERSION ..."
     mkdir -p watcherBackup.$WATCHER_CURRENT_VERSION
     cp watcher.jar watcherBackup.$WATCHER_CURRENT_VERSION
-    curl -#k $REMOTE_WATCHER_URL -o watcher.jar
+    curl $PROXY_CURL -#k $REMOTE_WATCHER_URL -o watcher.jar
   fi
 fi
 
 echo "Checking Delegate latest version..."
 DELEGATE_STORAGE_URL=_delegateStorageUrl_
-REMOTE_DELEGATE_LATEST=$(curl -#k $DELEGATE_STORAGE_URL/_delegateCheckLocation_)
+REMOTE_DELEGATE_LATEST=$(curl $PROXY_CURL -#k $DELEGATE_STORAGE_URL/_delegateCheckLocation_)
 REMOTE_DELEGATE_URL=$DELEGATE_STORAGE_URL/$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f2)
 REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f1)
 
 if [ ! -e delegate.jar ]
 then
   echo "Downloading Delegate $REMOTE_DELEGATE_VERSION ..."
-  curl -#k $REMOTE_DELEGATE_URL -o delegate.jar
+  curl $PROXY_CURL -#k $REMOTE_DELEGATE_URL -o delegate.jar
 else
   DELEGATE_CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
   if [[ $REMOTE_DELEGATE_VERSION != $DELEGATE_CURRENT_VERSION ]]
@@ -118,7 +127,7 @@ else
     echo "Downloading Delegate $REMOTE_DELEGATE_VERSION ..."
     mkdir -p backup.$DELEGATE_CURRENT_VERSION
     cp delegate.jar backup.$DELEGATE_CURRENT_VERSION
-    curl -#k $REMOTE_DELEGATE_URL -o delegate.jar
+    curl $PROXY_CURL -#k $REMOTE_DELEGATE_URL -o delegate.jar
   fi
 fi
 

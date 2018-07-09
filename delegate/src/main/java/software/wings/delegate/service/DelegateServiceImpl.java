@@ -58,13 +58,13 @@ import com.google.inject.name.Named;
 import com.ning.http.client.AsyncHttpClient;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.network.FibonacciBackOff;
+import io.harness.network.Http;
 import io.harness.version.VersionInfoManager;
 import okhttp3.ResponseBody;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHost;
-import org.apache.http.client.fluent.Request;
 import org.atmosphere.wasync.Client;
 import org.atmosphere.wasync.ClientFactory;
 import org.atmosphere.wasync.Encoder;
@@ -784,15 +784,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private String getResponseFromUrl(String url) throws IOException {
-    Request request = Request.Get(url).connectTimeout(10000).socketTimeout(10000);
-    if (httpProxyHost != null) {
-      String withoutScheme = url.substring(url.indexOf("://") + 3);
-      String host = withoutScheme.substring(0, withoutScheme.indexOf('/'));
-      if (isEmpty(nonProxyHosts) || nonProxyHosts.stream().noneMatch(host::endsWith)) {
-        request.viaProxy(httpProxyHost);
-      }
-    }
-    return request.execute().returnContent().asString().trim();
+    return Http.getResponseFromUrl(url, httpProxyHost, 10000, 10000);
   }
 
   private boolean doRestartDelegate() {

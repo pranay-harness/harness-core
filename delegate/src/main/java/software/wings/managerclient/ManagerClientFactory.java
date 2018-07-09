@@ -9,10 +9,10 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.network.FibonacciBackOff;
+import io.harness.network.Http;
 import io.harness.version.VersionInfoManager;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
-import okhttp3.OkHttpClient.Builder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Retrofit;
@@ -76,7 +76,7 @@ public class ManagerClientFactory implements Provider<ManagerClient> {
       // Create an ssl socket factory with our all-trusting manager
       final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
 
-      return new Builder()
+      return Http.getOkHttpClientWithProxyAuthSetup()
           .connectionPool(new ConnectionPool())
           .retryOnConnectionFailure(true)
           .addInterceptor(new DelegateAuthInterceptor(tokenGenerator))
