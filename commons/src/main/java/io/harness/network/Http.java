@@ -5,10 +5,16 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.base.Splitter;
 
+import okhttp3.Authenticator;
 import okhttp3.ConnectionPool;
+import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.Route;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.apache.http.HttpHost;
+import org.apache.http.client.fluent.Executor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,13 +74,12 @@ public class Http {
       HostnameVerifier allHostsValid = (s, sslSession) -> true;
       // Install the all-trusting host verifier
       HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
-      HttpURLConnection connection =
-          (HttpURLConnection) (shouldUseNonProxy(url) ? new URL(url).openConnection(Proxy.NO_PROXY)
-                                                      : new URL(url).openConnection());
+      HttpURLConnection connection = getHttpsURLConnection(url);
       connection.setRequestMethod(
           "GET"); // Changed to GET as some providers like artifactory SAAS is not accepting HEAD requests
       connection.setConnectTimeout(15000); // 20ms otherwise delegate times out
       connection.setReadTimeout(15000);
+
       int responseCode = connection.getResponseCode();
       if ((responseCode >= 200 && responseCode <= 399) || responseCode == 401 || responseCode == 403) {
         logger.info("Url {} is connectable", url);
@@ -85,6 +90,20 @@ public class Http {
       return false;
     }
     return false;
+  }
+
+  private static HttpURLConnection getHttpsURLConnection(String url) throws MalformedURLException, IOException {
+    HttpURLConnection connection = null;
+    if (shouldUseNonProxy(url)) {
+      connection = (HttpURLConnection) new URL(url).openConnection(Proxy.NO_PROXY);
+    } else {
+      connection = (HttpURLConnection) new URL(url).openConnection();
+    }
+    return connection;
+  }
+
+  private static boolean isProxyConfigured() {
+    return isNotEmpty(getProxyHostName());
   }
 
   public static SSLContext getSslContext() {
@@ -119,13 +138,18 @@ public class Http {
 
   public static synchronized OkHttpClient getUnsafeOkHttpClient(String url) {
     try {
-      return getOkHttpClientBuilder()
-          .sslSocketFactory(Http.getSslContext().getSocketFactory())
-          .hostnameVerifier((s, sslSession) -> true)
-          .connectTimeout(15000, TimeUnit.SECONDS)
-          .proxy(checkAndGetNonProxyIfApplicable(url))
-          .readTimeout(15000, TimeUnit.SECONDS)
-          .build();
+      OkHttpClient.Builder builder = getOkHttpClientBuilder()
+                                         .sslSocketFactory(Http.getSslContext().getSocketFactory())
+                                         .hostnameVerifier((s, sslSession) -> true)
+                                         .connectTimeout(15000, TimeUnit.SECONDS)
+                                         .readTimeout(15000, TimeUnit.SECONDS);
+
+      Proxy proxy = checkAndGetNonProxyIfApplicable(url);
+      if (proxy != null) {
+        builder.proxy(proxy);
+      }
+
+      return builder.build();
 
     } catch (Exception e) {
       throw new RuntimeException(e);
@@ -242,10 +266,106 @@ public class Http {
   }
 
   public static OkHttpClient.Builder getOkHttpClientBuilder() {
-    return new OkHttpClient.Builder().connectionPool(new ConnectionPool(0, 5, TimeUnit.MINUTES));
+    return getOkHttpClientWithProxyAuthSetup().connectionPool(new ConnectionPool(0, 5, TimeUnit.MINUTES));
   }
 
   public static OkHttpClient.Builder getOkHttpClientBuilderWithReadtimeOut(int timeout, TimeUnit timeUnit) {
     return getOkHttpClientBuilder().readTimeout(timeout, timeUnit);
+  }
+
+  public static OkHttpClient.Builder getOkHttpClientWithProxyAuthSetup() {
+    OkHttpClient.Builder builder = new OkHttpClient.Builder();
+
+    String user = getProxyUserName();
+    if (isNotEmpty(user)) {
+      logger.info("###Using proxy Auth");
+      String password = getProxyPassword();
+      builder.proxyAuthenticator(new Authenticator() {
+        public Request authenticate(Route route, Response response) throws IOException {
+          String credential = Credentials.basic(user, password);
+          return response.request().newBuilder().header("Proxy-Authorization", credential).build();
+        }
+      });
+    }
+
+    return builder;
+  }
+
+  public static String getProxyUserName() {
+    String user = null;
+    if ("http".equals(getProxyScheme().toLowerCase())) {
+      user = System.getProperty("http.proxyUser");
+    } else {
+      user = System.getProperty("https.proxyUser");
+    }
+    if (isNotEmpty(user)) {
+      return user;
+    }
+
+    return user;
+  }
+
+  // Need to add url encoding here
+  public static String getProxyPassword() {
+    String password = null;
+    if (isNotEmpty(getProxyUserName())) {
+      if ("http".equals(getProxyScheme().toLowerCase())) {
+        password = System.getProperty("http.proxyPassword");
+      } else {
+        password = System.getProperty("https.proxyPassword");
+      }
+    }
+    return password;
+  }
+
+  public static String getProxyScheme() {
+    String proxyScheme = System.getProperty("proxyScheme");
+    if (isNotEmpty(proxyScheme)) {
+      return proxyScheme;
+    }
+
+    return "http";
+  }
+
+  // Need to add url encoding here
+  public static String getProxyHostName() {
+    String proxyHost = null;
+    if ("http".equalsIgnoreCase(getProxyScheme())) {
+      proxyHost = System.getProperty("http.proxyHost");
+    } else { // https by default
+      proxyHost = System.getProperty("https.proxyHost");
+    }
+
+    return proxyHost;
+  }
+
+  // Need to add url encoding here
+  public static String getProxyPort() {
+    String proxyPort = null;
+    if ("http".equalsIgnoreCase(getProxyScheme())) {
+      proxyPort = System.getProperty("http.proxyPort");
+    } else { // https by default
+      proxyPort = System.getProperty("https.proxyPort");
+    }
+
+    return proxyPort;
+  }
+
+  public static String getResponseFromUrl(String url, HttpHost httpProxyHost, int socketTimeout, int connectTimeout)
+      throws IOException {
+    Executor executor = Executor.newInstance();
+    org.apache.http.client.fluent.Request request =
+        org.apache.http.client.fluent.Request.Get(url).connectTimeout(connectTimeout).socketTimeout(socketTimeout);
+
+    if (httpProxyHost != null) {
+      if (!Http.shouldUseNonProxy(url)) {
+        logger.info("using proxy");
+        request.viaProxy(httpProxyHost);
+        executor.auth(httpProxyHost, Http.getProxyUserName(), Http.getProxyPassword());
+      }
+    }
+
+    org.apache.http.client.fluent.Response response = executor.execute(request);
+    return response.returnContent().asString();
   }
 }

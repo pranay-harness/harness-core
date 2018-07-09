@@ -58,28 +58,36 @@ if ! `grep NO_PROXY proxy.config > /dev/null`; then
 fi
 
 source proxy.config
-
+PROXY_CURL=""
 if [[ $PROXY_HOST != "" ]]
-then
-  echo "Using $PROXY_SCHEME proxy $PROXY_HOST:$PROXY_PORT"
-  export http_proxy=$PROXY_HOST:$PROXY_PORT
-  export https_proxy=$PROXY_HOST:$PROXY_PORT
-  PROXY_SYS_PROPS="-DproxyScheme=$PROXY_SCHEME -Dhttp.proxyHost=$PROXY_HOST -Dhttp.proxyPort=$PROXY_PORT -Dhttps.proxyHost=$PROXY_HOST -Dhttps.proxyPort=$PROXY_PORT"
-fi
-if [[ $NO_PROXY != "" ]]
-then
-  echo "No proxy for domain suffixes $NO_PROXY"
-  export no_proxy=$NO_PROXY
-  SYSTEM_PROPERTY_NO_PROXY=`echo $NO_PROXY | sed "s/\,/|*/g"`
-  PROXY_SYS_PROPS=$PROXY_SYS_PROPS" -Dhttp.nonProxyHosts=*$SYSTEM_PROPERTY_NO_PROXY"
-  echo $PROXY_SYS_PROPS
-fi
+  then
+    echo "Using $PROXY_SCHEME proxy $PROXY_HOST:$PROXY_PORT"
+    if [[ $PROXY_USER != "" ]]
+    then
+       PROXY_CURL="-x "$PROXY_SCHEME"://"$PROXY_USER:$PROXY_PASSWORD@$PROXY_HOST:$PROXY_PORT
+       PROXY_SYS_PROPS="-Dhttp.proxyUser=$PROXY_USER -Dhttp.proxyPassword=$PROXY_PASSWORD -Dhttps.proxyUser=$PROXY_USER -Dhttps.proxyPassword=$PROXY_PASSWORD "
+    else
+       PROXY_CURL="-x "$PROXY_SCHEME"://"$PROXY_HOST:$PROXY_PORT
+       export http_proxy=$PROXY_HOST:$PROXY_PORT
+       export https_proxy=$PROXY_HOST:$PROXY_PORT
+    fi
+    PROXY_SYS_PROPS=$PROXY_SYS_PROPS" -DproxyScheme=$PROXY_SCHEME -Dhttp.proxyHost=$PROXY_HOST -Dhttp.proxyPort=$PROXY_PORT -Dhttps.proxyHost=$PROXY_HOST -Dhttps.proxyPort=$PROXY_PORT"
+  fi
 
+  if [[ $NO_PROXY != "" ]]
+  then
+    echo "No proxy for domain suffixes $NO_PROXY"
+    export no_proxy=$NO_PROXY
+    SYSTEM_PROPERTY_NO_PROXY=`echo $NO_PROXY | sed "s/\,/|*/g"`
+    PROXY_SYS_PROPS=$PROXY_SYS_PROPS" -Dhttp.nonProxyHosts=*$SYSTEM_PROPERTY_NO_PROXY"
+  fi
+
+echo $PROXY_SYS_PROPS
 if [ ! -d $JRE_DIR  -o ! -d jre -o ! -e $JRE_BINARY ]
 then
   echo "Downloading JRE packages..."
   JVM_TAR_FILENAME=$(basename "$JVM_URL")
-  curl -#kLO $JVM_URL
+  curl $PROXY_CURL -#kLO $JVM_URL
   echo "Extracting JRE packages..."
   mkdir -p tmp
   mv $JVM_TAR_FILENAME tmp
@@ -100,14 +108,14 @@ fi
 
 echo "Checking Watcher latest version..."
 WATCHER_STORAGE_URL=http://localhost:8888
-REMOTE_WATCHER_LATEST=$(curl -#k $WATCHER_STORAGE_URL/watcherci.txt)
+REMOTE_WATCHER_LATEST=$(curl $PROXY_CURL -#k $WATCHER_STORAGE_URL/watcherci.txt)
 REMOTE_WATCHER_URL=$WATCHER_STORAGE_URL/$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f2)
 REMOTE_WATCHER_VERSION=$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f1)
 
 if [ ! -e watcher.jar ]
 then
   echo "Downloading Watcher $REMOTE_WATCHER_VERSION ..."
-  curl -#k $REMOTE_WATCHER_URL -o watcher.jar
+  curl $PROXY_CURL -#k $REMOTE_WATCHER_URL -o watcher.jar
 else
   WATCHER_CURRENT_VERSION=$(unzip -c watcher.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
   if [[ $REMOTE_WATCHER_VERSION != $WATCHER_CURRENT_VERSION ]]
@@ -115,20 +123,20 @@ else
     echo "Downloading Watcher $REMOTE_WATCHER_VERSION ..."
     mkdir -p watcherBackup.$WATCHER_CURRENT_VERSION
     cp watcher.jar watcherBackup.$WATCHER_CURRENT_VERSION
-    curl -#k $REMOTE_WATCHER_URL -o watcher.jar
+    curl $PROXY_CURL -#k $REMOTE_WATCHER_URL -o watcher.jar
   fi
 fi
 
 echo "Checking Delegate latest version..."
 DELEGATE_STORAGE_URL=http://localhost:8888
-REMOTE_DELEGATE_LATEST=$(curl -#k $DELEGATE_STORAGE_URL/delegateci.txt)
+REMOTE_DELEGATE_LATEST=$(curl $PROXY_CURL -#k $DELEGATE_STORAGE_URL/delegateci.txt)
 REMOTE_DELEGATE_URL=$DELEGATE_STORAGE_URL/$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f2)
 REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f1)
 
 if [ ! -e delegate.jar ]
 then
   echo "Downloading Delegate $REMOTE_DELEGATE_VERSION ..."
-  curl -#k $REMOTE_DELEGATE_URL -o delegate.jar
+  curl $PROXY_CURL -#k $REMOTE_DELEGATE_URL -o delegate.jar
 else
   DELEGATE_CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
   if [[ $REMOTE_DELEGATE_VERSION != $DELEGATE_CURRENT_VERSION ]]
@@ -136,7 +144,7 @@ else
     echo "Downloading Delegate $REMOTE_DELEGATE_VERSION ..."
     mkdir -p backup.$DELEGATE_CURRENT_VERSION
     cp delegate.jar backup.$DELEGATE_CURRENT_VERSION
-    curl -#k $REMOTE_DELEGATE_URL -o delegate.jar
+    curl $PROXY_CURL -#k $REMOTE_DELEGATE_URL -o delegate.jar
   fi
 fi
 

@@ -37,7 +37,6 @@ import io.harness.network.Http;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.http.HttpHost;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.slf4j.Logger;
@@ -534,17 +533,12 @@ public class JenkinsImpl implements Jenkins {
 
   private HttpClientBuilder getUnSafeBuilder(String jenkinsUrl) {
     HttpClientBuilder builder = HttpClientBuilder.create();
-    HttpHost httpProxyHost = Http.getHttpProxyHost(jenkinsUrl);
     try {
       // Set ssl context
       builder.setSSLContext(Http.getSslContext());
       // Create all-trusting host name verifier
       HostnameVerifier allHostsValid = (s, sslSession) -> true;
-      if (httpProxyHost != null) {
-        builder.setProxy(httpProxyHost);
-      }
       builder.setSSLHostnameVerifier(allHostsValid);
-
     } catch (Exception ex) {
       logger.warn("Installing trust managers");
     }

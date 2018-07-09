@@ -882,7 +882,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       }
       HttpHost httpProxyHost = Http.getHttpProxyHost(artifactoryConfig.getArtifactoryUrl());
       if (httpProxyHost != null) {
-        builder.setProxy(new ProxyConfig(httpProxyHost.getHostName(), httpProxyHost.getPort(), null, null, null));
+        builder.setProxy(new ProxyConfig(httpProxyHost.getHostName(), httpProxyHost.getPort(), Http.getProxyScheme(),
+            Http.getProxyUserName(), Http.getProxyPassword()));
       }
       builder.setSocketTimeout(15000);
       builder.setConnectionTimeout(15000);
