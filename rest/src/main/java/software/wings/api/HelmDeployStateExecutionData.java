@@ -1,5 +1,7 @@
 package software.wings.api;
 
+import com.google.common.collect.Maps;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -36,22 +38,22 @@ public class HelmDeployStateExecutionData extends StateExecutionData implements 
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
-    Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
-    setInternalExecutionDetails(executionDetails);
-
-    return executionDetails;
+    return getInternalExecutionDetails();
   }
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
-    Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
-    setInternalExecutionDetails(executionDetails);
-
-    return executionDetails;
+    return getInternalExecutionDetails();
   }
 
-  private Map<String, ExecutionDataValue> setInternalExecutionDetails(
-      Map<String, ExecutionDataValue> executionDetails) {
+  private Map<String, ExecutionDataValue> getInternalExecutionDetails() {
+    Map<String, ExecutionDataValue> executionDetails = Maps.newLinkedHashMap();
+
+    if (getDelegateMetaInfo() != null) {
+      putNotNull(executionDetails, "delegateName",
+          ExecutionDataValue.builder().displayName("Delegate").value(this.getDelegateMetaInfo().getHostName()).build());
+    }
+
     putNotNull(executionDetails, "activityId",
         ExecutionDataValue.builder().value(activityId).displayName("Activity Id").build());
     putNotNull(executionDetails, "chartRepositoryUrl",
