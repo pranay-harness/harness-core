@@ -100,4 +100,7 @@ public interface MetricDataAnalysisService {
 
   TimeSeriesMLTransactionThresholds getCustomThreshold(
       String appId, StateType stateType, String serviceId, String groupName, String transactionName, String metricName);
+
+  boolean deleteCustomThreshold(
+      String appId, StateType stateType, String serviceId, String groupName, String transactionName, String metricName);
 }
