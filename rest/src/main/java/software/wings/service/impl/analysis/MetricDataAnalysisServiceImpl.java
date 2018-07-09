@@ -454,6 +454,18 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   }
 
   @Override
+  public boolean deleteCustomThreshold(String appId, StateType stateType, String serviceId, String groupName,
+      String transactionName, String metricName) {
+    return wingsPersistence.delete(wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
+                                       .filter("appId", appId)
+                                       .filter("stateType", stateType)
+                                       .filter("serviceId", serviceId)
+                                       .filter("groupName", groupName)
+                                       .filter("transactionName", transactionName)
+                                       .filter("metricName", metricName));
+  }
+
+  @Override
   public Map<String, Map<String, TimeSeriesMetricDefinition>> getMetricTemplate(
       StateType stateType, String stateExecutionId, String serviceId, String groupName) {
     Map<String, Map<String, TimeSeriesMetricDefinition>> result = new HashMap<>();

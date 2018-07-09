@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -221,6 +222,18 @@ public class TimeSeriesResource {
       @QueryParam("serviceId") String serviceId, @QueryParam("groupName") String groupName,
       @QueryParam("transactionName") String transactionName, @QueryParam("metricName") String metricName) {
     return new RestResponse<>(metricDataAnalysisService.getCustomThreshold(
+        appId, stateType, serviceId, groupName, transactionName, metricName));
+  }
+
+  @DELETE
+  @Path("/threshold")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> deleteCustomThreshold(@QueryParam("accountId") String accountId,
+      @QueryParam("appId") String appId, @QueryParam("stateType") StateType stateType,
+      @QueryParam("serviceId") String serviceId, @QueryParam("groupName") String groupName,
+      @QueryParam("transactionName") String transactionName, @QueryParam("metricName") String metricName) {
+    return new RestResponse<>(metricDataAnalysisService.deleteCustomThreshold(
         appId, stateType, serviceId, groupName, transactionName, metricName));
   }
 }
