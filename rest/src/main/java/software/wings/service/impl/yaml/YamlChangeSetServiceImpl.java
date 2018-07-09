@@ -28,13 +28,14 @@ import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
+import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
@@ -48,6 +49,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private PersistentLocker persistentLocker;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private YamlGitService yamlGitService;
 
   private static final Logger logger = LoggerFactory.getLogger(YamlChangeSetServiceImpl.class);
 
@@ -110,7 +112,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
             .addFilter("status", Operator.IN, new Status[] {Status.QUEUED, Status.FAILED});
 
     if (mostRecentCompletedChangeSet != null) {
-      pageRequestBuilder.addFilter("createdAt", Operator.GT, mostRecentCompletedChangeSet.getCreatedAt());
+      pageRequestBuilder.addFilter("createdAt", Operator.GE, mostRecentCompletedChangeSet.getCreatedAt());
     }
 
     return listYamlChangeSets(pageRequestBuilder.build()).getResponse();
@@ -137,10 +139,12 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
    */
   @Override
   public synchronized List<YamlChangeSet> getChangeSetsToSync(String accountId) {
+    List<YamlChangeSet> yamlChangeSets = Collections.EMPTY_LIST;
+    YamlChangeSet mostRecentCompletedChangeSet = null;
     try (AcquiredLock lock = persistentLocker.acquireLock(YamlChangeSet.class, accountId, Duration.ofMinutes(1))) {
       // Get most recent changeSet with Completed status,
       // We will pick all Queued and Failed changeSets created after this
-      YamlChangeSet mostRecentCompletedChangeSet = getMostRecentChangeSetWithCompletedStatus(accountId);
+      mostRecentCompletedChangeSet = getMostRecentChangeSetWithCompletedStatus(accountId);
 
       PageRequestBuilder pageRequestBuilder =
           aPageRequest()
@@ -152,25 +156,42 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
       if (mostRecentCompletedChangeSet != null) {
         pageRequestBuilder.addFilter("createdAt", Operator.GE, mostRecentCompletedChangeSet.getCreatedAt());
       }
-      List<YamlChangeSet> yamlChangeSets = listYamlChangeSets(pageRequestBuilder.build()).getResponse();
-
-      if (EmptyPredicate.isEmpty(yamlChangeSets)) {
-        logger.info("No Change set was found for processing for account: " + accountId);
-      }
-
-      // Update status for these yamlChangeSets to "Running"
-      updateStatusForYamlChangeSets(Status.RUNNING,
-          wingsPersistence.createQuery(YamlChangeSet.class)
-              .field("_id")
-              .in(yamlChangeSets.stream().map(yamlChangeSet -> yamlChangeSet.getUuid()).collect(Collectors.toList())));
-
-      return yamlChangeSets;
+      yamlChangeSets = listYamlChangeSets(pageRequestBuilder.build()).getResponse();
     } catch (WingsException exception) {
       exception.logProcessedMessages(MANAGER, logger);
     } catch (Exception exception) {
       logger.error("Error seen in fetching changeSet", exception);
     }
-    return null;
+
+    if (EmptyPredicate.isEmpty(yamlChangeSets)) {
+      return Collections.EMPTY_LIST;
+    }
+
+    List<YamlChangeSet> failedChangeSets = yamlChangeSets.stream()
+                                               .filter(yamlChangeSet -> yamlChangeSet.getStatus().equals(Status.FAILED))
+                                               .collect(Collectors.toList());
+
+    // All changeSets in this batch are in failed state, means this batch is failing
+    // for some change set and may be in a loop. Create a new GitReset change set and
+    // mark all scheduled changeSets as skipped
+    if (failedChangeSets.size() == yamlChangeSets.size()) {
+      // fullSync will mark all QUEUED/FAILED ones as SKIPPED
+      // which are after most recently completed yamlChangeSet
+      yamlGitService.fullSync(accountId, true);
+      return Collections.EMPTY_LIST;
+    }
+
+    if (EmptyPredicate.isEmpty(yamlChangeSets)) {
+      logger.info("No Change set was found for processing for account: " + accountId);
+    }
+
+    // Update status for these yamlChangeSets to "Running"
+    updateStatusForYamlChangeSets(Status.RUNNING,
+        wingsPersistence.createQuery(YamlChangeSet.class)
+            .field("_id")
+            .in(yamlChangeSets.stream().map(yamlChangeSet -> yamlChangeSet.getUuid()).collect(Collectors.toList())));
+
+    return yamlChangeSets;
   }
 
   @Override
@@ -215,8 +236,8 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   public boolean updateStatusForGivenYamlChangeSets(
       String accountId, Status newStatus, List<Status> currentStatuses, List<String> yamlChangeSetIds) {
     try (AcquiredLock lock = persistentLocker.acquireLock(YamlChangeSet.class, accountId, Duration.ofMinutes(1))) {
-      if (yamlChangeSetIds == null) {
-        yamlChangeSetIds = new ArrayList<>();
+      if (EmptyPredicate.isEmpty(yamlChangeSetIds)) {
+        return true;
       }
 
       UpdateOperations<YamlChangeSet> ops = wingsPersistence.createUpdateOperations(YamlChangeSet.class);
