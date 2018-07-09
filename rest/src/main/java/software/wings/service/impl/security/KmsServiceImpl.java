@@ -1,21 +1,15 @@
 package software.wings.service.impl.security;
 
-import static io.harness.threading.Morpheus.sleep;
-import static java.time.Duration.ofMillis;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
 import static software.wings.security.encryption.SimpleEncryption.CHARSET;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
-import static software.wings.service.intfc.security.EncryptionService.DECRYPTION_DELEGATE_TASK_TIMEOUT;
-import static software.wings.service.intfc.security.EncryptionService.DECRYPTION_DELEGATE_TIMEOUT;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
-import com.google.common.util.concurrent.TimeLimiter;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 
 import org.mongodb.morphia.query.CountOptions;
@@ -49,40 +43,22 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by rsingh on 9/29/17.
  */
 public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsService {
   @Inject private FileService fileService;
-  @Inject private TimeLimiter timeLimiter;
 
   @Override
   public EncryptedData encrypt(char[] value, String accountId, KmsConfig kmsConfig) {
     if (kmsConfig == null || value == null) {
       return encryptLocal(value);
     }
-    SyncTaskContext syncTaskContext = aContext()
-                                          .withAccountId(accountId)
-                                          .withTimeout(DECRYPTION_DELEGATE_TASK_TIMEOUT)
-                                          .withAppId(Base.GLOBAL_APP_ID)
-                                          .build();
+    SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
     try {
-      return timeLimiter.callWithTimeout(() -> {
-        while (true) {
-          try {
-            return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
-                .encrypt(accountId, value, kmsConfig);
-          } catch (Exception e) {
-            logger.warn("Error decrypting value. Retrying. Account ID: {}", accountId, e);
-            sleep(ofMillis(1000));
-          }
-        }
-      }, DECRYPTION_DELEGATE_TIMEOUT, TimeUnit.MILLISECONDS, true);
-    } catch (UncheckedTimeoutException ex) {
-      logger.warn("Timed out encrypting value", ex);
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR).addParam("reason", "Timed out decrypting value");
+      return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
+          .encrypt(accountId, value, kmsConfig);
     } catch (Exception e) {
       logger.error("Error while encrypting: ", e);
       throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, e).addParam("reason", Misc.getMessage(e));
@@ -94,26 +70,9 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     if (kmsConfig == null || data.getEncryptedValue() == null) {
       return decryptLocal(data);
     }
-    SyncTaskContext syncTaskContext = aContext()
-                                          .withAccountId(accountId)
-                                          .withTimeout(DECRYPTION_DELEGATE_TASK_TIMEOUT)
-                                          .withAppId(Base.GLOBAL_APP_ID)
-                                          .build();
+    SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
     try {
-      return timeLimiter.callWithTimeout(() -> {
-        while (true) {
-          try {
-            return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
-                .decrypt(data, kmsConfig);
-          } catch (Exception e) {
-            logger.warn("Error decrypting value. Retrying. Account ID: {}", accountId, e);
-            sleep(ofMillis(1000));
-          }
-        }
-      }, DECRYPTION_DELEGATE_TIMEOUT, TimeUnit.MILLISECONDS, true);
-    } catch (UncheckedTimeoutException ex) {
-      logger.warn("Timed out decrypting value", ex);
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR).addParam("reason", "Timed out decrypting value");
+      return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext).decrypt(data, kmsConfig);
     } catch (Exception e) {
       throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, e).addParam("reason", Misc.getMessage(e));
     }
