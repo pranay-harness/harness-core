@@ -98,15 +98,6 @@ public class PluginServiceImpl implements PluginService {
             .withUiSchema(readUiSchema("DOCKER"))
             .build(),
         anAccountPlugin()
-            .withSettingClass(GcpConfig.class)
-            .withAccountId(accountId)
-            .withIsEnabled(true)
-            .withDisplayName("Google Cloud Storage")
-            .withType("GCS")
-            .withPluginCategories(asList(Artifact))
-            .withUiSchema(readUiSchema("GCS"))
-            .build(),
-        anAccountPlugin()
             .withSettingClass(NexusConfig.class)
             .withAccountId(accountId)
             .withIsEnabled(true)
