@@ -6,12 +6,14 @@ import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.DelegateTask;
+import software.wings.service.impl.apm.APMDataCollectionInfo;
+import software.wings.service.intfc.security.EncryptionConfig;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class APMValidation extends AbstractDelegateValidateTask {
+public class APMValidation extends AbstractSecretManagerValidation {
   public APMValidation(
       String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {
     super(delegateId, delegateTask, postExecute);
@@ -34,5 +36,15 @@ public class APMValidation extends AbstractDelegateValidateTask {
                              })
                              .findFirst()
                              .orElse(null));
+  }
+
+  @Override
+  protected EncryptionConfig getEncryptionConfig() {
+    for (Object parmeter : getParameters()) {
+      if (parmeter instanceof APMDataCollectionInfo) {
+        return ((APMDataCollectionInfo) parmeter).getEncryptedDataDetails().get(0).getEncryptionConfig();
+      }
+    }
+    return super.getEncryptionConfig();
   }
 }

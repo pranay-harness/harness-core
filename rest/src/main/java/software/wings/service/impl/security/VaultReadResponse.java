@@ -1,6 +1,7 @@
 package software.wings.service.impl.security;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Builder;
 import lombok.Data;
 
 /**
@@ -8,6 +9,7 @@ import lombok.Data;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
+@Builder
 public class VaultReadResponse {
   private VaultSecretValue data;
 }
