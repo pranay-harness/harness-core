@@ -28,10 +28,10 @@ public class LogzDataCollectionInfo extends LogDataCollectionInfo {
 
   @Builder
   public LogzDataCollectionInfo(LogzConfig logzConfig, String accountId, String applicationId, String stateExecutionId,
-      String workflowId, String workflowExecutionId, String serviceId, Set<String> queries, String messageField,
+      String workflowId, String workflowExecutionId, String serviceId, String query, String messageField,
       String timestampField, String timestampFieldFormat, ElkQueryType queryType, long startTime, int startMinute,
       int collectionTime, String hostnameField, Set<String> hosts, List<EncryptedDataDetail> encryptedDataDetails) {
-    super(accountId, applicationId, stateExecutionId, workflowId, workflowExecutionId, serviceId, queries, startTime,
+    super(accountId, applicationId, stateExecutionId, workflowId, workflowExecutionId, serviceId, query, startTime,
         startMinute, collectionTime, hostnameField, hosts, StateType.LOGZ, encryptedDataDetails);
     this.logzConfig = logzConfig;
     this.messageField = messageField;

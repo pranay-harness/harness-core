@@ -5,8 +5,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
-import com.google.common.collect.Sets;
-
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.time.Timestamp;
@@ -123,7 +121,6 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
     }
 
     final SumoConfig sumoConfig = (SumoConfig) settingAttribute.getValue();
-    final Set<String> queries = Sets.newHashSet(query.split(","));
     final long logCollectionStartTimeStamp = Timestamp.currentMinuteBoundary();
 
     List<Set<String>> batchedHosts = batchHosts(hosts);
@@ -140,7 +137,7 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
               .workflowId(getWorkflowId(context))
               .workflowExecutionId(context.getWorkflowExecutionId())
               .serviceId(getPhaseServiceId(context))
-              .queries(queries)
+              .query(query)
               .startTime(logCollectionStartTimeStamp)
               .startMinute(0)
               .collectionTime(Integer.parseInt(timeDuration))

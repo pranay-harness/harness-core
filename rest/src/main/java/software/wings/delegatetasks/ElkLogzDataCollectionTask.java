@@ -100,129 +100,126 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
     @Override
     public void run() {
       try {
-        for (String query : dataCollectionInfo.getQueries()) {
-          for (String hostName : dataCollectionInfo.getHosts()) {
-            int retry = 0;
-            while (!completed.get() && retry < RETRIES) {
+        for (String hostName : dataCollectionInfo.getHosts()) {
+          int retry = 0;
+          while (!completed.get() && retry < RETRIES) {
+            try {
+              Object searchResponse;
+              String hostnameField;
+              String messageField;
+              String timestampField;
+              String timestampFieldFormat;
+              switch (dataCollectionInfo.getStateType()) {
+                case ELK:
+                  final ElkDataCollectionInfo elkDataCollectionInfo = (ElkDataCollectionInfo) dataCollectionInfo;
+                  final ElkLogFetchRequest elkFetchRequest =
+                      ElkLogFetchRequest.builder()
+                          .query(dataCollectionInfo.getQuery())
+                          .indices(elkDataCollectionInfo.getIndices())
+                          .hostnameField(elkDataCollectionInfo.getHostnameField())
+                          .messageField(elkDataCollectionInfo.getMessageField())
+                          .timestampField(elkDataCollectionInfo.getTimestampField())
+                          .hosts(Collections.singleton(hostName))
+                          .startTime(collectionStartTime)
+                          .endTime(collectionStartTime + TimeUnit.MINUTES.toMillis(1))
+                          .queryType(elkDataCollectionInfo.getQueryType())
+                          .build();
+                  logger.info("running elk query: " + JsonUtils.asJson(elkFetchRequest.toElasticSearchJsonObject()));
+                  searchResponse = elkDelegateService.search(elkDataCollectionInfo.getElkConfig(),
+                      elkDataCollectionInfo.getEncryptedDataDetails(), elkFetchRequest,
+                      createApiCallLog(dataCollectionInfo.getStateExecutionId()));
+                  hostnameField = elkDataCollectionInfo.getHostnameField();
+                  messageField = elkDataCollectionInfo.getMessageField();
+                  timestampField = elkDataCollectionInfo.getTimestampField();
+                  timestampFieldFormat = elkDataCollectionInfo.getTimestampFieldFormat();
+                  break;
+                case LOGZ:
+                  final LogzDataCollectionInfo logzDataCollectionInfo = (LogzDataCollectionInfo) dataCollectionInfo;
+                  final ElkLogFetchRequest logzFetchRequest =
+                      ElkLogFetchRequest.builder()
+                          .query(dataCollectionInfo.getQuery())
+                          .indices("")
+                          .hostnameField(logzDataCollectionInfo.getHostnameField())
+                          .messageField(logzDataCollectionInfo.getMessageField())
+                          .timestampField(logzDataCollectionInfo.getTimestampField())
+                          .hosts(Collections.singleton(hostName))
+                          .startTime(collectionStartTime)
+                          .endTime(collectionStartTime + TimeUnit.MINUTES.toMillis(1))
+                          .queryType(logzDataCollectionInfo.getQueryType())
+                          .build();
+
+                  logger.info("running logz query: " + JsonUtils.asJson(logzFetchRequest.toElasticSearchJsonObject()));
+                  searchResponse = logzDelegateService.search(logzDataCollectionInfo.getLogzConfig(),
+                      logzDataCollectionInfo.getEncryptedDataDetails(), logzFetchRequest,
+                      createApiCallLog(dataCollectionInfo.getStateExecutionId()));
+                  hostnameField = logzDataCollectionInfo.getHostnameField();
+                  messageField = logzDataCollectionInfo.getMessageField();
+                  timestampField = logzDataCollectionInfo.getTimestampField();
+                  timestampFieldFormat = logzDataCollectionInfo.getTimestampFieldFormat();
+                  break;
+                default:
+                  throw new IllegalStateException("Invalid collection attempt." + dataCollectionInfo);
+              }
+
+              JSONObject responseObject = new JSONObject(JsonUtils.asJson(searchResponse));
+              JSONObject hits = responseObject.getJSONObject("hits");
+              if (hits == null) {
+                continue;
+              }
+              List<LogElement> logElements;
               try {
-                Object searchResponse;
-                String hostnameField;
-                String messageField;
-                String timestampField;
-                String timestampFieldFormat;
-                switch (dataCollectionInfo.getStateType()) {
-                  case ELK:
-                    final ElkDataCollectionInfo elkDataCollectionInfo = (ElkDataCollectionInfo) dataCollectionInfo;
-                    final ElkLogFetchRequest elkFetchRequest =
-                        ElkLogFetchRequest.builder()
-                            .query(query)
-                            .indices(elkDataCollectionInfo.getIndices())
-                            .hostnameField(elkDataCollectionInfo.getHostnameField())
-                            .messageField(elkDataCollectionInfo.getMessageField())
-                            .timestampField(elkDataCollectionInfo.getTimestampField())
-                            .hosts(Collections.singleton(hostName))
-                            .startTime(collectionStartTime)
-                            .endTime(collectionStartTime + TimeUnit.MINUTES.toMillis(1))
-                            .queryType(elkDataCollectionInfo.getQueryType())
-                            .build();
-                    logger.info("running elk query: " + JsonUtils.asJson(elkFetchRequest.toElasticSearchJsonObject()));
-                    searchResponse = elkDelegateService.search(elkDataCollectionInfo.getElkConfig(),
-                        elkDataCollectionInfo.getEncryptedDataDetails(), elkFetchRequest,
-                        createApiCallLog(dataCollectionInfo.getStateExecutionId()));
-                    hostnameField = elkDataCollectionInfo.getHostnameField();
-                    messageField = elkDataCollectionInfo.getMessageField();
-                    timestampField = elkDataCollectionInfo.getTimestampField();
-                    timestampFieldFormat = elkDataCollectionInfo.getTimestampFieldFormat();
-                    break;
-                  case LOGZ:
-                    final LogzDataCollectionInfo logzDataCollectionInfo = (LogzDataCollectionInfo) dataCollectionInfo;
-                    final ElkLogFetchRequest logzFetchRequest =
-                        ElkLogFetchRequest.builder()
-                            .query(query)
-                            .indices("")
-                            .hostnameField(logzDataCollectionInfo.getHostnameField())
-                            .messageField(logzDataCollectionInfo.getMessageField())
-                            .timestampField(logzDataCollectionInfo.getTimestampField())
-                            .hosts(Collections.singleton(hostName))
-                            .startTime(collectionStartTime)
-                            .endTime(collectionStartTime + TimeUnit.MINUTES.toMillis(1))
-                            .queryType(logzDataCollectionInfo.getQueryType())
-                            .build();
-
-                    logger.info(
-                        "running logz query: " + JsonUtils.asJson(logzFetchRequest.toElasticSearchJsonObject()));
-                    searchResponse = logzDelegateService.search(logzDataCollectionInfo.getLogzConfig(),
-                        logzDataCollectionInfo.getEncryptedDataDetails(), logzFetchRequest,
-                        createApiCallLog(dataCollectionInfo.getStateExecutionId()));
-                    hostnameField = logzDataCollectionInfo.getHostnameField();
-                    messageField = logzDataCollectionInfo.getMessageField();
-                    timestampField = logzDataCollectionInfo.getTimestampField();
-                    timestampFieldFormat = logzDataCollectionInfo.getTimestampFieldFormat();
-                    break;
-                  default:
-                    throw new IllegalStateException("Invalid collection attempt." + dataCollectionInfo);
-                }
-
-                JSONObject responseObject = new JSONObject(JsonUtils.asJson(searchResponse));
-                JSONObject hits = responseObject.getJSONObject("hits");
-                if (hits == null) {
-                  continue;
-                }
-                List<LogElement> logElements;
-                try {
-                  logElements = parseElkResponse(searchResponse, query, timestampField, timestampFieldFormat,
-                      hostnameField, hostName, messageField, logCollectionMinute, true);
-                } catch (Exception pe) {
-                  retry = RETRIES;
-                  throw pe;
-                }
-                /**
-                 * Heart beat.
-                 */
-                logElements.add(LogElement.builder()
-                                    .query(query)
-                                    .clusterLabel("-1")
-                                    .host(hostName)
-                                    .count(0)
-                                    .logMessage("")
-                                    .timeStamp(0)
-                                    .logCollectionMinute(logCollectionMinute)
-                                    .build());
-                boolean response =
-                    logAnalysisStoreService.save(dataCollectionInfo.getStateType(), dataCollectionInfo.getAccountId(),
-                        dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(),
-                        dataCollectionInfo.getWorkflowId(), dataCollectionInfo.getWorkflowExecutionId(),
-                        dataCollectionInfo.getServiceId(), delegateTaskId, logElements);
-                if (!response) {
-                  if (++retry == RETRIES) {
-                    taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-                    taskResult.setErrorMessage("Cannot save log records. Server returned error");
-                    completed.set(true);
-                    break;
-                  }
-                  continue;
-                }
-                logger.info("sent " + dataCollectionInfo.getStateType() + "search records to server. Num of events: "
-                    + logElements.size() + " application: " + dataCollectionInfo.getApplicationId()
-                    + " stateExecutionId: " + dataCollectionInfo.getStateExecutionId()
-                    + " minute: " + logCollectionMinute + " host: " + hostName);
-                break;
-              } catch (Exception e) {
-                if (++retry >= RETRIES) {
+                logElements = parseElkResponse(searchResponse, dataCollectionInfo.getQuery(), timestampField,
+                    timestampFieldFormat, hostnameField, hostName, messageField, logCollectionMinute, true);
+              } catch (Exception pe) {
+                retry = RETRIES;
+                throw pe;
+              }
+              /**
+               * Heart beat.
+               */
+              logElements.add(LogElement.builder()
+                                  .query(dataCollectionInfo.getQuery())
+                                  .clusterLabel("-1")
+                                  .host(hostName)
+                                  .count(0)
+                                  .logMessage("")
+                                  .timeStamp(0)
+                                  .logCollectionMinute(logCollectionMinute)
+                                  .build());
+              boolean response =
+                  logAnalysisStoreService.save(dataCollectionInfo.getStateType(), dataCollectionInfo.getAccountId(),
+                      dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(),
+                      dataCollectionInfo.getWorkflowId(), dataCollectionInfo.getWorkflowExecutionId(),
+                      dataCollectionInfo.getServiceId(), delegateTaskId, logElements);
+              if (!response) {
+                if (++retry == RETRIES) {
                   taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
+                  taskResult.setErrorMessage("Cannot save log records. Server returned error");
                   completed.set(true);
-                  throw e;
-                } else {
-                  /*
-                   * Save the exception from the first attempt. This is usually
-                   * more meaningful to trouble shoot.
-                   */
-                  if (retry == 1) {
-                    taskResult.setErrorMessage(Misc.getMessage(e));
-                  }
-                  logger.warn("error fetching elk/logz logs. retrying in " + RETRY_SLEEP + "s", e);
-                  sleep(RETRY_SLEEP);
+                  break;
                 }
+                continue;
+              }
+              logger.info("sent " + dataCollectionInfo.getStateType() + "search records to server. Num of events: "
+                  + logElements.size() + " application: " + dataCollectionInfo.getApplicationId()
+                  + " stateExecutionId: " + dataCollectionInfo.getStateExecutionId() + " minute: " + logCollectionMinute
+                  + " host: " + hostName);
+              break;
+            } catch (Exception e) {
+              if (++retry >= RETRIES) {
+                taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
+                completed.set(true);
+                throw e;
+              } else {
+                /*
+                 * Save the exception from the first attempt. This is usually
+                 * more meaningful to trouble shoot.
+                 */
+                if (retry == 1) {
+                  taskResult.setErrorMessage(Misc.getMessage(e));
+                }
+                logger.warn("error fetching elk/logz logs. retrying in " + RETRY_SLEEP + "s", e);
+                sleep(RETRY_SLEEP);
               }
             }
           }

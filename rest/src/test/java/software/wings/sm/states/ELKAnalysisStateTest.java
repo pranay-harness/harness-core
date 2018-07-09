@@ -218,7 +218,7 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
             .workflowId(workflowId)
             .workflowExecutionId(workflowExecutionId)
             .serviceId(serviceId)
-            .queries(Sets.newHashSet(elkAnalysisState.getQuery().split(",")))
+            .query(elkAnalysisState.getQuery())
             .startMinute(0)
             .startMinute(0)
             .collectionTime(Integer.parseInt(elkAnalysisState.getTimeDuration()))
