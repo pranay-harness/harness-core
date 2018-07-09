@@ -428,6 +428,8 @@ public class GitClientImpl implements GitClient {
       if (ex instanceof InvalidRemoteException | ex.getCause() instanceof NoRemoteRepositoryException) {
         errorMsg = "Invalid git repo or user doesn't have write access to repository. repo:" + gitConfig.getRepoUrl();
       }
+
+      checkIfTransportException(ex);
       throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", errorMsg);
     }
   }
@@ -533,10 +535,10 @@ public class GitClientImpl implements GitClient {
     clone(gitConfig);
   }
 
-  private void checkIfTransportException(GitAPIException ex) {
+  private void checkIfTransportException(Exception ex) {
     // TransportException is subclass of GitAPIException. This is thrown when there is any issue in connecting to git
     // repo, like invalid authorization and invalid repo
-    if (ex.getCause() instanceof TransportException) {
+    if (ex instanceof GitAPIException && ex.getCause() instanceof TransportException) {
       throw new WingsException(ErrorCode.GIT_CONNECTION_ERROR + ":" + Misc.getMessage(ex), USER_ADMIN)
           .addParam(ErrorCode.GIT_CONNECTION_ERROR.name(), ErrorCode.GIT_CONNECTION_ERROR);
     }
