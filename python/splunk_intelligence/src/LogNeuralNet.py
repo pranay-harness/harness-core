@@ -115,14 +115,15 @@ class LogNeuralNet(object):
         logger.info("setting min_df = " + str(min_df) + " and max_df = " + str(max_df))
         logger.info("Start vectorization....")
         vectorizer, tfidf_feature_matrix = self.create_feature_vector(all_docs, min_df, max_df)
-        wtv_model = WordToVec().train(docs_control, docs_test)
-        wtv_cluster = WordToVecCluster(wtv_model, self._options.sim_threshold, docs_control)
         start_time = time.time()
+        wtv_model = WordToVec().train(docs_control, docs_test)
+        training_time = time.time() - start_time
+        start_time_clustering = time.time()
+        wtv_cluster = WordToVecCluster(wtv_model, self._options.sim_threshold, docs_control)
         wtv_cluster.cluster()
-
-        logger.info("Finished clustering controls, time taken: " + str(time.time() - start_time) + ' seconds.')
-
-        return wtv_cluster, wtv_model, tfidf_feature_matrix
+        control_clustering_time = time.time() - start_time_clustering
+        logger.info("Finished clustering controls, time taken: " + str(training_time) + ' seconds.')
+        return wtv_cluster, wtv_model, tfidf_feature_matrix, training_time, control_clustering_time
 
     def detect_count_anomalies(self):
 
@@ -189,8 +190,9 @@ class LogNeuralNet(object):
             predictions = np.array(
                 wtv_cluster.detect_anomaly_text_diff(self.corpus.get_control_events_text_as_np(),
                                                      self.corpus.get_test_events_text_as_np(), tfidf_feature_matrix))
-        logger.info("Finished detecting unknown events, time taken: " + str(time.time() - start_time) + ' seconds.')
-        return predictions
+        prediction_time = time.time()-start_time
+        logger.info("Finished detecting unknown events, time taken: " + str(prediction_time) + ' seconds.')
+        return predictions, prediction_time
 
 
     def run(self):
@@ -209,9 +211,9 @@ class LogNeuralNet(object):
                                         + str(len(self.corpus.control_events)) + ".Skipping analysis!"
             return self.corpus
 
-        wtv_cluster, wtv_model, tfidf_feature_matrix = self.cluster_input()
+        wtv_cluster, wtv_model, tfidf_feature_matrix, training_time, control_clustering_time = self.cluster_input()
 
-        predictions = self.detect_unknown_events(wtv_cluster, tfidf_feature_matrix)
+        predictions, prediction_time = self.detect_unknown_events(wtv_cluster, tfidf_feature_matrix)
 
         self.corpus.create_clusters(wtv_cluster.get_clusters(), [],
                                     [],
@@ -225,8 +227,17 @@ class LogNeuralNet(object):
 
         self.set_xy()
 
-        logger.info("done. time taken " + str(time.time() - start_time) + " seconds")
-        print(self.corpus.score)
+        total_time = time.time() - start_time
+        if not hasattr(self._options, 'state_execution_id'):
+            self._options.state_execution_id = 'no state exe id'
+
+
+        summary = dict(state_execution_id=self._options.state_execution_id, no_control_events=len(self.corpus.control_events),
+                       no_anom_cluster=len(self.corpus.anom_clusters),
+                       no_test_events=len(self.corpus.test_events), training_time=str(training_time) + ' s',
+                       control_clustering_time=str(control_clustering_time) + ' s',
+                       prediction_time=str(prediction_time) + ' s', total_time=str(total_time) + ' s')
+        logger.info(json.dumps(summary))
         return self.corpus
 
     @staticmethod
