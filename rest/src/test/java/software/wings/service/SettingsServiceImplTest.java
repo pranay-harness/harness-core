@@ -5,7 +5,6 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -27,10 +26,6 @@ import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.security.EnvFilter.FilterType.NON_PROD;
 import static software.wings.security.EnvFilter.FilterType.PROD;
 import static software.wings.security.EnvFilter.FilterType.SELECTED;
-import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
-import static software.wings.security.PermissionAttribute.PermissionType.ENV;
-import static software.wings.security.PermissionAttribute.PermissionType.PIPELINE;
-import static software.wings.security.PermissionAttribute.PermissionType.WORKFLOW;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.settings.UsageRestrictions.AppEnvRestriction.builder;
@@ -50,7 +45,6 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
@@ -63,7 +57,6 @@ import org.mockito.stubbing.Answer;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
-import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BastionConnectionAttributes;
@@ -76,8 +69,6 @@ import software.wings.beans.StringValue;
 import software.wings.beans.User;
 import software.wings.beans.ValidationResult;
 import software.wings.beans.artifact.JenkinsArtifactStream;
-import software.wings.beans.security.AppPermission;
-import software.wings.beans.security.UserGroup;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -90,17 +81,13 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
-import software.wings.security.WorkflowFilter;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.SettingValidationService;
 import software.wings.service.impl.security.auth.AuthHandler;
-import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.UsageRestrictionsService;
-import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
@@ -109,9 +96,7 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.settings.UsageRestrictions.AppEnvRestriction;
 
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -124,7 +109,6 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Inject @Named("primaryDatastore") private AdvancedDatastore datastore;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private AppService appService;
-  @Mock private AccountService accountService;
   @Mock private AuthHandler authHandler;
   @Mock private Application application;
   @Mock private InfrastructureMappingService infrastructureMappingService;
@@ -134,9 +118,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Mock private AwsHelperService awsHelperService;
   @Mock private SecretManager secretManager;
   @Mock private SettingValidationService settingValidationService;
-  @Mock private UserGroupService userGroupService;
 
-  @InjectMocks @Inject private UsageRestrictionsService usageRestrictionsService;
   @InjectMocks @Inject private SettingsService settingsService;
 
   private Query<SettingAttribute> spyQuery;
@@ -164,7 +146,6 @@ public class SettingsServiceImplTest extends WingsBaseTest {
     when(appService.get(TARGET_APP_ID))
         .thenReturn(Application.Builder.anApplication().withAccountId(ACCOUNT_ID).build());
     when(appService.get(APP_ID)).thenReturn(Application.Builder.anApplication().withAccountId(ACCOUNT_ID).build());
-    when(accountService.get(ACCOUNT_ID)).thenReturn(Account.Builder.anAccount().withUuid(ACCOUNT_ID).build());
   }
 
   /**
@@ -507,28 +488,6 @@ public class SettingsServiceImplTest extends WingsBaseTest {
       assertThat(filteredSettingAttributesByType)
           .containsExactlyInAnyOrder(settingAttributeList.toArray(new SettingAttribute[0]));
 
-      User user = User.Builder.anUser().withName(USER_NAME).withUuid(USER_ID).build();
-
-      Map<String, AppPermissionSummaryForUI> appPermissionsMap = Maps.newHashMap();
-
-      Map<String, Set<Action>> envPermissionMap = Maps.newHashMap();
-      envPermissionMap.put(ENV_ID_1, newHashSet(Action.READ));
-
-      AppPermissionSummaryForUI appPermissionSummaryForUI =
-          AppPermissionSummaryForUI.builder().envPermissions(envPermissionMap).build();
-
-      appPermissionsMap.put(APP_ID_1, appPermissionSummaryForUI);
-
-      UserPermissionInfo userPermissionInfo = UserPermissionInfo.builder()
-                                                  .accountId(ACCOUNT_ID)
-                                                  .isRbacEnabled(true)
-                                                  .appPermissionMap(appPermissionsMap)
-                                                  .build();
-
-      user.setUserRequestContext(
-          UserRequestContext.builder().accountId(ACCOUNT_ID).userPermissionInfo(userPermissionInfo).build());
-      UserThreadLocal.set(user);
-
       // Scenario 2: With usage restrictions set on settingAttribute1 but for all apps
       GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
       EnvFilter envFilter = EnvFilter.builder().filterTypes(newHashSet(PROD, NON_PROD)).build();
@@ -606,65 +565,79 @@ public class SettingsServiceImplTest extends WingsBaseTest {
 
       // Scenario 6: With usage restrictions set on settingAttribute1, but no appId and envId was passed
       // and common usage restrictions and user permissions.
+      appFilter = GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(APP_ID_1)).build();
+      envFilter = EnvFilter.builder().filterTypes(newHashSet(NON_PROD, PROD)).build();
+      appEnvRestriction = builder().appFilter(appFilter).envFilter(envFilter).build();
+      usageRestrictions = new UsageRestrictions();
+      usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
+      settingAttribute1.setUsageRestrictions(usageRestrictions);
       when(authHandler.getAppIdsByFilter(anyString(), any(GenericEntityFilter.class))).thenReturn(newHashSet(APP_ID_1));
-      when(authHandler.getEnvIdsByFilter(anyString(), any(EnvFilter.class))).thenReturn(newHashSet(ENV_ID_1));
+      when(authHandler.getEnvIdsByFilter(anyString(), any(EnvFilter.class)))
+          .thenReturn(newHashSet(ENV_ID_1, ENV_ID_2, ENV_ID_3));
 
-      List<Action> allActions = asList(Action.CREATE, Action.UPDATE, Action.READ, Action.DELETE, Action.EXECUTE);
+      User user = User.Builder.anUser().withName(USER_NAME).withUuid(USER_ID).build();
 
-      EnvFilter envFilter1 = new EnvFilter();
-      envFilter1.setFilterTypes(Sets.newHashSet(PROD));
+      Map<String, AppPermissionSummaryForUI> appPermissionsMap = Maps.newHashMap();
 
-      WorkflowFilter workflowFilter = new WorkflowFilter();
-      workflowFilter.setFilterTypes(Sets.newHashSet(PROD));
+      Map<String, Set<Action>> envPermissionMap = Maps.newHashMap();
+      envPermissionMap.put(ENV_ID_1, newHashSet(Action.READ));
 
-      AppPermission envPermission = AppPermission.builder()
-                                        .permissionType(ENV)
-                                        .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
-                                        .entityFilter(envFilter1)
-                                        .actions(new HashSet(allActions))
-                                        .build();
+      AppPermissionSummaryForUI appPermissionSummaryForUI =
+          AppPermissionSummaryForUI.builder().envPermissions(envPermissionMap).build();
 
-      AppPermission workflowPermission =
-          AppPermission.builder()
-              .permissionType(WORKFLOW)
-              .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
-              .entityFilter(workflowFilter)
-              .actions(new HashSet(allActions))
-              .build();
+      appPermissionsMap.put(APP_ID_1, appPermissionSummaryForUI);
 
-      AppPermission pipelinePermission =
-          AppPermission.builder()
-              .permissionType(PIPELINE)
-              .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
-              .entityFilter(envFilter)
-              .actions(new HashSet(allActions))
-              .build();
+      UserPermissionInfo userPermissionInfo = UserPermissionInfo.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .isRbacEnabled(true)
+                                                  .appPermissionMap(appPermissionsMap)
+                                                  .build();
 
-      AppPermission deploymentPermission =
-          AppPermission.builder()
-              .permissionType(DEPLOYMENT)
-              .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
-              .entityFilter(envFilter)
-              .actions(new HashSet(allActions))
-              .build();
+      user.setUserRequestContext(UserRequestContext.builder().userPermissionInfo(userPermissionInfo).build());
+      UserThreadLocal.set(user);
 
-      UserGroup userGroup =
-          UserGroup.builder()
-              .appPermissions(
-                  new HashSet(asList(envPermission, workflowPermission, pipelinePermission, deploymentPermission)))
-              .accountId(ACCOUNT_ID)
-              .name("userGroup1")
-              .memberIds(asList(USER_ID))
-              .build();
-      when(userGroupService.list(anyString(), any(PageRequest.class), anyBoolean()))
-          .thenReturn(aPageResponse().withResponse(Arrays.asList(userGroup)).build());
-      when(userGroupService.getUserGroupsByAccountId(anyString(), any(User.class)))
-          .thenReturn(aPageResponse().withResponse(Arrays.asList(userGroup)).build());
       filteredSettingAttributesByType =
           settingsService.getFilteredSettingAttributesByType(null, SettingVariableTypes.JENKINS.name(), null, null);
 
       assertThat(filteredSettingAttributesByType)
           .containsExactlyInAnyOrder(settingAttributeList.toArray(new SettingAttribute[0]));
+
+      // Scenario 7: With usage restrictions set on settingAttribute1, but no appId and envId was passed and nothing in
+      // common between usage restrictions and user permissions.
+      appFilter = GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(APP_ID_2)).build();
+      envFilter = EnvFilter.builder().filterTypes(newHashSet(NON_PROD, PROD)).build();
+      appEnvRestriction = builder().appFilter(appFilter).envFilter(envFilter).build();
+      usageRestrictions = new UsageRestrictions();
+      usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
+      settingAttribute1.setUsageRestrictions(usageRestrictions);
+      when(authHandler.getAppIdsByFilter(anyString(), any(GenericEntityFilter.class))).thenReturn(newHashSet(APP_ID_2));
+      when(authHandler.getEnvIdsByFilter(anyString(), any(EnvFilter.class))).thenReturn(newHashSet(ENV_ID_2, ENV_ID_3));
+
+      user = User.Builder.anUser().withName(USER_NAME).withUuid(USER_ID).build();
+
+      appPermissionsMap = Maps.newHashMap();
+
+      envPermissionMap = Maps.newHashMap();
+      envPermissionMap.put(ENV_ID_1, newHashSet(Action.READ));
+
+      appPermissionSummaryForUI = AppPermissionSummaryForUI.builder().envPermissions(envPermissionMap).build();
+
+      appPermissionsMap.put(APP_ID_1, appPermissionSummaryForUI);
+
+      userPermissionInfo = UserPermissionInfo.builder()
+                               .accountId(ACCOUNT_ID)
+                               .isRbacEnabled(true)
+                               .appPermissionMap(appPermissionsMap)
+                               .build();
+
+      user.setUserRequestContext(UserRequestContext.builder().userPermissionInfo(userPermissionInfo).build());
+      UserThreadLocal.set(user);
+
+      filteredSettingAttributesByType =
+          settingsService.getFilteredSettingAttributesByType(null, SettingVariableTypes.JENKINS.name(), null, null);
+
+      assertThat(filteredSettingAttributesByType)
+          .containsExactlyInAnyOrder(new SettingAttribute[] {settingAttribute2, settingAttribute3});
     } finally {
       UserThreadLocal.unset();
     }

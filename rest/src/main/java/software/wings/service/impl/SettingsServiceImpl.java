@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -34,12 +36,15 @@ import static software.wings.utils.Validator.equalCheck;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.observer.Rejection;
 import io.harness.observer.Subject;
 import lombok.Getter;
@@ -52,6 +57,7 @@ import software.wings.beans.Application;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.User;
 import software.wings.beans.ValidationResult;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.yaml.Change.ChangeType;
@@ -59,23 +65,35 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.InvalidRequestException;
+import software.wings.security.AppPermissionSummaryForUI;
+import software.wings.security.EnvFilter;
+import software.wings.security.GenericEntityFilter;
+import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.UserPermissionInfo;
+import software.wings.security.UserRequestContext;
+import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.manipulation.SettingsServiceManipulationObserver;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.UsageRestrictions;
+import software.wings.settings.UsageRestrictions.AppEnvRestriction;
 import software.wings.utils.CacheHelper;
 import software.wings.utils.Misc;
 import software.wings.utils.validation.Create;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -92,9 +110,9 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private YamlChangeSetHelper yamlChangeSetHelper;
+  @Inject private AuthHandler authHandler;
   @Transient @Inject private SecretManager secretManager;
   @Inject private ManagerDecryptionService managerDecryptionService;
-  @Inject private UsageRestrictionsService usageRestrictionsService;
   @Getter private Subject<SettingsServiceManipulationObserver> manipulationSubject = new Subject<>();
   @Inject private CacheHelper cacheHelper;
 
@@ -120,41 +138,125 @@ public class SettingsServiceImpl implements SettingsService {
     }
   }
 
-  private SettingAttribute getFilteredSettingAttribute(
-      SettingAttribute settingAttribute, String appIdFromRequest, String envIdFromRequest) {
-    if (settingAttribute == null) {
-      return null;
-    }
-
-    if (usageRestrictionsService.hasAccess(settingAttribute.getUsageRestrictions(), settingAttribute.getAccountId(),
-            appIdFromRequest, envIdFromRequest)) {
-      if (settingAttribute.getUsageRestrictions() != null) {
-        settingAttribute.getUsageRestrictions().setEditable(usageRestrictionsService.canUserUpdateOrDeleteEntity(
-            settingAttribute.getAccountId(), settingAttribute.getUsageRestrictions()));
-      }
-
-      return settingAttribute;
-    }
-
-    return null;
-  }
-
   private List<SettingAttribute> getFilteredSettingAttributes(
       List<SettingAttribute> inputSettingAttributes, String appIdFromRequest, String envIdFromRequest) {
-    List<SettingAttribute> filteredSettingAttributes = Lists.newArrayList();
-    if (EmptyPredicate.isNotEmpty(inputSettingAttributes)) {
-      inputSettingAttributes.forEach(settingAttribute -> {
-        if (usageRestrictionsService.hasAccess(settingAttribute.getUsageRestrictions(), settingAttribute.getAccountId(),
-                appIdFromRequest, envIdFromRequest)) {
-          if (settingAttribute.getUsageRestrictions() != null) {
-            settingAttribute.getUsageRestrictions().setEditable(usageRestrictionsService.canUserUpdateOrDeleteEntity(
-                settingAttribute.getAccountId(), settingAttribute.getUsageRestrictions()));
-          }
-          filteredSettingAttributes.add(settingAttribute);
-        }
-      });
+    if (isNotEmpty(inputSettingAttributes)) {
+      return inputSettingAttributes.stream()
+          .filter(settingAttribute -> {
+            UsageRestrictions usageRestrictions = settingAttribute.getUsageRestrictions();
+            if (usageRestrictions == null) {
+              return true;
+            }
+
+            Set<AppEnvRestriction> appEnvRestrictions = usageRestrictions.getAppEnvRestrictions();
+
+            if (isEmpty(appEnvRestrictions)) {
+              return true;
+            }
+
+            Multimap<String, String> appEnvMap = HashMultimap.create();
+
+            appEnvRestrictions.forEach(appEnvRestriction -> {
+              GenericEntityFilter appFilter = appEnvRestriction.getAppFilter();
+              Set<String> appIds = authHandler.getAppIdsByFilter(settingAttribute.getAccountId(), appFilter);
+              if (isEmpty(appIds)) {
+                return;
+              }
+
+              EnvFilter envFilter = appEnvRestriction.getEnvFilter();
+              appIds.forEach(appId -> {
+                Set<String> envIds = authHandler.getEnvIdsByFilter(appId, envFilter);
+                if (isEmpty(envIds)) {
+                  appEnvMap.put(appId, null);
+                } else {
+                  appEnvMap.putAll(appId, envIds);
+                }
+              });
+            });
+
+            if (appIdFromRequest != null && !appIdFromRequest.equals(GLOBAL_APP_ID)) {
+              if (envIdFromRequest != null) {
+                // Restrict it to both app and env
+                return appEnvMap.containsKey(appIdFromRequest)
+                    && appEnvMap.containsEntry(appIdFromRequest, envIdFromRequest);
+              } else {
+                // Restrict it to app
+                return appEnvMap.containsKey(appIdFromRequest);
+              }
+            } else {
+              User user = UserThreadLocal.get();
+
+              if (user == null) {
+                return true;
+              }
+
+              UserRequestContext userRequestContext = user.getUserRequestContext();
+
+              if (userRequestContext == null) {
+                return true;
+              }
+
+              UserPermissionInfo userPermissionInfo = userRequestContext.getUserPermissionInfo();
+              if (userPermissionInfo == null) {
+                return true;
+              }
+
+              Map<String, AppPermissionSummaryForUI> appPermissionMap = userPermissionInfo.getAppPermissionMap();
+
+              Set<String> appsFromUserPermissions = appPermissionMap.keySet();
+              Set<String> appsFromRestrictions = appEnvMap.keySet();
+
+              SetView<String> commonAppIds = Sets.intersection(appsFromUserPermissions, appsFromRestrictions);
+
+              if (isEmpty(commonAppIds)) {
+                return false;
+              } else {
+                return commonAppIds.stream()
+                    .filter(appId -> {
+                      AppPermissionSummaryForUI appPermissionSummaryForUI = appPermissionMap.get(appId);
+                      Map<String, Set<Action>> envPermissionMap = appPermissionSummaryForUI.getEnvPermissions();
+                      Set<String> envsFromUserPermissions = null;
+                      if (envPermissionMap != null) {
+                        envsFromUserPermissions = envPermissionMap.keySet();
+                      }
+
+                      Collection<String> envsFromRestrictions = appEnvMap.get(appId);
+                      boolean emptyEnvsInPermissions = isEmpty(envsFromUserPermissions);
+                      boolean emptyEnvsInRestrictions = isMultimapValuesEmpty(envsFromRestrictions);
+
+                      if (emptyEnvsInPermissions && emptyEnvsInRestrictions) {
+                        return true;
+                      }
+
+                      if (!emptyEnvsInRestrictions) {
+                        if (!emptyEnvsInPermissions) {
+                          Set<String> envsFromRestrictionSet = Sets.newHashSet(envsFromUserPermissions);
+                          SetView<String> commonEnvIds =
+                              Sets.intersection(envsFromUserPermissions, envsFromRestrictionSet);
+                          return !isEmpty(commonEnvIds);
+                        } else {
+                          return false;
+                        }
+                      } else {
+                        return true;
+                      }
+                    })
+                    .findFirst()
+                    .isPresent();
+              }
+            }
+          })
+          .collect(toList());
     }
-    return filteredSettingAttributes;
+    return Lists.newArrayList();
+  }
+
+  private boolean isMultimapValuesEmpty(Collection<String> values) {
+    if (values == null || values.size() == 0) {
+      return false;
+    }
+
+    return !values.stream().filter(value -> value != null).findFirst().isPresent();
   }
 
   @Override
@@ -166,9 +268,6 @@ public class SettingsServiceImpl implements SettingsService {
   @Override
   @ValidationGroups(Create.class)
   public SettingAttribute forceSave(SettingAttribute settingAttribute) {
-    usageRestrictionsService.validateUsageRestrictions(
-        settingAttribute.getAccountId(), null, settingAttribute.getUsageRestrictions());
-
     if (settingAttribute.getValue() != null) {
       if (settingAttribute.getValue() instanceof Encryptable) {
         ((Encryptable) settingAttribute.getValue()).setAccountId(settingAttribute.getAccountId());
@@ -258,8 +357,7 @@ public class SettingsServiceImpl implements SettingsService {
 
   @Override
   public SettingAttribute get(String varId) {
-    SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, varId);
-    return getFilteredSettingAttribute(settingAttribute, null, null);
+    return wingsPersistence.get(SettingAttribute.class, varId);
   }
 
   @Override
@@ -285,9 +383,6 @@ public class SettingsServiceImpl implements SettingsService {
     notNullCheck("Setting Attribute was deleted", existingSetting, USER);
     notNullCheck("SettingValue not associated", settingAttribute.getValue(), USER);
     equalCheck(existingSetting.getValue().getType(), settingAttribute.getValue().getType());
-
-    usageRestrictionsService.validateUsageRestrictions(settingAttribute.getAccountId(),
-        existingSetting.getUsageRestrictions(), settingAttribute.getUsageRestrictions());
 
     settingAttribute.setAccountId(existingSetting.getAccountId());
     settingAttribute.setAppId(existingSetting.getAppId());
@@ -355,7 +450,6 @@ public class SettingsServiceImpl implements SettingsService {
     SettingAttribute settingAttribute = get(varId);
     notNullCheck("Setting Value", settingAttribute, USER);
     ensureSettingAttributeSafeToDelete(settingAttribute);
-
     boolean deleted = wingsPersistence.delete(settingAttribute);
     if (deleted && shouldBeSynced(settingAttribute, pushToGit)) {
       yamlChangeSetHelper.queueSettingYamlChangeAsync(settingAttribute, ChangeType.DELETE);
@@ -417,7 +511,7 @@ public class SettingsServiceImpl implements SettingsService {
 
       List<Rejection> rejections = manipulationSubject.fireApproveFromAll(
           SettingsServiceManipulationObxxxxxxxx:settingsServiceDeleting, connectorSetting);
-      if (EmptyPredicate.isNotEmpty(rejections)) {
+      if (isNotEmpty(rejections)) {
         throw new InvalidRequestException(
             format("[%s]", Joiner.on("\n").join(rejections.stream().map(Rejection::message).collect(toList()))), USER);
       }
