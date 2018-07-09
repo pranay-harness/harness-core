@@ -113,136 +113,135 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
     @Override
     public void run() {
       try {
-        for (String query : dataCollectionInfo.getQueries()) {
-          int retry = 0;
-          while (!completed.get() && retry < RETRIES) {
-            try {
-              final List<LogElement> logElements = new ArrayList<>();
-              for (String host : dataCollectionInfo.getHosts()) {
-                String hostStr = dataCollectionInfo.getHostnameField() + " = \"" + host + "\" ";
+        int retry = 0;
+        while (!completed.get() && retry < RETRIES) {
+          try {
+            final List<LogElement> logElements = new ArrayList<>();
+            for (String host : dataCollectionInfo.getHosts()) {
+              String hostStr = dataCollectionInfo.getHostnameField() + " = \"" + host + "\" ";
+              String query = dataCollectionInfo.getQuery();
 
-                /* Heart beat */
-                final LogElement sumoHeartBeatElement = new LogElement();
-                sumoHeartBeatElement.setQuery(query);
-                sumoHeartBeatElement.setClusterLabel("-3");
-                sumoHeartBeatElement.setHost(host);
-                sumoHeartBeatElement.setCount(0);
-                sumoHeartBeatElement.setLogMessage("");
-                sumoHeartBeatElement.setTimeStamp(0);
-                sumoHeartBeatElement.setLogCollectionMinute(logCollectionMinute);
-                logElements.add(sumoHeartBeatElement);
+              /* Heart beat */
+              final LogElement sumoHeartBeatElement = new LogElement();
+              sumoHeartBeatElement.setQuery(query);
+              sumoHeartBeatElement.setClusterLabel("-3");
+              sumoHeartBeatElement.setHost(host);
+              sumoHeartBeatElement.setCount(0);
+              sumoHeartBeatElement.setLogMessage("");
+              sumoHeartBeatElement.setTimeStamp(0);
+              sumoHeartBeatElement.setLogCollectionMinute(logCollectionMinute);
+              logElements.add(sumoHeartBeatElement);
 
-                if (hostStr == null) {
-                  throw new IllegalArgumentException("No hosts found for Sumo task " + dataCollectionInfo.toString());
-                }
-
-                hostStr = " | where " + hostStr + " ";
-
-                String searchQuery = query + hostStr + " | timeslice 1m";
-
-                final long endTime = collectionStartTime + TimeUnit.MINUTES.toMillis(1) - 1;
-                ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
-                apiCallLog.setRequest("triggering sumo query startTime: " + collectionStartTime + " endTime: " + endTime
-                    + " query: " + searchQuery + " url: " + dataCollectionInfo.getSumoConfig().getSumoUrl());
-                apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
-                logger.info(apiCallLog.getRequest());
-                String searchJobId = sumoClient.createSearchJob(
-                    searchQuery, Long.toString(collectionStartTime), Long.toString(endTime), "UTC");
-
-                int messageCount;
-                GetSearchJobStatusResponse getSearchJobStatusResponse = null;
-                // We will loop until the search job status
-                // is either "DONE GATHERING RESULTS" or
-                // "CANCELLED".
-                while (getSearchJobStatusResponse == null
-                    || (!getSearchJobStatusResponse.getState().equals("DONE GATHERING RESULTS")
-                           && !getSearchJobStatusResponse.getState().equals("CANCELLED"))) {
-                  Thread.sleep(5000);
-
-                  // Get the latest search job status.
-                  getSearchJobStatusResponse = sumoClient.getSearchJobStatus(searchJobId);
-                  logger.info(
-                      "Waiting on search job ID: " + searchJobId + " status: " + getSearchJobStatusResponse.getState());
-                }
-
-                apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
-                apiCallLog.setJsonResponse(getSearchJobStatusResponse);
-                // If the last search job status indicated
-                // that the search job was "CANCELLED", we
-                // can't get messages or records.
-                if (getSearchJobStatusResponse.getState().equals("CANCELLED")) {
-                  logger.info("Ugh. Search job was cancelled. Retrying ...");
-                  delegateLogService.save(getAccountId(), apiCallLog);
-                  if (++retry == RETRIES) {
-                    taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-                    taskResult.setErrorMessage("Sumo Logic cancelled search job " + RETRIES + " times");
-                    completed.set(true);
-                    break;
-                  }
-                  continue;
-                }
-
-                delegateLogService.save(getAccountId(), apiCallLog);
-                messageCount = getSearchJobStatusResponse.getMessageCount();
-
-                int clusterLabel = 0;
-                int messageOffset = 0;
-                int messageLength = Math.min(messageCount, 1000);
-                if (messageCount > 0) {
-                  do {
-                    GetMessagesForSearchJobResponse getMessagesForSearchJobResponse =
-                        sumoClient.getMessagesForSearchJob(searchJobId, messageOffset, messageLength);
-                    for (LogMessage logMessage : getMessagesForSearchJobResponse.getMessages()) {
-                      final LogElement sumoLogElement = new LogElement();
-                      sumoLogElement.setQuery(query);
-                      sumoLogElement.setClusterLabel(String.valueOf(clusterLabel++));
-                      sumoLogElement.setCount(1);
-                      sumoLogElement.setLogMessage(logMessage.getProperties().get("_raw"));
-                      sumoLogElement.setTimeStamp(Long.parseLong(logMessage.getProperties().get("_timeslice")));
-                      sumoLogElement.setLogCollectionMinute(logCollectionMinute);
-                      logElements.add(sumoLogElement);
-                      sumoLogElement.setHost(host);
-                    }
-                    messageCount -= messageLength;
-                    messageOffset += messageLength;
-                    messageLength = Math.min(messageCount, 1000);
-                  } while (messageCount > 0);
-                }
+              if (hostStr == null) {
+                throw new IllegalArgumentException("No hosts found for Sumo task " + dataCollectionInfo.toString());
               }
 
-              boolean response = logAnalysisStoreService.save(StateType.SUMO, dataCollectionInfo.getAccountId(),
-                  dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(),
-                  dataCollectionInfo.getWorkflowId(), dataCollectionInfo.getWorkflowExecutionId(),
-                  dataCollectionInfo.getServiceId(), delegateTaskId, logElements);
-              if (!response) {
+              hostStr = " | where " + hostStr + " ";
+
+              String searchQuery = query + hostStr + " | timeslice 1m";
+
+              final long endTime = collectionStartTime + TimeUnit.MINUTES.toMillis(1) - 1;
+              ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
+              apiCallLog.setRequest("triggering sumo query startTime: " + collectionStartTime + " endTime: " + endTime
+                  + " query: " + searchQuery + " url: " + dataCollectionInfo.getSumoConfig().getSumoUrl());
+              apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
+              logger.info(apiCallLog.getRequest());
+              String searchJobId = sumoClient.createSearchJob(
+                  searchQuery, Long.toString(collectionStartTime), Long.toString(endTime), "UTC");
+
+              int messageCount;
+              GetSearchJobStatusResponse getSearchJobStatusResponse = null;
+              // We will loop until the search job status
+              // is either "DONE GATHERING RESULTS" or
+              // "CANCELLED".
+              while (getSearchJobStatusResponse == null
+                  || (!getSearchJobStatusResponse.getState().equals("DONE GATHERING RESULTS")
+                         && !getSearchJobStatusResponse.getState().equals("CANCELLED"))) {
+                Thread.sleep(5000);
+
+                // Get the latest search job status.
+                getSearchJobStatusResponse = sumoClient.getSearchJobStatus(searchJobId);
+                logger.info(
+                    "Waiting on search job ID: " + searchJobId + " status: " + getSearchJobStatusResponse.getState());
+              }
+
+              apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
+              apiCallLog.setJsonResponse(getSearchJobStatusResponse);
+              // If the last search job status indicated
+              // that the search job was "CANCELLED", we
+              // can't get messages or records.
+              if (getSearchJobStatusResponse.getState().equals("CANCELLED")) {
+                logger.info("Ugh. Search job was cancelled. Retrying ...");
+                delegateLogService.save(getAccountId(), apiCallLog);
                 if (++retry == RETRIES) {
                   taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-                  taskResult.setErrorMessage("Cannot save log records. Server returned error");
+                  taskResult.setErrorMessage("Sumo Logic cancelled search job " + RETRIES + " times");
                   completed.set(true);
                   break;
                 }
                 continue;
               }
-              logger.info("sent sumo search records to server. Num of events: " + logElements.size()
-                  + " application: " + dataCollectionInfo.getApplicationId() + " stateExecutionId: "
-                  + dataCollectionInfo.getStateExecutionId() + " minute: " + logCollectionMinute);
-              break;
-            } catch (Exception e) {
+
+              delegateLogService.save(getAccountId(), apiCallLog);
+              messageCount = getSearchJobStatusResponse.getMessageCount();
+
+              int clusterLabel = 0;
+              int messageOffset = 0;
+              int messageLength = Math.min(messageCount, 1000);
+              if (messageCount > 0) {
+                do {
+                  GetMessagesForSearchJobResponse getMessagesForSearchJobResponse =
+                      sumoClient.getMessagesForSearchJob(searchJobId, messageOffset, messageLength);
+                  for (LogMessage logMessage : getMessagesForSearchJobResponse.getMessages()) {
+                    final LogElement sumoLogElement = new LogElement();
+                    sumoLogElement.setQuery(query);
+                    sumoLogElement.setClusterLabel(String.valueOf(clusterLabel++));
+                    sumoLogElement.setCount(1);
+                    sumoLogElement.setLogMessage(logMessage.getProperties().get("_raw"));
+                    sumoLogElement.setTimeStamp(Long.parseLong(logMessage.getProperties().get("_timeslice")));
+                    sumoLogElement.setLogCollectionMinute(logCollectionMinute);
+                    logElements.add(sumoLogElement);
+                    sumoLogElement.setHost(host);
+                  }
+                  messageCount -= messageLength;
+                  messageOffset += messageLength;
+                  messageLength = Math.min(messageCount, 1000);
+                } while (messageCount > 0);
+              }
+            }
+
+            boolean response = logAnalysisStoreService.save(StateType.SUMO, dataCollectionInfo.getAccountId(),
+                dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(),
+                dataCollectionInfo.getWorkflowId(), dataCollectionInfo.getWorkflowExecutionId(),
+                dataCollectionInfo.getServiceId(), delegateTaskId, logElements);
+            if (!response) {
               if (++retry == RETRIES) {
                 taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
+                taskResult.setErrorMessage("Cannot save log records. Server returned error");
                 completed.set(true);
-                throw e;
-              } else {
-                /*
-                 * Save the exception from the first attempt. This is usually
-                 * more meaningful to trouble shoot.
-                 */
-                if (retry == 1) {
-                  taskResult.setErrorMessage(Misc.getMessage(e));
-                }
-                logger.warn("error fetching sumo logs. retrying in " + RETRY_SLEEP + "s", e);
-                sleep(RETRY_SLEEP);
+                break;
               }
+              continue;
+            }
+            logger.info("sent sumo search records to server. Num of events: " + logElements.size()
+                + " application: " + dataCollectionInfo.getApplicationId()
+                + " stateExecutionId: " + dataCollectionInfo.getStateExecutionId() + " minute: " + logCollectionMinute);
+            break;
+          } catch (Exception e) {
+            if (++retry == RETRIES) {
+              taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
+              completed.set(true);
+              throw e;
+            } else {
+              /*
+               * Save the exception from the first attempt. This is usually
+               * more meaningful to trouble shoot.
+               */
+              if (retry == 1) {
+                taskResult.setErrorMessage(Misc.getMessage(e));
+              }
+              logger.warn("error fetching sumo logs. retrying in " + RETRY_SLEEP + "s", e);
+              sleep(RETRY_SLEEP);
             }
           }
         }

@@ -4,8 +4,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
-import com.google.common.collect.Sets;
-
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.time.Timestamp;
@@ -58,7 +56,6 @@ public class LogzAnalysisState extends ElkAnalysisState {
     }
 
     final LogzConfig logzConfig = (LogzConfig) settingAttribute.getValue();
-    final Set<String> queries = Sets.newHashSet(query.split(","));
     final long logCollectionStartTimeStamp = Timestamp.currentMinuteBoundary();
 
     List<Set<String>> batchedHosts = batchHosts(hosts);
@@ -75,7 +72,7 @@ public class LogzAnalysisState extends ElkAnalysisState {
               .workflowId(getWorkflowId(context))
               .workflowExecutionId(context.getWorkflowExecutionId())
               .serviceId(getPhaseServiceId(context))
-              .queries(queries)
+              .query(query)
               .hostnameField(hostnameField)
               .messageField(messageField)
               .timestampField(DEFAULT_TIME_FIELD)

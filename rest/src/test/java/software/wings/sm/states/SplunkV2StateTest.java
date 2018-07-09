@@ -195,7 +195,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
             .workflowId(workflowId)
             .workflowExecutionId(workflowExecutionId)
             .serviceId(serviceId)
-            .queries(Sets.newHashSet(splunkState.getQuery().split(",")))
+            .query(splunkState.getQuery())
             .startMinute(0)
             .startMinute(0)
             .collectionTime(Integer.parseInt(splunkState.getTimeDuration()))

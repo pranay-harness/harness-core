@@ -220,7 +220,6 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
     final ElkConfig elkConfig = (ElkConfig) settingAttribute.getValue();
 
     final String timestampFieldFormat = getTimestampFormat();
-    final Set<String> queries = Sets.newHashSet(query.split(","));
     final long logCollectionStartTimeStamp = Timestamp.currentMinuteBoundary();
 
     List<Set<String>> batchedHosts = batchHosts(hosts);
@@ -237,7 +236,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
               .workflowId(getWorkflowId(context))
               .workflowExecutionId(context.getWorkflowExecutionId())
               .serviceId(getPhaseServiceId(context))
-              .queries(queries)
+              .query(query)
               .indices(finalIndices)
               .hostnameField(context.renderExpression(hostnameField))
               .messageField(context.renderExpression(messageField))

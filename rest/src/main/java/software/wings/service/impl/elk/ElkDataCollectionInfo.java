@@ -28,11 +28,11 @@ public class ElkDataCollectionInfo extends LogDataCollectionInfo {
 
   @Builder
   public ElkDataCollectionInfo(ElkConfig elkConfig, String accountId, String applicationId, String stateExecutionId,
-      String workflowId, String workflowExecutionId, String serviceId, Set<String> queries, String indices,
+      String workflowId, String workflowExecutionId, String serviceId, String query, String indices,
       String messageField, String timestampField, String timestampFieldFormat, ElkQueryType queryType, long startTime,
       int startMinute, int collectionTime, String hostnameField, Set<String> hosts,
       List<EncryptedDataDetail> encryptedDataDetails) {
-    super(accountId, applicationId, stateExecutionId, workflowId, workflowExecutionId, serviceId, queries, startTime,
+    super(accountId, applicationId, stateExecutionId, workflowId, workflowExecutionId, serviceId, query, startTime,
         startMinute, collectionTime, hostnameField, hosts, StateType.ELK, encryptedDataDetails);
     this.elkConfig = elkConfig;
     this.indices = indices;

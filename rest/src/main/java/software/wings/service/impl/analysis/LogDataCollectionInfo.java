@@ -5,7 +5,6 @@ import lombok.Data;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.sm.StateType;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -21,7 +20,7 @@ public abstract class LogDataCollectionInfo {
   private String workflowId;
   private String workflowExecutionId;
   private String serviceId;
-  private Set<String> queries = new HashSet<>();
+  private String query;
   private long startTime;
   private int startMinute;
   private int collectionTime;
