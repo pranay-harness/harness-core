@@ -151,8 +151,6 @@ public class KmsTest extends WingsBaseTest {
   @Before
   public void setup() throws IOException, NoSuchFieldException, IllegalAccessException {
     initMocks(this);
-    setStaticTimeOut(EncryptionService.class, "DECRYPTION_DELEGATE_TASK_TIMEOUT", 100L);
-    setStaticTimeOut(EncryptionService.class, "DECRYPTION_DELEGATE_TIMEOUT", 200L);
     accountId = generateUuid();
     appId = generateUuid();
     workflowName = generateUuid();

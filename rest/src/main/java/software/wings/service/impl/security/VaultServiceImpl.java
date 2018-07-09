@@ -1,20 +1,14 @@
 package software.wings.service.impl.security;
 
-import static io.harness.threading.Morpheus.sleep;
-import static java.time.Duration.ofMillis;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
 import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.security.encryption.SimpleEncryption.CHARSET;
-import static software.wings.service.intfc.security.EncryptionService.DECRYPTION_DELEGATE_TASK_TIMEOUT;
-import static software.wings.service.intfc.security.EncryptionService.DECRYPTION_DELEGATE_TIMEOUT;
 
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
-import com.google.common.util.concurrent.TimeLimiter;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
@@ -44,7 +38,6 @@ import java.nio.CharBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by rsingh on 11/2/17.
@@ -52,31 +45,14 @@ import java.util.concurrent.TimeUnit;
 public class VaultServiceImpl extends AbstractSecretServiceImpl implements VaultService {
   public static final String VAULT_VAILDATION_URL = "harness_vault_validation";
   @Inject private KmsService kmsService;
-  @Inject private TimeLimiter timeLimiter;
 
   @Override
   public EncryptedData encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
       VaultConfig vaultConfig, EncryptedData encryptedData) {
-    SyncTaskContext syncTaskContext = aContext()
-                                          .withAccountId(accountId)
-                                          .withTimeout(DECRYPTION_DELEGATE_TASK_TIMEOUT)
-                                          .withAppId(Base.GLOBAL_APP_ID)
-                                          .build();
+    SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
     try {
-      return timeLimiter.callWithTimeout(() -> {
-        while (true) {
-          try {
-            return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
-                .encrypt(name, value, accountId, settingType, vaultConfig, encryptedData);
-          } catch (Exception e) {
-            logger.warn("Error decrypting value. Retrying. Account ID: {}", accountId, e);
-            sleep(ofMillis(1000));
-          }
-        }
-      }, DECRYPTION_DELEGATE_TIMEOUT, TimeUnit.MILLISECONDS, true);
-    } catch (UncheckedTimeoutException ex) {
-      logger.warn("Timed out encrypting value", ex);
-      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR).addParam("reason", "Timed out decrypting value");
+      return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
+          .encrypt(name, value, accountId, settingType, vaultConfig, encryptedData);
     } catch (Exception e) {
       logger.error("Error while encrypting: ", e);
       throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, e).addParam("reason", Misc.getMessage(e));
@@ -85,26 +61,10 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
   @Override
   public char[] decrypt(EncryptedData data, String accountId, VaultConfig vaultConfig) {
-    SyncTaskContext syncTaskContext = aContext()
-                                          .withAccountId(accountId)
-                                          .withTimeout(DECRYPTION_DELEGATE_TASK_TIMEOUT)
-                                          .withAppId(Base.GLOBAL_APP_ID)
-                                          .build();
+    SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
     try {
-      return timeLimiter.callWithTimeout(() -> {
-        while (true) {
-          try {
-            return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
-                .decrypt(data, vaultConfig);
-          } catch (Exception e) {
-            logger.warn("Error decrypting value. Retrying. Account ID: {}", accountId, e);
-            sleep(ofMillis(1000));
-          }
-        }
-      }, DECRYPTION_DELEGATE_TIMEOUT, TimeUnit.MILLISECONDS, true);
-    } catch (UncheckedTimeoutException ex) {
-      logger.warn("Timed out decrypting value", ex);
-      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR).addParam("reason", "Timed out decrypting value");
+      return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
+          .decrypt(data, vaultConfig);
     } catch (Exception e) {
       throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, e).addParam("reason", Misc.getMessage(e));
     }

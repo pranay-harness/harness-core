@@ -32,7 +32,6 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AlertService;
-import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManager;
@@ -62,8 +61,6 @@ public class KmsAlertTest extends WingsBaseTest {
   @Before
   public void setup() throws IOException, NoSuchFieldException, IllegalAccessException {
     initMocks(this);
-    setStaticTimeOut(EncryptionService.class, "DECRYPTION_DELEGATE_TASK_TIMEOUT", 100L);
-    setStaticTimeOut(EncryptionService.class, "DECRYPTION_DELEGATE_TIMEOUT", 200L);
     when(mockDelegateServiceOK.encrypt(anyString(), anyString(), anyString(), anyObject(), anyObject(), anyObject()))
         .thenReturn(null);
     when(mockDelegateServiceOK.encrypt(anyString(), anyObject(), anyObject())).thenReturn(null);
