@@ -27,6 +27,8 @@ public class InstanceElement implements ContextElement {
   private String dockerId;
   private HostElement host;
   private ServiceTemplateElement serviceTemplateElement;
+  private String podName;
+  private String workloadName;
 
   @Override
   public String getName() {
@@ -98,6 +100,22 @@ public class InstanceElement implements ContextElement {
     this.dockerId = dockerId;
   }
 
+  public String getPodName() {
+    return podName;
+  }
+
+  public void setPodName(String podName) {
+    this.podName = podName;
+  }
+
+  public String getWorkloadName() {
+    return workloadName;
+  }
+
+  public void setWorkloadName(String workloadName) {
+    this.workloadName = workloadName;
+  }
+
   /**
    * Gets host element.
    *
@@ -158,20 +176,22 @@ public class InstanceElement implements ContextElement {
     return Objects.equal(getUuid(), that.getUuid()) && Objects.equal(getDisplayName(), that.getDisplayName())
         && Objects.equal(getHostName(), that.getHostName()) && Objects.equal(getDockerId(), that.getDockerId())
         && Objects.equal(getHost(), that.getHost())
-        && Objects.equal(getServiceTemplateElement(), that.getServiceTemplateElement());
+        && Objects.equal(getServiceTemplateElement(), that.getServiceTemplateElement())
+        && Objects.equal(getPodName(), that.getPodName()) && Objects.equal(getWorkloadName(), that.getWorkloadName());
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(
-        getUuid(), getDisplayName(), getHostName(), getDockerId(), getHost(), getServiceTemplateElement());
+    return Objects.hashCode(getUuid(), getDisplayName(), getHostName(), getDockerId(), getHost(),
+        getServiceTemplateElement(), getPodName(), getWorkloadName());
   }
 
   @Override
   public String toString() {
     return "InstanceElement{"
         + "uuid='" + uuid + '\'' + ", displayName='" + displayName + '\'' + ", hostName='" + hostName + '\''
-        + ", hostElement=" + host + ", serviceTemplateElement=" + serviceTemplateElement + '}';
+        + ", hostElement=" + host + ", serviceTemplateElement=" + serviceTemplateElement + ", podName=" + podName
+        + ", workloadName=" + workloadName + '}';
   }
 
   public static final class Builder {
@@ -181,6 +201,8 @@ public class InstanceElement implements ContextElement {
     private String dockerId;
     private HostElement host;
     private ServiceTemplateElement serviceTemplateElement;
+    private String podName;
+    private String workloadName;
 
     private Builder() {}
 
@@ -218,6 +240,16 @@ public class InstanceElement implements ContextElement {
       return this;
     }
 
+    public Builder withPodName(String podName) {
+      this.podName = podName;
+      return this;
+    }
+
+    public Builder withWorkloadName(String workloadName) {
+      this.workloadName = workloadName;
+      return this;
+    }
+
     public Builder but() {
       return anInstanceElement()
           .withUuid(uuid)
@@ -225,7 +257,9 @@ public class InstanceElement implements ContextElement {
           .withHostName(hostName)
           .withDockerId(dockerId)
           .withHost(host)
-          .withServiceTemplateElement(serviceTemplateElement);
+          .withServiceTemplateElement(serviceTemplateElement)
+          .withPodName(podName)
+          .withWorkloadName(workloadName);
     }
 
     public InstanceElement build() {
@@ -236,6 +270,8 @@ public class InstanceElement implements ContextElement {
       instanceElement.setDockerId(dockerId);
       instanceElement.setHost(host);
       instanceElement.setServiceTemplateElement(serviceTemplateElement);
+      instanceElement.setPodName(podName);
+      instanceElement.setWorkloadName(workloadName);
       return instanceElement;
     }
   }

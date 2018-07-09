@@ -182,6 +182,9 @@ public class ContainerDeploymentDelegateHelper {
     if (controllers.size() > 0) {
       containerInfoList =
           controllers.stream()
+              .filter(controller
+                  -> !(controller.getKind().equals("ReplicaSet")
+                      && controller.getMetadata().getOwnerReferences() != null))
               .flatMap(controller -> {
                 boolean isNotVersioned =
                     controller.getKind().equals("DaemonSet") || controller.getKind().equals("StatefulSet");

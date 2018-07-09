@@ -21,4 +21,6 @@ public class ContainerInfo {
   private String containerId;
   private Instance ec2Instance;
   private Status status;
+  private String podName;
+  private String workloadName;
 }

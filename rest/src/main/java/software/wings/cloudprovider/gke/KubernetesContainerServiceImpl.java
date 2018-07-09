@@ -360,8 +360,12 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       String containerId = !pod.getStatus().getContainerStatuses().isEmpty()
           ? StringUtils.substring(pod.getStatus().getContainerStatuses().get(0).getContainerID(), 9, 21)
           : "";
-      ContainerInfoBuilder containerInfoBuilder =
-          ContainerInfo.builder().hostName(podName).ip(pod.getStatus().getPodIP()).containerId(containerId);
+      ContainerInfoBuilder containerInfoBuilder = ContainerInfo.builder()
+                                                      .hostName(podName)
+                                                      .ip(pod.getStatus().getPodIP())
+                                                      .containerId(containerId)
+                                                      .workloadName(controllerName)
+                                                      .podName(podName);
       Set<String> images = getControllerImages(
           getPodTemplateSpec(getController(kubernetesConfig, encryptedDataDetails, controllerName)));
 

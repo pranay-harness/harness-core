@@ -118,6 +118,8 @@ public class ContainerDeploymentManagerHelper {
                                               .withHost(hostElement)
                                               .withServiceTemplateElement(serviceTemplateElement)
                                               .withDisplayName(containerInfo.getContainerId())
+                                              .withPodName(containerInfo.getPodName())
+                                              .withWorkloadName(containerInfo.getWorkloadName())
                                               .build();
         ExecutionStatus status =
             containerInfo.getStatus() == Status.SUCCESS ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
