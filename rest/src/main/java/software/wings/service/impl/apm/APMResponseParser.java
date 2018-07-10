@@ -79,7 +79,6 @@ public class APMResponseParser {
   public static Collection<NewRelicMetricDataRecord> extract(List<APMResponseData> apmResponseData) {
     Map<String, NewRelicMetricDataRecord> resultMap = new HashMap<>();
     for (APMResponseData data : apmResponseData) {
-      logger.info("RESPONSE DATA: {}", data);
       for (APMMetricInfo metricInfo : data.getMetricInfos()) {
         APMResponseParser apmResponseParser = new APMResponseParser();
         for (APMMetricInfo.ResponseMapper responseMapper : metricInfo.getResponseMappers().values()) {
