@@ -168,14 +168,20 @@ public class KryoUtils {
 
             // Harness classes
             Map<String, Integer> classIds = serializationClasses();
-            classIds.keySet().forEach(className -> {
-              try {
-                kryo.register(Class.forName(className), classIds.get(className));
-              } catch (ClassNotFoundException ex) {
-                logger.error("Class not found, couldn't register {}", className);
-              }
-            });
-            return kryo;
+            if (classIds != null) {
+              classIds.keySet().forEach(className -> {
+                try {
+                  kryo.register(Class.forName(className), classIds.get(className));
+                } catch (ClassNotFoundException ex) {
+                  logger.error("Class not found, couldn't register {}", className);
+                }
+              });
+              return kryo;
+            } else {
+              logger.error("Failed to get serialization classes");
+              System.exit(1);
+              return null;
+            }
           })
           .softReferences()
           .build();
