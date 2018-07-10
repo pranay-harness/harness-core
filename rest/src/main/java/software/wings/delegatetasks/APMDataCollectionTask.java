@@ -12,6 +12,7 @@ import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.network.Http;
 import io.harness.time.Timestamp;
 import org.slf4j.Logger;
@@ -97,17 +98,20 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
         dataCollectionInfo.getDataCollectionFrequency() != 0 ? dataCollectionInfo.getDataCollectionFrequency() : 1;
     initialDelayMins = 2;
     logger.info("apm collection - dataCollectionInfo: {}", dataCollectionInfo);
-    char[] decryptedValue;
-    for (EncryptedDataDetail encryptedDataDetail : dataCollectionInfo.getEncryptedDataDetails()) {
-      try {
-        decryptedValue = encryptionService.getDecryptedValue(encryptedDataDetail);
-        if (decryptedValue != null) {
-          decryptedFields.put(encryptedDataDetail.getFieldName(), new String(decryptedValue));
+
+    if (!EmptyPredicate.isEmpty(dataCollectionInfo.getEncryptedDataDetails())) {
+      char[] decryptedValue;
+      for (EncryptedDataDetail encryptedDataDetail : dataCollectionInfo.getEncryptedDataDetails()) {
+        try {
+          decryptedValue = encryptionService.getDecryptedValue(encryptedDataDetail);
+          if (decryptedValue != null) {
+            decryptedFields.put(encryptedDataDetail.getFieldName(), new String(decryptedValue));
+          }
+        } catch (IOException e) {
+          throw new WingsException(dataCollectionInfo.getStateType().getName()
+                  + ": APM data collection : Unable to decrypt field " + encryptedDataDetail.getFieldName(),
+              e);
         }
-      } catch (IOException e) {
-        throw new WingsException(dataCollectionInfo.getStateType().getName()
-                + ": APM data collection : Unable to decrypt field " + encryptedDataDetail.getFieldName(),
-            e);
       }
     }
     return DataCollectionTaskResult.builder()
