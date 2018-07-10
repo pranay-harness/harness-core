@@ -103,4 +103,12 @@ public class APMDataCollectionTaskTest {
     assertTrue("Third batch has 15 hosts", occuranceCount3 == 15);
     assertTrue("Fourth batch has 15 hosts", occuranceCount4 == 7);
   }
+
+  @Test
+  public void testEmptyEncryptedCredentialsInitDataCollection() {
+    setup();
+    APMDataCollectionInfo info = (APMDataCollectionInfo) dataCollectionTask.getParameters()[0];
+    info.setEncryptedDataDetails(null);
+    DataCollectionTaskResult tr = dataCollectionTask.initDataCollection(dataCollectionTask.getParameters());
+  }
 }
