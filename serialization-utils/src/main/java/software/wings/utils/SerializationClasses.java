@@ -1,6 +1,5 @@
 package software.wings.utils;
 
-import static java.util.Collections.emptyMap;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.apache.commons.lang3.StringUtils.trim;
@@ -14,26 +13,34 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-public class SerializationClasses {
+class SerializationClasses {
   private static final Logger logger = LoggerFactory.getLogger(SerializationClasses.class);
 
-  public static Map<String, Integer> serializationClasses() {
+  static Map<String, Integer> serializationClasses() {
     try {
       URL url = SerializationClasses.class.getClassLoader().getResource("serialization_classes");
       if (url != null) {
-        return Resources.readLines(url, Charsets.UTF_8)
-            .stream()
-            .filter(StringUtils::isNotBlank)
-            .filter(s -> s.charAt(0) != '#')
-            .collect(Collectors.toMap(
-                s -> trim(substringBefore(s, ",")), s -> Integer.valueOf(trim(substringAfter(s, ",")))));
+        Map<String, Integer> map = new HashMap<>();
+        for (String s : Resources.readLines(url, Charsets.UTF_8)) {
+          if (StringUtils.isNotBlank(s) && s.charAt(0) != '#') {
+            String className = trim(substringBefore(s, ","));
+            Integer id = Integer.valueOf(trim(substringAfter(s, ",")));
+            if (map.containsKey(className)) {
+              throw new IllegalStateException("Duplicate key: " + className);
+            }
+            logger.info("Registering class {} with id {}", className, id);
+            map.put(className, id);
+          }
+        }
+        return map;
       }
     } catch (IOException ex) {
       logger.error("Couldn't load serialization classes", ex);
+      System.exit(1);
     }
-    return emptyMap();
+    return null;
   }
 }
