@@ -402,6 +402,23 @@ public class WorkflowResource {
   }
 
   /**
+   * Updates the GraphNode.
+   *
+   * @param appId         the app id
+   * @param workflowId    the orchestration id
+   * @param nodeId        the nodeId
+   * @return the rest response
+   */
+  @GET
+  @Path("{workflowId}/nodes/{nodeId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<GraphNode> readGraphNode(@QueryParam("appId") String appId,
+      @PathParam("workflowId") String workflowId, @PathParam("nodeId") String nodeId) {
+    return new RestResponse<>(workflowService.readGraphNode(appId, workflowId, nodeId));
+  }
+
+  /**
    * Update.
    *
    * @param appId             the app id

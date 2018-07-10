@@ -153,15 +153,20 @@ public class WorkflowServiceTemplateHelper {
     }
 
     List<TemplateExpression> phaseTemplateExpressions = new ArrayList<>();
-    TemplateExpression serviceExpression = getTemplateExpression(templateExpressions, "serviceId");
-    TemplateExpression infraExpression = getTemplateExpression(templateExpressions, "infraMappingId");
+    addTemplateExpressions(templateExpressions, phaseTemplateExpressions);
+    workflowPhase.setTemplateExpressions(phaseTemplateExpressions);
+  }
+
+  private static void addTemplateExpressions(
+      List<TemplateExpression> sourceTemplateExpressions, List<TemplateExpression> targetTemplateExpressions) {
+    TemplateExpression serviceExpression = getTemplateExpression(sourceTemplateExpressions, "serviceId");
+    TemplateExpression infraExpression = getTemplateExpression(sourceTemplateExpressions, "infraMappingId");
     if (serviceExpression != null) {
-      phaseTemplateExpressions.add(serviceExpression);
+      targetTemplateExpressions.add(serviceExpression);
     }
     if (infraExpression != null) {
-      phaseTemplateExpressions.add(infraExpression);
+      targetTemplateExpressions.add(infraExpression);
     }
-    workflowPhase.setTemplateExpressions(phaseTemplateExpressions);
   }
 
   /**
@@ -184,14 +189,7 @@ public class WorkflowServiceTemplateHelper {
         phaseTemplateExpressions = new ArrayList<>();
       }
       // It means, user templatizing it from phase level
-      TemplateExpression serviceExpression = getTemplateExpression(phaseTemplateExpressions, "serviceId");
-      TemplateExpression infraExpression = getTemplateExpression(phaseTemplateExpressions, "infraMappingId");
-      if (serviceExpression != null) {
-        templateExpressions.add(serviceExpression);
-      }
-      if (infraExpression != null) {
-        templateExpressions.add(infraExpression);
-      }
+      addTemplateExpressions(phaseTemplateExpressions, templateExpressions);
       validateTemplateExpressions(templateExpressions);
       workflow.setTemplateExpressions(templateExpressions);
     }

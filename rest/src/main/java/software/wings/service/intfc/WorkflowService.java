@@ -136,4 +136,6 @@ public interface WorkflowService extends OwnedByApplication, OwnedByEnvironment,
   List<InstanceElement> getDeployedNodes(String appId, String workflowId);
 
   String resolveEnvironmentId(Workflow workflow, Map<String, String> workflowVariables);
+
+  GraphNode readGraphNode(@NotEmpty String appId, @NotEmpty String workflowId, @NotEmpty String nodeId);
 }

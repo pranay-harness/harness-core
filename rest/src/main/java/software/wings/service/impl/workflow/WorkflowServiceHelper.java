@@ -389,7 +389,7 @@ public class WorkflowServiceHelper {
   public Map<String, String> getStateDefaults(String appId, String serviceId, StateType stateType) {
     switch (stateType) {
       case AWS_CODEDEPLOY_STATE: {
-        List<ArtifactStream> artifactStreams = artifactStreamService.getArtifactStreamsForService(appId, serviceId);
+        List<ArtifactStream> artifactStreams = artifactStreamService.fetchArtifactStreamsForService(appId, serviceId);
         if (artifactStreams.stream().anyMatch(
                 artifactStream -> ArtifactStreamType.AMAZON_S3.name().equals(artifactStream.getArtifactStreamType()))) {
           return AwsCodeDeployState.loadDefaults();
@@ -845,8 +845,7 @@ public class WorkflowServiceHelper {
         .build();
   }
 
-  public WorkflowPhase generateRollbackWorkflowPhaseForSSH(
-      String appId, WorkflowPhase workflowPhase, OrchestrationWorkflowType orchestrationWorkflowType) {
+  public WorkflowPhase generateRollbackWorkflowPhaseForSSH(String appId, WorkflowPhase workflowPhase) {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
@@ -917,7 +916,7 @@ public class WorkflowServiceHelper {
   }
 
   public WorkflowPhase generateRollbackWorkflowPhaseForKubernetes(
-      WorkflowPhase workflowPhase, String appId, boolean serviceSetupRequired) {
+      WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
     if (workflowPhase.isDaemonSet() || workflowPhase.isStatefulSet()) {
       return generateRollbackSetupWorkflowPhase(workflowPhase);
     }
@@ -969,7 +968,7 @@ public class WorkflowServiceHelper {
   }
 
   public WorkflowPhase generateRollbackWorkflowPhaseForKubernetesBlueGreen(
-      WorkflowPhase workflowPhase, String appId, boolean serviceSetupRequired) {
+      WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
     if (workflowPhase.isDaemonSet() || workflowPhase.isStatefulSet()) {
       throw new InvalidRequestException("DaemonSet and StatefulSet are not supported with Blue/Green Deployment", USER);
     }

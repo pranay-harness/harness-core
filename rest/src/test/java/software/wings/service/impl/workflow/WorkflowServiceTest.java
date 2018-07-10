@@ -18,10 +18,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
-import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
-import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
-import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
-import static software.wings.beans.CustomOrchestrationWorkflow.CustomOrchestrationWorkflowBuilder.aCustomOrchestrationWorkflow;
 import static software.wings.beans.EntityType.APPDYNAMICS_CONFIGID;
 import static software.wings.beans.EntityType.ELK_CONFIGID;
 import static software.wings.beans.EntityType.ELK_INDICES;
@@ -29,26 +25,32 @@ import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
-import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.GraphLink.Builder.aLink;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
-import static software.wings.beans.MultiServiceOrchestrationWorkflow.MultiServiceOrchestrationWorkflowBuilder.aMultiServiceOrchestrationWorkflow;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
+import static software.wings.beans.PhaseStepType.AMI_DEPLOY_AUTOSCALING_GROUP;
+import static software.wings.beans.PhaseStepType.CLUSTER_SETUP;
+import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
+import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
+import static software.wings.beans.PhaseStepType.DEPLOY_AWS_LAMBDA;
+import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
+import static software.wings.beans.PhaseStepType.DISABLE_SERVICE;
+import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
 import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
+import static software.wings.beans.PhaseStepType.PREPARE_STEPS;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
+import static software.wings.beans.PhaseStepType.ROUTE_UPDATE;
 import static software.wings.beans.PhaseStepType.SELECT_NODE;
 import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
+import static software.wings.beans.PhaseStepType.WRAP_UP;
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
-import static software.wings.beans.command.Command.Builder.aCommand;
-import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
-import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.common.Constants.ARTIFACT_S3_BUCKET_EXPRESSION;
 import static software.wings.common.Constants.ARTIFACT__S3_KEY_EXPRESSION;
 import static software.wings.common.Constants.DEPLOY_CONTAINERS;
@@ -62,17 +64,61 @@ import static software.wings.common.Constants.WORKFLOW_VALIDATION_MESSAGE;
 import static software.wings.common.TemplateConstants.LATEST_TAG;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.assertClonedWorkflowAcrossApps;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.assertLinkedPhaseStep;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.assertOrchestrationWorkflow;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.assertPhaseNode;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.assertPostDeployTemplateStep;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.assertPreDeployTemplateStep;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.assertTemplateStep;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.assertTemplateWorkflowPhase;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.assertTemplatizedOrchestrationWorkflow;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.assertTemplatizedWorkflow;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.assertWorkflowPhaseTemplateExpressions;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.assertWorkflowPhaseTemplateStep;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructAmiInfraMapping;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructAppDVerifyStep;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructAppdTemplateExpressions;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructAwsLambdaInfraMapping;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBasicDeploymentTemplateWorkflow;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBasicWorkflow;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBasicWorkflowWithPhase;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBlueGreenWorkflow;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBuildWorkflow;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructCanaryHttpAsPostDeploymentStep;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructCanaryWithHttpPhaseStep;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructCanaryWithHttpStep;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructCanaryWorkflow;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructCanaryWorkflowWithPhase;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructCanaryWorkflowWithTwoPhases;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructCloneMetadata;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructCustomWorkflow;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructDirectKubernetesInfra;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructEcsWorkflow;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructEcsnfraMapping;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructElkTemplateExpressions;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructGKInfraMapping;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructHttpTemplateStep;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructLinkedTemplate;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructMulitServiceTemplateWorkflow;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructMultiServiceWorkflow;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructMultiServiceWorkflowWithPhase;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructPhysicalInfraMapping;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructPipeline;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructServiceCommand;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructTemplatizedCanaryWorkflow;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructWorkflowWithParam;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.getEnvTemplateExpression;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.getInfraTemplateExpression;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.getServiceTemplateExpression;
 import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
 import static software.wings.sm.StateType.AWS_CODEDEPLOY_STATE;
 import static software.wings.sm.StateType.AWS_NODE_SELECT;
 import static software.wings.sm.StateType.DC_NODE_SELECT;
-import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
-import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.sm.StateType.FORK;
 import static software.wings.sm.StateType.HTTP;
 import static software.wings.sm.StateType.JENKINS;
 import static software.wings.sm.StateType.REPEAT;
-import static software.wings.sm.StateType.WAIT;
 import static software.wings.utils.ArtifactType.DOCKER;
 import static software.wings.utils.ArtifactType.WAR;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -87,7 +133,6 @@ import static software.wings.utils.WingsTestConstants.JENKINS_URL;
 import static software.wings.utils.WingsTestConstants.NOTIFICATION_GROUP_ID;
 import static software.wings.utils.WingsTestConstants.PASSWORD;
 import static software.wings.utils.WingsTestConstants.ROLE_ID;
-import static software.wings.utils.WingsTestConstants.SERVICE_COMMAND_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID_CHANGED;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
@@ -96,7 +141,6 @@ import static software.wings.utils.WingsTestConstants.TARGET_SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
-import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -122,12 +166,12 @@ import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.BasicOrchestrationWorkflow;
+import software.wings.beans.BlueGreenOrchestrationWorkflow;
 import software.wings.beans.BuildWorkflow;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CustomOrchestrationWorkflow;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureCriteria;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.FailureType;
@@ -143,9 +187,6 @@ import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.Pipeline;
-import software.wings.beans.PipelineStage;
-import software.wings.beans.PipelineStage.PipelineStageElement;
-import software.wings.beans.RepairActionCode;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.SearchFilter.Operator;
@@ -199,7 +240,6 @@ import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.NotifyEventListener;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.validation.ConstraintViolationException;
@@ -212,7 +252,6 @@ import javax.validation.ConstraintViolationException;
 @Listeners(NotifyEventListener.class)
 public class WorkflowServiceTest extends WingsBaseTest {
   private static String envId = generateUuid();
-  private static String workflowId = generateUuid();
 
   private static final Logger logger = LoggerFactory.getLogger(WorkflowServiceTest.class);
 
@@ -273,6 +312,27 @@ public class WorkflowServiceTest extends WingsBaseTest {
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(service);
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(service);
     when(serviceResourceService.fetchServicesByUuids(APP_ID, asList(SERVICE_ID))).thenReturn(asList(service));
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(anAwsInfrastructureMapping()
+                        .withUuid(INFRA_MAPPING_ID)
+                        .withServiceId(SERVICE_ID)
+                        .withDeploymentType(SSH.name())
+                        .withComputeProviderType(SettingVariableTypes.AWS.name())
+                        .build());
+
+    Role role = aRole()
+                    .withRoleType(RoleType.ACCOUNT_ADMIN)
+                    .withUuid(ROLE_ID)
+                    .withAccountId(application.getAccountId())
+                    .build();
+    List<NotificationGroup> notificationGroups = asList(aNotificationGroup()
+                                                            .withUuid(NOTIFICATION_GROUP_ID)
+                                                            .withAccountId(application.getAccountId())
+                                                            .withRole(role)
+                                                            .build());
+    when(notificationSetupService.listNotificationGroups(
+             application.getAccountId(), RoleType.ACCOUNT_ADMIN.getDisplayName()))
+        .thenReturn(notificationGroups);
   }
 
   /**
@@ -330,8 +390,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
    * Should create workflow.
    */
   @Test
-  public void shouldCreateWorkflow() {
-    createWorkflow();
+  public void shouldCreateCustomWorkflow() {
+    createCustomWorkflow();
   }
 
   /**
@@ -339,30 +399,16 @@ public class WorkflowServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldCloneWorkflow() {
-    mockAwsInframapping();
-
-    Workflow workflow1 =
-        aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withAppId(APP_ID)
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withOrchestrationWorkflow(
-                aCanaryOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .addWorkflowPhase(aWorkflowPhase()
-                                          .withInfraMappingId(INFRA_MAPPING_ID)
-                                          .withServiceId(SERVICE_ID)
-                                          .withDeploymentType(SSH)
-                                          .build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-            .build();
-
-    Workflow workflow2 = workflowService.createWorkflow(workflow1);
+    Workflow workflow2 = workflowService.createWorkflow(constructCanaryWorkflowWithPhase());
     assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid");
 
     Workflow clonedWorkflow =
         workflowService.cloneWorkflow(APP_ID, workflow2.getUuid(), CloneMetadata.builder().workflow(workflow2).build());
+
+    assertClonedWorkflow(workflow2, clonedWorkflow);
+  }
+
+  private void assertClonedWorkflow(Workflow workflow2, Workflow clonedWorkflow) {
     assertThat(clonedWorkflow).isNotNull();
     assertThat(clonedWorkflow.getUuid()).isNotEqualTo(workflow2.getUuid());
     assertThat(clonedWorkflow.getAppId()).isEqualTo(workflow2.getAppId());
@@ -394,62 +440,15 @@ public class WorkflowServiceTest extends WingsBaseTest {
                         .withComputeProviderType(SettingVariableTypes.AWS.name())
                         .build());
 
-    Workflow workflow1 =
-        aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withAppId(APP_ID)
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withOrchestrationWorkflow(
-                aCanaryOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .addWorkflowPhase(aWorkflowPhase()
-                                          .withInfraMappingId(INFRA_MAPPING_ID)
-                                          .withServiceId(SERVICE_ID)
-                                          .withDeploymentType(SSH)
-                                          .build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-            .build();
+    Workflow workflow1 = constructCanaryWorkflowWithPhase();
 
     Workflow workflow2 = workflowService.createWorkflow(workflow1);
     assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid");
 
-    CloneMetadata cloneMetadata = CloneMetadata.builder()
-                                      .workflow(workflow2)
-                                      .serviceMapping(ImmutableMap.of(SERVICE_ID, TARGET_SERVICE_ID))
-                                      .targetAppId(TARGET_APP_ID)
-                                      .build();
+    CloneMetadata cloneMetadata = constructCloneMetadata(workflow2);
+
     Workflow clonedWorkflow = workflowService.cloneWorkflow(APP_ID, workflow2.getUuid(), cloneMetadata);
-    assertThat(clonedWorkflow).isNotNull();
-    assertThat(clonedWorkflow.getUuid()).isNotEqualTo(workflow2.getUuid());
-    assertThat(clonedWorkflow.getAppId()).isEqualTo(TARGET_APP_ID);
-    assertThat(clonedWorkflow.getEnvId()).isNullOrEmpty();
-    CanaryOrchestrationWorkflow orchestrationWorkflow =
-        (CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
-    CanaryOrchestrationWorkflow clonedOrchestrationWorkflow =
-        (CanaryOrchestrationWorkflow) clonedWorkflow.getOrchestrationWorkflow();
-    assertThat(clonedOrchestrationWorkflow).isNotNull();
-    assertThat(clonedOrchestrationWorkflow.getOrchestrationWorkflowType())
-        .isEqualTo(orchestrationWorkflow.getOrchestrationWorkflowType());
-    assertThat(clonedOrchestrationWorkflow.isValid()).isFalse();
-    assertThat(clonedOrchestrationWorkflow.getValidationMessage()).startsWith("Environment");
-    List<WorkflowPhase> workflowPhases = clonedOrchestrationWorkflow.getWorkflowPhases();
-    assertThat(workflowPhases).extracting(workflowPhase -> workflowPhase.getServiceId()).contains(TARGET_SERVICE_ID);
-    assertThat(workflowPhases)
-        .isNotNull()
-        .hasSize(1)
-        .extracting(workflowPhase -> workflowPhase.getInfraMappingId())
-        .containsNull();
-    assertThat(workflowPhases)
-        .isNotNull()
-        .hasSize(1)
-        .extracting(workflowPhase -> workflowPhase.getInfraMappingName())
-        .containsNull();
-    assertThat(workflowPhases)
-        .isNotNull()
-        .hasSize(1)
-        .extracting(workflowPhase -> workflowPhase.getComputeProviderId())
-        .containsNull();
+    assertClonedWorkflowAcrossApps(workflow2, clonedWorkflow);
   }
 
   /**
@@ -472,31 +471,12 @@ public class WorkflowServiceTest extends WingsBaseTest {
                         .withComputeProviderType(SettingVariableTypes.AWS.name())
                         .build());
 
-    Workflow workflow1 =
-        aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withAppId(APP_ID)
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withOrchestrationWorkflow(
-                aCanaryOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .addWorkflowPhase(aWorkflowPhase()
-                                          .withInfraMappingId(INFRA_MAPPING_ID)
-                                          .withServiceId(SERVICE_ID)
-                                          .withDeploymentType(SSH)
-                                          .build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-            .build();
+    Workflow workflow1 = constructCanaryWorkflow();
 
     Workflow workflow2 = workflowService.createWorkflow(workflow1);
     assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid");
 
-    CloneMetadata cloneMetadata = CloneMetadata.builder()
-                                      .workflow(workflow2)
-                                      .serviceMapping(ImmutableMap.of(SERVICE_ID, TARGET_SERVICE_ID))
-                                      .targetAppId(TARGET_APP_ID)
-                                      .build();
+    CloneMetadata cloneMetadata = constructCloneMetadata(workflow2);
     workflowService.cloneWorkflow(APP_ID, workflow2.getUuid(), cloneMetadata);
   }
 
@@ -504,9 +484,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
    * Should update workflow.
    */
   @Test
-  public void shouldUpdateWorkflow() {
-    Workflow workflow = createWorkflow();
-    Graph graph1 = ((CustomOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getGraph();
+  public void shouldUpdateCustomWorkflow() {
+    Workflow workflow = createCustomWorkflow();
 
     workflow.setName("workflow2");
     workflow.setDescription(null);
@@ -522,11 +501,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .isEqualToComparingOnlyGivenFields(workflow, "uuid", "name", "description", "orchestrationWorkflow")
         .hasFieldOrPropertyWithValue("defaultVersion", 2);
 
-    PageResponse<StateMachine> res = wingsPersistence.query(StateMachine.class,
-        aPageRequest()
-            .addFilter("appId", Operator.EQ, APP_ID)
-            .addFilter("originId", Operator.EQ, workflow.getUuid())
-            .build());
+    PageResponse<StateMachine> res = findStateMachine(workflow);
 
     assertThat(res).isNotNull().hasSize(2);
     assertThat(res.get(0))
@@ -546,7 +521,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldDeleteWorkflow() {
-    Workflow workflow = createWorkflow();
+    Workflow workflow = createCustomWorkflow();
     String uuid = workflow.getUuid();
     when(pipelineService.listPipelines(any(PageRequest.class))).thenReturn(aPageResponse().build());
     workflowService.deleteWorkflow(APP_ID, uuid);
@@ -563,23 +538,13 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldThrowExceptionOnReferencedWorkflowDelete() {
-    Workflow workflow = createWorkflow();
-    String uuid = workflow.getUuid();
-    Pipeline pipeline =
-        Pipeline.builder()
-            .name("PIPELINE_NAME")
-            .pipelineStages(
-                asList(PipelineStage.builder()
-                           .pipelineStageElements(asList(PipelineStageElement.builder()
-                                                             .name("STAGE")
-                                                             .type(ENV_STATE.name())
-                                                             .properties(ImmutableMap.of("workflowId", workflowId))
-                                                             .build()))
-                           .build()))
-            .build();
+    Workflow workflow = createCustomWorkflow();
+    String workflowId = workflow.getUuid();
+    Pipeline pipeline = constructPipeline(workflowId);
+
     when(pipelineService.listPipelines(any(PageRequest.class)))
         .thenReturn(aPageResponse().withResponse(asList(pipeline)).build());
-    assertThatThrownBy(() -> workflowService.deleteWorkflow(APP_ID, uuid))
+    assertThatThrownBy(() -> workflowService.deleteWorkflow(APP_ID, workflowId))
         .isInstanceOf(WingsException.class)
         .hasMessage(INVALID_REQUEST.name());
   }
@@ -589,7 +554,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
    */
   @Test(expected = WingsException.class)
   public void deleteWorkflowExecutionInProgress() {
-    Workflow workflow = createWorkflow();
+    Workflow workflow = createCustomWorkflow();
     String uuid = workflow.getUuid();
     when(workflowExecutionService.workflowExecutionsRunning(WorkflowType.ORCHESTRATION, APP_ID, uuid)).thenReturn(true);
     when(pipelineService.listPipelines(any(PageRequest.class))).thenReturn(aPageResponse().build());
@@ -598,38 +563,16 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflow).isNull();
   }
 
-  private Workflow createWorkflow() {
-    Graph graph =
-        aGraph()
-            .addNodes(aGraphNode().withId("n1").withName("stop").withType(ENV_STATE.name()).withOrigin(true).build(),
-                aGraphNode().withId("n2").withName("wait").withType(WAIT.name()).addProperty("duration", 1l).build(),
-                aGraphNode().withId("n3").withName("start").withType(ENV_STATE.name()).build())
-            .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("success").build())
-            .addLinks(aLink().withId("l2").withFrom("n2").withTo("n3").withType("success").build())
-            .build();
-
-    CustomOrchestrationWorkflow orchestrationWorkflow = aCustomOrchestrationWorkflow().withGraph(graph).build();
-    Workflow workflow = aWorkflow()
-                            .withAppId(APP_ID)
-                            .withName("workflow1")
-                            .withDescription("Sample Workflow")
-                            .withWorkflowType(WorkflowType.ORCHESTRATION)
-                            .withOrchestrationWorkflow(orchestrationWorkflow)
-                            .build();
-
-    workflow = workflowService.createWorkflow(workflow);
+  private Workflow createCustomWorkflow() {
+    Workflow workflow = workflowService.createWorkflow(constructCustomWorkflow());
     assertThat(workflow).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("defaultVersion", 1);
 
-    PageResponse<StateMachine> res = wingsPersistence.query(StateMachine.class,
-        aPageRequest()
-            .addFilter("appId", Operator.EQ, APP_ID)
-            .addFilter("originId", Operator.EQ, workflow.getUuid())
-            .build());
+    PageResponse<StateMachine> res = findStateMachine(workflow);
 
     assertThat(res).isNotNull().hasSize(1);
     assertThat(res.get(0))
         .isNotNull()
-        .hasFieldOrPropertyWithValue("orchestrationWorkflow", orchestrationWorkflow)
+        .hasFieldOrPropertyWithValue("orchestrationWorkflow", workflow.getOrchestrationWorkflow())
         .hasFieldOrPropertyWithValue("originId", workflow.getUuid())
         .hasFieldOrPropertyWithValue("originVersion", 1);
     return workflow;
@@ -672,17 +615,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void stencilsForOrchestrationFilterWorkflow() throws IllegalArgumentException {
-    Workflow workflow =
-        aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withAppId(APP_ID)
-            .withOrchestrationWorkflow(
-                aCanaryOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-            .build();
-    Workflow workflow2 = workflowService.createWorkflow(workflow);
+    Workflow workflow2 = workflowService.createWorkflow(constructCanaryWorkflow());
     assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
     Map<StateTypeScope, List<Stencil>> stencils =
         workflowService.stencils(APP_ID, workflow2.getUuid(), null, StateTypeScope.ORCHESTRATION_STENCILS);
@@ -697,18 +630,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void stencilsForBuildWorkflow() throws IllegalArgumentException {
-    Workflow workflow = aWorkflow()
-                            .withName(WORKFLOW_NAME)
-                            .withAppId(APP_ID)
-                            .withOrchestrationWorkflow(aBuildOrchestrationWorkflow().build())
-                            .build();
-
-    Workflow workflow2 = workflowService.createWorkflow(workflow);
-    assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
+    Workflow workflow = workflowService.createWorkflow(constructBuildWorkflow());
+    assertThat(workflow).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
     Map<StateTypeScope, List<Stencil>> stencils =
-        workflowService.stencils(APP_ID, workflow2.getUuid(), null, StateTypeScope.ORCHESTRATION_STENCILS);
+        workflowService.stencils(APP_ID, workflow.getUuid(), null, StateTypeScope.ORCHESTRATION_STENCILS);
 
-    logger.debug(JsonUtils.asJson(stencils));
     assertThat(stencils).isNotNull().hasSize(1).containsKeys(StateTypeScope.ORCHESTRATION_STENCILS);
     assertThat(stencils.get(StateTypeScope.ORCHESTRATION_STENCILS))
         .extracting(Stencil::getType)
@@ -718,22 +644,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void stencilsForOrchestrationFilterWorkflowPhase() throws IllegalArgumentException {
-    Workflow workflow =
-        aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withAppId(APP_ID)
-            .withServiceId(SERVICE_ID)
-            .withInfraMappingId(INFRA_MAPPING_ID)
-            .withOrchestrationWorkflow(
-                aBasicOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-            .build();
-
-    mockAwsInframapping();
-
-    ServiceCommand serviceCommand = createServiceCommand();
+    ServiceCommand serviceCommand = constructServiceCommand();
 
     when(serviceResourceService.get(APP_ID, SERVICE_ID, true))
         .thenReturn(Service.builder().uuid(SERVICE_ID).serviceCommands(ImmutableList.of(serviceCommand)).build());
@@ -741,7 +652,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     when(serviceResourceService.get(APP_ID, SERVICE_ID))
         .thenReturn(Service.builder().uuid(SERVICE_ID).serviceCommands(ImmutableList.of(serviceCommand)).build());
 
-    Workflow workflow2 = workflowService.createWorkflow(workflow);
+    Workflow workflow2 = workflowService.createWorkflow(constructBasicWorkflowWithPhase());
     assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
 
     BasicOrchestrationWorkflow basicOrchestrationWorkflow =
@@ -749,7 +660,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Map<StateTypeScope, List<Stencil>> stencils = workflowService.stencils(APP_ID, workflow2.getUuid(),
         basicOrchestrationWorkflow.getWorkflowPhases().get(0).getUuid(), StateTypeScope.ORCHESTRATION_STENCILS);
 
-    logger.debug(JsonUtils.asJson(stencils));
     assertThat(stencils).isNotNull().hasSize(1).containsKeys(StateTypeScope.ORCHESTRATION_STENCILS);
     assertThat(stencils.get(StateTypeScope.ORCHESTRATION_STENCILS))
         .extracting(Stencil::getType)
@@ -757,149 +667,54 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .contains("REPEAT", "FORK", "HTTP");
   }
 
-  private ServiceCommand createServiceCommand() {
-    return aServiceCommand()
-        .withServiceId(SERVICE_ID)
-        .withUuid(SERVICE_COMMAND_ID)
-        .withAppId(APP_ID)
-        .withName("START")
-        .withCommand(
-            aCommand()
-                .withName("START")
-                .addCommandUnits(
-                    anExecCommandUnit().withCommandPath("/home/xxx/tomcat").withCommandString("bin/startup.sh").build())
-                .build())
-        .build();
-  }
-
   @Test
   public void shouldCreateCanaryWorkflow() {
-    Workflow workflow =
-        aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withAppId(APP_ID)
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withOrchestrationWorkflow(
-                aCanaryOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-            .build();
-
-    Workflow workflow2 = workflowService.createWorkflow(workflow);
-    assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
+    Workflow workflow = workflowService.createWorkflow(constructCanaryWorkflow());
+    assertThat(workflow).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
 
     CanaryOrchestrationWorkflow orchestrationWorkflow =
-        (CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
-    assertThat(orchestrationWorkflow)
-        .isNotNull()
-        .hasFieldOrProperty("preDeploymentSteps")
-        .hasFieldOrProperty("postDeploymentSteps")
-        .hasFieldOrProperty("graph");
-    assertThat(orchestrationWorkflow.getGraph()).isNotNull();
-    assertThat(orchestrationWorkflow.getGraph().getNodes())
-        .extracting("id")
-        .contains(orchestrationWorkflow.getPostDeploymentSteps().getUuid(),
-            orchestrationWorkflow.getPostDeploymentSteps().getUuid());
+        (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
 
-    assertThat(orchestrationWorkflow.getGraph().getSubworkflows())
-        .containsKeys(orchestrationWorkflow.getPostDeploymentSteps().getUuid(),
-            orchestrationWorkflow.getPostDeploymentSteps().getUuid());
+    assertOrchestrationWorkflow(orchestrationWorkflow);
 
-    PageResponse<StateMachine> res = wingsPersistence.query(StateMachine.class,
-        aPageRequest()
-            .addFilter("appId", Operator.EQ, APP_ID)
-            .addFilter("originId", Operator.EQ, workflow.getUuid())
-            .build());
+    PageResponse<StateMachine> res = findStateMachine(workflow);
 
     assertThat(res).isNotNull().hasSize(1);
     assertThat(res.get(0)).isNotNull().hasFieldOrPropertyWithValue("orchestrationWorkflow", orchestrationWorkflow);
 
-    assertThat(workflow2.getKeywords())
+    assertThat(workflow.getKeywords())
         .isNotNull()
         .contains(workflow.getName().toLowerCase())
         .contains(WorkflowType.ORCHESTRATION.name().toLowerCase());
 
-    workflow2 = workflowService.readWorkflow(workflow2.getAppId(), workflow2.getUuid());
-    assertThat(workflow2.getKeywords())
+    workflow = workflowService.readWorkflow(workflow.getAppId(), workflow.getUuid());
+    assertThat(workflow.getKeywords())
         .isNotNull()
         .contains(workflow.getName().toLowerCase())
         .contains(WorkflowType.ORCHESTRATION.name().toLowerCase())
         .contains(OrchestrationWorkflowType.CANARY.name().toLowerCase());
+  }
 
-    logger.info(JsonUtils.asJson(workflow2));
+  private PageResponse findStateMachine(Workflow workflow) {
+    return wingsPersistence.query(StateMachine.class,
+        aPageRequest()
+            .addFilter("appId", Operator.EQ, APP_ID)
+            .addFilter("originId", Operator.EQ, workflow.getUuid())
+            .build());
   }
 
   @Test
   public void shouldCreateBasicDeploymentWorkflow() {
-    Workflow workflow =
-        aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withEnvId(ENV_ID)
-            .withAppId(APP_ID)
-            .withServiceId(SERVICE_ID)
-            .withInfraMappingId(INFRA_MAPPING_ID)
-            .withOrchestrationWorkflow(
-                aBasicOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-            .build();
-    mockAwsInframapping();
-
-    Role role = aRole()
-                    .withRoleType(RoleType.ACCOUNT_ADMIN)
-                    .withUuid(ROLE_ID)
-                    .withAccountId(application.getAccountId())
-                    .build();
-    List<NotificationGroup> notificationGroups = asList(aNotificationGroup()
-                                                            .withUuid(NOTIFICATION_GROUP_ID)
-                                                            .withAccountId(application.getAccountId())
-                                                            .withRole(role)
-                                                            .build());
-    when(notificationSetupService.listNotificationGroups(
-             application.getAccountId(), RoleType.ACCOUNT_ADMIN.getDisplayName()))
-        .thenReturn(notificationGroups);
+    Workflow workflow = constructBasicWorkflowWithPhase();
 
     Workflow workflow2 = workflowService.createWorkflow(workflow);
     assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
 
     BasicOrchestrationWorkflow orchestrationWorkflow =
         (BasicOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
-    assertThat(orchestrationWorkflow)
-        .isNotNull()
-        .hasFieldOrProperty("preDeploymentSteps")
-        .hasFieldOrProperty("postDeploymentSteps")
-        .hasFieldOrProperty("graph")
-        .hasFieldOrProperty("notificationRules")
-        .hasFieldOrProperty("failureStrategies");
-    assertThat(orchestrationWorkflow.getGraph()).isNotNull();
-    assertThat(orchestrationWorkflow.getGraph().getNodes())
-        .extracting("id")
-        .contains(orchestrationWorkflow.getPostDeploymentSteps().getUuid(),
-            orchestrationWorkflow.getPostDeploymentSteps().getUuid());
+    assertOrchestrationWorkflow(orchestrationWorkflow);
 
-    assertThat(orchestrationWorkflow.getGraph().getSubworkflows())
-        .containsKeys(orchestrationWorkflow.getPostDeploymentSteps().getUuid(),
-            orchestrationWorkflow.getPostDeploymentSteps().getUuid());
-
-    assertThat(orchestrationWorkflow.getNotificationRules()).isNotNull();
-    assertThat(orchestrationWorkflow.getNotificationRules().get(0)).isNotNull();
-    assertThat(orchestrationWorkflow.getNotificationRules().get(0).getConditions()).isNotNull();
-    assertThat(orchestrationWorkflow.getNotificationRules().get(0).getExecutionScope())
-        .isEqualTo(ExecutionScope.WORKFLOW);
-
-    assertThat(orchestrationWorkflow.getFailureStrategies()).isNotNull();
-    assertThat(orchestrationWorkflow.getFailureStrategies().get(0)).isNotNull();
-    assertThat(orchestrationWorkflow.getFailureStrategies().get(0).getRepairActionCode())
-        .isEqualTo(RepairActionCode.ROLLBACK_WORKFLOW);
-
-    PageResponse<StateMachine> res = wingsPersistence.query(StateMachine.class,
-        aPageRequest()
-            .addFilter("appId", Operator.EQ, APP_ID)
-            .addFilter("originId", Operator.EQ, workflow.getUuid())
-            .build());
+    PageResponse<StateMachine> res = findStateMachine(workflow);
 
     assertThat(res).isNotNull().hasSize(1);
     assertThat(res.get(0)).isNotNull().hasFieldOrPropertyWithValue("orchestrationWorkflow", orchestrationWorkflow);
@@ -913,41 +728,188 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .contains(OrchestrationWorkflowType.BASIC.name().toLowerCase())
         .contains(ENV_NAME.toLowerCase())
         .contains(SERVICE_NAME.toLowerCase());
+  }
 
-    logger.info(JsonUtils.asJson(workflow2));
+  @Test
+  public void shouldCreateBasicDirectKubernetesDeploymentWorkflow() {
+    Workflow workflow = constructBasicWorkflow();
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(constructDirectKubernetesInfra());
+    Workflow savedWorkflow = workflowService.createWorkflow(workflow);
+    assertThat(savedWorkflow).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
+
+    BasicOrchestrationWorkflow orchestrationWorkflow =
+        (BasicOrchestrationWorkflow) savedWorkflow.getOrchestrationWorkflow();
+    assertOrchestrationWorkflow(orchestrationWorkflow);
+
+    savedWorkflow = workflowService.readWorkflow(savedWorkflow.getAppId(), savedWorkflow.getUuid());
+
+    orchestrationWorkflow = (BasicOrchestrationWorkflow) savedWorkflow.getOrchestrationWorkflow();
+    assertWorkflowPhase(orchestrationWorkflow);
+    WorkflowPhase workflowPhase = orchestrationWorkflow.getWorkflowPhases().get(0);
+    assertThat(workflowPhase).isNotNull();
+    assertThat(workflowPhase)
+        .isNotNull()
+        .hasFieldOrPropertyWithValue("valid", false)
+        .hasFieldOrPropertyWithValue("validationMessage", format(PHASE_VALIDATION_MESSAGE, asList(DEPLOY_CONTAINERS)));
+
+    assertThat(workflowPhase.getPhaseSteps())
+        .isNotEmpty()
+        .extracting(PhaseStep::getPhaseStepType)
+        .contains(CONTAINER_SETUP, CONTAINER_DEPLOY, VERIFY_SERVICE, WRAP_UP);
+  }
+
+  @Test
+  public void shouldCreateBasicGCPKubernetesDeploymentWorkflow() {
+    Workflow workflow = constructBasicWorkflow();
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(constructGKInfraMapping());
+
+    Workflow savedWorkflow = workflowService.createWorkflow(workflow);
+    assertThat(savedWorkflow).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
+
+    BasicOrchestrationWorkflow orchestrationWorkflow =
+        (BasicOrchestrationWorkflow) savedWorkflow.getOrchestrationWorkflow();
+    assertOrchestrationWorkflow(orchestrationWorkflow);
+
+    savedWorkflow = workflowService.readWorkflow(savedWorkflow.getAppId(), savedWorkflow.getUuid());
+
+    orchestrationWorkflow = (BasicOrchestrationWorkflow) savedWorkflow.getOrchestrationWorkflow();
+    assertWorkflowPhase(orchestrationWorkflow);
+    WorkflowPhase workflowPhase = orchestrationWorkflow.getWorkflowPhases().get(0);
+    assertThat(workflowPhase).isNotNull();
+    assertThat(workflowPhase)
+        .isNotNull()
+        .hasFieldOrPropertyWithValue("valid", false)
+        .hasFieldOrPropertyWithValue("validationMessage", format(PHASE_VALIDATION_MESSAGE, asList(DEPLOY_CONTAINERS)));
+
+    assertThat(workflowPhase.getPhaseSteps())
+        .isNotEmpty()
+        .extracting(PhaseStep::getPhaseStepType)
+        .contains(CLUSTER_SETUP, CONTAINER_SETUP, CONTAINER_DEPLOY, VERIFY_SERVICE, WRAP_UP);
+  }
+
+  @Test
+  public void shouldCreateBasicPhysicalInfraDeploymentWorkflow() {
+    Workflow workflow = constructBasicWorkflow();
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(constructPhysicalInfraMapping());
+
+    Workflow savedWorkflow = workflowService.createWorkflow(workflow);
+    assertThat(savedWorkflow).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
+
+    BasicOrchestrationWorkflow orchestrationWorkflow =
+        (BasicOrchestrationWorkflow) savedWorkflow.getOrchestrationWorkflow();
+    assertOrchestrationWorkflow(orchestrationWorkflow);
+
+    savedWorkflow = workflowService.readWorkflow(savedWorkflow.getAppId(), savedWorkflow.getUuid());
+
+    orchestrationWorkflow = (BasicOrchestrationWorkflow) savedWorkflow.getOrchestrationWorkflow();
+    assertWorkflowPhase(orchestrationWorkflow);
+    WorkflowPhase workflowPhase = orchestrationWorkflow.getWorkflowPhases().get(0);
+    assertThat(workflowPhase.getPhaseSteps())
+        .isNotEmpty()
+        .extracting(PhaseStep::getPhaseStepType)
+        .contains(INFRASTRUCTURE_NODE, DISABLE_SERVICE, DEPLOY_SERVICE, ENABLE_SERVICE, VERIFY_SERVICE, WRAP_UP);
+  }
+
+  @Test
+  public void shouldCreateBlueGreenCPKubernetesDeploymentWorkflow() {
+    Workflow workflow = constructBlueGreenWorkflow();
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(constructGKInfraMapping());
+
+    Workflow savedWorkflow = workflowService.createWorkflow(workflow);
+    assertThat(savedWorkflow).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
+
+    BlueGreenOrchestrationWorkflow orchestrationWorkflow =
+        (BlueGreenOrchestrationWorkflow) savedWorkflow.getOrchestrationWorkflow();
+    assertOrchestrationWorkflow(orchestrationWorkflow);
+
+    savedWorkflow = workflowService.readWorkflow(savedWorkflow.getAppId(), savedWorkflow.getUuid());
+
+    orchestrationWorkflow = (BlueGreenOrchestrationWorkflow) savedWorkflow.getOrchestrationWorkflow();
+    assertThat(orchestrationWorkflow).isNotNull();
+    assertThat(orchestrationWorkflow.getWorkflowPhases()).isNotEmpty().hasSize(1);
+    WorkflowPhase workflowPhase = orchestrationWorkflow.getWorkflowPhases().get(0);
+    assertThat(workflowPhase.getPhaseSteps())
+        .isNotEmpty()
+        .extracting(PhaseStep::getPhaseStepType)
+        .contains(CONTAINER_SETUP, CONTAINER_DEPLOY, VERIFY_SERVICE, ROUTE_UPDATE, WRAP_UP);
+  }
+
+  @Test
+  public void shouldCreateBasicEcsDeploymentWorkflow() {
+    Workflow workflow = constructBasicWorkflow();
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(constructEcsnfraMapping());
+
+    Workflow savedWorkflow = workflowService.createWorkflow(workflow);
+    assertThat(savedWorkflow).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
+
+    BasicOrchestrationWorkflow orchestrationWorkflow =
+        (BasicOrchestrationWorkflow) savedWorkflow.getOrchestrationWorkflow();
+    assertOrchestrationWorkflow(orchestrationWorkflow);
+
+    savedWorkflow = workflowService.readWorkflow(savedWorkflow.getAppId(), savedWorkflow.getUuid());
+
+    orchestrationWorkflow = (BasicOrchestrationWorkflow) savedWorkflow.getOrchestrationWorkflow();
+    assertWorkflowPhase(orchestrationWorkflow);
+    WorkflowPhase workflowPhase = orchestrationWorkflow.getWorkflowPhases().get(0);
+    assertThat(workflowPhase.getPhaseSteps())
+        .isNotEmpty()
+        .extracting(PhaseStep::getPhaseStepType)
+        .contains(CONTAINER_SETUP, CONTAINER_DEPLOY, VERIFY_SERVICE, WRAP_UP);
+  }
+
+  @Test
+  public void shouldCreateBasicAwsAmiDeploymentWorkflow() {
+    Workflow workflow = constructBasicWorkflow();
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(constructAmiInfraMapping());
+
+    Workflow savedWorkflow = workflowService.createWorkflow(workflow);
+    assertThat(savedWorkflow).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
+
+    BasicOrchestrationWorkflow orchestrationWorkflow =
+        (BasicOrchestrationWorkflow) savedWorkflow.getOrchestrationWorkflow();
+    assertOrchestrationWorkflow(orchestrationWorkflow);
+
+    savedWorkflow = workflowService.readWorkflow(savedWorkflow.getAppId(), savedWorkflow.getUuid());
+
+    orchestrationWorkflow = (BasicOrchestrationWorkflow) savedWorkflow.getOrchestrationWorkflow();
+    assertWorkflowPhase(orchestrationWorkflow);
+    WorkflowPhase workflowPhase = orchestrationWorkflow.getWorkflowPhases().get(0);
+    assertThat(workflowPhase.getPhaseSteps())
+        .isNotEmpty()
+        .extracting(PhaseStep::getPhaseStepType)
+        .contains(AMI_DEPLOY_AUTOSCALING_GROUP, VERIFY_SERVICE, WRAP_UP);
+  }
+
+  @Test
+  public void shouldCreateBasicAwsLambdaDeploymentWorkflow() {
+    Workflow workflow = constructBasicWorkflow();
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(constructAwsLambdaInfraMapping());
+
+    Workflow savedWorkflow = workflowService.createWorkflow(workflow);
+    assertThat(savedWorkflow).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
+
+    BasicOrchestrationWorkflow orchestrationWorkflow =
+        (BasicOrchestrationWorkflow) savedWorkflow.getOrchestrationWorkflow();
+    assertOrchestrationWorkflow(orchestrationWorkflow);
+
+    savedWorkflow = workflowService.readWorkflow(savedWorkflow.getAppId(), savedWorkflow.getUuid());
+
+    orchestrationWorkflow = (BasicOrchestrationWorkflow) savedWorkflow.getOrchestrationWorkflow();
+    assertWorkflowPhase(orchestrationWorkflow);
+    WorkflowPhase workflowPhase = orchestrationWorkflow.getWorkflowPhases().get(0);
+    assertThat(workflowPhase.getPhaseSteps())
+        .isNotEmpty()
+        .extracting(PhaseStep::getPhaseStepType)
+        .contains(PREPARE_STEPS, DEPLOY_AWS_LAMBDA, VERIFY_SERVICE, WRAP_UP);
+  }
+
+  private void assertWorkflowPhase(BasicOrchestrationWorkflow orchestrationWorkflow) {
+    assertThat(orchestrationWorkflow).isNotNull();
+    assertThat(orchestrationWorkflow.getWorkflowPhases()).isNotEmpty().hasSize(1);
   }
 
   private Workflow createBasicWorkflow() {
-    Workflow workflow =
-        aWorkflow()
-            .withEnvId(ENV_ID)
-            .withName(WORKFLOW_NAME)
-            .withAppId(APP_ID)
-            .withServiceId(SERVICE_ID)
-            .withInfraMappingId(INFRA_MAPPING_ID)
-            .withOrchestrationWorkflow(
-                aBasicOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-            .build();
-
-    mockInframapping();
-
-    Role role = aRole()
-                    .withRoleType(RoleType.ACCOUNT_ADMIN)
-                    .withUuid(ROLE_ID)
-                    .withAccountId(application.getAccountId())
-                    .build();
-    List<NotificationGroup> notificationGroups = asList(aNotificationGroup()
-                                                            .withUuid(NOTIFICATION_GROUP_ID)
-                                                            .withAccountId(application.getAccountId())
-                                                            .withRole(role)
-                                                            .build());
-    when(notificationSetupService.listNotificationGroups(
-             application.getAccountId(), RoleType.ACCOUNT_ADMIN.getDisplayName()))
-        .thenReturn(notificationGroups);
-
+    Workflow workflow = constructBasicWorkflowWithPhase();
     Workflow workflow2 = workflowService.createWorkflow(workflow);
     assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid");
     assertThat(workflow2.getOrchestrationWorkflow())
@@ -960,44 +922,15 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldCreateMultiServiceWorkflow() {
-    Workflow workflow =
-        aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withAppId(APP_ID)
-            .withOrchestrationWorkflow(
-                aMultiServiceOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-            .build();
-
+    Workflow workflow = constructMultiServiceWorkflow();
     Workflow workflow2 = workflowService.createWorkflow(workflow);
     assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
-
     MultiServiceOrchestrationWorkflow orchestrationWorkflow =
         (MultiServiceOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
-    assertThat(orchestrationWorkflow)
-        .isNotNull()
-        .hasFieldOrProperty("preDeploymentSteps")
-        .hasFieldOrProperty("postDeploymentSteps")
-        .hasFieldOrProperty("graph");
-    assertThat(orchestrationWorkflow.getGraph()).isNotNull();
-    assertThat(orchestrationWorkflow.getGraph().getNodes())
-        .extracting("id")
-        .contains(orchestrationWorkflow.getPostDeploymentSteps().getUuid(),
-            orchestrationWorkflow.getPostDeploymentSteps().getUuid());
 
-    assertThat(orchestrationWorkflow.getGraph().getSubworkflows())
-        .containsKeys(orchestrationWorkflow.getPostDeploymentSteps().getUuid(),
-            orchestrationWorkflow.getPostDeploymentSteps().getUuid());
+    assertOrchestrationWorkflow(orchestrationWorkflow);
 
-    PageResponse<StateMachine> res = wingsPersistence.query(StateMachine.class,
-        aPageRequest()
-            .addFilter("appId", Operator.EQ, APP_ID)
-            .addFilter("originId", Operator.EQ, workflow.getUuid())
-            .build());
-
+    PageResponse<StateMachine> res = findStateMachine(workflow);
     assertThat(res).isNotNull().hasSize(1);
     assertThat(res.get(0)).isNotNull().hasFieldOrPropertyWithValue("orchestrationWorkflow", orchestrationWorkflow);
 
@@ -1012,37 +945,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldValidateWorkflow() {
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
-        .thenReturn(anAwsInfrastructureMapping()
-                        .withUuid(INFRA_MAPPING_ID)
-                        .withDeploymentType(SSH.name())
-                        .withComputeProviderType(SettingVariableTypes.AWS.name())
-                        .build());
-
-    Workflow workflow =
-        aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withAppId(APP_ID)
-            .withEnvId(ENV_ID)
-            .withOrchestrationWorkflow(
-                aCanaryOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .addWorkflowPhase(aWorkflowPhase()
-                                          .withServiceId(SERVICE_ID)
-                                          .withInfraMappingId(INFRA_MAPPING_ID)
-                                          .addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
-                                                            .addStep(aGraphNode()
-                                                                         .withId(generateUuid())
-                                                                         .withType(ECS_SERVICE_DEPLOY.name())
-                                                                         .withName(UPGRADE_CONTAINERS)
-                                                                         .build())
-                                                            .build())
-                                          .build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-            .build();
-
-    Workflow workflow2 = workflowService.createWorkflow(workflow);
+    Workflow workflow2 = workflowService.createWorkflow(constructEcsWorkflow());
     assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
 
     CanaryOrchestrationWorkflow orchestrationWorkflow =
@@ -1154,6 +1057,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
                         .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
                         .withComputeProviderType(SettingVariableTypes.AWS.name())
                         .build());
+
     Workflow workflow2 = aWorkflow()
                              .withAppId(APP_ID)
                              .withEnvId(ENV_ID_CHANGED)
@@ -1222,14 +1126,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     when(serviceResourceService.get(APP_ID, SERVICE_ID_CHANGED, false))
         .thenReturn(Service.builder().name(SERVICE_NAME).artifactType(WAR).uuid(SERVICE_ID_CHANGED).build());
 
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID_CHANGED))
-        .thenReturn(anAwsInfrastructureMapping()
-                        .withServiceId(SERVICE_ID_CHANGED)
-                        .withUuid(INFRA_MAPPING_ID_CHANGED)
-                        .withDeploymentType(SSH.name())
-                        .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
-                        .withComputeProviderType(SettingVariableTypes.AWS.name())
-                        .build());
+    mockAwsInfraMappingChanged();
     Workflow workflow2 = aWorkflow()
                              .withAppId(APP_ID)
                              .withEnvId(ENV_ID_CHANGED)
@@ -1248,34 +1145,20 @@ public class WorkflowServiceTest extends WingsBaseTest {
     }
   }
 
-  @Test
-  public void shouldUpdateMulitServiceDeploymentEnvironment() {
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+  private void mockAwsInfraMappingChanged() {
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID_CHANGED))
         .thenReturn(anAwsInfrastructureMapping()
-                        .withUuid(INFRA_MAPPING_ID)
+                        .withServiceId(SERVICE_ID_CHANGED)
+                        .withUuid(INFRA_MAPPING_ID_CHANGED)
                         .withDeploymentType(SSH.name())
+                        .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
                         .withComputeProviderType(SettingVariableTypes.AWS.name())
                         .build());
+  }
 
-    Workflow workflow1 =
-        aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withEnvId(ENV_ID)
-            .withAppId(APP_ID)
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withOrchestrationWorkflow(
-                aMultiServiceOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .addWorkflowPhase(aWorkflowPhase()
-                                          .withInfraMappingId(INFRA_MAPPING_ID)
-                                          .withServiceId(SERVICE_ID)
-                                          .withDeploymentType(SSH)
-                                          .build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-            .build();
-
-    workflowService.createWorkflow(workflow1);
+  @Test
+  public void shouldUpdateMulitServiceDeploymentEnvironment() {
+    Workflow workflow1 = workflowService.createWorkflow(constructMultiServiceWorkflowWithPhase());
 
     String name2 = "Name2";
 
@@ -1305,8 +1188,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldUpdateMultiServiceDeploymentEnvironmentServiceInfraMapping() {
-    mockAwsInframapping();
-
     when(serviceResourceService.get(APP_ID, SERVICE_ID_CHANGED, false))
         .thenReturn(Service.builder().name(SERVICE_NAME).artifactType(WAR).uuid(SERVICE_ID_CHANGED).build());
 
@@ -1355,19 +1236,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldUpdateMultiServiceDeploymentInCompatibleService() {
-    mockAwsInframapping();
-
     when(serviceResourceService.get(APP_ID, SERVICE_ID_CHANGED, false))
         .thenReturn(Service.builder().name(SERVICE_NAME).artifactType(WAR).uuid(SERVICE_ID_CHANGED).build());
 
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID_CHANGED))
-        .thenReturn(anAwsInfrastructureMapping()
-                        .withServiceId(SERVICE_ID_CHANGED)
-                        .withUuid(INFRA_MAPPING_ID_CHANGED)
-                        .withDeploymentType(SSH.name())
-                        .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
-                        .withComputeProviderType(SettingVariableTypes.AWS.name())
-                        .build());
+    mockAwsInfraMappingChanged();
     Workflow workflow1 = createMultiServiceWorkflow();
 
     WorkflowPhase workflowPhase =
@@ -1415,32 +1287,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldUpdateCanaryDeploymentEnvironment() {
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
-        .thenReturn(anAwsInfrastructureMapping()
-                        .withUuid(INFRA_MAPPING_ID)
-                        .withDeploymentType(SSH.name())
-                        .withComputeProviderType(SettingVariableTypes.AWS.name())
-                        .build());
-
-    Workflow workflow1 =
-        aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withEnvId(ENV_ID)
-            .withAppId(APP_ID)
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withOrchestrationWorkflow(
-                aCanaryOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .addWorkflowPhase(aWorkflowPhase()
-                                          .withInfraMappingId(INFRA_MAPPING_ID)
-                                          .withServiceId(SERVICE_ID)
-                                          .withDeploymentType(SSH)
-                                          .build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-            .build();
-
-    workflowService.createWorkflow(workflow1);
+    Workflow workflow1 = workflowService.createWorkflow(constructCanaryWorkflowWithPhase());
 
     String name2 = "Name2";
 
@@ -1470,15 +1317,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldUpdateCanaryDeploymentEnvironmentServiceInfraMapping() {
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
-        .thenReturn(anAwsInfrastructureMapping()
-                        .withName("NAME")
-                        .withServiceId(SERVICE_ID)
-                        .withUuid(INFRA_MAPPING_ID)
-                        .withDeploymentType(SSH.name())
-                        .withComputeProviderType(SettingVariableTypes.AWS.name())
-                        .build());
-
     when(serviceResourceService.get(APP_ID, SERVICE_ID_CHANGED, false))
         .thenReturn(Service.builder().name(SERVICE_NAME).artifactType(WAR).uuid(SERVICE_ID_CHANGED).build());
 
@@ -1527,19 +1365,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldUpdateCanaryInCompatibleService() {
-    mockAwsInframapping();
-
     when(serviceResourceService.get(APP_ID, SERVICE_ID_CHANGED, false))
         .thenReturn(Service.builder().name(SERVICE_NAME).artifactType(WAR).uuid(SERVICE_ID_CHANGED).build());
 
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID_CHANGED))
-        .thenReturn(anAwsInfrastructureMapping()
-                        .withServiceId(SERVICE_ID_CHANGED)
-                        .withUuid(INFRA_MAPPING_ID_CHANGED)
-                        .withDeploymentType(SSH.name())
-                        .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
-                        .withComputeProviderType(SettingVariableTypes.AWS.name())
-                        .build());
+    mockAwsInfraMappingChanged();
     Workflow workflow1 = createCanaryWorkflow();
 
     WorkflowPhase workflowPhase =
@@ -1574,7 +1403,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow1 = createCanaryWorkflow();
 
     PhaseStep phaseStep = aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).withStepsInParallel(true).build();
-    PhaseStep updated = workflowService.updatePreDeployment(workflow1.getAppId(), workflow1.getUuid(), phaseStep);
+    workflowService.updatePreDeployment(workflow1.getAppId(), workflow1.getUuid(), phaseStep);
 
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
     assertThat(workflow2).isNotNull().hasFieldOrPropertyWithValue("uuid", workflow1.getUuid());
@@ -1593,49 +1422,16 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   public Workflow createCanaryWorkflow() {
-    Workflow workflow =
-        aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withEnvId(ENV_ID)
-            .withAppId(APP_ID)
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withOrchestrationWorkflow(
-                aCanaryOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-            .build();
-
-    Workflow workflow2 = workflowService.createWorkflow(workflow);
+    Workflow workflow2 = workflowService.createWorkflow(constructCanaryWorkflow());
     assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid");
-    assertThat(workflow2.getOrchestrationWorkflow())
-        .isNotNull()
-        .hasFieldOrProperty("preDeploymentSteps")
-        .hasFieldOrProperty("postDeploymentSteps")
-        .hasFieldOrProperty("graph");
+    assertOrchestrationWorkflow((CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow());
     return workflow2;
   }
 
   public Workflow createMultiServiceWorkflow() {
-    Workflow workflow =
-        aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withAppId(APP_ID)
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withOrchestrationWorkflow(
-                aMultiServiceOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-            .build();
-
-    Workflow workflow2 = workflowService.createWorkflow(workflow);
+    Workflow workflow2 = workflowService.createWorkflow(constructMultiServiceWorkflow());
     assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid");
-    assertThat(workflow2.getOrchestrationWorkflow())
-        .isNotNull()
-        .hasFieldOrProperty("preDeploymentSteps")
-        .hasFieldOrProperty("postDeploymentSteps")
-        .hasFieldOrProperty("graph");
+    assertOrchestrationWorkflow((CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow());
     return workflow2;
   }
 
@@ -1664,7 +1460,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldCreateWorkflowPhase() {
-    mockAwsInframapping();
     Workflow workflow1 = createCanaryWorkflow();
     WorkflowPhase workflowPhase =
         aWorkflowPhase().withServiceId(SERVICE_ID).withInfraMappingId(INFRA_MAPPING_ID).build();
@@ -1697,7 +1492,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldUpdateWorkflowPhase() {
-    mockInframapping();
     Workflow workflow1 = createCanaryWorkflow();
 
     WorkflowPhase workflowPhase =
@@ -1786,7 +1580,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldCloneWorkflowPhase() {
-    mockAwsInframapping();
     Workflow workflow1 = createCanaryWorkflow();
 
     WorkflowPhase workflowPhase =
@@ -1821,7 +1614,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldCreateMultiServiceWorkflowPhase() {
-    mockAwsInframapping();
     Workflow workflow1 = createMultiServiceWorkflow();
     WorkflowPhase workflowPhase =
         aWorkflowPhase().withServiceId(SERVICE_ID).withInfraMappingId(INFRA_MAPPING_ID).build();
@@ -1854,7 +1646,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldUpdateMultiServiceWorkflowPhase() {
-    mockAwsInframapping();
     Workflow workflow1 = createMultiServiceWorkflow();
 
     WorkflowPhase workflowPhase =
@@ -1884,30 +1675,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldDeleteWorkflowPhase() {
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
-        .thenReturn(anAwsInfrastructureMapping()
-                        .withUuid(INFRA_MAPPING_ID)
-                        .withDeploymentType(SSH.name())
-                        .withComputeProviderType(SettingVariableTypes.AWS.name())
-                        .build());
-
-    Workflow workflow =
-        aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withAppId(APP_ID)
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withOrchestrationWorkflow(
-                aCanaryOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .addWorkflowPhase(
-                        aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build())
-                    .addWorkflowPhase(
-                        aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build())
-                    .build())
-            .build();
-
-    Workflow workflow1 = workflowService.createWorkflow(workflow);
+    Workflow workflow1 = workflowService.createWorkflow(constructCanaryWorkflowWithTwoPhases());
     assertThat(workflow1).isNotNull().hasFieldOrProperty("uuid");
 
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
@@ -1933,14 +1701,13 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(orchestrationWorkflow3.getGraph().getSubworkflows())
         .isNotNull()
         .doesNotContainKeys(workflowPhase.getUuid());
-    workflowPhase.getPhaseSteps().forEach(phaseStep -> {
-      assertThat(orchestrationWorkflow3.getGraph().getSubworkflows()).doesNotContainKeys(phaseStep.getUuid());
-    });
+    workflowPhase.getPhaseSteps().forEach(
+        (PhaseStep phaseStep)
+            -> assertThat(orchestrationWorkflow3.getGraph().getSubworkflows()).doesNotContainKeys(phaseStep.getUuid()));
   }
 
   @Test
   public void shouldUpdateWorkflowPhaseRollback() {
-    mockAwsInframapping();
     Workflow workflow1 = createCanaryWorkflow();
 
     WorkflowPhase workflowPhase =
@@ -1984,23 +1751,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldUpdateNode() {
-    Workflow workflow =
-        aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withAppId(APP_ID)
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withOrchestrationWorkflow(
-                aCanaryOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT)
-                                                .addStep(aGraphNode()
-                                                             .withType("HTTP")
-                                                             .withName("http")
-                                                             .addProperty("url", "http://www.google.com")
-                                                             .build())
-                                                .build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-            .build();
+    Workflow workflow = constructCanaryWithHttpStep();
 
     Workflow workflow2 = workflowService.createWorkflow(workflow);
     assertThat(workflow2).isNotNull();
@@ -2046,7 +1797,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldHaveGraph() {
-    mockAwsInframapping();
     Workflow workflow1 = createCanaryWorkflow();
 
     WorkflowPhase workflowPhase =
@@ -2109,7 +1859,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   public void shouldUpdateNotificationRules() {
     Workflow workflow1 = createCanaryWorkflow();
-
     List<NotificationRule> notificationRules = newArrayList(aNotificationRule().build());
     List<NotificationRule> updatedNotificationRules =
         workflowService.updateNotificationRules(workflow1.getAppId(), workflow1.getUuid(), notificationRules);
@@ -2159,8 +1908,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
                            .failureTypes(asList(FailureType.VERIFICATION_FAILURE))
                            .failureCriteria(FailureCriteria.builder().failureThresholdPercentage(-1).build())
                            .build());
-      List<FailureStrategy> updated =
-          workflowService.updateFailureStrategies(workflow1.getAppId(), workflow1.getUuid(), failureStrategies);
+
+      workflowService.updateFailureStrategies(workflow1.getAppId(), workflow1.getUuid(), failureStrategies);
       fail("No Constraint violation detected");
     } catch (ConstraintViolationException e) {
       logger.info("Expected constraintViolationException", e);
@@ -2197,7 +1946,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
                            .failureTypes(asList(FailureType.VERIFICATION_FAILURE))
                            .failureCriteria(FailureCriteria.builder().failureThresholdPercentage(100).build())
                            .build());
-      updated = workflowService.updateFailureStrategies(workflow1.getAppId(), workflow1.getUuid(), failureStrategies);
+      workflowService.updateFailureStrategies(workflow1.getAppId(), workflow1.getUuid(), failureStrategies);
     } catch (Exception e) {
       fail("Unexpected exception", e);
     }
@@ -2219,24 +1968,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldCreateComplexWorkflow() {
-    mockAwsInframapping();
-
-    Workflow workflow1 =
-        aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withAppId(APP_ID)
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withOrchestrationWorkflow(
-                aCanaryOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .addWorkflowPhase(aWorkflowPhase()
-                                          .withInfraMappingId(INFRA_MAPPING_ID)
-                                          .withServiceId(SERVICE_ID)
-                                          .withDeploymentType(SSH)
-                                          .build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-            .build();
+    Workflow workflow1 = constructCanaryWorkflowWithPhase();
 
     Workflow workflow2 = workflowService.createWorkflow(workflow1);
     assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid");
@@ -2250,7 +1982,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     WorkflowPhase workflowPhase = orchestrationWorkflow3.getWorkflowPhases().get(0);
     PhaseStep deployPhaseStep = workflowPhase.getPhaseSteps()
                                     .stream()
-                                    .filter(ps -> ps.getPhaseStepType() == PhaseStepType.DEPLOY_SERVICE)
+                                    .filter(ps -> ps.getPhaseStepType() == DEPLOY_SERVICE)
                                     .collect(toList())
                                     .get(0);
 
@@ -2268,45 +2000,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldTemplatizeBasicDeploymentOnCreation() {
-    Workflow workflow =
-        aWorkflow()
-            .withEnvId(ENV_ID)
-            .withName(WORKFLOW_NAME)
-            .withAppId(APP_ID)
-            .withServiceId(SERVICE_ID)
-            .withInfraMappingId(INFRA_MAPPING_ID)
-            .withOrchestrationWorkflow(
-                aBasicOrchestrationWorkflow()
-                    .withWorkflowPhases(asList(aWorkflowPhase()
-                                                   .withServiceId(SERVICE_ID)
-                                                   .withInfraMappingId(INFRA_MAPPING_ID)
-                                                   .withTemplateExpressions(asList(getEnvTemplateExpression(),
-                                                       getServiceTemplateExpression(), getInfraTemplateExpression()))
-                                                   .build()))
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-            .withTemplateExpressions(
-                asList(getEnvTemplateExpression(), getServiceTemplateExpression(), getInfraTemplateExpression()))
-            .build();
-
-    mockInframapping();
-
-    Role role = aRole()
-                    .withRoleType(RoleType.ACCOUNT_ADMIN)
-                    .withUuid(ROLE_ID)
-                    .withAccountId(application.getAccountId())
-                    .build();
-    List<NotificationGroup> notificationGroups = asList(aNotificationGroup()
-                                                            .withUuid(NOTIFICATION_GROUP_ID)
-                                                            .withAccountId(application.getAccountId())
-                                                            .withRole(role)
-                                                            .build());
-    when(notificationSetupService.listNotificationGroups(
-             application.getAccountId(), RoleType.ACCOUNT_ADMIN.getDisplayName()))
-        .thenReturn(notificationGroups);
-
-    Workflow workflow2 = workflowService.createWorkflow(workflow);
+    Workflow workflow2 = workflowService.createWorkflow(constructBasicDeploymentTemplateWorkflow());
 
     assertThat(workflow2.getKeywords())
         .isNotNull()
@@ -2339,29 +2033,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldTemplatizeMultiServiceEnvThenTemplatizeInfra() {
-    mockAwsInframapping();
-
-    Workflow workflow1 =
-        aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withAppId(APP_ID)
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withOrchestrationWorkflow(
-                aMultiServiceOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .addWorkflowPhase(aWorkflowPhase()
-                                          .withInfraMappingId(INFRA_MAPPING_ID)
-                                          .withServiceId(SERVICE_ID)
-                                          .withDeploymentType(SSH)
-                                          .build())
-                    .addWorkflowPhase(aWorkflowPhase()
-                                          .withInfraMappingId(INFRA_MAPPING_ID)
-                                          .withServiceId(SERVICE_ID)
-                                          .withDeploymentType(SSH)
-                                          .build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-            .build();
+    Workflow workflow1 = constructMulitServiceTemplateWorkflow();
 
     Workflow workflow2 = workflowService.createWorkflow(workflow1);
     assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid");
@@ -2379,15 +2051,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
     OrchestrationWorkflow orchestrationWorkflow = workflow3.getOrchestrationWorkflow();
     List<WorkflowPhase> workflowPhases =
         ((MultiServiceOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases();
-    assertThat(orchestrationWorkflow.getTemplatizedServiceIds()).isNotNull().doesNotContain(SERVICE_ID);
-    assertThat(orchestrationWorkflow.getTemplatizedInfraMappingIds()).isNotNull().contains(INFRA_MAPPING_ID);
-    assertThat(orchestrationWorkflow).extracting("userVariables").isNotEmpty();
-    assertThat(orchestrationWorkflow.getUserVariables().stream().anyMatch(
-                   variable -> variable.getName().equals("ServiceInfra_SSH")))
-        .isTrue();
-    assertThat(orchestrationWorkflow.getUserVariables().stream().anyMatch(
-                   variable -> variable.getName().equals("ServiceInfra_SSH2")))
-        .isTrue();
+
+    assertTemplatizedOrchestrationWorkflow(orchestrationWorkflow);
 
     assertThat(workflowPhases).isNotNull().hasSize(2);
 
@@ -2411,29 +2076,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldTemplatizeCanaryEnvThenTemplatizeInfra() {
-    mockAwsInframapping();
-
-    Workflow workflow1 =
-        aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withAppId(APP_ID)
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withOrchestrationWorkflow(
-                aCanaryOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .addWorkflowPhase(aWorkflowPhase()
-                                          .withInfraMappingId(INFRA_MAPPING_ID)
-                                          .withServiceId(SERVICE_ID)
-                                          .withDeploymentType(SSH)
-                                          .build())
-                    .addWorkflowPhase(aWorkflowPhase()
-                                          .withInfraMappingId(INFRA_MAPPING_ID)
-                                          .withServiceId(SERVICE_ID)
-                                          .withDeploymentType(SSH)
-                                          .build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-            .build();
+    Workflow workflow1 = constructTemplatizedCanaryWorkflow();
 
     Workflow workflow2 = workflowService.createWorkflow(workflow1);
     assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid");
@@ -2449,17 +2092,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .extracting(templateExpression -> templateExpression.getFieldName())
         .contains("envId");
     OrchestrationWorkflow orchestrationWorkflow = workflow3.getOrchestrationWorkflow();
-    List<WorkflowPhase> workflowPhases = ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases();
-    assertThat(orchestrationWorkflow.getTemplatizedServiceIds()).isNotNull().doesNotContain(SERVICE_ID);
-    assertThat(orchestrationWorkflow.getTemplatizedInfraMappingIds()).isNotNull().contains(INFRA_MAPPING_ID);
-    assertThat(orchestrationWorkflow).extracting("userVariables").isNotEmpty();
-    assertThat(orchestrationWorkflow.getUserVariables().stream().anyMatch(
-                   variable -> variable.getName().equals("ServiceInfra_SSH")))
-        .isTrue();
-    assertThat(orchestrationWorkflow.getUserVariables().stream().anyMatch(
-                   variable -> variable.getName().equals("ServiceInfra_SSH2")))
-        .isTrue();
 
+    assertTemplatizedOrchestrationWorkflow(orchestrationWorkflow);
+
+    List<WorkflowPhase> workflowPhases = ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases();
     assertThat(workflowPhases).isNotNull().hasSize(2);
 
     WorkflowPhase workflowPhase = workflowPhases.get(0);
@@ -2472,6 +2108,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(orchestrationWorkflow.getUserVariables())
         .extracting(variable -> variable.getEntityType())
         .containsSequence(ENVIRONMENT, INFRASTRUCTURE_MAPPING);
+
     workflowPhase = workflowPhases.get(1);
     assertThat(workflowPhase.getInfraMappingId()).isNotNull();
     assertThat(workflowPhase.getTemplateExpressions())
@@ -2480,19 +2117,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .contains("infraMappingId");
   }
 
-  private void mockAwsInframapping() {
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
-        .thenReturn(anAwsInfrastructureMapping()
-                        .withServiceId(SERVICE_ID)
-                        .withUuid(INFRA_MAPPING_ID)
-                        .withDeploymentType(SSH.name())
-                        .withComputeProviderType(SettingVariableTypes.AWS.name())
-                        .build());
-  }
-
   @Test
   public void shouldTemplatizeCanaryPhase() {
-    mockInframapping();
     Workflow workflow1 = createCanaryWorkflow();
 
     WorkflowPhase workflowPhase =
@@ -2514,8 +2140,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
     workflowPhase2.setTemplateExpressions(asList(getServiceTemplateExpression(), getInfraTemplateExpression()));
 
     workflowService.updateWorkflowPhase(workflow2.getAppId(), workflow2.getUuid(), workflowPhase2);
-
-    WorkflowPhase workflowPhase3 = assertWorkflowPhaseTemplateExpressions(workflow1, workflowPhase2);
+    Workflow workflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+    assertWorkflowPhaseTemplateExpressions(workflow3, workflowPhase2);
   }
 
   @Test
@@ -2605,54 +2231,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .containsSequence(ENVIRONMENT, SERVICE, INFRASTRUCTURE_MAPPING);
   }
 
-  private void assertTemplatizedWorkflow(Workflow workflow3) {
-    assertThat(workflow3.getTemplateExpressions())
-        .isNotEmpty()
-        .extracting(templateExpression -> templateExpression.getFieldName())
-        .contains("envId");
-    OrchestrationWorkflow orchestrationWorkflow = workflow3.getOrchestrationWorkflow();
-    List<WorkflowPhase> workflowPhases = ((BasicOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases();
-    assertThat(orchestrationWorkflow.getTemplatizedServiceIds()).isNotNull().contains(SERVICE_ID);
-    assertThat(orchestrationWorkflow.getTemplatizedInfraMappingIds()).isNotNull().contains(INFRA_MAPPING_ID);
-    assertThat(orchestrationWorkflow).extracting("userVariables").isNotEmpty();
-    assertThat(
-        orchestrationWorkflow.getUserVariables().stream().anyMatch(variable -> variable.getName().equals("Service")))
-        .isTrue();
-
-    assertThat(workflowPhases).isNotNull().hasSize(1);
-
-    WorkflowPhase workflowPhase = workflowPhases.get(0);
-    assertThat(workflowPhase).isNotNull().hasFieldOrPropertyWithValue("name", PHASE_NAME_PREFIX + 1);
-    assertThat(workflowPhase.getInfraMappingId()).isNotNull();
-    assertThat(workflowPhase.getTemplateExpressions())
-        .isNotEmpty()
-        .extracting(templateExpression -> templateExpression.getFieldName())
-        .contains("infraMappingId");
-    assertThat(orchestrationWorkflow.getUserVariables())
-        .extracting(variable -> variable.getEntityType())
-        .containsSequence(ENVIRONMENT, SERVICE, INFRASTRUCTURE_MAPPING);
-  }
-
   @Test
   public void shouldUpdateTemplatizeExpressionsCanary() {
-    mockAwsInframapping();
-
-    Workflow workflow1 =
-        aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withAppId(APP_ID)
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withOrchestrationWorkflow(
-                aCanaryOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .addWorkflowPhase(aWorkflowPhase()
-                                          .withInfraMappingId(INFRA_MAPPING_ID)
-                                          .withServiceId(SERVICE_ID)
-                                          .withDeploymentType(SSH)
-                                          .build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-            .build();
+    Workflow workflow1 = constructCanaryWorkflowWithPhase();
 
     Workflow workflow2 = workflowService.createWorkflow(workflow1);
     assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid");
@@ -2793,20 +2374,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     OrchestrationWorkflow orchestrationWorkflow = templatizedWorkflow.getOrchestrationWorkflow();
     List<WorkflowPhase> workflowPhases = ((BasicOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases();
-    assertThat(orchestrationWorkflow.getTemplatizedServiceIds()).isNullOrEmpty();
-    assertThat(orchestrationWorkflow.getTemplatizedInfraMappingIds()).isNotNull().contains(INFRA_MAPPING_ID);
-    assertThat(orchestrationWorkflow).extracting("userVariables").isNotEmpty();
-    assertThat(
-        orchestrationWorkflow.getUserVariables().stream().anyMatch(variable -> variable.getName().equals("Service")))
-        .isFalse();
-    assertThat(orchestrationWorkflow.getUserVariables().stream().anyMatch(
-                   variable -> variable.getName().equals("ServiceInfra_SSH")))
-        .isTrue();
-    assertThat(orchestrationWorkflow.getUserVariables().stream().anyMatch(
-                   variable -> variable.getName().equals("Environment")))
-        .isTrue();
-
-    assertThat(workflowPhases).isNotNull().hasSize(1);
+    assertTemplateWorkflowPhase(orchestrationWorkflow, workflowPhases);
 
     WorkflowPhase workflowPhase = workflowPhases.get(0);
     assertThat(workflowPhase).isNotNull().hasFieldOrPropertyWithValue("name", PHASE_NAME_PREFIX + 1);
@@ -2826,7 +2394,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test(expected = WingsException.class)
   public void shouldDeTemplatizeOnlyInfraCanaryPhase() {
-    mockInframapping();
     Workflow workflow1 = createCanaryWorkflow();
 
     WorkflowPhase workflowPhase =
@@ -2849,43 +2416,17 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     workflowService.updateWorkflowPhase(workflow2.getAppId(), workflow2.getUuid(), workflowPhase2);
 
-    WorkflowPhase workflowPhase3 = assertWorkflowPhaseTemplateExpressions(workflow1, workflowPhase2);
+    Workflow workflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+
+    WorkflowPhase workflowPhase3 = assertWorkflowPhaseTemplateExpressions(workflow3, workflowPhase2);
 
     workflowPhase3.setTemplateExpressions(asList(getServiceTemplateExpression()));
+
     workflowService.updateWorkflowPhase(workflow2.getAppId(), workflow2.getUuid(), workflowPhase3);
-  }
-
-  private WorkflowPhase assertWorkflowPhaseTemplateExpressions(Workflow workflow1, WorkflowPhase workflowPhase2) {
-    Workflow workflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
-    List<WorkflowPhase> workflowPhases3 =
-        ((CanaryOrchestrationWorkflow) workflow3.getOrchestrationWorkflow()).getWorkflowPhases();
-    WorkflowPhase workflowPhase3 = workflowPhases3.get(workflowPhases3.size() - 1);
-    assertThat(workflowPhase3).isEqualToComparingOnlyGivenFields(workflowPhase2, "uuid", "name");
-
-    assertThat(workflowPhase3.getInfraMappingId()).isNotNull();
-    assertThat(workflowPhase3.getTemplateExpressions())
-        .isNotEmpty()
-        .extracting(templateExpression -> templateExpression.getFieldName())
-        .contains("infraMappingId");
-    assertThat(workflow3.getOrchestrationWorkflow().getUserVariables())
-        .extracting(variable -> variable.getEntityType())
-        .containsSequence(SERVICE, INFRASTRUCTURE_MAPPING);
-    return workflowPhase3;
-  }
-
-  private void mockInframapping() {
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
-        .thenReturn(anAwsInfrastructureMapping()
-                        .withUuid(INFRA_MAPPING_ID)
-                        .withServiceId(SERVICE_ID)
-                        .withDeploymentType(SSH.name())
-                        .withComputeProviderType(SettingVariableTypes.AWS.name())
-                        .build());
   }
 
   @Test
   public void shouldDeTemplatizeOnlyServiceandInfraCanaryPhase() {
-    mockInframapping();
     Workflow workflow1 = createCanaryWorkflow();
 
     WorkflowPhase workflowPhase =
@@ -2939,70 +2480,21 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldCreateBuildDeploymentWorkflow() {
-    Workflow workflow = aWorkflow()
-                            .withName(WORKFLOW_NAME)
-                            .withAppId(APP_ID)
-                            .withOrchestrationWorkflow(aBuildOrchestrationWorkflow().build())
-                            .build();
-
-    Role role = aRole()
-                    .withRoleType(RoleType.ACCOUNT_ADMIN)
-                    .withUuid(ROLE_ID)
-                    .withAccountId(application.getAccountId())
-                    .build();
-    List<NotificationGroup> notificationGroups = asList(aNotificationGroup()
-                                                            .withUuid(NOTIFICATION_GROUP_ID)
-                                                            .withAccountId(application.getAccountId())
-                                                            .withRole(role)
-                                                            .build());
-    when(notificationSetupService.listNotificationGroups(
-             application.getAccountId(), RoleType.ACCOUNT_ADMIN.getDisplayName()))
-        .thenReturn(notificationGroups);
-
-    Workflow workflow2 = workflowService.createWorkflow(workflow);
+    Workflow workflow2 = workflowService.createWorkflow(constructBuildWorkflow());
     assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
 
     BuildWorkflow orchestrationWorkflow = (BuildWorkflow) workflow2.getOrchestrationWorkflow();
-    assertThat(orchestrationWorkflow)
-        .isNotNull()
-        .hasFieldOrProperty("preDeploymentSteps")
-        .hasFieldOrProperty("postDeploymentSteps")
-        .hasFieldOrProperty("graph")
-        .hasFieldOrProperty("notificationRules")
-        .hasFieldOrProperty("failureStrategies");
-    assertThat(orchestrationWorkflow.getGraph()).isNotNull();
-    assertThat(orchestrationWorkflow.getGraph().getNodes())
-        .extracting("id")
-        .contains(orchestrationWorkflow.getPostDeploymentSteps().getUuid(),
-            orchestrationWorkflow.getPostDeploymentSteps().getUuid());
-
-    assertThat(orchestrationWorkflow.getGraph().getSubworkflows())
-        .containsKeys(orchestrationWorkflow.getPostDeploymentSteps().getUuid(),
-            orchestrationWorkflow.getPostDeploymentSteps().getUuid());
-
-    assertThat(orchestrationWorkflow.getNotificationRules()).isNotNull();
-    assertThat(orchestrationWorkflow.getNotificationRules().get(0)).isNotNull();
-    assertThat(orchestrationWorkflow.getNotificationRules().get(0).getConditions()).isNotNull();
-    assertThat(orchestrationWorkflow.getNotificationRules().get(0).getExecutionScope())
-        .isEqualTo(ExecutionScope.WORKFLOW);
-
+    assertOrchestrationWorkflow(orchestrationWorkflow);
     assertThat(orchestrationWorkflow.getFailureStrategies()).isEmpty();
 
-    PageResponse<StateMachine> res = wingsPersistence.query(StateMachine.class,
-        aPageRequest()
-            .addFilter("appId", Operator.EQ, APP_ID)
-            .addFilter("originId", Operator.EQ, workflow.getUuid())
-            .build());
-
+    PageResponse<StateMachine> res = findStateMachine(workflow2);
     assertThat(res).isNotNull().hasSize(1);
     assertThat(res.get(0)).isNotNull().hasFieldOrPropertyWithValue("orchestrationWorkflow", orchestrationWorkflow);
-
-    logger.info(JsonUtils.asJson(workflow2));
   }
 
   @Test
   public void shouldAwsCodeDeployStateDefaults() {
-    when(artifactStreamService.getArtifactStreamsForService(APP_ID, SERVICE_ID)).thenReturn(asList(artifactStream));
+    when(artifactStreamService.fetchArtifactStreamsForService(APP_ID, SERVICE_ID)).thenReturn(asList(artifactStream));
     when(artifactStream.getArtifactStreamType()).thenReturn(ArtifactStreamType.AMAZON_S3.name());
     Map<String, String> defaults = workflowService.getStateDefaults(APP_ID, SERVICE_ID, AWS_CODEDEPLOY_STATE);
     assertThat(defaults).isNotEmpty();
@@ -3019,7 +2511,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void shouldTestWorkflowHasSshInfraMapping() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(Service.builder().uuid(SERVICE_ID).build());
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(Service.builder().uuid(SERVICE_ID).build());
-    mockInframapping();
     Workflow workflow1 = createCanaryWorkflow();
 
     WorkflowPhase workflowPhase =
@@ -3040,24 +2531,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void shouldTemplatizeAppDElkState() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(Service.builder().uuid(SERVICE_ID).build());
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(Service.builder().uuid(SERVICE_ID).build());
-    mockAwsInframapping();
 
-    Workflow workflow1 =
-        aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withAppId(APP_ID)
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withOrchestrationWorkflow(
-                aCanaryOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .addWorkflowPhase(aWorkflowPhase()
-                                          .withInfraMappingId(INFRA_MAPPING_ID)
-                                          .withServiceId(SERVICE_ID)
-                                          .withDeploymentType(SSH)
-                                          .build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-            .build();
+    Workflow workflow1 = constructCanaryWorkflowWithPhase();
 
     Workflow workflow2 = workflowService.createWorkflow(workflow1);
     assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid");
@@ -3066,29 +2541,12 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflow3).isNotNull();
     CanaryOrchestrationWorkflow orchestrationWorkflow3 =
         (CanaryOrchestrationWorkflow) workflow3.getOrchestrationWorkflow();
+
     assertThat(orchestrationWorkflow3.getWorkflowPhases()).isNotNull().hasSize(1);
 
     WorkflowPhase workflowPhase = orchestrationWorkflow3.getWorkflowPhases().get(0);
-    PhaseStep verifyPhaseStep = workflowPhase.getPhaseSteps()
-                                    .stream()
-                                    .filter(ps -> ps.getPhaseStepType() == PhaseStepType.VERIFY_SERVICE)
-                                    .collect(toList())
-                                    .get(0);
 
-    verifyPhaseStep.getSteps().add(aGraphNode()
-                                       .withType("APP_DYNAMICS")
-                                       .withName("APP_DYNAMICS")
-                                       .addProperty("analysisServerConfigId", "analysisServerConfigId")
-                                       .addProperty("applicationId", "applicagionId")
-                                       .addProperty("tierId", "tierId")
-                                       .build());
-
-    verifyPhaseStep.getSteps().add(aGraphNode()
-                                       .withType("ELK")
-                                       .withName("ELK")
-                                       .addProperty("analysisServerConfigId", "analysisServerConfigId")
-                                       .addProperty("indices", "indices")
-                                       .build());
+    PhaseStep verifyPhaseStep = constructAppDVerifyStep(workflowPhase);
 
     workflowService.updateWorkflowPhase(workflow2.getAppId(), workflow2.getUuid(), workflowPhase);
 
@@ -3103,34 +2561,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
                           .collect(toList())
                           .get(0);
 
-    List<TemplateExpression> appDTemplateExpressions =
-        asList(TemplateExpression.builder()
-                   .fieldName("analysisServerConfigId")
-                   .expression("${AppDynamics_Server}")
-                   .metadata(ImmutableMap.of("entityType", "APPDYNAMICS_CONFIGID"))
-                   .build(),
-            TemplateExpression.builder()
-                .fieldName("applicationId")
-                .expression("${AppDynamics_App}")
-                .metadata(ImmutableMap.of("entityType", "APPDYNAMICS_APPID"))
-                .build(),
-            TemplateExpression.builder()
-                .fieldName("tierId")
-                .expression("${AppDynamics_Tier}")
-                .metadata(ImmutableMap.of("entityType", "APPDYNAMICS_TIERID"))
-                .build());
+    List<TemplateExpression> appDTemplateExpressions = constructAppdTemplateExpressions();
+    List<TemplateExpression> elkTemplateExpressions = constructElkTemplateExpressions();
 
-    List<TemplateExpression> elkTemplateExpressions =
-        asList(TemplateExpression.builder()
-                   .fieldName("analysisServerConfigId")
-                   .expression("${ELK_Server}")
-                   .metadata(ImmutableMap.of("entityType", "ELK_CONFIGID"))
-                   .build(),
-            TemplateExpression.builder()
-                .fieldName("indices")
-                .expression("${ELK_Indices}")
-                .metadata(ImmutableMap.of("entityType", "ELK_INDICES"))
-                .build());
     verifyPhaseStep.getSteps().get(0).setTemplateExpressions(appDTemplateExpressions);
     verifyPhaseStep.getSteps().get(1).setTemplateExpressions(elkTemplateExpressions);
 
@@ -3175,24 +2608,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetResolvedServices() {
-    mockAwsInframapping();
-
-    Workflow workflow1 =
-        aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withAppId(APP_ID)
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withOrchestrationWorkflow(
-                aCanaryOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .addWorkflowPhase(aWorkflowPhase()
-                                          .withInfraMappingId(INFRA_MAPPING_ID)
-                                          .withServiceId(SERVICE_ID)
-                                          .withDeploymentType(SSH)
-                                          .build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-            .build();
+    Workflow workflow1 = constructCanaryWorkflowWithPhase();
 
     Workflow savedWorkflow = workflowService.createWorkflow(workflow1);
     assertThat(savedWorkflow).isNotNull().hasFieldOrProperty("uuid");
@@ -3202,7 +2618,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetResolvedTemplatizedServices() {
-    mockAwsInframapping();
     Workflow workflow1 = createCanaryWorkflow();
 
     WorkflowPhase workflowPhase =
@@ -3257,22 +2672,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(awsInfrastructureMapping);
     when(infrastructureMappingService.getInfraStructureMappingsByUuids(APP_ID, asList(INFRA_MAPPING_ID)))
         .thenReturn(asList(awsInfrastructureMapping));
-    Workflow workflow1 =
-        aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withAppId(APP_ID)
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withOrchestrationWorkflow(
-                aCanaryOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .addWorkflowPhase(aWorkflowPhase()
-                                          .withInfraMappingId(INFRA_MAPPING_ID)
-                                          .withServiceId(SERVICE_ID)
-                                          .withDeploymentType(SSH)
-                                          .build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-            .build();
+    Workflow workflow1 = constructCanaryWorkflowWithPhase();
 
     Workflow savedWorkflow = workflowService.createWorkflow(workflow1);
     assertThat(savedWorkflow).isNotNull().hasFieldOrProperty("uuid");
@@ -3332,8 +2732,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .containsSequence(SERVICE, INFRASTRUCTURE_MAPPING);
 
     when(serviceResourceService.fetchServicesByUuids(APP_ID, asList(SERVICE_ID))).thenReturn(asList(service));
+
     List<InfrastructureMapping> resolvedInfraMappings = workflowService.getResolvedInfraMappings(
         workflow3, ImmutableMap.of("Service", SERVICE_ID, "ServiceInfra_SSH", INFRA_MAPPING_ID));
+
     assertThat(resolvedInfraMappings)
         .isNotEmpty()
         .extracting(infrastructureMapping -> infrastructureMapping.getUuid())
@@ -3342,45 +2744,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetResolvedEnvironmentId() {
-    Workflow workflow =
-        aWorkflow()
-            .withEnvId(ENV_ID)
-            .withName(WORKFLOW_NAME)
-            .withAppId(APP_ID)
-            .withServiceId(SERVICE_ID)
-            .withInfraMappingId(INFRA_MAPPING_ID)
-            .withOrchestrationWorkflow(
-                aBasicOrchestrationWorkflow()
-                    .withWorkflowPhases(
-                        asList(aWorkflowPhase().withServiceId(SERVICE_ID).withInfraMappingId(INFRA_MAPPING_ID).build()))
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-
-            .build();
-
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
-        .thenReturn(anAwsInfrastructureMapping()
-                        .withUuid(INFRA_MAPPING_ID)
-                        .withDeploymentType(SSH.name())
-                        .withComputeProviderType(SettingVariableTypes.AWS.name())
-                        .build());
-
-    Role role = aRole()
-                    .withRoleType(RoleType.ACCOUNT_ADMIN)
-                    .withUuid(ROLE_ID)
-                    .withAccountId(application.getAccountId())
-                    .build();
-    List<NotificationGroup> notificationGroups = asList(aNotificationGroup()
-                                                            .withUuid(NOTIFICATION_GROUP_ID)
-                                                            .withAccountId(application.getAccountId())
-                                                            .withRole(role)
-                                                            .build());
-    when(notificationSetupService.listNotificationGroups(
-             application.getAccountId(), RoleType.ACCOUNT_ADMIN.getDisplayName()))
-        .thenReturn(notificationGroups);
-
-    Workflow workflow2 = workflowService.createWorkflow(workflow);
+    Workflow workflow2 = workflowService.createWorkflow(constructBasicWorkflowWithPhase());
     assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
 
     assertThat(workflowService.resolveEnvironmentId(workflow2, ImmutableMap.of("Environment", ENV_ID)))
@@ -3390,45 +2754,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetResolvedEnvironmentIdForTemplatizedWorkflow() {
-    TemplateExpression envExpression = getEnvTemplateExpression();
-
-    Workflow workflow =
-        aWorkflow()
-            .withEnvId(ENV_ID)
-            .withName(WORKFLOW_NAME)
-            .withAppId(APP_ID)
-            .withServiceId(SERVICE_ID)
-            .withInfraMappingId(INFRA_MAPPING_ID)
-            .withOrchestrationWorkflow(
-                aBasicOrchestrationWorkflow()
-                    .withWorkflowPhases(
-                        asList(aWorkflowPhase().withServiceId(SERVICE_ID).withInfraMappingId(INFRA_MAPPING_ID).build()))
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-            .withTemplateExpressions(asList(envExpression))
-            .build();
-
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
-        .thenReturn(anAwsInfrastructureMapping()
-                        .withUuid(INFRA_MAPPING_ID)
-                        .withDeploymentType(SSH.name())
-                        .withComputeProviderType(SettingVariableTypes.AWS.name())
-                        .build());
-
-    Role role = aRole()
-                    .withRoleType(RoleType.ACCOUNT_ADMIN)
-                    .withUuid(ROLE_ID)
-                    .withAccountId(application.getAccountId())
-                    .build();
-    List<NotificationGroup> notificationGroups = asList(aNotificationGroup()
-                                                            .withUuid(NOTIFICATION_GROUP_ID)
-                                                            .withAccountId(application.getAccountId())
-                                                            .withRole(role)
-                                                            .build());
-    when(notificationSetupService.listNotificationGroups(
-             application.getAccountId(), RoleType.ACCOUNT_ADMIN.getDisplayName()))
-        .thenReturn(notificationGroups);
+    Workflow workflow = constructBasicWorkflowWithPhase();
+    workflow.setTemplateExpressions(asList(getEnvTemplateExpression()));
 
     Workflow workflow2 = workflowService.createWorkflow(workflow);
     assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
@@ -3449,35 +2776,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .build();
   }
 
-  private Workflow createWorkflowWithParam(PhaseStep phaseStep) {
-    return aWorkflow()
-        .withName(WORKFLOW_NAME)
-        .withAppId(APP_ID)
-        .withWorkflowType(WorkflowType.ORCHESTRATION)
-        .withOrchestrationWorkflow(
-            aCanaryOrchestrationWorkflow()
-                .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                .addWorkflowPhase(aWorkflowPhase()
-                                      .withInfraMappingId(INFRA_MAPPING_ID)
-                                      .withServiceId(SERVICE_ID)
-                                      .addPhaseStep(phaseStep)
-                                      .withDeploymentType(SSH)
-                                      .build())
-                .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                .build())
-        .build();
-  }
-
   @Test
   public void testSettingsServiceDeleting() {
     String uuid = generateUuid();
-
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
-        .thenReturn(anAwsInfrastructureMapping()
-                        .withUuid(INFRA_MAPPING_ID)
-                        .withDeploymentType(SSH.name())
-                        .withComputeProviderType(SettingVariableTypes.AWS.name())
-                        .build());
 
     SettingAttribute settingAttribute = aSettingAttribute()
                                             .withAppId("APP_ID")
@@ -3495,13 +2796,13 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     // Create a workflow with a random Jenkins Id
     PhaseStep phaseStep = createPhaseStep(generateUuid());
-    Workflow workflow = createWorkflowWithParam(phaseStep);
+    Workflow workflow = constructWorkflowWithParam(phaseStep);
     workflowService.createWorkflow(workflow);
     assertNull(workflowService.settingsServiceDeleting(settingAttribute));
 
     // Create a workflow with a specific Jenkins Id
     phaseStep = createPhaseStep(uuid);
-    workflow = createWorkflowWithParam(phaseStep);
+    workflow = constructWorkflowWithParam(phaseStep);
     workflowService.createWorkflow(workflow);
     assertNotNull(workflowService.settingsServiceDeleting(settingAttribute).message());
   }
@@ -3524,25 +2825,12 @@ public class WorkflowServiceTest extends WingsBaseTest {
     PhaseStep phaseStep = canaryOrchestrationWorkflow.getPreDeploymentSteps();
     assertThat(phaseStep).isNotNull();
     GraphNode preDeploymentStep = phaseStep.getSteps().stream().findFirst().orElse(null);
-    assertThat(preDeploymentStep).isNotNull();
-    assertThat(preDeploymentStep.getTemplateUuid()).isNotEmpty().isEqualTo(TEMPLATE_ID);
-    assertThat(preDeploymentStep.getTemplateVersion()).isNotEmpty().isEqualTo(LATEST_TAG);
-    assertThat(preDeploymentStep.getTemplateVariables()).isNotEmpty().extracting(Variable::getName).contains("url");
-    assertThat(preDeploymentStep.getTemplateVariables())
-        .isNotEmpty()
-        .extracting(Variable::getValue)
-        .contains("https://harness.io");
-    assertThat(preDeploymentStep.getProperties()).isNotEmpty().containsKeys("url", "method", "assertion");
+    assertPreDeployTemplateStep(preDeploymentStep);
 
     PhaseStep postPhaseStep = canaryOrchestrationWorkflow.getPostDeploymentSteps();
     assertThat(postPhaseStep).isNotNull();
     GraphNode postDeploymentStep = phaseStep.getSteps().stream().findFirst().orElse(null);
-    assertThat(postDeploymentStep).isNotNull();
-    assertThat(postDeploymentStep.getTemplateUuid()).isNotEmpty().isEqualTo(TEMPLATE_ID);
-    assertThat(postDeploymentStep.getTemplateVersion()).isNotEmpty().isEqualTo(LATEST_TAG);
-    assertThat(preDeploymentStep.getTemplateVariables()).isNotEmpty().extracting(Variable::getName).contains("url");
-    assertThat(preDeploymentStep.getTemplateVariables()).isNotEmpty().extracting(Variable::getValue).contains("200 OK");
-    assertThat(preDeploymentStep.getProperties()).isNotEmpty().containsKeys("url", "method", "assertion");
+    assertPostDeployTemplateStep(preDeploymentStep, postDeploymentStep);
 
     WorkflowPhase workflowPhase = canaryOrchestrationWorkflow.getWorkflowPhases().get(0);
     assertThat(workflowPhase.getPhaseSteps()).isNotEmpty();
@@ -3550,15 +2838,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     PhaseStep phaseStep1 = workflowPhase.getPhaseSteps().stream().findFirst().orElse(null);
     assertThat(phaseStep1).isNotNull();
     GraphNode phaseNode = phaseStep.getSteps().stream().findFirst().orElse(null);
-    assertThat(phaseNode).isNotNull();
-    assertThat(phaseNode.getTemplateUuid()).isNotEmpty().isEqualTo(TEMPLATE_ID);
-    assertThat(postDeploymentStep.getTemplateVersion()).isNotEmpty().isEqualTo(LATEST_TAG);
-    assertThat(preDeploymentStep.getTemplateVariables()).isNotEmpty().extracting(Variable::getName).contains("url");
-    assertThat(preDeploymentStep.getTemplateVariables())
-        .isNotEmpty()
-        .extracting(Variable::getValue)
-        .contains("https://harness.io");
-    assertThat(preDeploymentStep.getProperties()).isNotEmpty().containsKeys("url", "method", "assertion");
+    assertWorkflowPhaseTemplateStep(preDeploymentStep, postDeploymentStep, phaseNode);
   }
 
   @Test
@@ -3620,28 +2900,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
     PhaseStep phaseStep = canaryOrchestrationWorkflow.getPreDeploymentSteps();
     assertThat(phaseStep).isNotNull();
     GraphNode preDeploymentStep = phaseStep.getSteps().stream().findFirst().orElse(null);
-    assertThat(preDeploymentStep).isNotNull();
-    assertThat(preDeploymentStep.getTemplateUuid()).isNotEmpty().isEqualTo(TEMPLATE_ID);
-    assertThat(preDeploymentStep.getTemplateVersion()).isNotEmpty().isEqualTo(LATEST_TAG);
+    assertTemplateStep(preDeploymentStep);
 
-    List<Variable> templateVariables = preDeploymentStep.getTemplateVariables();
-    assertThat(templateVariables).isNotEmpty();
-
-    preDeploymentStep.setTemplateVersion("1");
-    preDeploymentStep.setTemplateVariables(asList(aVariable().withName("url").withValue("https://google.com").build()));
-
-    Map<String, Object> properties = new HashMap<>();
-    properties.put("url", "${url}");
-    properties.put("method", "GET");
-
-    GraphNode templateStep =
-        aGraphNode()
-            .withType(StateType.HTTP.name())
-            .withTemplateUuid(TEMPLATE_ID)
-            .withProperties(properties)
-            .withTemplateVariables(
-                asList(aVariable().withName("url").withValue("https://harness.io").build(), aVariable().build()))
-            .build();
+    GraphNode templateStep = constructHttpTemplateStep();
 
     when(templateService.constructEntityFromTemplate(preDeploymentStep.getTemplateUuid(), "1"))
         .thenReturn(templateStep);
@@ -3649,25 +2910,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     PhaseStep updatedPhaseStep =
         workflowService.updatePreDeployment(savedWorkflow.getAppId(), savedWorkflow.getUuid(), phaseStep);
 
-    assertThat(updatedPhaseStep).isNotNull();
-    GraphNode updatedPreStep = phaseStep.getSteps().stream().findFirst().orElse(null);
-    assertThat(updatedPreStep).isNotNull();
-    assertThat(updatedPreStep.getTemplateUuid()).isNotEmpty().isEqualTo(TEMPLATE_ID);
-    assertThat(updatedPreStep.getTemplateVersion()).isNotEmpty().isEqualTo("1");
-
-    assertThat(updatedPreStep.getTemplateVariables()).isNotEmpty();
-
-    assertThat(updatedPreStep.getTemplateVariables()).isNotEmpty().extracting(Variable::getName).contains("url");
-    assertThat(updatedPreStep.getTemplateVariables())
-        .isNotEmpty()
-        .extracting(Variable::getValue)
-        .contains("https://harness.io");
-    assertThat(updatedPreStep.getTemplateVariables())
-        .isNotEmpty()
-        .extracting(Variable::getValue)
-        .doesNotContain("200 OK");
-    assertThat(preDeploymentStep.getProperties()).isNotEmpty().containsKeys("url", "method");
-    assertThat(preDeploymentStep.getProperties()).isNotEmpty().doesNotContainValue("200 OK");
+    assertLinkedPhaseStep(phaseStep, preDeploymentStep, updatedPhaseStep);
   }
 
   @Test
@@ -3680,56 +2923,19 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     PhaseStep phaseStep = canaryOrchestrationWorkflow.getPostDeploymentSteps();
     assertThat(phaseStep).isNotNull();
-    GraphNode PostDeploymentStep = phaseStep.getSteps().stream().findFirst().orElse(null);
-    assertThat(PostDeploymentStep).isNotNull();
-    assertThat(PostDeploymentStep.getTemplateUuid()).isNotEmpty().isEqualTo(TEMPLATE_ID);
-    assertThat(PostDeploymentStep.getTemplateVersion()).isNotEmpty().isEqualTo(LATEST_TAG);
+    GraphNode postDeploymentStep = phaseStep.getSteps().stream().findFirst().orElse(null);
 
-    List<Variable> templateVariables = PostDeploymentStep.getTemplateVariables();
-    assertThat(templateVariables).isNotEmpty();
+    assertTemplateStep(postDeploymentStep);
 
-    PostDeploymentStep.setTemplateVersion("1");
-    PostDeploymentStep.setTemplateVariables(
-        asList(aVariable().withName("url").withValue("https://google.com").build()));
+    GraphNode templateStep = constructHttpTemplateStep();
 
-    Map<String, Object> properties = new HashMap<>();
-    properties.put("url", "${url}");
-    properties.put("method", "GET");
-
-    GraphNode templateStep =
-        aGraphNode()
-            .withType(StateType.HTTP.name())
-            .withTemplateUuid(TEMPLATE_ID)
-            .withProperties(properties)
-            .withTemplateVariables(
-                asList(aVariable().withName("url").withValue("https://harness.io").build(), aVariable().build()))
-            .build();
-
-    when(templateService.constructEntityFromTemplate(PostDeploymentStep.getTemplateUuid(), "1"))
+    when(templateService.constructEntityFromTemplate(postDeploymentStep.getTemplateUuid(), "1"))
         .thenReturn(templateStep);
 
     PhaseStep updatedPhaseStep =
         workflowService.updatePostDeployment(savedWorkflow.getAppId(), savedWorkflow.getUuid(), phaseStep);
 
-    assertThat(updatedPhaseStep).isNotNull();
-    GraphNode updatedPostStep = phaseStep.getSteps().stream().findFirst().orElse(null);
-    assertThat(updatedPostStep).isNotNull();
-    assertThat(updatedPostStep.getTemplateUuid()).isNotEmpty().isEqualTo(TEMPLATE_ID);
-    assertThat(updatedPostStep.getTemplateVersion()).isNotEmpty().isEqualTo("1");
-
-    assertThat(updatedPostStep.getTemplateVariables()).isNotEmpty();
-
-    assertThat(updatedPostStep.getTemplateVariables()).isNotEmpty().extracting(Variable::getName).contains("url");
-    assertThat(updatedPostStep.getTemplateVariables())
-        .isNotEmpty()
-        .extracting(Variable::getValue)
-        .contains("https://harness.io");
-    assertThat(updatedPostStep.getTemplateVariables())
-        .isNotEmpty()
-        .extracting(Variable::getValue)
-        .doesNotContain("200 OK");
-    assertThat(PostDeploymentStep.getProperties()).isNotEmpty().containsKeys("url", "method");
-    assertThat(PostDeploymentStep.getProperties()).isNotEmpty().doesNotContainValue("200 OK");
+    assertLinkedPhaseStep(phaseStep, postDeploymentStep, updatedPhaseStep);
   }
 
   @Test
@@ -3747,29 +2953,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflowPhase.getPhaseSteps()).isNotEmpty().size().isGreaterThan(0);
     PhaseStep phaseStep = workflowPhase.getPhaseSteps().get(0);
     assertThat(phaseStep).isNotNull();
+
     GraphNode phaseNode = phaseStep.getSteps().stream().findFirst().orElse(null);
-    assertThat(phaseNode).isNotNull();
-    assertThat(phaseNode.getTemplateUuid()).isNotEmpty().isEqualTo(TEMPLATE_ID);
-    assertThat(phaseNode.getTemplateVersion()).isNotEmpty().isEqualTo(LATEST_TAG);
+    assertTemplateStep(phaseNode);
 
-    List<Variable> templateVariables = phaseNode.getTemplateVariables();
-    assertThat(templateVariables).isNotEmpty();
-
-    phaseNode.setTemplateVersion("1");
-    phaseNode.setTemplateVariables(asList(aVariable().withName("url").withValue("https://google.com").build()));
-
-    Map<String, Object> properties = new HashMap<>();
-    properties.put("url", "${url}");
-    properties.put("method", "GET");
-
-    GraphNode templateStep =
-        aGraphNode()
-            .withType(StateType.HTTP.name())
-            .withTemplateUuid(TEMPLATE_ID)
-            .withProperties(properties)
-            .withTemplateVariables(
-                asList(aVariable().withName("url").withValue("https://harness.io").build(), aVariable().build()))
-            .build();
+    GraphNode templateStep = constructHttpTemplateStep();
 
     when(templateService.constructEntityFromTemplate(phaseNode.getTemplateUuid(), "1")).thenReturn(templateStep);
 
@@ -3779,21 +2967,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(updateWorkflowPhase).isNotNull();
     PhaseStep workflowPhaseStep = updateWorkflowPhase.getPhaseSteps().stream().findFirst().orElse(null);
     GraphNode updatedPhaseNode = workflowPhaseStep.getSteps().stream().findFirst().orElse(null);
-    assertThat(updatedPhaseNode).isNotNull();
-    assertThat(updatedPhaseNode.getTemplateUuid()).isNotEmpty().isEqualTo(TEMPLATE_ID);
-    assertThat(updatedPhaseNode.getTemplateVersion()).isNotEmpty().isEqualTo("1");
-
-    assertThat(updatedPhaseNode.getTemplateVariables()).isNotEmpty();
-
-    assertThat(updatedPhaseNode.getTemplateVariables()).isNotEmpty().extracting(Variable::getName).contains("url");
-    assertThat(updatedPhaseNode.getTemplateVariables())
-        .isNotEmpty()
-        .extracting(Variable::getValue)
-        .contains("https://harness.io");
-    assertThat(updatedPhaseNode.getTemplateVariables())
-        .isNotEmpty()
-        .extracting(Variable::getValue)
-        .doesNotContain("200 OK");
+    assertPhaseNode(updatedPhaseNode);
     assertThat(phaseNode.getProperties()).isNotEmpty().containsKeys("url", "method");
     assertThat(phaseNode.getProperties()).isNotEmpty().doesNotContainValue("200 OK");
   }
@@ -3814,73 +2988,34 @@ public class WorkflowServiceTest extends WingsBaseTest {
     PhaseStep phaseStep = workflowPhase.getPhaseSteps().get(0);
     assertThat(phaseStep).isNotNull();
     GraphNode phaseNode = phaseStep.getSteps().stream().findFirst().orElse(null);
-    assertThat(phaseNode).isNotNull();
-    assertThat(phaseNode.getTemplateUuid()).isNotEmpty().isEqualTo(TEMPLATE_ID);
-    assertThat(phaseNode.getTemplateVersion()).isNotEmpty().isEqualTo(LATEST_TAG);
 
-    List<Variable> templateVariables = phaseNode.getTemplateVariables();
-    assertThat(templateVariables).isNotEmpty();
+    assertTemplateStep(phaseNode);
 
-    phaseNode.setTemplateVersion("1");
-    phaseNode.setTemplateVariables(asList(aVariable().withName("url").withValue("https://google.com").build()));
-
-    Map<String, Object> properties = new HashMap<>();
-    properties.put("url", "${url}");
-    properties.put("method", "GET");
-
-    GraphNode templateStep =
-        aGraphNode()
-            .withType(StateType.HTTP.name())
-            .withTemplateUuid(TEMPLATE_ID)
-            .withProperties(properties)
-            .withTemplateVariables(
-                asList(aVariable().withName("url").withValue("https://harness.io").build(), aVariable().build()))
-            .build();
+    GraphNode templateStep = constructHttpTemplateStep();
 
     when(templateService.constructEntityFromTemplate(phaseNode.getTemplateUuid(), "1")).thenReturn(templateStep);
 
     Workflow oldWorkflow = workflowService.readWorkflow(savedWorkflow.getAppId(), savedWorkflow.getUuid());
 
     Workflow updatedWorkflow = workflowService.updateLinkedWorkflow(savedWorkflow, oldWorkflow);
-
     assertThat(updatedWorkflow).isNotNull();
+
     CanaryOrchestrationWorkflow updatedCanaryWorkflow =
         (CanaryOrchestrationWorkflow) updatedWorkflow.getOrchestrationWorkflow();
     assertThat(updatedCanaryWorkflow).isNotNull();
     assertThat(updatedCanaryWorkflow.getWorkflowPhases()).isNotEmpty();
 
     WorkflowPhase updateWorkflowPhase = updatedCanaryWorkflow.getWorkflowPhases().get(0);
-
     assertThat(updateWorkflowPhase).isNotNull();
+
     PhaseStep workflowPhaseStep = updateWorkflowPhase.getPhaseSteps().stream().findFirst().orElse(null);
     GraphNode updatedPhaseNode = workflowPhaseStep.getSteps().stream().findFirst().orElse(null);
-    assertThat(updatedPhaseNode).isNotNull();
-    assertThat(updatedPhaseNode.getTemplateUuid()).isNotEmpty().isEqualTo(TEMPLATE_ID);
-    assertThat(updatedPhaseNode.getTemplateVersion()).isNotEmpty().isEqualTo("1");
-
-    assertThat(updatedPhaseNode.getTemplateVariables()).isNotEmpty();
-
-    assertThat(updatedPhaseNode.getTemplateVariables()).isNotEmpty().extracting(Variable::getName).contains("url");
-    assertThat(updatedPhaseNode.getTemplateVariables())
-        .isNotEmpty()
-        .extracting(Variable::getValue)
-        .contains("https://harness.io");
-    assertThat(updatedPhaseNode.getTemplateVariables())
-        .isNotEmpty()
-        .extracting(Variable::getValue)
-        .doesNotContain("200 OK");
+    assertPhaseNode(updatedPhaseNode);
     assertThat(phaseNode.getProperties()).isNotEmpty().containsKeys("url", "method");
     assertThat(phaseNode.getProperties()).isNotEmpty().doesNotContainValue("200 OK");
   }
 
   private Workflow createLinkedTemplateWorkflow() {
-    mockInframapping();
-
-    Map<String, Object> properties = new HashMap<>();
-    properties.put("url", "${url}");
-    properties.put("method", "GET");
-    properties.put("assertion", "${assertion}");
-
     GraphNode step = aGraphNode()
                          .withTemplateUuid(TEMPLATE_ID)
                          .withTemplateVersion(LATEST_TAG)
@@ -3888,63 +3023,60 @@ public class WorkflowServiceTest extends WingsBaseTest {
                          .withType(StateType.HTTP.name())
                          .build();
 
-    GraphNode templateStep =
-        aGraphNode()
-            .withType(StateType.HTTP.name())
-            .withTemplateUuid(TEMPLATE_ID)
-            .withProperties(properties)
-            .withTemplateVariables(asList(aVariable().withName("url").withValue("https://harness.io").build(),
-                aVariable().withName("assertion").withValue("200 OK").build()))
-            .build();
+    GraphNode templateStep = constructHttpTemplateStep();
 
     when(templateService.constructEntityFromTemplate(step.getTemplateUuid(), TemplateConstants.LATEST_TAG))
         .thenReturn(templateStep);
 
-    Workflow workflow =
-        aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withAppId(APP_ID)
-            .withUuid(WORKFLOW_ID)
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withOrchestrationWorkflow(
-                aCanaryOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).addStep(step).build())
-                    .addWorkflowPhase(
-                        aWorkflowPhase()
-                            .withInfraMappingId(INFRA_MAPPING_ID)
-                            .withServiceId(SERVICE_ID)
-                            .withDeploymentType(SSH)
-                            .addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE).addStep(step).build())
-                            .build())
-                    .withPostDeploymentSteps(
-                        aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).addStep(step).build())
-                    .build())
-            .build();
+    Workflow workflow = constructLinkedTemplate(step);
 
     return workflowService.createWorkflow(workflow);
   }
 
-  private TemplateExpression getEnvTemplateExpression() {
-    return TemplateExpression.builder()
-        .fieldName("envId")
-        .expression("${Environment}")
-        .metadata(ImmutableMap.of("entityType", "ENVIRONMENT"))
-        .build();
+  @Test
+  public void shouldTestGetGraphNodeInPredeploymentStep() {
+    Workflow workflow = workflowService.createWorkflow(constructCanaryWithHttpStep());
+    assertThat(workflow).isNotNull();
+
+    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+    assertOrchestrationWorkflow(canaryOrchestrationWorkflow);
+
+    String nodeId = canaryOrchestrationWorkflow.getPreDeploymentSteps().getSteps().get(0).getId();
+
+    GraphNode graphNode = workflowService.readGraphNode(workflow.getAppId(), workflow.getUuid(), nodeId);
+    assertThat(graphNode).isNotNull();
+    assertThat(graphNode.getProperties()).isNotEmpty().containsKeys("url");
+    assertThat(graphNode.getProperties()).isNotEmpty().containsValues("http://www.google.com");
   }
 
-  private TemplateExpression getServiceTemplateExpression() {
-    return TemplateExpression.builder()
-        .fieldName("serviceId")
-        .expression("${Service}")
-        .metadata(ImmutableMap.of("entityType", "SERVICE"))
-        .build();
+  @Test
+  public void shouldTestGetGraphNodeInPostdeploymentStep() {
+    Workflow workflow = workflowService.createWorkflow(constructCanaryHttpAsPostDeploymentStep());
+    assertThat(workflow).isNotNull();
+
+    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+    assertOrchestrationWorkflow(canaryOrchestrationWorkflow);
+
+    String nodeId = canaryOrchestrationWorkflow.getPostDeploymentSteps().getSteps().get(0).getId();
+
+    GraphNode graphNode = workflowService.readGraphNode(workflow.getAppId(), workflow.getUuid(), nodeId);
+    assertThat(graphNode).isNotNull();
   }
 
-  private TemplateExpression getInfraTemplateExpression() {
-    return TemplateExpression.builder()
-        .fieldName("infraMappingId")
-        .expression("${ServiceInfra_SSH}")
-        .metadata(ImmutableMap.of("entityType", "INFRASTRUCTURE_MAPPING"))
-        .build();
+  @Test
+  public void shouldTestGetGraphNodeInPhaseStep() {
+    Workflow workflow = workflowService.createWorkflow(constructCanaryWithHttpPhaseStep());
+    assertThat(workflow).isNotNull();
+
+    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+    assertOrchestrationWorkflow(canaryOrchestrationWorkflow);
+
+    String nodeId =
+        canaryOrchestrationWorkflow.getWorkflowPhases().get(0).getPhaseSteps().get(0).getSteps().get(0).getId();
+    GraphNode graphNode = workflowService.readGraphNode(workflow.getAppId(), workflow.getUuid(), nodeId);
+    assertThat(graphNode).isNotNull();
   }
 }

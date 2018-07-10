@@ -293,6 +293,14 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   @Override
+  public List<ArtifactStream> fetchArtifactStreamsForService(String appId, String serviceId) {
+    return wingsPersistence.createQuery(ArtifactStream.class)
+        .filter(ArtifactStream.APP_ID_KEY, appId)
+        .filter(ArtifactStream.SERVICE_ID_KEY, serviceId)
+        .asList();
+  }
+
+  @Override
   public Map<String, String> getSupportedBuildSourceTypes(String appId, String serviceId) {
     Service service = serviceResourceService.get(appId, serviceId, false);
     // Observed NPE in logs due to invalid service id provided by the ui due to a stale screen.
