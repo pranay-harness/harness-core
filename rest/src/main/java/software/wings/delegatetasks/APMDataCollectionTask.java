@@ -87,11 +87,6 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
   }
 
   @Override
-  protected int getPeriodMinutes() {
-    return collectionWindow;
-  }
-
-  @Override
   protected DataCollectionTaskResult initDataCollection(Object[] parameters) {
     dataCollectionInfo = (APMDataCollectionInfo) parameters[0];
     collectionWindow =
@@ -359,10 +354,10 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
           (int) ((Timestamp.currentMinuteBoundary() - collectionStartMinute) / TimeUnit.MINUTES.toMillis(1));
       boolean shouldCollectData = false;
       if (dataCollectionMinute == 0 || currentElapsedTime % collectionWindow == 0
-          || currentElapsedTime == dataCollectionInfo.getDataCollectionTotalTime()) {
+          || currentElapsedTime >= dataCollectionInfo.getDataCollectionTotalTime() - 1) {
         shouldCollectData = true;
       }
-      logger.info("ShouldCollectDataCollection is {} for minute {}", shouldCollectData, dataCollectionMinute);
+      logger.info("ShouldCollectDataCollection is {} for minute {}", shouldCollectData, currentElapsedTime);
       return shouldCollectData;
     }
     @SuppressFBWarnings
