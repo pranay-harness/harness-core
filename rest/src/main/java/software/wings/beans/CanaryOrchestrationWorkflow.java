@@ -284,7 +284,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     for (String workflowPhaseId : workflowPhaseIds) {
       WorkflowPhase workflowPhase = workflowPhaseIdMap.get(workflowPhaseId);
       workflowPhases.add(workflowPhase);
-      workflowPhase.getPhaseSteps().forEach(phaseStep -> { populatePhaseSteps(phaseStep, getGraph()); });
+      workflowPhase.getPhaseSteps().forEach(phaseStep -> populatePhaseSteps(phaseStep, getGraph()));
     }
     if (rollbackWorkflowPhaseIdMap != null) {
       rollbackWorkflowPhaseIdMap.values().forEach(workflowPhase -> {

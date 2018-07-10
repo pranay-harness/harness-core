@@ -61,6 +61,11 @@ public class WorkflowResourceRestClient {
         key -> fetchOrCreateWorkflow(client, SEED_ROLLING_WORKFLOW_NAME, aRollingOrchestrationWorkflow().build()));
   }
 
+  public Workflow getSeedBuildWorkflow(Client client) {
+    return cachedEntity.computeIfAbsent(SEED_ROLLING_WORKFLOW_KEY,
+        key -> fetchOrCreateWorkflow(client, SEED_ROLLING_WORKFLOW_NAME, aRollingOrchestrationWorkflow().build()));
+  }
+
   private Workflow fetchOrCreateWorkflow(
       Client client, String workflowName, OrchestrationWorkflow orchestrationWorkflow) {
     String appId = appResourceRestClient.getSeedApplication(client).getUuid();

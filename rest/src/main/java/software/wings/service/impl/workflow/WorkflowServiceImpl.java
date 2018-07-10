@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.govern.Switch.noop;
-import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
@@ -107,8 +106,6 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowType;
-import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.infrastructure.Host;
@@ -155,18 +152,17 @@ import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
-import software.wings.sm.states.AwsCodeDeployState;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilCategory;
 import software.wings.stencils.StencilPostProcessor;
+import software.wings.utils.Validator;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -488,6 +484,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public void loadOrchestrationWorkflow(Workflow workflow, Integer version) {
+    loadOrchestrationWorkflow(workflow, version, true);
+  }
+
+  private void loadOrchestrationWorkflow(Workflow workflow, Integer version, boolean withServices) {
     StateMachine stateMachine = readStateMachine(
         workflow.getAppId(), workflow.getUuid(), version == null ? workflow.getDefaultVersion() : version);
     if (stateMachine != null) {
@@ -496,11 +496,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       if (orchestrationWorkflow != null) {
         orchestrationWorkflow.onLoad();
         workflow.setTemplatized(orchestrationWorkflow.isTemplatized());
-        populateServices(workflow);
+        if (withServices) {
+          populateServices(workflow);
+        }
       }
     }
   }
-
   /**
    * {@inheritDoc}
    */
@@ -1058,19 +1059,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public Map<String, String> getStateDefaults(String appId, String serviceId, StateType stateType) {
-    switch (stateType) {
-      case AWS_CODEDEPLOY_STATE: {
-        List<ArtifactStream> artifactStreams = artifactStreamService.getArtifactStreamsForService(appId, serviceId);
-        if (artifactStreams.stream().anyMatch(
-                artifactStream -> ArtifactStreamType.AMAZON_S3.name().equals(artifactStream.getArtifactStreamType()))) {
-          return AwsCodeDeployState.loadDefaults();
-        }
-        break;
-      }
-      default:
-        unhandled(stateType);
-    }
-    return Collections.emptyMap();
+    return workflowServiceHelper.getStateDefaults(appId, serviceId, stateType);
   }
 
   @Override
@@ -1205,9 +1194,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         }
       }
       if (infrastructureMapping != null) {
-        workflowPhase.setComputeProviderId(infrastructureMapping.getComputeProviderSettingId());
-        workflowPhase.setInfraMappingName(infrastructureMapping.getName());
-        workflowPhase.setDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()));
+        setCloudProviderForPhase(infrastructureMapping, workflowPhase);
       }
 
       WorkflowPhase rollbackWorkflowPhase =
@@ -1216,9 +1203,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         rollbackWorkflowPhase.setServiceId(serviceId);
         rollbackWorkflowPhase.setInfraMappingId(infraMappingId);
         if (infrastructureMapping != null) {
-          rollbackWorkflowPhase.setComputeProviderId(infrastructureMapping.getComputeProviderSettingId());
-          rollbackWorkflowPhase.setInfraMappingName(infrastructureMapping.getName());
-          rollbackWorkflowPhase.setDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()));
+          setCloudProviderForPhase(infrastructureMapping, rollbackWorkflowPhase);
         }
         orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
       }
@@ -1268,6 +1253,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return orchestrationWorkflow.getWorkflowPhaseIdMap().get(workflowPhase.getUuid());
   }
 
+  private void setCloudProviderForPhase(
+      InfrastructureMapping infrastructureMapping, WorkflowPhase rollbackWorkflowPhase) {
+    rollbackWorkflowPhase.setComputeProviderId(infrastructureMapping.getComputeProviderSettingId());
+    rollbackWorkflowPhase.setInfraMappingName(infrastructureMapping.getName());
+    rollbackWorkflowPhase.setDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()));
+  }
+
   @Override
   public WorkflowPhase updateWorkflowPhaseRollback(
       String appId, String workflowId, String phaseId, WorkflowPhase rollbackWorkflowPhase) {
@@ -1282,8 +1274,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     notNullCheck("workflow", workflow, USER);
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-    notNullCheck("orchestrationWorkflow", orchestrationWorkflow, USER);
-    notNullCheck("WorkflowPhase", orchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId), USER);
+
+    validateWorkflowPhase(phaseId, orchestrationWorkflow);
 
     WorkflowPhase oldRollbackWorkflowPhase = orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(phaseId);
     workflowServiceTemplateHelper.updateLinkedWorkflowPhaseTemplate(rollbackWorkflowPhase, oldRollbackWorkflowPhase);
@@ -1298,16 +1290,22 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public void deleteWorkflowPhase(String appId, String workflowId, String phaseId) {
     Workflow workflow = readWorkflow(appId, workflowId);
     notNullCheck("workflow", workflow, USER);
+
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-    notNullCheck("orchestrationWorkflow", orchestrationWorkflow, USER);
-    notNullCheck("WorkflowPhase", orchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId), USER);
+
+    validateWorkflowPhase(phaseId, orchestrationWorkflow);
 
     orchestrationWorkflow.getWorkflowPhases().remove(orchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId));
     orchestrationWorkflow.getWorkflowPhaseIdMap().remove(phaseId);
     orchestrationWorkflow.getWorkflowPhaseIds().remove(phaseId);
     orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().remove(phaseId);
     updateWorkflow(workflow, orchestrationWorkflow);
+  }
+
+  private void validateWorkflowPhase(String phaseId, CanaryOrchestrationWorkflow orchestrationWorkflow) {
+    notNullCheck("orchestrationWorkflow", orchestrationWorkflow, USER);
+    notNullCheck("WorkflowPhase", orchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId), USER);
   }
 
   @Override
@@ -1350,14 +1348,20 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public Workflow cloneWorkflow(String appId, String originalWorkflowId, Workflow workflow) {
     Workflow originalWorkflow = readWorkflow(appId, originalWorkflowId);
-    Workflow clonedWorkflow = originalWorkflow.cloneInternal();
-    clonedWorkflow.setName(workflow.getName());
-    clonedWorkflow.setDescription(workflow.getDescription());
+    Workflow clonedWorkflow = cloneWorkflow(workflow, originalWorkflow);
+
     Workflow savedWorkflow = createWorkflow(clonedWorkflow);
     if (originalWorkflow.getOrchestrationWorkflow() != null) {
       savedWorkflow.setOrchestrationWorkflow(originalWorkflow.getOrchestrationWorkflow().cloneInternal());
     }
     return updateWorkflow(savedWorkflow, savedWorkflow.getOrchestrationWorkflow(), false, false, false, true);
+  }
+
+  private Workflow cloneWorkflow(Workflow workflow, Workflow originalWorkflow) {
+    Workflow clonedWorkflow = originalWorkflow.cloneInternal();
+    clonedWorkflow.setName(workflow.getName());
+    clonedWorkflow.setDescription(workflow.getDescription());
+    return clonedWorkflow;
   }
 
   @Override
@@ -1374,9 +1378,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         + "Environment, Service Infrastructure and Node selection will not be cloned");
     workflowServiceHelper.validateServiceMapping(appId, targetAppId, cloneMetadata.getServiceMapping());
     Workflow originalWorkflow = readWorkflow(appId, originalWorkflowId);
-    Workflow clonedWorkflow = originalWorkflow.cloneInternal();
-    clonedWorkflow.setName(workflow.getName());
-    clonedWorkflow.setDescription(workflow.getDescription());
+    Workflow clonedWorkflow = cloneWorkflow(workflow, originalWorkflow);
     clonedWorkflow.setAppId(targetAppId);
     clonedWorkflow.setEnvId(null);
     Workflow savedWorkflow = createWorkflow(clonedWorkflow);
@@ -1593,10 +1595,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     } else if (deploymentType == KUBERNETES) {
       if (orchestrationWorkflowType == OrchestrationWorkflowType.BLUE_GREEN) {
         return workflowServiceHelper.generateRollbackWorkflowPhaseForKubernetesBlueGreen(
-            workflowPhase, appId, serviceSetupRequired);
+            workflowPhase, serviceSetupRequired);
       } else {
-        return workflowServiceHelper.generateRollbackWorkflowPhaseForKubernetes(
-            workflowPhase, appId, serviceSetupRequired);
+        return workflowServiceHelper.generateRollbackWorkflowPhaseForKubernetes(workflowPhase, serviceSetupRequired);
       }
     } else if (deploymentType == AWS_CODEDEPLOY) {
       return workflowServiceHelper.generateRollbackWorkflowPhaseForAwsCodeDeploy(workflowPhase);
@@ -1609,7 +1610,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     } else if (deploymentType == PCF) {
       return workflowServiceHelper.generateRollbackWorkflowPhaseForPCF(workflowPhase);
     } else {
-      return workflowServiceHelper.generateRollbackWorkflowPhaseForSSH(appId, workflowPhase, orchestrationWorkflowType);
+      return workflowServiceHelper.generateRollbackWorkflowPhaseForSSH(appId, workflowPhase);
     }
   }
 
@@ -1869,5 +1870,59 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public String resolveEnvironmentId(Workflow workflow, Map<String, String> workflowVariables) {
     return workflowServiceHelper.resolveEnvironmentId(workflow, workflowVariables);
+  }
+
+  @Override
+  public GraphNode readGraphNode(String appId, String workflowId, String nodeId) {
+    Workflow workflow = wingsPersistence.get(Workflow.class, appId, workflowId);
+    Validator.notNullCheck("Workflow was deleted", workflow, WingsException.USER);
+
+    loadOrchestrationWorkflow(workflow, workflow.getDefaultVersion(), false);
+    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+    if (orchestrationWorkflow == null || !(orchestrationWorkflow instanceof CanaryOrchestrationWorkflow)) {
+      return null;
+    }
+    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
+    GraphNode graphNode = null;
+    // Verify in Predeployment steps
+    graphNode = matchesInPhaseStep(canaryOrchestrationWorkflow.getPreDeploymentSteps(), nodeId);
+    if (graphNode != null) {
+      return graphNode;
+    }
+
+    // Verify in PostDeployment Steps
+    graphNode = matchesInPhaseStep(canaryOrchestrationWorkflow.getPostDeploymentSteps(), nodeId);
+    if (graphNode != null) {
+      return graphNode;
+    }
+
+    // Verify in workflow phases
+    List<WorkflowPhase> workflowPhases = canaryOrchestrationWorkflow.getWorkflowPhases();
+    if (isEmpty(workflowPhases)) {
+      return null;
+    }
+    for (WorkflowPhase workflowPhase : workflowPhases) {
+      List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
+      if (isNotEmpty(phaseSteps)) {
+        for (PhaseStep phaseStep : phaseSteps) {
+          graphNode = matchesInPhaseStep(phaseStep, nodeId);
+          if (graphNode != null) {
+            return graphNode;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  private GraphNode matchesInPhaseStep(PhaseStep phaseStep, String nodeId) {
+    if (phaseStep != null && phaseStep.getSteps() != null) {
+      return phaseStep.getSteps()
+          .stream()
+          .filter(graphNode -> graphNode.getId() != null && graphNode.getId().equals(nodeId))
+          .findFirst()
+          .orElse(null);
+    }
+    return null;
   }
 }
