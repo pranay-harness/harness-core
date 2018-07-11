@@ -21,7 +21,6 @@ import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
-import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
@@ -114,7 +113,6 @@ import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
-import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.ownership.OwnedByService;
@@ -165,7 +163,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private ServiceVariableService serviceVariableService;
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
-  @Inject private SetupService setupService;
   @Inject private TriggerService triggerService;
   @Inject private WorkflowService workflowService;
   @Inject private YamlChangeSetHelper yamlChangeSetHelper;
@@ -657,11 +654,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public Service get(String appId, String serviceId, SetupStatus status) {
-    Service service = get(appId, serviceId);
-    if (status == INCOMPLETE) {
-      service.setSetup(setupService.getServiceSetupStatus(service));
-    }
-    return service;
+    return get(appId, serviceId);
   }
 
   @Override

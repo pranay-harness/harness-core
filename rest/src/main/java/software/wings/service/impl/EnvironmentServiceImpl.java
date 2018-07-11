@@ -73,7 +73,6 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
-import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.ownership.OwnedByEnvironment;
@@ -111,7 +110,6 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private ServiceVariableService serviceVariableService;
-  @Inject private SetupService setupService;
   @Inject private YamlChangeSetHelper yamlChangeSetHelper;
   @Inject private PersistentLocker persistentLocker;
   @Inject private WorkflowService workflowService;
@@ -162,11 +160,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   @Override
   public Environment get(@NotEmpty String appId, @NotEmpty String envId, @NotNull SetupStatus status) {
-    Environment environment = get(appId, envId, true);
-    if (status == SetupStatus.INCOMPLETE) {
-      environment.setSetup(setupService.getEnvironmentSetupStatus(environment));
-    }
-    return environment;
+    return get(appId, envId, true);
   }
 
   @Override

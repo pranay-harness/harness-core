@@ -59,7 +59,6 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -94,7 +93,6 @@ public class AppServiceImpl implements AppService {
   @Inject private RoleService roleService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private SettingsService settingsService;
-  @Inject private SetupService setupService;
   @Inject private StatisticsService statisticsService;
   @Inject private TriggerService triggerService;
   @Inject private WingsPersistence wingsPersistence;

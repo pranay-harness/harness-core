@@ -107,8 +107,6 @@ import software.wings.beans.PhaseStepType;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
-import software.wings.beans.Setup;
-import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.command.AmiCommandUnit;
 import software.wings.beans.command.AwsLambdaCommandUnit;
@@ -144,7 +142,6 @@ import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
-import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.stencils.Stencil;
@@ -186,7 +183,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
   @Mock private ActivityService activityService;
   @Mock private NotificationService notificationService;
-  @Mock private SetupService setupService;
   @Mock private EntityVersionService entityVersionService;
   @Mock private CommandService commandService;
   @Mock private WorkflowService workflowService;
@@ -320,20 +316,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     srs.get(APP_ID, SERVICE_ID);
     verify(wingsPersistence).get(Service.class, APP_ID, SERVICE_ID);
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
-  }
-
-  @Test
-  public void shouldAddSetupSuggestionForIncompleteService() {
-    when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID)).thenReturn(serviceBuilder.build());
-    when(configService.getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID)).thenReturn(new ArrayList<>());
-    when(setupService.getServiceSetupStatus(any())).thenReturn(Setup.Builder.aSetup().build());
-
-    Service service = srs.get(APP_ID, SERVICE_ID, SetupStatus.INCOMPLETE);
-
-    verify(wingsPersistence).get(Service.class, APP_ID, SERVICE_ID);
-    verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
-    verify(setupService).getServiceSetupStatus(Mockito.any(Service.class));
-    assertThat(service.getSetup()).isNotNull();
   }
 
   @Test

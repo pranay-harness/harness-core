@@ -15,7 +15,6 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.beans.stats.AppKeyStatistics;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.util.ArrayList;
@@ -48,7 +47,6 @@ public class Application extends Base {
   @Transient private List<WorkflowExecution> recentExecutions;
   @Transient private List<Notification> notifications;
   @Transient private long nextDeploymentOn;
-  @Transient private AppKeyStatistics appKeyStatistics;
   private transient Map<String, String> defaults = new HashMap<>();
 
   public Map<String, String> getDefaults() {
@@ -209,14 +207,6 @@ public class Application extends Base {
    */
   public void setNextDeploymentOn(long nextDeploymentOn) {
     this.nextDeploymentOn = nextDeploymentOn;
-  }
-
-  public AppKeyStatistics getAppKeyStatistics() {
-    return appKeyStatistics;
-  }
-
-  public void setAppKeyStatistics(AppKeyStatistics appKeyStatistics) {
-    this.appKeyStatistics = appKeyStatistics;
   }
 
   /**
