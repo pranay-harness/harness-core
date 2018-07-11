@@ -153,6 +153,7 @@ public class KryoUtils {
             kryo.register(javax.net.ssl.SSLHandshakeException.class, 74);
             kryo.register(java.util.concurrent.atomic.AtomicInteger.class, 75);
             kryo.register(java.net.ConnectException.class, 76);
+            kryo.register(java.lang.StringIndexOutOfBoundsException.class, 77);
 
             // External Serializers
             UnmodifiableCollectionsSerializer.registerSerializers(kryo);

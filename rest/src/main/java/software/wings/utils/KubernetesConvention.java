@@ -15,19 +15,20 @@ import java.util.regex.Pattern;
  * Created by brett on 3/8/17
  */
 public class KubernetesConvention {
-  public static final int HELM_RELEASE_VERSION_LENGTH = 15;
   private static Logger logger = LoggerFactory.getLogger(KubernetesConvention.class);
 
   public static final String DOT = ".";
   public static final String DASH = "-";
+
   private static final String VOLUME_PREFIX = "vol-";
   private static final String VOLUME_SUFFIX = "-vol";
   private static final String SECRET_PREFIX = "hs-";
   private static final String SECRET_SUFFIX = "-hs";
   private static final String CONTAINER_PREFIX = "hs-";
   private static final String CONTAINER_SUFFIX = "-hs";
-  private static Pattern wildCharPattern = Pattern.compile("[_+*/\\\\ &@$|\"':]");
+  private static final int HELM_RELEASE_VERSION_LENGTH = 15;
   private static final int MAX_REVISIONS = 100000;
+  private static Pattern wildCharPattern = Pattern.compile("[_+*/\\\\ &@$|\"':]");
 
   public static String getControllerName(String prefix, int revision, boolean useDashInHostname) {
     String separator = useDashInHostname ? DASH : DOT;
@@ -42,12 +43,30 @@ public class KubernetesConvention {
 
   public static String getPrefixFromControllerName(String controllerName, boolean useDashInHostname) {
     String separator = useDashInHostname ? DASH : DOT;
-    return controllerName.substring(0, controllerName.lastIndexOf(separator));
+    int index = controllerName.lastIndexOf(separator);
+    if (index > 0) {
+      try {
+        Integer.parseInt(controllerName.substring(index + separator.length()));
+        return controllerName.substring(0, index);
+      } catch (NumberFormatException e) {
+        // Not versioned
+      }
+    }
+    return controllerName;
   }
 
   public static String getServiceNameFromControllerName(String controllerName, boolean useDashInHostname) {
     String separator = useDashInHostname ? DASH : DOT;
-    return noDot(controllerName.substring(0, controllerName.lastIndexOf(separator)));
+    int index = controllerName.lastIndexOf(separator);
+    if (index > 0) {
+      try {
+        Integer.parseInt(controllerName.substring(index + separator.length()));
+        return noDot(controllerName.substring(0, index));
+      } catch (NumberFormatException e) {
+        // Not versioned
+      }
+    }
+    return noDot(controllerName);
   }
 
   public static String getKubernetesServiceName(String controllerNamePrefix) {

@@ -434,7 +434,6 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         .stream()
         .filter(ctrl -> ctrl.getMetadata().getName().startsWith(controllerNamePrefix))
         .filter(ctrl -> getControllerPodCount(ctrl) > 0)
-        .filter(ctrl -> getRevisionFromControllerName(ctrl.getMetadata().getName(), useDashInHostname).isPresent())
         .sorted(comparingInt(
             ctrl -> getRevisionFromControllerName(ctrl.getMetadata().getName(), useDashInHostname).orElse(-1)))
         .forEach(ctrl -> result.put(ctrl.getMetadata().getName(), getControllerPodCount(ctrl)));
