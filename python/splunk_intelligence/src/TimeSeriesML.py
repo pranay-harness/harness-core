@@ -143,8 +143,8 @@ class TSAnomlyDetector(object):
                             metric_host_data_dict['skip'] = False
                 if metric_template.get_metric_type(metric_name) == MetricType.ERROR:
                     for host, metric_host_data_dict in metric_data_dict.items():
-                        if not len(np.where(np.isfinite(metric_host_data_dict['data'].flatten()))[0]) > 0:
-                            metric_host_data_dict['data'] = np.zeros(len(metric_host_data_dict['data']))
+                        metric_host_data_dict['data'][np.isnan(metric_host_data_dict['data'])] = 0
+
 
 
         return txns_dict
