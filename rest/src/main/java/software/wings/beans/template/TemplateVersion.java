@@ -14,8 +14,9 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 
-@Indexes(@Index(fields = { @Field("templateUuid")
-                           , @Field("version") }, options = @IndexOptions(unique = true)))
+@Indexes(@Index(
+    fields = { @Field("templateUuid")
+               , @Field("version") }, options = @IndexOptions(name = "yaml", unique = true)))
 @Entity(value = "templateVersions", noClassnameStored = true)
 @Data
 @EqualsAndHashCode(callSuper = false)
