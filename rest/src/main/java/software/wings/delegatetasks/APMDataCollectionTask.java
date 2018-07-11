@@ -25,6 +25,7 @@ import software.wings.beans.DelegateTask;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.apm.APMRestClient;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
@@ -40,6 +41,7 @@ import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -70,6 +72,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
   @Inject private NewRelicDelegateService newRelicDelegateService;
   @Inject private MetricDataStoreService metricStoreService;
   @Inject private EncryptionService encryptionService;
+  @Inject private DelegateLogService delegateLogService;
   private int initialDelayMins = 2;
   private int collectionWindow = 1;
 
@@ -236,10 +239,17 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
       return output;
     }
 
-    private String collect(Call<Object> request) {
+    private String collect(Call<Object> request, final String urlToLog) {
       final Response<Object> response;
       try {
+        ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
+        apiCallLog.setRequest(urlToLog);
+        apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
         response = request.execute();
+        apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
+        apiCallLog.setStatusCode(response.code());
+        apiCallLog.setJsonResponse(response.body());
+        delegateLogService.save(getAccountId(), apiCallLog);
         if (response.isSuccessful()) {
           return JsonUtils.asJson(response.body());
         } else {
@@ -282,7 +292,8 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
             curUrls.forEach(curUrl
                 -> callabels.add(()
                                      -> new APMResponseParser.APMResponseData(null,
-                                         collect(getAPMRestClient(baseUrl).collect(curUrl, headersBiMap, optionsBiMap)),
+                                         collect(getAPMRestClient(baseUrl).collect(curUrl, headersBiMap, optionsBiMap),
+                                             baseUrl + curUrl),
                                          metricInfos)));
           }
         } else {
@@ -292,7 +303,8 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
             curUrls.forEach(curUrl
                 -> callabels.add(()
                                      -> new APMResponseParser.APMResponseData(host,
-                                         collect(getAPMRestClient(baseUrl).collect(curUrl, headersBiMap, optionsBiMap)),
+                                         collect(getAPMRestClient(baseUrl).collect(curUrl, headersBiMap, optionsBiMap),
+                                             baseUrl + curUrl),
                                          metricInfos)));
           }
         }
@@ -300,12 +312,13 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
       } else {
         List<String> curUrls = resolveDollarReferences(initialUrl, TEST_HOST_NAME, strategy);
         int i = 0;
-        IntStream.range(0, curUrls.size() - 1)
+        IntStream.range(0, curUrls.size())
             .forEach(index
                 -> callabels.add(
                     ()
                         -> new APMResponseParser.APMResponseData(getHostNameForTestControl(index),
-                            collect(getAPMRestClient(baseUrl).collect(curUrls.get(index), headersBiMap, optionsBiMap)),
+                            collect(getAPMRestClient(baseUrl).collect(curUrls.get(index), headersBiMap, optionsBiMap),
+                                baseUrl + curUrls.get(index)),
                             metricInfos)));
       }
 
