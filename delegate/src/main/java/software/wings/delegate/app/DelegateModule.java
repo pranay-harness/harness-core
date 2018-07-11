@@ -102,6 +102,7 @@ import software.wings.service.impl.WinRMCommandUnitExecutorServiceImpl;
 import software.wings.service.impl.analysis.APMDelegateService;
 import software.wings.service.impl.analysis.APMDelegateServiceImpl;
 import software.wings.service.impl.appdynamics.AppdynamicsDelegateServiceImpl;
+import software.wings.service.impl.aws.delegate.AwsEcrHelperServiceDelegateImpl;
 import software.wings.service.impl.dynatrace.DynaTraceDelegateServiceImpl;
 import software.wings.service.impl.elk.ElkDelegateServiceImpl;
 import software.wings.service.impl.logz.LogzDelegateServiceImpl;
@@ -129,6 +130,7 @@ import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.NexusBuildService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
+import software.wings.service.intfc.aws.delegate.AwsEcrHelperServiceDelegate;
 import software.wings.service.intfc.dynatrace.DynaTraceDelegateService;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.logz.LogzDelegateService;
@@ -286,6 +288,7 @@ public class DelegateModule extends AbstractModule {
     bind(PcfClient.class).to(PcfClientImpl.class);
     bind(PcfDeploymentManager.class).to(PcfDeploymentManagerImpl.class);
     bind(AwsEc2Service.class).to(AwsEc2ServiceImpl.class);
+    bind(AwsEcrHelperServiceDelegate.class).to(AwsEcrHelperServiceDelegateImpl.class);
 
     try {
       VersionInfoManager versionInfoManager = new VersionInfoManager(IOUtils.toString(
