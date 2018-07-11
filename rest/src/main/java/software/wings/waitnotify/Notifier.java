@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.core.queue.Queue;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -36,13 +37,14 @@ public class Notifier implements Runnable {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private PersistentLocker persistentLocker;
   @Inject private Queue<NotifyEvent> notifyQueue;
+  @Inject private ConfigurationController configurationController;
 
   /* (non-Javadoc)
    * @see java.lang.Runnable#run()
    */
   @Override
   public void run() {
-    if (isMaintenance()) {
+    if (isMaintenance() || configurationController.isNotPrimary()) {
       return;
     }
     execute();

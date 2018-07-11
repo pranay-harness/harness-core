@@ -12,6 +12,7 @@ import com.mongodb.BasicDBObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.FeatureName;
+import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.FeatureFlagService;
@@ -33,11 +34,12 @@ public class GitChangeSetRunnable implements Runnable {
   @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private ConfigurationController configurationController;
 
   @Override
   public void run() {
     try {
-      if (isMaintenance()) {
+      if (isMaintenance() || configurationController.isNotPrimary()) {
         return;
       }
 

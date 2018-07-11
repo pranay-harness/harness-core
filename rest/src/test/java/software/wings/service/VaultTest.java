@@ -58,6 +58,7 @@ import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.User;
 import software.wings.beans.VaultConfig;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
+import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.core.queue.Queue;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.PageResponse;
@@ -1515,6 +1516,7 @@ public class VaultTest extends WingsBaseTest {
   private Thread startTransitionListener() {
     transitionEventListener = new KmsTransitionEventListener();
     setInternalState(transitionEventListener, "timer", new ScheduledThreadPoolExecutor(1));
+    setInternalState(transitionEventListener, "configurationController", new ConfigurationController(1));
     setInternalState(transitionEventListener, "queue", transitionKmsQueue);
     setInternalState(transitionEventListener, "secretManager", secretManager);
 
