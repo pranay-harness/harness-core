@@ -4,9 +4,12 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.ErrorCode;
 import software.wings.exception.WingsException;
 
@@ -17,10 +20,13 @@ import java.security.Signature;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
 
+@Singleton
 public class GcsUtil {
-  static final String BASE_GCS_URL = "https://storage.googleapis.com";
+  @Inject private MainConfiguration configuration;
   private static final Logger log = LoggerFactory.getLogger(GcsUtil.class);
-  private static String getSignedUrlUsingPrivateKey(
+  private String downloadPathPattern = "/harness-download/";
+
+  private String getSignedUrlUsingPrivateKey(
       String objectPath, String account, String privateKey, long durationInSeconds) throws Exception {
     String expiryTime = getExpiryTimeInEpoch(durationInSeconds);
     String signInput = getSignInput(expiryTime, objectPath);
@@ -28,11 +34,12 @@ public class GcsUtil {
     String signedString = getSignedString(signInput, pk);
     // URL encode the signed string so that we can add this URL
     signedString = URLEncoder.encode(signedString, "UTF-8");
-    return constructSignedUrl(BASE_GCS_URL + objectPath, account, expiryTime, signedString);
+    return constructSignedUrl(
+        configuration.getPortal().getUrl() + "/harness-download/" + objectPath, account, expiryTime, signedString);
   }
 
-  public static String getSignedUrlForServiceAccount(
-      String objectPath, String serviceAccountJsonFile, long durationInSeconds) throws Exception {
+  public String getSignedUrlForServiceAccount(String objectPath, String serviceAccountJsonFile, long durationInSeconds)
+      throws Exception {
     if (isEmpty(serviceAccountJsonFile)) {
       log.warn(
           "ServiceAccount json file not found,cannot generate signedUrl for {}, returning empty string", objectPath);
@@ -45,7 +52,7 @@ public class GcsUtil {
   // Set an expiry date for the signed url. Sets it at one minute ahead of
   // current time.
   // Represented as the epoch time (seconds since 1st January 1970)
-  private static String getExpiryTimeInEpoch(long durationInSeconds) {
+  private String getExpiryTimeInEpoch(long durationInSeconds) {
     if (durationInSeconds < 1) {
       durationInSeconds = 600;
     }
@@ -57,13 +64,12 @@ public class GcsUtil {
   }
 
   // The signed URL format as required by Google.
-  private static String constructSignedUrl(
-      String fullObjectPath, String account, String expiryTime, String signedString) {
+  private String constructSignedUrl(String fullObjectPath, String account, String expiryTime, String signedString) {
     return fullObjectPath + "?GoogleAccessId=" + account + "&Expires=" + expiryTime + "&Signature=" + signedString;
   }
 
   // We sign the expiry time and bucket object path
-  private static String getSignInput(String expiryTime, String objectPath) {
+  private String getSignInput(String expiryTime, String objectPath) {
     return "GET"
         + "\n"
         + ""
@@ -73,7 +79,7 @@ public class GcsUtil {
   }
 
   // Use SHA256withRSA to sign the request
-  private static String getSignedString(String input, PrivateKey pk) throws Exception {
+  private String getSignedString(String input, PrivateKey pk) throws Exception {
     Signature privateSignature = Signature.getInstance("SHA256withRSA");
     privateSignature.initSign(pk);
     privateSignature.update(input.getBytes("UTF-8"));
@@ -82,7 +88,7 @@ public class GcsUtil {
   }
 
   // Get private key object from unencrypted PKCS#8 file content
-  private static PrivateKey getPrivateKey(String privateKey) throws Exception {
+  private PrivateKey getPrivateKey(String privateKey) throws Exception {
     // Remove extra characters in private key.
     String realPK = privateKey.replaceAll("-----END PRIVATE KEY-----", "")
                         .replaceAll("-----BEGIN PRIVATE KEY-----", "")
@@ -93,11 +99,11 @@ public class GcsUtil {
     return kf.generatePrivate(spec);
   }
 
-  private static String getPkFromJsonFile(String jsonFileAsString) {
+  private String getPkFromJsonFile(String jsonFileAsString) {
     return new Gson().fromJson(jsonFileAsString, JsonObject.class).get("private_key").getAsString();
   }
 
-  private static String getAccountNameFromJsonFile(String jsonFileAsString) {
+  private String getAccountNameFromJsonFile(String jsonFileAsString) {
     return new Gson().fromJson(jsonFileAsString, JsonObject.class).get("client_email").getAsString();
   }
 }

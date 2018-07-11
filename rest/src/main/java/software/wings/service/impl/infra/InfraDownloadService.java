@@ -9,6 +9,10 @@ public interface InfraDownloadService {
   String WATCHER_JAR = "watcher.jar";
   String DEFAULT_ERROR_STRING = "ERROR_GETTING_DATA";
 
+  String getDownloadUrlForDelegate(@NotEmpty String version, String env);
+
+  String getDownloadUrlForWatcher(@NotEmpty String version, String env);
+
   String getDownloadUrlForDelegate(@NotEmpty String version);
 
   String getDownloadUrlForWatcher(@NotEmpty String version);

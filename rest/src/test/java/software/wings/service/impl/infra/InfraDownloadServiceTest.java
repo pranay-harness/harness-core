@@ -2,22 +2,35 @@ package software.wings.service.impl.infra;
 
 import static junit.framework.TestCase.fail;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
+
+import com.google.inject.Inject;
 
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
-import software.wings.WingsBaseTest;
+import software.wings.app.MainConfiguration;
+import software.wings.app.PortalConfig;
+import software.wings.utils.GcsUtil;
 
-public class InfraDownloadServiceTest extends WingsBaseTest {
-  @Spy @InjectMocks InfraDownloadServiceImpl infraDownloadService;
+public class InfraDownloadServiceTest {
+  @Inject @InjectMocks GcsUtil gcsUtil;
+  @Mock MainConfiguration mainConfiguration;
+  @Spy @Inject InfraDownloadServiceImpl infraDownloadService;
 
   @Before
-  public void setUp() {
+  public void setUp() throws Exception {
     initMocks(this);
+    doReturn(gcsUtil).when(infraDownloadService).getGcsUtil();
+    PortalConfig portalConfig = mock(PortalConfig.class);
+    when(portalConfig.getUrl()).thenReturn("testUrl");
+    when(mainConfiguration.getPortal()).thenReturn(portalConfig);
   }
 
   @Test
