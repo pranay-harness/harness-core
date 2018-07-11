@@ -64,9 +64,7 @@ import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.TriggerService;
-import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -108,9 +106,7 @@ public class AppServiceTest extends WingsBaseTest {
   @Mock private PipelineService pipelineService;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private SettingsService settingsService;
-  @Mock private SetupService setupService;
   @Mock private TriggerService triggerService;
-  @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private WorkflowService workflowService;
 
   @Mock private JobScheduler jobScheduler;

@@ -135,7 +135,7 @@ public class UserServiceTest extends WingsBaseTest {
   /**
    * The Verification query end.
    */
-  @Mock FieldEnd verificationQueryEnd;
+
   /**
    * The User invite query.
    */
@@ -143,7 +143,7 @@ public class UserServiceTest extends WingsBaseTest {
   /**
    * The User invite query end.
    */
-  @Mock FieldEnd userInviteQueryEnd;
+
   @Mock private EmailNotificationService emailDataNotificationService;
   @Mock private RoleService roleService;
   @Mock private WingsPersistence wingsPersistence;
