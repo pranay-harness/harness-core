@@ -53,7 +53,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
   @Override
   @SuppressWarnings("PMD")
   public void run() {
-    try (TaskLogContext ctx = new TaskLogContext(this.taskId)) {
+    try (TaskLogContext ignore = new TaskLogContext(this.taskId)) {
       if (preExecute.get()) {
         NotifyResponseData result = null;
         try {
@@ -116,7 +116,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
     isAsync = async;
   }
 
-  protected ThirdPartyApiCallLog createApiCallLog(String stateExecutionId) {
+  ThirdPartyApiCallLog createApiCallLog(String stateExecutionId) {
     return ThirdPartyApiCallLog.builder()
         .accountId(getAccountId())
         .appId(getAppId())
@@ -124,5 +124,10 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
         .delegateTaskId(getTaskId())
         .stateExecutionId(stateExecutionId)
         .build();
+  }
+
+  @Override
+  public String toString() {
+    return "DelegateRunnableTask - " + getTaskType() + " - " + getTaskId() + " - " + (isAsync() ? "async" : "sync");
   }
 }

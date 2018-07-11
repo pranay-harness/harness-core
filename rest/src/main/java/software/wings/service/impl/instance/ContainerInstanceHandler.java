@@ -2,7 +2,8 @@ package software.wings.service.impl.instance;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.Arrays.asList;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.container.Label.Builder.aLabel;
 
@@ -57,13 +58,13 @@ import software.wings.sm.StepExecutionSummary;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -82,7 +83,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
     syncInstancesInternal(appId, infraMappingId, containerSvcNameInstanceMap, null, false);
   }
 
-  protected ContainerInfrastructureMapping getContainerInfraMapping(String appId, String inframappingId)
+  private ContainerInfrastructureMapping getContainerInfraMapping(String appId, String inframappingId)
       throws HarnessException {
     InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, inframappingId);
     Validator.notNullCheck("Infra mapping is null for id:" + inframappingId, infrastructureMapping);
@@ -97,13 +98,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
     return (ContainerInfrastructureMapping) infrastructureMapping;
   }
 
-  /**
-   * @param appId
-   * @param infraMappingId
-   * @param containerSvcNameInstanceMap key - containerSvcName     value - Instances
-   * @throws HarnessException
-   */
-  protected void syncInstancesInternal(String appId, String infraMappingId,
+  private void syncInstancesInternal(String appId, String infraMappingId,
       Multimap<String, Instance> containerSvcNameInstanceMap, List<DeploymentSummary> newDeploymentSummaries,
       boolean rollback) throws HarnessException {
     ContainerInfrastructureMapping containerInfraMapping = getContainerInfraMapping(appId, infraMappingId);
@@ -119,7 +114,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
         // Get all the instances for the given containerSvcName (In kubernetes, this is replication Controller and in
         // ECS it is taskDefinition)
         ContainerSyncResponse instanceSyncResponse =
-            containerSync.getInstances(containerInfraMapping, asList(containerSvcName));
+            containerSync.getInstances(containerInfraMapping, singletonList(containerSvcName));
         Validator.notNullCheck("InstanceSyncResponse is null for containerSvcName: " + containerSvcName
                 + " for infraMappingId: " + infraMappingId,
             instanceSyncResponse);
@@ -159,7 +154,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
           }
         });
 
-        long instanceInDBCount = instancesInDB.stream().filter(instance -> instance != null).count();
+        long instanceInDBCount = instancesInDB.stream().filter(Objects::nonNull).count();
         logger.info(
             "Total no of Container instances found in DB for ContainerSvcName: {} and InfraMappingId: {} and AppId: {}, "
                 + "No of instances in DB: {}, No of Running instances: {}, "
@@ -173,9 +168,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
         DeploymentSummary deploymentSummary;
         if (isNotEmpty(instancesToBeAdded)) {
           // newDeploymentInfo would be null in case of sync job.
-          if ((containerSvcNameInstanceMap == null
-                  || !serviceNamesNewDeploymentSummaryMap.containsKey(containerSvcName))
-              && isNotEmpty(instancesInDB)) {
+          if (!serviceNamesNewDeploymentSummaryMap.containsKey(containerSvcName) && isNotEmpty(instancesInDB)) {
             Optional<Instance> instanceWithExecutionInfoOptional = getInstanceWithExecutionInfo(instancesInDB);
             if (!instanceWithExecutionInfoOptional.isPresent()) {
               logger.warn("Couldn't find an instance from a previous deployment for inframapping {}", infraMappingId);
@@ -206,7 +199,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
   private Map<String, DeploymentSummary> getDeploymentSummaryMap(List<DeploymentSummary> newDeploymentSummaries,
       Multimap<String, Instance> containerSvcNameInstanceMap, ContainerInfrastructureMapping containerInfraMapping) {
     if (EmptyPredicate.isEmpty(newDeploymentSummaries)) {
-      return Collections.EMPTY_MAP;
+      return emptyMap();
     }
 
     Map<String, DeploymentSummary> deploymentSummaryMap = new HashMap<>();
@@ -300,8 +293,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
   @Override
   public Optional<List<DeploymentInfo>> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
       PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,
-      InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact)
-      throws HarnessException {
+      InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact) {
     PhaseStepExecutionSummary phaseStepExecutionSummary = phaseStepExecutionData.getPhaseStepExecutionSummary();
 
     if (phaseStepExecutionSummary == null) {
@@ -364,7 +356,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
 
           String clusterName = ((ContainerInfrastructureMapping) infrastructureMapping).getClusterName();
 
-          List<Label> labels = new ArrayList();
+          List<Label> labels = new ArrayList<>();
 
           if (stepExecutionSummary instanceof HelmSetupExecutionSummary) {
             HelmSetupExecutionSummary helmSetupExecutionSummary = (HelmSetupExecutionSummary) stepExecutionSummary;
@@ -375,8 +367,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
             labels.addAll(kubernetesSteadyStateCheckExecutionSummary.getLabels());
           }
 
-          ContainerInfrastructureMapping containerInfraMapping = (ContainerInfrastructureMapping) infrastructureMapping;
-          return Optional.of(Arrays.asList(getContainerDeploymentInfosWithLables(clusterName, labels)));
+          return Optional.of(singletonList(getContainerDeploymentInfosWithLables(clusterName, labels)));
         }
       }
     }
@@ -411,7 +402,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
     }
   }
 
-  public Instance buildInstanceFromContainerInfo(
+  private Instance buildInstanceFromContainerInfo(
       InfrastructureMapping infraMapping, ContainerInfo containerInfo, DeploymentSummary deploymentSummary) {
     InstanceBuilder builder = buildInstanceBase(null, infraMapping, deploymentSummary);
     builder.containerInstanceKey(generateInstanceKeyForContainer(containerInfo));
@@ -438,7 +429,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
     return containerInstanceKey;
   }
 
-  public String getContainerSvcName(ContainerInfo containerInfo) {
+  private String getContainerSvcName(ContainerInfo containerInfo) {
     if (containerInfo instanceof KubernetesContainerInfo) {
       return ((KubernetesContainerInfo) containerInfo).getControllerName();
     } else if (containerInfo instanceof EcsContainerInfo) {
@@ -449,7 +440,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
     }
   }
 
-  public ContainerSyncResponse getLatestInstancesFromContainerServer(
+  private ContainerSyncResponse getLatestInstancesFromContainerServer(
       Collection<software.wings.beans.infrastructure.instance.ContainerDeploymentInfo>
           containerDeploymentInfoCollection,
       InstanceType instanceType) {
@@ -477,7 +468,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
               .entrySet()
               .stream()
               .filter(entry -> entry.getKey().equals(Constants.DEPLOY_CONTAINERS))
-              .map(entry -> entry.getValue())
+              .map(Entry::getValue)
               .collect(toList());
       deployPhaseStepList.forEach(phaseStep -> {
         PhaseStepExecutionSummary phaseStepExecutionSummary =

@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.validation;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.network.Http.connectableHttpUrl;
 import static software.wings.common.Constants.ALWAYS_TRUE_CRITERIA;
 
@@ -39,8 +39,8 @@ public class ContainerValidationHelper {
   public boolean validateContainerServiceParams(ContainerServiceParams containerServiceParams) {
     SettingValue value = containerServiceParams.getSettingAttribute().getValue();
 
-    // see of we can decrypt from this delegate
-    if (Encryptable.class.isInstance(value) && !isEmpty(containerServiceParams.getEncryptionDetails())) {
+    // see if we can decrypt from this delegate
+    if (Encryptable.class.isInstance(value) && isNotEmpty(containerServiceParams.getEncryptionDetails())) {
       try {
         encryptionService.decrypt((Encryptable) value, containerServiceParams.getEncryptionDetails());
       } catch (Exception e) {

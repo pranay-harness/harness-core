@@ -983,7 +983,10 @@ public class DelegateServiceImpl implements DelegateService {
     ExecutorService executorService = delegateTask.isAsync()
         ? asyncExecutorService
         : delegateTask.getTaskType().contains("BUILD") ? artifactExecutorService : syncExecutorService;
-    currentlyExecutingFutures.put(delegateTask.getUuid(), executorService.submit(delegateRunnableTask));
+    Future<?> taskFuture = executorService.submit(delegateRunnableTask);
+    logger.info("Task future in executeTask: {} - done:{}, cancelled:{}", delegateTask.getUuid(), taskFuture.isDone(),
+        taskFuture.isCancelled());
+    currentlyExecutingFutures.put(delegateTask.getUuid(), taskFuture);
     timeoutEnforcementService.submit(() -> enforceDelegateTaskTimeout(delegateTask));
     logger.info("Task [{}] submitted for execution", delegateTask.getUuid());
   }
@@ -1047,8 +1050,15 @@ public class DelegateServiceImpl implements DelegateService {
     boolean stillRunning = true;
     long timeout = delegateTask.getTimeout() + TimeUnit.SECONDS.toMillis(30L);
     while (stillRunning && clock.millis() - startTime < timeout) {
+      logger.info("Task time remaining for {}: {} ms", delegateTask.getUuid(), startTime + timeout - clock.millis());
       sleep(ofSeconds(5));
       Future taskFuture = currentlyExecutingFutures.get(delegateTask.getUuid());
+      if (taskFuture != null) {
+        logger.info("Task future: {} - done:{}, cancelled:{}", delegateTask.getUuid(), taskFuture.isDone(),
+            taskFuture.isCancelled());
+      } else {
+        logger.info("Task future is null: {}", delegateTask.getUuid());
+      }
       stillRunning = taskFuture != null && !taskFuture.isDone() && !taskFuture.isCancelled();
     }
     if (stillRunning) {

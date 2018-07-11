@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -44,6 +45,12 @@ public class ScalingThreadPoolExecutor extends ThreadPoolExecutor {
   public ScalingThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit,
       BlockingQueue workQueue, ThreadFactory threadFactory) {
     super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory);
+  }
+
+  @Override
+  public Future<?> submit(Runnable task) {
+    logger.info("Task submitted: {}", task);
+    return super.submit(task);
   }
 
   @Override
