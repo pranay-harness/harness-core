@@ -21,6 +21,7 @@ import org.mockito.internal.stubbing.answers.ThrowsException;
 import org.mockito.invocation.InvocationOnMock;
 import org.mongodb.morphia.AdvancedDatastore;
 import software.wings.WingsBaseTest;
+import software.wings.core.managerConfiguration.ConfigurationController;
 
 import java.net.UnknownHostException;
 import java.util.concurrent.CountDownLatch;
@@ -48,6 +49,7 @@ public class QueueListenerTest extends WingsBaseTest {
     listener.setQueue(queue);
     listener.setRunOnce(true);
     listener.setTimer(new ScheduledThreadPoolExecutor(1));
+    listener.setConfigurationController(new ConfigurationController(1));
     listener = spy(listener);
   }
 

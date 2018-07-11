@@ -1,6 +1,7 @@
 package software.wings.scheduler;
 
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 
 import com.google.inject.Inject;
@@ -27,15 +28,19 @@ import software.wings.app.SchedulerConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.core.maintenance.MaintenanceController;
 import software.wings.core.maintenance.MaintenanceListener;
+import software.wings.core.managerConfiguration.ConfigChangeEvent;
+import software.wings.core.managerConfiguration.ConfigChangeListener;
+import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.MongoConfig;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Properties;
 
-public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceListener {
+public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceListener, ConfigChangeListener {
   private Injector injector;
   private Scheduler scheduler;
   private MainConfiguration configuration;
@@ -58,6 +63,7 @@ public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceList
     SchedulerConfig schedulerConfig = configuration.getSchedulerConfig();
     if (schedulerConfig.getAutoStart().equals("true")) {
       injector.getInstance(MaintenanceController.class).register(this);
+      injector.getInstance(ConfigurationController.class).register(this, asList(ConfigChangeEvent.PrimaryChanged));
       scheduler = createScheduler();
     }
   }
@@ -84,7 +90,8 @@ public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceList
       triggers.createIndex(fireKeys, "fire", false);
 
       scheduler.setJobFactory(injector.getInstance(GuiceQuartzJobFactory.class));
-      if (!isMaintenance()) {
+      ConfigurationController configurationController = injector.getInstance(Key.get(ConfigurationController.class));
+      if (!isMaintenance() && configurationController.isPrimary()) {
         scheduler.start();
       }
       return scheduler;
@@ -204,6 +211,26 @@ public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceList
         scheduler.start();
       } catch (SchedulerException e) {
         logger.error("Error starting scheduler.", e);
+      }
+    }
+  }
+
+  @Override
+  public void onConfigChange(List<ConfigChangeEvent> events) {
+    logger.info("onConfigChange {}", events);
+
+    if (scheduler != null) {
+      if (events.contains(ConfigChangeEvent.PrimaryChanged)) {
+        ConfigurationController configurationController = injector.getInstance(Key.get(ConfigurationController.class));
+        try {
+          if (configurationController.isPrimary()) {
+            scheduler.start();
+          } else {
+            scheduler.standby();
+          }
+        } catch (SchedulerException e) {
+          logger.error("Error updating scheduler.", e);
+        }
       }
     }
   }

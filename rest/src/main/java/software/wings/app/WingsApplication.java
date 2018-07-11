@@ -45,6 +45,7 @@ import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.MainConfiguration.AssetsConfigurationMixin;
 import software.wings.beans.User;
 import software.wings.core.maintenance.MaintenanceController;
+import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.core.queue.QueueListenerController;
 import software.wings.dl.WingsPersistence;
@@ -311,6 +312,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     environment.lifecycle().manage((Managed) injector.getInstance(DistributedLockSvc.class));
     environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
     environment.lifecycle().manage(injector.getInstance(MaintenanceController.class));
+    environment.lifecycle().manage(injector.getInstance(ConfigurationController.class));
     environment.lifecycle().manage(
         (Managed) injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("timer"))));
     environment.lifecycle().manage(

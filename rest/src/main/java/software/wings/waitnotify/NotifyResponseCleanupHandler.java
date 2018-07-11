@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.sm.ExecutionStatus;
@@ -34,13 +35,14 @@ public final class NotifyResponseCleanupHandler implements Runnable {
   private static final Logger logger = LoggerFactory.getLogger(NotifyResponseCleanupHandler.class);
 
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private ConfigurationController configurationController;
 
   /* (non-Javadoc)
    * @see java.lang.Runnable#run()
    */
   @Override
   public void run() {
-    if (isMaintenance()) {
+    if (isMaintenance() || configurationController.isNotPrimary()) {
       return;
     }
 

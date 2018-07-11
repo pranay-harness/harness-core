@@ -10,6 +10,7 @@ import com.google.inject.name.Named;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.exception.WingsException;
 import software.wings.utils.ThreadContext;
 
@@ -35,6 +36,7 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
   private AtomicBoolean shouldStop = new AtomicBoolean(false);
 
   @Inject @Named("timer") private ScheduledExecutorService timer;
+  @Inject private ConfigurationController configurationController;
 
   /* (non-Javadoc)
    * @see java.lang.Runnable#run()
@@ -46,7 +48,7 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
     Thread.currentThread().setName(threadName);
 
     do {
-      while (isMaintenance()) {
+      while (isMaintenance() || configurationController.isNotPrimary()) {
         sleep(Duration.ofSeconds(1));
       }
 
@@ -161,5 +163,9 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
    */
   void setTimer(ScheduledExecutorService timer) {
     this.timer = timer;
+  }
+
+  void setConfigurationController(ConfigurationController configurationController) {
+    this.configurationController = configurationController;
   }
 }
