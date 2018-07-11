@@ -8,6 +8,7 @@ import software.wings.beans.RestResponse;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.service.impl.infra.InfraDownloadService;
 
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -39,16 +40,16 @@ public class HarnessInfraDownloadResource {
   @GET
   @Path("default/watcher/{version}")
   @Produces(MediaType.APPLICATION_JSON)
-  public RestResponse<String> getWatcherDownloadUrlFromDefaultAuth(
-      @PathParam("version") String version, @QueryParam("accountId") @NotEmpty String accountId) {
-    return new RestResponse<String>(infraDownloadService.getDownloadUrlForWatcher(version));
+  public RestResponse<String> getWatcherDownloadUrlFromDefaultAuth(@PathParam("version") String version,
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("env") @DefaultValue("") String env) {
+    return new RestResponse<String>(infraDownloadService.getDownloadUrlForWatcher(version, env));
   }
 
   @GET
   @Path("default/delegate/{version}")
   @Produces(MediaType.APPLICATION_JSON)
-  public RestResponse<String> getDelegateDownloadUrlFromDefaultAuth(
-      @PathParam("version") String version, @QueryParam("accountId") @NotEmpty String accountId) {
-    return new RestResponse<String>(infraDownloadService.getDownloadUrlForDelegate(version));
+  public RestResponse<String> getDelegateDownloadUrlFromDefaultAuth(@PathParam("version") String version,
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("env") @DefaultValue("") String env) {
+    return new RestResponse<String>(infraDownloadService.getDownloadUrlForDelegate(version, env));
   }
 }

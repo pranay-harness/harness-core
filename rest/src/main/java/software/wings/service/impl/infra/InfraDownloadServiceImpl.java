@@ -2,6 +2,7 @@ package software.wings.service.impl.infra;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
@@ -31,31 +32,77 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
   private static final String STAGE_WATCHER_BUCKET = "harness-stage-watchers";
   private static final String ON_PREM_DELEGATE_BUCKET = "harness-on-prem-delegates";
   private static final String ON_PREM_WATCHER_BUCKET = "harness-on-prem-watchers";
+  @Inject private GcsUtil gcsUtil;
 
   @Override
-  public String getDownloadUrlForDelegate(String version) {
-    HarnessEnv env = getEnv();
+  public String getDownloadUrlForDelegate(String version, String envString) {
+    HarnessEnv env;
+    if (isEmpty(envString)) {
+      env = getEnv();
+    } else {
+      env = HarnessEnv.valueOf(envString);
+    }
     try {
       switch (env) {
         case CI:
-          return GcsUtil.getSignedUrlForServiceAccount(
+          return getGcsUtil().getSignedUrlForServiceAccount(
               "/" + CI_DELEGATE_BUCKET + BUILDS_PATH + version + "/" + DELEGATE_JAR,
               getServiceAccountJson(QA_SERVICE_ACCOUNT), 600L);
         case QA:
-          return GcsUtil.getSignedUrlForServiceAccount(
+          return getGcsUtil().getSignedUrlForServiceAccount(
               "/" + QA_DELEGATE_BUCKET + BUILDS_PATH + version + "/" + DELEGATE_JAR,
               getServiceAccountJson(QA_SERVICE_ACCOUNT), 600L);
         case PROD:
-          return GcsUtil.getSignedUrlForServiceAccount(
+          return getGcsUtil().getSignedUrlForServiceAccount(
               "/" + PROD_DELEGATE_BUCKET + BUILDS_PATH + version + "/" + DELEGATE_JAR,
               getServiceAccountJson(PROD_SERVICE_ACCOUNT), 600L);
         case STAGE:
-          return GcsUtil.getSignedUrlForServiceAccount(
+          return getGcsUtil().getSignedUrlForServiceAccount(
               "/" + STAGE_DELEGATE_BUCKET + BUILDS_PATH + version + "/" + DELEGATE_JAR,
               getServiceAccountJson(PROD_SERVICE_ACCOUNT), 600L);
         case ON_PREM:
-          return GcsUtil.getSignedUrlForServiceAccount(
+          return getGcsUtil().getSignedUrlForServiceAccount(
               "/" + ON_PREM_DELEGATE_BUCKET + BUILDS_PATH + version + "/" + DELEGATE_JAR,
+              getServiceAccountJson(PROD_SERVICE_ACCOUNT), 600L);
+        default:
+          throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION, "Unsupported env found, env=" + env);
+      }
+
+    } catch (Exception e) {
+      logger.warn("Failed to get downloadUrlForDelegate for version=" + version + ", env=" + env, e);
+    }
+    return DEFAULT_ERROR_STRING;
+  }
+
+  @Override
+  public String getDownloadUrlForWatcher(String version, String envString) {
+    HarnessEnv env;
+    if (isEmpty(envString)) {
+      env = getEnv();
+    } else {
+      env = HarnessEnv.valueOf(envString);
+    }
+    try {
+      switch (env) {
+        case CI:
+          return getGcsUtil().getSignedUrlForServiceAccount(
+              "/" + CI_WATCHER_BUCKET + BUILDS_PATH + version + "/" + WATCHER_JAR,
+              getServiceAccountJson(QA_SERVICE_ACCOUNT), 600L);
+        case QA:
+          return getGcsUtil().getSignedUrlForServiceAccount(
+              "/" + QA_WATCHER_BUCKET + BUILDS_PATH + version + "/" + WATCHER_JAR,
+              getServiceAccountJson(QA_SERVICE_ACCOUNT), 600L);
+        case PROD:
+          return getGcsUtil().getSignedUrlForServiceAccount(
+              "/" + PROD_WATCHER_BUCKET + BUILDS_PATH + version + "/" + WATCHER_JAR,
+              getServiceAccountJson(PROD_SERVICE_ACCOUNT), 600L);
+        case STAGE:
+          return getGcsUtil().getSignedUrlForServiceAccount(
+              "/" + STAGE_WATCHER_BUCKET + BUILDS_PATH + version + "/" + WATCHER_JAR,
+              getServiceAccountJson(PROD_SERVICE_ACCOUNT), 600L);
+        case ON_PREM:
+          return getGcsUtil().getSignedUrlForServiceAccount(
+              "/" + ON_PREM_WATCHER_BUCKET + BUILDS_PATH + version + "/" + WATCHER_JAR,
               getServiceAccountJson(PROD_SERVICE_ACCOUNT), 600L);
         default:
           throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION, "Unsupported env found, env=" + env);
@@ -70,36 +117,13 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
   @Override
   public String getDownloadUrlForWatcher(String version) {
     HarnessEnv env = getEnv();
-    try {
-      switch (env) {
-        case CI:
-          return GcsUtil.getSignedUrlForServiceAccount(
-              "/" + CI_WATCHER_BUCKET + BUILDS_PATH + version + "/" + WATCHER_JAR,
-              getServiceAccountJson(QA_SERVICE_ACCOUNT), 600L);
-        case QA:
-          return GcsUtil.getSignedUrlForServiceAccount(
-              "/" + QA_WATCHER_BUCKET + BUILDS_PATH + version + "/" + WATCHER_JAR,
-              getServiceAccountJson(QA_SERVICE_ACCOUNT), 600L);
-        case PROD:
-          return GcsUtil.getSignedUrlForServiceAccount(
-              "/" + PROD_WATCHER_BUCKET + BUILDS_PATH + version + "/" + WATCHER_JAR,
-              getServiceAccountJson(PROD_SERVICE_ACCOUNT), 600L);
-        case STAGE:
-          return GcsUtil.getSignedUrlForServiceAccount(
-              "/" + STAGE_WATCHER_BUCKET + BUILDS_PATH + version + "/" + WATCHER_JAR,
-              getServiceAccountJson(PROD_SERVICE_ACCOUNT), 600L);
-        case ON_PREM:
-          return GcsUtil.getSignedUrlForServiceAccount(
-              "/" + ON_PREM_WATCHER_BUCKET + BUILDS_PATH + version + "/" + WATCHER_JAR,
-              getServiceAccountJson(PROD_SERVICE_ACCOUNT), 600L);
-        default:
-          throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION, "Unsupported env found, env=" + env);
-      }
+    return getDownloadUrlForWatcher(version, env.toString());
+  }
 
-    } catch (Exception e) {
-      logger.warn("Failed to get downloadUrlForDelegate for version=" + version + ", env=" + env, e);
-    }
-    return DEFAULT_ERROR_STRING;
+  @Override
+  public String getDownloadUrlForDelegate(String version) {
+    HarnessEnv env = getEnv();
+    return getDownloadUrlForDelegate(version, env.toString());
   }
 
   protected HarnessEnv getEnv() {
@@ -128,5 +152,9 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
           "No Service Account configuration discovered for serviceAccount=" + serviceAccount);
     }
     return serviceAccountJson;
+  }
+
+  public GcsUtil getGcsUtil() {
+    return gcsUtil;
   }
 }
