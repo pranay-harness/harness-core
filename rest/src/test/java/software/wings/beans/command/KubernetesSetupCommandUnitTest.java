@@ -211,7 +211,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
     ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
     doNothing().when(executionLogCallback).saveExecutionLog(anyString(), any());
 
-    Map labels = new HashMap();
+    Map<String, String> labels = new HashMap<>();
     labels.put("app", "appName");
     labels.put("version", "9");
 
