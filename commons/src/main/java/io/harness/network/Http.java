@@ -361,7 +361,10 @@ public class Http {
       if (!Http.shouldUseNonProxy(url)) {
         logger.info("using proxy");
         request.viaProxy(httpProxyHost);
-        executor.auth(httpProxyHost, Http.getProxyUserName(), Http.getProxyPassword());
+        // Add Auth if proxy auth is defined using System vars
+        if (isNotEmpty(getProxyUserName())) {
+          executor.auth(httpProxyHost, Http.getProxyUserName(), Http.getProxyPassword());
+        }
       }
     }
 

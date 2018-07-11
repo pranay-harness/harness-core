@@ -1,4 +1,4 @@
-package io.harness.network;
+package software.wings.integration.network;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -25,6 +25,7 @@ import java.util.Properties;
 public class ProxyTest {
   private String proxyHost;
   private int proxyPort;
+  private String proxyHostNoAuth;
   private String proxyUser;
   private String proxyPassword;
   private String invalidProxyPassword;
@@ -36,13 +37,14 @@ public class ProxyTest {
     InputStream input = null;
 
     try {
-      input = ProxyTest.class.getResourceAsStream("../../../testProxyconfig.properties");
+      input = ProxyTest.class.getResourceAsStream("../../../../testProxyconfig.properties");
 
       // load a properties file
       prop.load(input);
 
       // get the property value and print it out
       proxyHost = prop.getProperty("PROXY_HOST");
+      proxyHostNoAuth = prop.getProperty("PROXY_HOST_NO_AUTH");
       proxyPort = Integer.parseInt(prop.getProperty("PROXY_PORT"));
       proxyUser = prop.getProperty("PROXY_USER");
       proxyPassword = prop.getProperty("PROXY_PASSWORD");
@@ -61,7 +63,7 @@ public class ProxyTest {
    * @throws IOException
    */
   @Test
-  public void testWithNoProxyConfigured() throws IOException {
+  public void testWithNoProxyConfigured_OkHttpClient() throws IOException {
     OkHttpClient.Builder builder = new Builder();
     Request request1 = new Request.Builder().url(targetUrl).build();
 
@@ -83,7 +85,7 @@ public class ProxyTest {
    * Using proxy with Auth
    */
   @Test
-  public void testWithProxyAuthSuccess() throws IOException {
+  public void testWithProxyAuthSuccess_OkHttpClient() throws IOException {
     Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, proxyPort));
     OkHttpClient.Builder builder = new OkHttpClient.Builder().proxy(proxy);
     builder.proxyAuthenticator(new Authenticator() {
@@ -119,7 +121,7 @@ public class ProxyTest {
    * @throws IOException
    */
   @Test
-  public void testWithProxyAuthFailWithInvalidCreds() throws IOException {
+  public void testWithProxyAuthFailWithInvalidCreds_OkHttpClient() throws IOException {
     Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, proxyPort));
     OkHttpClient.Builder builder = new OkHttpClient.Builder().proxy(proxy);
 
@@ -137,7 +139,58 @@ public class ProxyTest {
     } catch (Exception ex) {
       assertTrue(true);
     }
+  }
 
+  /**
+   * Using proxy with Auth
+   */
+  //  @Test
+  //  public void testWithProxyWithNoAuthSuccess_OkHttpClient() throws IOException {
+  //    Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHostNoAuth, proxyPort));
+  //    OkHttpClient.Builder builder = new OkHttpClient.Builder().proxy(proxy);
+  //
+  //    Request request = new Request.Builder().url(targetUrl).build();
+  //    try {
+  //      Response response = builder.build().newCall(request).execute();
+  //      assertEquals(200, response.code());
+  //    } catch (Exception e) {
+  //      assertFalse(true);
+  //    }
+  //
+  //    builder = new OkHttpClient.Builder().proxy(proxy);
+  //    builder.proxyAuthenticator(new Authenticator() {
+  //      public Request authenticate(Route route, Response response) throws IOException {
+  //        String credential = Credentials.basic(proxyUser, proxyPassword);
+  //        return response.request().newBuilder().header("Proxy-Authorization", credential).build();
+  //      }
+  //    });
+  //
+  //    request = new Request.Builder().url(targetUrl).build();
+  //    try {
+  //      Response response = builder.build().newCall(request).execute();
+  //      assertEquals(200, response.code());
+  //    } catch (Exception e) {
+  //      assertFalse(true);
+  //    }
+  //  }
+
+  @Test
+  public void testGetResponseFromUrlProxyAuth() throws IOException {
+    Executor executor = Executor.newInstance();
+    org.apache.http.client.fluent.Request request =
+        org.apache.http.client.fluent.Request.Get(targetUrl).connectTimeout(1500).socketTimeout(1500);
+
+    HttpHost httpProxyHost = new HttpHost(proxyHost, proxyPort, "http");
+    request.viaProxy(httpProxyHost);
+    // Add Auth if proxy auth is defined using System vars
+    executor.auth(httpProxyHost, proxyUser, proxyPassword);
+    org.apache.http.client.fluent.Response response = executor.execute(request);
+    int responseCode = response.returnResponse().getStatusLine().getStatusCode();
+    assertEquals(200, responseCode);
+  }
+
+  @Test
+  public void testGetResponseFromUrlProxyAuth_Fail() throws IOException {
     Executor executor = Executor.newInstance();
     org.apache.http.client.fluent.Request requestObj =
         org.apache.http.client.fluent.Request.Get(targetUrl).connectTimeout(10000).socketTimeout(10000);
@@ -148,5 +201,29 @@ public class ProxyTest {
 
     String responsePhrase = executor.execute(requestObj).returnResponse().getStatusLine().getReasonPhrase();
     assertEquals("Proxy Authentication Required", responsePhrase);
+  }
+
+  //  @Test
+  //  public void testGetResponseFromUrlProxyNoAuth() throws IOException {
+  //    Executor executor = Executor.newInstance();
+  //    org.apache.http.client.fluent.Request request =
+  //        org.apache.http.client.fluent.Request.Get(targetUrl).connectTimeout(1500).socketTimeout(1500);
+  //
+  //    HttpHost httpProxyHost = new HttpHost(proxyHostNoAuth, proxyPort, "http");
+  //    request.viaProxy(httpProxyHost);
+  //    org.apache.http.client.fluent.Response response = executor.execute(request);
+  //    int responseCode = response.returnResponse().getStatusLine().getStatusCode();
+  //    assertEquals(200, responseCode);
+  //  }
+
+  @Test
+  public void testGetResponseFromUrlNoProxy() throws IOException {
+    Executor executor = Executor.newInstance();
+    org.apache.http.client.fluent.Request request =
+        org.apache.http.client.fluent.Request.Get(targetUrl).connectTimeout(1500).socketTimeout(1500);
+
+    org.apache.http.client.fluent.Response response = executor.execute(request);
+    int responseCode = response.returnResponse().getStatusLine().getStatusCode();
+    assertEquals(200, responseCode);
   }
 }
