@@ -24,7 +24,7 @@ import java.util.Base64;
 public class GcsUtil {
   @Inject private MainConfiguration configuration;
   private static final Logger log = LoggerFactory.getLogger(GcsUtil.class);
-  private String downloadPathPattern = "/harness-download/";
+  private static final String downloadPathPattern = "/storage/harness-download";
 
   private String getSignedUrlUsingPrivateKey(
       String objectPath, String account, String privateKey, long durationInSeconds) throws Exception {
@@ -35,7 +35,7 @@ public class GcsUtil {
     // URL encode the signed string so that we can add this URL
     signedString = URLEncoder.encode(signedString, "UTF-8");
     return constructSignedUrl(
-        configuration.getPortal().getUrl() + "/harness-download/" + objectPath, account, expiryTime, signedString);
+        configuration.getPortal().getUrl() + downloadPathPattern + objectPath, account, expiryTime, signedString);
   }
 
   public String getSignedUrlForServiceAccount(String objectPath, String serviceAccountJsonFile, long durationInSeconds)
