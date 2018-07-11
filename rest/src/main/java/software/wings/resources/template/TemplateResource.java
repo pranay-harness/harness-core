@@ -1,6 +1,8 @@
 package software.wings.resources.template;
 
 import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
 import com.google.inject.Inject;
 
@@ -14,9 +16,7 @@ import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateVersion;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
-import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.template.TemplateVersionService;
 
@@ -34,8 +34,7 @@ import javax.ws.rs.QueryParam;
 @Api("templates")
 @Path("/templates")
 @Produces("application/json")
-@Scope(PermissionAttribute.ResourceType.TEMPLATE)
-@AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
+@AuthRule(permissionType = LOGGED_IN)
 public class TemplateResource {
   @Inject TemplateService templateService;
   @Inject TemplateVersionService templateVersionService;
@@ -57,6 +56,7 @@ public class TemplateResource {
   @POST
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<Template> save(@QueryParam("accountId") String accountId, Template template) {
     template.setAccountId(accountId);
     template.setAppId(GLOBAL_APP_ID);
@@ -73,6 +73,7 @@ public class TemplateResource {
   @Path("{templateId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<Template> update(
       @QueryParam("accountId") String accountId, @PathParam("templateId") String templateId, Template template) {
     template.setAccountId(accountId);
@@ -91,6 +92,7 @@ public class TemplateResource {
   @Path("{templateId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse delete(@QueryParam("accountId") String accountId, @PathParam("templateId") String templateId) {
     templateService.delete(accountId, templateId);
     return new RestResponse();
