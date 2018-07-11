@@ -324,6 +324,10 @@ public class WatcherServiceImpl implements WatcherService {
                 }
               } else if (restartNeeded || heartbeatTimedOut || versionMatchTimedOut || delegateMinorVersionMismatch
                   || upgradeTimedOut) {
+                logger.info("Restarting delegate process {}. Delegate request: {}, Local heartbeat timeout: {}, "
+                        + "Version match timeout: {}, Version banned: {}, Upgrade timeout: {}",
+                    delegateProcess, restartNeeded, heartbeatTimedOut, versionMatchTimedOut,
+                    delegateMinorVersionMismatch, upgradeTimedOut);
                 restartNeededList.add(delegateProcess);
                 minMinorVersion.set(0);
                 illegalVersions.clear();
