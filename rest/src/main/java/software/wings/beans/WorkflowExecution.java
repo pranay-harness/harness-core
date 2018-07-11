@@ -592,6 +592,7 @@ public class WorkflowExecution extends Base {
     private List<BuildExecutionSummary> buildExecutionSummaries;
     private OrchestrationWorkflowType orchestrationWorkflowType;
     private String pipelineExecutionId;
+    private PipelineExecution pipelineExecution;
 
     private WorkflowExecutionBuilder() {}
 
@@ -763,6 +764,11 @@ public class WorkflowExecution extends Base {
       return this;
     }
 
+    public WorkflowExecutionBuilder withPipelineExecution(PipelineExecution pipelineExecution) {
+      this.pipelineExecution = pipelineExecution;
+      return this;
+    }
+
     @Override
     public String toString() {
       return MoreObjects.toStringHelper(this)
@@ -847,6 +853,7 @@ public class WorkflowExecution extends Base {
       workflowExecution.setBuildExecutionSummaries(buildExecutionSummaries);
       workflowExecution.setOrchestrationType(orchestrationWorkflowType);
       workflowExecution.setPipelineExecutionId(pipelineExecutionId);
+      workflowExecution.setPipelineExecution(pipelineExecution);
       return workflowExecution;
     }
   }
