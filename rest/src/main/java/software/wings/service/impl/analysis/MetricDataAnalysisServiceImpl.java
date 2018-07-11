@@ -771,7 +771,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   @Override
   public Map<String, Map<String, TimeSeriesMetricDefinition>> getCustomMetricTemplates(
       StateType stateType, String serviceId, String groupName) {
-    TimeSeriesMLTransactionThresholds newRelicMetricTemplates =
+    List<TimeSeriesMLTransactionThresholds> thresholds =
         wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
             .field("stateType")
             .equal(stateType)
@@ -779,16 +779,17 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
             .equal(serviceId)
             .field("groupName")
             .equal(groupName)
-            .get();
+            .asList();
     Map<String, Map<String, TimeSeriesMetricDefinition>> customThresholds = new HashMap<>();
-    if (newRelicMetricTemplates != null) {
-      if (!customThresholds.containsKey(newRelicMetricTemplates.getTransactionName())) {
-        customThresholds.put(newRelicMetricTemplates.getTransactionName(), new HashMap<>());
+    if (thresholds != null) {
+      for (TimeSeriesMLTransactionThresholds threshold : thresholds) {
+        if (!customThresholds.containsKey(threshold.getTransactionName())) {
+          customThresholds.put(threshold.getTransactionName(), new HashMap<>());
+        }
+        customThresholds.get(threshold.getTransactionName()).put(threshold.getMetricName(), threshold.getThresholds());
       }
-      customThresholds.get(newRelicMetricTemplates.getTransactionName())
-          .put(newRelicMetricTemplates.getMetricName(), newRelicMetricTemplates.getThresholds());
     }
-    return newRelicMetricTemplates == null ? new HashMap<>() : customThresholds;
+    return customThresholds;
   }
 
   @Override
