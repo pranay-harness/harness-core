@@ -172,8 +172,8 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       switch (StateType.valueOf(getStateType())) {
         case CLOUD_WATCH:
         case APM_VERIFICATION:
+          analysisContext.getTestNodes().add(TEST_HOST_NAME);
           if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
-            analysisContext.getTestNodes().add(TEST_HOST_NAME);
             for (int i = 1; i <= CANARY_DAYS_TO_COLLECT; ++i) {
               analysisContext.getControlNodes().add(CONTROL_HOST_NAME + "-" + i);
             }
