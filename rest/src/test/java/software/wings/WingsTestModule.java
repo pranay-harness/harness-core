@@ -76,22 +76,22 @@ public class WingsTestModule extends AbstractModule {
                 .build()));
     bind(ExecutorService.class)
         .annotatedWith(Names.named("systemExecutor"))
-        .toInstance(ThreadPool.create(5, 5, 1, TimeUnit.SECONDS,
+        .toInstance(ThreadPool.create(4, 8, 1, TimeUnit.SECONDS,
             new ThreadFactoryBuilder().setNameFormat("system-%d").setPriority(Thread.MAX_PRIORITY).build()));
     bind(ExecutorService.class)
         .annotatedWith(Names.named("asyncExecutor"))
-        .toInstance(ThreadPool.create(20, 20, 1, TimeUnit.SECONDS,
+        .toInstance(ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
             new ThreadFactoryBuilder().setNameFormat("async-task-%d").setPriority(Thread.MIN_PRIORITY).build()));
     bind(ExecutorService.class)
         .annotatedWith(Names.named("artifactExecutor"))
-        .toInstance(ThreadPool.create(20, 20, 1, TimeUnit.SECONDS,
+        .toInstance(ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
             new ThreadFactoryBuilder()
                 .setNameFormat("artifact-collection-%d")
                 .setPriority(Thread.MIN_PRIORITY)
                 .build()));
     bind(ExecutorService.class)
         .annotatedWith(Names.named("timeoutExecutor"))
-        .toInstance(ThreadPool.create(10, 150, 1, TimeUnit.SECONDS,
+        .toInstance(ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
             new ThreadFactoryBuilder().setNameFormat("timeout-enforcer-%d").setPriority(Thread.NORM_PRIORITY).build()));
   }
 }
