@@ -411,8 +411,15 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
               groupNameSet.add(newRelicMetricDataRecord.getGroupName());
 
               newRelicMetricDataRecord.setAppId(dataCollectionInfo.getApplicationId());
-              records.put(newRelicMetricDataRecord.getName() + newRelicMetricDataRecord.getHost(),
-                  newRelicMetricDataRecord.getTimeStamp(), newRelicMetricDataRecord);
+              newRelicMetricDataRecord.setDataCollectionMinute(
+                  (int) ((Timestamp.minuteBoundary(newRelicMetricDataRecord.getTimeStamp()) - startTimeMinForHost)
+                      / TimeUnit.MINUTES.toMillis(1)));
+              if (newRelicMetricDataRecord.getTimeStamp() >= startTimeMinForHost) {
+                records.put(newRelicMetricDataRecord.getName() + newRelicMetricDataRecord.getHost(),
+                    newRelicMetricDataRecord.getTimeStamp(), newRelicMetricDataRecord);
+              } else {
+                logger.info("The data record {} is older than startTime. Ignoring", newRelicMetricDataRecord);
+              }
             });
 
             dataCollectionMinute = currentElapsedTime - 1;
