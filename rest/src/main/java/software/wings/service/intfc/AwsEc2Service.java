@@ -30,14 +30,6 @@ public interface AwsEc2Service {
   @DelegateTaskType(TaskType.AWS_GET_IAM_ROLES)
   Map<String, String> getIAMRoles(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails);
 
-  @DelegateTaskType(TaskType.AWS_GET_ECR_IMAGE_URL)
-  String getEcrImageUrl(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String imageName);
-
-  @DelegateTaskType(TaskType.AWS_GET_ECR_AUTH_TOKEN)
-  String getAmazonEcrAuthToken(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String awsAccount, String region);
-
   @DelegateTaskType(TaskType.AWS_GET_SUBNETS)
   List<String> getSubnets(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, List<String> vpcIds);

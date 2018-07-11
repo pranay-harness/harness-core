@@ -416,3 +416,11 @@ software.wings.service.impl.elk.ElkLogFetchRequest, 5376
 software.wings.service.impl.ThirdPartyApiCallLog, 5377
 software.wings.beans.Variable, 5378
 software.wings.beans.VariableType, 5379
+software.wings.service.impl.aws.model.AwsRequest, 5380
+software.wings.service.impl.aws.model.AwsResponse, 5381
+software.wings.service.impl.aws.model.AwsEcrRequest, 5382
+software.wings.service.impl.aws.model.AwsEcrRequest$AwsEcrRequestType, 5383
+software.wings.service.impl.aws.model.AwsEcrGetImageUrlRequest, 5384
+software.wings.service.impl.aws.model.AwsEcrGetImageUrlResponse, 5385
+software.wings.service.impl.aws.model.AwsEcrGetAuthTokenRequest, 5386
+software.wings.service.impl.aws.model.AwsEcrGetAuthTokenResponse, 5387

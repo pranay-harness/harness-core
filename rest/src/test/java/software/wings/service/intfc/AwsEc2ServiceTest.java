@@ -17,7 +17,6 @@ import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.Reservation;
-import com.amazonaws.services.ecr.model.Repository;
 import com.amazonaws.services.ecs.model.ListClustersResult;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -62,24 +61,6 @@ public class AwsEc2ServiceTest extends WingsBaseTest {
     doReturn(asList("vpc1", "vpc2")).when(mockAwsHelperService).listVPCs(any(), anyList(), anyString());
     assertEquals(asList("vpc1", "vpc2"),
         service.getVPCs(AwsConfig.builder().build(), singletonList(EncryptedDataDetail.builder().build()), "region"));
-  }
-
-  @Test
-  public void testGetEcrImageUrl() {
-    doReturn(new Repository().withRepositoryUri("uri"))
-        .when(mockAwsHelperService)
-        .getRepository(any(), anyList(), anyString(), anyString());
-    assertEquals("uri",
-        service.getEcrImageUrl(
-            AwsConfig.builder().build(), singletonList(EncryptedDataDetail.builder().build()), "region", "name"));
-  }
-
-  @Test
-  public void testGetAmazonEcrAuthToken() {
-    doReturn("Token").when(mockAwsHelperService).getAmazonEcrAuthToken(any(), anyList(), anyString(), anyString());
-    assertEquals("Token",
-        service.getAmazonEcrAuthToken(
-            AwsConfig.builder().build(), singletonList(EncryptedDataDetail.builder().build()), "account", "region"));
   }
 
   @Test

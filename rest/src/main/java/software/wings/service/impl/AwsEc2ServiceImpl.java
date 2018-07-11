@@ -11,7 +11,6 @@ import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Instance;
-import com.amazonaws.services.ecr.model.Repository;
 import com.amazonaws.services.ecs.model.ListClustersRequest;
 import com.amazonaws.services.ecs.model.ListClustersResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
@@ -56,19 +55,6 @@ public class AwsEc2ServiceImpl implements AwsEc2Service {
   @Override
   public Map<String, String> getIAMRoles(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
     return awsHelperService.listIAMRoles(awsConfig, encryptionDetails);
-  }
-
-  @Override
-  public String getEcrImageUrl(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String imageName) {
-    Repository repository = awsHelperService.getRepository(awsConfig, encryptionDetails, region, imageName);
-    return repository != null ? repository.getRepositoryUri() : null;
-  }
-
-  @Override
-  public String getAmazonEcrAuthToken(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String awsAccount, String region) {
-    return awsHelperService.getAmazonEcrAuthToken(awsConfig, encryptionDetails, awsAccount, region);
   }
 
   @Override
