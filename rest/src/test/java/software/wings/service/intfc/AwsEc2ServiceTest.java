@@ -8,7 +8,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 
 import com.google.inject.Inject;
@@ -17,7 +16,6 @@ import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.Reservation;
-import com.amazonaws.services.ecs.model.ListClustersResult;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -42,18 +40,6 @@ public class AwsEc2ServiceTest extends WingsBaseTest {
     doReturn(asList("r1", "r2")).when(mockAwsHelperService).listRegions(any(), anyList());
     assertEquals(asList("r1", "r2"),
         service.getRegions(AwsConfig.builder().build(), singletonList(EncryptedDataDetail.builder().build())));
-  }
-
-  @Test
-  public void testGetClusters() {
-    doReturn(new ListClustersResult().withClusterArns("arn1", "arn2"))
-        .when(mockAwsHelperService)
-        .listClusters(anyString(), any(), anyList(), any());
-    doReturn("id1").when(mockAwsHelperService).getIdFromArn(eq("arn1"));
-    doReturn("id2").when(mockAwsHelperService).getIdFromArn(eq("arn2"));
-    assertEquals(asList("id1", "id2"),
-        service.getClusters(
-            AwsConfig.builder().build(), singletonList(EncryptedDataDetail.builder().build()), "region"));
   }
 
   @Test

@@ -11,8 +11,6 @@ import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Instance;
-import com.amazonaws.services.ecs.model.ListClustersRequest;
-import com.amazonaws.services.ecs.model.ListClustersResult;
 import software.wings.beans.AwsConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.AwsEc2Service;
@@ -36,13 +34,6 @@ public class AwsEc2ServiceImpl implements AwsEc2Service {
   @Override
   public List<String> getRegions(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
     return awsHelperService.listRegions(awsConfig, encryptionDetails);
-  }
-
-  @Override
-  public List<String> getClusters(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
-    ListClustersResult listClustersResult =
-        awsHelperService.listClusters(region, awsConfig, encryptionDetails, new ListClustersRequest());
-    return listClustersResult.getClusterArns().stream().map(awsHelperService::getIdFromArn).collect(toList());
   }
 
   @Override

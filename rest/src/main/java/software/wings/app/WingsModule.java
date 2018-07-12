@@ -151,6 +151,7 @@ import software.wings.service.impl.appdynamics.AppdynamicsServiceImpl;
 import software.wings.service.impl.artifact.ArtifactCollectionServiceImpl;
 import software.wings.service.impl.artifact.ArtifactServiceImpl;
 import software.wings.service.impl.aws.manager.AwsEcrHelperServiceManagerImpl;
+import software.wings.service.impl.aws.manager.AwsEcsHelperServiceManagerImpl;
 import software.wings.service.impl.aws.manager.AwsElbHelperServiceManagerImpl;
 import software.wings.service.impl.elk.ElkAnalysisServiceImpl;
 import software.wings.service.impl.expression.ExpressionBuilderServiceImpl;
@@ -259,6 +260,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.service.intfc.aws.manager.AwsEcrHelperServiceManager;
+import software.wings.service.intfc.aws.manager.AwsEcsHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsElbHelperServiceManager;
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.service.intfc.expression.ExpressionBuilderService;
@@ -434,6 +436,7 @@ public class WingsModule extends AbstractModule {
     bind(AwsEcrHelperServiceManager.class).to(AwsEcrHelperServiceManagerImpl.class);
     bind(UsageRestrictionsService.class).to(UsageRestrictionsServiceImpl.class);
     bind(AwsElbHelperServiceManager.class).to(AwsElbHelperServiceManagerImpl.class);
+    bind(AwsEcsHelperServiceManager.class).to(AwsEcsHelperServiceManagerImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);
