@@ -27,6 +27,7 @@ import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConfiguration;
 import software.wings.beans.DelegateConnectionHeartbeat;
 import software.wings.beans.DelegateScripts;
+import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.DelegateTaskResponse;
@@ -110,6 +111,14 @@ public class DelegateResource {
   public RestResponse<DelegateConfiguration> getDelegateConfiguration(
       @QueryParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(accountService.getDelegateConfiguration(accountId));
+  }
+
+  @GET
+  @Path("status")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<DelegateStatus> listDelegateStatus(@QueryParam("accountId") @NotEmpty String accountId) {
+    return new RestResponse<>(delegateService.getDelegateStatus(accountId));
   }
 
   @GET

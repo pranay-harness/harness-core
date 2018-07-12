@@ -5,6 +5,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConnectionHeartbeat;
 import software.wings.beans.DelegateScripts;
+import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskAbortEvent;
 import software.wings.beans.DelegateTaskEvent;
@@ -27,6 +28,8 @@ public interface DelegateService {
   PageResponse<Delegate> list(PageRequest<Delegate> pageRequest);
 
   List<String> getKubernetesDelegateNames(String accountId);
+
+  DelegateStatus getDelegateStatus(String accountId);
 
   Delegate get(String accountId, String delegateId);
 

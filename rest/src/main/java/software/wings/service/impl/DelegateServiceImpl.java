@@ -62,6 +62,7 @@ import org.apache.commons.compress.archivers.zip.AsiExtraField;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.fluent.Request;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.atteo.evo.inflector.English;
@@ -75,9 +76,11 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Status;
+import software.wings.beans.DelegateConfiguration;
 import software.wings.beans.DelegateConnection;
 import software.wings.beans.DelegateConnectionHeartbeat;
 import software.wings.beans.DelegateScripts;
+import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskAbortEvent;
 import software.wings.beans.DelegateTaskEvent;
@@ -126,6 +129,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 import javax.ws.rs.NotFoundException;
 
@@ -215,6 +219,46 @@ public class DelegateServiceImpl implements DelegateService {
         .distinct()
         .sorted(naturalOrder())
         .collect(toList());
+  }
+
+  @Override
+  public DelegateStatus getDelegateStatus(String accountId) {
+    DelegateConfiguration delegateConfiguration = accountService.getDelegateConfiguration(accountId);
+    List<Delegate> delegates = wingsPersistence.createQuery(Delegate.class).filter("accountId", accountId).asList();
+    List<DelegateConnection> delegateConnections = wingsPersistence.createQuery(DelegateConnection.class)
+                                                       .filter("accountId", accountId)
+                                                       .project("delegateId", true)
+                                                       .project("version", true)
+                                                       .project("lastHeartbeat", true)
+                                                       .asList();
+
+    return DelegateStatus.builder()
+        .publishedVersions(delegateConfiguration.getDelegateVersions())
+        .delegates(delegates.stream()
+                       .map(delegate
+                           -> DelegateStatus.DelegateInner.builder()
+                                  .uuid(delegate.getUuid())
+                                  .delegateName(delegate.getDelegateName())
+                                  .description(delegate.getDescription())
+                                  .hostName(delegate.getHostName())
+                                  .ip(delegate.getIp())
+                                  .status(delegate.getStatus())
+                                  .excludeScopes(delegate.getExcludeScopes())
+                                  .includeScopes(delegate.getIncludeScopes())
+                                  .connections(delegateConnections.stream()
+                                                   .filter(delegateConnection
+                                                       -> StringUtils.equals(
+                                                           delegateConnection.getDelegateId(), delegate.getUuid()))
+                                                   .map(delegateConnection
+                                                       -> DelegateStatus.DelegateInner.DelegateConnectionInner.builder()
+                                                              .uuid(delegateConnection.getUuid())
+                                                              .lastHeartbeat(delegateConnection.getLastHeartbeat())
+                                                              .version(delegateConnection.getVersion())
+                                                              .build())
+                                                   .collect(Collectors.toList()))
+                                  .build())
+                       .collect(Collectors.toList()))
+        .build();
   }
 
   @Override
