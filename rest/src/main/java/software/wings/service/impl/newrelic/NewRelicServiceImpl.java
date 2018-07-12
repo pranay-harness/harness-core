@@ -18,6 +18,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -158,6 +159,54 @@ public class NewRelicServiceImpl implements NewRelicService {
     } catch (Exception e) {
       throw new WingsException(errorCode).addParam(
           "message", "Error in getting new relic applications. " + Misc.getMessage(e));
+    }
+  }
+
+  @Override
+  public List<NewRelicApplicationInstance> getApplicationInstances(
+      String settingId, long applicationId, StateType stateType) {
+    ErrorCode errorCode = null;
+    try {
+      final SettingAttribute settingAttribute = settingsService.get(settingId);
+      List<EncryptedDataDetail> encryptionDetails =
+          secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
+      SyncTaskContext syncTaskContext = aContext()
+                                            .withAccountId(settingAttribute.getAccountId())
+                                            .withAppId(Base.GLOBAL_APP_ID)
+                                            .withTimeout(Constants.DEFAULT_SYNC_CALL_TIMEOUT * 3)
+                                            .build();
+      switch (stateType) {
+        case NEW_RELIC:
+          errorCode = ErrorCode.NEWRELIC_ERROR;
+          return delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
+              .getApplicationInstances(
+                  (NewRelicConfig) settingAttribute.getValue(), encryptionDetails, applicationId, null);
+        default:
+          throw new IllegalStateException("Invalid state" + stateType);
+      }
+
+    } catch (Exception e) {
+      throw new WingsException(errorCode).addParam(
+          "message", "Error in getting new relic applications. " + e.getMessage());
+    }
+  }
+
+  @Override
+  public List<NewRelicMetric> getTxnsWithData(String settingId, long applicationId) {
+    try {
+      final SettingAttribute settingAttribute = settingsService.get(settingId);
+      List<EncryptedDataDetail> encryptionDetails =
+          secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
+      SyncTaskContext syncTaskContext = aContext()
+                                            .withAccountId(settingAttribute.getAccountId())
+                                            .withAppId(Base.GLOBAL_APP_ID)
+                                            .withTimeout(Constants.DEFAULT_SYNC_CALL_TIMEOUT * 3)
+                                            .build();
+      return delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
+          .getTxnsWithData((NewRelicConfig) settingAttribute.getValue(), encryptionDetails, applicationId, null);
+    } catch (Exception e) {
+      throw new WingsException(ErrorCode.NEWRELIC_ERROR)
+          .addParam("message", "Error in getting new relic applications. " + e.getMessage());
     }
   }
 }

@@ -7,6 +7,8 @@ import static java.time.Duration.ofMillis;
 import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
 import static software.wings.service.impl.security.SecretManagementDelegateServiceImpl.NUM_OF_RETRIES;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -22,6 +24,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.NewRelicDeploymentMarkerPayload;
+import software.wings.delegatetasks.DataCollectionExecutorService;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.newrelic.NewRelicRestClient;
@@ -29,6 +32,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -37,9 +41,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import javax.servlet.http.HttpServletResponse;
 
 /**
@@ -47,11 +56,14 @@ import javax.servlet.http.HttpServletResponse;
  */
 @SuppressFBWarnings("STCAL_STATIC_SIMPLE_DATE_FORMAT_INSTANCE")
 public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
+  private static final int METRIC_DATA_QUERY_BATCH_SIZE = 50;
+  private static final int MIN_RPM = 1;
   private static final String NEW_RELIC_DATE_FORMAT = "YYYY-MM-dd'T'HH:mm:ssZ";
   public static final SimpleDateFormat dateFormatter = new SimpleDateFormat(NEW_RELIC_DATE_FORMAT);
 
   private static final Logger logger = LoggerFactory.getLogger(NewRelicDelgateServiceImpl.class);
   @Inject private EncryptionService encryptionService;
+  @Inject private DataCollectionExecutorService dataCollectionService;
   @Inject private DelegateLogService delegateLogService;
 
   @Override
@@ -141,6 +153,17 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   }
 
   @Override
+  public List<NewRelicMetric> getTxnsWithData(NewRelicConfig newRelicConfig,
+      List<EncryptedDataDetail> encryptionDetails, long applicationId, ThirdPartyApiCallLog apiCallLog)
+      throws IOException {
+    Set<NewRelicMetric> txnNameToCollect =
+        getTxnNameToCollect(newRelicConfig, encryptionDetails, applicationId, apiCallLog);
+    Set<NewRelicMetric> txnsWithDataInLastHour =
+        getTxnsWithDataInLastHour(txnNameToCollect, newRelicConfig, encryptionDetails, applicationId, apiCallLog);
+    return Lists.newArrayList(txnsWithDataInLastHour);
+  }
+
+  @Override
   public Set<NewRelicMetric> getTxnNameToCollect(NewRelicConfig newRelicConfig,
       List<EncryptedDataDetail> encryptedDataDetails, long newRelicAppId, ThirdPartyApiCallLog apiCallLog)
       throws IOException {
@@ -187,6 +210,75 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     }
 
     throw new IllegalStateException("This state should have never reached ");
+  }
+
+  public Set<NewRelicMetric> getTxnsWithDataInLastHour(Collection<NewRelicMetric> metrics,
+      NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails, long applicationId,
+      ThirdPartyApiCallLog apiCallLog) throws IOException {
+    Map<String, NewRelicMetric> webTransactionMetrics = new HashMap<>();
+    for (NewRelicMetric metric : metrics) {
+      webTransactionMetrics.put(metric.getName(), metric);
+    }
+    List<Set<String>> metricBatches = batchMetricsToCollect(metrics);
+    List<Callable<Set<String>>> metricDataCallabels = new ArrayList<>();
+    for (Collection<String> metricNames : metricBatches) {
+      metricDataCallabels.add(
+          () -> getMetricsWithNoData(metricNames, newRelicConfig, encryptedDataDetails, applicationId, apiCallLog));
+    }
+    List<Optional<Set<String>>> results = dataCollectionService.executeParrallel(metricDataCallabels);
+    results.forEach(result -> {
+      if (result.isPresent()) {
+        for (String metricName : result.get()) {
+          webTransactionMetrics.remove(metricName);
+        }
+      }
+    });
+    return new HashSet<>(webTransactionMetrics.values());
+  }
+
+  @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
+  private Set<String> getMetricsWithNoData(Collection<String> metricNames, NewRelicConfig newRelicConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, long applicationId, ThirdPartyApiCallLog apiCallLog)
+      throws IOException {
+    final long currentTime = System.currentTimeMillis();
+    Set<String> metricsWithNoData = Sets.newHashSet(metricNames);
+    NewRelicMetricData metricData = getMetricDataApplication(newRelicConfig, encryptedDataDetails, applicationId,
+        metricNames, currentTime - TimeUnit.HOURS.toMillis(1), currentTime, true, apiCallLog);
+
+    if (metricData == null) {
+      throw new WingsException("Unable to get NewRelic metric data for metric name collection " + newRelicConfig);
+    }
+
+    metricsWithNoData.removeAll(metricData.getMetrics_found());
+
+    NewRelicMetricData errorMetricData = getMetricDataApplication(newRelicConfig, encryptedDataDetails, applicationId,
+        getErrorMetricNames(metricNames), currentTime - TimeUnit.HOURS.toMillis(1), currentTime, true, apiCallLog);
+
+    if (metricData == null) {
+      throw new WingsException("Unable to get NewRelic metric data for metric name collection " + newRelicConfig);
+    }
+    metricsWithNoData.removeAll(metricData.getMetrics_found());
+
+    for (NewRelicMetricData.NewRelicMetricSlice metric : metricData.getMetrics()) {
+      for (NewRelicMetricData.NewRelicMetricTimeSlice timeSlice : metric.getTimeslices()) {
+        final String webTxnJson = JsonUtils.asJson(timeSlice.getValues());
+        NewRelicWebTransactions webTransactions = JsonUtils.asObject(webTxnJson, NewRelicWebTransactions.class);
+        if (webTransactions.getRequests_per_minute() < MIN_RPM) {
+          metricsWithNoData.add(metric.getName());
+        }
+      }
+    }
+
+    for (NewRelicMetricData.NewRelicMetricSlice metric : errorMetricData.getMetrics()) {
+      for (NewRelicMetricData.NewRelicMetricTimeSlice timeSlice : metric.getTimeslices()) {
+        final String webTxnJson = JsonUtils.asJson(timeSlice.getValues());
+        NewRelicErrors webTransactions = JsonUtils.asObject(webTxnJson, NewRelicErrors.class);
+        if (webTransactions.getError_count() > 0 || webTransactions.getErrors_per_minute() > 0) {
+          metricsWithNoData.remove(metric.getName());
+        }
+      }
+    }
+    return metricsWithNoData;
   }
 
   @Override
@@ -295,5 +387,43 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
                                   .client(httpClient.build())
                                   .build();
     return retrofit.create(NewRelicRestClient.class);
+  }
+
+  public static List<Set<String>> batchMetricsToCollect(Collection<NewRelicMetric> metrics) {
+    List<Set<String>> rv = new ArrayList<>();
+
+    Set<String> batchedMetrics = new HashSet<>();
+    for (NewRelicMetric metric : metrics) {
+      batchedMetrics.add(metric.getName());
+
+      if (batchedMetrics.size() == METRIC_DATA_QUERY_BATCH_SIZE) {
+        rv.add(batchedMetrics);
+        batchedMetrics = new HashSet<>();
+      }
+    }
+
+    if (!batchedMetrics.isEmpty()) {
+      rv.add(batchedMetrics);
+    }
+
+    return rv;
+  }
+
+  public static Set<String> getApdexMetricNames(Collection<String> metricNames) {
+    final Set<String> rv = new HashSet<>();
+    for (String metricName : metricNames) {
+      rv.add(metricName.replace("WebTransaction", "Apdex"));
+    }
+
+    return rv;
+  }
+
+  public static Set<String> getErrorMetricNames(Collection<String> metricNames) {
+    final Set<String> rv = new HashSet<>();
+    for (String metricName : metricNames) {
+      rv.add("Errors/" + metricName);
+    }
+
+    return rv;
   }
 }

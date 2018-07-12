@@ -34,7 +34,6 @@ public interface NewRelicDelegateService {
       List<EncryptedDataDetail> encryptedDataDetails, long newRelicApplicationId, ThirdPartyApiCallLog apiCallLog)
       throws IOException, CloneNotSupportedException;
 
-  @DelegateTaskType(TaskType.NEWRELIC_GET_METRICES_DATA)
   NewRelicMetricData getMetricDataApplicationInstance(NewRelicConfig newRelicConfig,
       List<EncryptedDataDetail> encryptedDataDetails, long newRelicApplicationId, long instanceId,
       Collection<String> metricNames, long fromTime, long toTime, ThirdPartyApiCallLog apiCallLog) throws IOException;
@@ -49,5 +48,13 @@ public interface NewRelicDelegateService {
       throws IOException;
 
   Set<NewRelicMetric> getTxnNameToCollect(NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      long newRelicAppId, ThirdPartyApiCallLog thirdPartyApiCallLog) throws IOException;
+
+  Set<NewRelicMetric> getTxnsWithDataInLastHour(Collection<NewRelicMetric> metrics, NewRelicConfig newRelicConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, long applicationId, ThirdPartyApiCallLog apiCallLog)
+      throws IOException;
+
+  @DelegateTaskType(TaskType.NEWRELIC_GET_TXNS_WITH_DATA)
+  List<NewRelicMetric> getTxnsWithData(NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptionDetails,
       long newRelicAppId, ThirdPartyApiCallLog thirdPartyApiCallLog) throws IOException;
 }

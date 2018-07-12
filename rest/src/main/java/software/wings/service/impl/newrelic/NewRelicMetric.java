@@ -1,18 +1,15 @@
 package software.wings.service.impl.newrelic;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-
-import java.util.List;
 
 /**
  * Created by rsingh on 9/5/17.
  */
 @Data
-@EqualsAndHashCode(exclude = "values")
 @Builder
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class NewRelicMetric {
   private String name;
-  private List<String> values;
 }

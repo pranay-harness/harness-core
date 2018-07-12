@@ -432,3 +432,5 @@ software.wings.service.impl.aws.model.AwsElbListClassicElbsRequest, 5392
 software.wings.service.impl.aws.model.AwsElbListClassicElbsResponse, 5393
 software.wings.service.impl.aws.model.AwsElbListTargetGroupsRequest, 5394
 software.wings.service.impl.aws.model.AwsElbListTargetGroupsResponse, 5395
+software.wings.service.impl.newrelic.NewRelicApplicationInstance, 5396
+software.wings.service.impl.newrelic.NewRelicMetric, 5397
