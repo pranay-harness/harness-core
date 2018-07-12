@@ -865,7 +865,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public DelegateTask acquireDelegateTask(String accountId, String delegateId, String taskId) {
     logger.info("Acquiring delegate task {} for delegate {}", taskId, delegateId);
-    DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId);
+    DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId, delegateId);
     if (delegateTask == null) {
       return null;
     }
@@ -887,7 +887,7 @@ public class DelegateServiceImpl implements DelegateService {
   public DelegateTask reportConnectionResults(
       String accountId, String delegateId, String taskId, List<DelegateConnectionResult> results) {
     assignDelegateService.saveConnectionResults(results);
-    DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId);
+    DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId, delegateId);
     if (delegateTask == null) {
       return null;
     }
@@ -913,7 +913,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public DelegateTask shouldProceedAnyway(String accountId, String delegateId, String taskId) {
-    DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId);
+    DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId, delegateId);
     if (delegateTask == null) {
       logger.info("Task {} not found or was already assigned", taskId);
       return null;
@@ -980,7 +980,7 @@ public class DelegateServiceImpl implements DelegateService {
     wingsPersistence.update(updateQuery, updateOperations);
   }
 
-  private DelegateTask getUnassignedDelegateTask(String accountId, String taskId) {
+  private DelegateTask getUnassignedDelegateTask(String accountId, String taskId, String delegateId) {
     DelegateTask delegateTask = wingsPersistence.createQuery(DelegateTask.class)
                                     .filter("accountId", accountId)
                                     .filter("status", QUEUED)
@@ -990,11 +990,19 @@ public class DelegateServiceImpl implements DelegateService {
                                     .get();
 
     if (delegateTask == null) {
-      logger.info("Delegate task {} is already assigned", taskId);
-      return null;
+      delegateTask = wingsPersistence.createQuery(DelegateTask.class)
+                         .filter("accountId", accountId)
+                         .filter("delegateId", delegateId)
+                         .filter(ID_KEY, taskId)
+                         .get();
+      if (delegateTask != null) {
+        logger.info("Returning already assigned task {} to delegate {} from getUnassigned", taskId, delegateId);
+      } else {
+        logger.info("Task {} no longer available for delegate {} from getUnassigned", taskId, delegateId);
+      }
+    } else {
+      logger.info("Found unassigned delegate task: {}", delegateTask.getUuid());
     }
-
-    logger.info("Found unassigned delegate task: {}", delegateTask.getUuid());
     return delegateTask;
   }
 
