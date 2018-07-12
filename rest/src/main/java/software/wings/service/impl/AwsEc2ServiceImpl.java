@@ -13,7 +13,6 @@ import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ecs.model.ListClustersRequest;
 import com.amazonaws.services.ecs.model.ListClustersResult;
-import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import software.wings.beans.AwsConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.AwsEc2Service;
@@ -21,7 +20,6 @@ import software.wings.service.intfc.AwsEc2Service;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Created by anubhaw on 6/17/18.
@@ -97,27 +95,6 @@ public class AwsEc2ServiceImpl implements AwsEc2Service {
   @Override
   public List<String> getIAMInstanceRoles(AwsConfig awsConfig) {
     return awsHelperService.listIAMInstanceRoles(awsConfig);
-  }
-
-  @Override
-  public List<String> getApplicationLoadBalancers(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
-    return awsHelperService.listApplicationLoadBalancers(awsConfig, encryptionDetails, region);
-  }
-
-  @Override
-  public List<String> getClassicLoadBalancers(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
-    return awsHelperService.listClassicLoadBalancers(awsConfig, encryptionDetails, region);
-  }
-
-  @Override
-  public Map<String, String> getTargetGroupsForAlb(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String loadBalancerName) {
-    List<TargetGroup> targetGroups =
-        awsHelperService.listTargetGroupsForAlb(region, awsConfig, encryptionDetails, loadBalancerName);
-    return targetGroups.stream().collect(
-        Collectors.toMap(TargetGroup::getTargetGroupArn, TargetGroup::getTargetGroupName));
   }
 
   @Override

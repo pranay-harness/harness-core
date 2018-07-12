@@ -51,17 +51,6 @@ public interface AwsEc2Service {
 
   @DelegateTaskType(TaskType.AWS_GET_IAM_INSTANCE_ROLES) List<String> getIAMInstanceRoles(AwsConfig awsConfig);
 
-  @DelegateTaskType(TaskType.AWS_GET_APP_LBS)
-  List<String> getApplicationLoadBalancers(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region);
-
-  @DelegateTaskType(TaskType.AWS_GET_CLASSIC_LBS)
-  List<String> getClassicLoadBalancers(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region);
-
-  @DelegateTaskType(TaskType.AWS_GET_TARGET_GROUPS_FOR_ALBS)
-  Map<String, String> getTargetGroupsForAlb(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String loadBalancerName);
-
   @DelegateTaskType(TaskType.AWS_GET_AUTO_SCALING_GROUPS)
   List<String> getAutoScalingGroupNames(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region);

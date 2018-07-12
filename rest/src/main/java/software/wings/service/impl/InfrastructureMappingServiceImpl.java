@@ -1346,7 +1346,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   public List<String> listElasticLoadBalancer(String accessKey, char[] secretKey, String region, String accountId) {
     AwsInfrastructureProvider infrastructureProvider =
         (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
-    return infrastructureProvider.listClassicLoadBalancers(accessKey, secretKey, region, accountId);
+    return infrastructureProvider.listClassicLoadBalancers(accessKey, secretKey, region);
   }
 
   @Override

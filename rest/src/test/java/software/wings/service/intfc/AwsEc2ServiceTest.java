@@ -114,24 +114,6 @@ public class AwsEc2ServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void testGetApplicationLoadBalancers() {
-    doReturn(asList("lb1", "lb2"))
-        .when(mockAwsHelperService)
-        .listApplicationLoadBalancers(any(), anyList(), anyString());
-    assertEquals(asList("lb1", "lb2"),
-        service.getApplicationLoadBalancers(
-            AwsConfig.builder().build(), singletonList(EncryptedDataDetail.builder().build()), "region"));
-  }
-
-  @Test
-  public void testGetClassicLoadBalancers() {
-    doReturn(asList("lb1", "lb2")).when(mockAwsHelperService).listClassicLoadBalancers(any(), anyList(), anyString());
-    assertEquals(asList("lb1", "lb2"),
-        service.getClassicLoadBalancers(
-            AwsConfig.builder().build(), singletonList(EncryptedDataDetail.builder().build()), "region"));
-  }
-
-  @Test
   public void testGetAutoScalingGroups() {
     List<AutoScalingGroup> scalingGroups =
         singletonList(new AutoScalingGroup().withAutoScalingGroupName("name").withAutoScalingGroupARN("arn"));
