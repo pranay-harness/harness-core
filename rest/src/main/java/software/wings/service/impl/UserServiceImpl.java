@@ -1197,6 +1197,6 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public boolean isUserAssignedToAccount(User user, String accountId) {
-    return user.getAccounts().stream().filter(account -> account.getUuid().equals(accountId)).findFirst().isPresent();
+    return user.getAccounts().stream().anyMatch(account -> account.getUuid().equals(accountId));
   }
 }
