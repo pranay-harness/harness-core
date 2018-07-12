@@ -18,6 +18,7 @@ import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static software.wings.beans.Delegate.Builder.aDelegate;
+import static software.wings.beans.DelegateTask.Status.STARTED;
 import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskResponse;
 import static software.wings.delegate.app.DelegateApplication.getProcessId;
 import static software.wings.managerclient.ManagerClientFactory.TRUST_ALL_CERTS;
@@ -89,6 +90,7 @@ import software.wings.beans.DelegateScripts;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskAbortEvent;
 import software.wings.beans.DelegateTaskEvent;
+import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.RestResponse;
 import software.wings.beans.TaskType;
 import software.wings.delegate.app.DelegateConfiguration;
@@ -983,7 +985,7 @@ public class DelegateServiceImpl implements DelegateService {
     ExecutorService executorService = delegateTask.isAsync()
         ? asyncExecutorService
         : delegateTask.getTaskType().contains("BUILD") ? artifactExecutorService : syncExecutorService;
-    Future<?> taskFuture = executorService.submit(delegateRunnableTask);
+    Future taskFuture = executorService.submit(delegateRunnableTask);
     logger.info("Task future in executeTask: {} - done:{}, cancelled:{}", delegateTask.getUuid(), taskFuture.isDone(),
         taskFuture.isCancelled());
     currentlyExecutingFutures.put(delegateTask.getUuid(), taskFuture);
@@ -995,18 +997,25 @@ public class DelegateServiceImpl implements DelegateService {
       DelegateTaskEvent delegateTaskEvent, @NotNull DelegateTask delegateTask) {
     return () -> {
       try {
-        DelegateTask delegateTask1 =
-            execute(managerClient.startTask(delegateId, delegateTaskEvent.getDelegateTaskId(), accountId));
-        boolean taskAcquired = delegateTask1 != null;
-        if (taskAcquired) {
-          if (currentlyExecutingTasks.containsKey(delegateTask.getUuid())) {
-            logger.error("Delegate task {} already in executing tasks for this delegate", delegateTask.getUuid());
-            return false;
+        logger.info("Starting pre-execution for task {}", delegateTask.getUuid());
+        if (delegateTask.getStatus() == STARTED) {
+          return true;
+        } else {
+          DelegateTask delegateTaskFromManager =
+              execute(managerClient.startTask(delegateId, delegateTaskEvent.getDelegateTaskId(), accountId));
+          boolean taskAcquired = delegateTaskFromManager != null;
+          if (taskAcquired) {
+            if (currentlyExecutingTasks.containsKey(delegateTask.getUuid())) {
+              logger.error("Delegate task {} already in executing tasks for this delegate", delegateTask.getUuid());
+              return false;
+            }
+            currentlyExecutingTasks.put(delegateTask.getUuid(), delegateTaskFromManager);
+          } else {
+            logger.info("Task {} was null from manager on startTask. Aborting.", delegateTask.getUuid());
           }
-          currentlyExecutingTasks.put(delegateTask.getUuid(), delegateTask1);
+          return taskAcquired;
         }
-        return taskAcquired;
-      } catch (IOException e) {
+      } catch (Exception e) {
         logger.error("Unable to update task status on manager", e);
         return false;
       }
@@ -1018,13 +1027,11 @@ public class DelegateServiceImpl implements DelegateService {
       Response<ResponseBody> response = null;
       try {
         logger.info("Sending response for task {} to manager", delegateTask.getUuid());
-        response = timeLimiter.callWithTimeout(
-            ()
-                -> managerClient
-                       .sendTaskStatus(delegateId, delegateTask.getUuid(), accountId,
-                           aDelegateTaskResponse().withAccountId(accountId).withResponse(notifyResponseData).build())
-                       .execute(),
-            30L, TimeUnit.SECONDS, true);
+        response = timeLimiter.callWithTimeout(() -> {
+          DelegateTaskResponse taskResponse =
+              aDelegateTaskResponse().withAccountId(accountId).withResponse(notifyResponseData).build();
+          return managerClient.sendTaskStatus(delegateId, delegateTask.getUuid(), accountId, taskResponse).execute();
+        }, 30L, TimeUnit.SECONDS, true);
         logger.info("Task {} response sent to manager", delegateTask.getUuid());
       } catch (UncheckedTimeoutException ex) {
         logger.warn("Timed out sending response to manager");
@@ -1049,10 +1056,11 @@ public class DelegateServiceImpl implements DelegateService {
     long startTime = clock.millis();
     boolean stillRunning = true;
     long timeout = delegateTask.getTimeout() + TimeUnit.SECONDS.toMillis(30L);
+    Future taskFuture = null;
     while (stillRunning && clock.millis() - startTime < timeout) {
       logger.info("Task time remaining for {}: {} ms", delegateTask.getUuid(), startTime + timeout - clock.millis());
       sleep(ofSeconds(5));
-      Future taskFuture = currentlyExecutingFutures.get(delegateTask.getUuid());
+      taskFuture = currentlyExecutingFutures.get(delegateTask.getUuid());
       if (taskFuture != null) {
         logger.info("Task future: {} - done:{}, cancelled:{}", delegateTask.getUuid(), taskFuture.isDone(),
             taskFuture.isCancelled());
@@ -1065,6 +1073,15 @@ public class DelegateServiceImpl implements DelegateService {
       logger.error("Task {} timed out after {} milliseconds", delegateTask.getUuid(), timeout);
       Optional.ofNullable(currentlyExecutingFutures.get(delegateTask.getUuid()))
           .ifPresent(future -> future.cancel(true));
+    }
+    if (taskFuture != null) {
+      try {
+        timeLimiter.callWithTimeout(taskFuture::get, 5L, TimeUnit.SECONDS, true);
+      } catch (UncheckedTimeoutException e) {
+        logger.error("Timed out getting task future");
+      } catch (Exception e) {
+        logger.error("Error from task future {}", delegateTask.getUuid(), e);
+      }
     }
     currentlyExecutingTasks.remove(delegateTask.getUuid());
     if (currentlyExecutingFutures.remove(delegateTask.getUuid()) != null) {

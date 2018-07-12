@@ -73,8 +73,10 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
             consumer.accept(result);
           }
         }
+      } else {
+        logger.info("Pre-execute returned false for task {}", taskId);
       }
-    } catch (Exception e) {
+    } catch (Throwable e) {
       logger.error("Unexpected error executing delegate task {}", taskId, e);
     }
   }

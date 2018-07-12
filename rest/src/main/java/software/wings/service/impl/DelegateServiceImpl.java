@@ -966,15 +966,16 @@ public class DelegateServiceImpl implements DelegateService {
                                     .field("delegateId")
                                     .doesNotExist()
                                     .filter(ID_KEY, taskId);
-    UpdateOperations<DelegateTask> updateOperations =
-        wingsPersistence.createUpdateOperations(DelegateTask.class).set("delegateId", delegateId);
+    UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
+                                                          .set("delegateId", delegateId)
+                                                          .set("status", STARTED);
     DelegateTask task = wingsPersistence.getDatastore().findAndModify(query, updateOperations);
     // If the task wasn't updated because delegateId already exists then query for the task with the delegateId in case
     // client is retrying the request
     if (task == null) {
       task = wingsPersistence.createQuery(DelegateTask.class)
                  .filter("accountId", delegateTask.getAccountId())
-                 .filter("status", QUEUED)
+                 .filter("status", STARTED)
                  .filter("delegateId", delegateId)
                  .filter(ID_KEY, taskId)
                  .get();
@@ -999,7 +1000,23 @@ public class DelegateServiceImpl implements DelegateService {
                                     .filter(ID_KEY, taskId);
     UpdateOperations<DelegateTask> updateOperations =
         wingsPersistence.createUpdateOperations(DelegateTask.class).set("status", STARTED);
-    return wingsPersistence.getDatastore().findAndModify(query, updateOperations);
+    DelegateTask task = wingsPersistence.getDatastore().findAndModify(query, updateOperations);
+    if (task == null) {
+      task = wingsPersistence.createQuery(DelegateTask.class)
+                 .filter("accountId", accountId)
+                 .filter("status", STARTED)
+                 .filter("delegateId", delegateId)
+                 .filter(ID_KEY, taskId)
+                 .get();
+      if (task != null) {
+        logger.info("Returning previously started task {} to delegate {}", taskId, delegateId);
+      } else {
+        logger.info("Task {} no longer available for delegate to start {}", taskId, delegateId);
+      }
+    } else {
+      logger.info("Returning started task {} to delegate {}", taskId, delegateId);
+    }
+    return task;
   }
 
   @Override
