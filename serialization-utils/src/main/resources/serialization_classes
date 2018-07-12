@@ -424,3 +424,11 @@ software.wings.service.impl.aws.model.AwsEcrGetImageUrlRequest, 5384
 software.wings.service.impl.aws.model.AwsEcrGetImageUrlResponse, 5385
 software.wings.service.impl.aws.model.AwsEcrGetAuthTokenRequest, 5386
 software.wings.service.impl.aws.model.AwsEcrGetAuthTokenResponse, 5387
+software.wings.service.impl.aws.model.AwsElbRequest, 5388
+software.wings.service.impl.aws.model.AwsElbRequest$AwsElbRequestType, 5389
+software.wings.service.impl.aws.model.AwsElbListAppElbsRequest, 5390
+software.wings.service.impl.aws.model.AwsElbListAppElbsResponse, 5391
+software.wings.service.impl.aws.model.AwsElbListClassicElbsRequest, 5392
+software.wings.service.impl.aws.model.AwsElbListClassicElbsResponse, 5393
+software.wings.service.impl.aws.model.AwsElbListTargetGroupsRequest, 5394
+software.wings.service.impl.aws.model.AwsElbListTargetGroupsResponse, 5395

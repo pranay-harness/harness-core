@@ -10,7 +10,6 @@ import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.exception.WingsException.USER;
 
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -44,6 +43,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.AwsEc2Service;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureProvider;
+import software.wings.service.intfc.aws.manager.AwsElbHelperServiceManager;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.utils.Misc;
@@ -67,6 +67,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
   @Inject private SecretManager secretManager;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private AwsHelperService awsHelperService;
+  @Inject private AwsElbHelperServiceManager awsElbHelperServiceManager;
 
   @Override
   public PageResponse<Host> listHosts(AwsInfrastructureMapping awsInfrastructureMapping,
@@ -238,53 +239,28 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
   }
 
   public List<String> listLoadBalancers(SettingAttribute computeProviderSetting, String region) {
-    try {
-      SyncTaskContext syncTaskContext = aContext().withAccountId(computeProviderSetting.getAccountId()).build();
-      AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-      return delegateProxyFactory.get(AwsEc2Service.class, syncTaskContext)
-          .getApplicationLoadBalancers(awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
-    } catch (Exception e) {
-      logger.warn(Misc.getMessage(e), e);
-      throw new InvalidRequestException(Misc.getMessage(e), USER);
-    }
+    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+    return awsElbHelperServiceManager.listApplicationLoadBalancers(
+        awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
   }
 
   public List<String> listClassicLoadBalancers(SettingAttribute computeProviderSetting, String region) {
-    try {
-      SyncTaskContext syncTaskContext = aContext().withAccountId(computeProviderSetting.getAccountId()).build();
-      AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-      return delegateProxyFactory.get(AwsEc2Service.class, syncTaskContext)
-          .getClassicLoadBalancers(awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
-    } catch (Exception e) {
-      logger.warn(Misc.getMessage(e), e);
-      throw new InvalidRequestException(Misc.getMessage(e), USER);
-    }
+    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+    return awsElbHelperServiceManager.listClassicLoadBalancers(
+        awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
   }
 
-  public List<String> listClassicLoadBalancers(String accessKey, char[] secretKey, String region, String accountId) {
-    try {
-      SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).build();
-      AwsConfig awsConfig = AwsConfig.builder().accessKey(accessKey).secretKey(secretKey).build();
-      return delegateProxyFactory.get(AwsEc2Service.class, syncTaskContext)
-          .getApplicationLoadBalancers(awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
-    } catch (Exception e) {
-      logger.warn(Misc.getMessage(e), e);
-      throw new InvalidRequestException(Misc.getMessage(e), USER);
-    }
+  public List<String> listClassicLoadBalancers(String accessKey, char[] secretKey, String region) {
+    AwsConfig awsConfig = AwsConfig.builder().accessKey(accessKey).secretKey(secretKey).build();
+    return awsElbHelperServiceManager.listApplicationLoadBalancers(
+        awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
   }
 
   public Map<String, String> listTargetGroups(
       SettingAttribute computeProviderSetting, String region, String loadBalancerName) {
-    try {
-      SyncTaskContext syncTaskContext = aContext().withAccountId(computeProviderSetting.getAccountId()).build();
-      AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-      return delegateProxyFactory.get(AwsEc2Service.class, syncTaskContext)
-          .getTargetGroupsForAlb(
-              awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region, loadBalancerName);
-    } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
-    }
-    return Maps.newHashMap();
+    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+    return awsElbHelperServiceManager.listTargetGroupsForAlb(
+        awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region, loadBalancerName);
   }
 
   private void handleAmazonServiceException(AmazonServiceException amazonServiceException) {

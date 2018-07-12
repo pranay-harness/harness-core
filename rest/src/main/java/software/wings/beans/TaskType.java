@@ -29,6 +29,7 @@ import software.wings.delegatetasks.SplunkDataCollectionTask;
 import software.wings.delegatetasks.SumoDataCollectionTask;
 import software.wings.delegatetasks.TerraformProvisionTask;
 import software.wings.delegatetasks.aws.AwsEcrTask;
+import software.wings.delegatetasks.aws.AwsElbTask;
 import software.wings.delegatetasks.cloudformation.CloudFormationCommandTask;
 import software.wings.delegatetasks.collect.artifacts.AmazonS3CollectionTask;
 import software.wings.delegatetasks.collect.artifacts.ArtifactoryCollectionTask;
@@ -217,12 +218,10 @@ public enum TaskType {
   AWS_DESCRIBE_AUTO_SCALING_GROUP_INSTANCES(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   AWS_DESCRIBE_EC2_INSTANCES(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   AWS_GET_IAM_INSTANCE_ROLES(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
-  AWS_GET_APP_LBS(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
-  AWS_GET_CLASSIC_LBS(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
-  AWS_GET_TARGET_GROUPS_FOR_ALBS(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   AWS_GET_AUTO_SCALING_GROUPS(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   SECRET_DECRYPT_REF(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerDecryptValidation.class),
-  AWS_ECR_TASK(TaskGroup.AWS, AwsEcrTask.class, AlwaysTrueValidation.class);
+  AWS_ECR_TASK(TaskGroup.AWS, AwsEcrTask.class, AlwaysTrueValidation.class),
+  AWS_ELB_TASK(TaskGroup.AWS, AwsElbTask.class, AlwaysTrueValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;
