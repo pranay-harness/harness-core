@@ -434,3 +434,7 @@ software.wings.service.impl.aws.model.AwsElbListTargetGroupsRequest, 5394
 software.wings.service.impl.aws.model.AwsElbListTargetGroupsResponse, 5395
 software.wings.service.impl.newrelic.NewRelicApplicationInstance, 5396
 software.wings.service.impl.newrelic.NewRelicMetric, 5397
+software.wings.service.impl.aws.model.AwsEcsRequest, 5398
+software.wings.service.impl.aws.model.AwsEcsRequest$AwsEcsRequestType, 5399
+software.wings.service.impl.aws.model.AwsEcsListClustersRequest, 5400
+software.wings.service.impl.aws.model.AwsEcsListClustersResponse, 5401

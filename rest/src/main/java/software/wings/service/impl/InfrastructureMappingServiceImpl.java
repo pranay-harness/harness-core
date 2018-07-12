@@ -121,6 +121,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.aws.manager.AwsEcsHelperServiceManager;
 import software.wings.service.intfc.ownership.OwnedByInfrastructureMapping;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.EntityUpdateService;
@@ -181,6 +182,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private ExpressionEvaluator evaluator;
   @Inject private YamlChangeSetHelper yamlChangeSetHelper;
   @Inject private PcfHelperService pcfHelperService;
+  @Inject private AwsEcsHelperServiceManager awsEcsHelperServiceManager;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
@@ -1006,10 +1008,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     String type = computeProviderSetting.getValue().getType();
     if (AWS.name().equals(type)) {
-      SyncTaskContext syncTaskContext = aContext().withAccountId(computeProviderSetting.getAccountId()).build();
       AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-      return delegateProxyFactory.get(AwsEc2Service.class, syncTaskContext)
-          .getClusters(awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
+      return awsEcsHelperServiceManager.listClusters(
+          awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
     } else if (GCP.name().equals(type)) {
       GcpInfrastructureProvider infrastructureProvider =
           (GcpInfrastructureProvider) getInfrastructureProviderByComputeProviderType(GCP.name());
