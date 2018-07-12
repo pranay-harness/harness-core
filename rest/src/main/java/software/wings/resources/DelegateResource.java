@@ -387,17 +387,6 @@ public class DelegateResource {
 
   @DelegateAuth
   @PUT
-  @Produces("application/x-kryo")
-  @Path("{delegateId}/tasks/{taskId}/start")
-  @Timed
-  @ExceptionMetered
-  public DelegateTask startDelegateTask(@PathParam("delegateId") String delegateId, @PathParam("taskId") String taskId,
-      @QueryParam("accountId") @NotEmpty String accountId) {
-    return delegateService.startDelegateTask(accountId, delegateId, taskId);
-  }
-
-  @DelegateAuth
-  @PUT
   @Path("{delegateId}/clear-cache")
   @Timed
   @ExceptionMetered

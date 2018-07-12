@@ -70,8 +70,6 @@ public interface DelegateService {
 
   DelegateTask shouldProceedAnyway(String accountId, String delegateId, String taskId);
 
-  DelegateTask startDelegateTask(String accountId, String delegateId, String taskId);
-
   void clearCache(String delegateId);
 
   void processDelegateResponse(

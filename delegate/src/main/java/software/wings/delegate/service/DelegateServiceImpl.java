@@ -18,7 +18,6 @@ import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static software.wings.beans.Delegate.Builder.aDelegate;
-import static software.wings.beans.DelegateTask.Status.STARTED;
 import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskResponse;
 import static software.wings.delegate.app.DelegateApplication.getProcessId;
 import static software.wings.managerclient.ManagerClientFactory.TRUST_ALL_CERTS;
@@ -922,7 +921,7 @@ public class DelegateServiceImpl implements DelegateService {
       } else if (delegateId.equals(delegateTask.getDelegateId())) {
         // Whitelisted. Proceed immediately.
         logger.info("Delegate {} whitelisted for task {}, accountId: {}", delegateId, delegateTaskId, accountId);
-        executeTask(delegateTaskEvent, delegateTask);
+        executeTask(delegateTask);
       }
     } catch (IOException e) {
       logger.error("Unable to get task for validation", e);
@@ -940,11 +939,11 @@ public class DelegateServiceImpl implements DelegateService {
       boolean validated = results.stream().anyMatch(DelegateConnectionResult::isValidated);
       logger.info("Validation {} for task {}", validated ? "succeeded" : "failed", taskId);
       try {
-        DelegateTask delegateTask1 = execute(managerClient.reportConnectionResults(
+        DelegateTask delegateTaskPostValidation = execute(managerClient.reportConnectionResults(
             delegateId, delegateTaskEvent.getDelegateTaskId(), accountId, results));
-        if (delegateTask1 != null && delegateId.equals(delegateTask1.getDelegateId())) {
+        if (delegateTaskPostValidation != null && delegateId.equals(delegateTaskPostValidation.getDelegateId())) {
           logger.info("Got the go-ahead to proceed for task {}.", taskId);
-          executeTask(delegateTaskEvent, delegateTask1);
+          executeTask(delegateTaskPostValidation);
         } else {
           logger.info("Did not get the go-ahead to proceed for task {}", taskId);
           if (validated) {
@@ -955,11 +954,12 @@ public class DelegateServiceImpl implements DelegateService {
             sleep(ofSeconds(delay));
             try {
               logger.info("Checking whether to proceed anyway for task {}", taskId);
-              DelegateTask delegateTask2 = execute(
+              DelegateTask delegateTaskPostValidationFailure = execute(
                   managerClient.shouldProceedAnyway(delegateId, delegateTaskEvent.getDelegateTaskId(), accountId));
-              if (delegateTask2 != null && delegateId.equals(delegateTask2.getDelegateId())) {
+              if (delegateTaskPostValidationFailure != null
+                  && delegateId.equals(delegateTaskPostValidationFailure.getDelegateId())) {
                 logger.info("All delegates failed. Proceeding anyway to get proper failure for task {}", taskId);
-                executeTask(delegateTaskEvent, delegateTask2);
+                executeTask(delegateTaskPostValidationFailure);
               } else {
                 logger.info("Did not get go-ahead for task {}, giving up", taskId);
               }
@@ -974,13 +974,13 @@ public class DelegateServiceImpl implements DelegateService {
     };
   }
 
-  private void executeTask(DelegateTaskEvent delegateTaskEvent, @NotNull DelegateTask delegateTask) {
+  private void executeTask(@NotNull DelegateTask delegateTask) {
     logger.info("DelegateTask acquired - uuid: {}, accountId: {}, taskType: {}", delegateTask.getUuid(), accountId,
         delegateTask.getTaskType());
     DelegateRunnableTask delegateRunnableTask =
         TaskType.valueOf(delegateTask.getTaskType())
             .getDelegateRunnableTask(delegateId, delegateTask, getPostExecutionFunction(delegateTask),
-                getPreExecutionFunction(delegateTaskEvent, delegateTask));
+                getPreExecutionFunction(delegateTask));
     injector.injectMembers(delegateRunnableTask);
     ExecutorService executorService = delegateTask.isAsync()
         ? asyncExecutorService
@@ -993,32 +993,11 @@ public class DelegateServiceImpl implements DelegateService {
     logger.info("Task [{}] submitted for execution", delegateTask.getUuid());
   }
 
-  private Supplier<Boolean> getPreExecutionFunction(
-      DelegateTaskEvent delegateTaskEvent, @NotNull DelegateTask delegateTask) {
+  private Supplier<Boolean> getPreExecutionFunction(@NotNull DelegateTask delegateTask) {
     return () -> {
-      try {
-        logger.info("Starting pre-execution for task {}", delegateTask.getUuid());
-        if (delegateTask.getStatus() == STARTED) {
-          return true;
-        } else {
-          DelegateTask delegateTaskFromManager =
-              execute(managerClient.startTask(delegateId, delegateTaskEvent.getDelegateTaskId(), accountId));
-          boolean taskAcquired = delegateTaskFromManager != null;
-          if (taskAcquired) {
-            if (currentlyExecutingTasks.containsKey(delegateTask.getUuid())) {
-              logger.error("Delegate task {} already in executing tasks for this delegate", delegateTask.getUuid());
-              return false;
-            }
-            currentlyExecutingTasks.put(delegateTask.getUuid(), delegateTaskFromManager);
-          } else {
-            logger.info("Task {} was null from manager on startTask. Aborting.", delegateTask.getUuid());
-          }
-          return taskAcquired;
-        }
-      } catch (Exception e) {
-        logger.error("Unable to update task status on manager", e);
-        return false;
-      }
+      logger.info("Starting pre-execution for task {}", delegateTask.getUuid());
+      currentlyExecutingTasks.put(delegateTask.getUuid(), delegateTask);
+      return true;
     };
   }
 
