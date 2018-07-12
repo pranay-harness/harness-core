@@ -3,31 +3,43 @@ package software.wings.service.impl.analysis;
 import com.google.inject.Inject;
 
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.time.Timestamp;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.FeatureName;
+import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.User;
+import software.wings.common.VerificationConstants;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.StateType;
 
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import javax.validation.executable.ValidateOnExecution;
 
 @ValidateOnExecution
 public class ContinuousVerificationServiceImpl implements ContinuousVerificationService {
   @Inject protected WingsPersistence wingsPersistence;
   @Inject protected AuthService authService;
+  @Inject protected FeatureFlagService featureFlagService;
   private static final Logger logger = LoggerFactory.getLogger(ContinuousVerificationServiceImpl.class);
 
   @Override
@@ -143,6 +155,37 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     }
 
     return results;
+  }
+
+  @Override
+  public PageResponse<ContinuousVerificationExecutionMetaData> getAllCVExecutionsForTime(final String accountId,
+      long beginEpochTs, long endEpochTs, boolean isTimeSeries,
+      PageRequest<ContinuousVerificationExecutionMetaData> pageRequest) {
+    // TODO: Move this accountId check to Rbac
+    if (!featureFlagService.isEnabled(FeatureName.GLOBAL_CV_DASH, accountId)) {
+      return new PageResponse<>();
+    }
+    if (beginEpochTs < 0 || endEpochTs < 0) {
+      // if there's no start/end, we will default to 7 days
+      beginEpochTs = Timestamp.currentMinuteBoundary() - TimeUnit.DAYS.toMillis(7);
+      endEpochTs = Timestamp.currentMinuteBoundary();
+    }
+    List<StateType> stateTypeList;
+    if (isTimeSeries) {
+      stateTypeList = VerificationConstants.getMetricAnalysisStates();
+    } else {
+      stateTypeList = VerificationConstants.getLogAnalysisStates();
+    }
+
+    pageRequest.addFilter("stateType", Operator.IN, stateTypeList.toArray());
+    pageRequest.addFilter("workflowStartTs", Operator.GE, beginEpochTs);
+    pageRequest.addFilter("workflowStartTs", Operator.LT, endEpochTs);
+    pageRequest.setFieldsIncluded(
+        Arrays.asList("stateExecutionId", "workflowExecutionId", "accountId", "applicationId", "workflowStartTs"));
+    pageRequest.addOrder("workflowStartTs", OrderType.DESC);
+    pageRequest.addOrder("stateStartTs", OrderType.DESC);
+
+    return wingsPersistence.query(ContinuousVerificationExecutionMetaData.class, pageRequest);
   }
 
   /**

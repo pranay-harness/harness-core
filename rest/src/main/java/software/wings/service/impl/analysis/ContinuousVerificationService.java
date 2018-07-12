@@ -1,6 +1,8 @@
 package software.wings.service.impl.analysis;
 
 import software.wings.beans.User;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.sm.ExecutionStatus;
 
 import java.text.ParseException;
@@ -16,4 +18,6 @@ public interface ContinuousVerificationService {
   getCVExecutionMetaData(String accountId, long beginEpochTs, long endEpochTs, User user) throws ParseException;
 
   void setMetaDataExecutionStatus(String stateExecutionId, ExecutionStatus status);
+  PageResponse<ContinuousVerificationExecutionMetaData> getAllCVExecutionsForTime(String accountId, long beginEpochTs,
+      long endEpochTs, boolean isTimeSeries, PageRequest<ContinuousVerificationExecutionMetaData> pageRequest);
 }
