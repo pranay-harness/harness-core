@@ -131,10 +131,10 @@ class SAXHMMDistance(object):
         if not np.isnan(x) and not np.isnan(y):
             # Higher is bad
             if metric_deviation_type == MetricToDeviationType.HIGHER:
-                return y > 10 * x if x != 0 else y > 10
+                return y > 10 * x and x != 0
             # Lower is bad
             elif metric_deviation_type == MetricToDeviationType.LOWER:
-                return x > 10 * y if y != 0 else x > 10
+                return x > 10 * y and y != 0
             # Both are bad
             else:
                 return SAXHMMDistance.high_deviation(MetricToDeviationType.LOWER, x, y) or \
