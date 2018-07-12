@@ -117,11 +117,6 @@ public interface ManagerClient {
   Call<DelegateTask> shouldProceedAnyway(
       @Path("delegateId") String delegateId, @Path("taskId") String uuid, @Query("accountId") String accountId);
 
-  @KryoResponse
-  @PUT("delegates/{delegateId}/tasks/{taskId}/start")
-  Call<DelegateTask> startTask(
-      @Path("delegateId") String delegateId, @Path("taskId") String uuid, @Query("accountId") String accountId);
-
   @GET("delegates/{delegateId}/task-events")
   Call<List<DelegateTaskEvent>> pollTaskEvents(
       @Path("delegateId") String delegateId, @Query("accountId") String accountId);

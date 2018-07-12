@@ -1043,35 +1043,6 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  public DelegateTask startDelegateTask(String accountId, String delegateId, String taskId) {
-    logger.info("Starting task {} with delegate {}", taskId, delegateId);
-    Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
-                                    .filter("accountId", accountId)
-                                    .filter("status", QUEUED)
-                                    .filter("delegateId", delegateId)
-                                    .filter(ID_KEY, taskId);
-    UpdateOperations<DelegateTask> updateOperations =
-        wingsPersistence.createUpdateOperations(DelegateTask.class).set("status", STARTED);
-    DelegateTask task = wingsPersistence.getDatastore().findAndModify(query, updateOperations);
-    if (task == null) {
-      task = wingsPersistence.createQuery(DelegateTask.class)
-                 .filter("accountId", accountId)
-                 .filter("status", STARTED)
-                 .filter("delegateId", delegateId)
-                 .filter(ID_KEY, taskId)
-                 .get();
-      if (task != null) {
-        logger.info("Returning previously started task {} to delegate {}", taskId, delegateId);
-      } else {
-        logger.info("Task {} no longer available for delegate to start {}", taskId, delegateId);
-      }
-    } else {
-      logger.info("Returning started task {} to delegate {}", taskId, delegateId);
-    }
-    return task;
-  }
-
-  @Override
   public void clearCache(String delegateId) {
     assignDelegateService.clearConnectionResults(delegateId);
   }
