@@ -20,8 +20,6 @@ import static software.wings.utils.WingsReflectionUtils.getEncryptedRefField;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
-import com.google.common.util.concurrent.TimeLimiter;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
@@ -90,7 +88,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by rsingh on 10/30/17.
@@ -104,7 +101,6 @@ public class SecretManagerImpl implements SecretManager {
   @Inject private KmsService kmsService;
   @Inject private VaultService vaultService;
   @Inject private ManagerDecryptionService managerDecryptionService;
-  @Inject private TimeLimiter timeLimiter;
   @Inject private AlertService alertService;
   @Inject private FileService fileService;
   @Inject private Queue<KmsTransitionEvent> transitionKmsQueue;
@@ -1078,13 +1074,8 @@ public class SecretManagerImpl implements SecretManager {
               .message(kmsConfig.getName() + "(Amazon KMS) is not able to encrypt/decrypt. Please check your setup")
               .build();
       try {
-        timeLimiter.callWithTimeout(
-            ()
-                -> kmsService.encrypt(UUID.randomUUID().toString().toCharArray(), accountId, kmsConfig),
-            15L, TimeUnit.SECONDS, true);
+        kmsService.encrypt(UUID.randomUUID().toString().toCharArray(), accountId, kmsConfig);
         alertService.closeAlert(accountId, Base.GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
-      } catch (UncheckedTimeoutException ex) {
-        logger.warn("Timed out validating kms for account {} and kmsId {}", accountId, kmsConfig.getUuid());
       } catch (Exception e) {
         logger.error("Could not validate kms for account {} and kmsId {}", accountId, kmsConfig.getUuid(), e);
         alertService.openAlert(accountId, Base.GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
@@ -1102,13 +1093,9 @@ public class SecretManagerImpl implements SecretManager {
                   + "(Hashicorp Vault) is not able to encrypt/decrypt. Please check your setup and ensure that token is not expired")
               .build();
       try {
-        timeLimiter.callWithTimeout(()
-                                        -> vaultService.encrypt(VAULT_VAILDATION_URL, VAULT_VAILDATION_URL, accountId,
-                                            SettingVariableTypes.VAULT, vaultConfig, null),
-            15L, TimeUnit.SECONDS, true);
+        vaultService.encrypt(
+            VAULT_VAILDATION_URL, VAULT_VAILDATION_URL, accountId, SettingVariableTypes.VAULT, vaultConfig, null);
         alertService.closeAlert(accountId, Base.GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
-      } catch (UncheckedTimeoutException ex) {
-        logger.warn("Timed out validating vault for account {} and kmsId {}", accountId, vaultConfig.getUuid());
       } catch (Exception e) {
         logger.error("Could not validate vault for account {} and kmsId {}", accountId, vaultConfig.getUuid(), e);
         alertService.openAlert(accountId, Base.GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
