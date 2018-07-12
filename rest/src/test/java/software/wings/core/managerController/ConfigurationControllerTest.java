@@ -3,6 +3,7 @@ package software.wings.core.managerController;
 import static io.harness.threading.Morpheus.sleep;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.ManagerConfiguration.Builder.aManagerConfiguration;
@@ -11,7 +12,6 @@ import io.harness.version.VersionInfo;
 import io.harness.version.VersionInfoManager;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
@@ -78,27 +78,54 @@ public class ConfigurationControllerTest extends WingsBaseTest {
   @Test
   public void primaryIsNotSet() {
     when(query.get()).thenReturn(aManagerConfiguration().withPrimaryVersion("2.0.0").build());
-    sleep(Duration.ofMillis(100));
-    assertThat(configurationController.isPrimary()).isFalse();
+    assertEventually(10000, new Runnable() {
+      public void run() {
+        assertThat(configurationController.isPrimary()).isFalse();
+      }
+    });
   }
 
   @Test
   public void primaryIsSet() {
     when(query.get()).thenReturn(aManagerConfiguration().withPrimaryVersion("1.0.0").build());
-    sleep(Duration.ofMillis(100));
-    assertThat(configurationController.isPrimary()).isTrue();
+    assertEventually(10000, new Runnable() {
+      public void run() {
+        assertThat(configurationController.isPrimary()).isTrue();
+      }
+    });
   }
 
   @Test
-  @Ignore // ToDo [Puneet] find more reliable way to test this
   public void listenerIsCalled() {
     TestListener testListener = new TestListener();
+    on(configurationController)
+        .set("managerConfiguration", aManagerConfiguration().withPrimaryVersion("1.0.0").build());
     configurationController.register(testListener, asList(ConfigChangeEvent.PrimaryChanged));
-    when(query.get()).thenReturn(aManagerConfiguration().withPrimaryVersion("1.0.0").build());
-    sleep(Duration.ofMillis(100));
     when(query.get()).thenReturn(aManagerConfiguration().withPrimaryVersion("2.0.0").build());
-    sleep(Duration.ofMillis(100));
-    assertThat(testListener.onChangeCalled).isTrue();
+    assertEventually(10000, new Runnable() {
+      public void run() {
+        assertThat(testListener.onChangeCalled).isTrue();
+      }
+    });
     assertThat(configurationController.isPrimary()).isFalse();
+  }
+
+  private void assertEventually(int timeoutInMilliseconds, Runnable assertion) {
+    long begin = System.currentTimeMillis();
+    long now;
+    Throwable lastException = null;
+    do {
+      now = System.currentTimeMillis();
+      try {
+        assertion.run();
+        return;
+      } catch (RuntimeException e) {
+        lastException = e;
+      } catch (AssertionError e) {
+        lastException = e;
+      }
+      sleep(Duration.ofMillis(10));
+    } while ((now - begin) < timeoutInMilliseconds);
+    throw new RuntimeException(lastException);
   }
 }
