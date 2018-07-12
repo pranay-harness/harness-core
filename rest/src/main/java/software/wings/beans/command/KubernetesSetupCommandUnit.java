@@ -783,6 +783,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         configMapLabels.putAll(controllerLabels);
         configMapMeta.setLabels(configMapLabels);
         configMap.setMetadata(configMapMeta);
+        if (configMap.getData() == null) {
+          configMap.setData(new HashMap<>());
+        }
       } catch (Exception e) {
         throw new WingsException("Error while loading configMap yaml", e);
       }
@@ -793,21 +796,19 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                       .withNamespace(setupParams.getNamespace())
                       .withLabels(controllerLabels)
                       .endMetadata()
+                      .withData(new HashMap<>())
                       .build();
+    }
 
-      Map<String, String> data = new HashMap<>();
+    if (isNotEmpty(safeDisplayServiceVariables)) {
+      configMap.getData().putAll(safeDisplayServiceVariables.entrySet()
+                                     .stream()
+                                     .filter(entry -> !SECRET_MASK.equals(entry.getValue()))
+                                     .collect(toMap(Entry::getKey, Entry::getValue)));
+    }
 
-      if (isNotEmpty(safeDisplayServiceVariables)) {
-        data.putAll(safeDisplayServiceVariables.entrySet()
-                        .stream()
-                        .filter(entry -> !SECRET_MASK.equals(entry.getValue()))
-                        .collect(toMap(Entry::getKey, Entry::getValue)));
-      }
-
-      if (isNotEmpty(setupParams.getPlainConfigFiles())) {
-        data.putAll(setupParams.getPlainConfigFiles().stream().collect(toMap(sa -> sa[0], sa -> sa[1])));
-      }
-      configMap.setData(data);
+    if (isNotEmpty(setupParams.getPlainConfigFiles())) {
+      configMap.getData().putAll(setupParams.getPlainConfigFiles().stream().collect(toMap(sa -> sa[0], sa -> sa[1])));
     }
 
     if (isEmpty(configMap.getData())) {
