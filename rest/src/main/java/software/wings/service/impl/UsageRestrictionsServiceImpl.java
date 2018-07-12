@@ -120,6 +120,12 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       return false;
     }
 
+    if (hasNoRestrictions(entityUsageRestrictions)) {
+      entityUsageRestrictions = UsageRestrictions.builder().appEnvRestrictions(allAppEnvRestrictions).build();
+      appEnvMapFromEntityRestrictions = getAppEnvMap(accountId, allAppEnvRestrictions);
+    }
+
+    final UsageRestrictions entityUsageRestrictionsFinal = entityUsageRestrictions;
     // We want to first check if the restrictions from user permissions is not null
     if (isEmpty(appEnvMapFromEntityRestrictions)) {
       return hasCommonEnv(entityUsageRestrictions, restrictionsFromUserPermissions);
@@ -137,7 +143,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
 
           Set<String> envIdsFromRestrictions = appEnvEntryOfEntity.getValue();
           if (isEmpty(envIdsFromRestrictions)) {
-            return hasCommonEnv(appId, entityUsageRestrictions, restrictionsFromUserPermissions);
+            return hasCommonEnv(appId, entityUsageRestrictionsFinal, restrictionsFromUserPermissions);
           }
 
           Set<String> envIdsOfUser = appEnvMapOfUser.get(appId);
@@ -520,6 +526,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
 
     // If no restrictions, its equivalent to selecting all apps -> prod and non-prod
     if (hasNoRestrictions(entityUsageRestrictions)) {
+      entityUsageRestrictions = UsageRestrictions.builder().appEnvRestrictions(allAppEnvRestrictions).build();
       appEnvMapFromEntityRestrictions = getAppEnvMap(accountId, allAppEnvRestrictions);
     } else {
       appEnvMapFromEntityRestrictions = getAppEnvMap(accountId, entityUsageRestrictions.getAppEnvRestrictions());
@@ -529,6 +536,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       return hasCommonEnv(entityUsageRestrictions, restrictionsFromUserPermissions);
     }
 
+    UsageRestrictions entityUsageRestrictionsFinal = entityUsageRestrictions;
     return appEnvMapFromEntityRestrictions.entrySet().stream().allMatch(
         (Entry<String, Set<String>> appEnvEntryOfEntity) -> {
           String appId = appEnvEntryOfEntity.getKey();
@@ -539,7 +547,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
 
           Set<String> envIdsFromRestrictions = appEnvEntryOfEntity.getValue();
           if (isEmpty(envIdsFromRestrictions)) {
-            return hasCommonEnv(appId, entityUsageRestrictions, restrictionsFromUserPermissions);
+            return hasCommonEnv(appId, entityUsageRestrictionsFinal, restrictionsFromUserPermissions);
           }
 
           Set<String> envIdsFromUserPermissions = appEnvMapFromUserPermissions.get(appId);
