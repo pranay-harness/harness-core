@@ -1,5 +1,6 @@
 package software.wings.settings;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,7 +11,10 @@ import java.util.Set;
 
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class UsageRestrictions {
+  private transient boolean isEditable;
   private Set<AppEnvRestriction> appEnvRestrictions;
 
   @Data

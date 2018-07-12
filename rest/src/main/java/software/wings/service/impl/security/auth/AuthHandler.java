@@ -540,7 +540,7 @@ public class AuthHandler {
     return permissionTypeAppIdSetMap;
   }
 
-  private Set<String> getAppIdsByFilter(Set<String> allAppIds, GenericEntityFilter appFilter) {
+  public Set<String> getAppIdsByFilter(Set<String> allAppIds, GenericEntityFilter appFilter) {
     if (appFilter == null || FilterType.ALL.equals(appFilter.getFilterType())) {
       return new HashSet<>(allAppIds);
     }
@@ -556,60 +556,17 @@ public class AuthHandler {
   }
 
   public Set<String> getAppIdsByFilter(String accountId, GenericEntityFilter appFilter) {
-    if (appFilter == null) {
-      appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
-    }
-
-    String appFilterType = appFilter.getFilterType();
-    if (FilterType.ALL.equals(appFilterType)) {
-      return new HashSet<>(appService.getAppIdsByAccountId(accountId));
-    } else if (FilterType.SELECTED.equals(appFilterType)) {
-      return appFilter.getIds();
-    } else {
-      String msg = "Unknown app filter type: " + appFilterType;
-      logger.error(msg);
-      throw new WingsException(msg);
-    }
+    List<String> appIdsByAccountId = appService.getAppIdsByAccountId(accountId);
+    return getAppIdsByFilter(Sets.newHashSet(appIdsByAccountId), appFilter);
   }
 
   public Set<String> getEnvIdsByFilter(String appId, EnvFilter envFilter) {
-    envFilter = getDefaultEnvFilterIfNull(envFilter);
-
-    Set<String> filterTypes = envFilter.getFilterTypes();
-
-    boolean selected = hasEnvSelectedType(envFilter);
-    if (selected) {
-      return envFilter.getIds();
-    }
-
-    boolean allEnv = isAllEnv(filterTypes);
-    PageRequest<Environment> pageRequest = new PageRequest<>();
-    pageRequest.addFilter("appId", Operator.EQ, appId);
-    pageRequest.addFieldsIncluded("_id");
-
-    if (!allEnv) {
-      Optional<String> envFilterTypeOptional =
-          filterTypes.stream().filter(filterType -> isEnvType(filterType)).findFirst();
-      if (envFilterTypeOptional.isPresent()) {
-        pageRequest.addFilter("environmentType", Operator.EQ, envFilterTypeOptional.get());
-      }
-    }
-
+    PageRequest<Environment> pageRequest =
+        aPageRequest().addFilter("appId", Operator.EQ, appId).addFieldsIncluded("_id", "environmentType").build();
     PageResponse<Environment> pageResponse = environmentService.list(pageRequest, false);
     List<Environment> envList = pageResponse.getResponse();
-    return envList.stream().map(environment -> environment.getUuid()).collect(Collectors.toSet());
-  }
 
-  private boolean isEnvType(String filterType) {
-    return PROD.equals(filterType) || NON_PROD.equals(filterType);
-  }
-
-  private boolean isAllEnv(Set<String> envFilterTypes) {
-    boolean prodPresent =
-        envFilterTypes.stream().filter(envFilterType -> PROD.equals(envFilterType)).findFirst().isPresent();
-    boolean nonProdPresent =
-        envFilterTypes.stream().filter(envFilterType -> NON_PROD.equals(envFilterType)).findFirst().isPresent();
-    return prodPresent && nonProdPresent;
+    return getEnvIdsByFilter(envList, envFilter);
   }
 
   public void setEntityIdFilterIfUserAction(
@@ -618,6 +575,30 @@ public class AuthHandler {
     if (user != null && user.getUserRequestContext() != null) {
       setEntityIdFilter(requiredPermissionAttributes, user.getUserRequestContext(), appIds);
     }
+  }
+
+  public void setAppIdFilterIfUserAction() {
+    User user = UserThreadLocal.get();
+    if (user != null && user.getUserRequestContext() != null) {
+      UserRequestContext userRequestContext = user.getUserRequestContext();
+      UserPermissionInfo userPermissionInfo = userRequestContext.getUserPermissionInfo();
+      if (userPermissionInfo == null) {
+        return;
+      }
+      Map<String, AppPermissionSummaryForUI> appPermissionMap = userPermissionInfo.getAppPermissionMap();
+
+      if (appPermissionMap == null) {
+        return;
+      }
+
+      Set<String> appIdSet = appPermissionMap.keySet();
+      setAppIdFilter(user.getUserRequestContext(), appIdSet);
+    }
+  }
+
+  public void setAppIdFilter(UserRequestContext userRequestContext, Set<String> appIds) {
+    userRequestContext.setAppIdFilterRequired(true);
+    userRequestContext.setAppIds(appIds);
   }
 
   @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE") // TODO
@@ -815,7 +796,7 @@ public class AuthHandler {
     return envFilter;
   }
 
-  private Set<String> getEnvIdsByFilter(List<Base> environments, EnvFilter envFilter) {
+  private <T extends Base> Set<String> getEnvIdsByFilter(List<T> environments, EnvFilter envFilter) {
     if (environments == null) {
       return new HashSet<>();
     }
