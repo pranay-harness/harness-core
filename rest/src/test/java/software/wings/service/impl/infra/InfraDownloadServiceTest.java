@@ -79,16 +79,16 @@ public class InfraDownloadServiceTest {
 
     try {
       doReturn(prodTestKey).when(infraDownloadService).getServiceAccountJson(Mockito.anyString());
-      doReturn(HarnessEnv.PROD).when(infraDownloadService).getEnv();
+      doReturn("prod").when(infraDownloadService).getEnv();
       checkProdBucket();
-      doReturn(HarnessEnv.ON_PREM).when(infraDownloadService).getEnv();
+      doReturn("on-prem").when(infraDownloadService).getEnv();
       checkProdBucket();
-      doReturn(HarnessEnv.STAGE).when(infraDownloadService).getEnv();
+      doReturn("stage").when(infraDownloadService).getEnv();
       checkProdBucket();
 
-      doReturn(HarnessEnv.QA).when(infraDownloadService).getEnv();
+      doReturn("qa").when(infraDownloadService).getEnv();
       checkQABucket();
-      doReturn(HarnessEnv.CI).when(infraDownloadService).getEnv();
+      doReturn("ci").when(infraDownloadService).getEnv();
       checkQABucket();
 
     } catch (Exception e) {
