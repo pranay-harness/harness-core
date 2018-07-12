@@ -46,6 +46,7 @@ import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.impl.newrelic.MetricAnalysisJob.MetricAnalysisGenerator;
 import software.wings.service.impl.newrelic.NewRelicApplication;
+import software.wings.service.impl.newrelic.NewRelicApplicationInstance;
 import software.wings.service.impl.newrelic.NewRelicMetric;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
@@ -158,6 +159,28 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     }
 
     assertTrue(totalTxns > 0);
+  }
+
+  @Test
+  public void getNewRelicApplicationInstances() throws Exception {
+    WebTarget target = client.target(API_BASE + "/newrelic/nodes?settingId=" + newRelicConfigId
+        + "&accountId=" + accountId + "&applicationId=" + 107019083);
+    RestResponse<List<NewRelicApplicationInstance>> restResponse = getRequestBuilderWithAuthHeader(target).get(
+        new GenericType<RestResponse<List<NewRelicApplicationInstance>>>() {});
+
+    assertEquals(0, restResponse.getResponseMessages().size());
+    assertFalse(restResponse.getResource().isEmpty());
+  }
+
+  @Test
+  public void getNewRelicTxnsWithData() throws Exception {
+    WebTarget target = client.target(API_BASE + "/newrelic/txns-with-data?settingId=" + newRelicConfigId
+        + "&accountId=" + accountId + "&applicationId=" + 107019083);
+    RestResponse<List<NewRelicMetric>> restResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<NewRelicMetric>>>() {});
+
+    assertEquals(0, restResponse.getResponseMessages().size());
+    assertTrue(restResponse.getResource().size() >= 0);
   }
 
   @Test

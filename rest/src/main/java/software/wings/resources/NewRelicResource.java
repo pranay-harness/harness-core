@@ -12,6 +12,8 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.newrelic.NewRelicApplication;
+import software.wings.service.impl.newrelic.NewRelicApplicationInstance;
+import software.wings.service.impl.newrelic.NewRelicMetric;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.MetricDataAnalysisService;
@@ -97,6 +99,26 @@ public class NewRelicResource {
       Collections.sort(applications);
     }
     return new RestResponse<>(applications);
+  }
+
+  @GET
+  @Path("/nodes")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<NewRelicApplicationInstance>> getApplicationInstances(
+      @QueryParam("accountId") String accountId, @QueryParam("settingId") final String settingId,
+      @QueryParam("applicationId") final long applicationId) throws IOException {
+    return new RestResponse<>(newRelicService.getApplicationInstances(settingId, applicationId, StateType.NEW_RELIC));
+  }
+
+  @GET
+  @Path("/txns-with-data")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<NewRelicMetric>> getTxnsWithData(@QueryParam("accountId") String accountId,
+      @QueryParam("settingId") final String settingId, @QueryParam("applicationId") final long applicationId)
+      throws IOException {
+    return new RestResponse<>(newRelicService.getTxnsWithData(settingId, applicationId));
   }
 
   @POST
