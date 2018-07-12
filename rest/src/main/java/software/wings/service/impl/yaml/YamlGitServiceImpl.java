@@ -597,20 +597,20 @@ public class YamlGitServiceImpl implements YamlGitService {
   }
 
   @Override
-  public RestResponse discardGitSyncError(String accountId, String yamlFilePath) {
+  public RestResponse discardGitSyncError(String accountId, String errorId) {
     Query query = wingsPersistence.createAuthorizedQuery(GitSyncError.class);
     query.filter("accountId", accountId);
-    query.filter("yamlFilePath", yamlFilePath);
+    query.filter("_id", errorId);
     wingsPersistence.delete(query);
     closeAlertIfApplicable(accountId, false);
     return RestResponse.Builder.aRestResponse().build();
   }
 
   @Override
-  public RestResponse discardGitSyncErrorsForGivenPaths(String accountId, List<String> yamlFilePaths) {
+  public RestResponse discardGitSyncErrorsForGivenIds(String accountId, List<String> errorIds) {
     Query query = wingsPersistence.createAuthorizedQuery(GitSyncError.class);
     query.filter("accountId", accountId);
-    query.field("yamlFilePath").in(yamlFilePaths);
+    query.field("_id").in(errorIds);
     wingsPersistence.delete(query);
     closeAlertIfApplicable(accountId, false);
     return RestResponse.Builder.aRestResponse().build();
