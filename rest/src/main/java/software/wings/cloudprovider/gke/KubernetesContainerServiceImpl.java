@@ -84,10 +84,12 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Log.LogLevel;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.ContainerInfo.ContainerInfoBuilder;
 import software.wings.cloudprovider.ContainerInfo.Status;
+import software.wings.exception.InvalidArgumentsException;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.KubernetesHelperService;
@@ -926,7 +928,14 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       int serviceSteadyStateTimeout, List<Pod> originalPods, boolean isNotVersioned, long startTime,
       ExecutionLogCallback executionLogCallback) {
     HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, controllerName);
+    if (controller == null) {
+      throw new InvalidArgumentsException(NameValuePair.builder().name(controllerName).value("is null").build());
+    }
     PodTemplateSpec podTemplateSpec = getPodTemplateSpec(controller);
+    if (podTemplateSpec == null) {
+      throw new InvalidArgumentsException(
+          NameValuePair.builder().name(controllerName + " pod spec").value("is null").build());
+    }
     Set<String> images = getControllerImages(podTemplateSpec);
     Map<String, String> labels = podTemplateSpec.getMetadata().getLabels();
     List<String> originalPodNames = originalPods.stream().map(pod -> pod.getMetadata().getName()).collect(toList());
