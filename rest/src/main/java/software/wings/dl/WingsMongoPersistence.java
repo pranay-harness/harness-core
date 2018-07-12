@@ -294,8 +294,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
             if (shouldEncryptWhileUpdating(f, object, keyValuePairs, entityId)) {
               String accountId = object.getAccountId();
               Field encryptedField = getEncryptedRefField(f, object);
-              String encryptedId =
-                  encrypt(object, (char[]) value, encryptedField, null, secretManager.getEncryptionType(accountId));
+              String encryptedId = encrypt(object, (char[]) value, encryptedField, null);
               updateParentIfNecessary(object, entityId);
               operations.set(encryptedField.getName(), encryptedId);
               operations.unset(f.getName());
@@ -318,8 +317,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
         if (f.getAnnotation(Encrypted.class) != null) {
           try {
             Field encryptedField = getEncryptedRefField(f, object);
-            String encryptedId =
-                encrypt(object, null, encryptedField, object, secretManager.getEncryptionType(accountId));
+            String encryptedId = encrypt(object, null, encryptedField, object);
             updateParentIfNecessary(object, entityId);
             operations.set(encryptedField.getName(), encryptedId);
           } catch (IllegalAccessException e) {
@@ -640,12 +638,11 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     try {
       List<Field> fieldsToEncrypt = object.getEncryptedFields();
       for (Field f : fieldsToEncrypt) {
-        String accountId = object.getAccountId();
         f.setAccessible(true);
         char[] secret = (char[]) f.get(object);
         Field encryptedField = getEncryptedRefField(f, object);
         encryptedField.setAccessible(true);
-        encrypt(object, secret, encryptedField, savedObject, secretManager.getEncryptionType(accountId));
+        encrypt(object, secret, encryptedField, savedObject);
         f.set(object, null);
       }
     } catch (SecurityException e) {
@@ -655,8 +652,8 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     }
   }
 
-  private String encrypt(Encryptable object, char[] secret, Field encryptedField, Encryptable savedObject,
-      EncryptionType encryptionType) throws IllegalAccessException {
+  private String encrypt(Encryptable object, char[] secret, Field encryptedField, Encryptable savedObject)
+      throws IllegalAccessException {
     encryptedField.setAccessible(true);
     Field decryptedField = getDecryptedField(encryptedField, object);
     decryptedField.setAccessible(true);
@@ -674,6 +671,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     }
 
     final String accountId = object.getAccountId();
+    EncryptionType encryptionType = secretManager.getEncryptionType(accountId);
     String encryptedId =
         savedObject == null ? (String) encryptedField.get(object) : (String) encryptedField.get(savedObject);
     EncryptedData encryptedData = isBlank(encryptedId) ? null : get(EncryptedData.class, encryptedId);
