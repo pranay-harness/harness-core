@@ -148,18 +148,21 @@ public class SecretManagementResource {
   public RestResponse<String> saveFile(@QueryParam("accountId") final String accountId,
       @FormDataParam("name") final String name, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("usageRestrictions") final String usageRestrictionsString) {
+    return new RestResponse<>(
+        secretManager.saveFile(accountId, name, getUsageRestrictionsFromJson(usageRestrictionsString),
+            new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getConfigFileLimit())));
+  }
+
+  private UsageRestrictions getUsageRestrictionsFromJson(String usageRestrictionsString) {
     // TODO use a bean param instead. It wasn't working for some reason.
-    UsageRestrictions usageRestrictions = null;
     if (EmptyPredicate.isNotEmpty(usageRestrictionsString)) {
       try {
-        usageRestrictions = JsonUtils.asObject(usageRestrictionsString, UsageRestrictions.class);
+        return JsonUtils.asObject(usageRestrictionsString, UsageRestrictions.class);
       } catch (Exception ex) {
         throw new WingsException("Invalid usage restrictions");
       }
     }
-
-    return new RestResponse<>(secretManager.saveFile(accountId, name, usageRestrictions,
-        new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getConfigFileLimit())));
+    return null;
   }
 
   @POST
@@ -169,10 +172,11 @@ public class SecretManagementResource {
   @ExceptionMetered
   public RestResponse<Boolean> updateFile(@QueryParam("accountId") final String accountId,
       @FormDataParam("name") final String name,
-      @FormDataParam("usageRestrictions") final UsageRestrictions usageRestrictions,
+      @FormDataParam("usageRestrictions") final String usageRestrictionsString,
       @FormDataParam("uuid") final String fileId, @FormDataParam("file") InputStream uploadedInputStream) {
-    return new RestResponse<>(secretManager.updateFile(accountId, name, fileId, usageRestrictions,
-        new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getConfigFileLimit())));
+    return new RestResponse<>(
+        secretManager.updateFile(accountId, name, fileId, getUsageRestrictionsFromJson(usageRestrictionsString),
+            new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getConfigFileLimit())));
   }
 
   @DELETE

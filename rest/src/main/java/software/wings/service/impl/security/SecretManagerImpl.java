@@ -686,6 +686,12 @@ public class SecretManagerImpl implements SecretManager {
               "Being used by " + serviceVariables.stream().map(ServiceVariable::getName).collect(joining(", ")));
     }
 
+    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, uuId);
+    Preconditions.checkNotNull("No encrypted record found with id " + uuId);
+    if (!usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, encryptedData.getUsageRestrictions())) {
+      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
+    }
+
     return wingsPersistence.delete(EncryptedData.class, uuId);
   }
 
@@ -890,6 +896,10 @@ public class SecretManagerImpl implements SecretManager {
   public boolean deleteFile(String accountId, String uuId) {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, uuId);
     Preconditions.checkNotNull("No encrypted record found with id " + uuId);
+    if (!usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, encryptedData.getUsageRestrictions())) {
+      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
+    }
+
     List<ConfigFile> configFiles = wingsPersistence.createQuery(ConfigFile.class)
                                        .filter("accountId", accountId)
                                        .filter("encryptedFileId", uuId)
@@ -945,7 +955,7 @@ public class SecretManagerImpl implements SecretManager {
               .size());
       if (encryptedData.getUsageRestrictions() != null) {
         encryptedData.getUsageRestrictions().setEditable(
-            usageRestrictionsService.userHasPermissions(accountId, encryptedData.getUsageRestrictions()));
+            usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, encryptedData.getUsageRestrictions()));
       }
       filteredEncryptedDataList.add(encryptedData);
     }

@@ -52,7 +52,7 @@ public interface UsageRestrictionsService {
    * @param entityUsageRestrictions entity usage restrictions
    * @return boolean
    */
-  boolean userHasPermissions(String accountId, UsageRestrictions entityUsageRestrictions);
+  boolean userHasPermissionsToChangeEntity(String accountId, UsageRestrictions entityUsageRestrictions);
 
   /**
    * Checks if user can update an entity

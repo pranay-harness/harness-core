@@ -257,7 +257,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
 
     UsageRestrictions usageRestrictions = UsageRestrictions.builder().appEnvRestrictions(appEnvRestrictions).build();
     if (evaluateIfEditable) {
-      boolean isEditable = userHasPermissions(accountId, usageRestrictions);
+      boolean isEditable = userHasPermissionsToChangeEntity(accountId, usageRestrictions);
       usageRestrictions.setEditable(isEditable);
     }
     return usageRestrictions;
@@ -498,7 +498,11 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   }
 
   @Override
-  public boolean userHasPermissions(String accountId, UsageRestrictions entityUsageRestrictions) {
+  public boolean userHasPermissionsToChangeEntity(String accountId, UsageRestrictions entityUsageRestrictions) {
+    if (!hasUserContext()) {
+      return true;
+    }
+
     UsageRestrictions restrictionsFromUserPermissions = getUsageRestrictionsFromUserPermissions(accountId, false);
     return userHasPermissions(accountId, entityUsageRestrictions, restrictionsFromUserPermissions);
   }

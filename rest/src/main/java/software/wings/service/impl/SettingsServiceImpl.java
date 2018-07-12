@@ -49,6 +49,7 @@ import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.annotation.Encryptable;
 import software.wings.beans.Application;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
@@ -59,6 +60,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.InvalidRequestException;
+import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AppService;
@@ -129,7 +131,7 @@ public class SettingsServiceImpl implements SettingsService {
     if (usageRestrictionsService.hasAccess(settingAttribute.getUsageRestrictions(), settingAttribute.getAccountId(),
             appIdFromRequest, envIdFromRequest)) {
       if (settingAttribute.getUsageRestrictions() != null) {
-        settingAttribute.getUsageRestrictions().setEditable(usageRestrictionsService.userHasPermissions(
+        settingAttribute.getUsageRestrictions().setEditable(usageRestrictionsService.userHasPermissionsToChangeEntity(
             settingAttribute.getAccountId(), settingAttribute.getUsageRestrictions()));
       }
 
@@ -147,8 +149,9 @@ public class SettingsServiceImpl implements SettingsService {
         if (usageRestrictionsService.hasAccess(settingAttribute.getUsageRestrictions(), settingAttribute.getAccountId(),
                 appIdFromRequest, envIdFromRequest)) {
           if (settingAttribute.getUsageRestrictions() != null) {
-            settingAttribute.getUsageRestrictions().setEditable(usageRestrictionsService.userHasPermissions(
-                settingAttribute.getAccountId(), settingAttribute.getUsageRestrictions()));
+            settingAttribute.getUsageRestrictions().setEditable(
+                usageRestrictionsService.userHasPermissionsToChangeEntity(
+                    settingAttribute.getAccountId(), settingAttribute.getUsageRestrictions()));
           }
           filteredSettingAttributes.add(settingAttribute);
         }
@@ -354,6 +357,12 @@ public class SettingsServiceImpl implements SettingsService {
   public void delete(String appId, String varId, boolean pushToGit) {
     SettingAttribute settingAttribute = get(varId);
     notNullCheck("Setting Value", settingAttribute, USER);
+
+    if (!usageRestrictionsService.userHasPermissionsToChangeEntity(
+            settingAttribute.getAccountId(), settingAttribute.getUsageRestrictions())) {
+      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
+    }
+
     ensureSettingAttributeSafeToDelete(settingAttribute);
 
     boolean deleted = wingsPersistence.delete(settingAttribute);

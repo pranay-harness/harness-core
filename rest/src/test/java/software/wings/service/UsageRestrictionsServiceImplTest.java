@@ -574,7 +574,7 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  public void testCheckIfUserCanUpdateOrDeleteEntity() {
+  public void testIfUserHasPermissionsToChangeEntity() {
     try {
       String ENV_ID_1 = "ENV_ID_1";
       String ENV_ID_2 = "ENV_ID_2";
@@ -583,33 +583,42 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       String APP_ID_1 = "APP_ID_1";
       String APP_ID_2 = "APP_ID_2";
       String APP_ID_3 = "APP_ID_3";
+      Set<Action> allActions = newHashSet(Action.CREATE, Action.UPDATE, Action.READ, Action.DELETE, Action.EXECUTE);
 
       when(authHandler.getAppIdsByFilter(anyString(), any(GenericEntityFilter.class)))
           .thenReturn(newHashSet(APP_ID, APP_ID_1, APP_ID_2, APP_ID_3));
       when(authHandler.getEnvIdsByFilter(anyString(), any(EnvFilter.class)))
           .thenReturn(newHashSet(ENV_ID, ENV_ID_1, ENV_ID_2, ENV_ID_3));
 
+      UsageRestrictions usageRestrictions1 = UsageRestrictions.builder().appEnvRestrictions(newHashSet()).build();
+      doReturn(usageRestrictions1)
+          .when(usageRestrictionsService)
+          .getUsageRestrictionsFromUserPermissions(ACCOUNT_ID, false);
+
       // Scenario 1 non-admin user
-      boolean canUserUpdateOrDeleteEntity = usageRestrictionsService.userHasPermissions(ACCOUNT_ID, null);
+      setPermissions(asList(APP_ID_1, APP_ID_2, APP_ID_3), asList(ENV_ID_1, ENV_ID_2, ENV_ID_3), allActions, false);
+      boolean canUserUpdateOrDeleteEntity = usageRestrictionsService.userHasPermissionsToChangeEntity(ACCOUNT_ID, null);
       assertFalse(canUserUpdateOrDeleteEntity);
 
       // Scenario 1 user with all app access
+      setPermissions(asList(ENV_ID, APP_ID_1, APP_ID_2, APP_ID_3), asList(ENV_ID, ENV_ID_1, ENV_ID_2, ENV_ID_3),
+          allActions, false);
       GenericEntityFilter appFilter1 = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
       HashSet<String> envFilters1 = newHashSet(PROD, NON_PROD);
       EnvFilter envFilter1 = EnvFilter.builder().filterTypes(envFilters1).build();
       AppEnvRestriction appEnvRestriction1 =
           AppEnvRestriction.builder().appFilter(appFilter1).envFilter(envFilter1).build();
 
-      UsageRestrictions usageRestrictions1 =
-          UsageRestrictions.builder().appEnvRestrictions(newHashSet(appEnvRestriction1)).build();
+      usageRestrictions1 = UsageRestrictions.builder().appEnvRestrictions(newHashSet(appEnvRestriction1)).build();
       doReturn(usageRestrictions1)
           .when(usageRestrictionsService)
           .getUsageRestrictionsFromUserPermissions(ACCOUNT_ID, false);
 
-      canUserUpdateOrDeleteEntity = usageRestrictionsService.userHasPermissions(ACCOUNT_ID, null);
+      canUserUpdateOrDeleteEntity = usageRestrictionsService.userHasPermissionsToChangeEntity(ACCOUNT_ID, null);
       assertTrue(canUserUpdateOrDeleteEntity);
 
       // Scenario 2
+      setPermissions(asList(APP_ID_1, APP_ID_2, APP_ID_3), asList(ENV_ID_1, ENV_ID_2, ENV_ID_3), allActions, false);
       appFilter1 = GenericEntityFilter.builder()
                        .filterType(FilterType.SELECTED)
                        .ids(newHashSet(APP_ID_1, APP_ID_2, APP_ID_3))
@@ -641,10 +650,12 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       when(authHandler.getEnvIdsByFilter(ACCOUNT_ID, envFilter1))
           .thenReturn(newHashSet(ENV_ID, ENV_ID_1, ENV_ID_2, ENV_ID_3));
 
-      canUserUpdateOrDeleteEntity = usageRestrictionsService.userHasPermissions(ACCOUNT_ID, usageRestrictions);
+      canUserUpdateOrDeleteEntity =
+          usageRestrictionsService.userHasPermissionsToChangeEntity(ACCOUNT_ID, usageRestrictions);
       assertTrue(canUserUpdateOrDeleteEntity);
 
       // Scenario 3
+      setPermissions(asList(APP_ID_1), asList(ENV_ID_1), allActions, false);
       appFilter1 = GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(APP_ID_1)).build();
       envFilters1 = newHashSet(SELECTED);
       envFilter1 = EnvFilter.builder().filterTypes(envFilters1).ids(newHashSet(ENV_ID_1)).build();
@@ -669,10 +680,12 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       appEnvRestriction = AppEnvRestriction.builder().appFilter(appFilter).envFilter(envFilter).build();
       usageRestrictions = new UsageRestrictions();
       usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
-      canUserUpdateOrDeleteEntity = usageRestrictionsService.userHasPermissions(ACCOUNT_ID, usageRestrictions);
+      canUserUpdateOrDeleteEntity =
+          usageRestrictionsService.userHasPermissionsToChangeEntity(ACCOUNT_ID, usageRestrictions);
       assertFalse(canUserUpdateOrDeleteEntity);
 
       // Scenario 4
+      setPermissions(asList(APP_ID_1, APP_ID_2, APP_ID_3), asList(ENV_ID_1, ENV_ID_2, ENV_ID_3), allActions, false);
       appFilter1 = GenericEntityFilter.builder()
                        .filterType(FilterType.SELECTED)
                        .ids(newHashSet(APP_ID_1, APP_ID_2, APP_ID_3))
@@ -700,7 +713,8 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       appEnvRestriction = AppEnvRestriction.builder().appFilter(appFilter).envFilter(envFilter).build();
       usageRestrictions = new UsageRestrictions();
       usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
-      canUserUpdateOrDeleteEntity = usageRestrictionsService.userHasPermissions(ACCOUNT_ID, usageRestrictions);
+      canUserUpdateOrDeleteEntity =
+          usageRestrictionsService.userHasPermissionsToChangeEntity(ACCOUNT_ID, usageRestrictions);
       assertFalse(canUserUpdateOrDeleteEntity);
 
     } finally {
