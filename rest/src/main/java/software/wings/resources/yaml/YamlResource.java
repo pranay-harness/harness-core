@@ -861,15 +861,6 @@ public class YamlResource {
   }
 
   @POST
-  @Path("git-sync-errors-discard")
-  @Timed
-  @ExceptionMetered
-  public RestResponse discardGitSyncError(
-      @QueryParam("accountId") String accountId, @QueryParam("yamlFilePath") String yamlFilePath) {
-    return yamlGitService.discardGitSyncError(accountId, yamlFilePath);
-  }
-
-  @POST
   @Path("git-sync-errors-discard-all")
   @Timed
   @ExceptionMetered
@@ -881,8 +872,8 @@ public class YamlResource {
   @Path("git-sync-errors-discard-selected")
   @Timed
   @ExceptionMetered
-  public RestResponse discardGitSyncError(@QueryParam("accountId") String accountId, List<String> yamlPaths) {
-    return yamlGitService.discardGitSyncErrorsForGivenPaths(accountId, yamlPaths);
+  public RestResponse discardGitSyncError(@QueryParam("accountId") String accountId, List<String> errorIds) {
+    return yamlGitService.discardGitSyncErrorsForGivenIds(accountId, errorIds);
   }
 
   @POST

@@ -159,10 +159,10 @@ public interface YamlGitService {
    * Discard git sync error rest response.
    *
    * @param accountId    the account id
-   * @param yamlFilePath the yaml file path
+   * @param errorId the yaml file path
    * @return the rest response
    */
-  RestResponse discardGitSyncError(String accountId, String yamlFilePath);
+  RestResponse discardGitSyncError(String accountId, String errorId);
 
   /**
    * Fix git sync errors rest response.
@@ -182,7 +182,7 @@ public interface YamlGitService {
 
   RestResponse discardGitSyncErrorForFullSync(String accountId);
 
-  RestResponse discardGitSyncErrorsForGivenPaths(String accountId, List<String> yamlFilePaths);
+  RestResponse discardGitSyncErrorsForGivenIds(String accountId, List<String> errorIds);
 
   RestResponse discardAllGitSyncError(String accountId);
 }
