@@ -52,7 +52,10 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.Base;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Status;
+import software.wings.beans.DelegateConfiguration;
+import software.wings.beans.DelegateConnection;
 import software.wings.beans.DelegateScripts;
+import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.Event.Type;
@@ -137,6 +140,22 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldGet() {
     Delegate delegate = wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().build());
     assertThat(delegateService.get(ACCOUNT_ID, delegate.getUuid())).isEqualTo(delegate);
+  }
+
+  @Test
+  public void shouldGetDelegateStatus() {
+    when(accountService.getDelegateConfiguration(anyString()))
+        .thenReturn(DelegateConfiguration.builder().watcherVersion("1.0.0").delegateVersions(asList("1.0.0")).build());
+    Delegate delegate = wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().build());
+    DelegateConnection delegateConnection = wingsPersistence.saveAndGet(DelegateConnection.class,
+        DelegateConnection.builder().accountId(ACCOUNT_ID).delegateId(delegate.getUuid()).version("1.0.0").build());
+    DelegateStatus delegateStatus = delegateService.getDelegateStatus(ACCOUNT_ID);
+    assertThat(delegateStatus.getPublishedVersions()).hasSize(1).contains("1.0.0");
+    assertThat(delegateStatus.getDelegates()).hasSize(1);
+    assertThat(delegateStatus.getDelegates().get(0)).hasFieldOrPropertyWithValue("uuid", delegate.getUuid());
+    assertThat(delegateStatus.getDelegates().get(0).getConnections()).hasSize(1);
+    assertThat(delegateStatus.getDelegates().get(0).getConnections().get(0))
+        .hasFieldOrPropertyWithValue("version", "1.0.0");
   }
 
   @Test

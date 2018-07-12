@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Delegate;
+import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.RestResponse;
 import software.wings.common.Constants;
@@ -116,6 +117,18 @@ public class DelegateResourceTest {
     verify(DELEGATE_SERVICE, atLeastOnce()).list(pageRequest);
     assertThat(restResponse.getResource().getResponse().size()).isEqualTo(1);
     assertThat(restResponse.getResource().getResponse().get(0)).isNotNull();
+  }
+
+  @Test
+  public void shouldGetDelegateStatus() throws Exception {
+    when(DELEGATE_SERVICE.getDelegateStatus(any()))
+        .thenReturn(DelegateStatus.builder().publishedVersions(asList("1.0.0")).build());
+    RestResponse<DelegateStatus> restResponse = RESOURCES.client()
+                                                    .target("/delegates/status?accountId=" + ACCOUNT_ID)
+                                                    .request()
+                                                    .get(new GenericType<RestResponse<DelegateStatus>>() {});
+    verify(DELEGATE_SERVICE, atLeastOnce()).getDelegateStatus(ACCOUNT_ID);
+    assertThat(restResponse.getResource().getPublishedVersions().get(0)).isEqualTo("1.0.0");
   }
 
   @Test
