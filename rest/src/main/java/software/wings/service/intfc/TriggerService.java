@@ -114,18 +114,6 @@ public interface TriggerService extends OwnedByApplication, OwnedByPipeline, Own
       String appId, String webHookToken, Map<String, String> serviceBuildNumbers, Map<String, String> parameters);
 
   /**
-   * Trigger execution by webhook with the given artifact
-   *
-   * @param appId
-   * @param webHookToken
-   * @param artifact
-   * @param parameters
-   * @return
-   */
-  WorkflowExecution triggerExecutionByWebHook(
-      String appId, String webHookToken, Artifact artifact, Map<String, String> parameters);
-
-  /**
    * Triggers that have actions on Pipeline
    *
    * @param appId

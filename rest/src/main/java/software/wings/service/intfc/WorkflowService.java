@@ -49,6 +49,8 @@ public interface WorkflowService extends OwnedByApplication, OwnedByEnvironment,
 
   Workflow readWorkflow(@NotNull String appId, @NotNull String workflowId);
 
+  Workflow readWorkflowWithoutOrchestration(@NotNull String appId, @NotNull String workflowId);
+
   Workflow readWorkflowByName(String appId, String workflowName);
 
   @ValidationGroups(Create.class) Workflow createWorkflow(@Valid Workflow workflow);

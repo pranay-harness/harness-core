@@ -335,10 +335,13 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .thenReturn(notificationGroups);
   }
 
-  /**
-   * Should save and read.
-   *
-   */
+  @Test
+  public void shouldReadWorkflow() {
+    Workflow workflow = workflowService.createWorkflow(constructBasicWorkflow());
+    assertThat(workflow).isNotNull();
+    assertThat(workflowService.readWorkflowWithoutOrchestration(APP_ID, workflow.getUuid())).isNotNull();
+  }
+
   @Test
   public void shouldSaveAndRead() {
     StateMachine sm = new StateMachine();

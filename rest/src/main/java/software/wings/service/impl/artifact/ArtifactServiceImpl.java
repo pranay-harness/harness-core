@@ -327,11 +327,7 @@ public class ArtifactServiceImpl implements ArtifactService {
 
     if (isNotEmpty(artifact.getArtifactFiles())) {
       List<String> artifactIds = asList(artifactId);
-      List<ObjectId> artifactFileUuids = artifact.getArtifactFiles()
-                                             .stream()
-                                             .filter(artifactFile -> artifactFile.getFileUuid() != null)
-                                             .map(artifactFile -> new ObjectId(artifactFile.getFileUuid()))
-                                             .collect(Collectors.toList());
+      List<ObjectId> artifactFileUuids = collectArtifactFileIds(artifact);
       deleteArtifacts(artifactIds.toArray(), artifactFileUuids);
     } else {
       wingsPersistence.delete(Artifact.class, appId, artifactId);
@@ -358,11 +354,7 @@ public class ArtifactServiceImpl implements ArtifactService {
         Artifact artifact = iterator.next();
         if (isNotEmpty(artifact.getArtifactFiles())) {
           artifactIdsWithFiles.add(artifact.getUuid());
-          List<ObjectId> ids = artifact.getArtifactFiles()
-                                   .stream()
-                                   .filter(artifactFile -> artifactFile.getFileUuid() != null)
-                                   .map(artifactFile -> new ObjectId(artifactFile.getFileUuid()))
-                                   .collect(Collectors.toList());
+          List<ObjectId> ids = collectArtifactFileIds(artifact);
           if (isNotEmpty(ids)) {
             artifactFileUuids.addAll(ids);
           }
@@ -378,6 +370,14 @@ public class ArtifactServiceImpl implements ArtifactService {
     if (isNotEmpty(artifactIdsWithFiles)) {
       deleteArtifacts(artifactIdsWithFiles.toArray(), artifactFileUuids);
     }
+  }
+
+  private List<ObjectId> collectArtifactFileIds(Artifact artifact) {
+    return artifact.getArtifactFiles()
+        .stream()
+        .filter(artifactFile -> artifactFile.getFileUuid() != null)
+        .map(artifactFile -> new ObjectId(artifactFile.getFileUuid()))
+        .collect(Collectors.toList());
   }
 
   @Override
@@ -400,9 +400,14 @@ public class ArtifactServiceImpl implements ArtifactService {
   }
 
   @Override
-  public Artifact fetchLastCollectedArtifactForArtifactStream(
+  public Artifact fetchLastCollectedApprovedArtifactForArtifactStream(
       String appId, String artifactStreamId, String artifactSourceName) {
     return getArtifact(appId, artifactStreamId, artifactSourceName, asList(READY, APPROVED));
+  }
+
+  @Override
+  public Artifact fetchLastCollectedArtifact(String appId, String artifactStreamId, String artifactSourceName) {
+    return getArtifact(appId, artifactStreamId, artifactSourceName, asList(READY, QUEUED, RUNNING, WAITING, APPROVED));
   }
 
   @Override
@@ -551,25 +556,6 @@ public class ArtifactServiceImpl implements ArtifactService {
           .remove(new BasicDBObject("_id", new BasicDBObject("$in", artifactFileUuids.toArray())));
       wingsPersistence.getCollection("artifacts.chunks")
           .remove(new BasicDBObject("files_id", new BasicDBObject("$in", artifactFileUuids.toArray())));
-    }
-  }
-
-  @Override
-  public void deleteArtifactFiles() {
-    try {
-      List<String> fileUuids = wingsPersistence.getCollection("artifacts").distinct("artifactFiles.fileUuid");
-      logger.info("Artifact with files size {} and uuids {} ", fileUuids.size(), fileUuids);
-      List<ObjectId> artifactFileUuids = wingsPersistence.getCollection("artifacts.files").distinct("_id");
-      logger.info("Artifact files size {} and  uuids {}", artifactFileUuids.size(), artifactFileUuids);
-      List<ObjectId> fileObjectUuids = fileUuids.stream().map((String s) -> new ObjectId(s)).collect(toList());
-      artifactFileUuids.removeAll(fileObjectUuids);
-      logger.info("Dangling artifact files size {} and  uuids {}", artifactFileUuids.size(), artifactFileUuids);
-      wingsPersistence.getCollection("artifacts.files")
-          .remove(new BasicDBObject("_id", new BasicDBObject("$in", artifactFileUuids.toArray())));
-      wingsPersistence.getCollection("artifacts.chunks")
-          .remove(new BasicDBObject("files_id", new BasicDBObject("$in", artifactFileUuids.toArray())));
-    } catch (Exception ex) {
-      logger.warn("Failed to purge (delete) the artifact files", ex);
     }
   }
 
