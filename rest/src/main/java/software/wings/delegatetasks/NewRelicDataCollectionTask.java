@@ -117,7 +117,6 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
     private int dataCollectionMinute;
     private DataCollectionTaskResult taskResult;
     private final Set<NewRelicMetric> allTxns;
-    private long analysisStartTimeDelegate;
     private long managerAnalysisStartTime;
 
     private NewRelicMetricCollector(NewRelicDataCollectionInfo dataCollectionInfo, DataCollectionTaskResult taskResult)
@@ -125,7 +124,6 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       this.dataCollectionInfo = dataCollectionInfo;
       this.managerAnalysisStartTime = Timestamp.minuteBoundary(dataCollectionInfo.getStartTime());
       this.windowStartTimeManager = Timestamp.minuteBoundary(dataCollectionInfo.getStartTime());
-      this.analysisStartTimeDelegate = System.currentTimeMillis();
       this.dataCollectionMinute = 0;
       this.taskResult = taskResult;
       this.allTxns = newRelicDelegateService.getTxnNameToCollect(dataCollectionInfo.getNewRelicConfig(),
@@ -320,7 +318,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
           logger.info("Running new relic data collection");
           long startTime = System.currentTimeMillis();
           try {
-            int totalAnalysisTime = timeDeltaInMins(System.currentTimeMillis(), analysisStartTimeDelegate);
+            int totalAnalysisTime = timeDeltaInMins(System.currentTimeMillis(), windowStartTimeManager);
 
             Set<NewRelicMetric> txnsToCollect = getTxnsToCollect();
             if (txnsToCollect != null) {
