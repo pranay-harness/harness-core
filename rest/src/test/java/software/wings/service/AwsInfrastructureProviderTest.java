@@ -50,6 +50,7 @@ import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.impl.AwsUtils;
 import software.wings.service.intfc.AwsEc2Service;
 import software.wings.service.intfc.HostService;
+import software.wings.service.intfc.aws.manager.AwsEc2HelperServiceManager;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 
@@ -64,6 +65,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   @Mock private HostService hostService;
   @Mock private SecretManager secretManager;
   @Mock private AwsEc2Service mockAwsEc2Service;
+  @Mock private AwsEc2HelperServiceManager mockAwsEc2HelperServiceManager;
   @Spy private AwsHelperService awsHelperService;
   @Mock private DelegateProxyFactory mockDelegateProxyFactory;
 
@@ -86,16 +88,13 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
 
   @Test
   public void shouldListHostsPublicDns() {
-    /*
-    DescribeInstancesRequest instancesRequest =
-        new DescribeInstancesRequest().withFilters(new Filter("instance-state-name", asList("running")));
-    */
     Filter filter = new Filter("instance-state-name", asList("running"));
     List<Instance> resultList =
         asList(new Instance().withPublicDnsName("HOST_NAME_1"), new Instance().withPublicDnsName("HOST_NAME_2"));
+
     doReturn(resultList)
-        .when(mockAwsEc2Service)
-        .describeEc2Instances((AwsConfig) awsSetting.getValue(), Collections.emptyList(), Regions.US_EAST_1.getName(),
+        .when(mockAwsEc2HelperServiceManager)
+        .listEc2Instances((AwsConfig) awsSetting.getValue(), Collections.emptyList(), Regions.US_EAST_1.getName(),
             singletonList(filter));
     AwsInfrastructureMapping awsInfrastructureMapping =
         anAwsInfrastructureMapping().withRegion(Regions.US_EAST_1.getName()).withUsePublicDns(true).build();
@@ -109,23 +108,19 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
         .hasOnlyElementsOfType(Host.class)
         .extracting(Host::getPublicDns)
         .isEqualTo(asList("HOST_NAME_1", "HOST_NAME_2"));
-    verify(mockAwsEc2Service)
-        .describeEc2Instances((AwsConfig) awsSetting.getValue(), Collections.emptyList(), Regions.US_EAST_1.getName(),
+    verify(mockAwsEc2HelperServiceManager)
+        .listEc2Instances((AwsConfig) awsSetting.getValue(), Collections.emptyList(), Regions.US_EAST_1.getName(),
             singletonList(filter));
   }
 
   @Test
   public void shouldListHostsPrivateDns() {
-    /*
-    DescribeInstancesRequest instancesRequest =
-        new DescribeInstancesRequest().withFilters(new Filter("instance-state-name", asList("running")));
-    */
     Filter filter = new Filter("instance-state-name", asList("running"));
     List<Instance> resultList =
         asList(new Instance().withPrivateDnsName("HOST_NAME_1"), new Instance().withPrivateDnsName("HOST_NAME_2"));
     doReturn(resultList)
-        .when(mockAwsEc2Service)
-        .describeEc2Instances((AwsConfig) awsSetting.getValue(), Collections.emptyList(), Regions.US_EAST_1.getName(),
+        .when(mockAwsEc2HelperServiceManager)
+        .listEc2Instances((AwsConfig) awsSetting.getValue(), Collections.emptyList(), Regions.US_EAST_1.getName(),
             singletonList(filter));
     AwsInfrastructureMapping awsInfrastructureMapping =
         anAwsInfrastructureMapping().withRegion(Regions.US_EAST_1.getName()).withUsePublicDns(false).build();
@@ -139,22 +134,17 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
         .hasOnlyElementsOfType(Host.class)
         .extracting(Host::getPublicDns)
         .isEqualTo(asList("HOST_NAME_1", "HOST_NAME_2"));
-    verify(mockAwsEc2Service)
-        .describeEc2Instances((AwsConfig) awsSetting.getValue(), Collections.emptyList(), Regions.US_EAST_1.getName(),
+    verify(mockAwsEc2HelperServiceManager)
+        .listEc2Instances((AwsConfig) awsSetting.getValue(), Collections.emptyList(), Regions.US_EAST_1.getName(),
             singletonList(filter));
   }
 
   @Test
   public void shouldListHostsEmpty() {
-    /*
-
-    DescribeInstancesRequest instancesRequest =
-        new DescribeInstancesRequest().withFilters(new Filter("instance-state-name", asList("running")));
-        */
     Filter filter = new Filter("instance-state-name", asList("running"));
     doReturn(emptyList())
-        .when(mockAwsEc2Service)
-        .describeEc2Instances((AwsConfig) awsSetting.getValue(), Collections.emptyList(), Regions.US_EAST_1.getName(),
+        .when(mockAwsEc2HelperServiceManager)
+        .listEc2Instances((AwsConfig) awsSetting.getValue(), Collections.emptyList(), Regions.US_EAST_1.getName(),
             singletonList(filter));
     AwsInfrastructureMapping awsInfrastructureMapping =
         anAwsInfrastructureMapping().withRegion(Regions.US_EAST_1.getName()).withUsePublicDns(true).build();
@@ -164,8 +154,8 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
     PageResponse<Host> hosts = infrastructureProvider.listHosts(
         awsInfrastructureMapping, awsSetting, Collections.emptyList(), new PageRequest<>());
     assertThat(hosts).hasSize(0);
-    verify(mockAwsEc2Service)
-        .describeEc2Instances(awsConfig, Collections.emptyList(), Regions.US_EAST_1.getName(), singletonList(filter));
+    verify(mockAwsEc2HelperServiceManager)
+        .listEc2Instances(awsConfig, Collections.emptyList(), Regions.US_EAST_1.getName(), singletonList(filter));
   }
 
   @Test

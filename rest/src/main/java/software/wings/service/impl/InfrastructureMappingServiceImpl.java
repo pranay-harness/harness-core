@@ -110,7 +110,6 @@ import software.wings.scheduler.QuartzScheduler;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.AwsEc2Service;
 import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -121,6 +120,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.aws.manager.AwsEc2HelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsEcsHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsIamHelperServiceManager;
 import software.wings.service.intfc.ownership.OwnedByInfrastructureMapping;
@@ -185,6 +185,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private PcfHelperService pcfHelperService;
   @Inject private AwsEcsHelperServiceManager awsEcsHelperServiceManager;
   @Inject private AwsIamHelperServiceManager awsIamHelperServiceManager;
+  @Inject private AwsEc2HelperServiceManager awsEc2HelperServiceManager;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
@@ -1029,10 +1030,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       try {
-        SyncTaskContext syncTaskContext = aContext().withAccountId(computeProviderSetting.getAccountId()).build();
         AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-        return delegateProxyFactory.get(AwsEc2Service.class, syncTaskContext)
-            .getRegions(awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null));
+        return awsEc2HelperServiceManager.listRegions(
+            awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null));
       } catch (Exception e) {
         logger.warn(Misc.getMessage(e), e);
         throw new InvalidRequestException(Misc.getMessage(e), USER);
@@ -1081,10 +1081,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       try {
-        SyncTaskContext syncTaskContext = aContext().withAccountId(computeProviderSetting.getAccountId()).build();
         AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-        return delegateProxyFactory.get(AwsEc2Service.class, syncTaskContext)
-            .getTags(awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
+        return awsEc2HelperServiceManager.listTags(
+            awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
       } catch (Exception e) {
         logger.warn(Misc.getMessage(e), e);
         throw new InvalidRequestException(Misc.getMessage(e), USER);
@@ -1139,10 +1138,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       try {
-        SyncTaskContext syncTaskContext = aContext().withAccountId(computeProviderSetting.getAccountId()).build();
         AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-        return delegateProxyFactory.get(AwsEc2Service.class, syncTaskContext)
-            .getVPCs(awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
+        return awsEc2HelperServiceManager.listVPCs(
+            awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
       } catch (Exception e) {
         logger.warn(Misc.getMessage(e), e);
         throw new InvalidRequestException(Misc.getMessage(e), USER);
@@ -1191,10 +1189,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       try {
-        SyncTaskContext syncTaskContext = aContext().withAccountId(computeProviderSetting.getAccountId()).build();
         AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-        return delegateProxyFactory.get(AwsEc2Service.class, syncTaskContext)
-            .getSGs(awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region, vpcIds);
+        return awsEc2HelperServiceManager.listSGs(
+            awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region, vpcIds);
       } catch (Exception e) {
         logger.warn(Misc.getMessage(e), e);
         throw new InvalidRequestException(Misc.getMessage(e), USER);
@@ -1210,10 +1207,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       try {
-        SyncTaskContext syncTaskContext = aContext().withAccountId(computeProviderSetting.getAccountId()).build();
         AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-        return delegateProxyFactory.get(AwsEc2Service.class, syncTaskContext)
-            .getSubnets(awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region, vpcIds);
+        return awsEc2HelperServiceManager.listSubnets(
+            awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region, vpcIds);
       } catch (Exception e) {
         logger.warn(Misc.getMessage(e), e);
         throw new InvalidRequestException(Misc.getMessage(e), USER);

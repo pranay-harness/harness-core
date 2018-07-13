@@ -43,6 +43,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.AwsEc2Service;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureProvider;
+import software.wings.service.intfc.aws.manager.AwsEc2HelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsElbHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsIamHelperServiceManager;
 import software.wings.service.intfc.security.SecretManager;
@@ -70,6 +71,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
   @Inject private AwsHelperService awsHelperService;
   @Inject private AwsElbHelperServiceManager awsElbHelperServiceManager;
   @Inject private AwsIamHelperServiceManager awsIamHelperServiceManager;
+  @Inject private AwsEc2HelperServiceManager awsEc2HelperServiceManager;
 
   @Override
   public PageResponse<Host> listHosts(AwsInfrastructureMapping awsInfrastructureMapping,
@@ -154,9 +156,8 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
       List<EncryptedDataDetail> encryptedDataDetails) {
     List<Filter> filters = awsUtils.getAwsFilters(awsInfrastructureMapping);
     try {
-      SyncTaskContext syncTaskContext = aContext().withAccountId(awsConfig.getAccountId()).build();
-      return delegateProxyFactory.get(AwsEc2Service.class, syncTaskContext)
-          .describeEc2Instances(awsConfig, encryptedDataDetails, awsInfrastructureMapping.getRegion(), filters);
+      return awsEc2HelperServiceManager.listEc2Instances(
+          awsConfig, encryptedDataDetails, awsInfrastructureMapping.getRegion(), filters);
     } catch (Exception e) {
       logger.warn(Misc.getMessage(e), e);
       throw new InvalidRequestException(Misc.getMessage(e), USER);
@@ -277,10 +278,9 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
 
   public Set<String> listTags(SettingAttribute computeProviderSetting, String region) {
     try {
-      SyncTaskContext syncTaskContext = aContext().withAccountId(computeProviderSetting.getAccountId()).build();
       AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-      return delegateProxyFactory.get(AwsEc2Service.class, syncTaskContext)
-          .getTags(awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
+      return awsEc2HelperServiceManager.listTags(
+          awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
     } catch (Exception e) {
       logger.warn(Misc.getMessage(e), e);
       throw new InvalidRequestException(Misc.getMessage(e), USER);

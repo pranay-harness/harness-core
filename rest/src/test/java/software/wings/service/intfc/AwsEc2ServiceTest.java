@@ -1,7 +1,5 @@
 package software.wings.service.intfc;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -36,38 +34,6 @@ public class AwsEc2ServiceTest extends WingsBaseTest {
   @Inject @InjectMocks private AwsEc2ServiceImpl service;
 
   @Test
-  public void testGetRegions() {
-    doReturn(asList("r1", "r2")).when(mockAwsHelperService).listRegions(any(), anyList());
-    assertEquals(asList("r1", "r2"),
-        service.getRegions(AwsConfig.builder().build(), singletonList(EncryptedDataDetail.builder().build())));
-  }
-
-  @Test
-  public void testGetVPCs() {
-    doReturn(asList("vpc1", "vpc2")).when(mockAwsHelperService).listVPCs(any(), anyList(), anyString());
-    assertEquals(asList("vpc1", "vpc2"),
-        service.getVPCs(AwsConfig.builder().build(), singletonList(EncryptedDataDetail.builder().build()), "region"));
-  }
-
-  @Test
-  public void testGetSubnets() {
-    doReturn(asList("s1", "s2")).when(mockAwsHelperService).listSubnetIds(any(), anyList(), anyString(), anyList());
-    assertEquals(asList("s1", "s2"),
-        service.getSubnets(AwsConfig.builder().build(), singletonList(EncryptedDataDetail.builder().build()), "region",
-            asList("v1", "v2")));
-  }
-
-  @Test
-  public void testGetSGs() {
-    doReturn(asList("s1", "s2"))
-        .when(mockAwsHelperService)
-        .listSecurityGroupIds(any(), anyList(), anyString(), anyList());
-    assertEquals(asList("s1", "s2"),
-        service.getSGs(AwsConfig.builder().build(), singletonList(EncryptedDataDetail.builder().build()), "region",
-            asList("v1", "v2")));
-  }
-
-  @Test
   public void testDescribeAutoScalingGroupInstances() {
     DescribeInstancesResult result = new DescribeInstancesResult().withReservations(
         new Reservation().withInstances(new Instance().withArchitecture("arch")));
@@ -76,18 +42,6 @@ public class AwsEc2ServiceTest extends WingsBaseTest {
         .describeAutoScalingGroupInstances(any(), anyList(), anyString(), anyString());
     List<Instance> actual = service.describeAutoScalingGroupInstances(
         AwsConfig.builder().build(), singletonList(EncryptedDataDetail.builder().build()), "region", "name");
-    assertNotNull(actual);
-    assertEquals(actual.size(), 1);
-    assertEquals(actual.get(0).getArchitecture(), "arch");
-  }
-
-  @Test
-  public void testDescribeEc2Instances() {
-    DescribeInstancesResult result = new DescribeInstancesResult().withReservations(
-        new Reservation().withInstances(new Instance().withArchitecture("arch")));
-    doReturn(result).when(mockAwsHelperService).describeEc2Instances(any(), anyList(), anyString(), any());
-    List<Instance> actual = service.describeEc2Instances(
-        AwsConfig.builder().build(), singletonList(EncryptedDataDetail.builder().build()), "region", emptyList());
     assertNotNull(actual);
     assertEquals(actual.size(), 1);
     assertEquals(actual.get(0).getArchitecture(), "arch");
