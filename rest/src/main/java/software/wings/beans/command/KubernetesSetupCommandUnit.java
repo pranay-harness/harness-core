@@ -1260,6 +1260,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     kubernetesContainerService.listControllers(kubernetesConfig, encryptedDataDetails)
         .stream()
         .filter(ctrl -> ctrl.getMetadata().getName().startsWith(controllerNamePrefix))
+        .filter(ctrl -> !(ctrl.getKind().equals("ReplicaSet") && ctrl.getMetadata().getOwnerReferences() != null))
         .forEach(ctrl -> {
           Optional<Integer> revision = getRevisionFromControllerName(ctrl.getMetadata().getName(), useDashInHostName);
           if (revision.isPresent() && (lastController.get() == null || revision.get() > lastRevision.get())) {
@@ -1277,6 +1278,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     kubernetesContainerService.listControllers(kubernetesConfig, encryptedDataDetails)
         .stream()
         .filter(ctrl -> ctrl.getMetadata().getName().startsWith(controllerNamePrefix))
+        .filter(ctrl -> !(ctrl.getKind().equals("ReplicaSet") && ctrl.getMetadata().getOwnerReferences() != null))
         .forEach(ctrl -> {
           HorizontalPodAutoscaler hpa = kubernetesContainerService.getAutoscaler(
               kubernetesConfig, encryptedDataDetails, ctrl.getMetadata().getName(), KUBERNETES_V1.getVersionName());
@@ -1521,6 +1523,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           .stream()
           .filter(ctrl -> ctrl.getMetadata().getName().startsWith(controllerNamePrefix))
           .filter(ctrl -> !ctrl.getMetadata().getName().equals(containerServiceName))
+          .filter(ctrl -> !(ctrl.getKind().equals("ReplicaSet") && ctrl.getMetadata().getOwnerReferences() != null))
           .filter(ctrl -> kubernetesContainerService.getControllerPodCount(ctrl) == 0)
           .forEach(ctrl -> {
             String controllerName = ctrl.getMetadata().getName();
