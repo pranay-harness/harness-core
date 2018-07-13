@@ -114,6 +114,12 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
 
   private boolean hasAccess(String accountId, Map<String, Set<String>> appEnvMapFromEntityRestrictions,
       UsageRestrictions entityUsageRestrictions) {
+    if (hasNoRestrictions(entityUsageRestrictions)
+        || (hasAllEnvAccessOfType(entityUsageRestrictions, FilterType.PROD)
+               && hasAllEnvAccessOfType(entityUsageRestrictions, FilterType.NON_PROD))) {
+      return true;
+    }
+
     UsageRestrictions restrictionsFromUserPermissions = getUsageRestrictionsFromUserPermissions(accountId, false);
 
     if (hasNoRestrictions(restrictionsFromUserPermissions)) {
