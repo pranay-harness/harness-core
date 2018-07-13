@@ -171,8 +171,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     if (user != null) {
       if (!userService.isUserAssignedToAccount(user, accountId)) {
         if (!httpMethod.equals(HttpMethod.GET.name())) {
-          throw new InvalidRequestException(
-              "User not authorized to perform the operation in the account: " + accountId, USER);
+          throw new InvalidRequestException("User not authorized", USER);
         }
 
         Set<Action> actions = null;
@@ -181,7 +180,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
         }
 
         if (isEmpty(actions)) {
-          throw new InvalidRequestException("User not authorized to access the given account: " + accountId, USER);
+          throw new InvalidRequestException("User not authorized", USER);
         }
       }
     }
