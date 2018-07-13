@@ -45,11 +45,11 @@ import software.wings.exception.WingsException;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.AwsEc2Service;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.analysis.AnalysisService;
+import software.wings.service.intfc.aws.manager.AwsEc2HelperServiceManager;
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -84,6 +84,7 @@ public class SettingValidationService {
   @Inject @Transient private transient FeatureFlagService featureFlagService;
   @Inject private SecretManager secretManager;
   @Inject private EncryptionService encryptionService;
+  @Inject private AwsEc2HelperServiceManager awsEc2HelperServiceManager;
 
   public boolean validate(SettingAttribute settingAttribute) {
     // Name has leading/trailing spaces
@@ -202,9 +203,8 @@ public class SettingValidationService {
 
   private void validateAwsConfig(SettingAttribute settingAttribute) {
     try {
-      SyncTaskContext syncTaskContext = aContext().withAccountId(settingAttribute.getAccountId()).build();
       AwsConfig value = (AwsConfig) settingAttribute.getValue();
-      delegateProxyFactory.get(AwsEc2Service.class, syncTaskContext).validateAwsAccountCredential(value, emptyList());
+      awsEc2HelperServiceManager.validateAwsAccountCredential(value, emptyList());
     } catch (Exception e) {
       logger.warn(Misc.getMessage(e), e);
       throw new InvalidRequestException(Misc.getMessage(e), USER);
