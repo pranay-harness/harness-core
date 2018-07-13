@@ -975,6 +975,10 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void executeTask(@NotNull DelegateTask delegateTask) {
+    if (currentlyExecutingTasks.containsKey(delegateTask.getUuid())) {
+      logger.info("Already executing task {}", delegateTask.getUuid());
+      return;
+    }
     logger.info("DelegateTask acquired - uuid: {}, accountId: {}, taskType: {}", delegateTask.getUuid(), accountId,
         delegateTask.getTaskType());
     DelegateRunnableTask delegateRunnableTask =
@@ -996,8 +1000,14 @@ public class DelegateServiceImpl implements DelegateService {
   private Supplier<Boolean> getPreExecutionFunction(@NotNull DelegateTask delegateTask) {
     return () -> {
       logger.info("Starting pre-execution for task {}", delegateTask.getUuid());
-      currentlyExecutingTasks.put(delegateTask.getUuid(), delegateTask);
-      return true;
+      if (!currentlyExecutingTasks.containsKey(delegateTask.getUuid())) {
+        logger.info("Adding task {} to executing tasks", delegateTask.getUuid());
+        currentlyExecutingTasks.put(delegateTask.getUuid(), delegateTask);
+        return true;
+      } else {
+        logger.info("Task {} is already being executed", delegateTask.getUuid());
+        return false;
+      }
     };
   }
 
