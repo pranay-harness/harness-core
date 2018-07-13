@@ -122,6 +122,7 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.aws.manager.AwsEcsHelperServiceManager;
+import software.wings.service.intfc.aws.manager.AwsIamHelperServiceManager;
 import software.wings.service.intfc.ownership.OwnedByInfrastructureMapping;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.EntityUpdateService;
@@ -183,6 +184,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private YamlChangeSetHelper yamlChangeSetHelper;
   @Inject private PcfHelperService pcfHelperService;
   @Inject private AwsEcsHelperServiceManager awsEcsHelperServiceManager;
+  @Inject private AwsIamHelperServiceManager awsIamHelperServiceManager;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
@@ -1123,15 +1125,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
-      try {
-        SyncTaskContext syncTaskContext = aContext().withAccountId(computeProviderSetting.getAccountId()).build();
-        AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-        return delegateProxyFactory.get(AwsEc2Service.class, syncTaskContext)
-            .getIAMRoles(awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null));
-      } catch (Exception e) {
-        logger.warn(Misc.getMessage(e), e);
-        throw new InvalidRequestException(Misc.getMessage(e), USER);
-      }
+      AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+      return awsIamHelperServiceManager.listIamRoles(
+          awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null));
     }
     return Collections.emptyMap();
   }

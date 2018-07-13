@@ -94,12 +94,6 @@ public class AwsEc2ServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void testGetIAMInstanceRoles() {
-    doReturn(asList("r1", "r2")).when(mockAwsHelperService).listIAMInstanceRoles(any());
-    assertEquals(asList("r1", "r2"), service.getIAMInstanceRoles(AwsConfig.builder().build()));
-  }
-
-  @Test
   public void testGetAutoScalingGroups() {
     List<AutoScalingGroup> scalingGroups =
         singletonList(new AutoScalingGroup().withAutoScalingGroupName("name").withAutoScalingGroupARN("arn"));

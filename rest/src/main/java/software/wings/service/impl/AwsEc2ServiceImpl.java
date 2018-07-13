@@ -16,7 +16,6 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.AwsEc2Service;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -39,11 +38,6 @@ public class AwsEc2ServiceImpl implements AwsEc2Service {
   @Override
   public List<String> getVPCs(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
     return awsHelperService.listVPCs(awsConfig, encryptionDetails, region);
-  }
-
-  @Override
-  public Map<String, String> getIAMRoles(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
-    return awsHelperService.listIAMRoles(awsConfig, encryptionDetails);
   }
 
   @Override
@@ -81,11 +75,6 @@ public class AwsEc2ServiceImpl implements AwsEc2Service {
     List<Instance> instanceList = Lists.newArrayList();
     result.getReservations().forEach(reservation -> instanceList.addAll(reservation.getInstances()));
     return instanceList;
-  }
-
-  @Override
-  public List<String> getIAMInstanceRoles(AwsConfig awsConfig) {
-    return awsHelperService.listIAMInstanceRoles(awsConfig);
   }
 
   @Override

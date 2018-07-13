@@ -8,7 +8,6 @@ import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -23,9 +22,6 @@ public interface AwsEc2Service {
 
   @DelegateTaskType(TaskType.AWS_GET_VPCS)
   List<String> getVPCs(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region);
-
-  @DelegateTaskType(TaskType.AWS_GET_IAM_ROLES)
-  Map<String, String> getIAMRoles(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails);
 
   @DelegateTaskType(TaskType.AWS_GET_SUBNETS)
   List<String> getSubnets(
@@ -45,8 +41,6 @@ public interface AwsEc2Service {
   @DelegateTaskType(TaskType.AWS_DESCRIBE_EC2_INSTANCES)
   List<Instance> describeEc2Instances(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, List<Filter> filters);
-
-  @DelegateTaskType(TaskType.AWS_GET_IAM_INSTANCE_ROLES) List<String> getIAMInstanceRoles(AwsConfig awsConfig);
 
   @DelegateTaskType(TaskType.AWS_GET_AUTO_SCALING_GROUPS)
   List<String> getAutoScalingGroupNames(

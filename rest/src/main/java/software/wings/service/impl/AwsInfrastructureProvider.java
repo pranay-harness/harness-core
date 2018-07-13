@@ -44,6 +44,7 @@ import software.wings.service.intfc.AwsEc2Service;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.service.intfc.aws.manager.AwsElbHelperServiceManager;
+import software.wings.service.intfc.aws.manager.AwsIamHelperServiceManager;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.utils.Misc;
@@ -68,6 +69,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private AwsHelperService awsHelperService;
   @Inject private AwsElbHelperServiceManager awsElbHelperServiceManager;
+  @Inject private AwsIamHelperServiceManager awsIamHelperServiceManager;
 
   @Override
   public PageResponse<Host> listHosts(AwsInfrastructureMapping awsInfrastructureMapping,
@@ -228,14 +230,9 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
   }
 
   public List<String> listIAMInstanceRoles(SettingAttribute computeProviderSetting) {
-    try {
-      SyncTaskContext syncTaskContext = aContext().withAccountId(computeProviderSetting.getAccountId()).build();
-      AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-      return delegateProxyFactory.get(AwsEc2Service.class, syncTaskContext).getIAMInstanceRoles(awsConfig);
-    } catch (Exception e) {
-      logger.warn(Misc.getMessage(e), e);
-      throw new InvalidRequestException(Misc.getMessage(e), USER);
-    }
+    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+    return awsIamHelperServiceManager.listIamInstanceRoles(
+        awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null));
   }
 
   public List<String> listLoadBalancers(SettingAttribute computeProviderSetting, String region) {
