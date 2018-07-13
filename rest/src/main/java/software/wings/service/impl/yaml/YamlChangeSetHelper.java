@@ -443,7 +443,7 @@ public class YamlChangeSetHelper {
   public void queueSettingUpdateYamlChangeAsync(
       SettingAttribute savedSettingAttributes, SettingAttribute updatedSettingAttribute) {
     executorService.submit(() -> {
-      if (!updatedSettingAttribute.getName().equals(updatedSettingAttribute.getName())) {
+      if (!savedSettingAttributes.getName().equals(updatedSettingAttribute.getName())) {
         queueMoveSettingChange(savedSettingAttributes, updatedSettingAttribute);
       } else {
         if (isDefaultVariableType(updatedSettingAttribute)) {
@@ -497,7 +497,7 @@ public class YamlChangeSetHelper {
   }
 
   private void queueMoveSettingChange(SettingAttribute oldSettingAttribute, SettingAttribute newSettingAttribute) {
-    String accountId = appService.getAccountIdByAppId(newSettingAttribute.getAppId());
+    String accountId = newSettingAttribute.getAccountId();
     YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
     if (ygs != null) {
       List<GitFileChange> changeSet = new ArrayList<>();
@@ -518,13 +518,30 @@ public class YamlChangeSetHelper {
 
       changeSet.add(GitFileChange.Builder.aGitFileChange()
                         .withAccountId(newSettingAttrGitSyncFile.getAccountId())
-                        .withChangeType(ChangeType.RENAME)
-                        .withFilePath(newSettingAttrGitSyncFile.getFilePath())
-                        .withOldFilePath(oldSettingAttrPath)
+                        .withChangeType(ChangeType.DELETE)
+                        .withFilePath(oldSettingAttrPath)
                         .build());
+
       changeSet.add(newSettingAttrGitSyncFile);
+      yamlChangeSetService.saveChangeSet(ygs, changeSet);
+      // As Setting Attribute has changed, it may affect other entities yaml,
+      // e.g. Infra using cloud provider would be affected if cloudProvider name changes
+      // So perform git full sync
+      addFullSyncChangeSet(ygs, accountId);
+    }
+  }
+
+  private void addFullSyncChangeSet(YamlGitConfig ygs, String accountId) {
+    try {
+      List<GitFileChange> changeSet = new ArrayList<>();
       changeSet.addAll(yamlGitService.performFullSyncDryRun(accountId));
       yamlChangeSetService.saveChangeSet(ygs, changeSet);
+    } catch (Exception e) {
+      logger.warn(new StringBuilder()
+                      .append("Full sync failed with exception: ")
+                      .append(e)
+                      .append("\n git may be in inconsistent state, please perform git full sync/Reset")
+                      .toString());
     }
   }
 }
