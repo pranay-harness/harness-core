@@ -19,6 +19,7 @@ class WordToVecCluster(object):
         self.wtv_model = wtv_model
         self.docs = docs.tolist()
         self.control_labels = np.array([-1] * len(docs))
+        self.clustering_threshold = 0.98
 
     def cluster(self):
         workers = min(8, len(self.docs))
@@ -67,7 +68,7 @@ class WordToVecCluster(object):
                 for l in labels:
                     c_ind = np.where(self.control_labels == l)[0][0]
                     score = self.text_diff_score(self.docs[c_ind], self.docs[r_doc_idx])
-                    if score >= self.threshold:
+                    if score >= self.clustering_threshold:
                         # update labels
                         self.control_labels[self.control_labels == old_label_right] = l
                         break
@@ -88,7 +89,7 @@ class WordToVecCluster(object):
                 for l in labels:
                     c_ind = control_labels.index(l)
                     score = self.text_diff_score(docs[c_ind], docs[ind])
-                    if score >= self.threshold:
+                    if score >= self.clustering_threshold:
                         control_labels[ind] = l
                         found_cluster = True
                         break
