@@ -31,6 +31,7 @@ import software.wings.delegatetasks.TerraformProvisionTask;
 import software.wings.delegatetasks.aws.AwsEcrTask;
 import software.wings.delegatetasks.aws.AwsEcsTask;
 import software.wings.delegatetasks.aws.AwsElbTask;
+import software.wings.delegatetasks.aws.AwsIamTask;
 import software.wings.delegatetasks.cloudformation.CloudFormationCommandTask;
 import software.wings.delegatetasks.collect.artifacts.AmazonS3CollectionTask;
 import software.wings.delegatetasks.collect.artifacts.ArtifactoryCollectionTask;
@@ -211,18 +212,17 @@ public enum TaskType {
   ECS_STEADY_STATE_CHECK_TASK(TaskGroup.CONTAINER, EcsSteadyStateCheckTask.class, AlwaysTrueValidation.class),
   AWS_GET_REGIONS(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   AWS_GET_VPCS(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
-  AWS_GET_IAM_ROLES(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   AWS_GET_SUBNETS(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   AWS_GET_SGS(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   AWS_GET_TAGS(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   AWS_DESCRIBE_AUTO_SCALING_GROUP_INSTANCES(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   AWS_DESCRIBE_EC2_INSTANCES(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
-  AWS_GET_IAM_INSTANCE_ROLES(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   AWS_GET_AUTO_SCALING_GROUPS(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   SECRET_DECRYPT_REF(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerDecryptValidation.class),
   AWS_ECR_TASK(TaskGroup.AWS, AwsEcrTask.class, AlwaysTrueValidation.class),
   AWS_ELB_TASK(TaskGroup.AWS, AwsElbTask.class, AlwaysTrueValidation.class),
-  AWS_ECS_TASK(TaskGroup.AWS, AwsEcsTask.class, AlwaysTrueValidation.class);
+  AWS_ECS_TASK(TaskGroup.AWS, AwsEcsTask.class, AlwaysTrueValidation.class),
+  AWS_IAM_TASK(TaskGroup.AWS, AwsIamTask.class, AlwaysTrueValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;

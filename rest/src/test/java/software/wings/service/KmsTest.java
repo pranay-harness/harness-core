@@ -1316,6 +1316,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Ignore
   public void kmsEncryptionSaveServiceVariable() throws IOException, IllegalAccessException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
@@ -1425,6 +1426,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Ignore
   public void kmsEncryptionUpdateServiceVariable() throws IOException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);

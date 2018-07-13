@@ -438,3 +438,9 @@ software.wings.service.impl.aws.model.AwsEcsRequest, 5398
 software.wings.service.impl.aws.model.AwsEcsRequest$AwsEcsRequestType, 5399
 software.wings.service.impl.aws.model.AwsEcsListClustersRequest, 5400
 software.wings.service.impl.aws.model.AwsEcsListClustersResponse, 5401
+software.wings.service.impl.aws.model.AwsIamRequest, 5402
+software.wings.service.impl.aws.model.AwsIamRequest$AwsIamRequestType, 5403
+software.wings.service.impl.aws.model.AwsIamListInstanceRolesRequest, 5404
+software.wings.service.impl.aws.model.AwsIamListInstanceRolesResponse, 5405
+software.wings.service.impl.aws.model.AwsIamListRolesRequest, 5406
+software.wings.service.impl.aws.model.AwsIamListRolesResponse, 5407
