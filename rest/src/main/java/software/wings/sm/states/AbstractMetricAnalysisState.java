@@ -350,4 +350,8 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
   }
 
   public abstract AnalysisTolerance getAnalysisTolerance();
+
+  public void setAnalysisTolerance(String tolerance) {
+    this.tolerance = tolerance;
+  }
 }
