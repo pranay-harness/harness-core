@@ -34,6 +34,7 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 
+import de.danielbechler.util.Collections;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -326,11 +327,23 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldFetchLastCollectedArtifactForArtifactStream() {
+  public void shouldFetchLastCollectedApprovedArtifactForArtifactStream() {
     Artifact artifact = artifactBuilder.build();
     Artifact savedArtifact = artifactService.create(artifact);
     artifactService.updateStatus(savedArtifact.getUuid(), savedArtifact.getAppId(), APPROVED);
-    Artifact latestArtifact = artifactService.fetchLastCollectedArtifactForArtifactStream(
+    Artifact latestArtifact = artifactService.fetchLastCollectedApprovedArtifactForArtifactStream(
+        savedArtifact.getAppId(), savedArtifact.getArtifactStreamId(), savedArtifact.getArtifactSourceName());
+    assertThat(latestArtifact)
+        .isNotNull()
+        .extracting(Artifact::getArtifactSourceName)
+        .containsExactly(savedArtifact.getArtifactSourceName());
+  }
+
+  @Test
+  public void shouldFetchLastCollectedArtifactForArtifactStream() {
+    Artifact savedArtifact = artifactService.create(artifactBuilder.build());
+    artifactService.updateStatus(savedArtifact.getUuid(), savedArtifact.getAppId(), RUNNING);
+    Artifact latestArtifact = artifactService.fetchLastCollectedArtifact(
         savedArtifact.getAppId(), savedArtifact.getArtifactStreamId(), savedArtifact.getArtifactSourceName());
     assertThat(latestArtifact)
         .isNotNull()
@@ -340,8 +353,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetArtifactByBuildNumber() {
-    Artifact artifact = artifactBuilder.build();
-    Artifact savedArtifact = artifactService.create(artifact);
+    Artifact savedArtifact = artifactService.create(artifactBuilder.build());
     artifactService.updateStatus(savedArtifact.getUuid(), savedArtifact.getAppId(), APPROVED);
     Artifact latestArtifact = artifactService.getArtifactByBuildNumber(
         savedArtifact.getAppId(), savedArtifact.getArtifactStreamId(), savedArtifact.getBuildNo());
@@ -353,8 +365,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetArtifactByBuildNumberSource() {
-    Artifact artifact = artifactBuilder.build();
-    Artifact savedArtifact = artifactService.create(artifact);
+    Artifact savedArtifact = artifactService.create(artifactBuilder.build());
     artifactService.updateStatus(savedArtifact.getUuid(), savedArtifact.getAppId(), APPROVED);
     Artifact latestArtifact = artifactService.getArtifactByBuildNumber(savedArtifact.getAppId(),
         savedArtifact.getArtifactStreamId(), savedArtifact.getArtifactSourceName(), savedArtifact.getBuildNo(), false);
@@ -652,23 +663,9 @@ public class ArtifactServiceTest extends WingsBaseTest {
 
     String jenkinsArtifactStreamId = wingsRule.getDatastore().save(jenkinsArtifactStream).getId().toString();
 
-    Artifact dockerArtifact = anArtifact()
-                                  .withAppId(APP_ID)
-                                  .withArtifactStreamId(dockerArtifactStreamId)
-                                  .withMetadata(ImmutableMap.of("buildNo", "200"))
-                                  .withRevision("1.0")
-                                  .withDisplayName("DISPLAY_NAME")
-                                  .withServiceIds(asList(SERVICE_ID))
-                                  .build();
+    Artifact dockerArtifact = constructArtifact(dockerArtifactStreamId);
 
-    Artifact jenkinsArtifact = anArtifact()
-                                   .withAppId(APP_ID)
-                                   .withArtifactStreamId(jenkinsArtifactStreamId)
-                                   .withMetadata(ImmutableMap.of("buildNo", "200"))
-                                   .withRevision("1.0")
-                                   .withDisplayName("DISPLAY_NAME")
-                                   .withServiceIds(asList(SERVICE_ID))
-                                   .build();
+    Artifact jenkinsArtifact = constructArtifact(jenkinsArtifactStreamId);
 
     when(artifactStreamService.get(APP_ID, dockerArtifactStreamId)).thenReturn(dockerArtifactStream);
     artifactService.create(dockerArtifact);
@@ -679,6 +676,17 @@ public class ArtifactServiceTest extends WingsBaseTest {
     artifactService.deleteArtifacts(50);
     assertThat(artifactService.list(aPageRequest().addFilter(Artifact.APP_ID_KEY, EQ, APP_ID).build(), false))
         .hasSize(2);
+  }
+
+  private Artifact constructArtifact(String dockerArtifactStreamId) {
+    return anArtifact()
+        .withAppId(APP_ID)
+        .withArtifactStreamId(dockerArtifactStreamId)
+        .withMetadata(ImmutableMap.of("buildNo", "200"))
+        .withRevision("1.0")
+        .withDisplayName("DISPLAY_NAME")
+        .withServiceIds(asList(SERVICE_ID))
+        .build();
   }
 
   @Test
@@ -838,41 +846,9 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldDeleteArtifactFiles() {
-    JenkinsArtifactStream jenkinsArtifactStream = JenkinsArtifactStream.builder()
-                                                      .sourceName("todolistwar")
-                                                      .settingId(SETTING_ID)
-                                                      .appId(APP_ID)
-                                                      .jobname("todolistwar")
-                                                      .autoPopulate(true)
-                                                      .serviceId(SERVICE_ID)
-                                                      .artifactPaths(asList("target/todolist.war"))
-                                                      .build();
-    String jenkinsArtifactStreamId = wingsRule.getDatastore().save(jenkinsArtifactStream).getId().toString();
-    Artifact jenkinsArtifact = anArtifact()
-                                   .withAppId(APP_ID)
-                                   .withArtifactStreamId(jenkinsArtifactStreamId)
-                                   .withMetadata(ImmutableMap.of("buildNo", "200"))
-                                   .withRevision("1.0")
-                                   .withDisplayName("DISPLAY_NAME")
-                                   .withServiceIds(asList(SERVICE_ID))
-                                   .withStatus(APPROVED)
-                                   .build();
-
-    when(artifactStreamService.get(APP_ID, jenkinsArtifactStreamId)).thenReturn(jenkinsArtifactStream);
-    Artifact savedArtifact = artifactService.create(jenkinsArtifact);
-    ArtifactFile artifactFile = anArtifactFile()
-                                    .withAppId(APP_ID)
-                                    .withName("test-artifact.war")
-                                    .withUuid("5942bffe1e204f7f3004f455")
-                                    .withFileUuid("5942bffe1e204f7f3004f455")
-                                    .build();
-    wingsRule.getDatastore().save(artifactFile);
-    savedArtifact.setArtifactFiles(asList(artifactFile));
-    savedArtifact.setContentStatus(DOWNLOADED);
-
-    wingsRule.getDatastore().save(savedArtifact);
-
-    artifactService.deleteArtifactFiles();
+  public void shouldFetchArtifacts() {
+    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
+    assertThat(wingsPersistence.get(Artifact.class, savedArtifact.getUuid())).isNotNull();
+    assertThat(artifactService.fetchArtifacts(APP_ID, Collections.setOf(asList(savedArtifact.getUuid())))).isNotEmpty();
   }
 }

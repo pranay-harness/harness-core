@@ -273,8 +273,6 @@ public class DataGenUtil extends BaseIntegrationTest {
     createTestApplication(account);
     // createSeedEntries();
     //    systemTemplateGalleryMigration.migrate();
-    createOrUpdateSystemAppStackCatalogs();
-    createOrUpdateSystemAppContainers();
   }
 
   private void createSeedEntries() {

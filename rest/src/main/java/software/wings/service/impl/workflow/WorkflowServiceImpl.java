@@ -446,6 +446,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   @Override
+  public Workflow readWorkflowWithoutOrchestration(String appId, String workflowId) {
+    return wingsPersistence.get(Workflow.class, appId, workflowId);
+  }
+
+  @Override
   public List<String> isEnvironmentReferenced(String appId, String envId) {
     List<String> referencedWorkflows = new ArrayList<>();
     try (HIterator<Workflow> workflowHIterator =

@@ -220,7 +220,7 @@ public class ArtifactCollectionState extends State {
   private Artifact getLastCollectedArtifact(
       ExecutionContext context, String artifactStreamId, String sourceName, String buildNo) {
     if (isBlank(buildNo) || buildNo.equalsIgnoreCase(LATEST)) {
-      return artifactService.fetchLastCollectedArtifactForArtifactStream(
+      return artifactService.fetchLastCollectedApprovedArtifactForArtifactStream(
           context.getAppId(), artifactStreamId, sourceName);
     } else {
       return artifactService.getArtifactByBuildNumber(context.getAppId(), artifactStreamId, sourceName, buildNo, regex);

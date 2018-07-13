@@ -1322,13 +1322,6 @@ public class StateMachineExecutor {
     }
   }
 
-  void retryStateExecutionInstance(
-      String appId, String executionUuid, String stateExecutionInstanceId, Map<String, Object> stateParams) {
-    StateExecutionInstance stateExecutionInstance =
-        getStateExecutionInstance(appId, executionUuid, stateExecutionInstanceId);
-    retryStateExecutionInstance(stateExecutionInstance, stateParams);
-  }
-
   private void retryStateExecutionInstance(
       StateExecutionInstance stateExecutionInstance, Map<String, Object> stateParams) {
     clearStateExecutionData(stateExecutionInstance, stateParams);

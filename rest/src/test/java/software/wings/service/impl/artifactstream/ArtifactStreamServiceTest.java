@@ -1,4 +1,4 @@
-package software.wings.service;
+package software.wings.service.impl.artifactstream;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;

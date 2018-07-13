@@ -3,6 +3,7 @@ package software.wings.service;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.time.EpochUtil.PST_ZONE_ID;
 import static io.harness.time.EpochUtil.calculateEpochMilliOfStartOfDayForXDaysInPastFromNow;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.junit.Assert.assertNotNull;
@@ -44,8 +45,10 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.FieldEnd;
+import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import software.wings.WingsBaseTest;
@@ -75,7 +78,6 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachineExecutionSimulator;
 import software.wings.waitnotify.NotifyEventListener;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -318,7 +320,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     when(query.fetch()).thenReturn(executionIterator);
     long fromDateEpochMilli = calculateEpochMilliOfStartOfDayForXDaysInPastFromNow(30, PST_ZONE_ID);
     HIterator<WorkflowExecution> executionIterator =
-        workflowExecutionService.obtainWorkflowExecutionIterator(Arrays.asList(APP_ID), fromDateEpochMilli);
+        workflowExecutionService.obtainWorkflowExecutionIterator(asList(APP_ID), fromDateEpochMilli);
     assertNotNull(executionIterator);
   }
 
@@ -425,8 +427,17 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
 
     long fromDateEpochMilli = calculateEpochMilliOfStartOfDayForXDaysInPastFromNow(30, PST_ZONE_ID);
     List<WorkflowExecution> workflowExecutions =
-        workflowExecutionService.obtainWorkflowExecutions(Arrays.asList(APP_ID), fromDateEpochMilli);
+        workflowExecutionService.obtainWorkflowExecutions(asList(APP_ID), fromDateEpochMilli);
     assertNotNull(workflowExecutions);
     Assertions.assertThat(workflowExecutions).hasSize(2);
+  }
+
+  @Test
+  public void shouldFetchWorkflowExecution() {
+    when(query.order(Sort.descending(anyString()))).thenReturn(query);
+    when(query.get(any(FindOptions.class))).thenReturn(aWorkflowExecution().withAppId(APP_ID).build());
+    WorkflowExecution workflowExecution =
+        workflowExecutionService.fetchWorkflowExecution(APP_ID, asList(SERVICE_ID), asList(ENV_ID), WORKFLOW_ID);
+    assertThat(workflowExecution).isNotNull();
   }
 }

@@ -128,4 +128,7 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   HIterator<WorkflowExecution> obtainWorkflowExecutionIterator(List<String> appIds, long epochMilli);
 
   List<Artifact> obtainLastGoodDeployedArtifacts(@NotEmpty String appId, @NotEmpty String workflowId);
+
+  WorkflowExecution fetchWorkflowExecution(
+      String appId, List<String> serviceIds, List<String> envIds, String workflowId);
 }

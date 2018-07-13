@@ -151,8 +151,17 @@ public interface ArtifactService extends OwnedByArtifactStream {
    * @param artifactSourceName the artifact source name
    * @return the artifact
    */
-  Artifact fetchLastCollectedArtifactForArtifactStream(
+  Artifact fetchLastCollectedApprovedArtifactForArtifactStream(
       String appId, String artifactStreamId, String artifactSourceName);
+
+  /**
+   * Fetches last collected artifact that is in system so that artifact check takes care of downloading the artifact
+   * @param appId
+   * @param artifactStreamId
+   * @param artifactSourceName
+   * @return
+   */
+  Artifact fetchLastCollectedArtifact(String appId, String artifactStreamId, String artifactSourceName);
 
   /**
    * Gets artifact by build number.
@@ -195,11 +204,6 @@ public interface ArtifactService extends OwnedByArtifactStream {
    * @param retentionSize the size of the artifacts to be retained
    */
   void deleteArtifacts(int retentionSize);
-
-  /**
-   * Delete by artifact files.
-   */
-  void deleteArtifactFiles();
 
   List<Artifact> fetchArtifacts(String appId, Set<String> artifactUuids);
 }

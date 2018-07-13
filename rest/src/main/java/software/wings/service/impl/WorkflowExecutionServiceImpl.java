@@ -83,6 +83,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Value;
+import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -2458,5 +2459,21 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         .filter(STATUS_KEY, SUCCESS)
         .order("-createdAt")
         .get();
+  }
+
+  @Override
+  public WorkflowExecution fetchWorkflowExecution(
+      String appId, List<String> serviceIds, List<String> envIds, String workflowId) {
+    return wingsPersistence.createQuery(WorkflowExecution.class)
+        .filter("workflowType", ORCHESTRATION)
+        .filter("workflowId", workflowId)
+        .filter("appId", appId)
+        .filter("status", SUCCESS)
+        .field("serviceIds")
+        .in(serviceIds)
+        .field("envIds")
+        .in(envIds)
+        .order(Sort.descending("createdAt"))
+        .get(new FindOptions().skip(1));
   }
 }
