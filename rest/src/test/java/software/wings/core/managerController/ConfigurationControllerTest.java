@@ -3,7 +3,6 @@ package software.wings.core.managerController;
 import static io.harness.threading.Morpheus.sleep;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.ManagerConfiguration.Builder.aManagerConfiguration;
@@ -78,35 +77,26 @@ public class ConfigurationControllerTest extends WingsBaseTest {
   @Test
   public void primaryIsNotSet() {
     when(query.get()).thenReturn(aManagerConfiguration().withPrimaryVersion("2.0.0").build());
-    assertEventually(10000, new Runnable() {
-      public void run() {
-        assertThat(configurationController.isPrimary()).isFalse();
-      }
-    });
+    assertEventually(10000, () -> assertThat(configurationController.isPrimary()).isFalse());
   }
 
   @Test
   public void primaryIsSet() {
     when(query.get()).thenReturn(aManagerConfiguration().withPrimaryVersion("1.0.0").build());
-    assertEventually(10000, new Runnable() {
-      public void run() {
-        assertThat(configurationController.isPrimary()).isTrue();
-      }
-    });
+    assertEventually(10000, () -> assertThat(configurationController.isPrimary()).isTrue());
   }
 
   @Test
   public void listenerIsCalled() {
     TestListener testListener = new TestListener();
-    on(configurationController)
-        .set("managerConfiguration", aManagerConfiguration().withPrimaryVersion("1.0.0").build());
+
+    when(query.get()).thenReturn(aManagerConfiguration().withPrimaryVersion("1.0.0").build());
+    assertEventually(10000, () -> assertThat(configurationController.isPrimary()).isTrue());
+
     configurationController.register(testListener, asList(ConfigChangeEvent.PrimaryChanged));
+
     when(query.get()).thenReturn(aManagerConfiguration().withPrimaryVersion("2.0.0").build());
-    assertEventually(10000, new Runnable() {
-      public void run() {
-        assertThat(testListener.onChangeCalled).isTrue();
-      }
-    });
+    assertEventually(10000, () -> assertThat(testListener.onChangeCalled).isTrue());
     assertThat(configurationController.isPrimary()).isFalse();
   }
 
