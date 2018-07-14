@@ -1032,8 +1032,6 @@ public class DelegateServiceImpl implements DelegateService {
       if (taskFuture != null) {
         logger.info("Task future: {} - done:{}, cancelled:{}", delegateTask.getUuid(), taskFuture.isDone(),
             taskFuture.isCancelled());
-      } else {
-        logger.info("Task future is null: {}", delegateTask.getUuid());
       }
       stillRunning = taskFuture != null && !taskFuture.isDone() && !taskFuture.isCancelled();
     }

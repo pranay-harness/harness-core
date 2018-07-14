@@ -30,6 +30,7 @@ import software.wings.service.intfc.EnvironmentService;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by brett on 7/20/17
@@ -37,6 +38,8 @@ import java.util.List;
 @Singleton
 public class AssignDelegateServiceImpl implements AssignDelegateService {
   private static final Logger logger = LoggerFactory.getLogger(AssignDelegateServiceImpl.class);
+
+  private static final long WHITELIST_TTL = TimeUnit.HOURS.toMillis(6);
 
   @Inject private DelegateService delegateService;
   @Inject private EnvironmentService environmentService;
@@ -108,6 +111,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
                                                 .filter("accountId", task.getAccountId())
                                                 .filter("delegateId", delegateId)
                                                 .filter("criteria", criteria)
+                                                .field("lastUpdatedAt")
+                                                .greaterThan(clock.millis() - WHITELIST_TTL)
                                                 .get();
           if (result != null && result.isValidated()) {
             return true;
