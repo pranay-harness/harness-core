@@ -266,7 +266,7 @@ public class DelegateResourceTest {
     verify(DOWNLOAD_TOKEN_SERVICE, atLeastOnce()).validateDownloadToken("delegate." + ACCOUNT_ID, "token");
 
     assertThat(restResponse.getHeaderString("Content-Disposition"))
-        .isEqualTo("attachment; filename=" + Constants.DELEGATE_DIR + ".zip");
+        .isEqualTo("attachment; filename=" + Constants.DELEGATE_DIR + ".tar.gz");
     assertThat(IOUtils.readLines((InputStream) restResponse.getEntity(), Charset.defaultCharset()).get(0))
         .isEqualTo("Test");
   }

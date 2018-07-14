@@ -84,14 +84,14 @@ public void shouldDownloadDelegateZipWithWatcher()
   assertThat(zipDownloadUrl).isNotEmpty();
 
   assertThat(new ProcessExecutor()
-                 .command("rm", "-rf", "harness-delegate", "delegate.zip")
+                 .command("rm", "-rf", "harness-delegate", "delegate.tar.gz")
                  .readOutput(true)
                  .execute()
                  .getExitValue())
       .isEqualTo(0);
 
-  httpRequestExecutor.execute(Request.Get(zipDownloadUrl)).saveContent(new File("delegate.zip"));
-  assertThat(new ProcessExecutor().command("unzip", "delegate.zip").readOutput(true).execute().getExitValue())
+  httpRequestExecutor.execute(Request.Get(zipDownloadUrl)).saveContent(new File("delegate.tar.gz"));
+  assertThat(new ProcessExecutor().command("tar", "-xzf", "delegate.tar.gz").readOutput(true).execute().getExitValue())
       .isEqualTo(0);
 
   List<String> scripts = new ProcessExecutor()
@@ -117,12 +117,12 @@ public void shouldRunDelegate() throws IOException, JSONException, TimeoutExcept
           .returnContent()
           .asString();
 
-  new ProcessExecutor().command("rm", "-rf", "harness-delegate", "delegate.zip").readOutput(true).execute();
+  new ProcessExecutor().command("rm", "-rf", "harness-delegate", "delegate.tar.gz").readOutput(true).execute();
   String zipDownloadUrl = new JSONObject(responseString).getJSONObject("resource").getString("downloadUrl");
-  httpRequestExecutor.execute(Request.Get(zipDownloadUrl)).saveContent(new File("delegate.zip"));
+  httpRequestExecutor.execute(Request.Get(zipDownloadUrl)).saveContent(new File("delegate.tar.gz"));
   new ProcessExecutor()
       .command("/bin/sh", "-c",
-          "unzip delegate.zip && cd harness-delegate && sed -i'' 's/doUpgrade: true/doUpgrade: false/' start.sh")
+          "tar -xzf delegate.tar.gz && cd harness-delegate && sed -i'' 's/doUpgrade: true/doUpgrade: false/' start.sh")
       .readOutput(true)
       .execute()
       .getOutput()
