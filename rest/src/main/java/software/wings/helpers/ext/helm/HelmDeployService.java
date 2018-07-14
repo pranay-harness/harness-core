@@ -58,4 +58,7 @@ public interface HelmDeployService {
    * @return the helm release history command response
    */
   HelmReleaseHistoryCommandResponse releaseHistory(HelmReleaseHistoryCommandRequest helmCommandRequest);
+
+  HelmCommandResponse addPublicRepo(HelmCommandRequest commandRequest, LogCallback executionLogCallback)
+      throws InterruptedException, IOException, TimeoutException;
 }

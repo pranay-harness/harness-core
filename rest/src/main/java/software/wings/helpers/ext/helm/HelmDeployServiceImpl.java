@@ -1,11 +1,12 @@
 package software.wings.helpers.ext.helm;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.data.structure.EmptyPredicate;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -30,6 +31,7 @@ import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmListReleasesCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
 import software.wings.helpers.ext.helm.response.ReleaseInfo;
+import software.wings.helpers.ext.helm.response.RepoListInfo;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.utils.Misc;
 
@@ -59,7 +61,8 @@ public class HelmDeployServiceImpl implements HelmDeployService {
           "List all existing deployed releases for release name: " + commandRequest.getReleaseName());
       HelmCliResponse helmCliResponse =
           helmClient.releaseHistory(commandRequest.getKubeConfigLocation(), commandRequest.getReleaseName());
-      executionLogCallback.saveExecutionLog(helmCliResponse.getOutput());
+      executionLogCallback.saveExecutionLog(
+          preProcessReleaseHistoryCommandOutput(helmCliResponse, commandRequest.getReleaseName()));
 
       if (helmCliResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.FAILURE)) {
         executionLogCallback.saveExecutionLog("No previous deployment found for release. Installing chart");
@@ -136,6 +139,37 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   }
 
   @Override
+  public HelmCommandResponse addPublicRepo(HelmCommandRequest commandRequest, LogCallback executionLogCallback)
+      throws InterruptedException, TimeoutException, IOException {
+    executionLogCallback.saveExecutionLog(
+        "Checking if the repository has already been added", LogLevel.INFO, CommandExecutionStatus.RUNNING);
+
+    HelmCliResponse cliResponse = helmClient.getHelmRepoList(commandRequest);
+    List<RepoListInfo> repoListInfos = parseHelmAddRepoOutput(cliResponse.getOutput());
+
+    boolean repoAlreadyAdded = repoListInfos.stream().anyMatch(
+        repoListInfo -> repoListInfo.getRepoUrl().equals(commandRequest.getChartSpecification().getChartUrl()));
+
+    String responseMsg;
+    if (!repoAlreadyAdded) {
+      executionLogCallback.saveExecutionLog("Repository not found", LogLevel.INFO, CommandExecutionStatus.RUNNING);
+      executionLogCallback.saveExecutionLog("Adding repository " + commandRequest.getChartSpecification().getChartUrl()
+              + " with name " + commandRequest.getRepoName(),
+          LogLevel.INFO, CommandExecutionStatus.RUNNING);
+      cliResponse = helmClient.addPublicRepo(commandRequest);
+      if (cliResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.FAILURE)) {
+        throw new InvalidRequestException(cliResponse.getOutput());
+      }
+      responseMsg = "Successfully added repository " + commandRequest.getChartSpecification().getChartUrl()
+          + " with name " + commandRequest.getRepoName() + "\n";
+    } else {
+      responseMsg = "Repo " + commandRequest.getChartSpecification().getChartUrl() + " already added. Ignore adding\n";
+    }
+
+    return new HelmCommandResponse(cliResponse.getCommandExecutionStatus(), responseMsg);
+  }
+
+  @Override
   public HelmListReleasesCommandResponse listReleases(HelmInstallCommandRequest helmCommandRequest) {
     try {
       HelmCliResponse helmCliResponse = helmClient.listReleases(helmCommandRequest);
@@ -174,7 +208,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
   private List<ReleaseInfo> parseHelmReleaseCommandOutput(String listReleaseOutput, HelmCommandType helmCommandType)
       throws IOException {
-    if (EmptyPredicate.isEmpty(listReleaseOutput)) {
+    if (isEmpty(listReleaseOutput)) {
       return new ArrayList<>();
     }
     CSVFormat csvFormat = CSVFormat.RFC4180.withFirstRecordAsHeader().withDelimiter('\t').withTrim();
@@ -202,5 +236,30 @@ public class HelmDeployServiceImpl implements HelmDeployService {
         .status(releaseRecord.get("STATUS"))
         .chart(releaseRecord.get("CHART"))
         .build();
+  }
+
+  private List<RepoListInfo> parseHelmAddRepoOutput(String listReleaseOutput) throws IOException {
+    if (isEmpty(listReleaseOutput)) {
+      return new ArrayList<>();
+    }
+
+    CSVFormat csvFormat = CSVFormat.RFC4180.withFirstRecordAsHeader().withDelimiter('\t').withTrim();
+    return CSVParser.parse(listReleaseOutput, csvFormat)
+        .getRecords()
+        .stream()
+        .map(this ::repoListCsvRecordToRepoListInfo)
+        .collect(Collectors.toList());
+  }
+
+  private RepoListInfo repoListCsvRecordToRepoListInfo(CSVRecord repoListRecord) {
+    return RepoListInfo.builder().repoName(repoListRecord.get("NAME")).repoUrl(repoListRecord.get("URL")).build();
+  }
+
+  private String preProcessReleaseHistoryCommandOutput(HelmCliResponse helmCliResponse, String releaseName) {
+    if (helmCliResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.FAILURE)) {
+      return "Release: \"" + releaseName + "\" not found\n";
+    }
+
+    return helmCliResponse.getOutput();
   }
 }

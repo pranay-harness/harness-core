@@ -3,6 +3,7 @@ package software.wings.helpers.ext.helm.request;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.beans.container.HelmChartSpecification;
 import software.wings.service.impl.ContainerServiceParams;
 
 /**
@@ -19,6 +20,8 @@ public class HelmCommandRequest {
   private String activityId;
   private ContainerServiceParams containerServiceParams;
   private String releaseName;
+  private HelmChartSpecification chartSpecification;
+  private String repoName;
 
   public HelmCommandRequest(HelmCommandType helmCommandType) {
     this.helmCommandType = helmCommandType;

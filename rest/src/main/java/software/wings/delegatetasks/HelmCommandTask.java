@@ -1,5 +1,7 @@
 package software.wings.delegatetasks;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import com.google.inject.Inject;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -15,6 +17,7 @@ import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.helm.HelmCommandExecutionResponse;
 import software.wings.helpers.ext.helm.HelmDeployService;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
+import software.wings.helpers.ext.helm.request.HelmCommandRequest.HelmCommandType;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmReleaseHistoryCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
@@ -22,6 +25,8 @@ import software.wings.helpers.ext.helm.response.HelmCommandResponse;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
+import java.io.IOException;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -51,11 +56,12 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
       String configLocation = containerDeploymentDelegateHelper.createAndGetKubeConfigLocation(
           helmCommandRequest.getContainerServiceParams());
       helmCommandRequest.setKubeConfigLocation(configLocation);
-      HelmCommandResponse helmCommandResponse = helmDeployService.ensureHelmCliAndTillerInstalled(helmCommandRequest);
 
-      executionLogCallback.saveExecutionLog(helmCommandResponse.getOutput());
+      ensureHelmCliAndTillerInstalled(helmCommandRequest);
+      addPublicRepo(helmCommandRequest);
+
       executionLogCallback.saveExecutionLog(
-          "Started executing helm command", LogLevel.INFO, CommandExecutionStatus.RUNNING);
+          getDeploymentMessage(helmCommandRequest), LogLevel.INFO, CommandExecutionStatus.RUNNING);
 
       switch (helmCommandRequest.getHelmCommandType()) {
         case INSTALL:
@@ -107,5 +113,48 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
 
     @Override
     public void saveExecutionLog(String line, LogLevel logLevel, CommandExecutionStatus commandExecutionStatus) {}
+  }
+
+  private void ensureHelmCliAndTillerInstalled(HelmCommandRequest helmCommandRequest)
+      throws InterruptedException, IOException, TimeoutException {
+    LogCallback executionLogCallback = getExecutionLogCallback(helmCommandRequest);
+
+    executionLogCallback.saveExecutionLog(
+        "Finding helm client and server version", LogLevel.INFO, CommandExecutionStatus.RUNNING);
+    HelmCommandResponse helmCommandResponse = helmDeployService.ensureHelmCliAndTillerInstalled(helmCommandRequest);
+    executionLogCallback.saveExecutionLog(helmCommandResponse.getOutput());
+  }
+
+  private void addPublicRepo(HelmCommandRequest helmCommandRequest)
+      throws InterruptedException, IOException, TimeoutException {
+    LogCallback executionLogCallback = getExecutionLogCallback(helmCommandRequest);
+
+    if (helmCommandRequest.getHelmCommandType() != HelmCommandType.INSTALL) {
+      return;
+    }
+
+    if (helmCommandRequest.getChartSpecification() != null
+        && isNotEmpty(helmCommandRequest.getChartSpecification().getChartUrl())
+        && isNotEmpty(helmCommandRequest.getRepoName())) {
+      executionLogCallback.saveExecutionLog(
+          "Adding helm repository " + helmCommandRequest.getChartSpecification().getChartUrl(), LogLevel.INFO,
+          CommandExecutionStatus.RUNNING);
+      HelmCommandResponse helmCommandResponse =
+          helmDeployService.addPublicRepo(helmCommandRequest, executionLogCallback);
+      executionLogCallback.saveExecutionLog(helmCommandResponse.getOutput());
+    }
+  }
+
+  private String getDeploymentMessage(HelmCommandRequest helmCommandRequest) {
+    switch (helmCommandRequest.getHelmCommandType()) {
+      case INSTALL:
+        return "Installing";
+      case ROLLBACK:
+        return "Rolling back";
+      case RELEASE_HISTORY:
+        return "Getting release history";
+      default:
+        return "Unsupported operation";
+    }
   }
 }

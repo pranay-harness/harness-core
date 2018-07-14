@@ -15,7 +15,6 @@ import java.util.Map;
 @Data
 @EqualsAndHashCode(callSuper = false)
 public class HelmInstallCommandRequest extends HelmCommandRequest {
-  private HelmChartSpecification chartSpecification;
   private Integer newReleaseVersion;
   private Integer prevReleaseVersion;
   private String namespace;
@@ -31,10 +30,10 @@ public class HelmInstallCommandRequest extends HelmCommandRequest {
   public HelmInstallCommandRequest(String accountId, String appId, String kubeConfigLocation, String commandName,
       String activityId, ContainerServiceParams containerServiceParams, String releaseName,
       HelmChartSpecification chartSpecification, int newReleaseVersion, int prevReleaseVersion, String namespace,
-      long timeoutInMillis, Map<String, String> valueOverrides, List<String> variableOverridesYamlFiles) {
+      long timeoutInMillis, Map<String, String> valueOverrides, List<String> variableOverridesYamlFiles,
+      String repoName) {
     super(HelmCommandType.INSTALL, accountId, appId, kubeConfigLocation, commandName, activityId,
-        containerServiceParams, releaseName);
-    this.chartSpecification = chartSpecification;
+        containerServiceParams, releaseName, chartSpecification, repoName);
     this.newReleaseVersion = newReleaseVersion;
     this.prevReleaseVersion = prevReleaseVersion;
     this.namespace = namespace;

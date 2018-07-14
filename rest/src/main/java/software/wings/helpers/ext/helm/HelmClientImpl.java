@@ -6,9 +6,11 @@ import static software.wings.beans.command.CommandExecutionResult.CommandExecuti
 import static software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper.lockObjects;
 import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_HELM_COMMAND_TIMEOUT;
 import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT;
+import static software.wings.helpers.ext.helm.HelmConstants.HELM_ADD_REPO_COMMAND_TEMPLATE;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_INSTALL_COMMAND_TEMPLATE;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_LIST_RELEASE_COMMAND_TEMPLATE;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_RELEASE_HIST_COMMAND_TEMPLATE;
+import static software.wings.helpers.ext.helm.HelmConstants.HELM_REPO_LIST_COMMAND_TEMPLATE;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_ROLLBACK_COMMAND_TEMPLATE;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_UPGRADE_COMMAND_TEMPLATE;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_VERSION_COMMAND_TEMPLATE;
@@ -128,6 +130,26 @@ public class HelmClientImpl implements HelmClient {
     String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
     String command = HELM_VERSION_COMMAND_TEMPLATE.replace("${KUBECONFIG_PATH}", kubeConfigLocation)
                          .replace("${TILLER_CONN_TIMEOUT}", DEFAULT_TILLER_CONNECTION_TIMEOUT);
+    return executeHelmCLICommand(command);
+  }
+
+  @Override
+  public HelmCliResponse addPublicRepo(HelmCommandRequest commandRequest)
+      throws InterruptedException, TimeoutException, IOException {
+    String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
+    String command = HELM_ADD_REPO_COMMAND_TEMPLATE.replace("${KUBECONFIG_PATH}", kubeConfigLocation)
+                         .replace("${REPO_URL}", commandRequest.getChartSpecification().getChartUrl())
+                         .replace("${REPO_NAME}", commandRequest.getRepoName());
+
+    return executeHelmCLICommand(command);
+  }
+
+  @Override
+  public HelmCliResponse getHelmRepoList(HelmCommandRequest commandRequest)
+      throws InterruptedException, TimeoutException, IOException {
+    String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
+    String command = HELM_REPO_LIST_COMMAND_TEMPLATE.replace("${KUBECONFIG_PATH}", kubeConfigLocation);
+
     return executeHelmCLICommand(command);
   }
 

@@ -19,6 +19,6 @@ public class HelmReleaseHistoryCommandRequest extends HelmCommandRequest {
   public HelmReleaseHistoryCommandRequest(String accountId, String appId, String kubeConfigLocation, String commandName,
       String activityId, ContainerServiceParams containerServiceParams, String releaseName) {
     super(HelmCommandType.RELEASE_HISTORY, accountId, appId, kubeConfigLocation, commandName, activityId,
-        containerServiceParams, releaseName);
+        containerServiceParams, releaseName, null, null);
   }
 }
