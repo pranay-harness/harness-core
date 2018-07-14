@@ -25,6 +25,7 @@ import static software.wings.beans.DelegateTask.Status.QUEUED;
 import static software.wings.beans.DelegateTask.Status.STARTED;
 import static software.wings.beans.DelegateTaskAbortEvent.Builder.aDelegateTaskAbortEvent;
 import static software.wings.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aDelegateTaskEvent;
+import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskResponse;
 import static software.wings.beans.ErrorCode.UNAVAILABLE_DELEGATES;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
@@ -37,7 +38,9 @@ import static software.wings.common.Constants.KUBERNETES_DELEGATE;
 import static software.wings.common.Constants.MAX_DELEGATE_LAST_HEARTBEAT;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.ALL_DELEGATE_DOWN_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.DELEGATE_STATE_NOTIFICATION;
+import static software.wings.delegatetasks.RemoteMethodReturnValueData.Builder.aRemoteMethodReturnValueData;
 import static software.wings.dl.MongoHelper.setUnset;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.exception.WingsException.USER_ADMIN;
 import static software.wings.utils.KubernetesConvention.getAccountIdentifier;
 
@@ -50,6 +53,7 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import com.github.zafarkhaja.semver.Version;
@@ -98,6 +102,7 @@ import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.AccountService;
@@ -109,6 +114,7 @@ import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.sm.DelegateMetaInfo;
 import software.wings.waitnotify.DelegateTaskNotifyResponseData;
+import software.wings.waitnotify.ErrorNotifyResponseData;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
@@ -165,6 +171,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private TimeLimiter timeLimiter;
   @Inject private Clock clock;
   @Inject private VersionInfoManager versionInfoManager;
+  @Inject private Injector injector;
   @Inject private FeatureFlagService featureFlagService;
 
   private LoadingCache<String, String> delegateVersionCache =
@@ -931,7 +938,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  public DelegateTask shouldProceedAnyway(String accountId, String delegateId, String taskId) {
+  public DelegateTask failIfAllDelegatesFailed(String accountId, String delegateId, String taskId) {
     DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId, delegateId);
     if (delegateTask == null) {
       logger.info("Task {} not found or was already assigned", taskId);
@@ -945,7 +952,18 @@ public class DelegateServiceImpl implements DelegateService {
         return null;
       } else {
         logger.info("No whitelisted delegates found for task {}", taskId);
-        return assignTask(delegateId, taskId, delegateTask);
+        List<String> criteria = TaskType.valueOf(delegateTask.getTaskType()).getCriteria(delegateTask, injector);
+        String errorMessage = "No delegates could reach the resource. " + criteria;
+        logger.info("Task {}: {}", taskId, errorMessage);
+        NotifyResponseData response;
+        if (delegateTask.isAsync()) {
+          response = ErrorNotifyResponseData.builder().errorMessage(errorMessage).build();
+        } else {
+          InvalidRequestException exception = new InvalidRequestException(errorMessage, USER);
+          response = aRemoteMethodReturnValueData().withException(exception).build();
+        }
+        processDelegateResponse(
+            accountId, null, taskId, aDelegateTaskResponse().withAccountId(accountId).withResponse(response).build());
       }
     }
 

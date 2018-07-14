@@ -953,18 +953,11 @@ public class DelegateServiceImpl implements DelegateService {
             logger.info("Waiting {} seconds to give other delegates a chance to validate task {}", delay, taskId);
             sleep(ofSeconds(delay));
             try {
-              logger.info("Checking whether to proceed anyway for task {}", taskId);
-              DelegateTask delegateTaskPostValidationFailure = execute(
-                  managerClient.shouldProceedAnyway(delegateId, delegateTaskEvent.getDelegateTaskId(), accountId));
-              if (delegateTaskPostValidationFailure != null
-                  && delegateId.equals(delegateTaskPostValidationFailure.getDelegateId())) {
-                logger.info("All delegates failed. Proceeding anyway to get proper failure for task {}", taskId);
-                executeTask(delegateTaskPostValidationFailure);
-              } else {
-                logger.info("Did not get go-ahead for task {}, giving up", taskId);
-              }
+              logger.info("Manager check whether to fail task {}", taskId);
+              execute(
+                  managerClient.failIfAllDelegatesFailed(delegateId, delegateTaskEvent.getDelegateTaskId(), accountId));
             } catch (IOException e) {
-              logger.error("Unable to check whether to proceed. Task {}", taskId, e);
+              logger.error("Unable to tell manager to check whether to fail for task {}", taskId, e);
             }
           }
         }

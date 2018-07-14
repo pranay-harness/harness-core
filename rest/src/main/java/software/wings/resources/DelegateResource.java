@@ -377,12 +377,12 @@ public class DelegateResource {
   @DelegateAuth
   @GET
   @Produces("application/x-kryo")
-  @Path("{delegateId}/tasks/{taskId}/proceed")
+  @Path("{delegateId}/tasks/{taskId}/fail")
   @Timed
   @ExceptionMetered
-  public DelegateTask shouldProceedAnyway(@PathParam("delegateId") String delegateId,
-      @PathParam("taskId") String taskId, @QueryParam("accountId") @NotEmpty String accountId) {
-    return delegateService.shouldProceedAnyway(accountId, delegateId, taskId);
+  public void failIfAllDelegatesFailed(@PathParam("delegateId") String delegateId, @PathParam("taskId") String taskId,
+      @QueryParam("accountId") @NotEmpty String accountId) {
+    delegateService.failIfAllDelegatesFailed(accountId, delegateId, taskId);
   }
 
   @DelegateAuth
