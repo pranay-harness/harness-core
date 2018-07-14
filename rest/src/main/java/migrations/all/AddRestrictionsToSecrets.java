@@ -1,6 +1,7 @@
 package migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 
@@ -63,7 +64,8 @@ public class AddRestrictionsToSecrets implements Migration {
       List<EncryptedData> secretTextList = pageResponse.getResponse();
 
       secretTextList.forEach(secretText -> {
-        if (secretText.getUsageRestrictions() != null) {
+        if (secretText.getUsageRestrictions() != null
+            && isNotEmpty(secretText.getUsageRestrictions().getAppEnvRestrictions())) {
           return;
         }
 
