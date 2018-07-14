@@ -113,8 +113,8 @@ public interface ManagerClient {
       @Query("accountId") String accountId, @Body List<DelegateConnectionResult> results);
 
   @KryoResponse
-  @GET("delegates/{delegateId}/tasks/{taskId}/proceed")
-  Call<DelegateTask> shouldProceedAnyway(
+  @GET("delegates/{delegateId}/tasks/{taskId}/fail")
+  Call<DelegateTask> failIfAllDelegatesFailed(
       @Path("delegateId") String delegateId, @Path("taskId") String uuid, @Query("accountId") String accountId);
 
   @GET("delegates/{delegateId}/task-events")
