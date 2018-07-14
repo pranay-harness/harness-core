@@ -3,6 +3,7 @@ package software.wings.helpers.ext.helm.request;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import software.wings.beans.container.HelmChartSpecification;
 import software.wings.service.impl.ContainerServiceParams;
 
 /**
@@ -23,9 +24,10 @@ public class HelmRollbackCommandRequest extends HelmCommandRequest {
   @Builder
   public HelmRollbackCommandRequest(String accountId, String appId, String kubeConfigLocation, String commandName,
       String activityId, ContainerServiceParams containerServiceParams, String releaseName, int newReleaseVersion,
-      int prevReleaseVersion, int rollbackVersion, long timeoutInMillis) {
+      int prevReleaseVersion, int rollbackVersion, long timeoutInMillis, HelmChartSpecification chartSpecification,
+      String repoName) {
     super(HelmCommandType.ROLLBACK, accountId, appId, kubeConfigLocation, commandName, activityId,
-        containerServiceParams, releaseName);
+        containerServiceParams, releaseName, chartSpecification, repoName);
     this.newReleaseVersion = newReleaseVersion;
     this.prevReleaseVersion = prevReleaseVersion;
     this.rollbackVersion = rollbackVersion;

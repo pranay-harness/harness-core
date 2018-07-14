@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
+import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.helm.HelmDeployService;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.response.HelmCommandResponse;
@@ -24,6 +25,7 @@ public class HelmCommandValidation extends AbstractDelegateValidateTask {
 
   @Inject private transient HelmDeployService helmDeployService;
   @Inject private transient ContainerValidationHelper containerValidationHelper;
+  @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
 
   public HelmCommandValidation(
       String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> consumer) {
@@ -39,6 +41,9 @@ public class HelmCommandValidation extends AbstractDelegateValidateTask {
 
     boolean validated = false;
     try {
+      String configLocation =
+          containerDeploymentDelegateHelper.createAndGetKubeConfigLocation(commandRequest.getContainerServiceParams());
+      commandRequest.setKubeConfigLocation(configLocation);
       HelmCommandResponse helmCommandResponse = helmDeployService.ensureHelmCliAndTillerInstalled(commandRequest);
       if (helmCommandResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS)) {
         validated = containerValidationHelper.validateContainerServiceParams(params);

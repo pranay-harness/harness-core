@@ -85,4 +85,10 @@ public interface HelmClient {
    */
   HelmCliResponse getClientAndServerVersion(HelmCommandRequest helmCommandRequest)
       throws InterruptedException, TimeoutException, IOException;
+
+  HelmCliResponse addPublicRepo(HelmCommandRequest helmCommandRequest)
+      throws InterruptedException, TimeoutException, IOException;
+
+  HelmCliResponse getHelmRepoList(HelmCommandRequest commandRequest)
+      throws InterruptedException, TimeoutException, IOException;
 }

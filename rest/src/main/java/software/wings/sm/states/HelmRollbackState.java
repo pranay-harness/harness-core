@@ -40,7 +40,7 @@ public class HelmRollbackState extends HelmDeployState {
   protected HelmCommandRequest getHelmCommandRequest(ExecutionContext context,
       HelmChartSpecification helmChartSpecification, ContainerServiceParams containerServiceParams, String releaseName,
       String accountId, String appId, String activityId, ImageDetails imageTag,
-      ContainerInfrastructureMapping infrastructureMapping) {
+      ContainerInfrastructureMapping infrastructureMapping, String repoName) {
     Integer previousReleaseRevision = null;
 
     ContextElement contextElement = context.getContextElement(ContextElementType.HELM_DEPLOY);
@@ -59,6 +59,8 @@ public class HelmRollbackState extends HelmDeployState {
         .commandName(HELM_COMMAND_NAME)
         .timeoutInMillis(TimeUnit.MINUTES.toMillis(steadyStateTimeout))
         .containerServiceParams(containerServiceParams)
+        .chartSpecification(helmChartSpecification)
+        .repoName(repoName)
         .build();
   }
 

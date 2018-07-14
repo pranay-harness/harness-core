@@ -165,9 +165,11 @@ public class HelmDeployState extends State {
                                                           .build();
 
     ImageDetails imageDetails = getImageDetails(context, app, artifact);
+    String repoName = getRepoName(app.getName(), serviceElement.getName());
     setNewAndPrevReleaseVersion(context, app, releaseName, containerServiceParams, stateExecutionData);
-    HelmCommandRequest commandRequest = getHelmCommandRequest(context, helmChartSpecification, containerServiceParams,
-        releaseName, app.getAccountId(), app.getUuid(), activity.getUuid(), imageDetails, containerInfraMapping);
+    HelmCommandRequest commandRequest =
+        getHelmCommandRequest(context, helmChartSpecification, containerServiceParams, releaseName, app.getAccountId(),
+            app.getUuid(), activity.getUuid(), imageDetails, containerInfraMapping, repoName);
 
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(app.getAccountId())
@@ -212,7 +214,7 @@ public class HelmDeployState extends State {
   protected HelmCommandRequest getHelmCommandRequest(ExecutionContext context,
       HelmChartSpecification helmChartSpecification, ContainerServiceParams containerServiceParams, String releaseName,
       String accountId, String appId, String activityId, ImageDetails imageDetails,
-      ContainerInfrastructureMapping infrastructureMapping) {
+      ContainerInfrastructureMapping infrastructureMapping, String repoName) {
     List<String> helmValueOverridesYamlFiles =
         serviceTemplateService.helmValueOverridesYamlFiles(appId, infrastructureMapping.getServiceTemplateId());
     List<String> helmValueOverridesYamlFilesEvaluated = null;
@@ -239,6 +241,7 @@ public class HelmDeployState extends State {
         .containerServiceParams(containerServiceParams)
         .variableOverridesYamlFiles(helmValueOverridesYamlFilesEvaluated)
         .timeoutInMillis(TimeUnit.MINUTES.toMillis(steadyStateTimeout))
+        .repoName(repoName)
         .build();
   }
 
@@ -382,5 +385,9 @@ public class HelmDeployState extends State {
 
   public void setSteadyStateTimeout(int steadyStateTimeout) {
     this.steadyStateTimeout = steadyStateTimeout;
+  }
+
+  private String getRepoName(String appName, String serviceName) {
+    return appName + "-" + serviceName;
   }
 }

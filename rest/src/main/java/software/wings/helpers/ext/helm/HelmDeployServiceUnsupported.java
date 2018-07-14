@@ -38,4 +38,10 @@ public class HelmDeployServiceUnsupported implements HelmDeployService {
   public HelmReleaseHistoryCommandResponse releaseHistory(HelmReleaseHistoryCommandRequest helmCommandRequest) {
     throw new UnsupportedOperationException("Helm deploy service not supported on manager");
   }
+
+  @Override
+  public HelmCommandResponse addPublicRepo(HelmCommandRequest commandRequest, LogCallback executionLogCallback)
+      throws InterruptedException, IOException, TimeoutException {
+    throw new UnsupportedOperationException("Helm deploy service not supported on manager");
+  }
 }

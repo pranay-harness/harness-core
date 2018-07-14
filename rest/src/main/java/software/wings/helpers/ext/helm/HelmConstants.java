@@ -40,6 +40,9 @@ public class HelmConstants {
       "KUBECONFIG=${KUBECONFIG_PATH} helm hist ${RELEASE_NAME} ${FLAGS}";
   public static final String HELM_VERSION_COMMAND_TEMPLATE =
       "KUBECONFIG=${KUBECONFIG_PATH} helm version  --tiller-connection-timeout ${TILLER_CONN_TIMEOUT}";
+  public static final String HELM_ADD_REPO_COMMAND_TEMPLATE =
+      "KUBECONFIG=${KUBECONFIG_PATH} helm repo add ${REPO_NAME} ${REPO_URL}";
+  public static final String HELM_REPO_LIST_COMMAND_TEMPLATE = "KUBECONFIG=${KUBECONFIG_PATH} helm repo list";
 
   public static final long DEFAULT_HELM_COMMAND_TIMEOUT = TimeUnit.MINUTES.toMillis(30);
   public static final String DEFAULT_TILLER_CONNECTION_TIMEOUT = "60"; // seconds
