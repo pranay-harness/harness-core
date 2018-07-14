@@ -41,6 +41,7 @@ import static software.wings.common.NotificationMessageResolver.NotificationMess
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.DELEGATE_STATE_NOTIFICATION;
 import static software.wings.delegatetasks.RemoteMethodReturnValueData.Builder.aRemoteMethodReturnValueData;
 import static software.wings.dl.MongoHelper.setUnset;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.exception.WingsException.USER_ADMIN;
 import static software.wings.utils.KubernetesConvention.getAccountIdentifier;
 
@@ -958,7 +959,8 @@ public class DelegateServiceImpl implements DelegateService {
         if (delegateTask.isAsync()) {
           response = ErrorNotifyResponseData.builder().errorMessage(errorMessage).build();
         } else {
-          response = aRemoteMethodReturnValueData().withException(new InvalidRequestException(errorMessage)).build();
+          response =
+              aRemoteMethodReturnValueData().withException(new InvalidRequestException(errorMessage, USER)).build();
         }
         processDelegateResponse(
             accountId, null, taskId, aDelegateTaskResponse().withAccountId(accountId).withResponse(response).build());
