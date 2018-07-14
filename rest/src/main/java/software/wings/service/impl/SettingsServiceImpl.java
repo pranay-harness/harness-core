@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -39,8 +40,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.data.structure.EmptyPredicate;
-import io.harness.data.structure.UUIDGenerator;
 import io.harness.observer.Rejection;
 import io.harness.observer.Subject;
 import lombok.Getter;
@@ -108,12 +107,10 @@ public class SettingsServiceImpl implements SettingsService {
   public PageResponse<SettingAttribute> list(
       PageRequest<SettingAttribute> req, String appIdFromRequest, String envIdFromRequest) {
     try {
-      String requestId = UUIDGenerator.generateUuid();
-      logger.info("Received listSettingAttributes() for request {} at {}", requestId, System.currentTimeMillis());
       PageResponse<SettingAttribute> pageResponse = wingsPersistence.query(SettingAttribute.class, req);
-      logger.info("Response for Query for request {} at {}", requestId, System.currentTimeMillis());
+
       List<SettingAttribute> filteredSettingAttributes =
-          getFilteredSettingAttributes(pageResponse.getResponse(), appIdFromRequest, envIdFromRequest, requestId);
+          getFilteredSettingAttributes(pageResponse.getResponse(), appIdFromRequest, envIdFromRequest);
 
       return aPageResponse()
           .withResponse(filteredSettingAttributes)
@@ -131,47 +128,35 @@ public class SettingsServiceImpl implements SettingsService {
       return null;
     }
 
-    if (usageRestrictionsService.hasAccess(settingAttribute.getUsageRestrictions(), settingAttribute.getAccountId(),
-            appIdFromRequest, envIdFromRequest, null)) {
-      if (settingAttribute.getUsageRestrictions() != null) {
-        settingAttribute.getUsageRestrictions().setEditable(usageRestrictionsService.userHasPermissionsToChangeEntity(
-            settingAttribute.getAccountId(), settingAttribute.getUsageRestrictions()));
-      }
-
-      return settingAttribute;
+    List<SettingAttribute> filteredSettingAttributes =
+        getFilteredSettingAttributes(asList(settingAttribute), appIdFromRequest, envIdFromRequest);
+    if (isNotEmpty(filteredSettingAttributes)) {
+      return filteredSettingAttributes.get(0);
     }
 
     return null;
   }
 
-  private List<SettingAttribute> getFilteredSettingAttributes(List<SettingAttribute> inputSettingAttributes,
-      String appIdFromRequest, String envIdFromRequest, String requestId) {
-    logger.info("getFilteredSettingAttributes() - About to filter response for request {} at {}", requestId,
-        System.currentTimeMillis());
+  private List<SettingAttribute> getFilteredSettingAttributes(
+      List<SettingAttribute> inputSettingAttributes, String appIdFromRequest, String envIdFromRequest) {
     List<SettingAttribute> filteredSettingAttributes = Lists.newArrayList();
-    if (EmptyPredicate.isNotEmpty(inputSettingAttributes)) {
+    if (isNotEmpty(inputSettingAttributes)) {
       inputSettingAttributes.forEach(settingAttribute -> {
         if (usageRestrictionsService.hasAccess(settingAttribute.getUsageRestrictions(), settingAttribute.getAccountId(),
-                appIdFromRequest, envIdFromRequest, requestId)) {
-          logger.info(
-              "getFilteredSettingAttributes() - hasAccess is true, now checking if restrictions are null for request {} at {}",
-              requestId, System.currentTimeMillis());
+                appIdFromRequest, envIdFromRequest)) {
           if (settingAttribute.getUsageRestrictions() != null) {
-            logger.info("getFilteredSettingAttributes() - compiling setEditable() for request {} at {}", requestId,
-                System.currentTimeMillis());
-            settingAttribute.getUsageRestrictions().setEditable(
-                usageRestrictionsService.userHasPermissionsToChangeEntity(
-                    settingAttribute.getAccountId(), settingAttribute.getUsageRestrictions()));
+            if (isNotEmpty(settingAttribute.getUsageRestrictions().getAppEnvRestrictions())) {
+              settingAttribute.getUsageRestrictions().setEditable(
+                  usageRestrictionsService.userHasPermissionsToChangeEntity(
+                      settingAttribute.getAccountId(), settingAttribute.getUsageRestrictions()));
+            } else {
+              settingAttribute.getUsageRestrictions().setEditable(true);
+            }
           }
-          logger.info("getFilteredSettingAttributes() - compiling setEditable() done for request {} at {}", requestId,
-              System.currentTimeMillis());
           filteredSettingAttributes.add(settingAttribute);
         }
       });
     }
-
-    logger.info("getFilteredSettingAttributes() - Returning filtered setting attributes for request {} at {}",
-        requestId, System.currentTimeMillis());
     return filteredSettingAttributes;
   }
 
@@ -327,6 +312,7 @@ public class SettingsServiceImpl implements SettingsService {
     ImmutableMap.Builder<String, Object> fields =
         ImmutableMap.<String, Object>builder().put("name", settingAttribute.getName());
 
+    // To revisit
     if (settingAttribute.getUsageRestrictions() != null) {
       fields.put("usageRestrictions", settingAttribute.getUsageRestrictions());
     }
@@ -441,7 +427,7 @@ public class SettingsServiceImpl implements SettingsService {
 
       List<Rejection> rejections = manipulationSubject.fireApproveFromAll(
           SettingsServiceManipulationObxxxxxxxx:settingsServiceDeleting, connectorSetting);
-      if (EmptyPredicate.isNotEmpty(rejections)) {
+      if (isNotEmpty(rejections)) {
         throw new InvalidRequestException(
             format("[%s]", Joiner.on("\n").join(rejections.stream().map(Rejection::message).collect(toList()))), USER);
       }
@@ -631,7 +617,7 @@ public class SettingsServiceImpl implements SettingsService {
   public List<SettingAttribute> getFilteredSettingAttributesByType(
       String appId, String envId, String type, String currentAppId, String currentEnvId) {
     List<SettingAttribute> settingAttributeList = getSettingAttributesByType(appId, envId, type);
-    return getFilteredSettingAttributes(settingAttributeList, currentAppId, currentEnvId, null);
+    return getFilteredSettingAttributes(settingAttributeList, currentAppId, currentEnvId);
   }
 
   @Override
@@ -649,7 +635,7 @@ public class SettingsServiceImpl implements SettingsService {
   public List<SettingAttribute> getFilteredSettingAttributesByType(
       String accountId, String appId, String envId, String type, String currentAppId, String currentEnvId) {
     List<SettingAttribute> settingAttributeList = getSettingAttributesByType(accountId, appId, envId, type);
-    return getFilteredSettingAttributes(settingAttributeList, currentAppId, currentEnvId, null);
+    return getFilteredSettingAttributes(settingAttributeList, currentAppId, currentEnvId);
   }
 
   @Override
@@ -663,7 +649,7 @@ public class SettingsServiceImpl implements SettingsService {
   public List<SettingAttribute> getFilteredGlobalSettingAttributesByType(
       String accountId, String type, String currentAppId, String currentEnvId) {
     List<SettingAttribute> settingAttributeList = getGlobalSettingAttributesByType(accountId, type);
-    return getFilteredSettingAttributes(settingAttributeList, currentAppId, currentEnvId, null);
+    return getFilteredSettingAttributes(settingAttributeList, currentAppId, currentEnvId);
   }
 
   @Override

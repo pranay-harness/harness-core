@@ -69,22 +69,15 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   private Set<AppEnvRestriction> allAppEnvRestrictions = getAllAppEnvRestrictions();
 
   @Override
-  public boolean hasAccess(UsageRestrictions usageRestrictions, String accountId, String appIdFromRequest,
-      String envIdFromRequest, String requestId) {
-    logger.info("hasAccess1() - Before checking if restrictions is null for request {} at {}", requestId,
-        System.currentTimeMillis());
+  public boolean hasAccess(
+      UsageRestrictions usageRestrictions, String accountId, String appIdFromRequest, String envIdFromRequest) {
     if (usageRestrictions == null) {
-      logger.info("Restrictions is null for request {} at {}, Returning", requestId, System.currentTimeMillis());
       return true;
     }
 
     Set<AppEnvRestriction> appEnvRestrictions = usageRestrictions.getAppEnvRestrictions();
 
-    logger.info("hasAccess1() - Before checking app env restrictions are empty for request {} at {}", requestId,
-        System.currentTimeMillis());
     if (isEmpty(appEnvRestrictions)) {
-      logger.info("hasAccess1() - App env restrictions are empty for request {} at {}, Returning", requestId,
-          System.currentTimeMillis());
       return true;
     }
 
@@ -111,9 +104,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
         return true;
       }
 
-      logger.info("hasAccess1() - About to call hasAccess() for request {} at {}, Returning", requestId,
-          System.currentTimeMillis());
-      return hasAccess(accountId, appEnvMap, usageRestrictions, requestId);
+      return hasAccess(accountId, appEnvMap, usageRestrictions);
     }
   }
 
@@ -122,60 +113,53 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   }
 
   private boolean hasAccess(String accountId, Map<String, Set<String>> appEnvMapFromEntityRestrictions,
-      UsageRestrictions entityUsageRestrictions, String requestId) {
-    try {
-      logger.info("hasAccess2() - About to compute hasAccess() for request {} at {}, Returning", requestId,
-          System.currentTimeMillis());
-      if (hasNoRestrictions(entityUsageRestrictions)
-          || (hasAllEnvAccessOfType(entityUsageRestrictions, FilterType.PROD)
-                 && hasAllEnvAccessOfType(entityUsageRestrictions, FilterType.NON_PROD))) {
-        return true;
-      }
-
-      UsageRestrictions restrictionsFromUserPermissions = getUsageRestrictionsFromUserPermissions(accountId, false);
-
-      if (hasNoRestrictions(restrictionsFromUserPermissions)) {
-        return false;
-      }
-
-      if (hasNoRestrictions(entityUsageRestrictions)) {
-        entityUsageRestrictions = UsageRestrictions.builder().appEnvRestrictions(allAppEnvRestrictions).build();
-        appEnvMapFromEntityRestrictions = getAppEnvMap(accountId, allAppEnvRestrictions);
-      }
-
-      final UsageRestrictions entityUsageRestrictionsFinal = entityUsageRestrictions;
-      // We want to first check if the restrictions from user permissions is not null
-      if (isEmpty(appEnvMapFromEntityRestrictions)) {
-        return hasCommonEnv(entityUsageRestrictions, restrictionsFromUserPermissions);
-      }
-
-      Map<String, Set<String>> appEnvMapOfUser =
-          getAppEnvMap(accountId, restrictionsFromUserPermissions.getAppEnvRestrictions());
-      return appEnvMapFromEntityRestrictions.entrySet().stream().anyMatch(
-          (Entry<String, Set<String>> appEnvEntryOfEntity) -> {
-            String appId = appEnvEntryOfEntity.getKey();
-
-            if (!appEnvMapOfUser.containsKey(appId)) {
-              return false;
-            }
-
-            Set<String> envIdsFromRestrictions = appEnvEntryOfEntity.getValue();
-            if (isEmpty(envIdsFromRestrictions)) {
-              return hasCommonEnv(appId, entityUsageRestrictionsFinal, restrictionsFromUserPermissions);
-            }
-
-            Set<String> envIdsOfUser = appEnvMapOfUser.get(appId);
-            if (isEmpty(envIdsOfUser)) {
-              return false;
-            }
-
-            return envIdsFromRestrictions.stream().anyMatch(
-                envIdFromRestriction -> envIdsOfUser.contains(envIdFromRestriction));
-          });
-    } finally {
-      logger.info("hasAccess2() - Call to hasAccess() completed for request {} at {}, Returning", requestId,
-          System.currentTimeMillis());
+      UsageRestrictions entityUsageRestrictions) {
+    if (hasNoRestrictions(entityUsageRestrictions)
+        || (hasAllEnvAccessOfType(entityUsageRestrictions, FilterType.PROD)
+               && hasAllEnvAccessOfType(entityUsageRestrictions, FilterType.NON_PROD))) {
+      return true;
     }
+
+    UsageRestrictions restrictionsFromUserPermissions = getUsageRestrictionsFromUserPermissions(accountId, false);
+
+    if (hasNoRestrictions(restrictionsFromUserPermissions)) {
+      return false;
+    }
+
+    if (hasNoRestrictions(entityUsageRestrictions)) {
+      entityUsageRestrictions = UsageRestrictions.builder().appEnvRestrictions(allAppEnvRestrictions).build();
+      appEnvMapFromEntityRestrictions = getAppEnvMap(accountId, allAppEnvRestrictions);
+    }
+
+    final UsageRestrictions entityUsageRestrictionsFinal = entityUsageRestrictions;
+    // We want to first check if the restrictions from user permissions is not null
+    if (isEmpty(appEnvMapFromEntityRestrictions)) {
+      return hasCommonEnv(entityUsageRestrictions, restrictionsFromUserPermissions);
+    }
+
+    Map<String, Set<String>> appEnvMapOfUser =
+        getAppEnvMap(accountId, restrictionsFromUserPermissions.getAppEnvRestrictions());
+    return appEnvMapFromEntityRestrictions.entrySet().stream().anyMatch(
+        (Entry<String, Set<String>> appEnvEntryOfEntity) -> {
+          String appId = appEnvEntryOfEntity.getKey();
+
+          if (!appEnvMapOfUser.containsKey(appId)) {
+            return false;
+          }
+
+          Set<String> envIdsFromRestrictions = appEnvEntryOfEntity.getValue();
+          if (isEmpty(envIdsFromRestrictions)) {
+            return hasCommonEnv(appId, entityUsageRestrictionsFinal, restrictionsFromUserPermissions);
+          }
+
+          Set<String> envIdsOfUser = appEnvMapOfUser.get(appId);
+          if (isEmpty(envIdsOfUser)) {
+            return false;
+          }
+
+          return envIdsFromRestrictions.stream().anyMatch(
+              envIdFromRestriction -> envIdsOfUser.contains(envIdFromRestriction));
+        });
   }
 
   private boolean hasCommonEnv(

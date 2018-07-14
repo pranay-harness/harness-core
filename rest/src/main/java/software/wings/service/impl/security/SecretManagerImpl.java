@@ -939,7 +939,7 @@ public class SecretManagerImpl implements SecretManager {
 
     for (EncryptedData encryptedData : encryptedDataList) {
       if (!usageRestrictionsService.hasAccess(
-              encryptedData.getUsageRestrictions(), accountId, appIdFromRequest, envIdFromRequest, null)) {
+              encryptedData.getUsageRestrictions(), accountId, appIdFromRequest, envIdFromRequest)) {
         continue;
       }
 
@@ -953,11 +953,17 @@ public class SecretManagerImpl implements SecretManager {
       encryptedData.setChangeLog(
           getChangeLogs(encryptedData.getAccountId(), encryptedData.getUuid(), SettingVariableTypes.SECRET_TEXT)
               .size());
+
       if (encryptedData.getUsageRestrictions() != null) {
-        encryptedData.getUsageRestrictions().setEditable(
-            usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, encryptedData.getUsageRestrictions()));
+        if (isNotEmpty(encryptedData.getUsageRestrictions().getAppEnvRestrictions())) {
+          encryptedData.getUsageRestrictions().setEditable(usageRestrictionsService.userHasPermissionsToChangeEntity(
+              encryptedData.getAccountId(), encryptedData.getUsageRestrictions()));
+        } else {
+          encryptedData.getUsageRestrictions().setEditable(true);
+        }
+
+        filteredEncryptedDataList.add(encryptedData);
       }
-      filteredEncryptedDataList.add(encryptedData);
     }
 
     pageResponse.setResponse(filteredEncryptedDataList);
