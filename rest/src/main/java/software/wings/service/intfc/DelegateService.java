@@ -68,8 +68,6 @@ public interface DelegateService {
   DelegateTask reportConnectionResults(
       String accountId, String delegateId, String taskId, List<DelegateConnectionResult> results);
 
-  DelegateTask shouldProceedAnyway(String accountId, String delegateId, String taskId);
-
   void clearCache(String delegateId);
 
   void processDelegateResponse(

@@ -945,28 +945,7 @@ public class DelegateServiceImpl implements DelegateService {
           logger.info("Got the go-ahead to proceed for task {}.", taskId);
           executeTask(delegateTaskPostValidation);
         } else {
-          logger.info("Did not get the go-ahead to proceed for task {}", taskId);
-          if (validated) {
-            logger.info("Task {} validated but was not assigned", taskId);
-          } else {
-            int delay = POLL_INTERVAL_SECONDS + 3;
-            logger.info("Waiting {} seconds to give other delegates a chance to validate task {}", delay, taskId);
-            sleep(ofSeconds(delay));
-            try {
-              logger.info("Checking whether to proceed anyway for task {}", taskId);
-              DelegateTask delegateTaskPostValidationFailure = execute(
-                  managerClient.shouldProceedAnyway(delegateId, delegateTaskEvent.getDelegateTaskId(), accountId));
-              if (delegateTaskPostValidationFailure != null
-                  && delegateId.equals(delegateTaskPostValidationFailure.getDelegateId())) {
-                logger.info("All delegates failed. Proceeding anyway to get proper failure for task {}", taskId);
-                executeTask(delegateTaskPostValidationFailure);
-              } else {
-                logger.info("Did not get go-ahead for task {}, giving up", taskId);
-              }
-            } catch (IOException e) {
-              logger.error("Unable to check whether to proceed. Task {}", taskId, e);
-            }
-          }
+          logger.info("Did not get the go-ahead to proceed for task {}. Validated: {}", taskId, validated);
         }
       } catch (IOException e) {
         logger.error("Unable to report validation results. Task {}", taskId, e);
