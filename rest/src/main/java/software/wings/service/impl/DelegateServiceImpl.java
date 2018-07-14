@@ -6,7 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofMillis;
-import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.Comparator.naturalOrder;
@@ -26,7 +25,6 @@ import static software.wings.beans.DelegateTask.Status.QUEUED;
 import static software.wings.beans.DelegateTask.Status.STARTED;
 import static software.wings.beans.DelegateTaskAbortEvent.Builder.aDelegateTaskAbortEvent;
 import static software.wings.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aDelegateTaskEvent;
-import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskResponse;
 import static software.wings.beans.ErrorCode.UNAVAILABLE_DELEGATES;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
@@ -39,9 +37,7 @@ import static software.wings.common.Constants.KUBERNETES_DELEGATE;
 import static software.wings.common.Constants.MAX_DELEGATE_LAST_HEARTBEAT;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.ALL_DELEGATE_DOWN_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.DELEGATE_STATE_NOTIFICATION;
-import static software.wings.delegatetasks.RemoteMethodReturnValueData.Builder.aRemoteMethodReturnValueData;
 import static software.wings.dl.MongoHelper.setUnset;
-import static software.wings.exception.WingsException.USER;
 import static software.wings.exception.WingsException.USER_ADMIN;
 import static software.wings.utils.KubernetesConvention.getAccountIdentifier;
 
@@ -102,7 +98,6 @@ import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.AccountService;
@@ -114,7 +109,6 @@ import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.sm.DelegateMetaInfo;
 import software.wings.waitnotify.DelegateTaskNotifyResponseData;
-import software.wings.waitnotify.ErrorNotifyResponseData;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
@@ -132,7 +126,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -173,7 +166,6 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private Clock clock;
   @Inject private VersionInfoManager versionInfoManager;
   @Inject private FeatureFlagService featureFlagService;
-  @Inject private ExecutorService executorService;
 
   private LoadingCache<String, String> delegateVersionCache =
       CacheBuilder.newBuilder()
@@ -935,39 +927,30 @@ public class DelegateServiceImpl implements DelegateService {
     if (results.stream().anyMatch(DelegateConnectionResult::isValidated)) {
       return assignTask(delegateId, taskId, delegateTask);
     }
-    executorService.submit(() -> failTaskIfNoneCanValidate(accountId, delegateId, taskId, results));
     return null;
   }
 
-  private void failTaskIfNoneCanValidate(
-      String accountId, String delegateId, String taskId, List<DelegateConnectionResult> results) {
-    sleep(ofSeconds(8));
+  @Override
+  public DelegateTask shouldProceedAnyway(String accountId, String delegateId, String taskId) {
     DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId, delegateId);
     if (delegateTask == null) {
       logger.info("Task {} not found or was already assigned", taskId);
-    } else if (isValidationComplete(delegateTask)) {
+      return null;
+    }
+    if (isValidationComplete(delegateTask)) {
       // Check whether a whitelisted delegate is connected
       List<String> whitelistedDelegates = assignDelegateService.connectedWhitelistedDelegates(delegateTask);
       if (isNotEmpty(whitelistedDelegates)) {
         logger.info("Waiting for task {} to be acquired by a whitelisted delegate: {}", taskId, whitelistedDelegates);
+        return null;
       } else {
         logger.info("No whitelisted delegates found for task {}", taskId);
-        List<String> criteria = results.stream().map(DelegateConnectionResult::getCriteria).collect(toList());
-        String errorMessage = "No delegates could reach the resource. " + criteria;
-        logger.info("Task {}: {}", taskId, errorMessage);
-        NotifyResponseData response;
-        if (delegateTask.isAsync()) {
-          response = ErrorNotifyResponseData.builder().errorMessage(errorMessage).build();
-        } else {
-          response =
-              aRemoteMethodReturnValueData().withException(new InvalidRequestException(errorMessage, USER)).build();
-        }
-        processDelegateResponse(
-            accountId, null, taskId, aDelegateTaskResponse().withAccountId(accountId).withResponse(response).build());
+        return assignTask(delegateId, taskId, delegateTask);
       }
-    } else {
-      logger.info("Task {} is still being validated", taskId);
     }
+
+    logger.info("Task {} is still being validated", taskId);
+    return null;
   }
 
   private void setValidationStarted(String delegateId, DelegateTask delegateTask) {

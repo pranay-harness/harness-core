@@ -3,9 +3,6 @@ package software.wings.app;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.beans.DelegateTask.Status.ERROR;
-import static software.wings.beans.DelegateTask.Status.QUEUED;
-import static software.wings.beans.DelegateTask.Status.STARTED;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
@@ -23,6 +20,7 @@ import org.mongodb.morphia.query.WhereCriteria;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTask.Status;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.lock.AcquiredLock;
@@ -75,7 +73,7 @@ public class DelegateQueueTask implements Runnable {
   private void releaseLongQueuedTasks() {
     // Release async tasks acquired by delegate but not started execution. Introduce "ACQUIRED" status may be ?
     Query<DelegateTask> releaseLongQueuedTasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
-                                                     .filter("status", QUEUED)
+                                                     .filter("status", Status.QUEUED)
                                                      .filter("async", true)
                                                      .field("delegateId")
                                                      .exists()
@@ -87,7 +85,7 @@ public class DelegateQueueTask implements Runnable {
 
     // Release sync tasks acquired by delegate but not started execution.
     releaseLongQueuedTasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
-                                 .filter("status", QUEUED)
+                                 .filter("status", Status.QUEUED)
                                  .filter("async", false)
                                  .field("delegateId")
                                  .exists()
@@ -101,7 +99,7 @@ public class DelegateQueueTask implements Runnable {
   private void markTimedOutTasksAsFailed() {
     long currentTime = clock.millis();
     Query<DelegateTask> longRunningTimedOutTasksQuery =
-        wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).filter("status", STARTED);
+        wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).filter("status", Status.STARTED);
     longRunningTimedOutTasksQuery.and(new WhereCriteria("this.lastUpdatedAt + this.timeout < " + currentTime));
 
     List<Key<DelegateTask>> longRunningTimedOutTaskKeys = longRunningTimedOutTasksQuery.asKeyList();
@@ -116,7 +114,7 @@ public class DelegateQueueTask implements Runnable {
   private void markLongQueuedTasksAsFailed() {
     // Find tasks which have been queued for too long and update their status to ERROR.
     Query<DelegateTask> longQueuedTasksQuery = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
-                                                   .filter("status", QUEUED)
+                                                   .filter("status", Status.QUEUED)
                                                    .field("lastUpdatedAt")
                                                    .lessThan(clock.millis() - TimeUnit.HOURS.toMillis(1));
 
@@ -133,7 +131,7 @@ public class DelegateQueueTask implements Runnable {
     Query<DelegateTask> updateQuery =
         wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).field(Mapper.ID_KEY).in(taskIds);
     UpdateOperations<DelegateTask> updateOperations =
-        wingsPersistence.createUpdateOperations(DelegateTask.class).set("status", ERROR);
+        wingsPersistence.createUpdateOperations(DelegateTask.class).set("status", Status.ERROR);
     wingsPersistence.update(updateQuery, updateOperations);
 
     List<DelegateTask> delegateTasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
@@ -159,7 +157,7 @@ public class DelegateQueueTask implements Runnable {
     // Re-broadcast queued tasks not picked up by any Delegate and not in process of validation
     List<DelegateTask> unassignedTasks = null;
     unassignedTasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
-                          .filter("status", QUEUED)
+                          .filter("status", Status.QUEUED)
                           .filter("version", versionInfoManager.getVersionInfo().getVersion())
                           .field("delegateId")
                           .doesNotExist()
