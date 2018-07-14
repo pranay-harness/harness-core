@@ -291,6 +291,12 @@ public class EcsContainerTask extends ContainerTask {
     return containerDefinition;
   }
 
+  public ContainerTask cloneInternal() {
+    ContainerTask newContainerTask = new EcsContainerTask();
+    copyConfigToContainerTask(newContainerTask);
+    return newContainerTask;
+  }
+
   @Data
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor

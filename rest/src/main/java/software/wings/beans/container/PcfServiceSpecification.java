@@ -49,6 +49,13 @@ public class PcfServiceSpecification extends DeploymentSpecification {
     this.manifestYaml = trimYaml(preamble + manifestTemplate);
   }
 
+  public PcfServiceSpecification cloneInternal() {
+    PcfServiceSpecification specification =
+        PcfServiceSpecification.builder().serviceId(this.serviceId).manifestYaml(this.getManifestYaml()).build();
+    specification.setAppId(this.getAppId());
+    return specification;
+  }
+
   @Data
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor

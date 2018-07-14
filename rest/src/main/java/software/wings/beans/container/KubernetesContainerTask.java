@@ -316,6 +316,12 @@ public class KubernetesContainerTask extends ContainerTask {
     return containerBuilder.build();
   }
 
+  public ContainerTask cloneInternal() {
+    ContainerTask newContainerTask = new KubernetesContainerTask();
+    copyConfigToContainerTask(newContainerTask);
+    return newContainerTask;
+  }
+
   @Data
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor

@@ -6,10 +6,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -118,8 +120,10 @@ import software.wings.beans.command.CopyConfigCommandUnit;
 import software.wings.beans.command.InitSshCommandUnit;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
+import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.KubernetesPayload;
+import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.dl.HQuery;
@@ -420,6 +424,16 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     Service originalService =
         serviceBuilder.serviceCommands(asList(aServiceCommand().withUuid("SERVICE_COMMAND_ID").build())).build();
     when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID)).thenReturn(originalService);
+
+    Query<PcfServiceSpecification> pcfSpecificationQuery = mock(Query.class);
+    when(wingsPersistence.createQuery(PcfServiceSpecification.class)).thenReturn(pcfSpecificationQuery);
+    when(pcfSpecificationQuery.filter(anyString(), anyObject())).thenReturn(pcfSpecificationQuery);
+    when(pcfSpecificationQuery.get()).thenReturn(null);
+
+    Query<HelmChartSpecification> helmQuery = mock(Query.class);
+    when(wingsPersistence.createQuery(HelmChartSpecification.class)).thenReturn(helmQuery);
+    when(helmQuery.filter(anyString(), anyObject())).thenReturn(helmQuery);
+    when(helmQuery.get()).thenReturn(null);
 
     Service savedClonedService = originalService.cloneInternal();
     savedClonedService.setName("Clone Service");
