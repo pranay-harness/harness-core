@@ -40,5 +40,5 @@ public class DelegateConnectionResult extends Base {
   @JsonIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   @Default
-  private Date validUntil = Date.from(OffsetDateTime.now().plusDays(7).toInstant());
+  private Date validUntil = Date.from(OffsetDateTime.now().plusDays(30).toInstant());
 }
