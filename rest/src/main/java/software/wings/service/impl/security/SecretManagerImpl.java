@@ -939,7 +939,7 @@ public class SecretManagerImpl implements SecretManager {
 
     for (EncryptedData encryptedData : encryptedDataList) {
       if (!usageRestrictionsService.hasAccess(
-              encryptedData.getUsageRestrictions(), accountId, appIdFromRequest, envIdFromRequest)) {
+              encryptedData.getUsageRestrictions(), accountId, appIdFromRequest, envIdFromRequest, null)) {
         continue;
       }
 

@@ -26,7 +26,8 @@ public interface UsageRestrictionsService {
    * @param envId env id
    * @return boolean if the user needs to be provided access or not
    */
-  boolean hasAccess(UsageRestrictions usageRestrictions, String accountId, String appId, String envId);
+  boolean hasAccess(
+      UsageRestrictions usageRestrictions, String accountId, String appId, String envId, String requestId);
 
   /**
    * Lists all the applications and environments that the user has update permissions on.
