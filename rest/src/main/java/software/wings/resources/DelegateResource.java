@@ -295,7 +295,7 @@ public class DelegateResource {
     return Response.ok(delegateFile)
         .header("Content-Transfer-Encoding", "binary")
         .type("application/zip; charset=binary")
-        .header("Content-Disposition", "attachment; filename=" + DELEGATE_DIR + ".zip")
+        .header("Content-Disposition", "attachment; filename=" + DELEGATE_DIR + ".tar.gz")
         .build();
   }
 
@@ -312,7 +312,7 @@ public class DelegateResource {
     return Response.ok(delegateFile)
         .header("Content-Transfer-Encoding", "binary")
         .type("application/zip; charset=binary")
-        .header("Content-Disposition", "attachment; filename=" + DOCKER_DELEGATE + ".zip")
+        .header("Content-Disposition", "attachment; filename=" + DOCKER_DELEGATE + ".tar.gz")
         .build();
   }
 
@@ -329,7 +329,7 @@ public class DelegateResource {
     return Response.ok(delegateFile)
         .header("Content-Transfer-Encoding", "binary")
         .type("application/zip; charset=binary")
-        .header("Content-Disposition", "attachment; filename=" + KUBERNETES_DELEGATE + ".zip")
+        .header("Content-Disposition", "attachment; filename=" + KUBERNETES_DELEGATE + ".tar.gz")
         .build();
   }
 

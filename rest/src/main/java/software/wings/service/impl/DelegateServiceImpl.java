@@ -4,6 +4,7 @@ import static freemarker.template.Configuration.VERSION_2_3_23;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofMillis;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
@@ -52,15 +53,13 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.github.zafarkhaja.semver.Version;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
 import io.harness.version.VersionInfoManager;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.compress.archivers.zip.AsiExtraField;
-import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
-import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.fluent.Request;
@@ -130,6 +129,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPOutputStream;
 import javax.validation.executable.ValidateOnExecution;
 import javax.ws.rs.NotFoundException;
 
@@ -475,80 +475,71 @@ public class DelegateServiceImpl implements DelegateService {
     return null;
   }
 
-  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   @Override
   public File downloadScripts(String managerHost, String accountId) throws IOException, TemplateException {
-    File delegateFile = File.createTempFile(DELEGATE_DIR, ".zip");
+    File delegateFile = File.createTempFile(DELEGATE_DIR, ".tar");
 
-    try (ZipArchiveOutputStream out = new ZipArchiveOutputStream(delegateFile)) {
-      out.putArchiveEntry(new ZipArchiveEntry(DELEGATE_DIR + "/"));
+    try (TarArchiveOutputStream out = new TarArchiveOutputStream(new FileOutputStream(delegateFile))) {
+      out.putArchiveEntry(new TarArchiveEntry(DELEGATE_DIR + "/"));
       out.closeArchiveEntry();
 
       ImmutableMap<String, String> scriptParams =
           getJarAndScriptRunTimeParamMap(accountId, "0.0.0", managerHost); // first version is 0.0.0
 
       File start = File.createTempFile("start", ".sh");
-      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(start))) {
+      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(start), UTF_8)) {
         cfg.getTemplate("start.sh.ftl").process(scriptParams, fileWriter);
       }
       start = new File(start.getAbsolutePath());
-      ZipArchiveEntry startZipArchiveEntry = new ZipArchiveEntry(start, DELEGATE_DIR + "/start.sh");
-      startZipArchiveEntry.setUnixMode(0755 << 16L);
-      AsiExtraField permissions = new AsiExtraField();
-      permissions.setMode(0755);
-      startZipArchiveEntry.addExtraField(permissions);
-      out.putArchiveEntry(startZipArchiveEntry);
+      TarArchiveEntry startTarArchiveEntry = new TarArchiveEntry(start, DELEGATE_DIR + "/start.sh");
+      startTarArchiveEntry.setMode(0755);
+      out.putArchiveEntry(startTarArchiveEntry);
       try (FileInputStream fis = new FileInputStream(start)) {
         IOUtils.copy(fis, out);
       }
       out.closeArchiveEntry();
 
       File delegate = File.createTempFile("delegate", ".sh");
-      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(delegate))) {
+      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(delegate), UTF_8)) {
         cfg.getTemplate("delegate.sh.ftl").process(scriptParams, fileWriter);
       }
       delegate = new File(delegate.getAbsolutePath());
-      ZipArchiveEntry delegateZipArchiveEntry = new ZipArchiveEntry(delegate, DELEGATE_DIR + "/delegate.sh");
-      delegateZipArchiveEntry.setUnixMode(0755 << 16L);
-      permissions = new AsiExtraField();
-      permissions.setMode(0755);
-      delegateZipArchiveEntry.addExtraField(permissions);
-      out.putArchiveEntry(delegateZipArchiveEntry);
+      TarArchiveEntry delegateTarArchiveEntry = new TarArchiveEntry(delegate, DELEGATE_DIR + "/delegate.sh");
+      delegateTarArchiveEntry.setMode(0755);
+      out.putArchiveEntry(delegateTarArchiveEntry);
       try (FileInputStream fis = new FileInputStream(delegate)) {
         IOUtils.copy(fis, out);
       }
       out.closeArchiveEntry();
 
       File stop = File.createTempFile("stop", ".sh");
-      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(stop))) {
+      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(stop), UTF_8)) {
         cfg.getTemplate("stop.sh.ftl").process(scriptParams, fileWriter);
       }
       stop = new File(stop.getAbsolutePath());
-      ZipArchiveEntry stopZipArchiveEntry = new ZipArchiveEntry(stop, DELEGATE_DIR + "/stop.sh");
-      stopZipArchiveEntry.setUnixMode(0755 << 16L);
-      permissions = new AsiExtraField();
-      permissions.setMode(0755);
-      stopZipArchiveEntry.addExtraField(permissions);
-      out.putArchiveEntry(stopZipArchiveEntry);
+      TarArchiveEntry stopTarArchiveEntry = new TarArchiveEntry(stop, DELEGATE_DIR + "/stop.sh");
+      stopTarArchiveEntry.setMode(0755);
+      out.putArchiveEntry(stopTarArchiveEntry);
       try (FileInputStream fis = new FileInputStream(stop)) {
         IOUtils.copy(fis, out);
       }
       out.closeArchiveEntry();
 
       File readme = File.createTempFile("README", ".txt");
-      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(readme))) {
+      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(readme), UTF_8)) {
         cfg.getTemplate("readme.txt.ftl").process(emptyMap(), fileWriter);
       }
       readme = new File(readme.getAbsolutePath());
-      ZipArchiveEntry readmeZipArchiveEntry = new ZipArchiveEntry(readme, DELEGATE_DIR + "/README.txt");
-      out.putArchiveEntry(readmeZipArchiveEntry);
+      TarArchiveEntry readmeTarArchiveEntry = new TarArchiveEntry(readme, DELEGATE_DIR + "/README.txt");
+      out.putArchiveEntry(readmeTarArchiveEntry);
       try (FileInputStream fis = new FileInputStream(readme)) {
         IOUtils.copy(fis, out);
       }
       out.closeArchiveEntry();
 
       File proxyConfig = File.createTempFile("proxy", ".config");
-      try (BufferedWriter fileWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(proxyConfig)))) {
+      try (BufferedWriter fileWriter =
+               new BufferedWriter(new OutputStreamWriter(new FileOutputStream(proxyConfig), UTF_8))) {
         fileWriter.write("PROXY_HOST=");
         fileWriter.newLine();
         fileWriter.write("PROXY_PORT=");
@@ -558,98 +549,126 @@ public class DelegateServiceImpl implements DelegateService {
         fileWriter.write("NO_PROXY=");
       }
       proxyConfig = new File(proxyConfig.getAbsolutePath());
-      ZipArchiveEntry proxyZipArchiveEntry = new ZipArchiveEntry(proxyConfig, DELEGATE_DIR + "/proxy.config");
-      out.putArchiveEntry(proxyZipArchiveEntry);
+      TarArchiveEntry proxyTarArchiveEntry = new TarArchiveEntry(proxyConfig, DELEGATE_DIR + "/proxy.config");
+      out.putArchiveEntry(proxyTarArchiveEntry);
       try (FileInputStream fis = new FileInputStream(proxyConfig)) {
         IOUtils.copy(fis, out);
       }
       out.closeArchiveEntry();
+
+      out.flush();
+      out.finish();
     }
-    return delegateFile;
+
+    File gzipDelegateFile = File.createTempFile(DELEGATE_DIR, ".tar.gz");
+    compressGzipFile(delegateFile, gzipDelegateFile);
+    return gzipDelegateFile;
   }
 
-  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
+  private static void compressGzipFile(File file, File gzipFile) {
+    try (FileInputStream fis = new FileInputStream(file); FileOutputStream fos = new FileOutputStream(gzipFile);
+         GZIPOutputStream gzipOS = new GZIPOutputStream(fos)) {
+      byte[] buffer = new byte[1024];
+      int len;
+      while ((len = fis.read(buffer)) != -1) {
+        gzipOS.write(buffer, 0, len);
+      }
+    } catch (IOException e) {
+      logger.error("Error gzipping file.", e);
+    }
+  }
+
   @Override
   public File downloadDocker(String managerHost, String accountId) throws IOException, TemplateException {
-    File dockerDelegateFile = File.createTempFile(DOCKER_DELEGATE, ".zip");
+    File dockerDelegateFile = File.createTempFile(DOCKER_DELEGATE, ".tar");
 
-    try (ZipArchiveOutputStream out = new ZipArchiveOutputStream(dockerDelegateFile)) {
-      out.putArchiveEntry(new ZipArchiveEntry(DOCKER_DELEGATE + "/"));
+    try (TarArchiveOutputStream out = new TarArchiveOutputStream(new FileOutputStream(dockerDelegateFile))) {
+      out.putArchiveEntry(new TarArchiveEntry(DOCKER_DELEGATE + "/"));
       out.closeArchiveEntry();
 
       ImmutableMap<String, String> scriptParams =
           getJarAndScriptRunTimeParamMap(accountId, "0.0.0", managerHost); // first version is 0.0.0
 
       File launch = File.createTempFile("launch-harness-delegate", ".sh");
-      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(launch))) {
+      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(launch), UTF_8)) {
         cfg.getTemplate("launch-harness-delegate.sh.ftl").process(scriptParams, fileWriter);
       }
       launch = new File(launch.getAbsolutePath());
-      ZipArchiveEntry launchZipArchiveEntry =
-          new ZipArchiveEntry(launch, DOCKER_DELEGATE + "/launch-harness-delegate.sh");
-      launchZipArchiveEntry.setUnixMode(0755 << 16L);
-      AsiExtraField permissions = new AsiExtraField();
-      permissions.setMode(0755);
-      launchZipArchiveEntry.addExtraField(permissions);
-      out.putArchiveEntry(launchZipArchiveEntry);
+      TarArchiveEntry launchTarArchiveEntry =
+          new TarArchiveEntry(launch, DOCKER_DELEGATE + "/launch-harness-delegate.sh");
+      launchTarArchiveEntry.setMode(0755);
+      out.putArchiveEntry(launchTarArchiveEntry);
       try (FileInputStream fis = new FileInputStream(launch)) {
         IOUtils.copy(fis, out);
       }
       out.closeArchiveEntry();
 
       File readme = File.createTempFile("README", ".txt");
-      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(readme))) {
+      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(readme), UTF_8)) {
         cfg.getTemplate("readme-docker.txt.ftl").process(emptyMap(), fileWriter);
       }
       readme = new File(readme.getAbsolutePath());
-      ZipArchiveEntry readmeZipArchiveEntry = new ZipArchiveEntry(readme, DOCKER_DELEGATE + "/README.txt");
-      out.putArchiveEntry(readmeZipArchiveEntry);
+      TarArchiveEntry readmeTarArchiveEntry = new TarArchiveEntry(readme, DOCKER_DELEGATE + "/README.txt");
+      out.putArchiveEntry(readmeTarArchiveEntry);
       try (FileInputStream fis = new FileInputStream(readme)) {
         IOUtils.copy(fis, out);
       }
       out.closeArchiveEntry();
+
+      out.flush();
+      out.finish();
     }
-    return dockerDelegateFile;
+
+    File gzipDockerDelegateFile = File.createTempFile(DELEGATE_DIR, ".tar.gz");
+    compressGzipFile(dockerDelegateFile, gzipDockerDelegateFile);
+
+    return gzipDockerDelegateFile;
   }
 
-  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   @Override
   public File downloadKubernetes(String managerHost, String accountId, String delegateName)
       throws IOException, TemplateException {
-    File kubernetesDelegateFile = File.createTempFile(KUBERNETES_DELEGATE, ".zip");
+    File kubernetesDelegateFile = File.createTempFile(KUBERNETES_DELEGATE, ".tar");
 
-    try (ZipArchiveOutputStream out = new ZipArchiveOutputStream(kubernetesDelegateFile)) {
-      out.putArchiveEntry(new ZipArchiveEntry(KUBERNETES_DELEGATE + "/"));
+    try (TarArchiveOutputStream out = new TarArchiveOutputStream(new FileOutputStream(kubernetesDelegateFile))) {
+      out.putArchiveEntry(new TarArchiveEntry(KUBERNETES_DELEGATE + "/"));
       out.closeArchiveEntry();
 
       ImmutableMap<String, String> scriptParams =
           getJarAndScriptRunTimeParamMap(accountId, "0.0.0", managerHost, delegateName); // first version is 0.0.0
 
       File yaml = File.createTempFile("harness-delegate", ".yaml");
-      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(yaml))) {
+      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(yaml), UTF_8)) {
         cfg.getTemplate("harness-delegate.yaml.ftl").process(scriptParams, fileWriter);
       }
       yaml = new File(yaml.getAbsolutePath());
-      ZipArchiveEntry yamlZipArchiveEntry = new ZipArchiveEntry(yaml, KUBERNETES_DELEGATE + "/harness-delegate.yaml");
-      out.putArchiveEntry(yamlZipArchiveEntry);
+      TarArchiveEntry yamlTarArchiveEntry = new TarArchiveEntry(yaml, KUBERNETES_DELEGATE + "/harness-delegate.yaml");
+      out.putArchiveEntry(yamlTarArchiveEntry);
       try (FileInputStream fis = new FileInputStream(yaml)) {
         IOUtils.copy(fis, out);
       }
       out.closeArchiveEntry();
 
       File readme = File.createTempFile("README", ".txt");
-      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(readme))) {
+      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(readme), UTF_8)) {
         cfg.getTemplate("readme-kubernetes.txt.ftl").process(emptyMap(), fileWriter);
       }
       readme = new File(readme.getAbsolutePath());
-      ZipArchiveEntry readmeZipArchiveEntry = new ZipArchiveEntry(readme, KUBERNETES_DELEGATE + "/README.txt");
-      out.putArchiveEntry(readmeZipArchiveEntry);
+      TarArchiveEntry readmeTarArchiveEntry = new TarArchiveEntry(readme, KUBERNETES_DELEGATE + "/README.txt");
+      out.putArchiveEntry(readmeTarArchiveEntry);
       try (FileInputStream fis = new FileInputStream(readme)) {
         IOUtils.copy(fis, out);
       }
       out.closeArchiveEntry();
+
+      out.flush();
+      out.finish();
     }
-    return kubernetesDelegateFile;
+
+    File gzipKubernetesDelegateFile = File.createTempFile(DELEGATE_DIR, ".tar.gz");
+    compressGzipFile(kubernetesDelegateFile, gzipKubernetesDelegateFile);
+
+    return gzipKubernetesDelegateFile;
   }
 
   @Override
