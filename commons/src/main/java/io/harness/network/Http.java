@@ -75,13 +75,14 @@ public class Http {
       // Install the all-trusting host verifier
       HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
       HttpURLConnection connection = getHttpsURLConnection(url);
-      connection.setRequestMethod(
-          "GET"); // Changed to GET as some providers like artifactory SAAS is not accepting HEAD requests
+      // Changed to GET as some providers like artifactory SAAS is not accepting HEAD requests
+      connection.setRequestMethod("GET");
       connection.setConnectTimeout(15000); // 20ms otherwise delegate times out
       connection.setReadTimeout(15000);
 
       int responseCode = connection.getResponseCode();
-      if ((responseCode >= 200 && responseCode <= 399) || responseCode == 401 || responseCode == 403) {
+      if ((responseCode >= 200 && responseCode <= 399) || responseCode == 401 || responseCode == 403
+          || responseCode == 405) {
         logger.info("Url {} is connectable", url);
         return true;
       }
