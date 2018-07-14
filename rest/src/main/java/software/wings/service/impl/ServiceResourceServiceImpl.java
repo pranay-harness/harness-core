@@ -43,6 +43,7 @@ import com.google.inject.name.Named;
 import de.danielbechler.diff.ObjectDifferBuilder;
 import de.danielbechler.diff.node.DiffNode;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.validator.EntityNameValidator;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -253,6 +254,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       addCommand(savedCloneService.getAppId(), savedCloneService.getUuid(), clonedServiceCommand, shouldPushToYaml);
     });
 
+    // Copy ContainerTask, HelmChartSpecification, PcfSpecification
+    cloneServiceSpecifications(appId, originalService, savedCloneService.getUuid());
+
     List<ServiceTemplate> serviceTemplates =
         serviceTemplateService
             .list(aPageRequest()
@@ -290,6 +294,46 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       serviceVariableService.save(clonedServiceVariable);
     });
     return savedCloneService;
+  }
+
+  private void cloneServiceSpecifications(String appId, Service originalService, String clonedServiceId) {
+    String originalServiceId = originalService.getUuid();
+
+    clonePcfSpecification(appId, clonedServiceId, originalServiceId);
+
+    if (ArtifactType.DOCKER.equals(originalService.getArtifactType())) {
+      cloneHelmChartSpecification(appId, clonedServiceId, originalServiceId);
+      cloneContainerTasks(clonedServiceId, originalServiceId);
+    }
+  }
+
+  private void cloneContainerTasks(String clonedServiceId, String originalServiceId) {
+    List<ContainerTask> containerTasks = findContainerTaskForService(originalServiceId);
+    if (EmptyPredicate.isNotEmpty(containerTasks)) {
+      containerTasks.forEach(containerTask -> {
+        ContainerTask newContainerTask = containerTask.cloneInternal();
+        newContainerTask.setServiceId(clonedServiceId);
+        createContainerTask(newContainerTask, false);
+      });
+    }
+  }
+
+  private void cloneHelmChartSpecification(String appId, String clonedServiceId, String originalServiceId) {
+    HelmChartSpecification helmChartSpecification = getHelmChartSpecification(appId, originalServiceId);
+    if (helmChartSpecification != null) {
+      HelmChartSpecification helmChartSpecificationNew = helmChartSpecification.cloneInternal();
+      helmChartSpecificationNew.setServiceId(clonedServiceId);
+      createHelmChartSpecification(helmChartSpecificationNew);
+    }
+  }
+
+  private void clonePcfSpecification(String appId, String clonedServiceId, String originalServiceId) {
+    PcfServiceSpecification pcfServiceSpecification = getPcfServiceSpecification(appId, originalServiceId);
+    if (pcfServiceSpecification != null) {
+      PcfServiceSpecification pcfServiceSpecificationNew = pcfServiceSpecification.cloneInternal();
+      pcfServiceSpecificationNew.setServiceId(clonedServiceId);
+      createPcfServiceSpecification(pcfServiceSpecificationNew);
+    }
   }
 
   private void setKeyWords(Service clonedService) {
@@ -1506,5 +1550,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public List<CommandCategory> getCommandCategories(String appId, String serviceId, String commandName) {
     return commandHelper.getCommandCategories(appId, serviceId, commandName);
+  }
+
+  private List<ContainerTask> findContainerTaskForService(String serviceId) {
+    PageRequest<ContainerTask> pageRequest = aPageRequest().addFilter("serviceId", EQ, serviceId).build();
+    return wingsPersistence.query(ContainerTask.class, pageRequest).getResponse();
   }
 }

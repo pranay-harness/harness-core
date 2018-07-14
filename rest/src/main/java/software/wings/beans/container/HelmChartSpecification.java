@@ -22,6 +22,17 @@ public class HelmChartSpecification extends DeploymentSpecification {
   @NotNull private String chartName;
   @NotNull private String chartVersion;
 
+  public HelmChartSpecification cloneInternal() {
+    HelmChartSpecification specification = HelmChartSpecification.builder()
+                                               .chartName(this.chartName)
+                                               .chartUrl(this.getChartUrl())
+                                               .chartVersion(this.getChartVersion())
+                                               .serviceId(this.serviceId)
+                                               .build();
+    specification.setAppId(this.getAppId());
+    return specification;
+  }
+
   @Data
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor

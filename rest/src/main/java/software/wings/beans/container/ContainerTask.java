@@ -123,6 +123,17 @@ public abstract class ContainerTask extends DeploymentSpecification {
 
   public abstract void validateAdvanced();
 
+  protected void copyConfigToContainerTask(ContainerTask newContainerTask) {
+    newContainerTask.setAdvancedConfig(this.getAdvancedConfig());
+    newContainerTask.setContainerDefinitions(this.getContainerDefinitions());
+    newContainerTask.setServiceId(this.getServiceId());
+    newContainerTask.setAppId(this.getAppId());
+  }
+
+  public ContainerTask cloneInternal() {
+    throw new UnsupportedOperationException();
+  }
+
   @Data
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
