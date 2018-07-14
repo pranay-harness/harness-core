@@ -277,11 +277,11 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       when(authHandler.getEnvIdsByFilter(anyString(), any(EnvFilter.class)))
           .thenReturn(newHashSet(ENV_ID, ENV_ID_1, ENV_ID_2, ENV_ID_3));
 
-      boolean hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID, ENV_ID);
+      boolean hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID, ENV_ID, null);
       assertTrue(hasAccess);
-      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID, null);
+      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID, null, null);
       assertTrue(hasAccess);
-      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, null, null);
+      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, null, null, null);
       assertTrue(hasAccess);
 
       // Scenario 2
@@ -296,15 +296,15 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       when(authHandler.getEnvIdsByFilter(anyString(), any(EnvFilter.class)))
           .thenReturn(newHashSet(ENV_ID, ENV_ID_1, ENV_ID_2, ENV_ID_3));
 
-      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID_1, ENV_ID);
+      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID_1, ENV_ID, null);
       assertTrue(hasAccess);
-      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID_1, null);
+      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID_1, null, null);
       assertTrue(hasAccess);
-      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, null, null);
+      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, null, null, null);
       assertTrue(hasAccess);
-      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID, ENV_ID);
+      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID, ENV_ID, null);
       assertFalse(hasAccess);
-      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID, null);
+      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID, null, null);
       assertFalse(hasAccess);
 
       // Scenario 3
@@ -318,17 +318,17 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       when(authHandler.getAppIdsByFilter(anyString(), any(GenericEntityFilter.class))).thenReturn(newHashSet(APP_ID_1));
       when(authHandler.getEnvIdsByFilter(anyString(), any(EnvFilter.class))).thenReturn(newHashSet(ENV_ID_1, ENV_ID_2));
 
-      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID_1, ENV_ID_1);
+      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID_1, ENV_ID_1, null);
       assertTrue(hasAccess);
-      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID_1, null);
+      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID_1, null, null);
       assertTrue(hasAccess);
-      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, null, null);
+      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, null, null, null);
       assertTrue(hasAccess);
-      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID, ENV_ID);
+      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID, ENV_ID, null);
       assertFalse(hasAccess);
-      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID_1, ENV_ID);
+      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID_1, ENV_ID, null);
       assertFalse(hasAccess);
-      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID, null);
+      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID, null, null);
       assertFalse(hasAccess);
 
       // Scenario 4
@@ -342,17 +342,17 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       when(authHandler.getAppIdsByFilter(anyString(), any(GenericEntityFilter.class))).thenReturn(newHashSet(APP_ID));
       when(authHandler.getEnvIdsByFilter(anyString(), any(EnvFilter.class))).thenReturn(newHashSet(ENV_ID_1));
 
-      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID, ENV_ID_1);
+      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID, ENV_ID_1, null);
       assertTrue(hasAccess);
-      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID, null);
+      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID, null, null);
       assertTrue(hasAccess);
-      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, null, null);
+      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, null, null, null);
       assertTrue(hasAccess);
-      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID, ENV_ID);
+      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID, ENV_ID, null);
       assertFalse(hasAccess);
-      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID_1, ENV_ID);
+      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID_1, ENV_ID, null);
       assertFalse(hasAccess);
-      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID_1, null);
+      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID_1, null, null);
       assertFalse(hasAccess);
 
       // Scenario 5
@@ -366,17 +366,17 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       when(authHandler.getAppIdsByFilter(anyString(), any(GenericEntityFilter.class))).thenReturn(newHashSet(APP_ID));
       when(authHandler.getEnvIdsByFilter(anyString(), any(EnvFilter.class))).thenReturn(newHashSet(ENV_ID_1));
 
-      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID, ENV_ID_1);
+      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID, ENV_ID_1, null);
       assertTrue(hasAccess);
-      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID, null);
+      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID, null, null);
       assertTrue(hasAccess);
-      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, null, null);
+      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, null, null, null);
       assertTrue(hasAccess);
-      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID, ENV_ID);
+      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID, ENV_ID, null);
       assertFalse(hasAccess);
-      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID_1, ENV_ID);
+      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID_1, ENV_ID, null);
       assertFalse(hasAccess);
-      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID_1, null);
+      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID_1, null, null);
       assertFalse(hasAccess);
 
       // Scenario 6
@@ -390,17 +390,17 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       when(authHandler.getAppIdsByFilter(anyString(), any(GenericEntityFilter.class))).thenReturn(newHashSet());
       when(authHandler.getEnvIdsByFilter(anyString(), any(EnvFilter.class))).thenReturn(newHashSet());
 
-      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID, ENV_ID_1);
+      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID, ENV_ID_1, null);
       assertFalse(hasAccess);
-      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID, null);
+      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID, null, null);
       assertFalse(hasAccess);
-      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, null, null);
+      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, null, null, null);
       assertTrue(hasAccess);
-      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID, ENV_ID);
+      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID, ENV_ID, null);
       assertFalse(hasAccess);
-      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID_1, ENV_ID);
+      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID_1, ENV_ID, null);
       assertFalse(hasAccess);
-      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID_1, null);
+      hasAccess = usageRestrictionsService.hasAccess(usageRestrictions, ACCOUNT_ID, APP_ID_1, null, null);
       assertFalse(hasAccess);
 
     } finally {
