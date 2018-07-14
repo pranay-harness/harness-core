@@ -375,6 +375,17 @@ public class DelegateResource {
   }
 
   @DelegateAuth
+  @GET
+  @Produces("application/x-kryo")
+  @Path("{delegateId}/tasks/{taskId}/proceed")
+  @Timed
+  @ExceptionMetered
+  public DelegateTask shouldProceedAnyway(@PathParam("delegateId") String delegateId,
+      @PathParam("taskId") String taskId, @QueryParam("accountId") @NotEmpty String accountId) {
+    return delegateService.shouldProceedAnyway(accountId, delegateId, taskId);
+  }
+
+  @DelegateAuth
   @PUT
   @Path("{delegateId}/clear-cache")
   @Timed
