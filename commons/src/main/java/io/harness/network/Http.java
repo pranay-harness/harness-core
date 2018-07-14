@@ -82,9 +82,11 @@ public class Http {
 
       int responseCode = connection.getResponseCode();
       if ((responseCode >= 200 && responseCode <= 399) || responseCode == 401 || responseCode == 403
-          || responseCode == 405) {
+          || responseCode == 405 || responseCode == 500) {
         logger.info("Url {} is connectable", url);
         return true;
+      } else {
+        logger.info("Url {} returned code {}", url, responseCode);
       }
     } catch (Exception e) {
       logger.info("Could not connect to url {}: {}", url, e.getMessage());
