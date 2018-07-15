@@ -460,3 +460,9 @@ software.wings.service.impl.aws.model.AwsEc2ListVpcsRequest, 5420
 software.wings.service.impl.aws.model.AwsEc2ListVpcsResponse, 5421
 software.wings.service.impl.aws.model.AwsEc2ValidateCredentialsRequest, 5422
 software.wings.service.impl.aws.model.AwsEc2ValidateCredentialsResponse, 5423
+software.wings.service.impl.aws.model.AwsAsgRequest, 5424
+software.wings.service.impl.aws.model.AwsAsgRequest$AwsAsgRequestType, 5425
+software.wings.service.impl.aws.model.AwsAsgListAllNamesRequest, 5426
+software.wings.service.impl.aws.model.AwsAsgListAllNamesResponse, 5427
+software.wings.service.impl.aws.model.AwsAsgListInstancesRequest, 5428
+software.wings.service.impl.aws.model.AwsAsgListInstancesResponse, 5429

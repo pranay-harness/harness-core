@@ -149,6 +149,7 @@ import software.wings.service.impl.analysis.MetricDataAnalysisServiceImpl;
 import software.wings.service.impl.appdynamics.AppdynamicsServiceImpl;
 import software.wings.service.impl.artifact.ArtifactCollectionServiceImpl;
 import software.wings.service.impl.artifact.ArtifactServiceImpl;
+import software.wings.service.impl.aws.manager.AwsAsgHelperServiceManagerImpl;
 import software.wings.service.impl.aws.manager.AwsEc2HelperServiceManagerImpl;
 import software.wings.service.impl.aws.manager.AwsEcrHelperServiceManagerImpl;
 import software.wings.service.impl.aws.manager.AwsEcsHelperServiceManagerImpl;
@@ -261,6 +262,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
+import software.wings.service.intfc.aws.manager.AwsAsgHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsEc2HelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsEcrHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsEcsHelperServiceManager;
@@ -443,6 +445,7 @@ public class WingsModule extends AbstractModule {
     bind(AwsEcsHelperServiceManager.class).to(AwsEcsHelperServiceManagerImpl.class);
     bind(AwsIamHelperServiceManager.class).to(AwsIamHelperServiceManagerImpl.class);
     bind(AwsEc2HelperServiceManager.class).to(AwsEc2HelperServiceManagerImpl.class);
+    bind(AwsAsgHelperServiceManager.class).to(AwsAsgHelperServiceManagerImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);

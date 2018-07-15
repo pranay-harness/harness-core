@@ -28,6 +28,7 @@ import software.wings.delegatetasks.ShellScriptTask;
 import software.wings.delegatetasks.SplunkDataCollectionTask;
 import software.wings.delegatetasks.SumoDataCollectionTask;
 import software.wings.delegatetasks.TerraformProvisionTask;
+import software.wings.delegatetasks.aws.AwsAsgTask;
 import software.wings.delegatetasks.aws.AwsEc2Task;
 import software.wings.delegatetasks.aws.AwsEcrTask;
 import software.wings.delegatetasks.aws.AwsEcsTask;
@@ -210,14 +211,13 @@ public enum TaskType {
   KUBERNETES_SWAP_SERVICE_SELECTORS_TASK(
       TaskGroup.CONTAINER, KubernetesSwapServiceSelectorsTask.class, KubernetesSwapServiceSelectorsValidation.class),
   ECS_STEADY_STATE_CHECK_TASK(TaskGroup.CONTAINER, EcsSteadyStateCheckTask.class, AlwaysTrueValidation.class),
-  AWS_DESCRIBE_AUTO_SCALING_GROUP_INSTANCES(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
-  AWS_GET_AUTO_SCALING_GROUPS(TaskGroup.AWS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   SECRET_DECRYPT_REF(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerDecryptValidation.class),
   AWS_ECR_TASK(TaskGroup.AWS, AwsEcrTask.class, AlwaysTrueValidation.class),
   AWS_ELB_TASK(TaskGroup.AWS, AwsElbTask.class, AlwaysTrueValidation.class),
   AWS_ECS_TASK(TaskGroup.AWS, AwsEcsTask.class, AlwaysTrueValidation.class),
   AWS_IAM_TASK(TaskGroup.AWS, AwsIamTask.class, AlwaysTrueValidation.class),
-  AWS_EC2_TASK(TaskGroup.AWS, AwsEc2Task.class, AlwaysTrueValidation.class);
+  AWS_EC2_TASK(TaskGroup.AWS, AwsEc2Task.class, AlwaysTrueValidation.class),
+  AWS_ASG_TASK(TaskGroup.AWS, AwsAsgTask.class, AlwaysTrueValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;

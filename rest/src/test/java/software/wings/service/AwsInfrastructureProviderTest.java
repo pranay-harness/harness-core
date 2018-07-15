@@ -4,10 +4,8 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
@@ -42,14 +40,13 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
-import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.impl.AwsUtils;
-import software.wings.service.intfc.AwsEc2Service;
 import software.wings.service.intfc.HostService;
+import software.wings.service.intfc.aws.manager.AwsAsgHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsEc2HelperServiceManager;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.states.ManagerExecutionLogCallback;
@@ -64,10 +61,9 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   @Mock private AwsUtils mockAwsUtils;
   @Mock private HostService hostService;
   @Mock private SecretManager secretManager;
-  @Mock private AwsEc2Service mockAwsEc2Service;
   @Mock private AwsEc2HelperServiceManager mockAwsEc2HelperServiceManager;
+  @Mock private AwsAsgHelperServiceManager mockAwsAsgHelperServiceManager;
   @Spy private AwsHelperService awsHelperService;
-  @Mock private DelegateProxyFactory mockDelegateProxyFactory;
 
   @Inject @InjectMocks private AwsInfrastructureProvider infrastructureProvider = new AwsInfrastructureProvider();
 
@@ -83,7 +79,6 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
     MockitoAnnotations.initMocks(this);
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
     setInternalState(infrastructureProvider, "secretManager", secretManager);
-    doReturn(mockAwsEc2Service).when(mockDelegateProxyFactory).get(eq(AwsEc2Service.class), any());
   }
 
   @Test
@@ -198,8 +193,8 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
                         .withPublicDnsName(HOST_NAME)
                         .withInstanceId("INSTANCE_ID")
                         .withState(new InstanceState().withName("running"))))
-        .when(mockAwsEc2Service)
-        .describeAutoScalingGroupInstances(awsConfig, Collections.emptyList(), infrastructureMapping.getRegion(),
+        .when(mockAwsAsgHelperServiceManager)
+        .listAutoScalingGroupInstances(awsConfig, Collections.emptyList(), infrastructureMapping.getRegion(),
             infrastructureMapping.getAutoScalingGroupName());
     doReturn(HOST_NAME).when(mockAwsUtils).getHostnameFromPrivateDnsName(HOST_NAME);
     doNothing()
@@ -218,8 +213,8 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
         .setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, Collections.emptyList(),
             infrastructureMapping.getRegion(), infrastructureMapping.getAutoScalingGroupName(),
             infrastructureMapping.getDesiredCapacity(), new ManagerExecutionLogCallback());
-    verify(mockAwsEc2Service)
-        .describeAutoScalingGroupInstances(awsConfig, Collections.emptyList(), infrastructureMapping.getRegion(),
+    verify(mockAwsAsgHelperServiceManager)
+        .listAutoScalingGroupInstances(awsConfig, Collections.emptyList(), infrastructureMapping.getRegion(),
             infrastructureMapping.getAutoScalingGroupName());
   }
 }
