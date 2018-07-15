@@ -442,6 +442,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Ignore
   public void fetch() throws Exception {
     APMVerificationConfig config = new APMVerificationConfig();
     config.setAccountId(accountId);

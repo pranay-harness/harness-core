@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.api.HostElement.Builder.aHostElement;
-import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
@@ -28,7 +27,6 @@ import software.wings.api.HostElement;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
-import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
@@ -40,9 +38,9 @@ import software.wings.dl.PageResponse;
 import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.service.intfc.AwsEc2Service;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureProvider;
+import software.wings.service.intfc.aws.manager.AwsAsgHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsEc2HelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsElbHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsIamHelperServiceManager;
@@ -72,6 +70,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
   @Inject private AwsElbHelperServiceManager awsElbHelperServiceManager;
   @Inject private AwsIamHelperServiceManager awsIamHelperServiceManager;
   @Inject private AwsEc2HelperServiceManager awsEc2HelperServiceManager;
+  @Inject private AwsAsgHelperServiceManager awsAsgHelperServiceManager;
 
   @Override
   public PageResponse<Host> listHosts(AwsInfrastructureMapping awsInfrastructureMapping,
@@ -135,15 +134,8 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
       }
       return instances;
     } else {
-      try {
-        SyncTaskContext syncTaskContext = aContext().withAccountId(awsConfig.getAccountId()).build();
-        return delegateProxyFactory.get(AwsEc2Service.class, syncTaskContext)
-            .describeAutoScalingGroupInstances(awsConfig, encryptedDataDetails, awsInfrastructureMapping.getRegion(),
-                awsInfrastructureMapping.getAutoScalingGroupName());
-      } catch (Exception e) {
-        logger.warn(Misc.getMessage(e), e);
-        throw new InvalidRequestException(Misc.getMessage(e), USER);
-      }
+      return awsAsgHelperServiceManager.listAutoScalingGroupInstances(awsConfig, encryptedDataDetails,
+          awsInfrastructureMapping.getRegion(), awsInfrastructureMapping.getAutoScalingGroupName());
     }
   }
 
@@ -200,16 +192,8 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
           infrastructureMapping.getDesiredCapacity(), new ManagerExecutionLogCallback());
     }
 
-    List<Instance> instances;
-    try {
-      SyncTaskContext syncTaskContext = aContext().withAccountId(computeProviderSetting.getAccountId()).build();
-      instances = delegateProxyFactory.get(AwsEc2Service.class, syncTaskContext)
-                      .describeAutoScalingGroupInstances(awsConfig, encryptionDetails,
-                          infrastructureMapping.getRegion(), infrastructureMapping.getAutoScalingGroupName());
-    } catch (Exception e) {
-      logger.warn(Misc.getMessage(e), e);
-      throw new InvalidRequestException(Misc.getMessage(e), USER);
-    }
+    List<Instance> instances = awsAsgHelperServiceManager.listAutoScalingGroupInstances(awsConfig, encryptionDetails,
+        infrastructureMapping.getRegion(), infrastructureMapping.getAutoScalingGroupName());
     return instances.stream()
         .map(instance
             -> aHost()
@@ -289,10 +273,9 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
 
   public List<String> listAutoScalingGroups(SettingAttribute computeProviderSetting, String region) {
     try {
-      SyncTaskContext syncTaskContext = aContext().withAccountId(computeProviderSetting.getAccountId()).build();
       AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-      return delegateProxyFactory.get(AwsEc2Service.class, syncTaskContext)
-          .getAutoScalingGroupNames(awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
+      return awsAsgHelperServiceManager.listAutoScalingGroupNames(
+          awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
     } catch (Exception e) {
       logger.warn(Misc.getMessage(e), e);
       throw new InvalidRequestException(Misc.getMessage(e), USER);
