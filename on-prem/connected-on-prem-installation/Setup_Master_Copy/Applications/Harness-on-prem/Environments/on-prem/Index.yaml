@@ -24,7 +24,7 @@ variableOverrides:
     valueType: TEXT
   - name: docker_image_tag
     serviceName: Proxy
-    value: on_prem_9
+    value: on_prem_10
     valueType: TEXT
   - name: MANAGER3
     serviceName: Proxy
@@ -114,3 +114,8 @@ variableOverrides:
     serviceName: Manager
     value: ${serviceVariable.LOAD_BALANCER_URL}
     valueType: TEXT
+  - name: SERVER_PORT
+    serviceName: Manager
+    value: ${serviceVariable.MANAGER_PORT}
+    valueType: TEXT
+
