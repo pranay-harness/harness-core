@@ -8,7 +8,6 @@ import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
 
 import com.google.common.io.CharStreams;
@@ -79,6 +78,7 @@ import software.wings.utils.Misc;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -1085,8 +1085,10 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       List<String> containerInstances =
           tasks.stream().map(Task::getContainerInstanceArn).filter(Objects::nonNull).collect(toList());
       logger.info("Container Instances = " + containerInstances);
-      Map<String, String> containerTaskArns =
-          tasks.stream().collect(toMap(Task::getContainerInstanceArn, Task::getTaskArn));
+      Map<String, String> containerTaskArns = new HashMap<>();
+      for (Task task : tasks) {
+        containerTaskArns.put(task.getContainerInstanceArn(), task.getTaskArn());
+      }
 
       List<ContainerInstance> containerInstanceList =
           awsHelperService
