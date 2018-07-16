@@ -38,6 +38,7 @@ import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
 
+import java.io.File;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -128,8 +129,12 @@ public class CommandValidation extends AbstractDelegateValidateTask {
     }
     return DelegateConnectionResult.builder()
         .criteria(getCriteria(context))
-        .validated(region == null || AwsHelperService.isInAwsRegion(region))
+        .validated(region == null || AwsHelperService.isInAwsRegion(region) || isLocalDev())
         .build();
+  }
+
+  private static boolean isLocalDev() {
+    return !new File("delegate.sh").exists();
   }
 
   private DelegateConnectionResult validateAwsCodeDelpoy(CommandExecutionContext context) {
@@ -139,7 +144,7 @@ public class CommandValidation extends AbstractDelegateValidateTask {
     }
     return DelegateConnectionResult.builder()
         .criteria(getCriteria(context))
-        .validated(region == null || AwsHelperService.isInAwsRegion(region))
+        .validated(region == null || AwsHelperService.isInAwsRegion(region) || isLocalDev())
         .build();
   }
 
@@ -246,12 +251,15 @@ public class CommandValidation extends AbstractDelegateValidateTask {
               .addParam("args", "Unknown kubernetes cloud provider setting value: " + value.getType());
         }
       case ECS:
+        String cluster = "";
         if (context.getContainerSetupParams() != null) {
           region = ((EcsSetupParams) context.getContainerSetupParams()).getRegion();
+          cluster = context.getContainerSetupParams().getClusterName();
         } else if (context.getContainerResizeParams() != null) {
           region = ((EcsResizeParams) context.getContainerResizeParams()).getRegion();
+          cluster = context.getContainerResizeParams().getClusterName();
         }
-        return getAwsRegionCriteria(region);
+        return "ECS Cluster: " + cluster + ", " + getAwsRegionCriteria(region);
       case AWS_CODEDEPLOY:
         if (context.getCodeDeployParams() != null) {
           region = context.getCodeDeployParams().getRegion();
@@ -271,6 +279,6 @@ public class CommandValidation extends AbstractDelegateValidateTask {
   }
 
   private String getAwsRegionCriteria(String region) {
-    return region == null ? ALWAYS_TRUE_CRITERIA : "AWS: " + region;
+    return region == null ? ALWAYS_TRUE_CRITERIA : "AWS Region: " + region;
   }
 }
