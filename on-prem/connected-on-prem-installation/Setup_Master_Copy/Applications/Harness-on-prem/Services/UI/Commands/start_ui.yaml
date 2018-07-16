@@ -21,7 +21,7 @@ commandUnits:
     name: Setup Env
   - command: |-
         sudo docker pull harness/ui
-        sudo docker run -d --name harness_ui -p 8000:80 --rm -e API_URL='${serviceVariable.API_URL}' harness/ui
+        sudo docker run -d --name harness_ui -p ${serviceVariable.UI_PORT}:80 --rm -e API_URL='${serviceVariable.API_URL}' harness/ui
     commandUnitType: EXEC
     deploymentType: SSH
     name: Start docker UI
