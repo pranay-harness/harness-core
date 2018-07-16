@@ -151,6 +151,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
     final APMDataCollectionInfo dataCollectionInfo =
         APMDataCollectionInfo.builder()
             .baseUrl(datadogConfig.getUrl())
+            .validationUrl(DatadogConfig.validationUrl)
             .encryptedDataDetails(
                 secretManager.getEncryptionDetails(datadogConfig, context.getAppId(), context.getWorkflowExecutionId()))
             .hosts(hosts)

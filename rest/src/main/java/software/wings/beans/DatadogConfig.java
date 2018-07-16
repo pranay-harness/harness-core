@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 @EqualsAndHashCode(callSuper = false)
 @ToString(exclude = {"apiKey", "applicationKey"})
 public class DatadogConfig extends SettingValue implements Encryptable {
-  private static final String validationUrl = "metrics";
+  public static final String validationUrl = "metrics";
 
   @Attributes(title = "URL", required = true) @NotEmpty private String url;
 

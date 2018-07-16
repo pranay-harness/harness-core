@@ -14,6 +14,7 @@ import java.util.Set;
 @Builder
 public class APMDataCollectionInfo {
   private String baseUrl;
+  private String validationUrl;
   private Map<String, String> headers;
   private Map<String, String> options;
   List<EncryptedDataDetail> encryptedDataDetails;

@@ -24,14 +24,20 @@ public class APMValidation extends AbstractSecretManagerValidation {
     return singletonList(Arrays.stream(getParameters())
                              .filter(o
                                  -> o instanceof DatadogConfig || o instanceof APMVerificationConfig
-                                     || o instanceof APMValidateCollectorConfig)
+                                     || o instanceof APMValidateCollectorConfig || o instanceof APMDataCollectionInfo)
                              .map(obj -> {
                                if (obj instanceof DatadogConfig) {
-                                 return ((DatadogConfig) obj).getUrl();
+                                 DatadogConfig config = (DatadogConfig) obj;
+                                 return config.getUrl() + DatadogConfig.validationUrl;
                                } else if (obj instanceof APMVerificationConfig) {
-                                 return ((APMVerificationConfig) obj).getUrl();
+                                 APMVerificationConfig config = (APMVerificationConfig) obj;
+                                 return config.getUrl() + config.getValidationUrl();
+                               } else if (obj instanceof APMDataCollectionInfo) {
+                                 APMDataCollectionInfo dInfo = (APMDataCollectionInfo) obj;
+                                 return dInfo.getBaseUrl() + dInfo.getValidationUrl();
                                } else {
-                                 return ((APMValidateCollectorConfig) obj).getUrl();
+                                 APMValidateCollectorConfig config = (APMValidateCollectorConfig) obj;
+                                 return config.getBaseUrl() + config.getUrl();
                                }
                              })
                              .findFirst()
