@@ -923,15 +923,14 @@ public class TriggerServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldNotTriggerScheduledExecutionIfNoArtifacts() throws UnableToRegisterIdempotentOperationException {
+  public void shouldTriggerScheduledExecutionIfNoArtifacts() throws UnableToRegisterIdempotentOperationException {
     scheduledTriggerMocks();
     triggerService.save(scheduledConditionTrigger);
 
     triggerService.triggerScheduledExecutionAsync(scheduledConditionTrigger, new Date());
 
     verify(idempotentRegistry).create(any(), any(), any(), any());
-    verify(workflowExecutionService, times(0))
-        .triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class));
+    verify(workflowExecutionService).triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class));
   }
 
   private void scheduledTriggerMocks() {
