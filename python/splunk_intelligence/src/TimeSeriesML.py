@@ -284,17 +284,20 @@ class TSAnomlyDetector(object):
             min_delta = self.metric_template.get_deviation_threshold(metric_name, ThresholdComparisonType.DELTA)
             min_ratio = self.metric_template.get_deviation_threshold(metric_name, ThresholdComparisonType.RATIO)
             dist_2d_data[np.logical_or(abs(dist_2d_data) < min_delta,
-                                       abs(dist_2d_data) < min_ratio * np.minimum(test_data_2d, base_array))] = 0
+                                       abs(dist_2d_data) < min_ratio * base_array)] = 0
             # normalizing distances
             dist_2d_data = dist_2d_data/std_array
-            # TODO this should be done after adjusting dist it should not be always positive
-            # for points where baseline is Nan but test has a value, distance is set to maximum.
-            dist_2d_data[np.logical_and(~np.isnan(test_data_2d), np.isnan(base_array))] = \
-                3 * self._options.tolerance + 0.1
+
             metric_deviation_type = self.metric_template.get_deviation_type(metric_name)
-            adjusted_dist = self.adjust_numeric_dist(metric_deviation_type, dist_2d_data)
+            min_thresh, max_thresh = self.metric_template.get_abs_deviation_range(transaction_name, metric_name)
+            adjusted_dist = self.adjust_numeric_dist(metric_deviation_type, dist_2d_data, test_data_2d, max_thresh, min_thresh)
             # clipping distances at threshold
             adjusted_dist[adjusted_dist > 3 * self._options.tolerance] = 3 * self._options.tolerance
+            # for points where baseline is Nan but test has a value, distance is set to maximum.
+            adjusted_dist[np.logical_and(~np.isnan(test_data_2d), np.isnan(base_array))] = \
+                3 * self._options.tolerance + 0.1
+            # distance when test is nan is set to zero
+            adjusted_dist[np.isnan(test_data_2d)] = 0
             w_dist = []
             # weights has value just at points that test has a value
             cum_weight = np.sum(~np.isnan(test_data_2d), 1)
@@ -353,18 +356,20 @@ class TSAnomlyDetector(object):
                     min_ratio = self.metric_template.get_deviation_threshold(metric_name, ThresholdComparisonType.RATIO)
                     y = input_data[pred_ind]
                     dist = y - y_hat
-                    dist = 0 if abs(dist) < min_delta or abs(dist) < min_ratio * min(y, y_hat) else dist
-                    # remove oulier for next time prediction
-                    if abs(dist) >= threshold:
-                        input_data[pred_ind] = y_hat  #+ np.sign(dist) * threshold
+                    dist = 0 if abs(dist) < min_delta or abs(dist) < min_ratio * y_hat else dist
                     metric_deviation_type = self.metric_template.get_deviation_type(metric_name)
-                    adjusted_dist = self.adjust_numeric_dist(metric_deviation_type, np.array([dist]))[0]
+                    min_thresh, max_thresh = self.metric_template.get_abs_deviation_range(txn_name, metric_name)
+                    adjusted_dist = self.adjust_numeric_dist(metric_deviation_type, np.array([dist]), np.array([y]),
+                                                             max_thresh, min_thresh)[0]
+
                     # need to normalize the dist to have std =1
                     adjusted_dist = adjusted_dist*1./std if std!=0 else adjusted_dist
                     # clipping distances at threshold assuming after normalization std =1
                     if adjusted_dist > 1.96:
                         # 1.96 is 95% and 2.57 is 99%
                         adjusted_dist = 2.67 if adjusted_dist > 2.57 else 2.06
+                        # remove oulier for next time prediction
+                        input_data[pred_ind] = y_hat  # + np.sign(dist) * threshold
                         anomalies[pred_ind] = 1
                     # keep distance if both predicted and measured have values
                     if not np.isnan(y) and not np.isnan(y_hat):
@@ -543,12 +548,19 @@ class TSAnomlyDetector(object):
         return response
 
     @staticmethod
-    def adjust_numeric_dist(metric_deviation_type, dist_2d_data):
+    def adjust_numeric_dist(metric_deviation_type, dist_2d_data, y, max_thresh, min_thresh):
         adjusted_dist = np.copy(dist_2d_data)
         if metric_deviation_type == MetricToDeviationType.HIGHER:
+            adjusted_dist[y < max_thresh] = 0
+            # for user overide threshold
             adjusted_dist[dist_2d_data < 0] = 0
         elif metric_deviation_type == MetricToDeviationType.LOWER:
             adjusted_dist[dist_2d_data > 0] = 0
+            # for user overide threshold
+            adjusted_dist[y > min_thresh] = 0
+        else:
+            # for user overide threshold for mteric type == both
+            adjusted_dist[np.logical_and(y > min_thresh,  y < max_thresh)] = 0
         return np.abs(adjusted_dist)
 
     @staticmethod
