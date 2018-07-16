@@ -205,6 +205,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     final APMDataCollectionInfo dataCollectionInfo =
         APMDataCollectionInfo.builder()
             .baseUrl(apmConfig.getUrl())
+            .validationUrl(apmConfig.getValidationUrl())
             .headers(apmConfig.collectionHeaders())
             .options(apmConfig.collectionParams())
             .encryptedDataDetails(apmConfig.encryptedDataDetails(secretManager))
