@@ -94,6 +94,39 @@ def run_analysis(options_var, ctrl_file, test_file, out_file):
                 assert host_data['nn'] == out_metric_data[host_name]['nn']
 
 
+def run_analysis_fast(options_var, ctrl_file, test_file, out_file):
+    control = FileLoader.load_data(ctrl_file)
+    test = FileLoader.load_data(test_file)
+    out = FileLoader.load_data(out_file)['transactions']
+    out_mod = {}
+    for o in out.values():
+        out_mod[o['txn_name']] = {'metrics': {}}
+        for m in o['metrics'].values():
+            out_mod[o['txn_name']]['metrics'][m['metric_name']] = m
+
+    out = out_mod
+
+    anomaly_detector = TSAnomlyDetector(options_var, metric_template, control, test)
+    result = anomaly_detector.analyze()
+
+    for txn_id, txn_data in result['transactions'].items():
+        assert txn_data['txn_name'] in out
+        assert txn_data['txn_tag'] == 'default'
+        for metrics_id, metric_data in txn_data['metrics'].items():
+            print(txn_data['txn_name'])
+            assert metric_data['metric_name'] in out[txn_data['txn_name']]['metrics']
+            assert metric_data['max_risk'] == out[txn_data['txn_name']]['metrics'][metric_data['metric_name']][
+                'max_risk']
+            out_metric_data = out[txn_data['txn_name']]['metrics'][metric_data['metric_name']]['results']
+            for host_name, host_data in metric_data['results'].items():
+                assert out_metric_data[host_name] is not None
+                assert compare(host_data['score'], out_metric_data[host_name]['score'])
+                assert host_data['control_data'] == out_metric_data[host_name]['control_data']
+                assert host_data['test_data'] == out_metric_data[host_name]['test_data']
+                assert compare(host_data['risk'], out_metric_data[host_name]['risk'])
+
+
+
 def run_analysis_2(options_var, ctrl_file, test_file):
     control = FileLoader.load_data(ctrl_file)
     test = FileLoader.load_data(test_file)
@@ -181,6 +214,13 @@ def test_run_6():
          '--comparison_unit_window', '1', '--parallelProcesses', '1', '--max_nodes_threshold', '19', '--time_series_ml_analysis_type', 'COMPARATIVE'])
     run_analysis_2(options_var, 'resources/ts/nr_control_live_5.json', 'resources/ts/nr_test_live_5.json')
 
+def test_run_7():
+    '''testing fast method'''
+    options_var = parser.parse_args(
+        ['--analysis_minute', '2', '--analysis_start_min', 0, '--tolerance', '1', '--smooth_window', '3', '--min_rpm',
+         '10',
+         '--comparison_unit_window', '1', '--parallelProcesses', '1', '--max_nodes_threshold', '1', '--time_series_ml_analysis_type', 'COMPARATIVE'])
+    run_analysis_fast(options_var, 'resources/ts/nr_control_live_4.json', 'resources/ts/nr_test_live_4.json', 'resources/ts/nr_out_fast_4.json')
 
 def main(args):
     test_run_2()
@@ -188,6 +228,7 @@ def main(args):
     test_run_4()
     test_run_5()
     test_run_6()
+    test_run_7()
 
 
 
