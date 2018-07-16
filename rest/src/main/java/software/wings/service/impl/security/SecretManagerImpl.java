@@ -961,9 +961,9 @@ public class SecretManagerImpl implements SecretManager {
         } else {
           encryptedData.getUsageRestrictions().setEditable(true);
         }
-
-        filteredEncryptedDataList.add(encryptedData);
       }
+
+      filteredEncryptedDataList.add(encryptedData);
     }
 
     pageResponse.setResponse(filteredEncryptedDataList);
