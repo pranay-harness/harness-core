@@ -23,4 +23,5 @@ public class ContainerInfo {
   private Status status;
   private String podName;
   private String workloadName;
+  private boolean newContainer;
 }

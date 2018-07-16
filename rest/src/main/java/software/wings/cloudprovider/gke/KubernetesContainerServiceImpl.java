@@ -349,6 +349,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
               serviceSteadyStateTimeout, originalPods, isNotVersioned, startTime, executionLogCallback)
         : originalPods;
     int desiredCount = getControllerPodCount(getController(kubernetesConfig, encryptedDataDetails, controllerName));
+    Set<String> originalPodNames = originalPods.stream().map(pod -> pod.getMetadata().getName()).collect(toSet());
     List<ContainerInfo> containerInfos = new ArrayList<>();
     boolean hasErrors = false;
     if (pods.size() != desiredCount) {
@@ -367,7 +368,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
                                                       .ip(pod.getStatus().getPodIP())
                                                       .containerId(containerId)
                                                       .workloadName(controllerName)
-                                                      .podName(podName);
+                                                      .podName(podName)
+                                                      .newContainer(!originalPodNames.contains(podName));
       Set<String> images = getControllerImages(
           getPodTemplateSpec(getController(kubernetesConfig, encryptedDataDetails, controllerName)));
 

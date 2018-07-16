@@ -150,7 +150,8 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
               .flatMap(data -> executeResize(contextData, data, executionLogCallback).stream())
               .collect(toList());
       if (isUpsize) {
-        executionDataBuilder.containerInfos(containerInfos);
+        executionDataBuilder.containerInfos(
+            containerInfos.stream().filter(ContainerInfo::isNewContainer).collect(toList()));
       }
       logContainerInfos(containerInfos, executionLogCallback);
       logger.info("Successfully completed resize operation");
@@ -165,7 +166,8 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
         containerInfos.forEach(info
             -> executionLogCallback.saveExecutionLog("  " + info.getHostName()
                 + (info.getHostName().equals(info.getIp()) ? "" : " - " + info.getIp())
-                + (info.getHostName().equals(info.getContainerId()) ? "" : " - " + info.getContainerId())));
+                + (info.getHostName().equals(info.getContainerId()) ? "" : " - " + info.getContainerId())
+                + (info.isNewContainer() ? " (new)" : "")));
         executionLogCallback.saveExecutionLog("");
       }
     } catch (Exception e) {

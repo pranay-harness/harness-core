@@ -54,7 +54,7 @@ public interface EcsContainerService {
 
   List<ContainerInfo> getContainerInfosAfterEcsWait(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
-      ExecutionLogCallback executionLogCallback, boolean isDownsizeInitiatedByHarness);
+      List<String> originalTaskArns, ExecutionLogCallback executionLogCallback, boolean isDownsizeInitiatedByHarness);
 
   /**
    * Create service.
@@ -79,7 +79,7 @@ public interface EcsContainerService {
 
   List<ContainerInfo> generateContainerInfos(List<Task> tasks, String clusterName, String region,
       List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback, AwsConfig awsConfig,
-      List<String> taskArns);
+      List<String> taskArns, List<String> originalTaskArns);
 
   TaskDefinition getTaskDefinitionFromService(String region, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, Service service);

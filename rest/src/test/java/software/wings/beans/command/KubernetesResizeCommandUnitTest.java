@@ -70,16 +70,20 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
         .thenReturn(kubernetesConfig);
     when(kubernetesContainerService.setControllerPodCount(
              eq(kubernetesConfig), any(), eq(CLUSTER_NAME), anyString(), anyInt(), anyInt(), anyInt(), any()))
-        .thenAnswer(i -> buildContainerInfos((Integer) i.getArguments()[5]));
+        .thenAnswer(i -> buildContainerInfos((Integer) i.getArguments()[5], (Integer) i.getArguments()[4]));
     when(kubernetesContainerService.getController(any(), any(), any()))
         .thenReturn(new ReplicationControllerBuilder().build());
   }
 
-  private List<ContainerInfo> buildContainerInfos(int count) {
+  private List<ContainerInfo> buildContainerInfos(int count, int previousCount) {
     List<ContainerInfo> containerInfos = new ArrayList<>();
     for (int i = 0; i < count; i++) {
-      containerInfos.add(
-          ContainerInfo.builder().status(Status.SUCCESS).hostName("host" + i).containerId("c" + i).build());
+      containerInfos.add(ContainerInfo.builder()
+                             .status(Status.SUCCESS)
+                             .hostName("host" + i)
+                             .containerId("c" + i)
+                             .newContainer(i >= previousCount)
+                             .build());
     }
     return containerInfos;
   }
@@ -140,7 +144,7 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
 
     ResizeCommandUnitExecutionData executionData = execute(activeServiceCounts, 1, "rc-name.1", false, 2, 0, 2, COUNT);
 
-    assertThat(executionData.getContainerInfos().size()).isEqualTo(2);
+    assertThat(executionData.getContainerInfos().size()).isEqualTo(1);
     assertThat(executionData.getNewInstanceData().size()).isEqualTo(1);
     ContainerServiceData contextNewServiceData = executionData.getNewInstanceData().get(0);
     assertThat(contextNewServiceData.getPreviousCount()).isEqualTo(1);
