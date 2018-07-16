@@ -292,7 +292,8 @@ public class ContainerServiceImpl implements ContainerService {
       List<String> taskArns = tasks.stream().map(Task::getTaskArn).collect(Collectors.toList());
 
       return ecsContainerService.generateContainerInfos(tasks, containerServiceParams.getClusterName(),
-          containerServiceParams.getRegion(), containerServiceParams.getEncryptionDetails(), null, awsConfig, taskArns);
+          containerServiceParams.getRegion(), containerServiceParams.getEncryptionDetails(), null, awsConfig, taskArns,
+          taskArns);
     }
 
     throw new WingsException("invalid setting type " + containerServiceParams);

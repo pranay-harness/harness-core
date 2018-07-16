@@ -8,6 +8,7 @@ import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
 
 import com.google.common.io.CharStreams;
@@ -977,6 +978,13 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig, encryptedDataDetails);
 
     try {
+      List<String> originalTaskArns = awsHelperService
+                                          .listTasks(region, awsConfig, encryptedDataDetails,
+                                              new ListTasksRequest()
+                                                  .withCluster(clusterName)
+                                                  .withServiceName(serviceName)
+                                                  .withDesiredStatus(DesiredStatus.RUNNING))
+                                          .getTaskArns();
       if (desiredCount != previousCount) {
         UpdateServiceRequest updateServiceRequest =
             new UpdateServiceRequest().withCluster(clusterName).withService(serviceName).withDesiredCount(desiredCount);
@@ -995,7 +1003,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       }
 
       return getContainerInfosAfterEcsWait(region, awsConfig, encryptedDataDetails, clusterName, serviceName,
-          executionLogCallback, desiredCount <= previousCount);
+          originalTaskArns, executionLogCallback, desiredCount <= previousCount);
     } catch (Exception ex) {
       throw new InvalidRequestException(Misc.getMessage(ex), ex);
     }
@@ -1004,7 +1012,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   @Override
   public List<ContainerInfo> getContainerInfosAfterEcsWait(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
-      ExecutionLogCallback executionLogCallback, boolean isDownsizeInitiatedByHarness) {
+      List<String> originalTaskArns, ExecutionLogCallback executionLogCallback, boolean isDownsizeInitiatedByHarness) {
     List<String> taskArns = awsHelperService
                                 .listTasks(region, awsConfig, encryptedDataDetails,
                                     new ListTasksRequest()
@@ -1025,8 +1033,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
     List<ContainerInfo> containerInfos = null;
     if (CollectionUtils.isNotEmpty(tasks)) {
-      containerInfos = generateContainerInfos(
-          tasks, clusterName, region, encryptedDataDetails, executionLogCallback, awsConfig, taskArns);
+      containerInfos = generateContainerInfos(tasks, clusterName, region, encryptedDataDetails, executionLogCallback,
+          awsConfig, taskArns, originalTaskArns);
     } else {
       logger.warn("Could not fetched tasks, aws.describeTasks returned 0 tasks");
     }
@@ -1038,7 +1046,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   @Override
   public List<ContainerInfo> generateContainerInfos(List<Task> tasks, String clusterName, String region,
       List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback, AwsConfig awsConfig,
-      List<String> taskArns) {
+      List<String> taskArns, List<String> originalTaskArns) {
     List<ContainerInfo> containerInfos = new ArrayList<>();
 
     List<Task> ec2Tasks =
@@ -1052,32 +1060,33 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       logger.warn("For Fargate tasks, AWS does not expose Container instances and EC2 instances, "
           + "so there is no way to fetch dockerContainerId. Verification steps using containerId may not work");
 
-      tasks.forEach(ecsTask -> {
-        ecsTask.getContainers().forEach(container -> {
-          // Read private Ip of ENI (all container will have same private IP as all containers within task use same
-          // ENI)
-          String privateIpv4AddressForENI = container.getNetworkInterfaces()
-                                                .stream()
-                                                .findFirst()
-                                                .map(NetworkInterface::getPrivateIpv4Address)
-                                                .orElse(StringUtils.EMPTY);
+      tasks.forEach(ecsTask -> ecsTask.getContainers().forEach(container -> {
+        // Read private Ip of ENI (all container will have same private IP as all containers within task use same
+        // ENI)
+        String privateIpv4AddressForENI = container.getNetworkInterfaces()
+                                              .stream()
+                                              .findFirst()
+                                              .map(NetworkInterface::getPrivateIpv4Address)
+                                              .orElse(StringUtils.EMPTY);
 
-          ContainerInfo containerInfo = ContainerInfo.builder()
-                                            .status(Status.SUCCESS)
-                                            .containerId(container.getContainerArn())
-                                            .hostName(privateIpv4AddressForENI)
-                                            .ip(privateIpv4AddressForENI)
-                                            .build();
-          containerInfos.add(containerInfo);
-        });
-      });
+        ContainerInfo containerInfo = ContainerInfo.builder()
+                                          .status(Status.SUCCESS)
+                                          .containerId(container.getContainerArn())
+                                          .hostName(privateIpv4AddressForENI)
+                                          .ip(privateIpv4AddressForENI)
+                                          .newContainer(!originalTaskArns.contains(ecsTask.getTaskArn()))
+                                          .build();
+        containerInfos.add(containerInfo);
+      }));
     }
 
     // Handle EC2 tasks
     if (CollectionUtils.isNotEmpty(ec2Tasks)) {
-      List<String> containerInstances = tasks.stream().map(Task::getContainerInstanceArn).collect(toList());
-      containerInstances = containerInstances.stream().filter(Objects::nonNull).collect(toList());
+      List<String> containerInstances =
+          tasks.stream().map(Task::getContainerInstanceArn).filter(Objects::nonNull).collect(toList());
       logger.info("Container Instances = " + containerInstances);
+      Map<String, String> containerTaskArns =
+          tasks.stream().collect(toMap(Task::getContainerInstanceArn, Task::getTaskArn));
 
       List<ContainerInstance> containerInstanceList =
           awsHelperService
@@ -1129,6 +1138,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                                                 .containerId(containerId)
                                                 .ec2Instance(ec2Instance)
                                                 .status(Status.SUCCESS)
+                                                .newContainer(!originalTaskArns.contains(optionalTask.get().getArn()))
                                                 .build();
               containerInfos.add(containerInfo);
             } else {
@@ -1145,6 +1155,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                                      .containerId(ipAddress)
                                      .ec2Instance(ec2Instance)
                                      .status(Status.SUCCESS)
+                                     .newContainer(!originalTaskArns.contains(
+                                         containerTaskArns.get(containerInstance.getContainerInstanceArn())))
                                      .build());
             }
           } catch (IOException ex) {
@@ -1160,6 +1172,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                                    .containerId(ipAddress)
                                    .ec2Instance(ec2Instance)
                                    .status(Status.SUCCESS)
+                                   .newContainer(!originalTaskArns.contains(
+                                       containerTaskArns.get(containerInstance.getContainerInstanceArn())))
                                    .build());
           } catch (Exception e) {
             throw new InvalidRequestException(Misc.getMessage(e), e);
@@ -1177,6 +1191,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                                  .containerId(ipAddress)
                                  .ec2Instance(ec2Instance)
                                  .status(Status.SUCCESS)
+                                 .newContainer(!originalTaskArns.contains(
+                                     containerTaskArns.get(containerInstance.getContainerInstanceArn())))
                                  .build());
         }
       });

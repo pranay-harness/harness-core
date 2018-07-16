@@ -22,6 +22,7 @@ import software.wings.service.impl.AwsHelperService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.waitnotify.NotifyResponseData;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -85,7 +86,7 @@ public class EcsSteadyStateCheckTask extends AbstractDelegateRunnableTask {
       // Now get all the container infos
       List<ContainerInfo> containerInfos = ecsContainerService.getContainerInfosAfterEcsWait(params.getRegion(),
           params.getAwsConfig(), params.getEncryptionDetails(), params.getClusterName(), params.getServiceName(),
-          executionLogCallback, false);
+          new ArrayList<>(), executionLogCallback, false);
       executionLogCallback.saveExecutionLog("Got all the container infos", LogLevel.INFO);
       return EcsSteadyStateCheckResponse.builder()
           .executionStatus(ExecutionStatus.SUCCESS)

@@ -19,8 +19,10 @@ import com.amazonaws.services.ecs.model.AwsVpcConfiguration;
 import com.amazonaws.services.ecs.model.ContainerDefinition;
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.DeploymentConfiguration;
+import com.amazonaws.services.ecs.model.DesiredStatus;
 import com.amazonaws.services.ecs.model.KeyValuePair;
 import com.amazonaws.services.ecs.model.LaunchType;
+import com.amazonaws.services.ecs.model.ListTasksRequest;
 import com.amazonaws.services.ecs.model.LoadBalancer;
 import com.amazonaws.services.ecs.model.NetworkConfiguration;
 import com.amazonaws.services.ecs.model.NetworkMode;
@@ -51,6 +53,7 @@ import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.AwsHelperService;
 import software.wings.utils.EcsConvention;
 import software.wings.utils.Misc;
 
@@ -74,6 +77,7 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
 
   @Inject @Transient private transient AwsClusterService awsClusterService;
   @Inject @Transient private transient EcsContainerService ecsContainerService;
+  @Inject @Transient private transient AwsHelperService awsHelperService;
 
   public EcsSetupCommandUnit() {
     super(CommandUnitType.ECS_SETUP);
@@ -482,12 +486,20 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
         settingAttribute, encryptedDataDetails, setupParams.getClusterName(), containerServiceName);
     String latestHealthyController = null;
     if (activeCounts.size() > 1) {
+      AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
       executionLogCallback.saveExecutionLog("\nActive tasks:");
       for (Entry<String, Integer> entry : activeCounts.entrySet()) {
         String activeServiceName = entry.getKey();
-        List<ContainerInfo> containerInfos = ecsContainerService.getContainerInfosAfterEcsWait(setupParams.getRegion(),
-            (AwsConfig) settingAttribute.getValue(), encryptedDataDetails, setupParams.getClusterName(),
-            activeServiceName, executionLogCallback, false);
+        List<String> originalTaskArns = awsHelperService
+                                            .listTasks(setupParams.getRegion(), awsConfig, encryptedDataDetails,
+                                                new ListTasksRequest()
+                                                    .withCluster(setupParams.getClusterName())
+                                                    .withServiceName(activeServiceName)
+                                                    .withDesiredStatus(DesiredStatus.RUNNING))
+                                            .getTaskArns();
+        List<ContainerInfo> containerInfos =
+            ecsContainerService.getContainerInfosAfterEcsWait(setupParams.getRegion(), awsConfig, encryptedDataDetails,
+                setupParams.getClusterName(), activeServiceName, originalTaskArns, executionLogCallback, false);
         boolean allContainersSuccess =
             containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);
         if (allContainersSuccess) {
