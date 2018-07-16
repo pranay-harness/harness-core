@@ -22,7 +22,6 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Misc;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -98,7 +97,6 @@ public abstract class AbstractSecretManagerValidation extends AbstractDelegateVa
         }
       }
     }
-    throw new IllegalStateException(
-        "No encryption details were passed to config {} " + Arrays.toString(getParameters()));
+    return null;
   }
 }
