@@ -344,8 +344,7 @@ public class TriggerServiceImpl implements TriggerService {
         List<Artifact> lastDeployedArtifacts = getLastDeployedArtifacts(appId, sourcePipelineId, null);
         if (isEmpty(lastDeployedArtifacts)) {
           logger.warn(
-              "No last deployed artifacts found. Skipped execution {} without artifacts", trigger.getWorkflowId());
-          return;
+              "No last deployed artifacts found. Triggering execution {} without artifacts", trigger.getWorkflowId());
         }
         triggerExecution(lastDeployedArtifacts, trigger);
       } else {
@@ -380,45 +379,36 @@ public class TriggerServiceImpl implements TriggerService {
       if (idempotent.alreadyExecuted()) {
         return;
       }
-
       logger.info("Received scheduled trigger for appId {} and Trigger Id {}", trigger.getAppId(), trigger.getUuid());
       List<Artifact> lastDeployedArtifacts =
           getLastDeployedArtifacts(trigger.getAppId(), trigger.getWorkflowId(), null);
-
       ScheduledTriggerCondition scheduledTriggerCondition = (ScheduledTriggerCondition) trigger.getCondition();
-      List<ArtifactSelection> artifactSelections = trigger.getArtifactSelections();
-      if (isEmpty(artifactSelections)) {
-        logger.info("No artifactSelection configuration setup found. Executing pipeline {}", trigger.getWorkflowId());
-        if (isNotEmpty(lastDeployedArtifacts)) {
-          triggerExecution(lastDeployedArtifacts, trigger, null);
+      List<Artifact> artifacts = new ArrayList<>();
+      boolean artifactNeeded = addArtifactsFromSelections(trigger.getAppId(), trigger, artifacts);
+      if (!artifactNeeded) {
+        logger.info("No artifactSelection configuration setup found. Executing workflow / pipeline {} ",
+            trigger.getWorkflowId());
+        triggerExecution(lastDeployedArtifacts, trigger, null);
+      } else if (isNotEmpty(artifacts)) {
+        if (!scheduledTriggerCondition.isOnNewArtifactOnly()) {
+          triggerExecution(artifacts, trigger);
         } else {
-          logger.warn(
-              "No last deployed artifacts found. Skipped execution {} without artifacts", trigger.getWorkflowId());
-        }
-      } else {
-        List<Artifact> artifacts = new ArrayList<>();
-        addArtifactsFromSelections(trigger.getAppId(), trigger, artifacts);
-        if (isNotEmpty(artifacts)) {
-          if (!scheduledTriggerCondition.isOnNewArtifactOnly()) {
+          List<String> lastDeployedArtifactIds =
+              lastDeployedArtifacts.stream().map(Artifact::getUuid).distinct().collect(toList());
+          List<String> artifactIds = artifacts.stream().map(Artifact::getUuid).distinct().collect(toList());
+          if (!lastDeployedArtifactIds.containsAll(artifactIds)) {
+            logger.info("New version of artifacts found from the last successful execution "
+                    + "of pipeline/ workflow {}. So, triggering  execution",
+                trigger.getWorkflowId());
             triggerExecution(artifacts, trigger);
           } else {
-            List<String> lastDeployedArtifactIds =
-                lastDeployedArtifacts.stream().map(Artifact::getUuid).distinct().collect(toList());
-            List<String> artifactIds = artifacts.stream().map(Artifact::getUuid).distinct().collect(toList());
-            if (!lastDeployedArtifactIds.containsAll(artifactIds)) {
-              logger.info("New version of artifacts found from the last successful execution "
-                      + "of pipeline/ workflow {}. So, triggering  execution",
-                  trigger.getWorkflowId());
-              triggerExecution(artifacts, trigger);
-            } else {
-              logger.info("No new version of artifacts found from the last successful execution "
-                      + "of pipeline/ workflow {}. So, not triggering execution",
-                  trigger.getWorkflowId());
-            }
+            logger.info("No new version of artifacts found from the last successful execution "
+                    + "of pipeline/ workflow {}. So, not triggering execution",
+                trigger.getWorkflowId());
           }
-        } else {
-          logger.warn("No artifacts set. So, skipping the execution");
         }
+      } else {
+        logger.warn("No artifacts set. So, skipping the execution");
       }
       logger.info("Scheduled trigger for appId {} and Trigger Id {} complete", trigger.getAppId(), trigger.getUuid());
       idempotent.succeeded(trigger.getUuid());
@@ -428,6 +418,9 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   private boolean addArtifactsFromSelections(String appId, Trigger trigger, List<Artifact> artifacts) {
+    if (isEmpty(trigger.getArtifactSelections())) {
+      return false;
+    }
     boolean artifactNeeded = false;
     for (ArtifactSelection artifactSelection : trigger.getArtifactSelections()) {
       if (artifactSelection.getType().equals(LAST_COLLECTED)) {
