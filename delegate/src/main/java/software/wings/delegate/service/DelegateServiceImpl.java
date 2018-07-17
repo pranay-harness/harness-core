@@ -1016,7 +1016,7 @@ public class DelegateServiceImpl implements DelegateService {
             DelegateTaskResponse taskResponse =
                 aDelegateTaskResponse().withAccountId(accountId).withResponse(notifyResponseData).build();
             resp = managerClient.sendTaskStatus(delegateId, delegateTask.getUuid(), accountId, taskResponse).execute();
-            if (resp != null && resp.code() == 200) {
+            if (resp != null && resp.code() >= 200 && resp.code() <= 299) {
               logger.info("Task {} response sent to manager", delegateTask.getUuid());
               return resp;
             } else {
