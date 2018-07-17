@@ -1021,7 +1021,7 @@ public class DelegateServiceImpl implements DelegateService {
               return resp;
             } else {
               logger.warn("Response received for sent task {}: {}. {}", delegateTask.getUuid(),
-                  resp == null ? "null" : resp.code(), retries > 0 ? "Retrying." : 0);
+                  resp == null ? "null" : resp.code(), retries > 0 ? "Retrying." : "Giving up.");
               sleep(ofMillis(200));
             }
           }
