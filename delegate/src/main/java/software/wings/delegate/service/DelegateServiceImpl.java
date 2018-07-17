@@ -1010,11 +1010,23 @@ public class DelegateServiceImpl implements DelegateService {
       try {
         logger.info("Sending response for task {} to manager", delegateTask.getUuid());
         response = timeLimiter.callWithTimeout(() -> {
-          DelegateTaskResponse taskResponse =
-              aDelegateTaskResponse().withAccountId(accountId).withResponse(notifyResponseData).build();
-          return managerClient.sendTaskStatus(delegateId, delegateTask.getUuid(), accountId, taskResponse).execute();
+          Response<ResponseBody> resp = null;
+          int retries = 3;
+          while (retries-- > 0) {
+            DelegateTaskResponse taskResponse =
+                aDelegateTaskResponse().withAccountId(accountId).withResponse(notifyResponseData).build();
+            resp = managerClient.sendTaskStatus(delegateId, delegateTask.getUuid(), accountId, taskResponse).execute();
+            if (resp != null && resp.code() == 200) {
+              logger.info("Task {} response sent to manager", delegateTask.getUuid());
+              return resp;
+            } else {
+              logger.warn("Response received for sent task {}: {}. {}", delegateTask.getUuid(),
+                  resp == null ? "null" : resp.code(), retries > 0 ? "Retrying." : 0);
+              sleep(ofMillis(200));
+            }
+          }
+          return resp;
         }, 30L, TimeUnit.SECONDS, true);
-        logger.info("Task {} response sent to manager", delegateTask.getUuid());
       } catch (UncheckedTimeoutException ex) {
         logger.warn("Timed out sending response to manager");
       } catch (Exception e) {

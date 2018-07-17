@@ -28,6 +28,7 @@ import static software.wings.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aD
 import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskResponse;
 import static software.wings.beans.ErrorCode.UNAVAILABLE_DELEGATES;
 import static software.wings.beans.Event.Builder.anEvent;
+import static software.wings.beans.FeatureName.DELEGATE_TASK_VERSIONING;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
@@ -90,7 +91,6 @@ import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Event.Type;
-import software.wings.beans.FeatureName;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.TaskType;
@@ -884,7 +884,8 @@ public class DelegateServiceImpl implements DelegateService {
               .build());
     }
 
-    logger.info("{} delegates {} eligible to execute the task", eligibleDelegates.size(), eligibleDelegates);
+    logger.info(
+        "{} delegates {} eligible to execute the task {}", eligibleDelegates.size(), eligibleDelegates, task.getUuid());
     return eligibleDelegates;
   }
 
@@ -1183,7 +1184,7 @@ public class DelegateServiceImpl implements DelegateService {
                                                 .field("delegateId")
                                                 .doesNotExist();
 
-    if (featureFlagService.isEnabled(FeatureName.DELEGATE_TASK_VERSIONING, accountId)) {
+    if (featureFlagService.isEnabled(DELEGATE_TASK_VERSIONING, accountId)) {
       delegateTaskQuery.filter("version", versionInfoManager.getVersionInfo().getVersion());
     }
 
