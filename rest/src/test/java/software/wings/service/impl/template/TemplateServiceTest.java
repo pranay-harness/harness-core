@@ -21,6 +21,8 @@ import static software.wings.beans.command.CommandUnitType.PORT_CHECK_LISTENING;
 import static software.wings.beans.command.CommandUnitType.PROCESS_CHECK_RUNNING;
 import static software.wings.beans.command.CommandUnitType.SCP;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
+import static software.wings.beans.template.TemplateHelper.obtainTemplateFolderPath;
+import static software.wings.beans.template.TemplateHelper.obtainTemplateName;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_CUSTOM_KEYWORD;
@@ -55,6 +57,8 @@ public class TemplateServiceTest extends TemplateBaseTest {
 
     Template savedTemplate = templateService.save(template);
     assertThat(savedTemplate).isNotNull();
+    assertThat(savedTemplate.getAccountId()).isNotEmpty();
+    assertThat(savedTemplate.getGalleryId()).isNotEmpty();
     assertThat(savedTemplate.getAppId()).isNotNull().isEqualTo(GLOBAL_APP_ID);
     assertThat(savedTemplate.getKeywords()).isNotEmpty();
     assertThat(savedTemplate.getKeywords())
@@ -289,9 +293,13 @@ public class TemplateServiceTest extends TemplateBaseTest {
     Template savedTemplate = templateService.save(template);
     assertThat(savedTemplate).isNotNull();
     String templateUri = templateService.fetchTemplateUri(template.getUuid());
+    assertTemplateUri(templateUri);
+  }
+
+  private void assertTemplateUri(String templateUri) {
     assertThat(templateUri).isNotEmpty();
-    assertThat(templateUri.split(":")[0].equals("Harness/Tomcat Commands"));
-    assertThat(templateUri.split(":")[1].equals("My Start Command"));
+    assertThat(obtainTemplateFolderPath(templateUri)).isEqualTo("Harness/Tomcat Commands");
+    assertThat(obtainTemplateName(templateUri)).isEqualTo("My Start Command");
   }
 
   @Test
@@ -301,9 +309,7 @@ public class TemplateServiceTest extends TemplateBaseTest {
     Template savedTemplate = templateService.save(template);
     assertThat(savedTemplate).isNotNull();
     String templateUri = templateService.fetchTemplateUri(template.getUuid());
-    assertThat(templateUri).isNotEmpty();
-    assertThat(templateUri.split(":")[0].equals("Harness/Tomcat Commands"));
-    assertThat(templateUri.split(":")[1].equals("My Start Command"));
+    assertTemplateUri(templateUri);
 
     String templateUuid = templateService.fetchTemplateIdFromUri(GLOBAL_ACCOUNT_ID, templateUri);
     assertThat(templateUuid).isNotEmpty().isEqualTo(savedTemplate.getUuid());

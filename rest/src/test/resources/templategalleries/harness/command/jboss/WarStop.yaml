@@ -3,10 +3,10 @@ gallery: "Harness"
 folderPath: "Harness/JBoss Commands"
 version: "1"
 description: "This is a command to stop service by invoking scripts over SSH to the individual instances."
-keywords: [ssh, jboss, war, stop]
+keywords: [ssh, war, jboss, stop]
+referencedTemplateUri: "Harness/JBoss Commands/Install:1"
 variables:
 - name: "RuntimePath"
-  value: "${WINGS_RUNTIME_PATH}"
   description: "Runtime path to install binaries."
 templateObject:
   type: "SSH"
@@ -39,7 +39,7 @@ templateObject:
     scriptType: BASH
   - command: |-
       set -x
-      standalone_xml="$RuntimePath/jboss/standalone/configuration/standalone.xml"
+      standalone_xml="${RuntimePath}/jboss/standalone/configuration/standalone.xml"
       if [ -f "$standalone_xml" ]
       then
       port=$(grep "<socket-binding name=\"http\" port=\"\${jboss.http.port" "$standalone_xml" | cut -d ":" -f2 | cut -d "}" -f1)

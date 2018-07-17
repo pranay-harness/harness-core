@@ -33,15 +33,19 @@ public class TemplateGallery extends Base {
   @NotEmpty @EntityName(groups = Create.class) private String name;
   @NotEmpty private String accountId;
   private String description;
+  private String referencedGalleryId;
+  private boolean global;
 
   @Builder
   public TemplateGallery(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
       long lastUpdatedAt, List<String> keywords, String entityYamlPath, String name, String accountId,
-      String description) {
+      String description, String referencedGalleryId, boolean global) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
     this.name = name;
     this.accountId = accountId;
     this.description = description;
+    this.referencedGalleryId = referencedGalleryId;
+    this.global = global;
   }
 
   @Override

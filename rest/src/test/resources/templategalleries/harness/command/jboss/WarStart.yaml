@@ -4,9 +4,9 @@ folderPath: "Harness/JBoss Commands"
 version: "1"
 description: "This is a command to start service by invoking scripts over SSH to the individual instances."
 keywords: [ssh, war, jboss, start]
+referencedTemplateUri: "Harness/JBoss Commands/Install:1"
 variables:
 - name: "RuntimePath"
-  value: "${WINGS_RUNTIME_PATH}"
   description: "Runtime path to install binaries."
 templateObject:
   type: "SSH"

@@ -5,37 +5,24 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.template.TemplateGallery;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
 import javax.validation.Valid;
 
-public interface TemplateGalleryService {
+public interface TemplateGalleryService extends OwnedByAccount {
   /**
-   *
+   * List template galleries, User can supply the filters
    * @param pageRequest
    * @return
    */
   PageResponse<TemplateGallery> list(PageRequest<TemplateGallery> pageRequest);
 
-  /**
-   *
-   * @param templateGallery
-   * @return
-   */
   @ValidationGroups(Create.class) TemplateGallery save(@Valid TemplateGallery templateGallery);
 
-  /**
-   *
-   * @param templateGallery
-   * @return
-   */
   @ValidationGroups(Update.class) TemplateGallery update(@Valid TemplateGallery templateGallery);
 
-  /**
-   *
-   * @param galleryUuid
-   */
   void delete(String galleryUuid);
 
   /**
@@ -52,4 +39,31 @@ public interface TemplateGalleryService {
    * @return
    */
   TemplateGallery get(@NotEmpty String uuid);
+
+  /**
+   * Get template galleries by accountId
+   * @param accountId
+   * @return
+   */
+  TemplateGallery getByAccount(@NotEmpty String accountId);
+
+  /**
+   * Loads default harness gallery with the
+   */
+  void loadHarnessGallery();
+
+  /**
+   * Copies Harness template
+   */
+  void copyHarnessTemplates();
+
+  /**
+   * Saves Harness gallery
+   * @return
+   */
+  TemplateGallery saveHarnessGallery();
+
+  void copyHarnessTemplatesToAccount(@NotEmpty String accountId, @NotEmpty String accountName);
+
+  void deleteAccountGalleryByName(String accountId, String galleryName);
 }

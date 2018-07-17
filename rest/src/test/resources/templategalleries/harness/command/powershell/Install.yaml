@@ -4,12 +4,11 @@ folderPath: "Harness/Power Shell Commands"
 version: "1"
 description: "This is a command to install service by invoking scripts over SSH to the individual instances."
 keywords: [ssh, iis, powershell, install]
+referencedTemplateUri: "Harness/Power Shell Commands/Install:1"
 variables:
 - name: "ReleaseNo"
-  value: "${workflow.ReleaseNo}"
   description: "ReleaseId."
 - name: "ServiceName"
-  value: "${service.Name}"
   description: "Service Name"
 - name: "AppPoolName"
   value: "DefaultAppPool"

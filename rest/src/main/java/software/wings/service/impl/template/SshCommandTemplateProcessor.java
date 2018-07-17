@@ -3,7 +3,6 @@ package software.wings.service.impl.template;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
-import static software.wings.beans.Base.KEYWORDS_KEY;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.template.Template.FOLDER_ID_KEY;
 import static software.wings.beans.template.Template.NAME_KEY;
@@ -63,11 +62,11 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
   }
 
   @Override
-  public void loadDefaultTemplates(String accountId) {
+  public void loadDefaultTemplates(String accountId, String accountName) {
     super.loadDefaultTemplates(
         asList(TOMCAT_WAR_STOP_PATH, TOMCAT_WAR_START_PATH, TOMCAT_WAR_INSTALL_PATH, JBOSS_WAR_STOP_PATH,
             JBOSS_WAR_START_PATH, JBOSS_WAR_INSTALL_PATH, POWER_SHELL_IIS_INSTALL_PATH, GENERIC_JSON_PATH),
-        accountId);
+        accountId, accountName);
   }
 
   @Override
@@ -118,8 +117,6 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
                                               .filter(ACCOUNT_ID_KEY, template.getAccountId())
                                               .filter(TYPE_KEY, template.getType())
                                               .filter(FOLDER_ID_KEY, template.getFolderId())
-                                              .field(KEYWORDS_KEY)
-                                              .contains(LATEST_TAG.toLowerCase())
                                               .filter(NAME_KEY, referenceId);
           Template referencedTemplate = templateQuery.get();
           if (referencedTemplate != null) {

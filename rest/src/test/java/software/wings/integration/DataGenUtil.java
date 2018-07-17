@@ -9,6 +9,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.Base.ACCOUNT_ID_KEY;
+import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
@@ -54,7 +56,6 @@ import com.google.inject.Inject;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.MongoCommandException;
-import migrations.all.SystemTemplateGalleryMigration;
 import org.assertj.core.util.Lists;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
@@ -93,8 +94,6 @@ import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
-import software.wings.beans.SearchFilter;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
@@ -148,6 +147,7 @@ import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.template.TemplateGalleryService;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -220,9 +220,9 @@ public class DataGenUtil extends BaseIntegrationTest {
   @Inject private EnvResourceRestClient envResourceRestClient;
   @Inject private WorkflowResourceRestClient workflowResourceRestClient;
   @Inject private UserResourceRestClient userResourceRestClient;
-  @Inject private SystemTemplateGalleryMigration systemTemplateGalleryMigration;
 
   @Inject private AppContainerService appContainerService;
+  @Inject private TemplateGalleryService templateGalleryService;
 
   /**
    * Generated Data for across the API use.
@@ -251,8 +251,11 @@ public class DataGenUtil extends BaseIntegrationTest {
    */
   @Test
   public void populateData() throws IOException {
+    templateGalleryService.loadHarnessGallery();
+
     Account account = createLicenseAndDefaultUsers();
     accountGenerator.setAccount(account);
+
     createGlobalSettings();
 
     List<Application> apps = createApplications();
@@ -272,7 +275,6 @@ public class DataGenUtil extends BaseIntegrationTest {
 
     createTestApplication(account);
     // createSeedEntries();
-    //    systemTemplateGalleryMigration.migrate();
   }
 
   private void createSeedEntries() {
@@ -396,10 +398,8 @@ public class DataGenUtil extends BaseIntegrationTest {
   }
 
   private void addUserToUserGroup(User user, String accountId, String userGroupName) {
-    PageRequest<UserGroup> pageRequest = aPageRequest()
-                                             .addFilter("accountId", Operator.EQ, accountId)
-                                             .addFilter("name", Operator.EQ, userGroupName)
-                                             .build();
+    PageRequest<UserGroup> pageRequest =
+        aPageRequest().addFilter("accountId", EQ, accountId).addFilter("name", EQ, userGroupName).build();
     PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest, true);
     UserGroup userGroup = pageResponse.get(0);
     userGroup.setMembers(asList(user));
@@ -412,18 +412,20 @@ public class DataGenUtil extends BaseIntegrationTest {
   }
 
   private User addUser(String userName, String email, char[] password, Account account) {
-    User user =
-        anUser()
-            .withName(userName)
-            .withEmail(email)
-            .withPassword(password)
-            .withRoles(wingsPersistence
-                           .query(Role.class,
-                               aPageRequest().addFilter("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN).build())
-                           .getResponse())
-            .withAccountName(HARNESS_NAME)
-            .withCompanyName(HARNESS_NAME)
-            .build();
+    User user = anUser()
+                    .withName(userName)
+                    .withEmail(email)
+                    .withPassword(password)
+                    .withRoles(wingsPersistence
+                                   .query(Role.class,
+                                       aPageRequest()
+                                           .addFilter(ACCOUNT_ID_KEY, EQ, account.getUuid())
+                                           .addFilter("roleType", EQ, RoleType.ACCOUNT_ADMIN)
+                                           .build())
+                                   .getResponse())
+                    .withAccountName(HARNESS_NAME)
+                    .withCompanyName(HARNESS_NAME)
+                    .build();
     User newUser = userService.registerNewUser(user, account);
     wingsPersistence.updateFields(User.class, newUser.getUuid(), ImmutableMap.of("emailVerified", true));
 
@@ -998,8 +1000,11 @@ public class DataGenUtil extends BaseIntegrationTest {
     if (isEmpty(accounts)) {
       return;
     }
-    List<SystemCatalog> systemCatalogs = systemCatalogService.list(
-        aPageRequest().addFilter("catalogType", SearchFilter.Operator.EQ, SystemCatalog.CatalogType.APPSTACK).build());
+    List<SystemCatalog> systemCatalogs =
+        systemCatalogService.list(aPageRequest()
+                                      .addFilter(ACCOUNT_ID_KEY, EQ, GLOBAL_ACCOUNT_ID)
+                                      .addFilter("catalogType", EQ, SystemCatalog.CatalogType.APPSTACK)
+                                      .build());
     accounts.forEach(account -> {
       for (SystemCatalog systemCatalog : systemCatalogs) {
         AppContainer appContainer = anAppContainer()

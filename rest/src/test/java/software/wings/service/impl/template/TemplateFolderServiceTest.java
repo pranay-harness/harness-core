@@ -1,5 +1,6 @@
 package software.wings.service.impl.template;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
@@ -12,10 +13,13 @@ import static software.wings.common.TemplateConstants.TOMCAT_WAR_INSTALL_PATH;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_DESC_CHANGED;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_FOLDER_DEC;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_FOLDER_NAME;
+import static software.wings.utils.TemplateTestConstants.TEMPLATE_GALLERY;
+import static software.wings.utils.TemplateTestConstants.TEMPLATE_GALLERY_DESC;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import org.junit.Test;
 import software.wings.beans.template.TemplateFolder;
+import software.wings.beans.template.TemplateGallery;
 
 import java.util.Arrays;
 
@@ -23,7 +27,6 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
   @Test
   public void shouldSaveTemplateFolder() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
-
     TemplateFolder myTemplateFolder = templateFolderService.save(constructTemplateBuilder(parentFolder.getUuid()));
 
     assertThat(myTemplateFolder).isNotNull();
@@ -146,7 +149,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
 
   @Test
   public void shouldLoadDefaultCommandTemplates() {
-    templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID);
+    templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     TemplateFolder templateFolder =
         templateFolderService.getTemplateTree(GLOBAL_ACCOUNT_ID, null, Arrays.asList(SSH.name()));
     assertThat(templateFolder).isNotNull();
@@ -164,7 +167,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
 
   @Test
   public void shouldGetGlobalTemplateTreeByKeywordAndTypes() {
-    templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID);
+    templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     TemplateFolder templateFolder =
         templateFolderService.getTemplateTree(GLOBAL_ACCOUNT_ID, "Install", Arrays.asList(SSH.name()));
     assertThat(templateFolder).isNotNull();
@@ -183,7 +186,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
 
   @Test
   public void shouldGetGlobalTemplateTreeByKeywordAndTypesNotMatching() {
-    templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID);
+    templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     TemplateFolder templateFolder =
         templateFolderService.getTemplateTree(GLOBAL_ACCOUNT_ID, "Install3", Arrays.asList(SSH.name()));
     assertThat(templateFolder).isNull();
@@ -191,9 +194,10 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
 
   @Test
   public void shouldCopyHarnessTemplateFolders() {
-    templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID);
+    TemplateGallery templateGallery = templateGalleryService.get(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
 
-    templateFolderService.copyHarnessTemplateFolders(ACCOUNT_ID);
+    templateFolderService.copyHarnessTemplateFolders(templateGallery.getUuid(), ACCOUNT_ID, HARNESS_GALLERY);
     TemplateFolder templateFolder = templateFolderService.getTemplateTree(ACCOUNT_ID, null, null);
 
     assertThat(templateFolder).isNotNull();
@@ -209,8 +213,9 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
 
   @Test
   public void shouldGetAccountTemplateTree() {
-    templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID);
-    templateFolderService.copyHarnessTemplateFolders(ACCOUNT_ID);
+    TemplateGallery templateGallery = templateGalleryService.get(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    templateFolderService.copyHarnessTemplateFolders(templateGallery.getUuid(), ACCOUNT_ID, HARNESS_GALLERY);
 
     TemplateFolder templateFolder = templateFolderService.getTemplateTree(ACCOUNT_ID, null, null);
     assertThat(templateFolder).isNotNull();
@@ -226,16 +231,23 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
 
   @Test
   public void shouldLoadTomcatStandardInstallCommand() {
-    templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID);
-    templateFolderService.copyHarnessTemplateFolders(ACCOUNT_ID);
-
-    templateService.loadYaml(SSH, TOMCAT_WAR_INSTALL_PATH, ACCOUNT_ID);
+    TemplateGallery templateGallery = templateGalleryService.get(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    templateGalleryService.save(TemplateGallery.builder()
+                                    .name(TEMPLATE_GALLERY)
+                                    .accountId(ACCOUNT_ID)
+                                    .description(TEMPLATE_GALLERY_DESC)
+                                    .appId(GLOBAL_APP_ID)
+                                    .keywords(asList("CD"))
+                                    .build());
+    templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    templateFolderService.copyHarnessTemplateFolders(templateGallery.getUuid(), ACCOUNT_ID, TEMPLATE_GALLERY);
+    templateService.loadYaml(SSH, TOMCAT_WAR_INSTALL_PATH, ACCOUNT_ID, TEMPLATE_GALLERY);
     TemplateFolder templateFolder =
         templateFolderService.getTemplateTree(ACCOUNT_ID, "Install", Arrays.asList(SSH.name()));
     assertThat(templateFolder).isNotNull();
     assertThat(templateFolder.getAccountId()).isNotNull().isEqualTo(ACCOUNT_ID);
     assertThat(templateFolder.getChildren()).isNotEmpty();
-    assertThat(templateFolder).extracting(TemplateFolder::getName).contains(HARNESS_GALLERY);
+    assertThat(templateFolder).extracting(TemplateFolder::getName).contains(TEMPLATE_GALLERY);
     assertThat(templateFolder.getChildren()).isNotEmpty();
 
     assertThat(templateFolder.getChildren())
@@ -249,8 +261,9 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
 
   @Test
   public void shouldGetRootFolder() {
-    templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID);
-    templateFolderService.copyHarnessTemplateFolders(ACCOUNT_ID);
+    TemplateGallery templateGallery = templateGalleryService.get(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    templateFolderService.copyHarnessTemplateFolders(templateGallery.getUuid(), ACCOUNT_ID, HARNESS_GALLERY);
 
     TemplateFolder templateFolder = templateFolderService.getByFolderPath(ACCOUNT_ID, HARNESS_GALLERY);
 
@@ -264,9 +277,9 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
 
   @Test
   public void shouldGetFolderByPath() {
-    templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID);
-    templateFolderService.copyHarnessTemplateFolders(ACCOUNT_ID);
-
+    TemplateGallery templateGallery = templateGalleryService.get(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    templateFolderService.copyHarnessTemplateFolders(templateGallery.getUuid(), ACCOUNT_ID, HARNESS_GALLERY);
     TemplateFolder templateFolder =
         templateFolderService.getByFolderPath(ACCOUNT_ID, HARNESS_GALLERY + "/" + TOMCAT_COMMANDS);
 

@@ -2,14 +2,13 @@ name: "Json to Environment Variables"
 gallery: "Harness"
 folderPath: "Harness/Generic Commands"
 version: "1"
-description: "This parses the Json content and export as environment variables"
+description: "The script to parse the Json content and export as environment variables"
 keywords: [ssh, exec, json]
+referencedTemplateUri: "Harness/Generic Commands/Json to Environment Variables:1"
 variables:
 - name: "RuntimePath"
-  value: "${WINGS_RUNTIME_PATH}"
   description: "Runtime path to install binaries."
 - name: "ArtifactFileName"
-  value: "${ARTIFACT_FILE_NAME}"
   description: "Artifact JSON file name"
 templateObject:
   type: "SSH"

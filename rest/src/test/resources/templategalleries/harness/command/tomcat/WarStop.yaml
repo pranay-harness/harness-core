@@ -4,9 +4,9 @@ folderPath: "Harness/Tomcat Commands"
 version: "1"
 description: "This is a command to stop service by invoking scripts over SSH to the individual instances."
 keywords: [ssh, tomcat, war]
+referencedTemplateUri: "Harness/Tomcat Commands/Stop:1"
 variables:
 - name: "RuntimePath"
-  value: "${WINGS_RUNTIME_PATH}"
   description: "Runtime path to install binaries."
 templateObject:
   type: "SSH"

@@ -54,12 +54,17 @@ public class Template extends Base {
   @NotNull private transient BaseTemplate templateObject;
   private transient List<Variable> variables;
   private transient VersionedTemplate versionedTemplate;
+  private String galleryId;
+  @Indexed private String referencedTemplateId;
+  private Long referencedTemplateVersion;
+  private transient String referencedTemplateUri;
 
   @Builder
   public Template(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
       long lastUpdatedAt, List<String> keywords, String entityYamlPath, String name, String accountId, String type,
       String folderId, long version, String description, String folderPathId, String folderPath, String gallery,
-      BaseTemplate templateObject, List<Variable> variables, VersionedTemplate versionedTemplate) {
+      BaseTemplate templateObject, List<Variable> variables, VersionedTemplate versionedTemplate, String galleryId,
+      String referencedTemplateId, Long referencedTemplateVersion) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
     this.name = name;
     this.accountId = accountId;
@@ -73,6 +78,9 @@ public class Template extends Base {
     this.templateObject = templateObject;
     this.variables = variables;
     this.versionedTemplate = versionedTemplate;
+    this.galleryId = galleryId;
+    this.referencedTemplateId = referencedTemplateId;
+    this.referencedTemplateVersion = referencedTemplateVersion;
   }
 
   @Override

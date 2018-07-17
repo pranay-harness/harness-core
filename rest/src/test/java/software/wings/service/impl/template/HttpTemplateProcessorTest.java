@@ -62,7 +62,7 @@ public class HttpTemplateProcessorTest extends TemplateBaseTest {
 
   @Test
   public void shouldLoadDefaultTemplates() {
-    templateService.loadDefaultTemplates(TemplateType.HTTP, GLOBAL_ACCOUNT_ID);
+    templateService.loadDefaultTemplates(TemplateType.HTTP, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
   }
 
   @Test

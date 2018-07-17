@@ -45,4 +45,8 @@ public interface AccountService {
   List<Account> list(@NotNull PageRequest<Account> request);
 
   DelegateConfiguration getDelegateConfiguration(String accountId);
+
+  List<Account> listAllAccounts();
+
+  Account getByAccountName(String accountName);
 }

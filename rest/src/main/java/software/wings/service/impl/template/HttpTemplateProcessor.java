@@ -41,8 +41,8 @@ public class HttpTemplateProcessor extends AbstractTemplateProcessor {
   }
 
   @Override
-  public void loadDefaultTemplates(String accountId) {
-    super.loadDefaultTemplates(Arrays.asList(HTTP_HEALTH_CHECK), accountId);
+  public void loadDefaultTemplates(String accountId, String accountName) {
+    super.loadDefaultTemplates(Arrays.asList(HTTP_HEALTH_CHECK), accountId, accountName);
   }
 
   @Override

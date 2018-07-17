@@ -155,14 +155,33 @@ public class TemplateHelper {
   }
 
   public static String obtainTemplateVersion(String templateUri) {
-    String[] templateUris = templateUri.split(":");
-    if (templateUris.length < 2) {
-      throw new WingsException("Invalid TemplateUri [" + templateUri + "]", WingsException.USER);
-    }
-    if (templateUris.length == 2) {
+    String[] templateUris = fetchTemplateUris(templateUri);
+    if (templateUris.length == 1) {
       return TemplateConstants.LATEST_TAG;
     }
-    return templateUris[2];
+    return templateUris[1];
+  }
+
+  public static String obtainTemplateName(String templateUri) {
+    if (templateUri.contains(":")) {
+      String[] templateUris = fetchTemplateUris(templateUri);
+      templateUri = templateUris[0];
+    }
+    return templateUri.substring(templateUri.lastIndexOf('/') + 1);
+  }
+
+  public static String obtainTemplateFolderPath(String templateUri) {
+    String[] templateUris = fetchTemplateUris(templateUri);
+    int endIndex = templateUri.lastIndexOf('/');
+    return templateUris[0].substring(0, endIndex);
+  }
+
+  private static String[] fetchTemplateUris(String templateUri) {
+    String[] templateUris = templateUri.split(":");
+    if (templateUris.length < 1) {
+      throw new WingsException("Invalid TemplateUri [" + templateUri + "]", WingsException.USER);
+    }
+    return templateUris;
   }
 
   /**

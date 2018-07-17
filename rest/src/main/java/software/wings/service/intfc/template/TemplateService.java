@@ -28,9 +28,9 @@ public interface TemplateService {
 
   boolean delete(String accountId, String templateUuid);
 
-  void loadDefaultTemplates(TemplateType templateType, @NotEmpty String accountId);
+  void loadDefaultTemplates(TemplateType templateType, @NotEmpty String accountId, @NotEmpty String accountName);
 
-  Template loadYaml(TemplateType templateType, String yamlFilePath, String accountId);
+  Template loadYaml(TemplateType templateType, String yamlFilePath, String accountId, String accountName);
 
   List<CommandCategory> getCommandCategories(@NotEmpty String accountId, @NotEmpty String templateId);
 
