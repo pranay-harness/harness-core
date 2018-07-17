@@ -278,6 +278,45 @@ public class ArtifactServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldListSortByBuildNo() {
+    constructArtifacts();
+
+    when(artifactStreamService.fetchArtifactStreamIdsForService(APP_ID, SERVICE_ID))
+        .thenReturn(asList(ARTIFACT_STREAM_ID));
+    List<Artifact> artifacts = artifactService.listSortByBuildNo(
+        APP_ID, SERVICE_ID, aPageRequest().addFilter(Artifact.APP_ID_KEY, EQ, APP_ID).build());
+
+    assertThat(artifacts)
+        .hasSize(4)
+        .extracting(Artifact::getBuildNo)
+        .containsSequence("todolist-1.0-15.x86_64.rpm", "todolist-1.0-10.x86_64.rpm", "todolist-1.0-5.x86_64.rpm",
+            "todolist-1.0-1.x86_64.rpm");
+  }
+
+  @Test
+  public void shouldListSortByBuildNoWithNoServiceId() {
+    constructArtifacts();
+
+    List<Artifact> artifacts = artifactService.listSortByBuildNo(
+        APP_ID, null, aPageRequest().addFilter(Artifact.APP_ID_KEY, EQ, APP_ID).build());
+
+    assertThat(artifacts)
+        .hasSize(4)
+        .extracting(Artifact::getBuildNo)
+        .containsSequence("todolist-1.0-15.x86_64.rpm", "todolist-1.0-10.x86_64.rpm", "todolist-1.0-5.x86_64.rpm",
+            "todolist-1.0-1.x86_64.rpm");
+  }
+
+  @Test
+  public void shouldNotListArtifactsOfDeletedArtifactStreams() {
+    constructArtifacts();
+
+    List<Artifact> artifacts = artifactService.listSortByBuildNo(
+        APP_ID, SERVICE_ID, aPageRequest().addFilter(Artifact.APP_ID_KEY, EQ, APP_ID).build());
+
+    assertThat(artifacts).isEmpty();
+  }
+
+  private void constructArtifacts() {
     artifactService.create(
         artifactBuilder.withMetadata(ImmutableMap.of(Constants.BUILD_NO, "todolist-1.0-1.x86_64.rpm")).but().build());
 
@@ -288,15 +327,6 @@ public class ArtifactServiceTest extends WingsBaseTest {
 
     artifactService.create(
         artifactBuilder.withMetadata(ImmutableMap.of(Constants.BUILD_NO, "todolist-1.0-15.x86_64.rpm")).but().build());
-
-    List<Artifact> artifacts =
-        artifactService.listSortByBuildNo(aPageRequest().addFilter(Artifact.APP_ID_KEY, EQ, APP_ID).build());
-
-    assertThat(artifacts)
-        .hasSize(4)
-        .extracting(Artifact::getBuildNo)
-        .containsSequence("todolist-1.0-15.x86_64.rpm", "todolist-1.0-10.x86_64.rpm", "todolist-1.0-5.x86_64.rpm",
-            "todolist-1.0-1.x86_64.rpm");
   }
 
   @Test

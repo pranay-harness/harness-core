@@ -192,6 +192,9 @@ public class ContainerDeploymentManagerHelper {
   public ImageDetails fetchArtifactDetails(Artifact artifact, String appId, String workflowExecutionId) {
     ImageDetailsBuilder imageDetails = ImageDetails.builder().tag(artifact.getBuildNo());
     ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
+    if (artifactStream == null) {
+      throw new InvalidRequestException("Artifact Stream [" + artifact.getArtifactSourceName() + "] was deleted");
+    }
     String settingId = artifactStream.getSettingId();
     if (artifactStream.getArtifactStreamType().equals(DOCKER.name())) {
       DockerArtifactStream dockerArtifactStream = (DockerArtifactStream) artifactStream;

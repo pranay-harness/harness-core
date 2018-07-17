@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import static software.wings.beans.artifact.Artifact.Status;
 
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ContentStatus;
 import software.wings.beans.artifact.ArtifactFile;
@@ -13,6 +14,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Set;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 /**
  * The Interface ArtifactService.
@@ -30,9 +32,11 @@ public interface ArtifactService extends OwnedByArtifactStream {
   /***
    * List artifact sort by build nos
    * @param pageRequest
+   * @param  appId
    * @return
    */
-  PageResponse<Artifact> listSortByBuildNo(PageRequest<Artifact> pageRequest);
+  PageResponse<Artifact> listSortByBuildNo(
+      @NotEmpty String appId, String serviceId, @NotNull PageRequest<Artifact> pageRequest);
 
   /**
    * Creates the artifact and validates artifact type

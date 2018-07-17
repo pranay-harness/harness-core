@@ -47,6 +47,7 @@ public class Artifact extends Base {
   public static final String STATUS_KEY = "status";
   public static final String ERROR_MSG_KEY = "errorMessage";
   public static final String DISPLAY_NAME_KEY = "displayName";
+  public static final String SERVICE_ID_KEY = "serviceIds";
 
   @Indexed private String artifactStreamId;
   @Indexed private String artifactSourceName;

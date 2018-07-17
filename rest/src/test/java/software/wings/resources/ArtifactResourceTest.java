@@ -14,6 +14,7 @@ import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -45,9 +46,6 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-/**
- * Created by peeyushaggarwal on 4/1/16.
- */
 public class ArtifactResourceTest {
   /**
    * The constant ARTIFACT_SERVICE.
@@ -189,18 +187,28 @@ public class ArtifactResourceTest {
    * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
-  public void shouldListArtifact() throws IOException {
-    RestResponse<PageResponse<Artifact>> restResponse =
-        RESOURCES.client()
-            .target("/artifacts/?appId=" + APP_ID)
-            .request()
-            .get(new GenericType<RestResponse<PageResponse<Artifact>>>() {});
+  public void shouldListArtifact() {
+    RESOURCES.client()
+        .target("/artifacts/?appId=" + APP_ID)
+        .request()
+        .get(new GenericType<RestResponse<PageResponse<Artifact>>>() {});
     PageRequest<Artifact> expectedPageRequest = new PageRequest<>();
     expectedPageRequest.addFilter("appId", Operator.EQ, APP_ID);
     expectedPageRequest.setOffset("0");
-    verify(ARTIFACT_SERVICE).listSortByBuildNo(expectedPageRequest);
+    verify(ARTIFACT_SERVICE).listSortByBuildNo(APP_ID, null, expectedPageRequest);
   }
 
+  @Test
+  public void shouldListArtifactWithServiceId() {
+    RESOURCES.client()
+        .target("/artifacts/?appId=" + APP_ID + "&serviceId=" + SERVICE_ID)
+        .request()
+        .get(new GenericType<RestResponse<PageResponse<Artifact>>>() {});
+    PageRequest<Artifact> expectedPageRequest = new PageRequest<>();
+    expectedPageRequest.addFilter("appId", Operator.EQ, APP_ID);
+    expectedPageRequest.setOffset("0");
+    verify(ARTIFACT_SERVICE).listSortByBuildNo(APP_ID, SERVICE_ID, expectedPageRequest);
+  }
   /**
    * Should delete artifact.
    *
