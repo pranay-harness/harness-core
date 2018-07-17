@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
@@ -153,7 +154,7 @@ public class HelmDeployState extends State {
 
     HelmChartSpecification helmChartSpecification =
         serviceResourceService.getHelmChartSpecification(context.getAppId(), serviceElement.getUuid());
-
+    evaluateHelmChartSpecificationExpression(context, helmChartSpecification);
     validateChartSpecification(helmChartSpecification);
 
     HelmDeployStateExecutionData stateExecutionData = HelmDeployStateExecutionData.builder()
@@ -389,5 +390,20 @@ public class HelmDeployState extends State {
 
   private String getRepoName(String appName, String serviceName) {
     return appName + "-" + serviceName;
+  }
+
+  private void evaluateHelmChartSpecificationExpression(
+      ExecutionContext context, HelmChartSpecification helmChartSpec) {
+    if (isNotBlank(helmChartSpec.getChartUrl())) {
+      helmChartSpec.setChartUrl(context.renderExpression(helmChartSpec.getChartUrl()));
+    }
+
+    if (isNotBlank(helmChartSpec.getChartVersion())) {
+      helmChartSpec.setChartVersion(context.renderExpression(helmChartSpec.getChartVersion()));
+    }
+
+    if (isNotBlank(helmChartSpec.getChartName())) {
+      helmChartSpec.setChartName(context.renderExpression(helmChartSpec.getChartName()));
+    }
   }
 }
