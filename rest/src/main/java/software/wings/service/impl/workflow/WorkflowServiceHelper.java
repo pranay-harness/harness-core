@@ -492,11 +492,16 @@ public class WorkflowServiceHelper {
                                                     .build())
                                        .build());
       }
+
+      Map<String, Object> defaultSetupProperties = new HashMap<>();
+      defaultSetupProperties.put("replicationControllerName", "${app.name}-${service.name}-${env.name}");
+      defaultSetupProperties.put("resizeStrategy", "RESIZE_NEW_FIRST");
       workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
                                      .addStep(aGraphNode()
                                                   .withId(generateUuid())
                                                   .withType(KUBERNETES_SETUP.name())
                                                   .withName(Constants.KUBERNETES_SERVICE_SETUP)
+                                                  .withProperties(defaultSetupProperties)
                                                   .build())
                                      .build());
     }
@@ -537,6 +542,7 @@ public class WorkflowServiceHelper {
       defaultBlueGreenConfig.put("stageService", defaultServiceSpec);
 
       Map<String, Object> defaultSetupProperties = new HashMap<>();
+      defaultSetupProperties.put("replicationControllerName", "${app.name}-${service.name}-${env.name}");
       defaultSetupProperties.put("blueGreen", true);
       defaultSetupProperties.put("blueGreenConfig", defaultBlueGreenConfig);
       defaultSetupProperties.put("resizeStrategy", "RESIZE_NEW_FIRST");
