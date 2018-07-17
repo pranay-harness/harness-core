@@ -34,7 +34,6 @@ import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -90,7 +89,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
-import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -384,7 +382,6 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     Queue<Future> futures = new ConcurrentLinkedQueue<>();
 
     Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap = Maps.newConcurrentMap();
-    Set<ChangeContext> processedChangeSet = Sets.newHashSet();
     YamlType previousYamlType = null;
     int numOfParallelChanges = 0;
     for (ChangeContext changeContext : changeContextList) {
@@ -405,7 +402,6 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
           logger.info("Processing file: [{}]", changeContext.getChange().getFilePath());
           processYamlChange(changeContext, changeContextList);
           yamlGitService.discardGitSyncError(changeContext.getChange().getAccountId(), yamlFilePath);
-          processedChangeSet.add(changeContext);
 
           logger.info("Processing done for file [{}]", changeContext.getChange().getFilePath());
         } catch (Exception ex) {

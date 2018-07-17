@@ -106,10 +106,9 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   public synchronized List<YamlChangeSet> getChangeSetsToBeMarkedSkipped(String accountId) {
     YamlChangeSet mostRecentCompletedChangeSet = getMostRecentChangeSetWithCompletedStatus(accountId);
 
-    PageRequestBuilder pageRequestBuilder =
-        aPageRequest()
-            .addFilter("accountId", Operator.EQ, accountId)
-            .addFilter("status", Operator.IN, new Status[] {Status.QUEUED, Status.FAILED});
+    PageRequestBuilder pageRequestBuilder = aPageRequest()
+                                                .addFilter("accountId", Operator.EQ, accountId)
+                                                .addFilter("status", Operator.IN, new Status[] {Status.QUEUED});
 
     if (mostRecentCompletedChangeSet != null) {
       pageRequestBuilder.addFilter("createdAt", Operator.GE, mostRecentCompletedChangeSet.getCreatedAt());
@@ -146,12 +145,11 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
       // We will pick all Queued and Failed changeSets created after this
       mostRecentCompletedChangeSet = getMostRecentChangeSetWithCompletedStatus(accountId);
 
-      PageRequestBuilder pageRequestBuilder =
-          aPageRequest()
-              .addFilter("accountId", Operator.EQ, accountId)
-              .addFilter("status", Operator.IN, new Status[] {Status.QUEUED, Status.FAILED})
-              .addOrder("createdAt", OrderType.ASC)
-              .withLimit("50");
+      PageRequestBuilder pageRequestBuilder = aPageRequest()
+                                                  .addFilter("accountId", Operator.EQ, accountId)
+                                                  .addFilter("status", Operator.IN, new Status[] {Status.QUEUED})
+                                                  .addOrder("createdAt", OrderType.ASC)
+                                                  .withLimit("50");
 
       if (mostRecentCompletedChangeSet != null) {
         pageRequestBuilder.addFilter("createdAt", Operator.GE, mostRecentCompletedChangeSet.getCreatedAt());
@@ -164,25 +162,8 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
     }
 
     if (EmptyPredicate.isEmpty(yamlChangeSets)) {
-      return Collections.EMPTY_LIST;
-    }
-
-    List<YamlChangeSet> failedChangeSets = yamlChangeSets.stream()
-                                               .filter(yamlChangeSet -> yamlChangeSet.getStatus().equals(Status.FAILED))
-                                               .collect(Collectors.toList());
-
-    // All changeSets in this batch are in failed state, means this batch is failing
-    // for some change set and may be in a loop. Create a new GitReset change set and
-    // mark all scheduled changeSets as skipped
-    if (failedChangeSets.size() == yamlChangeSets.size()) {
-      // fullSync will mark all QUEUED/FAILED ones as SKIPPED
-      // which are after most recently completed yamlChangeSet
-      yamlGitService.fullSync(accountId, true);
-      return Collections.EMPTY_LIST;
-    }
-
-    if (EmptyPredicate.isEmpty(yamlChangeSets)) {
       logger.info("No Change set was found for processing for account: " + accountId);
+      return Collections.EMPTY_LIST;
     }
 
     // Update status for these yamlChangeSets to "Running"

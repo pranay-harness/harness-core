@@ -260,7 +260,7 @@ public class YamlGitServiceImpl implements YamlGitService {
         yamlChangeSetService.save(yamlChangeSet);
         // mark these change sets as Skipped
         yamlChangeSetService.updateStatusForGivenYamlChangeSets(
-            accountId, Status.SKIPPED, Arrays.asList(Status.QUEUED, Status.FAILED), yamlChangesetIdsToBeSkipped);
+            accountId, Status.SKIPPED, Arrays.asList(Status.QUEUED), yamlChangesetIdsToBeSkipped);
       } catch (Exception ex) {
         logger.error(GIT_YAML_LOG_PREFIX + "Failed to sync files for account {} ", yamlGitConfig.getAccountId(), ex);
       }
