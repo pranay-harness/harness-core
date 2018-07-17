@@ -28,6 +28,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.Misc;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -162,6 +163,7 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
   private void logContainerInfos(List<ContainerInfo> containerInfos, ExecutionLogCallback executionLogCallback) {
     try {
       if (isNotEmpty(containerInfos)) {
+        containerInfos.sort(Comparator.comparing(ContainerInfo::isNewContainer).reversed());
         executionLogCallback.saveExecutionLog("\nContainer IDs:");
         containerInfos.forEach(info
             -> executionLogCallback.saveExecutionLog("  " + info.getHostName()
