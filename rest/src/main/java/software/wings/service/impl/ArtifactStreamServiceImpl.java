@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.STARTS_WITH;
 import static software.wings.beans.SortOrder.OrderType.ASC;
@@ -216,8 +217,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     if (isEmpty(triggers)) {
       return;
     }
-    List<String> triggerNames =
-        triggers.stream().map(software.wings.beans.trigger.Trigger::getName).collect(Collectors.toList());
+    List<String> triggerNames = triggers.stream().map(software.wings.beans.trigger.Trigger::getName).collect(toList());
     throw new InvalidRequestException(
         format("Artifact Source associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)),
         USER);
@@ -298,6 +298,17 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         .filter(ArtifactStream.APP_ID_KEY, appId)
         .filter(ArtifactStream.SERVICE_ID_KEY, serviceId)
         .asList();
+  }
+
+  @Override
+  public List<String> fetchArtifactStreamIdsForService(String appId, String serviceId) {
+    return wingsPersistence.createQuery(ArtifactStream.class)
+        .filter(ArtifactStream.APP_ID_KEY, appId)
+        .filter(ArtifactStream.SERVICE_ID_KEY, serviceId)
+        .asKeyList()
+        .stream()
+        .map(artifactStreamKey -> artifactStreamKey.getId().toString())
+        .collect(toList());
   }
 
   @Override

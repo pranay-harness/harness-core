@@ -2,13 +2,13 @@ package software.wings.service.impl.artifact;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.regex.Pattern.compile;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.CREATED_AT_KEY;
+import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.artifact.Artifact.ARTIFACT_STREAM_ID_KEY;
 import static software.wings.beans.artifact.Artifact.CONTENT_STATUS_KEY;
 import static software.wings.beans.artifact.Artifact.ContentStatus.DELETED;
@@ -31,6 +31,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.collect.CollectEvent.Builder.aCollectEvent;
 import static software.wings.dl.MongoHelper.setUnset;
+import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 import static software.wings.utils.ArtifactType.DOCKER;
@@ -138,11 +139,20 @@ public class ArtifactServiceImpl implements ArtifactService {
   }
 
   @Override
-  public PageResponse<Artifact> listSortByBuildNo(PageRequest<Artifact> pageRequest) {
+  public PageResponse<Artifact> listSortByBuildNo(String appId, String serviceId, PageRequest<Artifact> pageRequest) {
+    List<Artifact> artifacts = new ArrayList<>();
+    if (serviceId != null) {
+      List<String> artifactStreamIds = artifactStreamService.fetchArtifactStreamIdsForService(appId, serviceId);
+      if (isNotEmpty(artifactStreamIds)) {
+        pageRequest.addFilter(ARTIFACT_STREAM_ID_KEY, IN, artifactStreamIds.toArray());
+      } else {
+        return aPageResponse().withResponse(artifacts).build();
+      }
+    }
     PageResponse<Artifact> pageResponse = wingsPersistence.query(Artifact.class, pageRequest);
     Map<String, List<Artifact>> groupByArtifactStream =
         pageResponse.getResponse().stream().collect(Collectors.groupingBy(Artifact::getArtifactStreamId));
-    List<Artifact> artifacts = new ArrayList<>();
+
     for (Entry<String, List<Artifact>> artifactStreamEntry : groupByArtifactStream.entrySet()) {
       artifacts.addAll(artifactStreamEntry.getValue().stream().sorted(new ArtifactComparator()).collect(toList()));
     }
@@ -540,7 +550,7 @@ public class ArtifactServiceImpl implements ArtifactService {
         deleteArtifacts(artifactIds, artifactFileUuids);
       }
     } catch (Exception ex) {
-      logger.warn(format("Failed to purge(delete) artifacts for artifactStreamId %s of size: %s for appId %s",
+      logger.warn(String.format("Failed to purge(delete) artifacts for artifactStreamId %s of size: %s for appId %s",
                       artifactStreamId, toBeDeletedArtifacts.size(), appId),
           ex);
     }

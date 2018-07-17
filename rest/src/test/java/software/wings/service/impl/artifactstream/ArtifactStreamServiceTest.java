@@ -1487,15 +1487,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                         .accountId(ACCOUNT_ID)
                         .build());
 
-    ArtifactoryArtifactStream artifactoryArtifactStream = ArtifactoryArtifactStream.builder()
-                                                              .appId(APP_ID)
-                                                              .repositoryType("any")
-                                                              .jobname("docker")
-                                                              .settingId(SETTING_ID)
-                                                              .imageName("wingsplugins/todolist")
-                                                              .autoPopulate(true)
-                                                              .serviceId(SERVICE_ID)
-                                                              .build();
+    ArtifactoryArtifactStream artifactoryArtifactStream = buildArtifactoryStream();
     ArtifactStream savedArtifactSteam = artifactStreamService.create(artifactoryArtifactStream);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
 
@@ -1506,5 +1498,37 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
         .containsOnlyKeys(
             ARTIFACT_SOURCE_USER_NAME_KEY, ARTIFACT_SOURCE_REGISTRY_URL_KEY, ARTIFACT_SOURCE_REPOSITORY_NAME_KEY);
     assertThat(artifactSourceProperties).containsValues("username", "http://artifactory.com", "wingsplugins/todolist");
+  }
+
+  private ArtifactoryArtifactStream buildArtifactoryStream() {
+    return ArtifactoryArtifactStream.builder()
+        .appId(APP_ID)
+        .repositoryType("any")
+        .jobname("docker")
+        .settingId(SETTING_ID)
+        .imageName("wingsplugins/todolist")
+        .autoPopulate(true)
+        .serviceId(SERVICE_ID)
+        .build();
+  }
+
+  @Test
+  public void shouldListArtifactStreamIdsofService() {
+    ArtifactStream savedArtifactSteam = artifactStreamService.create(buildArtifactoryStream());
+    assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
+    assertThat(artifactStreamService.fetchArtifactStreamIdsForService(APP_ID, SERVICE_ID))
+        .isNotEmpty()
+        .contains(savedArtifactSteam.getUuid());
+  }
+
+  @Test
+  public void shouldListArtifactStreamsofService() {
+    ArtifactStream savedArtifactSteam = artifactStreamService.create(buildArtifactoryStream());
+    assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
+    assertThat(artifactStreamService.fetchArtifactStreamsForService(APP_ID, SERVICE_ID))
+        .isNotEmpty()
+        .extracting(ArtifactStream::getUuid)
+        .isNotNull()
+        .contains(savedArtifactSteam.getUuid());
   }
 }

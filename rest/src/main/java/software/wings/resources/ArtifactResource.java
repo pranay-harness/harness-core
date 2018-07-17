@@ -73,10 +73,10 @@ public class ArtifactResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.SERVICE, action = Action.READ, dbFieldName = "serviceIds")
-  public RestResponse<PageResponse<Artifact>> list(
-      @QueryParam("appId") String appId, @BeanParam PageRequest<Artifact> pageRequest) {
+  public RestResponse<PageResponse<Artifact>> list(@QueryParam("appId") String appId,
+      @QueryParam("serviceId") String serviceId, @BeanParam PageRequest<Artifact> pageRequest) {
     pageRequest.addFilter("appId", EQ, appId);
-    return new RestResponse<>(artifactService.listSortByBuildNo(pageRequest));
+    return new RestResponse<>(artifactService.listSortByBuildNo(appId, serviceId, pageRequest));
   }
 
   /**
