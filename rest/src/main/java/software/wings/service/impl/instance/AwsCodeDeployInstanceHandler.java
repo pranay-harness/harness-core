@@ -29,11 +29,11 @@ import software.wings.beans.infrastructure.instance.info.Ec2InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.key.deployment.AwsCodeDeployDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
-import software.wings.cloudprovider.aws.AwsCodeDeployService;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.aws.manager.AwsCodeDeployHelperServiceManager;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StepExecutionSummary;
 import software.wings.utils.Validator;
@@ -49,7 +49,7 @@ import java.util.stream.Collectors;
  */
 public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
   @Inject private InfrastructureMappingService infraMappingService;
-  @Inject private AwsCodeDeployService awsCodeDeployService;
+  @Inject private AwsCodeDeployHelperServiceManager awsCodeDeployHelperServiceManager;
 
   @Override
   public Optional<List<DeploymentInfo>> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
@@ -146,8 +146,8 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
 
         // This will create filter for "instance-state-name" = "running"
         List<com.amazonaws.services.ec2.model.Instance> latestEc2Instances =
-            awsCodeDeployService.listDeploymentInstances(
-                region, cloudProviderSetting, encryptedDataDetails, awsCodeDeployDeploymentInfo.getDeploymentId());
+            awsCodeDeployHelperServiceManager.listDeploymentInstances(
+                awsConfig, encryptedDataDetails, region, awsCodeDeployDeploymentInfo.getDeploymentId());
         Map<String, com.amazonaws.services.ec2.model.Instance> latestEc2InstanceMap =
             latestEc2Instances.stream().collect(
                 Collectors.toMap(ec2Instance -> ec2Instance.getInstanceId(), ec2Instance -> ec2Instance));
