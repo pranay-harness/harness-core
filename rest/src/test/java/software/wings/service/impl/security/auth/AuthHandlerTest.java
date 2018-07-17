@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
@@ -26,12 +27,14 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.stubbing.Answer;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
@@ -46,6 +49,7 @@ import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.PageRequest;
+import software.wings.dl.PageRequest.PageRequestBuilder;
 import software.wings.dl.PageResponse;
 import software.wings.security.AccountPermissionSummary;
 import software.wings.security.EnvFilter;
@@ -916,5 +920,123 @@ public class AuthHandlerTest extends WingsBaseTest {
 
     assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getDeploymentPermissions())
         .doesNotContainKeys(pipeline1.getUuid(), pipeline2.getUuid());
+  }
+
+  @Test
+  public void shouldGetAllEntities_multiplePages() {
+    // Scenario page size = 10, total = 11
+    int total = 11;
+    int pageSize = 10;
+    String pageSizeStr = "10";
+
+    PageRequest<Environment> pageRequest1 =
+        PageRequestBuilder.aPageRequest().withLimit(pageSizeStr).withOffset("0").build();
+    List<Environment> expectedEnv = createEnvs("dev", 0, total);
+
+    PageResponse<Environment> firstPage =
+        aPageResponse().withResponse(createEnvs("dev", 0, pageSize)).withTotal(total).build();
+    PageResponse<Environment> lastPage =
+        aPageResponse().withResponse(createEnvs("dev", pageSize, total)).withTotal(total).build();
+
+    when(environmentService.list(any(PageRequest.class), eq(false)))
+        .thenAnswer((Answer<PageResponse<Environment>>) invocation -> {
+          Object[] arguments = invocation.getArguments();
+          PageRequest pageRequest = (PageRequest) arguments[0];
+          if (pageRequest.getOffset().equals("0")) {
+            return firstPage;
+          } else if (pageRequest.getOffset().equals(pageSizeStr)) {
+            return lastPage;
+          } else {
+            return null;
+          }
+        });
+
+    List<Environment> allEntities =
+        authHandler.getAllEntities(pageRequest1, () -> environmentService.list(pageRequest1, false));
+    assertEquals(allEntities.size(), total);
+    assertThat(allEntities).containsExactlyInAnyOrder(expectedEnv.toArray(new Environment[0]));
+  }
+
+  @Test
+  public void shouldGetAllEntities_multiplePages_multiplesOfPageSize() {
+    // Scenario page size = 10, total = 20
+    int total = 20;
+    int pageSize = 10;
+    String pageSizeStr = "10";
+    PageRequest<Environment> pageRequest1 =
+        PageRequestBuilder.aPageRequest().withLimit(pageSizeStr).withOffset("0").build();
+    List<Environment> expectedEnv = createEnvs("dev", 0, total);
+
+    PageResponse<Environment> firstPage =
+        aPageResponse().withResponse(createEnvs("dev", 0, 10)).withTotal(total).build();
+    PageResponse<Environment> lastPage =
+        aPageResponse().withResponse(createEnvs("dev", pageSize, total)).withTotal(total).build();
+
+    when(environmentService.list(any(PageRequest.class), eq(false)))
+        .thenAnswer((Answer<PageResponse<Environment>>) invocation -> {
+          Object[] arguments = invocation.getArguments();
+          PageRequest pageRequest = (PageRequest) arguments[0];
+          if (pageRequest.getOffset().equals("0")) {
+            return firstPage;
+          } else if (pageRequest.getOffset().equals(pageSizeStr)) {
+            return lastPage;
+          } else {
+            return null;
+          }
+        });
+
+    List<Environment> allEntities =
+        authHandler.getAllEntities(pageRequest1, () -> environmentService.list(pageRequest1, false));
+    assertEquals(allEntities.size(), total);
+    assertThat(allEntities).containsExactlyInAnyOrder(expectedEnv.toArray(new Environment[0]));
+  }
+
+  @Test
+  public void shouldGetAllEntities_onePage() {
+    // Scenario page size = 10, total = 8
+    int total = 8;
+    String pageSizeStr = "10";
+    PageRequest<Environment> pageRequest1 =
+        PageRequestBuilder.aPageRequest().withLimit(pageSizeStr).withOffset("0").build();
+    List<Environment> expectedEnv = createEnvs("dev", 0, total);
+
+    PageResponse<Environment> firstPage =
+        aPageResponse().withResponse(createEnvs("dev", 0, total)).withTotal(total).build();
+    when(environmentService.list(eq(pageRequest1), eq(false))).thenReturn(firstPage);
+
+    List<Environment> allEntities =
+        authHandler.getAllEntities(pageRequest1, () -> environmentService.list(pageRequest1, false));
+    assertEquals(allEntities.size(), total);
+    assertThat(allEntities).containsExactlyInAnyOrder(expectedEnv.toArray(new Environment[0]));
+  }
+
+  @Test
+  public void shouldGetAllEntities_noResults() {
+    // Scenario page size = 10, total = 0
+    int total = 0;
+    String pageSizeStr = "10";
+
+    PageRequest<Environment> pageRequest1 =
+        PageRequestBuilder.aPageRequest().withLimit(pageSizeStr).withOffset("0").build();
+
+    PageResponse<Environment> firstPage = aPageResponse().withResponse(Lists.newArrayList()).withTotal(total).build();
+    when(environmentService.list(eq(pageRequest1), eq(false))).thenReturn(firstPage);
+
+    List<Environment> allEntities =
+        authHandler.getAllEntities(pageRequest1, () -> environmentService.list(pageRequest1, false));
+    assertEquals(allEntities.size(), total);
+  }
+
+  private List<Environment> createEnvs(String prefix, int start, int end) {
+    List<Environment> envList = Lists.newArrayList();
+    for (int i = start; i < end; i++) {
+      envList.add(anEnvironment()
+                      .withUuid(Integer.toString(i))
+                      .withName(prefix + i)
+                      .withAppId(APP_ID)
+                      .withEnvironmentType(EnvironmentType.NON_PROD)
+                      .build());
+    }
+    return envList;
   }
 }
