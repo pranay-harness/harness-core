@@ -18,6 +18,12 @@ import static software.wings.beans.container.KubernetesContainerTask.SECRET_MAP_
 import static software.wings.beans.container.KubernetesServiceType.None;
 import static software.wings.common.Constants.HARNESS_APP;
 import static software.wings.common.Constants.HARNESS_ENV;
+import static software.wings.common.Constants.HARNESS_KUBERNETES_APP_LABEL_KEY;
+import static software.wings.common.Constants.HARNESS_KUBERNETES_ENV_LABEL_KEY;
+import static software.wings.common.Constants.HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY;
+import static software.wings.common.Constants.HARNESS_KUBERNETES_MANAGED_LABEL_KEY;
+import static software.wings.common.Constants.HARNESS_KUBERNETES_REVISION_LABEL_KEY;
+import static software.wings.common.Constants.HARNESS_KUBERNETES_SERVICE_LABEL_KEY;
 import static software.wings.common.Constants.HARNESS_REVISION;
 import static software.wings.common.Constants.HARNESS_SERVICE;
 import static software.wings.common.Constants.SECRET_MASK;
@@ -164,6 +170,12 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   @Inject private transient Clock clock;
   @Inject private transient AzureHelperService azureHelperService;
 
+  private Map<String, String> harnessAnnotations;
+  private Map<String, String> lookupLabels;
+  private int currentRevision;
+  private boolean isNotVersioned;
+  private String currentNamePrefix;
+
   public KubernetesSetupCommandUnit() {
     super(CommandUnitType.KUBERNETES_SETUP);
     setDeploymentType(DeploymentType.KUBERNETES.name());
@@ -181,6 +193,10 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
     try {
       KubernetesSetupParams setupParams = (KubernetesSetupParams) containerSetupParams;
+
+      harnessAnnotations = getHarnessAnnotations(setupParams);
+      lookupLabels = ImmutableMap.of(HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY,
+          KubernetesConvention.getNormalizedInfraMappingIdLabelValue(setupParams.getInfraMappingId()));
 
       KubernetesConfig kubernetesConfig;
       List<EncryptedDataDetail> encryptedDataDetails;
@@ -222,17 +238,30 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
       boolean isStatefulSet = kubernetesContainerTask.checkStatefulSet();
       boolean isDaemonSet = kubernetesContainerTask.checkDaemonSet();
-      boolean isNotVersioned = isDaemonSet || isStatefulSet;
+      isNotVersioned = isDaemonSet || isStatefulSet;
       boolean useDashInHostname = setupParams.isUseDashInHostname();
+      currentNamePrefix = setupParams.getControllerNamePrefix();
 
-      String lastCtrlName = lastController(
-          kubernetesConfig, encryptedDataDetails, setupParams.getControllerNamePrefix(), useDashInHostname);
-      int revision = getRevisionFromControllerName(lastCtrlName, useDashInHostname).orElse(-1) + 1;
+      String lastCtrlName;
+      if (setupParams.isUseNewLabelMechanism()) {
+        HasMetadata lastDeployment = getLastDeployment(kubernetesConfig, encryptedDataDetails, setupParams);
+        currentRevision = isNotVersioned ? 0 : getRevisionNumber(lastDeployment) + 1;
+        lastCtrlName = lastDeployment != null ? lastDeployment.getMetadata().getName() : null;
+      } else {
+        lastCtrlName = lastController(
+            kubernetesConfig, encryptedDataDetails, setupParams.getControllerNamePrefix(), useDashInHostname);
+        currentRevision = getRevisionFromControllerName(lastCtrlName, useDashInHostname).orElse(-1) + 1;
+      }
 
       String containerServiceName = isNotVersioned
           ? isStatefulSet ? KubernetesConvention.getKubernetesServiceName(setupParams.getControllerNamePrefix())
                           : setupParams.getControllerNamePrefix()
-          : KubernetesConvention.getControllerName(setupParams.getControllerNamePrefix(), revision, useDashInHostname);
+          : KubernetesConvention.getControllerName(
+                setupParams.getControllerNamePrefix(), currentRevision, useDashInHostname);
+
+      Map<String, String> controllerLabels = isNotVersioned
+          ? getLabels(setupParams)
+          : getLabelsWithRevision(setupParams, Integer.toString(currentRevision));
 
       String dockerImageName = setupParams.getImageDetails().getName() + ":" + setupParams.getImageDetails().getTag();
 
@@ -268,8 +297,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       }
 
       String registrySecretName = getKubernetesRegistrySecretName(setupParams.getImageDetails());
-      Secret registrySecret = createRegistrySecret(
-          registrySecretName, setupParams.getNamespace(), setupParams.getImageDetails(), executionLogCallback);
+      Secret registrySecret = createRegistrySecret(registrySecretName, setupParams.getNamespace(),
+          setupParams.getImageDetails(), controllerLabels, executionLogCallback);
       kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, encryptedDataDetails, registrySecret);
 
       KubernetesYamlConfigBuilder yamlConfigBuilder = KubernetesYamlConfig.builder();
@@ -291,8 +320,14 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           lastAutoscaler = containerServiceName;
         }
       } else {
-        activeServiceCounts = kubernetesContainerService.getActiveServiceCounts(
-            kubernetesConfig, encryptedDataDetails, containerServiceName, useDashInHostname);
+        if (setupParams.isUseNewLabelMechanism()) {
+          activeServiceCounts = kubernetesContainerService.getActiveServiceCountsWithLabels(
+              kubernetesConfig, encryptedDataDetails, lookupLabels);
+        } else {
+          activeServiceCounts = kubernetesContainerService.getActiveServiceCounts(
+              kubernetesConfig, encryptedDataDetails, containerServiceName, useDashInHostname);
+        }
+
         trafficWeights = kubernetesContainerService.getTrafficWeights(
             kubernetesConfig, encryptedDataDetails, containerServiceName, useDashInHostname);
         if (isNotBlank(lastCtrlName)) {
@@ -315,9 +350,6 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           .previousYamlConfig(yamlConfig)
           .activeServiceCounts(integerMapToListOfStringArray(activeServiceCounts))
           .trafficWeights(integerMapToListOfStringArray(trafficWeights));
-
-      Map<String, String> controllerLabels =
-          getLabelsWithRevision(setupParams, isNotVersioned ? "none" : Integer.toString(revision));
 
       // Setup config map
       ConfigMap configMap = prepareConfigMap(kubernetesConfig, encryptedDataDetails, setupParams, containerServiceName,
@@ -360,7 +392,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           activeServiceCounts, executionLogCallback, summaryOutput);
 
       setupServiceAndIngressForBlueGreen(setupParams, kubernetesConfig, encryptedDataDetails, containerServiceName,
-          Integer.toString(revision), executionLogCallback, summaryOutput);
+          Integer.toString(currentRevision), executionLogCallback, summaryOutput);
 
       if (isNotVersioned) {
         listContainerInfosWhenReady(encryptedDataDetails, setupParams.getServiceSteadyStateTimeout(),
@@ -381,7 +413,13 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       } else {
         downsizeOldOrUnhealthy(kubernetesConfig, encryptedDataDetails, containerServiceName, setupParams,
             executionLogCallback, useDashInHostname);
-        cleanup(kubernetesConfig, encryptedDataDetails, containerServiceName, executionLogCallback, useDashInHostname);
+        if (setupParams.isUseNewLabelMechanism()) {
+          cleanupWithLabels(kubernetesConfig, encryptedDataDetails, executionLogCallback);
+
+        } else {
+          cleanup(
+              kubernetesConfig, encryptedDataDetails, containerServiceName, executionLogCallback, useDashInHostname);
+        }
       }
 
       executionLogCallback.saveExecutionLog("\n\nSummary:");
@@ -441,9 +479,12 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           LogLevel.INFO);
     }
 
+    Map<String, String> selectors =
+        setupParams.isUseNewLabelMechanism() ? getNewLabelSelectors(setupParams) : getLabelSelectors(setupParams);
+
     Service service =
         prepareService(spec, kubernetesConfig, encryptedDataDetails, kubernetesServiceName, setupParams.getNamespace(),
-            false, labels, labels, setupParams.getServiceSteadyStateTimeout(), executionLogCallback, summaryOutput);
+            false, selectors, labels, setupParams.getServiceSteadyStateTimeout(), executionLogCallback, summaryOutput);
 
     String ingressYaml = "";
 
@@ -472,7 +513,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     String stageServiceName = getStageServiceName(getKubernetesServiceName(setupParams.getControllerNamePrefix()));
     String ingressName = getBlueGreenIngressName(setupParams.getControllerNamePrefix());
     Map<String, String> labels = getLabels(setupParams);
-    Map<String, String> labelsWithRevision = getLabelsWithRevision(setupParams, revision);
+    Map<String, String> selectors = setupParams.isUseNewLabelMechanism()
+        ? getNewLabelSelectorsWithRevision(setupParams, revision)
+        : getLabelSelectorsWithRevision(setupParams, revision);
 
     KubernetesServiceSpecification primaryServiceSpecification =
         (setupParams.isBlueGreen() && setupParams.getBlueGreenConfig() != null)
@@ -485,7 +528,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
 
     Service primaryService = prepareService(primaryServiceSpecification, kubernetesConfig, encryptedDataDetails,
-        primaryServiceName, setupParams.getNamespace(), true, labelsWithRevision, labels,
+        primaryServiceName, setupParams.getNamespace(), true, selectors, labels,
         setupParams.getServiceSteadyStateTimeout(), executionLogCallback, summaryOutput);
 
     KubernetesServiceSpecification stageServiceSpecification =
@@ -499,7 +542,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
 
     Service stageService = prepareService(stageServiceSpecification, kubernetesConfig, encryptedDataDetails,
-        stageServiceName, setupParams.getNamespace(), false, labelsWithRevision, labels,
+        stageServiceName, setupParams.getNamespace(), false, selectors, labels,
         setupParams.getServiceSteadyStateTimeout(), executionLogCallback, summaryOutput);
 
     boolean useIngress = setupParams.isBlueGreen() && setupParams.getBlueGreenConfig() != null
@@ -528,12 +571,20 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         executionLogCallback, summaryOutput);
 
     if (primaryService != null && stageService != null && setupParams.isBlueGreen()) {
-      String primaryRevision = primaryService.getSpec().getSelector().get(HARNESS_REVISION);
-      String stageRevision = stageService.getSpec().getSelector().get(HARNESS_REVISION);
+      String primaryRevision = getRevisionFromService(primaryService);
+      String stageRevision = getRevisionFromService(stageService);
 
       executionLogCallback.saveExecutionLog("Primary Service is at revision: " + primaryRevision);
       executionLogCallback.saveExecutionLog("Stage Service is at revision: " + stageRevision);
     }
+  }
+
+  private String getRevisionFromService(Service service) {
+    String revision = service.getSpec().getSelector().get(HARNESS_REVISION);
+    if (revision == null) {
+      revision = service.getSpec().getSelector().get(HARNESS_KUBERNETES_REVISION_LABEL_KEY);
+    }
+    return revision;
   }
 
   private ImmutableMap<String, String> getLabels(KubernetesSetupParams setupParams) {
@@ -541,6 +592,24 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         .put(HARNESS_APP, KubernetesConvention.getLabelValue(setupParams.getAppName()))
         .put(HARNESS_SERVICE, KubernetesConvention.getLabelValue(setupParams.getServiceName()))
         .put(HARNESS_ENV, KubernetesConvention.getLabelValue(setupParams.getEnvName()))
+        .put(HARNESS_KUBERNETES_MANAGED_LABEL_KEY, "true")
+        .put(HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY,
+            KubernetesConvention.getNormalizedInfraMappingIdLabelValue(setupParams.getInfraMappingId()))
+        .build();
+  }
+
+  private ImmutableMap<String, String> getLabelSelectors(KubernetesSetupParams setupParams) {
+    return ImmutableMap.<String, String>builder()
+        .put(HARNESS_APP, KubernetesConvention.getLabelValue(setupParams.getAppName()))
+        .put(HARNESS_SERVICE, KubernetesConvention.getLabelValue(setupParams.getServiceName()))
+        .put(HARNESS_ENV, KubernetesConvention.getLabelValue(setupParams.getEnvName()))
+        .build();
+  }
+
+  private ImmutableMap<String, String> getNewLabelSelectors(KubernetesSetupParams setupParams) {
+    return ImmutableMap.<String, String>builder()
+        .put(HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY,
+            KubernetesConvention.getNormalizedInfraMappingIdLabelValue(setupParams.getInfraMappingId()))
         .build();
   }
 
@@ -550,6 +619,37 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         .put(HARNESS_SERVICE, KubernetesConvention.getLabelValue(setupParams.getServiceName()))
         .put(HARNESS_ENV, KubernetesConvention.getLabelValue(setupParams.getEnvName()))
         .put(HARNESS_REVISION, revision)
+        .put(HARNESS_KUBERNETES_MANAGED_LABEL_KEY, "true")
+        .put(HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY,
+            KubernetesConvention.getNormalizedInfraMappingIdLabelValue(setupParams.getInfraMappingId()))
+        .put(HARNESS_KUBERNETES_REVISION_LABEL_KEY, revision)
+        .build();
+  }
+
+  private ImmutableMap<String, String> getHarnessAnnotations(KubernetesSetupParams setupParams) {
+    return ImmutableMap.<String, String>builder()
+        .put(HARNESS_KUBERNETES_APP_LABEL_KEY, KubernetesConvention.getLabelValue(setupParams.getAppName()))
+        .put(HARNESS_KUBERNETES_SERVICE_LABEL_KEY, KubernetesConvention.getLabelValue(setupParams.getServiceName()))
+        .put(HARNESS_KUBERNETES_ENV_LABEL_KEY, KubernetesConvention.getLabelValue(setupParams.getEnvName()))
+        .build();
+  }
+
+  private ImmutableMap<String, String> getLabelSelectorsWithRevision(
+      KubernetesSetupParams setupParams, String revision) {
+    return ImmutableMap.<String, String>builder()
+        .put(HARNESS_APP, KubernetesConvention.getLabelValue(setupParams.getAppName()))
+        .put(HARNESS_SERVICE, KubernetesConvention.getLabelValue(setupParams.getServiceName()))
+        .put(HARNESS_ENV, KubernetesConvention.getLabelValue(setupParams.getEnvName()))
+        .put(HARNESS_REVISION, revision)
+        .build();
+  }
+
+  private ImmutableMap<String, String> getNewLabelSelectorsWithRevision(
+      KubernetesSetupParams setupParams, String revision) {
+    return ImmutableMap.<String, String>builder()
+        .put(HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY,
+            KubernetesConvention.getNormalizedInfraMappingIdLabelValue(setupParams.getInfraMappingId()))
+        .put(HARNESS_KUBERNETES_REVISION_LABEL_KEY, revision)
         .build();
   }
 
@@ -722,6 +822,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       ExecutionLogCallback executionLogCallback) {
     Secret secretMap = new SecretBuilder()
                            .withNewMetadata()
+                           .withAnnotations(harnessAnnotations)
                            .withName(secretMapName)
                            .withNamespace(setupParams.getNamespace())
                            .withLabels(controllerLabels)
@@ -776,12 +877,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         ObjectMeta configMapMeta = Optional.ofNullable(configMap.getMetadata()).orElse(new ObjectMeta());
         configMapMeta.setName(configMapName);
         configMapMeta.setNamespace(setupParams.getNamespace());
-        Map<String, String> configMapLabels = new HashMap<>();
-        if (isNotEmpty(configMapMeta.getLabels())) {
-          configMapLabels.putAll(configMapMeta.getLabels());
-        }
-        configMapLabels.putAll(controllerLabels);
-        configMapMeta.setLabels(configMapLabels);
+        configMapMeta.setAnnotations(mergeMaps(configMapMeta.getAnnotations(), harnessAnnotations));
+        configMapMeta.setLabels(mergeMaps(configMapMeta.getLabels(), controllerLabels));
         configMap.setMetadata(configMapMeta);
         if (configMap.getData() == null) {
           configMap.setData(new HashMap<>());
@@ -792,6 +889,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     } else {
       configMap = new ConfigMapBuilder()
                       .withNewMetadata()
+                      .withAnnotations(harnessAnnotations)
                       .withName(configMapName)
                       .withNamespace(setupParams.getNamespace())
                       .withLabels(controllerLabels)
@@ -886,12 +984,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             .addParam("args", "Couldn't parse Ingress YAML: " + ingressYaml);
       }
       ingress.getMetadata().setName(ingressName);
-      Map<String, String> ingressLabels = ingress.getMetadata().getLabels();
-      if (ingressLabels == null) {
-        ingressLabels = new HashMap<>();
-      }
-      ingressLabels.putAll(labels);
-      ingress.getMetadata().setLabels(ingressLabels);
+      ingress.getMetadata().setAnnotations(mergeMaps(ingress.getMetadata().getAnnotations(), harnessAnnotations));
+      ingress.getMetadata().setLabels(mergeMaps(ingress.getMetadata().getLabels(), labels));
       executionLogCallback.saveExecutionLog("Setting ingress:\n\n" + toDisplayYaml(ingress));
       return ingress;
     } catch (IOException | RuntimeException e) {
@@ -947,7 +1041,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       }
 
       // set labels, name and namespace
-      objectMeta.setLabels(serviceLabels);
+      objectMeta.setAnnotations(mergeMaps(objectMeta.getAnnotations(), harnessAnnotations));
+      objectMeta.setLabels(mergeMaps(objectMeta.getLabels(), serviceLabels));
       objectMeta.setName(name);
       objectMeta.setNamespace(namespace);
 
@@ -971,9 +1066,10 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             .endScaleTargetRef();
     return new HorizontalPodAutoscalerBuilder()
         .withNewMetadata()
+        .withAnnotations(harnessAnnotations)
         .withName(name)
         .withNamespace(namespace)
-        .addToLabels(serviceLabels)
+        .withLabels(serviceLabels)
         .endMetadata()
         .withSpec(spec.build())
         .build();
@@ -984,6 +1080,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       ExecutionLogCallback executionLogCallback) {
     RouteRuleSpecNested<IstioResourceBuilder> routeRuleSpecNested = new IstioResourceBuilder()
                                                                         .withNewMetadata()
+                                                                        .withAnnotations(harnessAnnotations)
                                                                         .withName(kubernetesServiceName)
                                                                         .withNamespace(setupParams.getNamespace())
                                                                         .withLabels(serviceLabels)
@@ -1190,8 +1287,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   }
 
   @SuppressFBWarnings("DM_DEFAULT_ENCODING")
-  private Secret createRegistrySecret(
-      String secretName, String namespace, ImageDetails imageDetails, ExecutionLogCallback executionLogCallback) {
+  private Secret createRegistrySecret(String secretName, String namespace, ImageDetails imageDetails,
+      Map<String, String> controllerLabels, ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog("Setting image pull secret " + secretName);
     String credentialData = format(DOCKER_REGISTRY_CREDENTIAL_TEMPLATE, imageDetails.getRegistryUrl(),
         imageDetails.getUsername(), imageDetails.getPassword());
@@ -1199,6 +1296,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         ImmutableMap.of(".dockercfg", new String(Base64.getEncoder().encode(credentialData.getBytes())));
     return new SecretBuilder()
         .withNewMetadata()
+        .withAnnotations(harnessAnnotations)
+        .withLabels(controllerLabels)
         .withName(secretName)
         .withNamespace(namespace)
         .endMetadata()
@@ -1271,6 +1370,27 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     return lastController.get() != null ? lastController.get().getMetadata().getName() : null;
   }
 
+  private HasMetadata getLastDeployment(KubernetesConfig kubernetesConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, KubernetesSetupParams setupParams) {
+    final AtomicReference<HasMetadata> lastDeployment = new AtomicReference<>();
+    final AtomicInteger lastRevision = new AtomicInteger(-1);
+    kubernetesContainerService.getControllers(kubernetesConfig, encryptedDataDetails, lookupLabels)
+        .forEach(deployment -> {
+          int revision = getRevisionNumber(deployment);
+          if (revision > lastRevision.get()) {
+            lastDeployment.set(deployment);
+            lastRevision.set(revision);
+          }
+        });
+    return lastDeployment.get() != null ? lastDeployment.get() : null;
+  }
+
+  private int getRevisionNumber(HasMetadata kubernetesResource) {
+    return isNotVersioned || kubernetesResource == null
+        ? 0
+        : Integer.parseInt(kubernetesResource.getMetadata().getLabels().get(HARNESS_KUBERNETES_REVISION_LABEL_KEY));
+  }
+
   private String lastAutoscaler(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
       String controllerNamePrefix, boolean useDashInHostName) {
     final AtomicReference<HorizontalPodAutoscaler> lastHpa = new AtomicReference<>();
@@ -1308,6 +1428,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     KubernetesHelper.setName(controller, controllerName);
     KubernetesHelper.setNamespace(controller, setupParams.getNamespace());
     KubernetesHelper.getOrCreateLabels(controller).putAll(controllerLabels);
+    controller.getMetadata().setAnnotations(mergeMaps(controller.getMetadata().getAnnotations(), harnessAnnotations));
 
     configureTypeSpecificSpecs(
         controllerLabels, controller, configMap, secretMap, setupParams, originalPods, executionLogCallback);
@@ -1359,12 +1480,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       podTemplateSpec.setMetadata(new ObjectMeta());
     }
 
-    Map<String, String> labels = podTemplateSpec.getMetadata().getLabels();
-    if (labels == null) {
-      labels = new HashMap<>();
-      podTemplateSpec.getMetadata().setLabels(labels);
-    }
-    podTemplateSpec.getMetadata().getLabels().putAll(controllerLabels);
+    podTemplateSpec.getMetadata().setAnnotations(
+        mergeMaps(podTemplateSpec.getMetadata().getAnnotations(), harnessAnnotations));
+    podTemplateSpec.getMetadata().setLabels(mergeMaps(podTemplateSpec.getMetadata().getLabels(), controllerLabels));
 
     Map<String, EnvVar> secretEnvVars = new HashMap<>();
 
@@ -1410,6 +1528,17 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
   }
 
+  private Map<String, String> mergeMaps(Map<String, String> map1, Map<String, String> map2) {
+    Map<String, String> newMap = new HashMap<>();
+    if (map1 != null) {
+      newMap.putAll(map1);
+    }
+    if (map2 != null) {
+      newMap.putAll(map2);
+    }
+    return newMap;
+  }
+
   private io.fabric8.kubernetes.api.model.Service createServiceDefinition(String serviceName, String namespace,
       Map<String, String> labelSelectors, Map<String, String> labels,
       KubernetesServiceSpecification serviceSpecification, ExecutionLogCallback executionLogCallback) {
@@ -1420,10 +1549,11 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
               .addParam("args", "Couldn't parse Service YAML: " + serviceSpecification.getServiceYaml());
         }
-        service.getMetadata().setLabels(labels);
+        service.getMetadata().setAnnotations(mergeMaps(service.getMetadata().getAnnotations(), harnessAnnotations));
+        service.getMetadata().setLabels(mergeMaps(service.getMetadata().getLabels(), labels));
         service.getMetadata().setName(serviceName);
         service.getMetadata().setNamespace(namespace);
-        service.getSpec().setSelector(labelSelectors);
+        service.getSpec().setSelector(mergeMaps(service.getSpec().getSelector(), labelSelectors));
         executionLogCallback.saveExecutionLog("Setting service:\n\n" + toDisplayYaml(service));
         return service;
       } catch (Exception e) {
@@ -1468,9 +1598,10 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
       Service service = new ServiceBuilder()
                             .withNewMetadata()
+                            .withAnnotations(harnessAnnotations)
                             .withName(serviceName)
                             .withNamespace(namespace)
-                            .addToLabels(labels)
+                            .withLabels(labels)
                             .endMetadata()
                             .withSpec(spec.build())
                             .build();
@@ -1482,8 +1613,16 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   private void downsizeOldOrUnhealthy(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
       String containerServiceName, KubernetesSetupParams setupParams, ExecutionLogCallback executionLogCallback,
       boolean useDashInHostname) {
-    Map<String, Integer> activeCounts = kubernetesContainerService.getActiveServiceCounts(
-        kubernetesConfig, encryptedDataDetails, containerServiceName, useDashInHostname);
+    Map<String, Integer> activeCounts;
+
+    if (setupParams.isUseNewLabelMechanism()) {
+      activeCounts = kubernetesContainerService.getActiveServiceCountsWithLabels(
+          kubernetesConfig, encryptedDataDetails, lookupLabels);
+    } else {
+      activeCounts = kubernetesContainerService.getActiveServiceCounts(
+          kubernetesConfig, encryptedDataDetails, containerServiceName, useDashInHostname);
+    }
+
     String latestHealthyController = null;
     if (activeCounts.size() > 1) {
       executionLogCallback.saveExecutionLog("\nActive pods:");
@@ -1544,6 +1683,60 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
   }
 
+  private void cleanupWithLabels(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      ExecutionLogCallback executionLogCallback) {
+    if (isNotVersioned) {
+      return;
+    }
+    executionLogCallback.saveExecutionLog("\nRemoving versions with no pods");
+
+    kubernetesContainerService.getControllers(kubernetesConfig, encryptedDataDetails, lookupLabels)
+        .stream()
+        .filter(ctrl
+            -> kubernetesContainerService.getControllerPodCount(ctrl) == 0
+                && getRevisionNumber(ctrl) != currentRevision)
+        .filter(ctrl -> !(ctrl.getKind().equals("ReplicaSet") && ctrl.getMetadata().getOwnerReferences() != null))
+        .forEach(ctrl -> {
+          String controllerName = ctrl.getMetadata().getName();
+          logger.info("Deleting old version: " + controllerName);
+          executionLogCallback.saveExecutionLog("Deleting old version: " + controllerName);
+          try {
+            kubernetesContainerService.deleteController(kubernetesConfig, encryptedDataDetails, controllerName);
+            kubernetesContainerService.deleteAutoscaler(kubernetesConfig, encryptedDataDetails, controllerName);
+            kubernetesContainerService.deleteConfigMap(kubernetesConfig, encryptedDataDetails, controllerName);
+            kubernetesContainerService.deleteSecret(kubernetesConfig, encryptedDataDetails, controllerName);
+          } catch (Exception e) {
+            Misc.logAllMessages(e, executionLogCallback);
+          }
+        });
+
+    kubernetesContainerService.getServices(kubernetesConfig, encryptedDataDetails, lookupLabels)
+        .stream()
+        .filter(service -> !(service.getMetadata().getName().equals(getKubernetesServiceName(currentNamePrefix))))
+        .filter(service
+            -> !(service.getMetadata().getName().equals(
+                getKubernetesServiceName(getPrimaryServiceName(currentNamePrefix)))))
+        .filter(service
+            -> !(service.getMetadata().getName().equals(
+                getKubernetesServiceName(getStageServiceName(currentNamePrefix)))))
+        .filter(service
+            -> kubernetesContainerService
+                    .getPods(kubernetesConfig, encryptedDataDetails, service.getSpec().getSelector())
+                    .size()
+                == 0)
+        .forEach(service -> {
+          String serviceName = service.getMetadata().getName();
+          logger.info("Deleting old service: " + serviceName);
+          executionLogCallback.saveExecutionLog("Deleting old service: " + serviceName);
+          try {
+            kubernetesContainerService.deleteService(kubernetesConfig, encryptedDataDetails, serviceName);
+            kubernetesContainerService.deleteIngress(kubernetesConfig, encryptedDataDetails, serviceName);
+          } catch (Exception e) {
+            Misc.logAllMessages(e, executionLogCallback);
+          }
+        });
+  }
+
   private void cleanupStageDeployment(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
       KubernetesSetupParams setupParams, ExecutionLogCallback executionLogCallback, boolean useDashInHostname) {
     String primaryServiceName = getPrimaryServiceName(getKubernetesServiceName(setupParams.getControllerNamePrefix()));
@@ -1566,8 +1759,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       return;
     }
 
-    String primaryRevision = primaryService.getSpec().getSelector().get(HARNESS_REVISION);
-    String stageRevision = stageService.getSpec().getSelector().get(HARNESS_REVISION);
+    String primaryRevision = getRevisionFromService(primaryService);
+    String stageRevision = getRevisionFromService(stageService);
 
     executionLogCallback.saveExecutionLog("Primary Service is at revision: " + primaryRevision);
     executionLogCallback.saveExecutionLog("Stage Service is at revision: " + stageRevision);

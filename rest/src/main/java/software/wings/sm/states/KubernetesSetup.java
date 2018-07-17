@@ -129,6 +129,8 @@ public class KubernetesSetup extends ContainerServiceSetup {
     }
 
     boolean useDashInHostName = featureFlagService.isEnabled(FeatureName.USE_DASH_IN_HOSTNAME, app.getAccountId());
+    boolean useNewLabelMechanism =
+        featureFlagService.isEnabled(FeatureName.USE_NEW_K8S_LABEL_MECHANISM, app.getAccountId());
 
     if (containerTask != null) {
       KubernetesContainerTask kubernetesContainerTask = (KubernetesContainerTask) containerTask;
@@ -221,6 +223,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
         .withEncryptedConfigFiles(encryptedConfigFiles)
         .withConfigMapYaml(configMapYamlEvaluated)
         .withUseDashInHostname(useDashInHostName)
+        .withUseNewLabelMechanism(useNewLabelMechanism)
         .build();
   }
 

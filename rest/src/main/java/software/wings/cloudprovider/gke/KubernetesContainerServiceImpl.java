@@ -13,6 +13,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.command.ContainerApiVersions.KUBERNETES_V1;
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
+import static software.wings.common.Constants.HARNESS_KUBERNETES_REVISION_LABEL_KEY;
 import static software.wings.common.Constants.HARNESS_REVISION;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.KubernetesConvention.DASH;
@@ -441,6 +442,20 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         .filter(ctrl -> getControllerPodCount(ctrl) > 0)
         .sorted(comparingInt(
             ctrl -> getRevisionFromControllerName(ctrl.getMetadata().getName(), useDashInHostname).orElse(-1)))
+        .forEach(ctrl -> result.put(ctrl.getMetadata().getName(), getControllerPodCount(ctrl)));
+    return result;
+  }
+
+  @Override
+  public LinkedHashMap<String, Integer> getActiveServiceCountsWithLabels(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> labels) {
+    LinkedHashMap<String, Integer> result = new LinkedHashMap<>();
+    getControllers(kubernetesConfig, encryptedDataDetails, labels)
+        .stream()
+        .filter(ctrl -> !(ctrl.getKind().equals("ReplicaSet") && ctrl.getMetadata().getOwnerReferences() != null))
+        .filter(ctrl -> getControllerPodCount(ctrl) > 0)
+        .sorted(comparingInt(
+            ctrl -> Integer.parseInt(ctrl.getMetadata().getLabels().get(HARNESS_KUBERNETES_REVISION_LABEL_KEY))))
         .forEach(ctrl -> result.put(ctrl.getMetadata().getName(), getControllerPodCount(ctrl)));
     return result;
   }
