@@ -18,6 +18,8 @@ import software.wings.service.impl.aws.model.AwsEcsRequest;
 import software.wings.service.impl.aws.model.AwsResponse;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.aws.manager.AwsEcsHelperServiceManager;
+import software.wings.waitnotify.ErrorNotifyResponseData;
+import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -49,7 +51,11 @@ public class AwsEcsHelperServiceManagerImpl implements AwsEcsHelperServiceManage
                                     .build();
 
     try {
-      return delegateService.executeTask(delegateTask);
+      NotifyResponseData notifyResponseData = delegateService.executeTask(delegateTask);
+      if (notifyResponseData instanceof ErrorNotifyResponseData) {
+        throw new WingsException(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
+      }
+      return (AwsResponse) notifyResponseData;
     } catch (InterruptedException ex) {
       throw new InvalidRequestException(ex.getMessage(), WingsException.USER);
     }

@@ -22,6 +22,8 @@ import software.wings.service.impl.aws.model.AwsIamRequest;
 import software.wings.service.impl.aws.model.AwsResponse;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.aws.manager.AwsIamHelperServiceManager;
+import software.wings.waitnotify.ErrorNotifyResponseData;
+import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
 import java.util.Map;
@@ -57,7 +59,11 @@ public class AwsIamHelperServiceManagerImpl implements AwsIamHelperServiceManage
                                     .withParameters(new Object[] {request})
                                     .build();
     try {
-      return delegateService.executeTask(delegateTask);
+      NotifyResponseData notifyResponseData = delegateService.executeTask(delegateTask);
+      if (notifyResponseData instanceof ErrorNotifyResponseData) {
+        throw new WingsException(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
+      }
+      return (AwsResponse) notifyResponseData;
     } catch (InterruptedException ex) {
       throw new InvalidRequestException(ex.getMessage(), WingsException.USER);
     }
