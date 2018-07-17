@@ -81,8 +81,7 @@ public class Http {
       connection.setReadTimeout(15000);
 
       int responseCode = connection.getResponseCode();
-      if ((responseCode >= 200 && responseCode <= 399) || responseCode == 401 || responseCode == 403
-          || responseCode == 405 || responseCode == 500) {
+      if (responseCode != 400) {
         logger.info("Url {} is connectable", url);
         return true;
       } else {
@@ -90,7 +89,6 @@ public class Http {
       }
     } catch (Exception e) {
       logger.info("Could not connect to url {}: {}", url, e.getMessage());
-      return false;
     }
     return false;
   }
