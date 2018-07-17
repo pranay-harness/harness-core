@@ -49,6 +49,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
   private List<String[]> plainConfigFiles;
   private List<String[]> encryptedConfigFiles;
   private boolean useDashInHostname;
+  private boolean useNewLabelMechanism;
 
   public static final class KubernetesSetupParamsBuilder {
     private String serviceName;
@@ -93,6 +94,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
     private List<String[]> plainConfigFiles;
     private List<String[]> encryptedConfigFiles;
     private boolean useDashInHostname;
+    private boolean useNewLabelMechanism;
 
     private KubernetesSetupParamsBuilder() {}
 
@@ -310,6 +312,11 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       return this;
     }
 
+    public KubernetesSetupParamsBuilder withUseNewLabelMechanism(boolean useNewLabelMechanism) {
+      this.useNewLabelMechanism = useNewLabelMechanism;
+      return this;
+    }
+
     public KubernetesSetupParamsBuilder but() {
       return aKubernetesSetupParams()
           .withServiceName(serviceName)
@@ -353,7 +360,8 @@ public class KubernetesSetupParams extends ContainerSetupParams {
           .withConfigMapYaml(configMapYaml)
           .withPlainConfigFiles(plainConfigFiles)
           .withEncryptedConfigFiles(encryptedConfigFiles)
-          .withUseDashInHostname(useDashInHostname);
+          .withUseDashInHostname(useDashInHostname)
+          .withUseNewLabelMechanism(useNewLabelMechanism);
     }
 
     public KubernetesSetupParams build() {
@@ -400,6 +408,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       kubernetesSetupParams.setPlainConfigFiles(plainConfigFiles);
       kubernetesSetupParams.setEncryptedConfigFiles(encryptedConfigFiles);
       kubernetesSetupParams.setUseDashInHostname(useDashInHostname);
+      kubernetesSetupParams.setUseNewLabelMechanism(useNewLabelMechanism);
       return kubernetesSetupParams;
     }
   }

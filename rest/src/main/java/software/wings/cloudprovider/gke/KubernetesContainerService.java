@@ -68,6 +68,9 @@ public interface KubernetesContainerService {
   LinkedHashMap<String, Integer> getActiveServiceCounts(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, boolean useDashInHostName);
 
+  LinkedHashMap<String, Integer> getActiveServiceCountsWithLabels(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> labels);
+
   Map<String, String> getActiveServiceImages(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, String imagePrefix,
       boolean useDashInHostName);

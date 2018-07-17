@@ -28,6 +28,15 @@ public final class UUIDGenerator {
   }
 
   /**
+   * Converts Base64 uuid to canonical form, xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.
+   *
+   * @return the uuid
+   */
+  public static String convertBase64UuidToCanonicalForm(String base64Uuid) {
+    return UUID.nameUUIDFromBytes(Base64.decodeBase64(base64Uuid)).toString();
+  }
+
+  /**
    * Graph id generator string.
    *
    * @param prefix the prefix

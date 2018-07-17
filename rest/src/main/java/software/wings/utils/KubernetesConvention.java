@@ -1,6 +1,7 @@
 package software.wings.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
 
@@ -179,6 +180,10 @@ public class KubernetesConvention {
 
   public static String getLabelValue(String value) {
     return normalize(value);
+  }
+
+  public static String getNormalizedInfraMappingIdLabelValue(String infraMppingId) {
+    return convertBase64UuidToCanonicalForm(infraMppingId);
   }
 
   public static String normalize(String expression) {
