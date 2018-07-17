@@ -93,6 +93,7 @@ public class MigrationList {
         .add(Pair.of(170, EntityNameValidationMigration_All_04.class))
         .add(Pair.of(171, DropOldCollectionMigration.class))
         .add(Pair.of(172, SystemTemplateGalleryMigration.class))
+        .add(Pair.of(173, SystemTemplateGalleryMigration.class))
         .build();
   }
 }

@@ -266,11 +266,12 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
   }
 
   @Override
-  public void copyHarnessTemplateFolders(String accountId) {
+  public void copyHarnessTemplateFolders(String galleryId, String accountId, String accountName) {
     // First Get the Harness template folder
     TemplateFolder harnessTemplateFolder = getTemplateTree(GLOBAL_ACCOUNT_ID, null, null);
-    TemplateFolder destinationRootFolder = createTemplateFolder(harnessTemplateFolder, accountId, null);
-    createChildren(harnessTemplateFolder, accountId, destinationRootFolder);
+    TemplateFolder destinationRootFolder =
+        createRootTemplateFolder(harnessTemplateFolder, accountId, accountName, galleryId);
+    createChildren(harnessTemplateFolder, accountId, galleryId, destinationRootFolder);
   }
 
   @Override
@@ -335,7 +336,8 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
     return templateFolders.stream().collect(Collectors.toMap(TemplateFolder::getUuid, TemplateFolder::getName));
   }
 
-  private void createChildren(TemplateFolder templateFolder, String accountId, TemplateFolder parentFolder) {
+  private void createChildren(
+      TemplateFolder templateFolder, String accountId, String galleryId, TemplateFolder parentFolder) {
     if (templateFolder == null) {
       return;
     }
@@ -343,13 +345,13 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
       return;
     }
     templateFolder.getChildren().forEach(sourceFolder -> {
-      TemplateFolder destinationFolder = createTemplateFolder(sourceFolder, accountId, parentFolder);
-      createChildren(sourceFolder, accountId, destinationFolder);
+      TemplateFolder destinationFolder = createTemplateFolder(sourceFolder, accountId, galleryId, parentFolder);
+      createChildren(sourceFolder, accountId, galleryId, destinationFolder);
     });
   }
 
   private TemplateFolder createTemplateFolder(
-      TemplateFolder sourceFolder, String accountId, TemplateFolder parentFolder) {
+      TemplateFolder sourceFolder, String accountId, String galleryId, TemplateFolder parentFolder) {
     TemplateFolder destinationFolder = sourceFolder.cloneInternal();
     destinationFolder.setAccountId(accountId);
     if (parentFolder != null) {
@@ -362,7 +364,19 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
         destinationFolder.setPathId(parentFolder.getPathId() + "/" + parentFolder.getUuid());
       }
     }
+    destinationFolder.setGalleryId(galleryId);
     destinationFolder.setKeywords(getKeywords(destinationFolder));
+    destinationFolder = wingsPersistence.saveAndGet(TemplateFolder.class, destinationFolder);
+    return destinationFolder;
+  }
+
+  private TemplateFolder createRootTemplateFolder(
+      TemplateFolder sourceRootFolder, String accountId, String accountName, String galleryId) {
+    TemplateFolder destinationFolder = sourceRootFolder.cloneInternal();
+    destinationFolder.setAccountId(accountId);
+    destinationFolder.setName(accountName);
+    destinationFolder.setKeywords(getKeywords(destinationFolder));
+    destinationFolder.setGalleryId(galleryId);
     destinationFolder = wingsPersistence.saveAndGet(TemplateFolder.class, destinationFolder);
     return destinationFolder;
   }

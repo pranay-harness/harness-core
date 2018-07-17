@@ -52,12 +52,12 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
 
   @Test
   public void shouldLoadTomcatStandardCommands() {
-    templateService.loadYaml(SSH, TOMCAT_WAR_STOP_PATH, GLOBAL_ACCOUNT_ID);
+    templateService.loadYaml(SSH, TOMCAT_WAR_STOP_PATH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
   }
 
   @Test
   public void shouldLoadDefaultCommandTemplates() {
-    templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID);
+    templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
   }
 
   @Test

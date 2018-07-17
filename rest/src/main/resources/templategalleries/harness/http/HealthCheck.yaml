@@ -4,6 +4,7 @@ folderPath: "Harness/HTTP Verifications"
 version: "1"
 description: "This is http template for health check "
 keywords: [http, ping]
+referencedTemplateUri: "Harness/HTTP Verifications/Health Check:1"
 variables:
 - name: "Url"
   description: "Url to verify the status"

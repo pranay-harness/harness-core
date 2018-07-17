@@ -130,7 +130,6 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
       builder.withTemplateUuid(existingSvcCommand.getTemplateUuid());
       builder.withTemplateVersion(existingSvcCommand.getTemplateVersion());
       if (isNotEmpty(commandYaml.getTemplateUri())) {
-        // Only version change for now
         builder.withTemplateVersion(TemplateHelper.obtainTemplateVersion(commandYaml.getTemplateUri()));
       }
     } else {

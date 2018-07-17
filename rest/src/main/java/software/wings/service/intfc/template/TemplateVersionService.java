@@ -12,6 +12,7 @@ public interface TemplateVersionService {
 
   TemplateVersion lastTemplateVersion(@NotEmpty String accountId, @NotEmpty String templateUuid);
 
-  TemplateVersion newTemplateVersion(@NotEmpty String accountId, @NotEmpty String templateUuid,
-      @NotEmpty String templateType, @NotEmpty String templateName, @NotEmpty ChangeType changeType);
+  TemplateVersion newTemplateVersion(@NotEmpty String accountId, @NotEmpty String galleryId,
+      @NotEmpty String templateUuid, @NotEmpty String templateType, @NotEmpty String templateName,
+      @NotEmpty ChangeType changeType);
 }

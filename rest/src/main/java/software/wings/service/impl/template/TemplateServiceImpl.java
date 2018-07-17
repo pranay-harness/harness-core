@@ -9,6 +9,10 @@ import static software.wings.beans.EntityType.WORKFLOW;
 import static software.wings.beans.ErrorCode.TEMPLATES_LINKED;
 import static software.wings.beans.template.Template.FOLDER_PATH_ID_KEY;
 import static software.wings.beans.template.Template.VERSION_KEY;
+import static software.wings.beans.template.TemplateHelper.addUserKeyWords;
+import static software.wings.beans.template.TemplateHelper.mappedEntity;
+import static software.wings.beans.template.TemplateHelper.obtainTemplateFolderPath;
+import static software.wings.beans.template.TemplateHelper.obtainTemplateName;
 import static software.wings.beans.template.TemplateType.HTTP;
 import static software.wings.beans.template.TemplateType.SSH;
 import static software.wings.beans.template.TemplateVersion.ChangeType.CREATED;
@@ -31,6 +35,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.template.BaseTemplate;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
+import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.template.TemplateHelper;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.TemplateVersion;
@@ -43,6 +48,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.template.TemplateFolderService;
+import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.template.TemplateVersionService;
 import software.wings.utils.Validator;
@@ -66,6 +72,7 @@ public class TemplateServiceImpl implements TemplateService {
   @Inject private ExecutorService executorService;
   @Inject private TemplateVersionService templateVersionService;
   @Inject private TemplateHelper templateHelper;
+  @Inject private TemplateGalleryService templateGalleryService;
 
   @Override
   public PageResponse<Template> list(PageRequest<Template> pageRequest) {
@@ -99,12 +106,20 @@ public class TemplateServiceImpl implements TemplateService {
         .accountId(template.getAccountId())
         .version(template.getVersion())
         .templateObject(template.getTemplateObject())
+        .galleryId(template.getGalleryId())
         .variables(template.getVariables())
         .build();
   }
 
   private void saveOrUpdate(Template template) {
     TemplateFolder templateFolder;
+    String galleryId = template.getGalleryId();
+    if (isEmpty(galleryId)) {
+      TemplateGallery templateGallery = templateGalleryService.getByAccount(template.getAccountId());
+      notNullCheck("Template gallery does not exist", templateGallery, USER);
+      galleryId = templateGallery.getUuid();
+    }
+    template.setGalleryId(galleryId);
     if (isEmpty(template.getFolderId())) {
       notNullCheck("Template Folder Path", template.getFolderPath());
       templateFolder = templateFolderService.getByFolderPath(template.getAccountId(), template.getFolderPath());
@@ -167,7 +182,7 @@ public class TemplateServiceImpl implements TemplateService {
   private TemplateVersion getTemplateVersion(
       Template template, String uuid, String templateType, String templateName, TemplateVersion.ChangeType updated) {
     return templateVersionService.newTemplateVersion(
-        template.getAccountId(), uuid, templateType, templateName, updated);
+        template.getAccountId(), template.getGalleryId(), uuid, templateType, templateName, updated);
   }
 
   @Override
@@ -229,7 +244,7 @@ public class TemplateServiceImpl implements TemplateService {
     if (templateHelper.templatesLinked(templateType, Collections.singletonList(templateUuid))) {
       throw new WingsException(TEMPLATES_LINKED, USER)
           .addParam("message", String.format("Template : [%s] couldn't be deleted", template.getName()))
-          .addParam("type", TemplateHelper.mappedEntity(templateType));
+          .addParam("type", mappedEntity(templateType));
     }
     boolean templateDeleted = wingsPersistence.delete(template);
     if (templateDeleted) {
@@ -245,16 +260,16 @@ public class TemplateServiceImpl implements TemplateService {
   }
 
   @Override
-  public void loadDefaultTemplates(TemplateType templateType, String accountId) {
+  public void loadDefaultTemplates(TemplateType templateType, String accountId, String accountName) {
     logger.info("Loading default templates for template type {}", templateType);
     AbstractTemplateProcessor abstractTemplateProcessor = getTemplateProcessor(templateType.name());
-    abstractTemplateProcessor.loadDefaultTemplates(accountId);
+    abstractTemplateProcessor.loadDefaultTemplates(accountId, accountName);
     logger.info("Loading default templates for template type {} success", templateType);
   }
 
   @Override
-  public Template loadYaml(TemplateType templateType, String yamlFilePath, String accountId) {
-    return getTemplateProcessor(templateType.name()).loadYaml(yamlFilePath, accountId);
+  public Template loadYaml(TemplateType templateType, String yamlFilePath, String accountId, String accountName) {
+    return getTemplateProcessor(templateType.name()).loadYaml(yamlFilePath, accountId, accountName);
   }
 
   @Override
@@ -320,7 +335,7 @@ public class TemplateServiceImpl implements TemplateService {
       }
       i++;
     }
-    return templateFolderPath.append(":").append(template.getName()).toString();
+    return templateFolderPath.append("/").append(template.getName()).toString();
   }
 
   @Override
@@ -332,16 +347,13 @@ public class TemplateServiceImpl implements TemplateService {
 
   @Override
   public String fetchTemplateIdFromUri(String accountId, String templateUri) {
-    String[] templateUris = templateUri.split(":");
-    if (templateUris.length < 2) {
-      throw new WingsException("Invalid TemplateUri [" + templateUri + "]", WingsException.USER);
-    }
-    String folderPath = templateUris[0];
+    String folderPath = obtainTemplateFolderPath(templateUri);
     TemplateFolder templateFolder = templateFolderService.getByFolderPath(accountId, folderPath);
     if (templateFolder == null) {
-      throw new WingsException("No template folder found for the uri +[" + templateUri + "]");
+      throw new WingsException("No template folder found with the uri  [" + templateUri + "]");
     }
-    String templateName = templateUris[1];
+
+    String templateName = obtainTemplateName(templateUri);
     Template template = wingsPersistence.createQuery(Template.class)
                             .project(Template.NAME_KEY, true)
                             .project(Template.ACCOUNT_ID_KEY, true)
@@ -350,7 +362,7 @@ public class TemplateServiceImpl implements TemplateService {
                             .filter(Template.FOLDER_ID_KEY, templateFolder.getUuid())
                             .get();
     if (template == null) {
-      throw new WingsException("No template found for the uri +[" + templateUri + "]");
+      throw new WingsException("No template found for the uri [" + templateUri + "]");
     }
     return template.getUuid();
   }
@@ -393,6 +405,6 @@ public class TemplateServiceImpl implements TemplateService {
 
   private List<String> getKeywords(Template template) {
     List<String> generatedKeywords = trimList(template.generateKeywords());
-    return TemplateHelper.addUserKeyWords(template.getKeywords(), generatedKeywords);
+    return addUserKeyWords(template.getKeywords(), generatedKeywords);
   }
 }

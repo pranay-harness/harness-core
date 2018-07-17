@@ -3,7 +3,9 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.beans.Account.ACCOUNT_NAME_KEY;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
+import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.ID_KEY;
@@ -56,6 +58,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SystemCatalogService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.ownership.OwnedByAccount;
+import software.wings.service.intfc.template.TemplateGalleryService;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -85,6 +88,8 @@ public class AccountServiceImpl implements AccountService {
   @Inject private AppContainerService appContainerService;
   @Inject private SystemCatalogService systemCatalogService;
   @Inject private AlertService alertService;
+  @Inject private TemplateGalleryService templateGalleryService;
+
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
   @Override
@@ -105,6 +110,9 @@ public class AccountServiceImpl implements AccountService {
         .forEach(role -> createDefaultNotificationGroup(account, role));
     createSystemAppContainers(account);
     authHandler.createDefaultUserGroups(account, null);
+
+    executorService.submit(
+        () -> templateGalleryService.copyHarnessTemplatesToAccount(account.getUuid(), account.getAccountName()));
   }
 
   List<Role> createDefaultRoles(Account account) {
@@ -252,6 +260,16 @@ public class AccountServiceImpl implements AccountService {
         accounts.stream().filter(account -> StringUtils.equals(GLOBAL_ACCOUNT_ID, account.getUuid())).findFirst();
 
     return fallbackAccount.get().getDelegateConfiguration();
+  }
+
+  @Override
+  public List<Account> listAllAccounts() {
+    return wingsPersistence.createQuery(Account.class).filter(APP_ID_KEY, GLOBAL_APP_ID).asList();
+  }
+
+  @Override
+  public Account getByAccountName(String accountName) {
+    return wingsPersistence.createQuery(Account.class).filter(ACCOUNT_NAME_KEY, accountName).get();
   }
 
   private void createDefaultNotificationGroup(Account account, Role role) {

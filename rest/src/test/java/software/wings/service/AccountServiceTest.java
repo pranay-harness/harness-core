@@ -23,6 +23,7 @@ import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.template.TemplateGalleryService;
 
 /**
  * Created by peeyushaggarwal on 10/11/16.
@@ -33,6 +34,7 @@ public class AccountServiceTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private SettingsService settingsService;
   @Mock private JobScheduler jobScheduler;
+  @Mock private TemplateGalleryService templateGalleryService;
 
   @InjectMocks @Inject private AccountService accountService;
 
@@ -54,6 +56,7 @@ public class AccountServiceTest extends WingsBaseTest {
     assertThat(wingsPersistence.get(Account.class, accountId)).isNull();
     verify(appService).deleteByAccountId(accountId);
     verify(settingsService).deleteByAccountId(accountId);
+    verify(templateGalleryService).deleteByAccountId(accountId);
   }
 
   @Test
@@ -66,9 +69,16 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldGetAccountByName() {
+  public void shouldGetAccountByCompanyName() {
     Account account = wingsPersistence.saveAndGet(Account.class, anAccount().withCompanyName(HARNESS_NAME).build());
     assertThat(accountService.getByName(HARNESS_NAME)).isEqualTo(account);
+  }
+
+  @Test
+  public void shouldGetAccountByAccountName() {
+    Account account = wingsPersistence.saveAndGet(
+        Account.class, anAccount().withAccountName(HARNESS_NAME).withCompanyName(HARNESS_NAME).build());
+    assertThat(accountService.getByAccountName(HARNESS_NAME)).isEqualTo(account);
   }
 
   @Test
@@ -108,5 +118,13 @@ public class AccountServiceTest extends WingsBaseTest {
     assertThat(accountService.getDelegateConfiguration(accountId))
         .hasFieldOrPropertyWithValue("watcherVersion", "globalVersion")
         .hasFieldOrPropertyWithValue("delegateVersions", asList("globalVersion"));
+  }
+
+  @Test
+  public void shouldListAllAccounts() {
+    Account account = wingsPersistence.saveAndGet(Account.class, anAccount().withCompanyName(HARNESS_NAME).build());
+    assertThat(accountService.get(account.getUuid())).isEqualTo(account);
+    assertThat(accountService.listAllAccounts()).isNotEmpty();
+    assertThat(accountService.listAllAccounts().get(0)).isNotNull();
   }
 }

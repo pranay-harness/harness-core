@@ -27,7 +27,7 @@ public interface TemplateFolderService {
 
   TemplateFolder getTemplateTree(@NotEmpty String accountId, String keyword, List<String> templateTypes);
 
-  void copyHarnessTemplateFolders(String accountId);
+  void copyHarnessTemplateFolders(@NotEmpty String galleryId, @NotEmpty String accountId, @NotEmpty String accountName);
 
   TemplateFolder getByFolderPath(@NotEmpty String accountId, @NotEmpty String folderPath);
 

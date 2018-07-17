@@ -37,10 +37,11 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
   }
 
   @Override
-  public TemplateVersion newTemplateVersion(String accountId, String templateUuid, String templateType,
-      String templateName, TemplateVersion.ChangeType changeType) {
+  public TemplateVersion newTemplateVersion(String accountId, String galleryId, String templateUuid,
+      String templateType, String templateName, TemplateVersion.ChangeType changeType) {
     TemplateVersion templateVersion = TemplateVersion.builder()
                                           .accountId(accountId)
+                                          .galleryId(galleryId)
                                           .templateUuid(templateUuid)
                                           .templateName(templateName)
                                           .templateType(templateType)
