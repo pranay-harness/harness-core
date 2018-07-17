@@ -24,8 +24,21 @@ import static software.wings.beans.PhaseStepType.SELECT_NODE;
 import static software.wings.beans.PhaseStepType.START_SERVICE;
 import static software.wings.beans.PhaseStepType.STOP_SERVICE;
 import static software.wings.beans.PhaseStepType.WRAP_UP;
+import static software.wings.common.Constants.AMI_SETUP_COMMAND_NAME;
+import static software.wings.common.Constants.AWS_CODE_DEPLOY;
+import static software.wings.common.Constants.AWS_LAMBDA;
 import static software.wings.common.Constants.DE_PROVISION_CLOUD_FORMATION;
+import static software.wings.common.Constants.KUBERNETES_SERVICE_SETUP;
+import static software.wings.common.Constants.PCF_UNMAP_ROUT;
 import static software.wings.common.Constants.PROVISION_CLOUD_FORMATION;
+import static software.wings.common.Constants.ROLLBACK_AWS_AMI_CLUSTER;
+import static software.wings.common.Constants.ROLLBACK_AWS_CODE_DEPLOY;
+import static software.wings.common.Constants.ROLLBACK_AWS_LAMBDA;
+import static software.wings.common.Constants.ROLLBACK_CONTAINERS;
+import static software.wings.common.Constants.ROLLBACK_KUBERNETES_SETUP;
+import static software.wings.common.Constants.SELECT_NODE_NAME;
+import static software.wings.common.Constants.UPGRADE_AUTOSCALING_GROUP;
+import static software.wings.common.Constants.UPGRADE_CONTAINERS;
 import static software.wings.sm.StateTypeScope.COMMON;
 import static software.wings.sm.StateTypeScope.NONE;
 import static software.wings.sm.StateTypeScope.ORCHESTRATION_STENCILS;
@@ -62,7 +75,6 @@ import software.wings.sm.states.ArtifactCollectionState;
 import software.wings.sm.states.AwsAmiServiceDeployState;
 import software.wings.sm.states.AwsAmiServiceRollback;
 import software.wings.sm.states.AwsAmiServiceSetup;
-import software.wings.sm.states.AwsAutoScaleProvisionState;
 import software.wings.sm.states.AwsCodeDeployRollback;
 import software.wings.sm.states.AwsCodeDeployState;
 import software.wings.sm.states.AwsLambdaRollback;
@@ -298,75 +310,71 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * AWS Node Select state.
    */
-  AWS_NODE_SELECT(AwsNodeSelectState.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_SSH),
-      asList(INFRASTRUCTURE_NODE, SELECT_NODE), ORCHESTRATION_STENCILS),
-
-  /**
-   * AWS Node Provision state.
-   */
-  AWS_AUTOSCALE_PROVISION(AwsAutoScaleProvisionState.class, CLOUD,
+  AWS_NODE_SELECT(AwsNodeSelectState.class, CLOUD, SELECT_NODE_NAME,
       Lists.newArrayList(InfrastructureMappingType.AWS_SSH), asList(INFRASTRUCTURE_NODE, SELECT_NODE),
       ORCHESTRATION_STENCILS),
 
-  DC_NODE_SELECT(DcNodeSelectState.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH),
-      asList(SELECT_NODE), ORCHESTRATION_STENCILS),
+  DC_NODE_SELECT(DcNodeSelectState.class, CLOUD, SELECT_NODE_NAME,
+      Lists.newArrayList(InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH), asList(SELECT_NODE),
+      ORCHESTRATION_STENCILS),
 
-  ROLLING_NODE_SELECT(RollingNodeSelectState.class, CLOUD, asList(), asList(SELECT_NODE), ORCHESTRATION_STENCILS),
+  ROLLING_NODE_SELECT(
+      RollingNodeSelectState.class, CLOUD, SELECT_NODE_NAME, asList(), asList(SELECT_NODE), ORCHESTRATION_STENCILS),
 
   PHASE(PhaseSubWorkflow.class, StencilCategory.SUB_WORKFLOW, asList(), NONE),
 
   PHASE_STEP(PhaseStepSubWorkflow.class, StencilCategory.SUB_WORKFLOW, asList(), NONE),
 
-  AWS_CODEDEPLOY_STATE(AwsCodeDeployState.class, COMMANDS, Constants.AWS_CODE_DEPLOY,
+  AWS_CODEDEPLOY_STATE(AwsCodeDeployState.class, COMMANDS, AWS_CODE_DEPLOY,
       Lists.newArrayList(InfrastructureMappingType.AWS_AWS_CODEDEPLOY), asList(DEPLOY_AWSCODEDEPLOY),
       ORCHESTRATION_STENCILS),
 
-  AWS_CODEDEPLOY_ROLLBACK(AwsCodeDeployRollback.class, COMMANDS, Constants.ROLLBACK_AWS_CODE_DEPLOY,
+  AWS_CODEDEPLOY_ROLLBACK(AwsCodeDeployRollback.class, COMMANDS, ROLLBACK_AWS_CODE_DEPLOY,
       Lists.newArrayList(InfrastructureMappingType.AWS_AWS_CODEDEPLOY), asList(DEPLOY_AWSCODEDEPLOY),
       ORCHESTRATION_STENCILS),
 
-  AWS_LAMBDA_STATE(AwsLambdaState.class, COMMANDS, Constants.AWS_LAMBDA,
+  AWS_LAMBDA_STATE(AwsLambdaState.class, COMMANDS, AWS_LAMBDA,
       Lists.newArrayList(InfrastructureMappingType.AWS_AWS_LAMBDA), asList(DEPLOY_AWS_LAMBDA), ORCHESTRATION_STENCILS),
 
-  AWS_LAMBDA_ROLLBACK(AwsLambdaRollback.class, COMMANDS, Constants.ROLLBACK_AWS_LAMBDA,
+  AWS_LAMBDA_ROLLBACK(AwsLambdaRollback.class, COMMANDS, ROLLBACK_AWS_LAMBDA,
       Lists.newArrayList(InfrastructureMappingType.AWS_AWS_LAMBDA), asList(DEPLOY_AWS_LAMBDA), ORCHESTRATION_STENCILS),
 
-  AWS_AMI_SERVICE_SETUP(AwsAmiServiceSetup.class, CLOUD, Constants.AMI_SETUP_COMMAND_NAME,
+  AWS_AMI_SERVICE_SETUP(AwsAmiServiceSetup.class, CLOUD, AMI_SETUP_COMMAND_NAME,
       Lists.newArrayList(InfrastructureMappingType.AWS_AMI), asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
-  AWS_AMI_SERVICE_DEPLOY(AwsAmiServiceDeployState.class, COMMANDS, Constants.UPGRADE_AUTOSCALING_GROUP,
+  AWS_AMI_SERVICE_DEPLOY(AwsAmiServiceDeployState.class, COMMANDS, UPGRADE_AUTOSCALING_GROUP,
       Lists.newArrayList(InfrastructureMappingType.AWS_AMI), asList(AMI_DEPLOY_AUTOSCALING_GROUP),
       ORCHESTRATION_STENCILS),
 
-  AWS_AMI_SERVICE_ROLLBACK(AwsAmiServiceRollback.class, COMMANDS, Constants.ROLLBACK_AWS_AMI_CLUSTER,
+  AWS_AMI_SERVICE_ROLLBACK(AwsAmiServiceRollback.class, COMMANDS, ROLLBACK_AWS_AMI_CLUSTER,
       Lists.newArrayList(InfrastructureMappingType.AWS_AMI), asList(AMI_DEPLOY_AUTOSCALING_GROUP),
       ORCHESTRATION_STENCILS),
 
   ECS_SERVICE_SETUP(EcsServiceSetup.class, CLOUD, Constants.ECS_SERVICE_SETUP,
       Lists.newArrayList(InfrastructureMappingType.AWS_ECS), asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
-  ECS_SERVICE_DEPLOY(EcsServiceDeploy.class, COMMANDS, Constants.UPGRADE_CONTAINERS,
+  ECS_SERVICE_DEPLOY(EcsServiceDeploy.class, COMMANDS, UPGRADE_CONTAINERS,
       Lists.newArrayList(InfrastructureMappingType.AWS_ECS), asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
 
-  ECS_SERVICE_ROLLBACK(EcsServiceRollback.class, COMMANDS, Constants.ROLLBACK_CONTAINERS,
+  ECS_SERVICE_ROLLBACK(EcsServiceRollback.class, COMMANDS, ROLLBACK_CONTAINERS,
       Lists.newArrayList(InfrastructureMappingType.AWS_ECS), asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
 
-  KUBERNETES_SETUP(KubernetesSetup.class, CLOUD, Constants.KUBERNETES_SERVICE_SETUP,
+  KUBERNETES_SETUP(KubernetesSetup.class, CLOUD, KUBERNETES_SERVICE_SETUP,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
-  KUBERNETES_SETUP_ROLLBACK(KubernetesSetupRollback.class, COMMANDS, Constants.ROLLBACK_KUBERNETES_SETUP,
+  KUBERNETES_SETUP_ROLLBACK(KubernetesSetupRollback.class, COMMANDS, ROLLBACK_KUBERNETES_SETUP,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
-  KUBERNETES_DEPLOY(KubernetesDeploy.class, COMMANDS, Constants.UPGRADE_CONTAINERS,
+  KUBERNETES_DEPLOY(KubernetesDeploy.class, COMMANDS, UPGRADE_CONTAINERS,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(CONTAINER_DEPLOY, WRAP_UP), ORCHESTRATION_STENCILS),
 
-  KUBERNETES_DEPLOY_ROLLBACK(KubernetesDeployRollback.class, COMMANDS, Constants.ROLLBACK_CONTAINERS,
+  KUBERNETES_DEPLOY_ROLLBACK(KubernetesDeployRollback.class, COMMANDS, ROLLBACK_CONTAINERS,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
@@ -403,7 +411,7 @@ public enum StateType implements StateTypeDescriptor {
 
   PCF_MAP_ROUTE(MapRouteState.class, FLOW_CONTROLS, Constants.PCF_MAP_ROUTE,
       Lists.newArrayList(InfrastructureMappingType.PCF_PCF), asList(PhaseStepType.PCF_RESIZE), ORCHESTRATION_STENCILS),
-  PCF_UNMAP_ROUTE(UnmapRouteState.class, FLOW_CONTROLS, Constants.PCF_UNMAP_ROUT,
+  PCF_UNMAP_ROUTE(UnmapRouteState.class, FLOW_CONTROLS, PCF_UNMAP_ROUT,
       Lists.newArrayList(InfrastructureMappingType.PCF_PCF), asList(PhaseStepType.PCF_RESIZE), ORCHESTRATION_STENCILS),
 
   TERRAFORM_PROVISION(ApplyTerraformProvisionState.class, PROVISIONERS, 0, "Terraform Provision",
