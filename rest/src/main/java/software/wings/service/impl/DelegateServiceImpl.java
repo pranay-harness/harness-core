@@ -1019,29 +1019,23 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private DelegateTask getUnassignedDelegateTask(String accountId, String taskId, String delegateId) {
-    DelegateTask delegateTask = wingsPersistence.createQuery(DelegateTask.class)
-                                    .filter("accountId", accountId)
-                                    .filter("status", QUEUED)
-                                    .field("delegateId")
-                                    .doesNotExist()
-                                    .filter(ID_KEY, taskId)
-                                    .get();
+    DelegateTask delegateTask =
+        wingsPersistence.createQuery(DelegateTask.class).filter("accountId", accountId).filter(ID_KEY, taskId).get();
 
-    if (delegateTask == null) {
-      delegateTask = wingsPersistence.createQuery(DelegateTask.class)
-                         .filter("accountId", accountId)
-                         .filter("delegateId", delegateId)
-                         .filter(ID_KEY, taskId)
-                         .get();
-      if (delegateTask != null) {
+    if (delegateTask != null) {
+      if (delegateTask.getDelegateId() == null && delegateTask.getStatus() == QUEUED) {
+        logger.info("Found unassigned delegate task: {}", delegateTask.getUuid());
+        return delegateTask;
+      } else if (delegateId.equals(delegateTask.getDelegateId())) {
         logger.info("Returning already assigned task {} to delegate {} from getUnassigned", taskId, delegateId);
-      } else {
-        logger.info("Task {} no longer available for delegate {} from getUnassigned", taskId, delegateId);
+        return delegateTask;
       }
+      logger.info("Task {} not available for delegate {} - it was assigned to {} and has status {}", taskId, delegateId,
+          delegateTask.getDelegateId(), delegateTask.getStatus());
     } else {
-      logger.info("Found unassigned delegate task: {}", delegateTask.getUuid());
+      logger.info("Task {} no longer exists", taskId);
     }
-    return delegateTask;
+    return null;
   }
 
   private DelegateTask assignTask(String delegateId, String taskId, DelegateTask delegateTask) {
