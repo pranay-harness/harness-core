@@ -339,7 +339,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("notifyResponseCleaner")))
         .scheduleWithFixedDelay(injector.getInstance(NotifyResponseCleanupHandler.class), 0L, 30L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("delegateTaskNotifier")))
-        .scheduleWithFixedDelay(injector.getInstance(DelegateQueueTask.class), 0L, 5L, TimeUnit.SECONDS);
+        .scheduleWithFixedDelay(injector.getInstance(DelegateQueueTask.class), 0L, 20L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("gitChangeSet")))
         .scheduleWithFixedDelay(injector.getInstance(GitChangeSetRunnable.class), 0L, 2L, TimeUnit.SECONDS);
   }

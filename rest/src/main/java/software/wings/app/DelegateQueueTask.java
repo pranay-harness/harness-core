@@ -12,6 +12,8 @@ import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
 import static software.wings.service.impl.DelegateServiceImpl.VALIDATION_TIMEOUT;
 
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 
 import io.harness.version.VersionInfoManager;
@@ -49,6 +51,7 @@ public class DelegateQueueTask implements Runnable {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private Clock clock;
   @Inject private VersionInfoManager versionInfoManager;
+  @Inject private TimeLimiter timeLimiter;
 
   /* (non-Javadoc)
    * @see java.lang.Runnable#run()
@@ -61,9 +64,14 @@ public class DelegateQueueTask implements Runnable {
 
     try (AcquiredLock ignore =
              persistentLocker.acquireLock(DelegateQueueTask.class, DelegateQueueTask.class.getName(), ofMinutes(1))) {
-      markTimedOutTasksAsFailed();
-      markLongQueuedTasksAsFailed();
-      rebroadcastUnassignedTasks();
+      timeLimiter.callWithTimeout(() -> {
+        markTimedOutTasksAsFailed();
+        markLongQueuedTasksAsFailed();
+        rebroadcastUnassignedTasks();
+        return true;
+      }, 1L, TimeUnit.MINUTES, true);
+    } catch (UncheckedTimeoutException exception) {
+      logger.error("Timed out processing delegate tasks");
     } catch (WingsException exception) {
       exception.logProcessedMessages(MANAGER, logger);
     } catch (Exception exception) {
