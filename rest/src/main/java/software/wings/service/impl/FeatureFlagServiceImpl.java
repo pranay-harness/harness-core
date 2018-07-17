@@ -95,6 +95,13 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
                                 .notIn(definedNames),
         wingsPersistence.createUpdateOperations(FeatureFlag.class).set("obsolete", true));
 
+    // Mark persisted flags that are defined as not obsolete
+    wingsPersistence.update(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority)
+                                .filter("obsolete", true)
+                                .field("name")
+                                .in(definedNames),
+        wingsPersistence.createUpdateOperations(FeatureFlag.class).set("obsolete", false));
+
     // Delete flags that were marked obsolete more than ten days ago
     wingsPersistence.delete(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority)
                                 .filter("obsolete", true)
