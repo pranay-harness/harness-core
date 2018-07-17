@@ -466,3 +466,16 @@ software.wings.service.impl.aws.model.AwsAsgListAllNamesRequest, 5426
 software.wings.service.impl.aws.model.AwsAsgListAllNamesResponse, 5427
 software.wings.service.impl.aws.model.AwsAsgListInstancesRequest, 5428
 software.wings.service.impl.aws.model.AwsAsgListInstancesResponse, 5429
+software.wings.service.impl.aws.model.AwsCodeDeployRequest, 5430
+software.wings.service.impl.aws.model.AwsCodeDeployRequest$AwsCodeDeployRequestType, 5431
+software.wings.service.impl.aws.model.AwsCodeDeployListAppRequest, 5432
+software.wings.service.impl.aws.model.AwsCodeDeployListAppResponse, 5433
+software.wings.service.impl.aws.model.AwsCodeDeployListAppRevisionRequest, 5434
+software.wings.service.impl.aws.model.AwsCodeDeployListAppRevisionResponse, 5435
+software.wings.service.impl.aws.model.AwsCodeDeployS3LocationData, 5436
+software.wings.service.impl.aws.model.AwsCodeDeployListDeploymentConfigRequest, 5437
+software.wings.service.impl.aws.model.AwsCodeDeployListDeploymentConfigResponse, 5438
+software.wings.service.impl.aws.model.AwsCodeDeployListDeploymentGroupRequest, 5439
+software.wings.service.impl.aws.model.AwsCodeDeployListDeploymentGroupResponse, 5440
+software.wings.service.impl.aws.model.AwsCodeDeployListDeploymentInstancesRequest, 5441
+software.wings.service.impl.aws.model.AwsCodeDeployListDeploymentInstancesResponse, 5442

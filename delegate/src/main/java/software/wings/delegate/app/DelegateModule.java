@@ -102,6 +102,7 @@ import software.wings.service.impl.analysis.APMDelegateService;
 import software.wings.service.impl.analysis.APMDelegateServiceImpl;
 import software.wings.service.impl.appdynamics.AppdynamicsDelegateServiceImpl;
 import software.wings.service.impl.aws.delegate.AwsAsgHelperServiceDelegateImpl;
+import software.wings.service.impl.aws.delegate.AwsCodeDeployHelperServiceDelegateImpl;
 import software.wings.service.impl.aws.delegate.AwsEc2HelperServiceDelegateImpl;
 import software.wings.service.impl.aws.delegate.AwsEcrHelperServiceDelegateImpl;
 import software.wings.service.impl.aws.delegate.AwsEcsHelperServiceDelegateImpl;
@@ -134,6 +135,7 @@ import software.wings.service.intfc.NexusBuildService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.aws.delegate.AwsAsgHelperServiceDelegate;
+import software.wings.service.intfc.aws.delegate.AwsCodeDeployHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsEcrHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
@@ -301,6 +303,7 @@ public class DelegateModule extends AbstractModule {
     bind(AwsIamHelperServiceDelegate.class).to(AwsIamHelperServiceDelegateImpl.class);
     bind(AwsEc2HelperServiceDelegate.class).to(AwsEc2HelperServiceDelegateImpl.class);
     bind(AwsAsgHelperServiceDelegate.class).to(AwsAsgHelperServiceDelegateImpl.class);
+    bind(AwsCodeDeployHelperServiceDelegate.class).to(AwsCodeDeployHelperServiceDelegateImpl.class);
 
     try {
       VersionInfoManager versionInfoManager = new VersionInfoManager(IOUtils.toString(

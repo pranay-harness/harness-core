@@ -67,7 +67,6 @@ import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.beans.infrastructure.instance.info.Ec2InstanceInfo;
 import software.wings.beans.infrastructure.instance.key.ContainerInstanceKey;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
-import software.wings.cloudprovider.aws.AwsCodeDeployService;
 import software.wings.dl.PageResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
@@ -78,6 +77,7 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.aws.manager.AwsCodeDeployHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsEc2HelperServiceManager;
 import software.wings.service.intfc.instance.DeploymentService;
 import software.wings.service.intfc.instance.InstanceService;
@@ -98,11 +98,11 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
   @Mock private InstanceService instanceService;
   @Mock private SettingsService settingsService;
   @Mock private AwsHelperService awsHelperService;
-  @Mock private AwsCodeDeployService awsCodeDeployService;
   @Mock private AppService appService;
   @Mock private DeploymentService deploymentService;
   @Mock private AwsUtils mockAwsUtils;
   @Mock private AwsEc2HelperServiceManager mockAwsEc2HelperServiceManager;
+  @Mock private AwsCodeDeployHelperServiceManager mockAwsCodeDeployHelperServiceManager;
   @Mock EnvironmentService environmentService;
   @Mock ServiceResourceService serviceResourceService;
   @InjectMocks @Inject AwsCodeDeployInstanceHandler awsCodeDeployInstanceHandler;
@@ -293,7 +293,9 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
     ec2Instance2.setInstanceId(INSTANCE_3_ID);
     ec2Instance2.setPublicDnsName(PUBLIC_DNS_3);
 
-    doReturn(asList(ec2Instance2)).when(awsCodeDeployService).listDeploymentInstances(any(), any(), any(), any());
+    doReturn(asList(ec2Instance2))
+        .when(mockAwsCodeDeployHelperServiceManager)
+        .listDeploymentInstances(any(), any(), any(), any());
     doReturn(HOST_NAME_IP3).when(awsHelperService).getHostnameFromPrivateDnsName(PRIVATE_DNS_3);
     doReturn(HOST_NAME_IP3).when(mockAwsUtils).getHostnameFromPrivateDnsName(PRIVATE_DNS_3);
 
@@ -385,7 +387,9 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
     ec2Instance2.setInstanceId(INSTANCE_3_ID);
     ec2Instance2.setPublicDnsName(PUBLIC_DNS_3);
 
-    doReturn(asList(ec2Instance2)).when(awsCodeDeployService).listDeploymentInstances(any(), any(), any(), any());
+    doReturn(asList(ec2Instance2))
+        .when(mockAwsCodeDeployHelperServiceManager)
+        .listDeploymentInstances(any(), any(), any(), any());
     doReturn(HOST_NAME_IP3).when(awsHelperService).getHostnameFromPrivateDnsName(PRIVATE_DNS_3);
     doReturn(HOST_NAME_IP3).when(mockAwsUtils).getHostnameFromPrivateDnsName(PRIVATE_DNS_3);
 

@@ -17,8 +17,6 @@ import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuild
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import com.amazonaws.services.codedeploy.model.RevisionLocation;
-import com.amazonaws.services.codedeploy.model.S3Location;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.Key;
@@ -35,6 +33,7 @@ import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.CodeDeployInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
@@ -47,16 +46,17 @@ import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
-import software.wings.cloudprovider.aws.AwsCodeDeployService;
 import software.wings.common.Constants;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
+import software.wings.service.impl.aws.model.AwsCodeDeployS3LocationData;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.aws.manager.AwsCodeDeployHelperServiceManager;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -104,7 +104,7 @@ public class AwsCodeDeployState extends State {
 
   @Attributes(title = "Command") @DefaultValue("Amazon Code Deploy") private String commandName = "Amazon Code Deploy";
 
-  @Inject @Transient protected transient AwsCodeDeployService awsCodeDeployService;
+  @Inject @Transient private transient AwsCodeDeployHelperServiceManager awsCodeDeployHelperServiceManager;
 
   @Inject @Transient protected transient SettingsService settingsService;
 
@@ -237,20 +237,19 @@ public class AwsCodeDeployState extends State {
                                             .build();
     executionDataBuilder.withCodeDeployParams(codeDeployParams);
 
-    RevisionLocation revisionLocation = awsCodeDeployService.getApplicationRevisionList(codeDeployParams.getRegion(),
-        codeDeployParams.getApplicationName(), codeDeployParams.getDeploymentGroupName(), cloudProviderSetting,
-        encryptedDataDetails);
-    if (revisionLocation != null && revisionLocation.getS3Location() != null) {
-      S3Location s3Location = revisionLocation.getS3Location();
+    AwsCodeDeployS3LocationData s3LocationData = awsCodeDeployHelperServiceManager.listAppRevision(
+        (AwsConfig) cloudProviderSetting.getValue(), encryptedDataDetails, codeDeployParams.getRegion(),
+        codeDeployParams.getApplicationName(), codeDeployParams.getDeploymentGroupName());
+    if (s3LocationData != null) {
       CodeDeployParams oldCodeDeployParams =
           CodeDeployParams.builder()
               .applicationName(codeDeployParams.getApplicationName())
               .deploymentGroupName(codeDeployParams.getDeploymentGroupName())
               .deploymentConfigurationName(codeDeployParams.getDeploymentConfigurationName())
               .region(codeDeployParams.getRegion())
-              .bucket(s3Location.getBucket())
-              .key(s3Location.getKey())
-              .bundleType(s3Location.getBundleType())
+              .bucket(s3LocationData.getBucket())
+              .key(s3LocationData.getKey())
+              .bundleType(s3LocationData.getBundleType())
               .enableAutoRollback(enableAutoRollback)
               .autoRollbackConfigurations(autoRollbackConfigurations)
               .fileExistsBehavior(fileExistsBehavior)

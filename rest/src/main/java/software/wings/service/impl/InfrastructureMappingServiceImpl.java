@@ -95,7 +95,6 @@ import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.yaml.Change.ChangeType;
-import software.wings.cloudprovider.aws.AwsCodeDeployService;
 import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.HQuery.QueryChecks;
@@ -120,6 +119,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.aws.manager.AwsCodeDeployHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsEc2HelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsEcsHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsIamHelperServiceManager;
@@ -166,7 +166,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private Map<String, InfrastructureProvider> infrastructureProviders;
   @Inject private AppService appService;
   @Inject private EnvironmentService envService;
-  @Inject private AwsCodeDeployService awsCodeDeployService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private EntityUpdateService entityUpdateService;
   @Inject private ExecutorService executorService;
@@ -186,6 +185,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private AwsEcsHelperServiceManager awsEcsHelperServiceManager;
   @Inject private AwsIamHelperServiceManager awsIamHelperServiceManager;
   @Inject private AwsEc2HelperServiceManager awsEc2HelperServiceManager;
+  @Inject private AwsCodeDeployHelperServiceManager awsCodeDeployHelperServiceManager;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
@@ -1348,8 +1348,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
-      return awsCodeDeployService.listApplications(region, computeProviderSetting,
-          secretManager.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null, null));
+      AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+      return awsCodeDeployHelperServiceManager.listApplications(
+          awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
     }
     return ImmutableList.of();
   }
@@ -1360,8 +1361,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
-      return awsCodeDeployService.listDeploymentGroup(region, applicationName, computeProviderSetting,
-          secretManager.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null, null));
+      AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+      return awsCodeDeployHelperServiceManager.listDeploymentGroups(
+          awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region, applicationName);
     }
     return ImmutableList.of();
   }
@@ -1372,8 +1374,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
-      return awsCodeDeployService.listDeploymentConfiguration(region, computeProviderSetting,
-          secretManager.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null, null));
+      AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+      return awsCodeDeployHelperServiceManager.listDeploymentConfiguration(
+          awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
     }
     return ImmutableList.of();
   }
