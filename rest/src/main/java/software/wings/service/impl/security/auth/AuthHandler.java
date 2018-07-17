@@ -29,6 +29,7 @@ import static software.wings.security.UserRequestContext.EntityInfo;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
@@ -97,6 +98,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 /**
@@ -431,8 +433,7 @@ public class AuthHandler {
     }
     PageRequest<Service> pageRequest =
         aPageRequest().addFilter("appId", Operator.IN, appIds.toArray()).addFieldsIncluded("_id", "appId").build();
-    PageResponse<Service> pageResponse = serviceResourceService.list(pageRequest, false, false);
-    List<Service> list = pageResponse.getResponse();
+    List<Service> list = getAllEntities(pageRequest, () -> serviceResourceService.list(pageRequest, false, false));
     return list.stream().collect(Collectors.groupingBy(Base::getAppId));
   }
 
@@ -442,8 +443,9 @@ public class AuthHandler {
     }
     PageRequest<InfrastructureProvisioner> pageRequest =
         aPageRequest().addFilter("appId", Operator.IN, appIds.toArray()).addFieldsIncluded("_id", "appId").build();
-    PageResponse<InfrastructureProvisioner> pageResponse = infrastructureProvisionerService.list(pageRequest);
-    List<InfrastructureProvisioner> list = pageResponse.getResponse();
+
+    List<InfrastructureProvisioner> list =
+        getAllEntities(pageRequest, () -> infrastructureProvisionerService.list(pageRequest));
     return list.stream().collect(Collectors.groupingBy(Base::getAppId));
   }
 
@@ -455,9 +457,37 @@ public class AuthHandler {
                                                .addFilter("appId", Operator.IN, appIds.toArray())
                                                .addFieldsIncluded("_id", "appId", "environmentType")
                                                .build();
-    PageResponse<Environment> pageResponse = environmentService.list(pageRequest, false);
-    List<Environment> list = pageResponse.getResponse();
+
+    List<Environment> list = getAllEntities(pageRequest, () -> environmentService.list(pageRequest, false));
+
     return list.stream().collect(Collectors.groupingBy(Base::getAppId));
+  }
+
+  <T extends Base> List<T> getAllEntities(PageRequest<T> pageRequest, Callable<PageResponse<T>> callable) {
+    List<T> result = Lists.newArrayList();
+    long currentPageSize;
+    long total = 0;
+    long countSoFar = 0;
+
+    try {
+      do {
+        pageRequest.setOffset(Long.toString(countSoFar));
+        PageResponse<T> pageResponse = callable.call();
+        total = pageResponse.getTotal();
+        List<T> listFromResponse = pageResponse.getResponse();
+        if (isEmpty(listFromResponse)) {
+          break;
+        }
+        currentPageSize = listFromResponse.size();
+        countSoFar += currentPageSize;
+        result.addAll(listFromResponse);
+      } while (countSoFar < total);
+
+    } catch (Exception e) {
+      logger.error("Error while retrieving the entities for auth mgmt");
+      throw new WingsException(e);
+    }
+    return result;
   }
 
   private Map<String, List<Base>> getAppIdWorkflowMap(Set<String> appIds) {
@@ -471,8 +501,8 @@ public class AuthHandler {
             .addFieldsIncluded("_id", "appId", "envId", "templatized", "templateExpressions")
             .build();
 
-    PageResponse<Workflow> pageResponse = workflowService.listWorkflowsWithoutOrchestration(pageRequest);
-    List<Workflow> list = pageResponse.getResponse();
+    List<Workflow> list =
+        getAllEntities(pageRequest, () -> workflowService.listWorkflowsWithoutOrchestration(pageRequest));
     return list.stream().collect(Collectors.groupingBy(Base::getAppId));
   }
 
@@ -481,8 +511,7 @@ public class AuthHandler {
       return new HashMap<>();
     }
     PageRequest<Pipeline> pageRequest = aPageRequest().addFilter("appId", Operator.IN, appIds.toArray()).build();
-    PageResponse<Pipeline> pageResponse = pipelineService.listPipelines(pageRequest);
-    List<Pipeline> list = pageResponse.getResponse();
+    List<Pipeline> list = getAllEntities(pageRequest, () -> pipelineService.listPipelines(pageRequest));
     return list.stream().collect(Collectors.groupingBy(Base::getAppId));
   }
 
@@ -563,8 +592,7 @@ public class AuthHandler {
   public Set<String> getEnvIdsByFilter(String appId, EnvFilter envFilter) {
     PageRequest<Environment> pageRequest =
         aPageRequest().addFilter("appId", Operator.EQ, appId).addFieldsIncluded("_id", "environmentType").build();
-    PageResponse<Environment> pageResponse = environmentService.list(pageRequest, false);
-    List<Environment> envList = pageResponse.getResponse();
+    List<Environment> envList = getAllEntities(pageRequest, () -> environmentService.list(pageRequest, false));
 
     return getEnvIdsByFilter(envList, envFilter);
   }
@@ -574,25 +602,6 @@ public class AuthHandler {
     User user = UserThreadLocal.get();
     if (user != null && user.getUserRequestContext() != null) {
       setEntityIdFilter(requiredPermissionAttributes, user.getUserRequestContext(), appIds);
-    }
-  }
-
-  public void setAppIdFilterIfUserAction() {
-    User user = UserThreadLocal.get();
-    if (user != null && user.getUserRequestContext() != null) {
-      UserRequestContext userRequestContext = user.getUserRequestContext();
-      UserPermissionInfo userPermissionInfo = userRequestContext.getUserPermissionInfo();
-      if (userPermissionInfo == null) {
-        return;
-      }
-      Map<String, AppPermissionSummaryForUI> appPermissionMap = userPermissionInfo.getAppPermissionMap();
-
-      if (appPermissionMap == null) {
-        return;
-      }
-
-      Set<String> appIdSet = appPermissionMap.keySet();
-      setAppIdFilter(user.getUserRequestContext(), appIdSet);
     }
   }
 
