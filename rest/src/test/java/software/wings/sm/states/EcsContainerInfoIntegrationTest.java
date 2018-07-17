@@ -11,6 +11,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
+import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -23,12 +24,12 @@ import org.mockito.Mock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
+import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement.PhaseElementBuilder;
 import software.wings.api.ServiceElement;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.DelegateTask.SyncTaskContext;
-import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
@@ -91,8 +92,8 @@ public class EcsContainerInfoIntegrationTest extends WingsBaseTest {
   @Test
   public void testGetLastExecutionNodesECS() throws NoSuchAlgorithmException, KeyManagementException {
     AwsConfig awsConfig = AwsConfig.builder()
-                              .accessKey("AKIAIKL7FYYF2TIYHCLQ")
-                              .secretKey("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".toCharArray())
+                              .accessKey("AKIAI6QUDIAUPQ2VC63A")
+                              .secretKey("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".toCharArray())
                               .accountId(accountId)
                               .build();
     SettingAttribute settingAttribute =
@@ -122,14 +123,15 @@ public class EcsContainerInfoIntegrationTest extends WingsBaseTest {
     doReturn(appId).when(context).getAppId();
     doReturn(UUID.randomUUID().toString()).when(context).getWorkflowExecutionId();
     when(infraMappingService.get(anyString(), anyString()))
-        .thenReturn(EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping()
-                        .withClusterName("harness-qa")
+        .thenReturn(anEcsInfrastructureMapping()
+                        .withClusterName("Learning-Engine-Experimental")
                         .withRegion(Regions.US_EAST_1.getName())
+                        .withDeploymentType(DeploymentType.ECS.name())
                         .withComputeProviderSettingId(awsConfigid)
                         .build());
     when(containerInstanceHandler.getContainerServiceNames(anyObject(), anyString(), anyString()))
-        .thenReturn(Sets.newHashSet("do_not_delete__ecs__container__integration__test__Prod__1",
-            "do_not_delete__ecs__container__integration__test__Prod__2"));
+        .thenReturn(Sets.newHashSet(
+            "Harness__Verification__Learning__Engine__ECS__2", "Harness__Verification__Learning__Engine__ECS__3"));
 
     SplunkV2State splunkV2State = spy(new SplunkV2State("SplunkState"));
     doReturn(workflowId).when(splunkV2State).getWorkflowId(context);

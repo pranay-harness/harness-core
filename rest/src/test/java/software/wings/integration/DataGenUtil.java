@@ -176,7 +176,7 @@ public class DataGenUtil extends BaseIntegrationTest {
   private static final int NUM_ENV_PER_APP = 0; /* Max 6. 4 are created by default */
   private static final int NUM_TAG_GROUPS_PER_ENV = 3; /* Max 10   */
   private static final int TAG_HIERARCHY_DEPTH = 3; /* Max 10   */
-  public static final String AWS_NON_PROD = "Aws non-prod";
+  public static final String AWS_PLAY_GROUND = "aws-playground";
   public static final String WINGS_KEY = "Wings Key";
 
   /**
@@ -515,13 +515,13 @@ public class DataGenUtil extends BaseIntegrationTest {
     SettingAttribute awsNonProdAttribute =
         aSettingAttribute()
             .withCategory(Category.CLOUD_PROVIDER)
-            .withName(AWS_NON_PROD)
+            .withName(AWS_PLAY_GROUND)
             .withAppId(GLOBAL_APP_ID)
             .withEnvId(GLOBAL_ENV_ID)
             .withAccountId(accountId)
             .withValue(AwsConfig.builder()
-                           .accessKey("AKIAIKL7FYYF2TIYHCLQ")
-                           .secretKey("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".toCharArray())
+                           .accessKey("AKIAJYPT24SZETVEFYMQ")
+                           .secretKey("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".toCharArray())
                            .accountId(accountId)
                            .build())
             .build();

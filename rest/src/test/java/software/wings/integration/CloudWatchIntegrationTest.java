@@ -3,7 +3,7 @@ package software.wings.integration;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static software.wings.integration.DataGenUtil.AWS_NON_PROD;
+import static software.wings.integration.DataGenUtil.AWS_PLAY_GROUND;
 
 import com.google.inject.Inject;
 
@@ -34,7 +34,8 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
   public void setUp() throws Exception {
     super.setUp();
     loginAdminUser();
-    SettingAttribute settingAttribute = settingsService.getByName(accountId, Application.GLOBAL_APP_ID, AWS_NON_PROD);
+    SettingAttribute settingAttribute =
+        settingsService.getByName(accountId, Application.GLOBAL_APP_ID, AWS_PLAY_GROUND);
     assertNotNull(settingAttribute);
     awsConfigId = settingAttribute.getUuid();
     assertTrue(isNotEmpty(awsConfigId));
