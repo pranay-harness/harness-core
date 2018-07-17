@@ -44,7 +44,7 @@ import javax.ws.rs.ext.Provider;
  */
 @Singleton
 @Provider
-@Priority(1)
+@Priority(1500) // Authorization > Audit > Authentication
 public class AuditRequestFilter implements ContainerRequestFilter {
   private static final Logger logger = LoggerFactory.getLogger(AuditRequestFilter.class);
   @Context private ResourceContext resourceContext;
