@@ -29,6 +29,8 @@ import com.google.inject.Singleton;
 import io.harness.data.structure.ListUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.Base;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
@@ -55,6 +57,7 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 @ValidateOnExecution
 public class TemplateFolderServiceImpl implements TemplateFolderService {
+  private static final Logger logger = LoggerFactory.getLogger(TemplateFolderServiceImpl.class);
   @Inject private WingsPersistence wingsPersistence;
   @Inject private TemplateGalleryService templateGalleryService;
   @Inject private TemplateService templateService;
@@ -256,7 +259,8 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
           templateFolder.setNodeType(FOLDER.name());
           templateFolder.addChild(folder);
         } else {
-          throw new WingsException("Failed to construct tree from partial list", USER);
+          logger.error("Failed to construct tree from partial list");
+          //          throw new WingsException("Failed to construct tree from partial list", USER);
         }
       } else {
         folder.setNodeType(FOLDER.name());
