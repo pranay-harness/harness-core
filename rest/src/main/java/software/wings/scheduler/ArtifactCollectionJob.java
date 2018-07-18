@@ -41,10 +41,9 @@ public class ArtifactCollectionJob implements Job {
   public static final Duration timeout = Duration.ofMinutes(10);
 
   @Inject private ArtifactStreamService artifactStreamService;
-  @Inject private ExecutorService executorService;
   @Inject private TriggerService triggerService;
   @Inject private ArtifactCollectionService artifactCollectionService;
-
+  @Inject @Named("artifactCollectionExecutor") private ExecutorService artifactCollectionExecutor;
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
   public static void addDefaultJob(QuartzScheduler jobScheduler, String appId, String artifactStreamId) {
@@ -73,23 +72,24 @@ public class ArtifactCollectionJob implements Job {
   public void execute(JobExecutionContext jobExecutionContext) {
     String artifactStreamId = jobExecutionContext.getMergedJobDataMap().getString(ARTIFACT_STREAM_ID_KEY);
     String appId = jobExecutionContext.getMergedJobDataMap().getString(APP_ID_KEY);
-    executorService.submit(() -> executeJobAsync(appId, artifactStreamId));
-  }
-
-  private void executeJobAsync(String appId, String artifactStreamId) {
-    List<Artifact> artifacts = null;
     ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
     if (artifactStream == null) {
       jobScheduler.deleteJob(artifactStreamId, GROUP);
       return;
     }
+    artifactCollectionExecutor.submit(() -> executeJobAsync(appId, artifactStreamId));
+  }
+
+  private void executeJobAsync(String appId, String artifactStreamId) {
+    List<Artifact> artifacts = null;
     try {
       artifacts = artifactCollectionService.collectNewArtifacts(appId, artifactStreamId);
     } catch (WingsException exception) {
-      logger.warn("Failed to collect artifacts for appId {}, artifact stream {}", appId, artifactStream.getUuid());
+      logger.warn("Failed to collect artifacts for appId {}, artifact stream {}. Reason {}", appId, artifactStreamId,
+          exception.getMessage());
       exception.logProcessedMessages(MANAGER, logger);
     } catch (Exception e) {
-      log(appId, artifactStream, new WingsException(e));
+      log(appId, artifactStreamId, new WingsException(e));
     }
     if (isNotEmpty(artifacts)) {
       logger.info("[{}] new artifacts collected", artifacts.size());
@@ -100,8 +100,7 @@ public class ArtifactCollectionJob implements Job {
     }
   }
 
-  private void log(String appId, ArtifactStream artifactStream, WingsException exception) {
-    logger.warn(
-        "Failed to collect artifacts for appId {}, artifact stream {}", appId, artifactStream.getUuid(), exception);
+  private void log(String appId, String artifactStreamId, WingsException exception) {
+    logger.warn("Failed to collect artifacts for appId {}, artifact stream {}", appId, artifactStreamId, exception);
   }
 }

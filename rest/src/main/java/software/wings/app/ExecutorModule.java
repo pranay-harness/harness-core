@@ -2,9 +2,11 @@ package software.wings.app;
 
 import static software.wings.common.thread.ThreadPool.create;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 
+import software.wings.common.thread.ThreadPool;
 import software.wings.utils.ManagedExecutorService;
 import software.wings.utils.ManagedScheduledExecutorService;
 
@@ -58,5 +60,12 @@ public class ExecutorModule extends AbstractModule {
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("gitChangeSet"))
         .toInstance(new ManagedScheduledExecutorService("GitChangeSet"));
+    bind(ExecutorService.class)
+        .annotatedWith(Names.named("artifactCollectionExecutor"))
+        .toInstance(ThreadPool.create(10, 50, 500L, TimeUnit.MILLISECONDS,
+            new ThreadFactoryBuilder()
+                .setNameFormat("Artifact-Collection-%d")
+                .setPriority(Thread.MIN_PRIORITY)
+                .build()));
   }
 }
