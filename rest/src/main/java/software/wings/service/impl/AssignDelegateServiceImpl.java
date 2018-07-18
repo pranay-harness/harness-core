@@ -40,6 +40,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   private static final Logger logger = LoggerFactory.getLogger(AssignDelegateServiceImpl.class);
 
   private static final long WHITELIST_TTL = TimeUnit.HOURS.toMillis(6);
+  private static final long BLACKLIST_TTL = TimeUnit.MINUTES.toMillis(5);
 
   @Inject private DelegateService delegateService;
   @Inject private EnvironmentService environmentService;
@@ -121,6 +122,30 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
       }
     } catch (Exception e) {
       logger.error("Error checking whether delegate is whitelisted for task {}", task.getUuid(), e);
+    }
+    return false;
+  }
+
+  @Override
+  public boolean shouldValidate(DelegateTask task, String delegateId) {
+    try {
+      for (String criteria : TaskType.valueOf(task.getTaskType()).getCriteria(task, injector)) {
+        if (isNotBlank(criteria)) {
+          DelegateConnectionResult result = wingsPersistence.createQuery(DelegateConnectionResult.class)
+                                                .filter("accountId", task.getAccountId())
+                                                .filter("delegateId", delegateId)
+                                                .filter("criteria", criteria)
+                                                .get();
+          if (result == null || result.isValidated() || clock.millis() - result.getLastUpdatedAt() > BLACKLIST_TTL
+              || isEmpty(connectedWhitelistedDelegates(task))) {
+            return true;
+          }
+        } else {
+          return true;
+        }
+      }
+    } catch (Exception e) {
+      logger.error("Error checking whether delegate should validate task {}", task.getUuid(), e);
     }
     return false;
   }
