@@ -21,6 +21,8 @@ public interface AssignDelegateService {
 
   List<String> connectedWhitelistedDelegates(DelegateTask task);
 
+  void refreshWhitelist(DelegateTask task, String delegateId);
+
   void saveConnectionResults(List<DelegateConnectionResult> results);
 
   void clearConnectionResults(String delegateId);

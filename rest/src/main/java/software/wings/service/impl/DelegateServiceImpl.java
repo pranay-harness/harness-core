@@ -1117,6 +1117,7 @@ public class DelegateServiceImpl implements DelegateService {
         delegateTask.setStatus(FINISHED);
         wingsPersistence.save(delegateTask);
       }
+      assignDelegateService.refreshWhitelist(delegateTask, delegateId);
     } else {
       logger.warn("No delegate task found: {}", taskId);
     }

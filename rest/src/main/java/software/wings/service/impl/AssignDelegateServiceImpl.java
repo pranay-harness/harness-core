@@ -12,6 +12,8 @@ import com.google.inject.Singleton;
 
 import com.mongodb.DuplicateKeyException;
 import org.mongodb.morphia.Key;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Delegate;
@@ -183,6 +185,31 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
       logger.error("Error checking for whitelisted delegates for task {}", task.getUuid(), e);
     }
     return delegateIds;
+  }
+
+  @Override
+  public void refreshWhitelist(DelegateTask task, String delegateId) {
+    try {
+      for (String criteria : TaskType.valueOf(task.getTaskType()).getCriteria(task, injector)) {
+        if (isNotBlank(criteria)) {
+          Query<DelegateConnectionResult> query = wingsPersistence.createQuery(DelegateConnectionResult.class)
+                                                      .filter("accountId", task.getAccountId())
+                                                      .filter("delegateId", delegateId)
+                                                      .filter("criteria", criteria);
+          UpdateOperations<DelegateConnectionResult> updateOperations =
+              wingsPersistence.createUpdateOperations(DelegateConnectionResult.class)
+                  .set("lastUpdatedAt", clock.millis());
+          DelegateConnectionResult result = wingsPersistence.getDatastore().findAndModify(query, updateOperations);
+          if (result != null) {
+            logger.info("Whitelist entry refreshed for task {} and delegate {}", task.getUuid(), delegateId);
+          } else {
+            logger.info("Whitelist entry was not updated for task {} and delegate {}", task.getUuid(), delegateId);
+          }
+        }
+      }
+    } catch (Exception e) {
+      logger.error("Error refreshing whitelist entry for task {}", task.getUuid(), e);
+    }
   }
 
   @Override
