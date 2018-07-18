@@ -8,6 +8,7 @@ import migrations.all.AddValidUntilToActivity;
 import migrations.all.AddValidUntilToAlert;
 import migrations.all.AddValidUntilToDelegateConnectionResults;
 import migrations.all.AddValidUntilToDelegateTask;
+import migrations.all.AppKeywordsMigration;
 import migrations.all.DirectKubernetesOrphanRemoval;
 import migrations.all.DirectKubernetesOrphanRemovalMirgation;
 import migrations.all.DropDelegateScopeCollectionMigration;
@@ -94,6 +95,7 @@ public class MigrationList {
         .add(Pair.of(171, DropOldCollectionMigration.class))
         .add(Pair.of(172, SystemTemplateGalleryMigration.class))
         .add(Pair.of(173, SystemTemplateGalleryMigration.class))
+        .add(Pair.of(174, AppKeywordsMigration.class))
         .build();
   }
 }
