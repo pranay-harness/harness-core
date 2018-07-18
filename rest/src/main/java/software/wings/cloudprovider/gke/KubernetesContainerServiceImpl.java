@@ -353,7 +353,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     Set<String> originalPodNames = originalPods.stream().map(pod -> pod.getMetadata().getName()).collect(toSet());
     List<ContainerInfo> containerInfos = new ArrayList<>();
     boolean hasErrors = false;
-    if (pods.size() != desiredCount) {
+    if (wait && pods.size() != desiredCount) {
       hasErrors = true;
       String msg = format("Pod count did not reach desired count (%d/%d)", pods.size(), desiredCount);
       logger.error(msg);
