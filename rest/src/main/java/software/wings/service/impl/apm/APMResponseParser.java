@@ -240,14 +240,18 @@ public class APMResponseParser {
         if (group.equals("*")) {
           return jsonObject;
         }
-        Object val = ((JSONArray) jsonObject).get(Integer.parseInt(group));
-        if (val instanceof JSONArray) {
-          return ((JSONArray) jsonObject).getJSONArray(Integer.parseInt(group));
-        }
-        return val;
+        return ((JSONArray) jsonObject).get(Integer.parseInt(group));
 
       } else {
-        return ((JSONObject) jsonObject).getJSONArray(field.substring(0, field.length() - 3));
+        JSONArray array = ((JSONObject) jsonObject).getJSONArray(field.substring(0, field.length() - 3));
+        if (field.endsWith("[*]")) {
+          return array;
+        }
+        // return the actual value of the element instead of the whole object.
+        Matcher matcher = p.matcher(field);
+        matcher.find();
+        String group = matcher.group(1);
+        return array.get(Integer.parseInt(group));
       }
     } else {
       return ((JSONObject) jsonObject).get(field);
