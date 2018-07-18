@@ -126,6 +126,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     AuthToken authToken = authService.validateToken(tokenString);
     User user = authToken.getUser();
     if (user != null) {
+      user.setToken(tokenString);
       return user;
     }
     throw new WingsException(INVALID_TOKEN, USER);

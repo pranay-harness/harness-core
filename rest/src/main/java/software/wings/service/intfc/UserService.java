@@ -254,12 +254,7 @@ public interface UserService {
    */
   boolean updatePassword(String resetPasswordToken, char[] password);
 
-  /**
-   * Logout.
-   *
-   * @param userId the user id
-   */
-  void logout(String userId);
+  void logout(User user);
 
   /**
    * Generate zendesk sso jwt zendesk sso login response.

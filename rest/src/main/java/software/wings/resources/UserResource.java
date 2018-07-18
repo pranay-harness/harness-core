@@ -500,7 +500,8 @@ public class UserResource {
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.LOGGED_IN, skipAuth = true)
   public RestResponse logout(@PathParam("userId") String userId) {
-    userService.logout(userId);
+    User user = UserThreadLocal.get();
+    userService.logout(user);
     return new RestResponse();
   }
 

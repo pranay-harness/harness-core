@@ -74,6 +74,8 @@ public interface AuthService {
 
   void invalidateAllTokensForUser(String userId);
 
+  void invalidateToken(String utoken);
+
   void validateExternalServiceToken(String accountId, String tokenString);
 
   void validateLearningEngineServiceToken(String learningEngineServiceToken);
