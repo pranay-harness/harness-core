@@ -117,26 +117,29 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
       throw new WingsException(GENERAL_ERROR).addParam("message", "Failed to resize controller");
     }
 
-    if (desiredCount > 0 && desiredCount > previousCount && contextData.deployingToHundredPercent
-        && resizeParams.isUseAutoscaler()) {
-      HorizontalPodAutoscaler hpa = kubernetesContainerService.createOrReplaceAutoscaler(
-          kubernetesConfig, encryptedDataDetails, resizeParams.getAutoscalerYaml());
-      if (hpa != null) {
-        String hpaName = hpa.getMetadata().getName();
-        executionLogCallback.saveExecutionLog("\nHorizontal pod autoscaler enabled: " + hpaName);
-      }
-    }
-
     return containerInfos;
   }
 
   protected void postExecution(
       ContextData contextData, List<ContainerServiceData> allData, ExecutionLogCallback executionLogCallback) {
     KubernetesResizeParams resizeParams = (KubernetesResizeParams) contextData.resizeParams;
+    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
+    KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
+    boolean executedSomething = false;
+
+    // Enable HPA
+    if (contextData.deployingToHundredPercent && resizeParams.isUseAutoscaler()) {
+      HorizontalPodAutoscaler hpa = kubernetesContainerService.createOrReplaceAutoscaler(
+          kubernetesConfig, encryptedDataDetails, resizeParams.getAutoscalerYaml());
+      if (hpa != null) {
+        String hpaName = hpa.getMetadata().getName();
+        executionLogCallback.saveExecutionLog("Horizontal pod autoscaler enabled: " + hpaName + "\n");
+        executedSomething = true;
+      }
+    }
+
     // Edit weights for Istio route rule if applicable
     if (resizeParams.isUseIstioRouteRule()) {
-      List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
-      KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
       String controllerName = resizeParams.getContainerServiceName();
       String kubernetesServiceName =
           getServiceNameFromControllerName(controllerName, resizeParams.isUseDashInHostName());
@@ -155,6 +158,10 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
         printRouteRuleWeights(
             existingRouteRule, controllerPrefix, resizeParams.isUseDashInHostName(), executionLogCallback);
       }
+      executionLogCallback.saveExecutionLog("");
+      executedSomething = true;
+    }
+    if (executedSomething) {
       executionLogCallback.saveExecutionLog(DASH_STRING + "\n");
     }
   }
