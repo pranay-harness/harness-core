@@ -83,8 +83,8 @@ public class DatadogState extends AbstractMetricAnalysisState {
   @Attributes(required = true, title = "Metrics") private String metrics;
 
   @EnumData(enumDataProvider = AnalysisToleranceProvider.class)
-  @Attributes(required = true, title = "Failure Criteria")
-  @DefaultValue("LOW")
+  @Attributes(required = true, title = "Algorithm Sensitivity")
+  @DefaultValue("MEDIUM")
   public AnalysisTolerance getAnalysisTolerance() {
     if (isBlank(tolerance)) {
       return AnalysisTolerance.LOW;
