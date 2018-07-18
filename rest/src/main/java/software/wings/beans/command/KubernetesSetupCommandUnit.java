@@ -361,11 +361,28 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
       long replaceControllerStartTime = clock.millis();
 
+      HasMetadata definition = createKubernetesControllerDefinition(kubernetesContainerTask, containerServiceName,
+          controllerLabels, setupParams, registrySecretName, configMap, secretMap, originalPods, executionLogCallback);
+
+      if (definition instanceof StatefulSet) {
+        HasMetadata existing = kubernetesContainerService.getController(
+            kubernetesConfig, encryptedDataDetails, definition.getMetadata().getName());
+        if (existing != null && existing.getKind().equals("StatefulSet")) {
+          StatefulSet newDefinition = (StatefulSet) definition;
+          StatefulSet mergedDefinition = (StatefulSet) existing;
+          mergedDefinition.getSpec().setReplicas(newDefinition.getSpec().getReplicas());
+          mergedDefinition.getSpec().setTemplate(newDefinition.getSpec().getTemplate());
+          mergedDefinition.getSpec().getTemplate().getMetadata().setLabels(
+              mergedDefinition.getSpec().getSelector().getMatchLabels());
+          mergedDefinition.getSpec().setUpdateStrategy(newDefinition.getSpec().getUpdateStrategy());
+          definition = mergedDefinition;
+        }
+      }
+
+      executionLogCallback.saveExecutionLog("Creating controller:\n\n" + toDisplayYaml(definition));
       // Setup controller
       HasMetadata controller =
-          kubernetesContainerService.createOrReplaceController(kubernetesConfig, encryptedDataDetails,
-              createKubernetesControllerDefinition(kubernetesContainerTask, containerServiceName, controllerLabels,
-                  setupParams, registrySecretName, configMap, secretMap, originalPods, executionLogCallback));
+          kubernetesContainerService.createOrReplaceController(kubernetesConfig, encryptedDataDetails, definition);
 
       // Delete old autoscaler
       if (isNotBlank(lastAutoscaler)) {
@@ -1432,8 +1449,6 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
     configureTypeSpecificSpecs(
         controllerLabels, controller, configMap, secretMap, setupParams, originalPods, executionLogCallback);
-
-    executionLogCallback.saveExecutionLog("Creating controller:\n\n" + toDisplayYaml(controller));
     return controller;
   }
 
