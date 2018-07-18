@@ -263,10 +263,10 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
         continue;
       }
 
-      JSONObject hostObject = null;
+      JSONObject hostObject = source;
       String[] hostPaths = hostnameField.split("\\.");
       for (int j = 0; j < hostPaths.length - 1; ++j) {
-        hostObject = source.getJSONObject(hostPaths[j]);
+        hostObject = hostObject.getJSONObject(hostPaths[j]);
       }
       final String host =
           hostObject == null ? source.getString(hostnameField) : hostObject.getString(hostPaths[hostPaths.length - 1]);
