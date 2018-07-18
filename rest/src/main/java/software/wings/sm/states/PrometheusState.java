@@ -103,7 +103,7 @@ public class PrometheusState extends AbstractMetricAnalysisState {
     final PrometheusConfig prometheusConfig = (PrometheusConfig) settingAttribute.getValue();
 
     metricAnalysisService.saveMetricTemplates(
-        StateType.PROMETHEUS, context.getStateExecutionInstanceId(), getMetricTemplates());
+        context.getAppId(), StateType.PROMETHEUS, context.getStateExecutionInstanceId(), getMetricTemplates());
     final long dataCollectionStartTimeStamp = Timestamp.minuteBoundary(System.currentTimeMillis());
     final PrometheusDataCollectionInfo dataCollectionInfo = PrometheusDataCollectionInfo.builder()
                                                                 .prometheusConfig(prometheusConfig)

@@ -144,8 +144,8 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
     final long dataCollectionStartTimeStamp = Timestamp.minuteBoundary(System.currentTimeMillis());
     Map<AwsNameSpace, List<CloudWatchMetric>> cloudWatchMetrics = cloudWatchService.getCloudWatchMetrics();
 
-    metricAnalysisService.saveMetricTemplates(
-        StateType.CLOUD_WATCH, context.getStateExecutionInstanceId(), getMetricTemplates(cloudWatchMetrics));
+    metricAnalysisService.saveMetricTemplates(context.getAppId(), StateType.CLOUD_WATCH,
+        context.getStateExecutionInstanceId(), getMetricTemplates(cloudWatchMetrics));
     final CloudWatchDataCollectionInfo dataCollectionInfo =
         CloudWatchDataCollectionInfo.builder()
             .awsConfig(awsConfig)

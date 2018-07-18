@@ -74,7 +74,7 @@ public class MetricDataAnalysisImplTest extends WingsBaseTest {
         appId, StateType.NEW_RELIC, serviceId, "default", "txn1", "metric1"));
 
     Map<String, Map<String, TimeSeriesMetricDefinition>> metricTemplates =
-        metricDataAnalysisService.getMetricTemplate(StateType.NEW_RELIC, stateExecutionId, serviceId, "default");
+        metricDataAnalysisService.getMetricTemplate(appId, StateType.NEW_RELIC, stateExecutionId, serviceId, "default");
 
     assertNotNull(metricTemplates.get("txn1"));
     assertEquals(metricTemplates.get("txn1").get("metric1").getCustomThresholds().get(0), threshold);
