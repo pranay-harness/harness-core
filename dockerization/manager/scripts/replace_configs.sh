@@ -53,6 +53,10 @@ fi
 
 sed -i "s|91b01067de772de3a12d99bddeab84d82a9f05c8|${NEWRELIC_LICENSE_KEY}|" /opt/harness/newrelic.yml
 
+if [[ "${DISABLE_NEW_RELIC}" == "true" ]]; then
+    sed -i "s|agent_enabled: true|agent_enabled: false|" /opt/harness/newrelic.yml
+fi
+
 if [[ -v "jwtPasswordSecret" ]]; then
     sed -i "s|a8SGF1CQMHN6pnCJgz32kLn1tebrXnw6MtWto8xI|${jwtPasswordSecret}|" /opt/harness/config.yml
 fi
