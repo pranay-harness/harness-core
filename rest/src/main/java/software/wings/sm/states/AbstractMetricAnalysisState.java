@@ -237,6 +237,8 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     MetricDataAnalysisResponse executionResponse = (MetricDataAnalysisResponse) response.values().iterator().next();
 
     if (ExecutionStatus.isBrokeStatus(executionResponse.getExecutionStatus())) {
+      getLogger().info(
+          "for {} got failed execution response {}", context.getStateExecutionInstanceId(), executionResponse);
       continuousVerificationService.setMetaDataExecutionStatus(
           context.getStateExecutionInstanceId(), ExecutionStatus.FAILED);
       return anExecutionResponse()
@@ -249,12 +251,15 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     List<NewRelicMetricAnalysisRecord> metricAnalysisRecords = metricAnalysisService.getMetricsAnalysis(
         context.getAppId(), context.getStateExecutionInstanceId(), context.getWorkflowExecutionId());
     if (isEmpty(metricAnalysisRecords)) {
+      getLogger().info("for {} No analysis summary.", context.getStateExecutionInstanceId());
       continuousVerificationService.setMetaDataExecutionStatus(
           context.getStateExecutionInstanceId(), ExecutionStatus.SUCCESS);
       return generateAnalysisResponse(
           context, ExecutionStatus.SUCCESS, "No data found for comparison. Please check load. Skipping analysis.");
     }
 
+    getLogger().info("for {} found analysisSummary with analysis records {}", context.getStateExecutionInstanceId(),
+        metricAnalysisRecords.size());
     for (NewRelicMetricAnalysisRecord metricAnalysisRecord : metricAnalysisRecords) {
       if (metricAnalysisRecord.getRiskLevel() == RiskLevel.HIGH) {
         executionStatus = ExecutionStatus.FAILED;
