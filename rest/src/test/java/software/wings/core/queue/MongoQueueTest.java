@@ -5,12 +5,14 @@ import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.joor.Reflect.on;
 
 import com.google.common.base.MoreObjects;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.rule.RepeatRule.Repeat;
+import io.harness.version.VersionInfoManager;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -30,6 +32,7 @@ import java.util.Objects;
  */
 public class MongoQueueTest extends WingsBaseTest {
   @Inject @Named("primaryDatastore") private AdvancedDatastore datastore;
+  @Inject private VersionInfoManager versionInfoManager;
 
   private MongoQueueImpl<QueuableObject> queue;
 
@@ -41,6 +44,7 @@ public class MongoQueueTest extends WingsBaseTest {
   @Before
   public void setup() throws UnknownHostException {
     queue = new MongoQueueImpl<>(QueuableObject.class, datastore);
+    on(queue).set("versionInfoManager", versionInfoManager);
   }
 
   /**
@@ -370,6 +374,7 @@ public class MongoQueueTest extends WingsBaseTest {
     assertThat(actualCreated).isAfterOrEqualsTo(timeBeforeRequeue).isBeforeOrEqualsTo(new Date());
 
     QueuableObject expected = new QueuableObject(0);
+    expected.setVersion(versionInfoManager.getVersionInfo().getVersion());
     expected.setEarliestGet(expectedEarliestGet);
     expected.setPriority(expectedPriority);
     expected.setCreated(actualCreated);
@@ -433,6 +438,7 @@ public class MongoQueueTest extends WingsBaseTest {
     assertThat(actualCreated).isAfterOrEqualsTo(timeBeforeSend).isBeforeOrEqualsTo(new Date());
 
     QueuableObject expected = new QueuableObject(1);
+    expected.setVersion(versionInfoManager.getVersionInfo().getVersion());
     expected.setEarliestGet(expectedEarliestGet);
     expected.setPriority(expectedPriority);
     expected.setCreated(actualCreated);
@@ -447,6 +453,7 @@ public class MongoQueueTest extends WingsBaseTest {
   public void shouldSendAndGetMessageWithEntityReference() {
     Queue<TestQueuableWithEntity> entityQueue;
     entityQueue = new MongoQueueImpl<>(TestQueuableWithEntity.class, datastore);
+    on(entityQueue).set("versionInfoManager", versionInfoManager);
 
     TestEntity testEntity = new TestEntity(1);
     datastore.save(testEntity);
@@ -460,6 +467,28 @@ public class MongoQueueTest extends WingsBaseTest {
     TestQueuableWithEntity actual = entityQueue.get();
 
     assertThat(actual.getEntity()).isEqualTo(testEntity);
+  }
+
+  @Test
+  public void shouldFilterWithVersion() {
+    Queue<QueuableObject> versionQueue;
+    versionQueue = new MongoQueueImpl<>(QueuableObject.class, datastore, 5, true);
+    on(versionQueue).set("versionInfoManager", new VersionInfoManager("version   : 1.0.0"));
+    QueuableObject message = new QueuableObject(1);
+    versionQueue.send(message);
+    on(versionQueue).set("versionInfoManager", new VersionInfoManager("version   : 2.0.0"));
+    assertThat(versionQueue.get()).isNull();
+  }
+
+  @Test
+  public void shouldNotFilterWithVersion() {
+    Queue<QueuableObject> versionQueue;
+    versionQueue = new MongoQueueImpl<>(QueuableObject.class, datastore, 5, false);
+    on(versionQueue).set("versionInfoManager", new VersionInfoManager("version   : 1.0.0"));
+    QueuableObject message = new QueuableObject(1);
+    versionQueue.send(message);
+    on(versionQueue).set("versionInfoManager", new VersionInfoManager("version   : 2.0.0"));
+    assertThat(versionQueue.get()).isNotNull();
   }
 
   @Entity(value = "testEntity")

@@ -4,6 +4,7 @@ import static com.google.common.collect.ImmutableMap.of;
 import static com.google.inject.matcher.Matchers.not;
 import static java.time.Duration.ofSeconds;
 import static software.wings.app.LoggingInitializer.initializeLogging;
+import static software.wings.beans.FeatureName.MONGO_QUEUE_VERSIONING;
 import static software.wings.common.Constants.USER_CACHE;
 
 import com.google.inject.AbstractModule;
@@ -31,6 +32,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
@@ -188,7 +190,10 @@ public class WingsApplication extends Application<MainConfiguration> {
         },
         new ValidationModule(validatorFactory), databaseModule, new WingsModule(configuration), new YamlModule(),
 
-        new ExecutorModule(), new QueueModule(databaseModule.getPrimaryDatastore()), new TemplateModule());
+        new ExecutorModule(),
+        new QueueModule(databaseModule.getPrimaryDatastore(),
+            StringUtils.contains(configuration.getFeatureNames(), MONGO_QUEUE_VERSIONING.toString())),
+        new TemplateModule());
 
     Caching.getCachingProvider().getCacheManager().createCache(USER_CACHE, new Configuration<String, User>() {
       public static final long serialVersionUID = 1L;

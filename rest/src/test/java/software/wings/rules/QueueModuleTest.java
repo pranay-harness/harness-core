@@ -39,13 +39,14 @@ public class QueueModuleTest extends AbstractModule {
   protected void configure() {
     bind(new TypeLiteral<Queue<EmailData>>() {}).toInstance(new MongoQueueImpl<>(EmailData.class, datastore));
     bind(new TypeLiteral<Queue<CollectEvent>>() {}).toInstance(new MongoQueueImpl<>(CollectEvent.class, datastore));
-    bind(new TypeLiteral<Queue<NotifyEvent>>() {}).toInstance(new MongoQueueImpl<>(NotifyEvent.class, datastore));
+    bind(new TypeLiteral<Queue<NotifyEvent>>() {})
+        .toInstance(new MongoQueueImpl<>(NotifyEvent.class, datastore, 5, false));
     bind(new TypeLiteral<Queue<KmsTransitionEvent>>() {})
         .toInstance(new MongoQueueImpl<>(KmsTransitionEvent.class, datastore, 30));
     bind(new TypeLiteral<Queue<ExecutionEvent>>() {})
-        .toInstance(new MongoQueueImpl<>(ExecutionEvent.class, datastore, 30));
+        .toInstance(new MongoQueueImpl<>(ExecutionEvent.class, datastore, 30, false));
     bind(new TypeLiteral<Queue<DeploymentEvent>>() {})
-        .toInstance(new MongoQueueImpl<>(DeploymentEvent.class, datastore, 60));
+        .toInstance(new MongoQueueImpl<>(DeploymentEvent.class, datastore, 60, false));
     bind(new TypeLiteral<Queue<InstanceChangeEvent>>() {})
         .toInstance(new MongoQueueImpl<>(InstanceChangeEvent.class, datastore, 60));
 

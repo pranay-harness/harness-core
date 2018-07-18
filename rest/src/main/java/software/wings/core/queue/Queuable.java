@@ -29,6 +29,7 @@ public abstract class Queuable {
   private double priority;
   private Date created = new Date();
   private int retries;
+  private String version;
 
   /**
    * Instantiates a new queuable.
@@ -48,6 +49,7 @@ public abstract class Queuable {
     priority = other.priority;
     created = other.created;
     retries = other.retries;
+    version = other.version;
   }
 
   /**
@@ -174,6 +176,14 @@ public abstract class Queuable {
    */
   public void setRetries(int retries) {
     this.retries = retries;
+  }
+
+  public String getVersion() {
+    return version;
+  }
+
+  public void setVersion(String version) {
+    this.version = version;
   }
 
   /**

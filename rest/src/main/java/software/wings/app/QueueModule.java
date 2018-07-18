@@ -25,14 +25,16 @@ import software.wings.waitnotify.NotifyEventListener;
  */
 public class QueueModule extends AbstractModule {
   private AdvancedDatastore datastore;
+  private boolean filterWithVersion;
 
   /**
    * Creates a guice module for portal app.
    *
    * @param datastore datastore for queues
    */
-  public QueueModule(AdvancedDatastore datastore) {
+  public QueueModule(AdvancedDatastore datastore, boolean filterWithVersion) {
     this.datastore = datastore;
+    this.filterWithVersion = filterWithVersion;
   }
 
   /* (non-Javadoc)
@@ -42,13 +44,14 @@ public class QueueModule extends AbstractModule {
   protected void configure() {
     bind(new TypeLiteral<Queue<EmailData>>() {}).toInstance(new MongoQueueImpl<>(EmailData.class, datastore));
     bind(new TypeLiteral<Queue<CollectEvent>>() {}).toInstance(new MongoQueueImpl<>(CollectEvent.class, datastore));
-    bind(new TypeLiteral<Queue<NotifyEvent>>() {}).toInstance(new MongoQueueImpl<>(NotifyEvent.class, datastore));
+    bind(new TypeLiteral<Queue<NotifyEvent>>() {})
+        .toInstance(new MongoQueueImpl<>(NotifyEvent.class, datastore, 5, filterWithVersion));
     bind(new TypeLiteral<Queue<DeploymentEvent>>() {})
-        .toInstance(new MongoQueueImpl<>(DeploymentEvent.class, datastore, 60));
+        .toInstance(new MongoQueueImpl<>(DeploymentEvent.class, datastore, 60, filterWithVersion));
     bind(new TypeLiteral<Queue<KmsTransitionEvent>>() {})
         .toInstance(new MongoQueueImpl<>(KmsTransitionEvent.class, datastore, 30));
     bind(new TypeLiteral<Queue<ExecutionEvent>>() {})
-        .toInstance(new MongoQueueImpl<>(ExecutionEvent.class, datastore, 30));
+        .toInstance(new MongoQueueImpl<>(ExecutionEvent.class, datastore, 30, filterWithVersion));
 
     bind(new TypeLiteral<AbstractQueueListener<EmailData>>() {}).to(EmailNotificationListener.class);
     bind(new TypeLiteral<AbstractQueueListener<CollectEvent>>() {}).to(ArtifactCollectEventListener.class);

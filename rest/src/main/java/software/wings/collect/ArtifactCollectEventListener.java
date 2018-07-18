@@ -60,6 +60,10 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
   @Inject private EventEmitter eventEmitter;
   @Inject private SecretManager secretManager;
 
+  public ArtifactCollectEventListener() {
+    super(true);
+  }
+
   /* (non-Javadoc)
    * @see software.wings.core.queue.AbstractQueueListener#onMessage(software.wings.core.queue.Queuable)
    */

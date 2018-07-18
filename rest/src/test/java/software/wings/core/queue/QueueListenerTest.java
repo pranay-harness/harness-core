@@ -1,6 +1,7 @@
 package software.wings.core.queue;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeast;
@@ -14,6 +15,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.rule.RepeatRule.Repeat;
+import io.harness.version.VersionInfoManager;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -36,6 +38,7 @@ public class QueueListenerTest extends WingsBaseTest {
   private QueuableObjectListener listener;
 
   @Inject @Named("primaryDatastore") private AdvancedDatastore datastore;
+  @Inject private VersionInfoManager versionInfoManager;
 
   /**
    * Setup.
@@ -45,6 +48,7 @@ public class QueueListenerTest extends WingsBaseTest {
   @Before
   public void setup() throws UnknownHostException {
     queue = spy(new MongoQueueImpl<>(QueuableObject.class, datastore));
+    on(queue).set("versionInfoManager", versionInfoManager);
     listener = new QueuableObjectListener();
     listener.setQueue(queue);
     listener.setRunOnce(true);
@@ -204,6 +208,10 @@ public class QueueListenerTest extends WingsBaseTest {
      */
     public void setThrowException(boolean throwException) {
       this.throwException = throwException;
+    }
+
+    QueuableObjectListener() {
+      super(true);
     }
 
     @Override

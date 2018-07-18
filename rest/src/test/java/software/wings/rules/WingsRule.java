@@ -251,7 +251,7 @@ public class WingsRule implements MethodRule {
     if (fakeMongo) {
       modules.add(new QueueModuleTest(datastore));
     } else {
-      modules.add(new QueueModule(datastore));
+      modules.add(new QueueModule(datastore, false));
     }
 
     if (annotations.stream().filter(annotation -> Cache.class.isInstance(annotation)).findFirst().isPresent()) {
