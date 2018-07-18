@@ -104,8 +104,8 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
   }
 
   @EnumData(enumDataProvider = AnalysisToleranceProvider.class)
-  @Attributes(required = true, title = "Failure Criteria")
-  @DefaultValue("LOW")
+  @Attributes(required = true, title = "Algorithm Sensitivity")
+  @DefaultValue("MEDIUM")
   public AnalysisTolerance getAnalysisTolerance() {
     if (isEmpty(tolerance)) {
       return AnalysisTolerance.LOW;

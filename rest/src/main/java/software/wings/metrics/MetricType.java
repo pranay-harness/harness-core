@@ -24,7 +24,7 @@ public enum MetricType {
       Threshold.builder()
           .thresholdType(ThresholdType.ALERT_HIGHER_OR_LOWER)
           .comparisonType(ThresholdComparisonType.DELTA)
-          .ml(0)
+          .ml(25)
           .build())),
 
   /**

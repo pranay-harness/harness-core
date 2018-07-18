@@ -111,8 +111,8 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
   }
 
   @EnumData(enumDataProvider = AnalysisToleranceProvider.class)
-  @Attributes(required = true, title = "Failure Criteria")
-  @DefaultValue("LOW")
+  @Attributes(required = true, title = "Algorithm Sensitivity")
+  @DefaultValue("MEDIUM")
   public AnalysisTolerance getAnalysisTolerance() {
     if (isBlank(tolerance)) {
       return AnalysisTolerance.LOW;
