@@ -467,7 +467,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
 
   @Override
   public Map<String, Map<String, TimeSeriesMetricDefinition>> getMetricTemplate(
-      StateType stateType, String stateExecutionId, String serviceId, String groupName) {
+      String appId, StateType stateType, String stateExecutionId, String serviceId, String groupName) {
     Map<String, Map<String, TimeSeriesMetricDefinition>> result = new HashMap<>();
     switch (stateType) {
       case NEW_RELIC:
@@ -483,12 +483,12 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       case CLOUD_WATCH:
       case DATA_DOG:
       case APM_VERIFICATION:
-        result.put("default", getMetricTemplates(stateType, stateExecutionId));
+        result.put("default", getMetricTemplates(appId, stateType, stateExecutionId));
         break;
       default:
         throw new WingsException("Invalid Verification StateType.");
     }
-    result.putAll(getCustomMetricTemplates(stateType, serviceId, groupName));
+    result.putAll(getCustomMetricTemplates(appId, stateType, serviceId, groupName));
     return result;
   }
 
@@ -748,18 +748,23 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   }
 
   @Override
-  public void saveMetricTemplates(
-      StateType stateType, String stateExecutionId, Map<String, TimeSeriesMetricDefinition> metricTemplates) {
-    wingsPersistence.save(TimeSeriesMetricTemplates.builder()
-                              .stateType(stateType)
-                              .stateExecutionId(stateExecutionId)
-                              .metricTemplates(metricTemplates)
-                              .build());
+  public void saveMetricTemplates(String appId, StateType stateType, String stateExecutionId,
+      Map<String, TimeSeriesMetricDefinition> metricTemplates) {
+    TimeSeriesMetricTemplates metricTemplate = TimeSeriesMetricTemplates.builder()
+                                                   .stateType(stateType)
+                                                   .stateExecutionId(stateExecutionId)
+                                                   .metricTemplates(metricTemplates)
+                                                   .build();
+    metricTemplate.setAppId(appId);
+    wingsPersistence.save(metricTemplate);
   }
 
   @Override
-  public Map<String, TimeSeriesMetricDefinition> getMetricTemplates(StateType stateType, String stateExecutionId) {
+  public Map<String, TimeSeriesMetricDefinition> getMetricTemplates(
+      String appId, StateType stateType, String stateExecutionId) {
     TimeSeriesMetricTemplates newRelicMetricTemplates = wingsPersistence.createQuery(TimeSeriesMetricTemplates.class)
+                                                            .field("appId")
+                                                            .equal(appId)
                                                             .field("stateType")
                                                             .equal(stateType)
                                                             .field("stateExecutionId")
@@ -770,9 +775,11 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
 
   @Override
   public Map<String, Map<String, TimeSeriesMetricDefinition>> getCustomMetricTemplates(
-      StateType stateType, String serviceId, String groupName) {
+      String appId, StateType stateType, String serviceId, String groupName) {
     List<TimeSeriesMLTransactionThresholds> thresholds =
         wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
+            .field("appId")
+            .equal(appId)
             .field("stateType")
             .equal(stateType)
             .field("serviceId")

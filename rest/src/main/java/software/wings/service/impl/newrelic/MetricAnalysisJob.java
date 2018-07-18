@@ -186,8 +186,8 @@ public class MetricAnalysisJob implements Job {
         case CLOUD_WATCH:
         case DATA_DOG:
         case APM_VERIFICATION:
-          stateValuesToAnalyze = getMetricTypeMap(
-              analysisService.getMetricTemplates(context.getStateType(), context.getStateExecutionId()));
+          stateValuesToAnalyze = getMetricTypeMap(analysisService.getMetricTemplates(
+              context.getAppId(), context.getStateType(), context.getStateExecutionId()));
           break;
         default:
           throw new IllegalStateException("Invalid stateType " + context.getStateType());
@@ -282,9 +282,10 @@ public class MetricAnalysisJob implements Job {
               .test_input_url(testInputUrl)
               .control_input_url(controlInputUrl)
               .analysis_save_url(logAnalysisSaveUrl)
-              .metric_template_url("/api/" + MetricDataAnalysisService.RESOURCE_URL + "/get-metric-template?accountId="
-                  + context.getAccountId() + "&stateType=" + context.getStateType() + "&stateExecutionId="
-                  + context.getStateExecutionId() + "&serviceId=" + context.getServiceId() + "&groupName=" + groupName)
+              .metric_template_url("/api/" + MetricDataAnalysisService.RESOURCE_URL
+                  + "/get-metric-template?accountId=" + context.getAccountId() + "&appId=" + context.getAppId()
+                  + "&stateType=" + context.getStateType() + "&stateExecutionId=" + context.getStateExecutionId()
+                  + "&serviceId=" + context.getServiceId() + "&groupName=" + groupName)
               .control_nodes(controlNodes)
               .test_nodes(
                   mlAnalysisType.equals(TimeSeriesMlAnalysisType.PREDICTIVE) ? Sets.newHashSet(groupName) : testNodes)

@@ -73,17 +73,18 @@ public interface MetricDataAnalysisService {
       int analysisMinute, String transactionName, String metricName, String groupName);
 
   Map<String, Map<String, TimeSeriesMetricDefinition>> getMetricTemplate(
-      StateType stateType, String stateExecutionId, String serviceId, String groupName);
+      String appId, StateType stateType, String stateExecutionId, String serviceId, String groupName);
   Map<String, Map<String, TimeSeriesMetricDefinition>> getCustomMetricTemplates(
-      StateType stateType, String serviceId, String groupName);
+      String appId, StateType stateType, String serviceId, String groupName);
 
   NewRelicMetricDataRecord getAnalysisMinute(StateType stateType, String appId, String stateExecutionId,
       String workflowExecutionId, String serviceId, String groupName);
 
-  void saveMetricTemplates(
-      StateType stateType, String stateExecutionId, Map<String, TimeSeriesMetricDefinition> metricTemplates);
+  void saveMetricTemplates(String appId, StateType stateType, String stateExecutionId,
+      Map<String, TimeSeriesMetricDefinition> metricTemplates);
 
-  Map<String, TimeSeriesMetricDefinition> getMetricTemplates(StateType stateType, String stateExecutionId);
+  Map<String, TimeSeriesMetricDefinition> getMetricTemplates(
+      String accountId, StateType stateType, String stateExecutionId);
 
   void saveMetricGroups(
       String appId, StateType stateType, String stateExecutionId, Map<String, TimeSeriesMlAnalysisGroupInfo> groups);

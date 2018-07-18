@@ -1129,7 +1129,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     metricDataAnalysisService.saveMetricData(
         accountId, appId, stateExecutionId, delegateTaskId, Lists.newArrayList(record, record1));
 
-    metricDataAnalysisService.saveMetricTemplates(StateType.DATA_DOG, stateExecutionId,
+    metricDataAnalysisService.saveMetricTemplates(appId, StateType.DATA_DOG, stateExecutionId,
         DatadogState.metricDefinitions(
             DatadogState.metrics(Lists.newArrayList("trace.servlet.request.duration", "trace.servlet.request.hits"))
                 .values()));

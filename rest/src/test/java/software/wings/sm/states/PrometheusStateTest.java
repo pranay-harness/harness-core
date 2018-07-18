@@ -248,7 +248,7 @@ public class PrometheusStateTest extends APMStateVerificationTestBase {
     // assert metric templates
     assertEquals(1, wingsPersistence.createQuery(TimeSeriesMetricTemplates.class).count());
     Map<String, TimeSeriesMetricDefinition> metricTemplates =
-        metricDataAnalysisService.getMetricTemplates(StateType.PROMETHEUS, stateExecutionId);
+        metricDataAnalysisService.getMetricTemplates(appId, StateType.PROMETHEUS, stateExecutionId);
     assertEquals(1, metricTemplates.size());
     assertEquals("metric_name", metricTemplates.entrySet().iterator().next().getKey());
     assertNotNull(metricTemplates.get("metric_name"));

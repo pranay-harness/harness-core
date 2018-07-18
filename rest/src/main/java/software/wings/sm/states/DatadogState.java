@@ -117,8 +117,8 @@ public class DatadogState extends AbstractMetricAnalysisState {
   @Override
   protected String triggerAnalysisDataCollection(ExecutionContext context, String correlationId, Set<String> hosts) {
     List<String> metricNames = Arrays.asList(metrics.split(","));
-    metricAnalysisService.saveMetricTemplates(
-        StateType.DATA_DOG, context.getStateExecutionInstanceId(), metricDefinitions(metrics(metricNames).values()));
+    metricAnalysisService.saveMetricTemplates(context.getAppId(), StateType.DATA_DOG,
+        context.getStateExecutionInstanceId(), metricDefinitions(metrics(metricNames).values()));
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
     SettingAttribute settingAttribute = null;

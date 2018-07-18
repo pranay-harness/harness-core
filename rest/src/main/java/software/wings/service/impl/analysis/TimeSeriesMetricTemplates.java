@@ -33,5 +33,7 @@ public class TimeSeriesMetricTemplates extends Base {
 
   @NotEmpty @Indexed private String stateExecutionId;
 
+  private String accountId;
+
   @NotEmpty private Map<String, TimeSeriesMetricDefinition> metricTemplates;
 }
