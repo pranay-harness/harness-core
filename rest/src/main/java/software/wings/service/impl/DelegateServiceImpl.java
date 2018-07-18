@@ -850,6 +850,10 @@ public class DelegateServiceImpl implements DelegateService {
       logger.warn("Delegate task is null");
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Delegate task is null");
     }
+    if (task.getAccountId() == null) {
+      logger.warn("Delegate task has null account ID");
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Delegate task has null account ID");
+    }
 
     List<String> activeDelegates = wingsPersistence.createQuery(Delegate.class)
                                        .filter("accountId", task.getAccountId())
