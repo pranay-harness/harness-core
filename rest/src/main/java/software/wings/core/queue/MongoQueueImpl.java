@@ -2,6 +2,9 @@ package software.wings.core.queue;
 
 import static org.joor.Reflect.on;
 
+import com.google.inject.Inject;
+
+import io.harness.version.VersionInfoManager;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -21,9 +24,12 @@ import java.util.concurrent.TimeUnit;
 public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
   private static final Logger logger = LoggerFactory.getLogger(MongoQueueImpl.class);
 
-  private Datastore datastore;
-  private Class<T> klass;
+  private final Datastore datastore;
+  private final Class<T> klass;
   private int resetDurationInSeconds;
+  private final boolean filterWithVersion;
+
+  @Inject VersionInfoManager versionInfoManager;
 
   /**
    * Instantiates a new mongo queue impl.
@@ -43,11 +49,25 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
    * @param resetDurationInSeconds the reset duration in seconds
    */
   public MongoQueueImpl(Class<T> klass, final Datastore datastore, int resetDurationInSeconds) {
+    this(klass, datastore, resetDurationInSeconds, false);
+  }
+
+  /**
+   * Instantiates a new mongo queue impl.
+   *
+   * @param klass                  the klass
+   * @param datastore              the datastore
+   * @param resetDurationInSeconds the reset duration in seconds
+   * @param filterWithVersion      the filterWithVersion
+   */
+  public MongoQueueImpl(
+      Class<T> klass, final Datastore datastore, int resetDurationInSeconds, boolean filterWithVersion) {
     Objects.requireNonNull(datastore);
     Objects.requireNonNull(klass);
     this.datastore = datastore;
     this.klass = klass;
     this.resetDurationInSeconds = resetDurationInSeconds;
+    this.filterWithVersion = filterWithVersion;
   }
 
   /* (non-Javadoc)
@@ -72,11 +92,10 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
   @Override
   public T get(final int waitDuration, long pollDuration) {
     // reset stuck messages
-    datastore.update(
-        datastore.createQuery(klass).filter("running", true).field("resetTimestamp").lessThanOrEq(new Date()),
+    datastore.update(createQuery().filter("running", true).field("resetTimestamp").lessThanOrEq(new Date()),
         datastore.createUpdateOperations(klass).set("running", false));
 
-    Query<T> query = datastore.createQuery(klass)
+    Query<T> query = createQuery()
                          .filter("running", false)
                          .field("earliestGet")
                          .lessThanOrEq(new Date())
@@ -116,7 +135,7 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
   public void updateResetDuration(T message) {
     Objects.requireNonNull(message);
 
-    Query<T> query = datastore.createQuery(klass)
+    Query<T> query = createQuery()
                          .filter("_id", message.getId())
                          .field("resetTimestamp")
                          .greaterThan(new Date())
@@ -147,7 +166,7 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
    */
   @Override
   public long count(final boolean running) {
-    return datastore.getCount(datastore.createQuery(klass).filter("running", running));
+    return datastore.getCount(createQuery().filter("running", running));
   }
 
   /* (non-Javadoc)
@@ -218,6 +237,7 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
   @Override
   public void send(final T payload) {
     Objects.requireNonNull(payload);
+    payload.setVersion(versionInfoManager.getVersionInfo().getVersion());
     datastore.save(payload);
   }
 
@@ -245,5 +265,11 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
   // package protected
   void resetDuration(int resetDurationInSeconds) {
     this.resetDurationInSeconds = resetDurationInSeconds;
+  }
+
+  private Query<T> createQuery() {
+    return filterWithVersion
+        ? datastore.createQuery(klass).filter("version", versionInfoManager.getVersionInfo().getVersion())
+        : datastore.createQuery(klass);
   }
 }

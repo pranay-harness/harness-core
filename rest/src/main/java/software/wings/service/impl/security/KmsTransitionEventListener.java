@@ -17,6 +17,10 @@ public class KmsTransitionEventListener extends AbstractQueueListener<KmsTransit
   protected static final Logger logger = LoggerFactory.getLogger(KmsTransitionEventListener.class);
   @Inject private SecretManager secretManager;
 
+  public KmsTransitionEventListener() {
+    super(true);
+  }
+
   @Override
   protected void onMessage(KmsTransitionEvent message) {
     try {

@@ -16,6 +16,10 @@ import software.wings.core.queue.AbstractQueueListener;
 public class DeploymentEventListener extends AbstractQueueListener<DeploymentEvent> {
   @Inject private InstanceHelper instanceHelper;
 
+  public DeploymentEventListener() {
+    super(false);
+  }
+
   /* (non-Javadoc)
    * @see software.wings.core.queue.AbstractQueueListener#onMessage(software.wings.core.queue.Queuable)
    */

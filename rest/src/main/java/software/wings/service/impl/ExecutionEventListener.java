@@ -40,6 +40,10 @@ public class ExecutionEventListener extends AbstractQueueListener<ExecutionEvent
   @Inject private PersistentLocker persistentLocker;
   @Inject private StateMachineExecutor stateMachineExecutor;
 
+  public ExecutionEventListener() {
+    super(false);
+  }
+
   @Override
   protected void onMessage(ExecutionEvent message) {
     try (AcquiredLock lock =

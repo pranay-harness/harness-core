@@ -32,11 +32,16 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
   @Inject private Queue<T> queue;
 
   private boolean runOnce;
+  private final boolean primaryOnly;
 
   private AtomicBoolean shouldStop = new AtomicBoolean(false);
 
   @Inject @Named("timer") private ScheduledExecutorService timer;
   @Inject private ConfigurationController configurationController;
+
+  public AbstractQueueListener(boolean primaryOnly) {
+    this.primaryOnly = primaryOnly;
+  }
 
   /* (non-Javadoc)
    * @see java.lang.Runnable#run()
@@ -48,7 +53,7 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
     Thread.currentThread().setName(threadName);
 
     do {
-      while (isMaintenance() || configurationController.isNotPrimary()) {
+      while (isMaintenance() || (primaryOnly && configurationController.isNotPrimary())) {
         sleep(Duration.ofSeconds(1));
       }
 

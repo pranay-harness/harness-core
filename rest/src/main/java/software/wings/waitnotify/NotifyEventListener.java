@@ -45,6 +45,10 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
 
   @Inject private PersistentLocker persistentLocker;
 
+  public NotifyEventListener() {
+    super(false);
+  }
+
   /**
    * {@inheritDoc}
    */
