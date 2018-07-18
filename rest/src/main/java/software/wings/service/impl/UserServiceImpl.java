@@ -653,9 +653,9 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public void logout(String userId) {
-    authService.invalidateAllTokensForUser(userId);
-    evictUserFromCache(userId);
+  public void logout(User user) {
+    authService.invalidateToken(user.getToken());
+    evictUserFromCache(user.getUuid());
   }
 
   private void resetUserPassword(String email, char[] password, long tokenIssuedAt) {

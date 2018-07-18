@@ -363,10 +363,13 @@ public class AuthServiceImpl implements AuthService {
   public void invalidateAllTokensForUser(String userId) {
     List<Key<AuthToken>> keyList =
         wingsPersistence.createQuery(AuthToken.class, excludeAuthority).filter("userId", userId).asKeyList();
-    keyList.forEach(authTokenKey -> {
-      wingsPersistence.delete(AuthToken.class, authTokenKey.getId().toString());
-      dbCache.invalidate(AuthToken.class, authTokenKey.getId().toString());
-    });
+    keyList.forEach(authToken -> invalidateToken(authToken.getId().toString()));
+  }
+
+  @Override
+  public void invalidateToken(String utoken) {
+    wingsPersistence.delete(AuthToken.class, utoken);
+    dbCache.invalidate(AuthToken.class, utoken);
   }
 
   private boolean authorizeAccessType(String accountId, String appId, String envId, EnvironmentType envType,
