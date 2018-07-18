@@ -201,6 +201,8 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     LogAnalysisResponse executionResponse = (LogAnalysisResponse) response.values().iterator().next();
 
     if (ExecutionStatus.isBrokeStatus(executionResponse.getExecutionStatus())) {
+      getLogger().info(
+          "for {} got failed execution response {}", executionContext.getStateExecutionInstanceId(), executionResponse);
       continuousVerificationService.setMetaDataExecutionStatus(
           executionContext.getStateExecutionInstanceId(), ExecutionStatus.FAILED);
       return anExecutionResponse()
@@ -214,12 +216,15 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       final LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(
           context.getStateExecutionId(), context.getAppId(), StateType.valueOf(getStateType()));
       if (analysisSummary == null) {
-        getLogger().warn("No analysis summary. This can happen if there is no data with the given queries");
+        getLogger().info("for {} No analysis summary. This can happen if there is no data with the given queries",
+            context.getStateExecutionId());
         continuousVerificationService.setMetaDataExecutionStatus(
             executionContext.getStateExecutionInstanceId(), ExecutionStatus.SUCCESS);
         return generateAnalysisResponse(
             context, ExecutionStatus.SUCCESS, "No data found with given queries. Skipped Analysis");
       }
+      getLogger().info("for {} found analysisSummary with message {}", context.getStateExecutionId(),
+          analysisSummary.getAnalysisSummaryMessage());
 
       ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
       if (analysisSummary.getRiskLevel() == RiskLevel.HIGH) {
@@ -235,6 +240,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         executionStatus = ExecutionStatus.FAILED;
       }
 
+      getLogger().info("for {} the final status is {}", context.getStateExecutionId(), executionStatus);
       executionResponse.getLogAnalysisExecutionData().setStatus(executionStatus);
       continuousVerificationService.setMetaDataExecutionStatus(
           executionContext.getStateExecutionInstanceId(), executionStatus);
