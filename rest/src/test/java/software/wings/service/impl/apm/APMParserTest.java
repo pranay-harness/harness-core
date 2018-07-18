@@ -143,6 +143,82 @@ public class APMParserTest extends WingsBaseTest {
   }
 
   @Test
+  public void testJsonParserInsightsResponse() throws IOException {
+    String text500 =
+        Resources.toString(APMParserTest.class.getResource("/apm/insights_sample_response.json"), Charsets.UTF_8);
+
+    Map<String, APMMetricInfo.ResponseMapper> responseMapperMap = new HashMap<>();
+    responseMapperMap.put(
+        "host", APMMetricInfo.ResponseMapper.builder().fieldName("host").jsonPath("facets[*].name[1]").build());
+    responseMapperMap.put("timestamp",
+        APMMetricInfo.ResponseMapper.builder()
+            .fieldName("timestamp")
+            .jsonPath("facets[*].timeSeries[*].endTimeSeconds")
+            .build());
+    responseMapperMap.put("value",
+        APMMetricInfo.ResponseMapper.builder()
+            .fieldName("value")
+            .jsonPath("facets[*].timeSeries[*].results[*].count")
+            .build());
+    responseMapperMap.put(
+        "txnName", APMMetricInfo.ResponseMapper.builder().fieldName("txnName").jsonPath("facets[*].name[0]").build());
+
+    List<APMMetricInfo> metricInfos = Lists.newArrayList(APMMetricInfo.builder()
+                                                             .metricName("HttpErrors")
+                                                             .metricType(MetricType.ERROR)
+                                                             .tag("NRHTTP")
+                                                             .responseMappers(responseMapperMap)
+                                                             .build());
+
+    Collection<NewRelicMetricDataRecord> records = APMResponseParser.extract(
+        Lists.newArrayList(APMResponseParser.APMResponseData.builder().text(text500).metricInfos(metricInfos).build()));
+
+    assertEquals(10, records.size());
+    String output =
+        Resources.toString(APMParserTest.class.getResource("/apm/insights_sample_collected.json"), Charsets.UTF_8);
+
+    assertEquals(output, JsonUtils.asJson(records));
+  }
+
+  @Test
+  public void testJsonParserArrayInsideArray() throws IOException {
+    String text500 =
+        Resources.toString(APMParserTest.class.getResource("/apm/insights-variation-1.json"), Charsets.UTF_8);
+
+    Map<String, APMMetricInfo.ResponseMapper> responseMapperMap = new HashMap<>();
+    responseMapperMap.put(
+        "host", APMMetricInfo.ResponseMapper.builder().fieldName("host").jsonPath("facets[*].name[1]").build());
+    responseMapperMap.put("timestamp",
+        APMMetricInfo.ResponseMapper.builder()
+            .fieldName("timestamp")
+            .jsonPath("facets[*].timeSeries[*].endTimeSeconds")
+            .build());
+    responseMapperMap.put("value",
+        APMMetricInfo.ResponseMapper.builder()
+            .fieldName("value")
+            .jsonPath("facets[*].timeSeries[*].results[*].[*].count")
+            .build());
+    responseMapperMap.put(
+        "txnName", APMMetricInfo.ResponseMapper.builder().fieldName("txnName").jsonPath("facets[*].name[0]").build());
+
+    List<APMMetricInfo> metricInfos = Lists.newArrayList(APMMetricInfo.builder()
+                                                             .metricName("HttpErrors")
+                                                             .metricType(MetricType.ERROR)
+                                                             .tag("NRHTTP")
+                                                             .responseMappers(responseMapperMap)
+                                                             .build());
+
+    Collection<NewRelicMetricDataRecord> records = APMResponseParser.extract(
+        Lists.newArrayList(APMResponseParser.APMResponseData.builder().text(text500).metricInfos(metricInfos).build()));
+
+    assertEquals(10, records.size());
+    String output =
+        Resources.toString(APMParserTest.class.getResource("/apm/insights-variation-1-collected.json"), Charsets.UTF_8);
+
+    assertEquals(output, JsonUtils.asJson(records));
+  }
+
+  @Test
   public void apmVerificationstateYaml() throws IOException {
     String yaml =
         "- collectionUrl: query?from=${start_time}&to=${end_time}&query=trace.servlet.request.duration{service:todolist, host:${host}}by{resource_name, host}.rollup(avg,60)\n"
