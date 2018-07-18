@@ -911,9 +911,10 @@ public class DelegateServiceImpl implements DelegateService {
     } else if (assignDelegateService.shouldValidate(delegateTask, delegateId)) {
       setValidationStarted(delegateId, delegateTask);
       return delegateTask;
+    } else {
+      logger.info("Delegate {} is blacklisted for task {}", delegateId, taskId);
+      return null;
     }
-
-    return null;
   }
 
   @Override
