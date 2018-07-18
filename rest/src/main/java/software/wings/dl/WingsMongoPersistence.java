@@ -371,9 +371,10 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   public <T extends Base> boolean delete(Query<T> query) {
     if (query.getEntityClass().equals(SettingAttribute.class)
         || Encryptable.class.isAssignableFrom(query.getEntityClass())) {
-      List<T> objects = query.asList();
-      for (T object : objects) {
-        deleteEncryptionReferenceIfNecessary(object);
+      try (HIterator<T> records = new HIterator<>(query.fetch())) {
+        while (records.hasNext()) {
+          deleteEncryptionReferenceIfNecessary(records.next());
+        }
       }
     }
     WriteResult result = primaryDatastore.delete(query);
