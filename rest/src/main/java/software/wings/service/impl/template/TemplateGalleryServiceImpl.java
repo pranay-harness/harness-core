@@ -152,7 +152,7 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
   public void copyHarnessTemplates() {
     List<Account> accounts = accountService.listAllAccounts();
     for (Account account : accounts) {
-      deleteAccountGalleryByName(account.getUuid(), account.getAccountName());
+      deleteByAccountId(account.getUuid());
       copyHarnessTemplatesToAccount(account.getUuid(), account.getAccountName());
     }
   }
