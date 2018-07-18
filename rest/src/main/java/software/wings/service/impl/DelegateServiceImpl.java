@@ -904,10 +904,12 @@ public class DelegateServiceImpl implements DelegateService {
 
     if (assignDelegateService.isWhitelisted(delegateTask, delegateId)) {
       return assignTask(delegateId, taskId, delegateTask);
-    } else {
+    } else if (assignDelegateService.shouldValidate(delegateTask, delegateId)) {
       setValidationStarted(delegateId, delegateTask);
       return delegateTask;
     }
+
+    return null;
   }
 
   @Override
