@@ -1,13 +1,20 @@
 package software.wings.utils;
 
+import static org.junit.Assert.assertFalse;
+import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkResponse;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONObject;
 import org.junit.Test;
+import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
 import software.wings.service.impl.elk.ElkQueryType;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -119,5 +126,15 @@ public class ElkLogFetchRequestTest {
     String expectedJson = new JSONObject().put("query", indicesObject).toString();
 
     //    assertEquals(expectedJson, JsonUtils.asJson(elkLogFetchRequest.toElasticSearchJsonObject()));
+  }
+
+  @Test
+  public void testParse() throws Exception {
+    ObjectMapper mapper = new ObjectMapper();
+    LinkedHashMap map = mapper.readValue(
+        new File(getClass().getClassLoader().getResource("./elk/elk.txt").getFile()), LinkedHashMap.class);
+    List<LogElement> logElements = parseElkResponse(map, "info", "@timestamp", "yyyy-MM-dd'T'HH:mm:ss.SSSX",
+        "kubernetes.pod.name", "harness-learning-engine", "log", 0, false);
+    assertFalse(logElements.isEmpty());
   }
 }
