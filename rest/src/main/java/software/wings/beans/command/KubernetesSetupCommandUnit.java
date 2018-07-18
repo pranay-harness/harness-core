@@ -708,17 +708,29 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     Service serviceToCreate = createServiceDefinition(
         kubernetesServiceName, namespace, labelSelectors, labels, serviceSpecification, executionLogCallback);
     if (service != null) {
-      if (LOAD_BALANCER.equals(serviceToCreate.getSpec().getType())) {
+      if (LOAD_BALANCER.equals(serviceToCreate.getSpec().getType())
+          && LOAD_BALANCER.equals(service.getSpec().getType())) {
         LoadBalancerStatus loadBalancer = service.getStatus().getLoadBalancer();
         // Keep the previous load balancer IP if it exists and a new one was not specified
         if (isEmpty(serviceToCreate.getSpec().getLoadBalancerIP()) && loadBalancer != null
             && !loadBalancer.getIngress().isEmpty()) {
           serviceToCreate.getSpec().setLoadBalancerIP(loadBalancer.getIngress().get(0).getIp());
         }
-        // When externalTrafficPolicy=Local the health check node port cannot change
-        if (POLICY_LOCAL.equals(service.getSpec().getExternalTrafficPolicy())) {
-          serviceToCreate.getSpec().setHealthCheckNodePort(service.getSpec().getHealthCheckNodePort());
+      } else if (NODE_PORT.equals(serviceToCreate.getSpec().getType())
+          && NODE_PORT.equals(service.getSpec().getType())) {
+        Map<String, Integer> portNodePort = service.getSpec().getPorts().stream().collect(
+            toMap(p -> p.getPort() + ":" + p.getTargetPort(), ServicePort::getNodePort));
+        // Keep the previous node ports if they exist and were not specified
+        for (ServicePort port : serviceToCreate.getSpec().getPorts()) {
+          if (port.getNodePort() == null) {
+            port.setNodePort(portNodePort.get(port.getPort() + ":" + port.getTargetPort()));
+          }
         }
+      }
+
+      // When externalTrafficPolicy=Local the health check node port cannot change
+      if (POLICY_LOCAL.equals(service.getSpec().getExternalTrafficPolicy())) {
+        serviceToCreate.getSpec().setHealthCheckNodePort(service.getSpec().getHealthCheckNodePort());
       }
     }
 
