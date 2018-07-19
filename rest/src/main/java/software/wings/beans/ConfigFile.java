@@ -152,6 +152,7 @@ public class ConfigFile extends BaseFile implements Encryptable {
                                 .accountId(getAccountId())
                                 .configOverrideExpression(getConfigOverrideExpression())
                                 .configOverrideType(getConfigOverrideType())
+                                .encryptedFileId(getEncryptedFileId())
                                 .build();
     configFile.setAppId(getAppId());
     configFile.setFileName(getFileName());
