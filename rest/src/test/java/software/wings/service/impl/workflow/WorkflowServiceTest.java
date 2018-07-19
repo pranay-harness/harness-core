@@ -16,8 +16,10 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
+import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
 import static software.wings.beans.EntityType.APPDYNAMICS_CONFIGID;
 import static software.wings.beans.EntityType.ELK_CONFIGID;
 import static software.wings.beans.EntityType.ELK_INDICES;
@@ -25,6 +27,7 @@ import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
+import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.beans.GraphLink.Builder.aLink;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
@@ -46,6 +49,7 @@ import static software.wings.beans.PhaseStepType.ROUTE_UPDATE;
 import static software.wings.beans.PhaseStepType.SELECT_NODE;
 import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
 import static software.wings.beans.PhaseStepType.WRAP_UP;
+import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
@@ -113,11 +117,17 @@ import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.get
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.getServiceTemplateExpression;
 import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
 import static software.wings.sm.StateType.AWS_CODEDEPLOY_STATE;
+import static software.wings.sm.StateType.AWS_LAMBDA_VERIFICATION;
 import static software.wings.sm.StateType.AWS_NODE_SELECT;
 import static software.wings.sm.StateType.DC_NODE_SELECT;
+import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
+import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 import static software.wings.sm.StateType.FORK;
 import static software.wings.sm.StateType.HTTP;
 import static software.wings.sm.StateType.JENKINS;
+import static software.wings.sm.StateType.KUBERNETES_DEPLOY;
+import static software.wings.sm.StateType.KUBERNETES_SETUP;
+import static software.wings.sm.StateType.KUBERNETES_SETUP_ROLLBACK;
 import static software.wings.sm.StateType.REPEAT;
 import static software.wings.utils.ArtifactType.DOCKER;
 import static software.wings.utils.ArtifactType.WAR;
@@ -178,6 +188,7 @@ import software.wings.beans.FailureType;
 import software.wings.beans.Graph;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.MultiServiceOrchestrationWorkflow;
 import software.wings.beans.NotificationGroup;
@@ -317,6 +328,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
                         .withUuid(INFRA_MAPPING_ID)
                         .withServiceId(SERVICE_ID)
                         .withDeploymentType(SSH.name())
+                        .withInfraMappingType(InfrastructureMappingType.AWS_SSH.name())
                         .withComputeProviderType(SettingVariableTypes.AWS.name())
                         .build());
 
@@ -647,6 +659,17 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void stencilsForOrchestrationFilterWorkflowPhase() throws IllegalArgumentException {
+    Map<StateTypeScope, List<Stencil>> stencils = getStateTypeScopeListMap();
+
+    assertThat(stencils).isNotNull().hasSize(1).containsKeys(StateTypeScope.ORCHESTRATION_STENCILS);
+    List<Stencil> stencilList = stencils.get(StateTypeScope.ORCHESTRATION_STENCILS);
+    assertThat(stencilList)
+        .extracting(Stencil::getType)
+        .doesNotContain("BUILD", "ENV_STATE", ARTIFACT_COLLECTION.name())
+        .contains("REPEAT", "FORK", "HTTP", AWS_NODE_SELECT.name(), AWS_LAMBDA_VERIFICATION.name());
+  }
+
+  private Map<StateTypeScope, List<Stencil>> getStateTypeScopeListMap() {
     ServiceCommand serviceCommand = constructServiceCommand();
 
     when(serviceResourceService.get(APP_ID, SERVICE_ID, true))
@@ -660,14 +683,76 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     BasicOrchestrationWorkflow basicOrchestrationWorkflow =
         (BasicOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
-    Map<StateTypeScope, List<Stencil>> stencils = workflowService.stencils(APP_ID, workflow2.getUuid(),
+    return workflowService.stencils(APP_ID, workflow2.getUuid(),
         basicOrchestrationWorkflow.getWorkflowPhases().get(0).getUuid(), StateTypeScope.ORCHESTRATION_STENCILS);
+  }
+
+  @Test
+  public void stencilsForOrchestrationFilterGKInfra() throws IllegalArgumentException {
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(aGcpKubernetesInfrastructureMapping()
+                        .withUuid(INFRA_MAPPING_ID)
+                        .withServiceId(SERVICE_ID)
+                        .withDeploymentType(SSH.name())
+                        .withInfraMappingType(InfrastructureMappingType.GCP_KUBERNETES.name())
+                        .withComputeProviderType(SettingVariableTypes.GCP.name())
+                        .build());
+
+    Map<StateTypeScope, List<Stencil>> stencils = getStateTypeScopeListMap();
 
     assertThat(stencils).isNotNull().hasSize(1).containsKeys(StateTypeScope.ORCHESTRATION_STENCILS);
-    assertThat(stencils.get(StateTypeScope.ORCHESTRATION_STENCILS))
+    List<Stencil> stencilList = stencils.get(StateTypeScope.ORCHESTRATION_STENCILS);
+    assertThat(stencilList)
         .extracting(Stencil::getType)
-        .doesNotContain("BUILD", "ENV_STATE")
-        .contains("REPEAT", "FORK", "HTTP");
+        .doesNotContain("BUILD", "ENV_STATE", ARTIFACT_COLLECTION.name(), ECS_SERVICE_SETUP.name(),
+            ECS_SERVICE_DEPLOY.name(), StateType.ECS_STEADY_STATE_CHECK.name())
+        .contains("REPEAT", "FORK", "HTTP", KUBERNETES_SETUP.name(), KUBERNETES_SETUP_ROLLBACK.name(),
+            KUBERNETES_DEPLOY.name(), StateType.KUBERNETES_STEADY_STATE_CHECK.name());
+  }
+
+  @Test
+  public void stencilsForOrchestrationFilterECSInfra() throws IllegalArgumentException {
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(anEcsInfrastructureMapping()
+                        .withUuid(INFRA_MAPPING_ID)
+                        .withServiceId(SERVICE_ID)
+                        .withDeploymentType(ECS.name())
+                        .withInfraMappingType(InfrastructureMappingType.AWS_ECS.name())
+                        .withComputeProviderType(SettingVariableTypes.AWS.name())
+                        .build());
+
+    Map<StateTypeScope, List<Stencil>> stencils = getStateTypeScopeListMap();
+
+    assertThat(stencils).isNotNull().hasSize(1).containsKeys(StateTypeScope.ORCHESTRATION_STENCILS);
+    List<Stencil> stencilList = stencils.get(StateTypeScope.ORCHESTRATION_STENCILS);
+    assertThat(stencilList)
+        .extracting(Stencil::getType)
+        .doesNotContain("BUILD", "ENV_STATE", ARTIFACT_COLLECTION.name(), KUBERNETES_SETUP.name(),
+            KUBERNETES_SETUP_ROLLBACK.name(), KUBERNETES_DEPLOY.name(), StateType.KUBERNETES_STEADY_STATE_CHECK.name())
+        .contains("REPEAT", "FORK", "HTTP", ECS_SERVICE_SETUP.name(), ECS_SERVICE_DEPLOY.name(),
+            StateType.ECS_STEADY_STATE_CHECK.name());
+  }
+
+  @Test
+  public void stencilsForOrchestrationFilterPhysicalInfra() throws IllegalArgumentException {
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(aPhysicalInfrastructureMapping()
+                        .withUuid(INFRA_MAPPING_ID)
+                        .withServiceId(SERVICE_ID)
+                        .withDeploymentType(SSH.name())
+                        .withInfraMappingType(InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name())
+                        .withComputeProviderType(SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
+                        .build());
+
+    Map<StateTypeScope, List<Stencil>> stencils = getStateTypeScopeListMap();
+
+    assertThat(stencils).isNotNull().hasSize(1).containsKeys(StateTypeScope.ORCHESTRATION_STENCILS);
+    List<Stencil> stencilList = stencils.get(StateTypeScope.ORCHESTRATION_STENCILS);
+    assertThat(stencilList)
+        .extracting(Stencil::getType)
+        .doesNotContain("BUILD", "ENV_STATE", ARTIFACT_COLLECTION.name(), KUBERNETES_SETUP.name(),
+            KUBERNETES_SETUP_ROLLBACK.name(), KUBERNETES_DEPLOY.name(), StateType.KUBERNETES_STEADY_STATE_CHECK.name())
+        .contains("REPEAT", "FORK", "HTTP", DC_NODE_SELECT.name(), StateType.SHELL_SCRIPT.name());
   }
 
   @Test
@@ -3023,7 +3108,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
                          .withTemplateUuid(TEMPLATE_ID)
                          .withTemplateVersion(LATEST_TAG)
                          .withName("Ping Response")
-                         .withType(StateType.HTTP.name())
+                         .withType(HTTP.name())
                          .build();
 
     GraphNode templateStep = constructHttpTemplateStep();
