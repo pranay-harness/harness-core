@@ -232,6 +232,34 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     getVaultRestClient(vaultConfig).deleteSecret(String.valueOf(vaultConfig.getAuthToken()), path).execute();
   }
 
+  @Override
+  public boolean renewVaultToken(VaultConfig vaultConfig) throws IOException {
+    for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
+      try {
+        logger.info("renewing token for vault {}", vaultConfig);
+        Call<Object> renewTokenCall = getVaultRestClient(vaultConfig).renewToken(vaultConfig.getAuthToken());
+
+        Response<Object> response = renewTokenCall.execute();
+        if (response.isSuccessful()) {
+          return true;
+        }
+        String errorMsg =
+            new StringBuilder().append("Request not successful. Reason: {").append(response).append("}").toString();
+        logger.error(errorMsg);
+        throw new IOException(errorMsg);
+      } catch (Exception e) {
+        if (retry < NUM_OF_RETRIES) {
+          logger.warn("renewal failed. trial num: {}", retry, e);
+          sleep(ofMillis(1000));
+        } else {
+          logger.error("renewal failed after {} retries for {}", retry, vaultConfig, e);
+          throw new IOException("renewal failed after " + NUM_OF_RETRIES + " retries", e);
+        }
+      }
+    }
+    return false;
+  }
+
   @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   public static char[] encrypt(String src, Key key)
       throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException,

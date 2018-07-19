@@ -28,6 +28,8 @@ public interface VaultService {
 
   VaultConfig getVaultConfig(String accountId, String entityId);
 
+  void renewTokens(String accountId);
+
   EncryptedData encryptFile(String accountId, VaultConfig vaultConfig, String name, BoundedInputStream inputStream,
       EncryptedData savedEncryptedData);
 

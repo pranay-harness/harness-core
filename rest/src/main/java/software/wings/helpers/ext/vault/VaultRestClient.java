@@ -26,4 +26,6 @@ public interface VaultRestClient {
 
   @GET(BASE_VAULT_URL + "{path}")
   Call<VaultReadResponse> readSecret(@Header("X-Vault-Token") String header, @Path("path") String keyName);
+
+  @POST("v1/auth/token/renew-self") Call<Object> renewToken(@Header("X-Vault-Token") String header);
 }
