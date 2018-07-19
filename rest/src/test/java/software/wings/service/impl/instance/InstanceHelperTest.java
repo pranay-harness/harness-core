@@ -593,6 +593,71 @@ public class InstanceHelperTest extends WingsBaseTest {
   }
 
   @Test
+  public void testExtractInstanceOrContainerInfoBaseOnType_For_Helm_Kubernetes_rollback() {
+    endsAtTime = System.currentTimeMillis();
+    phaseExecutionData =
+        instaceHelperTestHelper.initKubernetesExecutionSummary(InfrastructureMappingType.GCP_KUBERNETES,
+            Constants.DEPLOY_CONTAINERS, endsAtTime, DeploymentType.KUBERNETES.getDisplayName(), true);
+    phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionData);
+    doReturn(GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping()
+                 .withUuid(INFRA_MAP_ID)
+                 .withInfraMappingType(InfrastructureMappingType.GCP_KUBERNETES.getName())
+                 .withAppId(APP_ID)
+                 .withClusterName(CLUSTER_NAME)
+                 .build())
+        .when(infraMappingService)
+        .get(anyString(), anyString());
+
+    PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("Name");
+    phaseStepSubWorkflow.setRollback(true);
+    instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
+        phaseStepExecutionData, workflowStandardParams, APP_ID, workflowExecution, phaseStepSubWorkflow, null);
+
+    // Capture the argument of the doSomething function
+    ArgumentCaptor<DeploymentEvent> captor = ArgumentCaptor.forClass(DeploymentEvent.class);
+    verify(deploymentEventQueue).send(captor.capture());
+
+    /*
+     * The way we test here is,
+     * We have mocked deploymentQueueEvent.send(DeploymentEvent) to doNothing as we dont want to process queue.
+     * We capture the argument i.e. deploymentEvent that is generated and sent to deploymentEventQueue, and
+     * validate to check its valid
+     * */
+    DeploymentEvent event = captor.getValue();
+    assertNotNull(event);
+    assertEquals(0, event.getRetries());
+    assertTrue(event.isRollback());
+
+    assertNotNull(event.getDeploymentSummaries());
+    assertEquals(1, event.getDeploymentSummaries().size());
+
+    DeploymentSummary deploymentSummary = event.getDeploymentSummaries().get(0);
+    assertNotNull(deploymentSummary.getContainerDeploymentKey());
+    // This is validating rollback version
+    assertEquals("0", deploymentSummary.getContainerDeploymentKey().getNewVersion());
+    DeploymentInfo deploymentInfo = event.getDeploymentSummaries().get(0).getDeploymentInfo();
+
+    assertDeploymentSummaryObject(event.getDeploymentSummaries().get(0));
+    assertTrue(deploymentInfo instanceof ContainerDeploymentInfoWithLabels);
+    assertDeploymentSummaryObject(event.getDeploymentSummaries().get(0));
+
+    ContainerDeploymentInfoWithLabels containerDeploymentInfoWithLabels =
+        (ContainerDeploymentInfoWithLabels) deploymentInfo;
+    assertEquals(CLUSTER_NAME, containerDeploymentInfoWithLabels.getClusterName());
+    assertNotNull(containerDeploymentInfoWithLabels.getLabels());
+    assertEquals(1, containerDeploymentInfoWithLabels.getLabels().size());
+    assertEquals("release", containerDeploymentInfoWithLabels.getLabels().get(0).getName());
+    assertEquals("version1", containerDeploymentInfoWithLabels.getLabels().get(0).getValue());
+
+    assertNotNull(deploymentSummary.getContainerDeploymentKey().getLabels());
+    assertEquals("release", deploymentSummary.getContainerDeploymentKey().getLabels().get(0).getName());
+    assertEquals("version1", deploymentSummary.getContainerDeploymentKey().getLabels().get(0).getValue());
+
+    assertEquals("release", containerDeploymentInfoWithLabels.getLabels().get(0).getName());
+    assertEquals("version1", containerDeploymentInfoWithLabels.getLabels().get(0).getValue());
+  }
+
+  @Test
   public void testIsSupported() throws Exception {
     assertFalse((Boolean) MethodUtils.invokeMethod(
         instanceHelper, true, "isSupported", new Object[] {InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH}));
