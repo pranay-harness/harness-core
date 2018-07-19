@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.helm;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT;
 
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
@@ -129,13 +130,20 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   }
 
   @Override
-  public HelmCommandResponse ensureHelmCliAndTillerInstalled(HelmCommandRequest helmCommandRequest)
-      throws InterruptedException, IOException, TimeoutException {
-    HelmCliResponse cliResponse = helmClient.getClientAndServerVersion(helmCommandRequest);
-    if (cliResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.FAILURE)) {
-      throw new InvalidRequestException(cliResponse.getOutput());
+  public HelmCommandResponse ensureHelmCliAndTillerInstalled(HelmCommandRequest helmCommandRequest) throws Exception {
+    try {
+      return timeLimiter.callWithTimeout(() -> {
+        HelmCliResponse cliResponse = helmClient.getClientAndServerVersion(helmCommandRequest);
+        if (cliResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.FAILURE)) {
+          throw new InvalidRequestException(cliResponse.getOutput());
+        }
+        return new HelmCommandResponse(cliResponse.getCommandExecutionStatus(), cliResponse.getOutput());
+      }, Long.parseLong(DEFAULT_TILLER_CONNECTION_TIMEOUT), TimeUnit.SECONDS, true);
+    } catch (UncheckedTimeoutException e) {
+      String msg = "Timed out while finding helm client and server version";
+      logger.error(msg, e);
+      throw new InvalidRequestException(msg);
     }
-    return new HelmCommandResponse(cliResponse.getCommandExecutionStatus(), cliResponse.getOutput());
   }
 
   @Override
@@ -145,6 +153,10 @@ public class HelmDeployServiceImpl implements HelmDeployService {
         "Checking if the repository has already been added", LogLevel.INFO, CommandExecutionStatus.RUNNING);
 
     HelmCliResponse cliResponse = helmClient.getHelmRepoList(commandRequest);
+    if (cliResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.FAILURE)) {
+      throw new InvalidRequestException(cliResponse.getOutput());
+    }
+
     List<RepoListInfo> repoListInfos = parseHelmAddRepoOutput(cliResponse.getOutput());
 
     boolean repoAlreadyAdded = repoListInfos.stream().anyMatch(
