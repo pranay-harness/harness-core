@@ -8,9 +8,9 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import org.junit.Before;
@@ -94,8 +94,8 @@ public class PrometheusStateTest extends APMStateVerificationTestBase {
   @Test
   public void noTestNodes() {
     PrometheusState spyState = spy(prometheusState);
-    doReturn(Collections.emptySet()).when(spyState).getCanaryNewHostNames(executionContext);
-    doReturn(Collections.emptySet()).when(spyState).getLastExecutionNodes(executionContext);
+    doReturn(Collections.emptyMap()).when(spyState).getCanaryNewHostNames(executionContext);
+    doReturn(Collections.emptyMap()).when(spyState).getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
 
@@ -120,8 +120,10 @@ public class PrometheusStateTest extends APMStateVerificationTestBase {
   public void noControlNodesCompareWithCurrent() {
     prometheusState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
     PrometheusState spyState = spy(prometheusState);
-    doReturn(Collections.singleton("some-host")).when(spyState).getCanaryNewHostNames(executionContext);
-    doReturn(Collections.emptySet()).when(spyState).getLastExecutionNodes(executionContext);
+    doReturn(Collections.singletonMap("some-host", DEFAULT_GROUP_NAME))
+        .when(spyState)
+        .getCanaryNewHostNames(executionContext);
+    doReturn(Collections.emptyMap()).when(spyState).getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
 
@@ -148,8 +150,12 @@ public class PrometheusStateTest extends APMStateVerificationTestBase {
   public void compareWithCurrentSameTestAndControlNodes() {
     prometheusState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
     PrometheusState spyState = spy(prometheusState);
-    doReturn(Sets.newHashSet("some-host")).when(spyState).getCanaryNewHostNames(executionContext);
-    doReturn(Sets.newHashSet("some-host")).when(spyState).getLastExecutionNodes(executionContext);
+    doReturn(new HashMap<>(Collections.singletonMap("some-host", DEFAULT_GROUP_NAME)))
+        .when(spyState)
+        .getCanaryNewHostNames(executionContext);
+    doReturn(new HashMap<>(Collections.singletonMap("some-host", DEFAULT_GROUP_NAME)))
+        .when(spyState)
+        .getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
 
@@ -184,8 +190,12 @@ public class PrometheusStateTest extends APMStateVerificationTestBase {
     wingsPersistence.save(settingAttribute);
     prometheusState.setAnalysisServerConfigId(settingAttribute.getUuid());
     PrometheusState spyState = spy(prometheusState);
-    doReturn(Collections.singleton("test")).when(spyState).getCanaryNewHostNames(executionContext);
-    doReturn(Collections.singleton("control")).when(spyState).getLastExecutionNodes(executionContext);
+    doReturn(Collections.singletonMap("test", DEFAULT_GROUP_NAME))
+        .when(spyState)
+        .getCanaryNewHostNames(executionContext);
+    doReturn(Collections.singletonMap("control", DEFAULT_GROUP_NAME))
+        .when(spyState)
+        .getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
     when(workflowStandardParams.getEnv())
@@ -215,7 +225,7 @@ public class PrometheusStateTest extends APMStateVerificationTestBase {
             .collectionTime(Integer.parseInt(prometheusState.getTimeDuration()))
             .timeSeriesToCollect(timeSeriesToCollect)
             .dataCollectionMinute(0)
-            .hosts(Sets.newHashSet("test"))
+            .hosts(Collections.singletonMap("test", DEFAULT_GROUP_NAME))
             .analysisComparisonStrategy(prometheusState.getComparisonStrategy())
             .build();
 

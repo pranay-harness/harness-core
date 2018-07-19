@@ -10,7 +10,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 /**
  * Created by rsingh on 5/18/17.
@@ -31,7 +31,7 @@ public class AppdynamicsDataCollectionInfo {
   private long tierId;
   private int collectionTime;
   private int dataCollectionMinute;
-  private Set<String> hosts;
+  private Map<String, String> hosts;
   private List<EncryptedDataDetail> encryptedDataDetails;
   @Default private TimeSeriesMlAnalysisType timeSeriesMlAnalysisType = TimeSeriesMlAnalysisType.COMPARATIVE;
 }

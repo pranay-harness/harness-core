@@ -4,8 +4,9 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
-import com.google.common.collect.Sets;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import org.junit.Before;
@@ -77,8 +78,14 @@ public class MetricAnalysisJobTest extends WingsBaseTest {
                           .workflowExecutionId(workflowExecutionId)
                           .stateExecutionId(stateExecutionId)
                           .serviceId(serviceId)
-                          .controlNodes(Sets.newHashSet("control1", "control2"))
-                          .testNodes(Sets.newHashSet("test1", "test2"))
+                          .controlNodes(ImmutableMap.<String, String>builder()
+                                            .put("control1", DEFAULT_GROUP_NAME)
+                                            .put("control2", DEFAULT_GROUP_NAME)
+                                            .build())
+                          .testNodes(ImmutableMap.<String, String>builder()
+                                         .put("test1", DEFAULT_GROUP_NAME)
+                                         .put("test2", DEFAULT_GROUP_NAME)
+                                         .build())
                           .isSSL(true)
                           .appPort(1234)
                           .comparisonStrategy(COMPARE_WITH_PREVIOUS)

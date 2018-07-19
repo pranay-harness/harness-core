@@ -7,6 +7,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.states.ElkAnalysisState.DEFAULT_TIME_FIELD;
 
 import com.google.common.collect.Sets;
@@ -89,8 +90,8 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
   @Test
   public void noTestNodes() {
     ElkAnalysisState spyState = spy(elkAnalysisState);
-    doReturn(Collections.emptySet()).when(spyState).getCanaryNewHostNames(executionContext);
-    doReturn(Collections.emptySet()).when(spyState).getLastExecutionNodes(executionContext);
+    doReturn(Collections.emptyMap()).when(spyState).getCanaryNewHostNames(executionContext);
+    doReturn(Collections.emptyMap()).when(spyState).getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
 
@@ -111,8 +112,10 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
   public void noControlNodesCompareWithCurrent() {
     elkAnalysisState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
     ElkAnalysisState spyState = spy(elkAnalysisState);
-    doReturn(Collections.singleton("some-host")).when(spyState).getCanaryNewHostNames(executionContext);
-    doReturn(Collections.emptySet()).when(spyState).getLastExecutionNodes(executionContext);
+    doReturn(Collections.singletonMap("some-host", DEFAULT_GROUP_NAME))
+        .when(spyState)
+        .getCanaryNewHostNames(executionContext);
+    doReturn(Collections.emptyMap()).when(spyState).getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
 
@@ -134,8 +137,12 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
   public void compareWithCurrentSameTestAndControlNodes() {
     elkAnalysisState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
     ElkAnalysisState spyState = spy(elkAnalysisState);
-    doReturn(Sets.newHashSet("some-host")).when(spyState).getCanaryNewHostNames(executionContext);
-    doReturn(Sets.newHashSet("some-host")).when(spyState).getLastExecutionNodes(executionContext);
+    doReturn(new HashMap<>(Collections.singletonMap("some-host", DEFAULT_GROUP_NAME)))
+        .when(spyState)
+        .getCanaryNewHostNames(executionContext);
+    doReturn(new HashMap<>(Collections.singletonMap("some-host", DEFAULT_GROUP_NAME)))
+        .when(spyState)
+        .getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
 
@@ -187,8 +194,12 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
     elkAnalysisState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
 
     ElkAnalysisState spyState = spy(elkAnalysisState);
-    doReturn(Collections.singleton("test")).when(spyState).getCanaryNewHostNames(executionContext);
-    doReturn(Collections.singleton("control")).when(spyState).getLastExecutionNodes(executionContext);
+    doReturn(Collections.singletonMap("test", DEFAULT_GROUP_NAME))
+        .when(spyState)
+        .getCanaryNewHostNames(executionContext);
+    doReturn(Collections.singletonMap("control", DEFAULT_GROUP_NAME))
+        .when(spyState)
+        .getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
     when(workflowStandardParams.getEnv())

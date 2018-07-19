@@ -1,6 +1,7 @@
 package software.wings.service.impl.apm;
 
 import static org.junit.Assert.assertEquals;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
@@ -35,9 +36,17 @@ public class APMParserTest extends WingsBaseTest {
         DatadogState.metricEndpointsInfo("todolist", Lists.newArrayList("system.load.1", "system.mem.used"));
 
     Iterator<List<APMMetricInfo>> metricInfoIterator = metricEndpointsInfo.values().iterator();
-    Collection<NewRelicMetricDataRecord> records = APMResponseParser.extract(Lists.newArrayList(
-        APMResponseParser.APMResponseData.builder().text(textLoad).metricInfos(metricInfoIterator.next()).build(),
-        APMResponseParser.APMResponseData.builder().text(textMem).metricInfos(metricInfoIterator.next()).build()));
+    Collection<NewRelicMetricDataRecord> records =
+        APMResponseParser.extract(Lists.newArrayList(APMResponseParser.APMResponseData.builder()
+                                                         .text(textLoad)
+                                                         .groupName(DEFAULT_GROUP_NAME)
+                                                         .metricInfos(metricInfoIterator.next())
+                                                         .build(),
+            APMResponseParser.APMResponseData.builder()
+                .text(textMem)
+                .groupName(DEFAULT_GROUP_NAME)
+                .metricInfos(metricInfoIterator.next())
+                .build()));
 
     assertEquals(80, records.size());
     String output = Resources.toString(
@@ -68,8 +77,12 @@ public class APMParserTest extends WingsBaseTest {
                                                              .responseMappers(responseMapperMap)
                                                              .build());
 
-    Collection<NewRelicMetricDataRecord> records = APMResponseParser.extract(
-        Lists.newArrayList(APMResponseParser.APMResponseData.builder().text(text500).metricInfos(metricInfos).build()));
+    Collection<NewRelicMetricDataRecord> records =
+        APMResponseParser.extract(Lists.newArrayList(APMResponseParser.APMResponseData.builder()
+                                                         .text(text500)
+                                                         .groupName(DEFAULT_GROUP_NAME)
+                                                         .metricInfos(metricInfos)
+                                                         .build()));
 
     assertEquals(61, records.size());
     String output = Resources.toString(
@@ -100,8 +113,12 @@ public class APMParserTest extends WingsBaseTest {
                                                              .responseMappers(responseMapperMap)
                                                              .build());
 
-    Collection<NewRelicMetricDataRecord> records = APMResponseParser.extract(
-        Lists.newArrayList(APMResponseParser.APMResponseData.builder().text(text500).metricInfos(metricInfos).build()));
+    Collection<NewRelicMetricDataRecord> records =
+        APMResponseParser.extract(Lists.newArrayList(APMResponseParser.APMResponseData.builder()
+                                                         .text(text500)
+                                                         .groupName(DEFAULT_GROUP_NAME)
+                                                         .metricInfos(metricInfos)
+                                                         .build()));
 
     assertEquals(61, records.size());
     String output = Resources.toString(
@@ -132,8 +149,12 @@ public class APMParserTest extends WingsBaseTest {
                                                              .responseMappers(responseMapperMap)
                                                              .build());
 
-    Collection<NewRelicMetricDataRecord> records = APMResponseParser.extract(
-        Lists.newArrayList(APMResponseParser.APMResponseData.builder().text(text500).metricInfos(metricInfos).build()));
+    Collection<NewRelicMetricDataRecord> records =
+        APMResponseParser.extract(Lists.newArrayList(APMResponseParser.APMResponseData.builder()
+                                                         .text(text500)
+                                                         .groupName(DEFAULT_GROUP_NAME)
+                                                         .metricInfos(metricInfos)
+                                                         .build()));
 
     assertEquals(4, records.size());
     String output = Resources.toString(
@@ -170,8 +191,12 @@ public class APMParserTest extends WingsBaseTest {
                                                              .responseMappers(responseMapperMap)
                                                              .build());
 
-    Collection<NewRelicMetricDataRecord> records = APMResponseParser.extract(
-        Lists.newArrayList(APMResponseParser.APMResponseData.builder().text(text500).metricInfos(metricInfos).build()));
+    Collection<NewRelicMetricDataRecord> records =
+        APMResponseParser.extract(Lists.newArrayList(APMResponseParser.APMResponseData.builder()
+                                                         .text(text500)
+                                                         .metricInfos(metricInfos)
+                                                         .groupName(DEFAULT_GROUP_NAME)
+                                                         .build()));
 
     assertEquals(10, records.size());
     String output =
@@ -208,8 +233,12 @@ public class APMParserTest extends WingsBaseTest {
                                                              .responseMappers(responseMapperMap)
                                                              .build());
 
-    Collection<NewRelicMetricDataRecord> records = APMResponseParser.extract(
-        Lists.newArrayList(APMResponseParser.APMResponseData.builder().text(text500).metricInfos(metricInfos).build()));
+    Collection<NewRelicMetricDataRecord> records =
+        APMResponseParser.extract(Lists.newArrayList(APMResponseParser.APMResponseData.builder()
+                                                         .text(text500)
+                                                         .metricInfos(metricInfos)
+                                                         .groupName(DEFAULT_GROUP_NAME)
+                                                         .build()));
 
     assertEquals(10, records.size());
     String output =

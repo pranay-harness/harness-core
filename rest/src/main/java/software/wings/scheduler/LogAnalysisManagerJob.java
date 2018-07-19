@@ -32,7 +32,7 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.WaitNotifyEngine;
 
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.Set;
 
 /**
@@ -113,11 +113,11 @@ public class LogAnalysisManagerJob implements Job {
 
     private Set<String> getCollectedNodes() {
       if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
-        Set<String> nodes = Sets.newHashSet(context.getControlNodes());
-        nodes.addAll(context.getTestNodes());
+        Set<String> nodes = Sets.newHashSet(context.getControlNodes().keySet());
+        nodes.addAll(context.getTestNodes().keySet());
         return nodes;
       } else {
-        return Sets.newHashSet(context.getTestNodes());
+        return Sets.newHashSet(context.getTestNodes().keySet());
       }
     }
 
@@ -239,8 +239,9 @@ public class LogAnalysisManagerJob implements Job {
                 .serverConfigId(context.getAnalysisServerConfigId())
                 .query(context.getQuery())
                 .timeDuration(context.getTimeDuration())
-                .canaryNewHostNames(context.getTestNodes())
-                .lastExecutionNodes(context.getControlNodes() == null ? new HashSet<>() : context.getControlNodes())
+                .canaryNewHostNames(context.getTestNodes().keySet())
+                .lastExecutionNodes(
+                    context.getControlNodes() == null ? Collections.emptySet() : context.getControlNodes().keySet())
                 .correlationId(context.getCorrelationId())
                 .build();
 

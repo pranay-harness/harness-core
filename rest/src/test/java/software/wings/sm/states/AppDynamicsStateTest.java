@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -9,6 +10,8 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
+import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
@@ -18,13 +21,17 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import software.wings.api.DeploymentType;
+import software.wings.api.PhaseElement;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
+import software.wings.common.Constants;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.sm.ContextElementType;
@@ -46,16 +53,20 @@ import java.util.UUID;
 public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   @Inject private TemplateExpressionProcessor templateExpressionProcessor;
   @Mock private MetricDataAnalysisService metricAnalysisService;
+  @Mock private InfrastructureMappingService infraMappingService;
 
   @Mock private AppdynamicsService appdynamicsService;
+  @Mock private PhaseElement phaseElement;
 
   private AppDynamicsState appDynamicsState;
+  private String infraMappingId;
 
   @Before
   public void setup() throws IOException {
     setupCommon();
 
     MockitoAnnotations.initMocks(this);
+    infraMappingId = generateUuid();
 
     appDynamicsState = new AppDynamicsState("AppDynamicsState");
     appDynamicsState.setApplicationId("30444");
@@ -78,6 +89,12 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     setInternalState(appDynamicsState, "workflowExecutionBaselineService", workflowExecutionBaselineService);
     setInternalState(appDynamicsState, "appdynamicsService", appdynamicsService);
     setInternalState(appDynamicsState, "featureFlagService", featureFlagService);
+    setInternalState(appDynamicsState, "infraMappingService", infraMappingService);
+    when(executionContext.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM)).thenReturn(phaseElement);
+    when(phaseElement.getInfraMappingId()).thenReturn(infraMappingId);
+    when(executionContext.getAppId()).thenReturn(appId);
+    when(infraMappingService.get(anyString(), anyString()))
+        .thenReturn(anAwsInfrastructureMapping().withDeploymentType(DeploymentType.AWS_CODEDEPLOY.name()).build());
 
     setupCommonMocks();
   }
@@ -99,8 +116,12 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     appDynamicsState.setAnalysisServerConfigId(settingAttribute.getUuid());
 
     AppDynamicsState spyAppDynamicsState = spy(appDynamicsState);
-    doReturn(Collections.singleton("test")).when(spyAppDynamicsState).getCanaryNewHostNames(executionContext);
-    doReturn(Collections.singleton("control")).when(spyAppDynamicsState).getLastExecutionNodes(executionContext);
+    doReturn(Collections.singletonMap("test", DEFAULT_GROUP_NAME))
+        .when(spyAppDynamicsState)
+        .getCanaryNewHostNames(executionContext);
+    doReturn(Collections.singletonMap("control", DEFAULT_GROUP_NAME))
+        .when(spyAppDynamicsState)
+        .getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyAppDynamicsState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyAppDynamicsState).getPhaseServiceId(executionContext);
     when(workflowStandardParams.getEnv())
@@ -147,8 +168,12 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
             .build()));
 
     AppDynamicsState spyAppDynamicsState = spy(appDynamicsState);
-    doReturn(Collections.singleton("test")).when(spyAppDynamicsState).getCanaryNewHostNames(executionContext);
-    doReturn(Collections.singleton("control")).when(spyAppDynamicsState).getLastExecutionNodes(executionContext);
+    doReturn(Collections.singletonMap("test", DEFAULT_GROUP_NAME))
+        .when(spyAppDynamicsState)
+        .getCanaryNewHostNames(executionContext);
+    doReturn(Collections.singletonMap("control", DEFAULT_GROUP_NAME))
+        .when(spyAppDynamicsState)
+        .getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyAppDynamicsState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyAppDynamicsState).getPhaseServiceId(executionContext);
 

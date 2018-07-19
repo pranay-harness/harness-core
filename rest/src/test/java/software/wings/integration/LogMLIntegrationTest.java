@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.dl.HQuery.excludeAuthority;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -623,8 +624,8 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
             .prevWorkflowExecutionId(lastWorkflowExecutionId)
             .stateExecutionId(stateExecutionId)
             .serviceId(serviceId)
-            .controlNodes(com.google.common.collect.Sets.newHashSet(host))
-            .testNodes(com.google.common.collect.Sets.newHashSet(host))
+            .controlNodes(Collections.singletonMap(host, DEFAULT_GROUP_NAME))
+            .testNodes(Collections.singletonMap(host, DEFAULT_GROUP_NAME))
             .query(query)
             .isSSL(true)
             .appPort(9090)
@@ -742,8 +743,8 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
             .workflowExecutionId(workflowExecutionId)
             .stateExecutionId(stateExecutionId)
             .serviceId(serviceId)
-            .controlNodes(com.google.common.collect.Sets.newHashSet(host))
-            .testNodes(com.google.common.collect.Sets.newHashSet(host))
+            .controlNodes(Collections.singletonMap(host, DEFAULT_GROUP_NAME))
+            .testNodes(Collections.singletonMap(host, DEFAULT_GROUP_NAME))
             .query(query)
             .isSSL(true)
             .appPort(9090)
@@ -876,8 +877,8 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
             .workflowExecutionId(workflowExecutionId)
             .stateExecutionId(stateExecutionId)
             .serviceId(serviceId)
-            .controlNodes(com.google.common.collect.Sets.newHashSet(host))
-            .testNodes(com.google.common.collect.Sets.newHashSet(host))
+            .controlNodes(Collections.singletonMap(host, DEFAULT_GROUP_NAME))
+            .testNodes(Collections.singletonMap(host, DEFAULT_GROUP_NAME))
             .query(query)
             .isSSL(true)
             .appPort(9090)
@@ -929,10 +930,10 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
     List<LogElement> logElements = new ArrayList<>();
 
     final String query = UUID.randomUUID().toString();
-    List<String> hosts = new ArrayList<>();
+    Map<String, String> hosts = new HashMap<>();
 
     for (int i = 0; i < 5; i++) {
-      hosts.add(UUID.randomUUID().toString());
+      hosts.put("host-" + i, DEFAULT_GROUP_NAME);
     }
 
     for (int i = 0; i < 5; i++) {
@@ -940,14 +941,14 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
         LogElement splunkHeartBeatElement = new LogElement();
         splunkHeartBeatElement.setQuery(query);
         splunkHeartBeatElement.setClusterLabel("-3");
-        splunkHeartBeatElement.setHost(hosts.get(j));
+        splunkHeartBeatElement.setHost("host-" + j);
         splunkHeartBeatElement.setCount(0);
         splunkHeartBeatElement.setLogMessage("");
         splunkHeartBeatElement.setTimeStamp(0);
         splunkHeartBeatElement.setLogCollectionMinute(i);
 
         logElements.add(splunkHeartBeatElement);
-        LogElement logElement = new LogElement(query, "0", hosts.get(j), 0, 1, "Hello World " + i, i);
+        LogElement logElement = new LogElement(query, "0", "host-" + j, 0, 1, "Hello World " + i, i);
         logElements.add(logElement);
       }
     }
@@ -983,14 +984,14 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
         LogElement splunkHeartBeatElement = new LogElement();
         splunkHeartBeatElement.setQuery(query);
         splunkHeartBeatElement.setClusterLabel("-3");
-        splunkHeartBeatElement.setHost(hosts.get(j));
+        splunkHeartBeatElement.setHost("host-" + j);
         splunkHeartBeatElement.setCount(0);
         splunkHeartBeatElement.setLogMessage("");
         splunkHeartBeatElement.setTimeStamp(0);
         splunkHeartBeatElement.setLogCollectionMinute(i);
         logElements.add(splunkHeartBeatElement);
 
-        LogElement logElement = new LogElement(query, "0", hosts.get(j), 0, 1, "Hello World", i);
+        LogElement logElement = new LogElement(query, "0", "host-" + j, 0, 1, "Hello World", i);
         logElements.add(logElement);
       }
     }
@@ -1006,8 +1007,8 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
             .workflowExecutionId(workflowExecutionId)
             .stateExecutionId(stateExecutionId)
             .serviceId(serviceId)
-            .controlNodes(Sets.newHashSet(hosts))
-            .testNodes(Sets.newHashSet(hosts))
+            .controlNodes(hosts)
+            .testNodes(hosts)
             .query(query)
             .isSSL(true)
             .appPort(9090)

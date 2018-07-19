@@ -187,14 +187,17 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
               .build();
       dataCollectionInfo.getLoadBalancerMetrics().forEach(
           (loadBalancerName, cloudWatchMetrics) -> cloudWatchMetrics.forEach(cloudWatchMetric -> {
-            callables.add(
-                () -> getMetricDataRecords(AwsNameSpace.ELB, cloudWatchClient, cloudWatchMetric, loadBalancerName));
+            callables.add(()
+                              -> getMetricDataRecords(AwsNameSpace.ELB, cloudWatchClient, cloudWatchMetric,
+                                  loadBalancerName, DEFAULT_GROUP_NAME));
           }));
 
-      dataCollectionInfo.getHosts().forEach(host
-          -> dataCollectionInfo.getEc2Metrics().forEach(cloudWatchMetric
-              -> callables.add(
-                  () -> getMetricDataRecords(AwsNameSpace.EC2, cloudWatchClient, cloudWatchMetric, host))));
+      dataCollectionInfo.getHosts().forEach(
+          (host, groupName)
+              -> dataCollectionInfo.getEc2Metrics().forEach(cloudWatchMetric
+                  -> callables.add(()
+                                       -> getMetricDataRecords(
+                                           AwsNameSpace.EC2, cloudWatchClient, cloudWatchMetric, host, groupName))));
 
       logger.info("fetching cloud watch metrics for {} strategy {} for min {}",
           dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getAnalysisComparisonStrategy(),
@@ -220,29 +223,30 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
     }
 
     private TreeBasedTable<String, Long, NewRelicMetricDataRecord> getMetricDataRecords(AwsNameSpace awsNameSpace,
-        AmazonCloudWatchClient cloudWatchClient, CloudWatchMetric cloudWatchMetric, String dimensionValue) {
+        AmazonCloudWatchClient cloudWatchClient, CloudWatchMetric cloudWatchMetric, String dimensionValue,
+        String groupName) {
       TreeBasedTable<String, Long, NewRelicMetricDataRecord> rv = TreeBasedTable.create();
       long endTime = System.currentTimeMillis();
       long startTime = endTime - TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES);
       switch (dataCollectionInfo.getAnalysisComparisonStrategy()) {
         case COMPARE_WITH_PREVIOUS:
-          fetchMetrics(
-              awsNameSpace, cloudWatchClient, cloudWatchMetric, dimensionValue, dimensionValue, startTime, endTime, rv);
+          fetchMetrics(awsNameSpace, cloudWatchClient, cloudWatchMetric, dimensionValue, dimensionValue, groupName,
+              startTime, endTime, rv);
           break;
 
         case COMPARE_WITH_CURRENT:
           switch (awsNameSpace) {
             case EC2:
-              fetchMetrics(awsNameSpace, cloudWatchClient, cloudWatchMetric, dimensionValue, dimensionValue, startTime,
-                  endTime, rv);
+              fetchMetrics(awsNameSpace, cloudWatchClient, cloudWatchMetric, dimensionValue, dimensionValue, groupName,
+                  startTime, endTime, rv);
               break;
             case ELB:
               for (int i = 0; i <= CANARY_DAYS_TO_COLLECT; i++) {
                 String hostName = i == 0 ? TEST_HOST_NAME : CONTROL_HOST_NAME + "-" + i;
                 endTime = endTime - TimeUnit.DAYS.toMillis(i);
                 startTime = startTime - TimeUnit.DAYS.toMillis(i);
-                fetchMetrics(
-                    awsNameSpace, cloudWatchClient, cloudWatchMetric, dimensionValue, hostName, startTime, endTime, rv);
+                fetchMetrics(awsNameSpace, cloudWatchClient, cloudWatchMetric, dimensionValue, hostName, groupName,
+                    startTime, endTime, rv);
               }
               break;
             default:
@@ -257,8 +261,8 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
     }
 
     private void fetchMetrics(AwsNameSpace awsNameSpace, AmazonCloudWatchClient cloudWatchClient,
-        CloudWatchMetric cloudWatchMetric, String dimensionValue, String host, long startTime, long endTime,
-        TreeBasedTable<String, Long, NewRelicMetricDataRecord> rv) {
+        CloudWatchMetric cloudWatchMetric, String dimensionValue, String host, String groupName, long startTime,
+        long endTime, TreeBasedTable<String, Long, NewRelicMetricDataRecord> rv) {
       GetMetricStatisticsRequest metricStatisticsRequest = new GetMetricStatisticsRequest();
       metricStatisticsRequest.withNamespace(awsNameSpace.getNameSpace())
           .withMetricName(cloudWatchMetric.getMetricName())
@@ -283,7 +287,7 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
                 .timeStamp(datapoint.getTimestamp().getTime())
                 .dataCollectionMinute(dataCollectionMinute)
                 .host(host)
-                .groupName(DEFAULT_GROUP_NAME)
+                .groupName(groupName)
                 .tag(awsNameSpace.name())
                 .values(new HashMap<>())
                 .build();

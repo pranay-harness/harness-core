@@ -7,6 +7,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -83,8 +84,8 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
   @Test
   public void noTestNodes() {
     SplunkV2State spyState = spy(splunkState);
-    doReturn(Collections.emptySet()).when(spyState).getCanaryNewHostNames(executionContext);
-    doReturn(Collections.emptySet()).when(spyState).getLastExecutionNodes(executionContext);
+    doReturn(Collections.emptyMap()).when(spyState).getCanaryNewHostNames(executionContext);
+    doReturn(Collections.emptyMap()).when(spyState).getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
 
@@ -106,8 +107,10 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
   public void noControlNodesCompareWithCurrent() {
     splunkState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
     SplunkV2State spyState = spy(splunkState);
-    doReturn(Collections.singleton("some-host")).when(spyState).getCanaryNewHostNames(executionContext);
-    doReturn(Collections.emptySet()).when(spyState).getLastExecutionNodes(executionContext);
+    doReturn(Collections.singletonMap("some-host", DEFAULT_GROUP_NAME))
+        .when(spyState)
+        .getCanaryNewHostNames(executionContext);
+    doReturn(Collections.emptyMap()).when(spyState).getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
 
@@ -130,8 +133,12 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
   public void compareWithCurrentSameTestAndControlNodes() {
     splunkState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
     SplunkV2State spyState = spy(splunkState);
-    doReturn(Sets.newHashSet("some-host")).when(spyState).getCanaryNewHostNames(executionContext);
-    doReturn(Sets.newHashSet("some-host")).when(spyState).getLastExecutionNodes(executionContext);
+    doReturn(new HashMap<>(Collections.singletonMap("some-host", DEFAULT_GROUP_NAME)))
+        .when(spyState)
+        .getCanaryNewHostNames(executionContext);
+    doReturn(new HashMap<>(Collections.singletonMap("some-host", DEFAULT_GROUP_NAME)))
+        .when(spyState)
+        .getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
 
@@ -167,8 +174,12 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     wingsPersistence.save(settingAttribute);
     splunkState.setAnalysisServerConfigId(settingAttribute.getUuid());
     SplunkV2State spyState = spy(splunkState);
-    doReturn(Collections.singleton("test")).when(spyState).getCanaryNewHostNames(executionContext);
-    doReturn(Collections.singleton("control")).when(spyState).getLastExecutionNodes(executionContext);
+    doReturn(Collections.singletonMap("test", DEFAULT_GROUP_NAME))
+        .when(spyState)
+        .getCanaryNewHostNames(executionContext);
+    doReturn(Collections.singletonMap("control", DEFAULT_GROUP_NAME))
+        .when(spyState)
+        .getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
     when(workflowStandardParams.getEnv())
@@ -303,8 +314,12 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     responseMap.put("somekey", response);
 
     SplunkV2State spyState = spy(splunkState);
-    doReturn(Collections.singleton("test")).when(spyState).getCanaryNewHostNames(executionContext);
-    doReturn(Collections.singleton("control")).when(spyState).getLastExecutionNodes(executionContext);
+    doReturn(Collections.singletonMap("test", DEFAULT_GROUP_NAME))
+        .when(spyState)
+        .getCanaryNewHostNames(executionContext);
+    doReturn(Collections.singletonMap("control", DEFAULT_GROUP_NAME))
+        .when(spyState)
+        .getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
 

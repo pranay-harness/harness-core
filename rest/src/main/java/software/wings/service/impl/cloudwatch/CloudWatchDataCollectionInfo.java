@@ -8,10 +8,8 @@ import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by rsingh on 5/18/17.
@@ -32,7 +30,7 @@ public class CloudWatchDataCollectionInfo {
   private List<EncryptedDataDetail> encryptedDataDetails;
   private String region;
 
-  @Builder.Default private Set<String> hosts = new HashSet<>();
+  @Builder.Default private Map<String, String> hosts = new HashMap<>();
 
   @Builder.Default private Map<String, List<CloudWatchMetric>> loadBalancerMetrics = new HashMap<>();
   @Builder.Default private List<CloudWatchMetric> ec2Metrics = new ArrayList<>();

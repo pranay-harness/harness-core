@@ -5,8 +5,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
-import com.google.common.collect.Sets;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import org.junit.Before;
@@ -77,8 +78,14 @@ public class LogAnalysisManagerJobTest extends WingsBaseTest {
                           .workflowExecutionId(workflowExecutionId)
                           .stateExecutionId(stateExecutionId)
                           .serviceId(serviceId)
-                          .controlNodes(Sets.newHashSet("control1", "control2"))
-                          .testNodes(Sets.newHashSet("test1", "test2"))
+                          .controlNodes(ImmutableMap.<String, String>builder()
+                                            .put("control1", DEFAULT_GROUP_NAME)
+                                            .put("control2", DEFAULT_GROUP_NAME)
+                                            .build())
+                          .testNodes(ImmutableMap.<String, String>builder()
+                                         .put("test1", DEFAULT_GROUP_NAME)
+                                         .put("test2", DEFAULT_GROUP_NAME)
+                                         .build())
                           .isSSL(true)
                           .appPort(1234)
                           .comparisonStrategy(COMPARE_WITH_PREVIOUS)
@@ -103,15 +110,15 @@ public class LogAnalysisManagerJobTest extends WingsBaseTest {
   public void testMlJobQueuedPrevious() throws Exception {
     when(analysisService.isStateValid(appId, stateExecutionId)).thenReturn(true);
     when(analysisService.getCollectionMinuteForLevel(query, appId, stateExecutionId, analysisContext.getStateType(),
-             ClusterLevel.L1, analysisContext.getTestNodes()))
+             ClusterLevel.L1, analysisContext.getTestNodes().keySet()))
         .thenReturn(10);
 
     when(analysisService.hasDataRecords(query, appId, stateExecutionId, analysisContext.getStateType(),
-             analysisContext.getTestNodes(), ClusterLevel.L1, 10))
+             analysisContext.getTestNodes().keySet(), ClusterLevel.L1, 10))
         .thenReturn(true);
 
     when(analysisService.getCollectionMinuteForLevel(query, appId, stateExecutionId, analysisContext.getStateType(),
-             ClusterLevel.L2, analysisContext.getTestNodes()))
+             ClusterLevel.L2, analysisContext.getTestNodes().keySet()))
         .thenReturn(10);
     logAnalysisManagerJob.execute(jobExecutionContext);
     LearningEngineAnalysisTask learningEngineAnalysisTask =
@@ -123,8 +130,8 @@ public class LogAnalysisManagerJobTest extends WingsBaseTest {
     assertEquals(serviceId, learningEngineAnalysisTask.getService_id());
     assertEquals(0, learningEngineAnalysisTask.getAnalysis_start_min());
     assertEquals(10, learningEngineAnalysisTask.getAnalysis_minute());
-    assertEquals(analysisContext.getControlNodes(), learningEngineAnalysisTask.getControl_nodes());
-    assertEquals(analysisContext.getTestNodes(), learningEngineAnalysisTask.getTest_nodes());
+    assertEquals(analysisContext.getControlNodes().keySet(), learningEngineAnalysisTask.getControl_nodes());
+    assertEquals(analysisContext.getTestNodes().keySet(), learningEngineAnalysisTask.getTest_nodes());
     assertEquals(analysisContext.getStateType(), learningEngineAnalysisTask.getStateType());
     assertEquals(MLAnalysisType.LOG_ML, learningEngineAnalysisTask.getMl_analysis_type());
     assertEquals(ExecutionStatus.RUNNING, learningEngineAnalysisTask.getExecutionStatus());

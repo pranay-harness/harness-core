@@ -16,8 +16,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.DeploymentType;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.TemplateExpression;
@@ -135,7 +137,8 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
   }
 
   @Override
-  protected String triggerAnalysisDataCollection(ExecutionContext context, String correlationId, Set<String> hosts) {
+  protected String triggerAnalysisDataCollection(
+      ExecutionContext context, String correlationId, Map<String, String> hosts) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
 
@@ -212,7 +215,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
 
     for (int i = 0; i < dependentTiers.size(); i++) {
       waitIds[i + 1] =
-          createDelegateTask(context, Collections.emptySet(), envId, finalApplicationId, dependentTiers.get(i).getId(),
+          createDelegateTask(context, Collections.emptyMap(), envId, finalApplicationId, dependentTiers.get(i).getId(),
               appDynamicsConfig, dataCollectionStartTimeStamp, TimeSeriesMlAnalysisType.PREDICTIVE, delegateTasks);
       metricGroups.put(dependentTiers.get(i).getName(),
           TimeSeriesMlAnalysisGroupInfo.builder()
@@ -222,8 +225,13 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
               .build());
     }
     waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId, false), waitIds);
-    metricAnalysisService.saveMetricGroups(
-        context.getAppId(), StateType.APP_DYNAMICS, context.getStateExecutionInstanceId(), metricGroups);
+    InfrastructureMapping infrastructureMapping = getInfrastructureMapping(context);
+    if (DeploymentType.valueOf(infrastructureMapping.getDeploymentType()).equals(DeploymentType.HELM)) {
+      super.createAndSaveMetricGroups(context, hosts);
+    } else {
+      metricAnalysisService.saveMetricGroups(
+          context.getAppId(), StateType.APP_DYNAMICS, context.getStateExecutionInstanceId(), metricGroups);
+    }
     List<String> delegateTaskIds = new ArrayList<>();
     for (DelegateTask task : delegateTasks) {
       delegateTaskIds.add(delegateService.queueTask(task));
@@ -231,7 +239,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
     return StringUtils.join(delegateTaskIds, ",");
   }
 
-  private String createDelegateTask(ExecutionContext context, Set<String> hosts, String envId,
+  private String createDelegateTask(ExecutionContext context, Map<String, String> hosts, String envId,
       String finalApplicationId, long finalTierId, AppDynamicsConfig appDynamicsConfig,
       long dataCollectionStartTimeStamp, TimeSeriesMlAnalysisType mlAnalysisType, List<DelegateTask> delegateTasks) {
     final AppdynamicsDataCollectionInfo dataCollectionInfo =
@@ -264,6 +272,16 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
                           .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 5))
                           .build());
     return waitId;
+  }
+
+  @Override
+  protected void createAndSaveMetricGroups(ExecutionContext context, Map<String, String> hostsToCollect) {
+    if (!isEmpty(dependentTiersToAnalyze)) {
+      InfrastructureMapping infrastructureMapping = getInfrastructureMapping(context);
+      if (DeploymentType.valueOf(infrastructureMapping.getDeploymentType()).equals(DeploymentType.HELM)) {
+        throw new WingsException("can not analyze dependent tiers for helm type deployment");
+      }
+    }
   }
 
   @Override

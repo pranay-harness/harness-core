@@ -5,6 +5,9 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.service.impl.apm.APMMetricInfo.ResponseMapper;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
+import static software.wings.sm.states.DynatraceState.CONTROL_HOST_NAME;
+import static software.wings.sm.states.DynatraceState.TEST_HOST_NAME;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -174,7 +177,8 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
   }
 
   @Override
-  protected String triggerAnalysisDataCollection(ExecutionContext context, String correlationId, Set<String> hosts) {
+  protected String triggerAnalysisDataCollection(
+      ExecutionContext context, String correlationId, Map<String, String> hosts) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
 
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
@@ -224,6 +228,13 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
             .accountId(accountId)
             .strategy(getComparisonStrategy())
             .build();
+
+    analysisContext.getTestNodes().put(TEST_HOST_NAME, DEFAULT_GROUP_NAME);
+    if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
+      for (int i = 1; i <= CANARY_DAYS_TO_COLLECT; ++i) {
+        analysisContext.getControlNodes().put(CONTROL_HOST_NAME + "-" + i, DEFAULT_GROUP_NAME);
+      }
+    }
 
     String waitId = generateUuid();
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);

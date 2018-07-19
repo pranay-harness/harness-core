@@ -2,8 +2,6 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-import static software.wings.sm.states.DynatraceState.CONTROL_HOST_NAME;
-import static software.wings.sm.states.DynatraceState.TEST_HOST_NAME;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -22,6 +20,8 @@ import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisTolerance;
+import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
+import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.impl.newrelic.MetricAnalysisJob;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
@@ -39,12 +39,14 @@ import software.wings.waitnotify.NotifyResponseData;
 import java.io.UnsupportedEncodingException;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+
 /**
  * Created by rsingh on 9/25/17.
  */
@@ -54,7 +56,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
   protected static final int MIN_REQUESTS_PER_MINUTE = 10;
   protected static final int COMPARISON_WINDOW = 1;
   protected static final int PARALLEL_PROCESSES = 7;
-  private static final int CANARY_DAYS_TO_COLLECT = 7;
+  public static final int CANARY_DAYS_TO_COLLECT = 7;
 
   @Inject @Named("VerificationJobScheduler") private QuartzScheduler jobScheduler;
 
@@ -67,6 +69,9 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
   private void cleanUpForRetry(ExecutionContext executionContext) {
     metricAnalysisService.cleanUpForMetricRetry(executionContext.getStateExecutionInstanceId());
   }
+
+  protected abstract String triggerAnalysisDataCollection(
+      ExecutionContext context, String correlationId, Map<String, String> hosts);
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
@@ -88,22 +93,22 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       }
     }
 
-    Set<String> canaryNewHostNames = analysisContext.getTestNodes();
+    Map<String, String> canaryNewHostNames = analysisContext.getTestNodes();
     if (isEmpty(canaryNewHostNames)) {
       getLogger().warn("id: {}, Could not find test nodes to compare the data", context.getStateExecutionInstanceId());
       return generateAnalysisResponse(context, ExecutionStatus.SUCCESS, "Could not find nodes to analyze!");
     }
 
-    Set<String> lastExecutionNodes = analysisContext.getControlNodes();
+    Map<String, String> lastExecutionNodes = analysisContext.getControlNodes();
     if (isEmpty(lastExecutionNodes)) {
       if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
-        getLogger().warn("id: {}, No nodes with older version found to compare the logs. Skipping analysis",
+        getLogger().info("id: {}, No nodes with older version found to compare the logs. Skipping analysis",
             context.getStateExecutionInstanceId());
         return generateAnalysisResponse(context, ExecutionStatus.SUCCESS,
             "Skipping analysis due to lack of baseline data (First time deployment or Last phase).");
       }
 
-      getLogger().warn(
+      getLogger().info(
           "id: {}, It seems that there is no successful run for this workflow yet. Metric data will be collected to be analyzed for next deployment run",
           context.getStateExecutionInstanceId());
     }
@@ -146,42 +151,30 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
             .stateExecutionInstanceId(context.getStateExecutionInstanceId())
             .serverConfigId(getAnalysisServerConfigId())
             .timeDuration(timeDurationInt)
-            .canaryNewHostNames(canaryNewHostNames)
-            .lastExecutionNodes(lastExecutionNodes == null ? new HashSet<>() : new HashSet<>(lastExecutionNodes))
+            .canaryNewHostNames(canaryNewHostNames.keySet())
+            .lastExecutionNodes(lastExecutionNodes == null ? new HashSet<>() : lastExecutionNodes.keySet())
             .correlationId(analysisContext.getCorrelationId())
-            .canaryNewHostNames(analysisContext.getTestNodes())
-            .lastExecutionNodes(analysisContext.getControlNodes())
+            .canaryNewHostNames(analysisContext.getTestNodes().keySet())
+            .lastExecutionNodes(analysisContext.getControlNodes().keySet())
             .build();
     executionData.setErrorMsg(responseMessage);
     executionData.setStatus(ExecutionStatus.RUNNING);
-    Set<String> hostsToCollect = new HashSet<>();
+    Map<String, String> hostsToCollect = new HashMap<>();
     if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS) {
-      hostsToCollect.addAll(canaryNewHostNames);
+      hostsToCollect.putAll(canaryNewHostNames);
     } else {
-      hostsToCollect.addAll(canaryNewHostNames);
-      hostsToCollect.addAll(lastExecutionNodes);
+      hostsToCollect.putAll(canaryNewHostNames);
+      hostsToCollect.putAll(lastExecutionNodes);
     }
 
     try {
       getLogger().info(
           "triggering data collection for {} state, id: {} ", getStateType(), context.getStateExecutionInstanceId());
       hostsToCollect.remove(null);
+      createAndSaveMetricGroups(context, hostsToCollect);
       String delegateTaskId = triggerAnalysisDataCollection(context, executionData.getCorrelationId(), hostsToCollect);
       getLogger().info("triggered data collection for {} state, id: {}, delgateTaskId: {}", getStateType(),
           context.getStateExecutionInstanceId(), delegateTaskId);
-      switch (StateType.valueOf(getStateType())) {
-        case CLOUD_WATCH:
-        case APM_VERIFICATION:
-          analysisContext.getTestNodes().add(TEST_HOST_NAME);
-          if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
-            for (int i = 1; i <= CANARY_DAYS_TO_COLLECT; ++i) {
-              analysisContext.getControlNodes().add(CONTROL_HOST_NAME + "-" + i);
-            }
-          }
-          break;
-        default:
-          // no op
-      }
 
       final MetricDataAnalysisResponse response =
           MetricDataAnalysisResponse.builder().stateExecutionData(executionData).build();
@@ -197,13 +190,28 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     } catch (Exception ex) {
       getLogger().error("metric analysis state failed", ex);
       return anExecutionResponse()
-          .withAsync(true)
+          .withAsync(false)
           .withCorrelationIds(Collections.singletonList(executionData.getCorrelationId()))
           .withExecutionStatus(ExecutionStatus.ERROR)
           .withErrorMessage(Misc.getMessage(ex))
           .withStateExecutionData(executionData)
           .build();
     }
+  }
+
+  protected void createAndSaveMetricGroups(ExecutionContext context, Map<String, String> hostsToCollect) {
+    Map<String, TimeSeriesMlAnalysisGroupInfo> metricGroups = new HashMap<>();
+    Set<String> hostGroups = new HashSet<>(hostsToCollect.values());
+    getLogger().info("for state {} saving host groups are {}", context.getStateExecutionInstanceId(), hostGroups);
+    hostGroups.forEach(hostGroup
+        -> metricGroups.put(hostGroup,
+            TimeSeriesMlAnalysisGroupInfo.builder()
+                .groupName(hostGroup)
+                .mlAnalysisType(TimeSeriesMlAnalysisType.COMPARATIVE)
+                .build()));
+    getLogger().info("for state {} saving metric groups {}", context.getStateExecutionInstanceId(), metricGroups);
+    metricAnalysisService.saveMetricGroups(
+        context.getAppId(), StateType.valueOf(getStateType()), context.getStateExecutionInstanceId(), metricGroups);
   }
 
   private void scheduleAnalysisCronJob(AnalysisContext context, String delegateTaskId) {
@@ -311,11 +319,11 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
 
   private AnalysisContext getAnalysisContext(ExecutionContext context, String correlationId) {
     try {
-      Set<String> controlNodes = getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS
-          ? Collections.emptySet()
+      Map<String, String> controlNodes = getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS
+          ? Collections.emptyMap()
           : getLastExecutionNodes(context);
-      Set<String> testNodes = getCanaryNewHostNames(context);
-      controlNodes.removeAll(testNodes);
+      Map<String, String> testNodes = getCanaryNewHostNames(context);
+      testNodes.keySet().forEach(testNode -> controlNodes.remove(testNode));
       int timeDurationInt = Integer.parseInt(timeDuration);
       return AnalysisContext.builder()
           .accountId(this.appService.get(context.getAppId()).getAccountId())

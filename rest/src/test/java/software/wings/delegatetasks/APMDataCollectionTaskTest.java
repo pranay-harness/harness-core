@@ -3,6 +3,9 @@ package software.wings.delegatetasks;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
+
+import com.google.common.collect.ImmutableMap;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
@@ -10,16 +13,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.TaskType;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
 import software.wings.sm.StateType;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -41,8 +43,11 @@ public class APMDataCollectionTaskTest {
                              .startTime(12312321123L)
                              .stateType(StateType.APM_VERIFICATION)
                              .dataCollectionFrequency(2)
-                             .hosts(new HashSet(Arrays.asList("test.host.node1", "test.host.node2")))
-                             .encryptedDataDetails(new ArrayList<EncryptedDataDetail>())
+                             .hosts(ImmutableMap.<String, String>builder()
+                                        .put("test.host.node1", DEFAULT_GROUP_NAME)
+                                        .put("test.host.node2", DEFAULT_GROUP_NAME)
+                                        .build())
+                             .encryptedDataDetails(new ArrayList<>())
                              .dataCollectionMinute(0)
                              .build();
 
@@ -82,12 +87,12 @@ public class APMDataCollectionTaskTest {
   @Test
   public void testMoreThanFiftyHostsInBatch() throws Exception {
     setup();
-    List<String> hostList = new ArrayList<>();
+    Map<String, String> hostList = new HashMap<>();
     for (int i = 0; i < 52; i++) {
-      hostList.add("test.host.node" + i);
+      hostList.put("test.host.node" + i, DEFAULT_GROUP_NAME);
     }
 
-    dataCollectionInfo.setHosts(new HashSet<>(hostList));
+    dataCollectionInfo.setHosts(hostList);
     DataCollectionTaskResult tr = dataCollectionTask.initDataCollection(dataCollectionTask.getParameters());
     String batchUrl = "urlData{$harness_batch{pod_name:${host},'|'}}";
     List<String> batchedHosts =

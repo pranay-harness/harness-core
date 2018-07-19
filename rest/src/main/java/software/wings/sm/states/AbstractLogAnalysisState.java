@@ -85,7 +85,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     getLogger().info("id: {} context: {}", executionContext.getStateExecutionInstanceId(), analysisContext);
     saveMetaDataForDashboard(analysisContext.getAccountId(), executionContext);
 
-    Set<String> canaryNewHostNames = analysisContext.getTestNodes();
+    Set<String> canaryNewHostNames = analysisContext.getTestNodes().keySet();
     if (isDemoPath(analysisContext.getAccountId()) && getStateType().equals(StateType.ELK.name())) {
       if (settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev")
           || settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("prod")) {
@@ -104,7 +104,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS, "Could not find hosts to analyze!");
     }
 
-    Set<String> lastExecutionNodes = analysisContext.getControlNodes();
+    Set<String> lastExecutionNodes = analysisContext.getControlNodes().keySet();
     if (isEmpty(lastExecutionNodes)) {
       if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
         getLogger().info("id: {}, No nodes with older version found to compare the logs. Skipping analysis",
@@ -186,7 +186,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     } catch (Exception ex) {
       getLogger().error("log analysis state failed ", ex);
       return anExecutionResponse()
-          .withAsync(true)
+          .withAsync(false)
           .withCorrelationIds(Collections.singletonList(analysisContext.getCorrelationId()))
           .withExecutionStatus(ExecutionStatus.ERROR)
           .withErrorMessage(Misc.getMessage(ex))
@@ -194,6 +194,9 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           .build();
     }
   }
+
+  protected abstract String triggerAnalysisDataCollection(
+      ExecutionContext context, String correlationId, Set<String> hosts);
 
   @Override
   public ExecutionResponse handleAsyncResponse(
@@ -352,11 +355,11 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
   private AnalysisContext getLogAnalysisContext(ExecutionContext context, String correlationId) {
     try {
-      Set<String> controlNodes = getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS
-          ? Collections.emptySet()
+      Map<String, String> controlNodes = getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS
+          ? Collections.emptyMap()
           : getLastExecutionNodes(context);
-      Set<String> testNodes = getCanaryNewHostNames(context);
-      controlNodes.removeAll(testNodes);
+      Map<String, String> testNodes = getCanaryNewHostNames(context);
+      testNodes.keySet().forEach(testNode -> controlNodes.remove(testNode));
       return AnalysisContext.builder()
           .accountId(this.appService.get(context.getAppId()).getAccountId())
           .appId(context.getAppId())

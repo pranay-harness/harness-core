@@ -2,13 +2,14 @@ package software.wings.service.impl.analysis;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import software.wings.sm.StateType;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by sriram_parthasarathy on 8/23/17.
@@ -24,8 +25,8 @@ public class AnalysisContext {
   private String workflowExecutionId;
   private String stateExecutionId;
   private String serviceId;
-  private Set<String> controlNodes;
-  private Set<String> testNodes;
+  private Map<String, String> controlNodes;
+  private Map<String, String> testNodes;
   private String query;
   private boolean isSSL;
   private int appPort;
@@ -41,7 +42,7 @@ public class AnalysisContext {
   private int minimumRequestsPerMinute;
   private int comparisonWindow;
   private int parallelProcesses;
-  private Map<String, List<TimeSeries>> timeSeriesToCollect;
+  @Default private Map<String, List<TimeSeries>> timeSeriesToCollect = new HashMap<>();
   private boolean runTillConvergence;
 
   public LogClusterContext getClusterContext() {
@@ -51,8 +52,8 @@ public class AnalysisContext {
         .workflowExecutionId(workflowExecutionId)
         .stateExecutionId(stateExecutionId)
         .serviceId(serviceId)
-        .controlNodes(controlNodes)
-        .testNodes(testNodes)
+        .controlNodes(controlNodes.keySet())
+        .testNodes(testNodes.keySet())
         .query(query)
         .isSSL(isSSL)
         .appPort(appPort)

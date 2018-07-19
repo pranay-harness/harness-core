@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.dl.HQuery.excludeAuthority;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.APDEX_SCORE;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.AVERAGE_RESPONSE_TIME;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.ERROR;
@@ -570,8 +571,8 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
             .workflowExecutionId(workflowExecutionId)
             .stateExecutionId(stateExecutionId)
             .serviceId(serviceId)
-            .controlNodes(com.google.common.collect.Sets.newHashSet("host1"))
-            .testNodes(com.google.common.collect.Sets.newHashSet("host1"))
+            .controlNodes(Collections.singletonMap("host1", DEFAULT_GROUP_NAME))
+            .testNodes(Collections.singletonMap("host1", DEFAULT_GROUP_NAME))
             .isSSL(true)
             .appPort(9090)
             .comparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS)
@@ -703,8 +704,8 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
             .workflowExecutionId(workflowExecutionId)
             .stateExecutionId(stateExecutionId)
             .serviceId(serviceId)
-            .controlNodes(com.google.common.collect.Sets.newHashSet("host1"))
-            .testNodes(com.google.common.collect.Sets.newHashSet("host1"))
+            .controlNodes(Collections.singletonMap("host1", DEFAULT_GROUP_NAME))
+            .testNodes(Collections.singletonMap("host1", DEFAULT_GROUP_NAME))
             .isSSL(true)
             .appPort(9090)
             .comparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS)
@@ -840,8 +841,8 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
             .workflowExecutionId(workflowExecutionId)
             .stateExecutionId(stateExecutionId)
             .serviceId(serviceId)
-            .controlNodes(com.google.common.collect.Sets.newHashSet("host1"))
-            .testNodes(com.google.common.collect.Sets.newHashSet("host1"))
+            .controlNodes(Collections.singletonMap("host1", DEFAULT_GROUP_NAME))
+            .testNodes(Collections.singletonMap("host1", DEFAULT_GROUP_NAME))
             .isSSL(true)
             .appPort(9090)
             .comparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS)
@@ -988,8 +989,8 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
             .workflowExecutionId(workflowExecutionId)
             .stateExecutionId(stateExecutionId)
             .serviceId(serviceId)
-            .controlNodes(com.google.common.collect.Sets.newHashSet("host1"))
-            .testNodes(com.google.common.collect.Sets.newHashSet("host1"))
+            .controlNodes(Collections.singletonMap("host1", DEFAULT_GROUP_NAME))
+            .testNodes(Collections.singletonMap("host1", DEFAULT_GROUP_NAME))
             .isSSL(true)
             .appPort(9090)
             .comparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS)
@@ -1144,8 +1145,8 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
             .workflowExecutionId(workflowExecutionId)
             .stateExecutionId(stateExecutionId)
             .serviceId(serviceId)
-            .controlNodes(com.google.common.collect.Sets.newHashSet("host1"))
-            .testNodes(com.google.common.collect.Sets.newHashSet("host1"))
+            .controlNodes(Collections.singletonMap("host1", DEFAULT_GROUP_NAME))
+            .testNodes(Collections.singletonMap("host1", DEFAULT_GROUP_NAME))
             .isSSL(true)
             .appPort(9090)
             .comparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS)

@@ -149,9 +149,9 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
   @Test
   public void testAnalysisSorting() throws IOException {
     Map<String, TimeSeriesMlAnalysisGroupInfo> groups = new HashMap<>();
-    groups.put("b_group",
+    groups.put("b_group.with.dot",
         TimeSeriesMlAnalysisGroupInfo.builder()
-            .groupName("b_group")
+            .groupName("b_group.with.dot")
             .mlAnalysisType(TimeSeriesMlAnalysisType.PREDICTIVE)
             .build());
 
@@ -161,9 +161,9 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
             .mlAnalysisType(TimeSeriesMlAnalysisType.COMPARATIVE)
             .build());
 
-    groups.put("a_group",
+    groups.put("a_group.with.dot",
         TimeSeriesMlAnalysisGroupInfo.builder()
-            .groupName("a_group")
+            .groupName("a_group.with.dot")
             .mlAnalysisType(TimeSeriesMlAnalysisType.PREDICTIVE)
             .build());
 
@@ -177,7 +177,7 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
             .message("No data available")
             .riskLevel(RiskLevel.NA)
             .stateType(StateType.NEW_RELIC)
-            .groupName("b_group")
+            .groupName("b_group.with.dot")
             .mlAnalysisType(TimeSeriesMlAnalysisType.PREDICTIVE)
             .build();
     metricDataAnalysisService.saveAnalysisRecords(newRelicMetricAnalysisRecord1);
@@ -205,7 +205,7 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
             .message("No data available")
             .riskLevel(RiskLevel.NA)
             .stateType(StateType.NEW_RELIC)
-            .groupName("a_group")
+            .groupName("a_group.with.dot")
             .mlAnalysisType(TimeSeriesMlAnalysisType.PREDICTIVE)
             .build();
     metricDataAnalysisService.saveAnalysisRecords(newRelicMetricAnalysisRecord3);

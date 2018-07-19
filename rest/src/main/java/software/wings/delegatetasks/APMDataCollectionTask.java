@@ -3,6 +3,7 @@ package software.wings.delegatetasks;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.states.DynatraceState.CONTROL_HOST_NAME;
 import static software.wings.sm.states.DynatraceState.TEST_HOST_NAME;
 
@@ -291,32 +292,33 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
             List<String> curUrls = resolveDollarReferences(url, null, strategy);
             curUrls.forEach(curUrl
                 -> callabels.add(()
-                                     -> new APMResponseParser.APMResponseData(null,
+                                     -> new APMResponseParser.APMResponseData(null, DEFAULT_GROUP_NAME,
                                          collect(getAPMRestClient(baseUrl).collect(curUrl, headersBiMap, optionsBiMap),
                                              baseUrl + curUrl),
                                          metricInfos)));
           }
         } else {
           // This is not a batch query
-          for (String host : dataCollectionInfo.getHosts()) {
+          for (String host : dataCollectionInfo.getHosts().keySet()) {
             List<String> curUrls = resolveDollarReferences(initialUrl, host, strategy);
             curUrls.forEach(curUrl
-                -> callabels.add(()
-                                     -> new APMResponseParser.APMResponseData(host,
-                                         collect(getAPMRestClient(baseUrl).collect(curUrl, headersBiMap, optionsBiMap),
-                                             baseUrl + curUrl),
-                                         metricInfos)));
+                -> callabels.add(
+                    ()
+                        -> new APMResponseParser.APMResponseData(host, dataCollectionInfo.getHosts().get(host),
+                            collect(getAPMRestClient(baseUrl).collect(curUrl, headersBiMap, optionsBiMap),
+                                baseUrl + curUrl),
+                            metricInfos)));
           }
         }
 
       } else {
         List<String> curUrls = resolveDollarReferences(initialUrl, TEST_HOST_NAME, strategy);
-        int i = 0;
         IntStream.range(0, curUrls.size())
             .forEach(index
                 -> callabels.add(
                     ()
                         -> new APMResponseParser.APMResponseData(getHostNameForTestControl(index),
+                            dataCollectionInfo.getHosts().get(getHostNameForTestControl(index)),
                             collect(getAPMRestClient(baseUrl).collect(curUrls.get(index), headersBiMap, optionsBiMap),
                                 baseUrl + curUrls.get(index)),
                             metricInfos)));
@@ -335,7 +337,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
      * @return urlData{pod_name:host1.pod1.com | pod_name:host2.pod3.com }
      */
     protected List<String> resolveBatchHosts(final String batchUrl) {
-      List<String> hostList = new ArrayList<>(dataCollectionInfo.getHosts());
+      List<String> hostList = new ArrayList<>(dataCollectionInfo.getHosts().keySet());
       List<String> batchResolvedUrls = new ArrayList<>();
       Pattern batchPattern = Pattern.compile(BATCH_REGEX);
       Matcher matcher = batchPattern.matcher(batchUrl);
@@ -474,7 +476,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
     private void addHeartbeatRecords(
         Set<String> groupNameSet, TreeBasedTable<String, Long, NewRelicMetricDataRecord> records) {
       if (isEmpty(groupNameSet)) {
-        groupNameSet = new HashSet<>(Arrays.asList(NewRelicMetricDataRecord.DEFAULT_GROUP_NAME));
+        groupNameSet = new HashSet<>(Arrays.asList(DEFAULT_GROUP_NAME));
       }
       for (String group : groupNameSet) {
         // HeartBeat
