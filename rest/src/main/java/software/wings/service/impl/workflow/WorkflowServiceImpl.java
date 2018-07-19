@@ -332,14 +332,22 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             -> stencil.getStencilCategory() != StencilCategory.COMMANDS
             && stencil.getStencilCategory() != StencilCategory.CLOUD;
       }
-      if (!buildWorkflow) {
-        predicate = stencil -> stencil.getStencilCategory() != StencilCategory.COLLECTIONS;
-      }
     }
     Predicate<Stencil> finalPredicate = predicate;
     maps = maps.entrySet().stream().collect(toMap(Entry::getKey,
         stateTypeScopeListEntry
         -> stateTypeScopeListEntry.getValue().stream().filter(finalPredicate).collect(toList())));
+    if (!buildWorkflow) {
+      maps = filterArtifactCollectionState(maps);
+    }
+    return maps;
+  }
+
+  private Map<StateTypeScope, List<Stencil>> filterArtifactCollectionState(Map<StateTypeScope, List<Stencil>> maps) {
+    Predicate<Stencil> buildWorkflowPredicate = stencil -> stencil.getStencilCategory() != StencilCategory.COLLECTIONS;
+    maps = maps.entrySet().stream().collect(toMap(Entry::getKey,
+        stateTypeScopeListEntry
+        -> stateTypeScopeListEntry.getValue().stream().filter(buildWorkflowPredicate).collect(toList())));
     return maps;
   }
 
