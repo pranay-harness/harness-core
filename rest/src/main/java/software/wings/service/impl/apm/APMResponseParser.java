@@ -33,6 +33,7 @@ public class APMResponseParser {
   @Builder
   public static class APMResponseData {
     private String hostName;
+    private String groupName;
     private String text;
     private List<APMMetricInfo> metricInfos;
   }
@@ -96,7 +97,7 @@ public class APMResponseParser {
           continue;
         }
         createRecords(metricInfo.getResponseMappers().get("txnName").getFieldValue(), metricInfo.getMetricName(),
-            data.hostName, metricInfo.getTag(), output, resultMap);
+            data.hostName, metricInfo.getTag(), data.groupName, output, resultMap);
       }
     }
     return resultMap.values();
@@ -162,7 +163,7 @@ public class APMResponseParser {
   }
 
   @SuppressFBWarnings("BX_UNBOXING_IMMEDIATELY_REBOXED")
-  private static void createRecords(String txnName, String metricName, String hostName, String tag,
+  private static void createRecords(String txnName, String metricName, String hostName, String tag, String groupName,
       List<Multimap<String, Object>> response, Map<String, NewRelicMetricDataRecord> resultMap) {
     for (Multimap<String, Object> record : response) {
       Iterator<Object> timestamps = record.get("timestamp").iterator();
@@ -184,7 +185,7 @@ public class APMResponseParser {
           resultMap.get(key).setName(txnName);
           resultMap.get(key).setHost(hostName);
           resultMap.get(key).setTag(tag);
-          resultMap.get(key).setGroupName(NewRelicMetricDataRecord.DEFAULT_GROUP_NAME);
+          resultMap.get(key).setGroupName(groupName);
         }
 
         Object val = values.next();

@@ -73,11 +73,11 @@ public class LogClusterManagerJob implements Job {
 
     private Set<String> getCollectedNodes() {
       if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
-        Set<String> nodes = Sets.newHashSet(context.getControlNodes());
-        nodes.addAll(context.getTestNodes());
+        Set<String> nodes = Sets.newHashSet(context.getControlNodes().keySet());
+        nodes.addAll(context.getTestNodes().keySet());
         return nodes;
       } else {
-        return Sets.newHashSet(context.getTestNodes());
+        return Sets.newHashSet(context.getTestNodes().keySet());
       }
     }
 

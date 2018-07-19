@@ -8,7 +8,7 @@ import software.wings.beans.NewRelicConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 /**
  * Created by rsingh on 5/18/17.
@@ -29,7 +29,7 @@ public class NewRelicDataCollectionInfo {
   private long newRelicAppId;
   private int dataCollectionMinute;
   List<EncryptedDataDetail> encryptedDataDetails;
-  private Set<String> hosts;
+  private Map<String, String> hosts;
   private String settingAttributeId;
   private String deploymentMarker;
 }

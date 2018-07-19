@@ -7,6 +7,8 @@ import static java.util.Arrays.asList;
 import static software.wings.dl.HQuery.excludeCount;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
+import static software.wings.utils.Misc.replaceDotWithUnicode;
+import static software.wings.utils.Misc.replaceUnicodeWithDot;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -802,11 +804,17 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   @Override
   public void saveMetricGroups(
       String appId, StateType stateType, String stateExecutionId, Map<String, TimeSeriesMlAnalysisGroupInfo> groups) {
+    Map<String, TimeSeriesMlAnalysisGroupInfo> toSave = new HashMap<>();
+    groups.forEach((groupName, timeSeriesMlAnalysisGroupInfo) -> {
+      groupName = replaceDotWithUnicode(groupName);
+      timeSeriesMlAnalysisGroupInfo.setGroupName(groupName);
+      toSave.put(groupName, timeSeriesMlAnalysisGroupInfo);
+    });
     wingsPersistence.save(TimeSeriesMetricGroup.builder()
                               .appId(appId)
                               .stateType(stateType)
                               .stateExecutionId(stateExecutionId)
-                              .groups(groups)
+                              .groups(toSave)
                               .build());
   }
 
@@ -819,15 +827,25 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                                       .equal(appId)
                                                       .get();
 
-    return timeSeriesMetricGroup == null ? new ImmutableMap.Builder<String, TimeSeriesMlAnalysisGroupInfo>()
-                                               .put(DEFAULT_GROUP_NAME,
-                                                   TimeSeriesMlAnalysisGroupInfo.builder()
-                                                       .groupName(DEFAULT_GROUP_NAME)
-                                                       .dependencyPath(DEFAULT_GROUP_NAME)
-                                                       .mlAnalysisType(TimeSeriesMlAnalysisType.COMPARATIVE)
-                                                       .build())
-                                               .build()
-                                         : timeSeriesMetricGroup.getGroups();
+    if (timeSeriesMetricGroup != null) {
+      Map<String, TimeSeriesMlAnalysisGroupInfo> toReturn = new HashMap<>();
+      timeSeriesMetricGroup.getGroups().forEach((groupName, timeSeriesMlAnalysisGroupInfo) -> {
+        groupName = replaceUnicodeWithDot(groupName);
+        timeSeriesMlAnalysisGroupInfo.setGroupName(groupName);
+        toReturn.put(groupName, timeSeriesMlAnalysisGroupInfo);
+      });
+
+      return toReturn;
+    }
+
+    return new ImmutableMap.Builder<String, TimeSeriesMlAnalysisGroupInfo>()
+        .put(DEFAULT_GROUP_NAME,
+            TimeSeriesMlAnalysisGroupInfo.builder()
+                .groupName(DEFAULT_GROUP_NAME)
+                .dependencyPath(DEFAULT_GROUP_NAME)
+                .mlAnalysisType(TimeSeriesMlAnalysisType.COMPARATIVE)
+                .build())
+        .build();
   }
 
   @Override

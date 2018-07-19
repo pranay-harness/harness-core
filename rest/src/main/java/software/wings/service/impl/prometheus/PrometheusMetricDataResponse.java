@@ -1,7 +1,5 @@
 package software.wings.service.impl.prometheus;
 
-import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
-
 import com.google.common.collect.TreeBasedTable;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -50,7 +48,7 @@ public class PrometheusMetricDataResponse implements MetricCollectionResponse {
   @Override
   public TreeBasedTable<String, Long, NewRelicMetricDataRecord> getMetricRecords(String transactionName,
       String metricName, String appId, String workflowId, String workflowExecutionId, String stateExecutionId,
-      String serviceId, String host, int collectionMinute) {
+      String serviceId, String host, String groupName, int collectionMinute) {
     TreeBasedTable<String, Long, NewRelicMetricDataRecord> rv = TreeBasedTable.create();
     if (!status.equals("success")) {
       return rv;
@@ -90,7 +88,7 @@ public class PrometheusMetricDataResponse implements MetricCollectionResponse {
                                  .timeStamp(timeStamp)
                                  .stateType(StateType.PROMETHEUS)
                                  .host(host)
-                                 .groupName(DEFAULT_GROUP_NAME)
+                                 .groupName(groupName)
                                  .build();
           metricDataRecord.setAppId(appId);
           rv.put(transactionName, timeStamp, metricDataRecord);

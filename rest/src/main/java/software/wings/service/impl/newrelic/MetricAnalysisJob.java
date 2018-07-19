@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static software.wings.delegatetasks.AppdynamicsDataCollectionTask.DURATION_TO_ASK_MINUTES;
 import static software.wings.delegatetasks.AppdynamicsDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -95,8 +96,8 @@ public class MetricAnalysisJob implements Job {
     private final AnalysisContext context;
     private final JobExecutionContext jobExecutionContext;
     private final String delegateTaskId;
-    private final Set<String> testNodes;
-    private final Set<String> controlNodes;
+    private final Map<String, String> testNodes;
+    private final Map<String, String> controlNodes;
     private final MetricDataAnalysisService analysisService;
     private final LearningEngineService learningEngineService;
     private final WaitNotifyEngine waitNotifyEngine;
@@ -116,7 +117,7 @@ public class MetricAnalysisJob implements Job {
       this.testNodes = context.getTestNodes();
       this.controlNodes = context.getControlNodes();
       if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
-        this.controlNodes.removeAll(this.testNodes);
+        this.testNodes.keySet().forEach(testNode -> controlNodes.remove(testNode));
       }
       this.analysisDuration = context.getTimeDuration() - APM_BUFFER_MINUTES - 1;
     }
@@ -145,11 +146,12 @@ public class MetricAnalysisJob implements Job {
                 analysisMinute, analysisStartMin)
           : analysisService.getRecords(context.getStateType(), context.getAppId(), context.getWorkflowExecutionId(),
                 context.getStateExecutionId(), context.getWorkflowId(), context.getServiceId(), groupName,
-                context.getControlNodes(), analysisMinute, analysisStartMin);
+                getNodesForGroup(groupName, context.getControlNodes()), analysisMinute, analysisStartMin);
 
-      final List<NewRelicMetricDataRecord> testRecords = analysisService.getRecords(context.getStateType(),
-          context.getAppId(), context.getWorkflowExecutionId(), context.getStateExecutionId(), context.getWorkflowId(),
-          context.getServiceId(), groupName, context.getTestNodes(), analysisMinute, analysisStartMin);
+      final List<NewRelicMetricDataRecord> testRecords =
+          analysisService.getRecords(context.getStateType(), context.getAppId(), context.getWorkflowExecutionId(),
+              context.getStateExecutionId(), context.getWorkflowId(), context.getServiceId(), groupName,
+              getNodesForGroup(groupName, context.getTestNodes()), analysisMinute, analysisStartMin);
 
       String message = "";
       if (isEmpty(testRecords)) {
@@ -286,9 +288,10 @@ public class MetricAnalysisJob implements Job {
                   + "/get-metric-template?accountId=" + context.getAccountId() + "&appId=" + context.getAppId()
                   + "&stateType=" + context.getStateType() + "&stateExecutionId=" + context.getStateExecutionId()
                   + "&serviceId=" + context.getServiceId() + "&groupName=" + groupName)
-              .control_nodes(controlNodes)
-              .test_nodes(
-                  mlAnalysisType.equals(TimeSeriesMlAnalysisType.PREDICTIVE) ? Sets.newHashSet(groupName) : testNodes)
+              .control_nodes(getNodesForGroup(groupName, controlNodes))
+              .test_nodes(mlAnalysisType.equals(TimeSeriesMlAnalysisType.PREDICTIVE)
+                      ? Sets.newHashSet(groupName)
+                      : getNodesForGroup(groupName, testNodes))
               .analysis_start_time(
                   mlAnalysisType.equals(TimeSeriesMlAnalysisType.PREDICTIVE) ? PREDECTIVE_HISTORY_MINUTES : 0)
               .stateType(context.getStateType())
@@ -382,12 +385,12 @@ public class MetricAnalysisJob implements Job {
               analysisService.getAnalysisMinute(context.getStateType(), context.getAppId(),
                   context.getStateExecutionId(), context.getWorkflowExecutionId(), context.getServiceId(), groupName);
           if (analysisDataRecord == null) {
-            logger.info("Skipping time series analysis. No new data.");
+            logger.info("for {} Skipping time series analysis. No new data.", context.getStateExecutionId());
             continue;
           }
           int analysisMinute = analysisDataRecord.getDataCollectionMinute();
 
-          logger.info("running analysis for " + context.getStateExecutionId() + " for minute" + analysisMinute);
+          logger.info("running analysis for {} for minute {}", context.getStateExecutionId(), analysisMinute);
 
           boolean runTimeSeriesML = true;
 
@@ -411,9 +414,9 @@ public class MetricAnalysisJob implements Job {
                     context.getPrevWorkflowExecutionId(), groupName);
 
                 if (analysisMinute < minControlMinute) {
-                  logger.info("Baseline control minute starts at " + minControlMinute
-                      + ". But current analysis minute is  " + analysisMinute
-                      + "Will run local analysis instead of ML for minute " + analysisMinute);
+                  logger.info(
+                      "For {} Baseline control minute starts at {} . But current analysis minute is {} Will run local analysis instead of ML for minute {}",
+                      context.getStateExecutionId(), minControlMinute, analysisMinute, analysisMinute);
                   runTimeSeriesML = false;
                   break;
                 }
@@ -424,8 +427,8 @@ public class MetricAnalysisJob implements Job {
 
                 if (analysisMinute > maxControlMinute) {
                   logger.warn(
-                      "Not enough control data. analysis minute = {} , max control minute = {} analysisContext = {}",
-                      analysisMinute, maxControlMinute, context);
+                      "For {} Not enough control data. analysis minute = {} , max control minute = {} analysisContext = {}",
+                      context.getStateExecutionId(), analysisMinute, maxControlMinute, context);
                   // Do nothing. Don't run any analysis.
                   taskQueued = true;
                   analysisService.bumpCollectionMinuteToProcess(context.getStateType(), context.getAppId(),
@@ -437,7 +440,8 @@ public class MetricAnalysisJob implements Job {
                 break;
                 // Note that control flows through to COMPARE_WITH_CURRENT where the ml analysis is run.
               case COMPARE_WITH_CURRENT:
-                logger.info("running time series ml analysis for minute " + analysisMinute);
+                logger.info("For {} running time series ml analysis for minute {}", context.getStateExecutionId(),
+                    analysisMinute);
                 taskQueued = timeSeriesML(analysisMinute, groupName, timeSeriesMlAnalysisType);
                 break;
               default:
@@ -510,8 +514,9 @@ public class MetricAnalysisJob implements Job {
                 .stateExecutionInstanceId(context.getStateExecutionId())
                 .serverConfigId(context.getAnalysisServerConfigId())
                 .timeDuration(context.getTimeDuration())
-                .canaryNewHostNames(context.getTestNodes())
-                .lastExecutionNodes(context.getControlNodes() == null ? new HashSet<>() : context.getControlNodes())
+                .canaryNewHostNames(context.getTestNodes().keySet())
+                .lastExecutionNodes(
+                    context.getControlNodes() == null ? new HashSet<>() : context.getControlNodes().keySet())
                 .correlationId(context.getCorrelationId())
                 .build();
         executionData.setStatus(status);
@@ -524,6 +529,16 @@ public class MetricAnalysisJob implements Job {
         logger.info("Notifying state id: {} , corr id: {}", context.getStateExecutionId(), context.getCorrelationId());
         waitNotifyEngine.notify(context.getCorrelationId(), response);
       }
+    }
+
+    private Set<String> getNodesForGroup(String groupName, Map<String, String> nodes) {
+      Set<String> rv = new HashSet<>();
+      nodes.forEach((host, group) -> {
+        if (group.equals(groupName) || group.equals(DEFAULT_GROUP_NAME)) {
+          rv.add(host);
+        }
+      });
+      return rv;
     }
   }
 }

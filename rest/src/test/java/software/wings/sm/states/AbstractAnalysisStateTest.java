@@ -16,6 +16,7 @@ import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder.aPhaseExecutionData;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
 import com.google.common.collect.Lists;
@@ -28,9 +29,12 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.api.CanaryWorkflowStandardParams;
+import software.wings.api.DeploymentType;
 import software.wings.api.InstanceElement;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ElementExecutionSummary;
+import software.wings.beans.GcpKubernetesInfrastructureMapping;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.WorkflowExecution;
@@ -55,7 +59,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -66,6 +69,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Mock private ContainerInstanceHandler containerInstanceHandler;
   @Mock private InfrastructureMappingService infraMappingService;
+  @Mock private InfrastructureMapping infrastructureMapping;
   private final String workflowId = UUID.randomUUID().toString();
   private final String appId = UUID.randomUUID().toString();
   private final String previousWorkflowExecutionId = UUID.randomUUID().toString();
@@ -74,7 +78,8 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   public void setup() {
     initMocks(this);
     when(containerInstanceHandler.isContainerDeployment(anyObject())).thenReturn(false);
-    when(infraMappingService.get(anyString(), anyString())).thenReturn(null);
+    when(infrastructureMapping.getDeploymentType()).thenReturn(DeploymentType.KUBERNETES.name());
+    when(infraMappingService.get(anyString(), anyString())).thenReturn(infrastructureMapping);
   }
 
   @Test
@@ -120,14 +125,17 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     setInternalState(splunkV2State, "containerInstanceHandler", containerInstanceHandler);
     setInternalState(splunkV2State, "infraMappingService", infraMappingService);
     Reflect.on(splunkV2State).set("workflowExecutionService", workflowExecutionService);
-    Set<String> nodes = splunkV2State.getLastExecutionNodes(context);
+    Map<String, String> nodes = splunkV2State.getLastExecutionNodes(context);
     assertEquals(5, nodes.size());
     for (int i = 0; i < 5; ++i) {
-      assertTrue(nodes.contains("serviceA"
+      assertTrue(nodes.keySet().contains("serviceA"
           + "-" + i + ".harness.com"));
+      assertEquals(DEFAULT_GROUP_NAME,
+          nodes.get("serviceA"
+              + "-" + i + ".harness.com"));
       nodes.remove("serviceA"
           + "-" + i + ".harness.com");
-      assertFalse(nodes.contains("serviceA"
+      assertFalse(nodes.keySet().contains("serviceA"
           + "-" + i));
       nodes.remove("serviceA"
           + "-" + i);
@@ -201,16 +209,19 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     setInternalState(splunkV2State, "containerInstanceHandler", containerInstanceHandler);
     setInternalState(splunkV2State, "infraMappingService", infraMappingService);
     Reflect.on(splunkV2State).set("workflowExecutionService", workflowExecutionService);
-    Set<String> nodes = splunkV2State.getLastExecutionNodes(context);
+    Map<String, String> nodes = splunkV2State.getLastExecutionNodes(context);
     assertEquals(3, nodes.size());
-    assertFalse(nodes.contains("serviceA-0.harness.com"));
-    assertFalse(nodes.contains("serviceA-1.harness.com"));
+    assertFalse(nodes.keySet().contains("serviceA-0.harness.com"));
+    assertFalse(nodes.keySet().contains("serviceA-1.harness.com"));
     for (int i = 2; i < 5; ++i) {
-      assertTrue(nodes.contains("serviceA"
+      assertTrue(nodes.keySet().contains("serviceA"
           + "-" + i + ".harness.com"));
+      assertEquals(DEFAULT_GROUP_NAME,
+          nodes.get("serviceA"
+              + "-" + i + ".harness.com"));
       nodes.remove("serviceA"
           + "-" + i + ".harness.com");
-      assertFalse(nodes.contains("serviceA"
+      assertFalse(nodes.keySet().contains("serviceA"
           + "-" + i));
       nodes.remove("serviceA"
           + "-" + i);
@@ -225,6 +236,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
       instanceElements.add(anInstanceElement()
                                .withHostName("serviceA"
                                    + "-" + i + ".harness.com")
+                               .withWorkloadName("workload-" + i)
                                .build());
     }
     ExecutionContext context = Mockito.mock(ExecutionContext.class);
@@ -238,11 +250,53 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     SplunkV2State splunkV2State = spy(new SplunkV2State("SplunkState"));
 
     setInternalState(splunkV2State, "infraMappingService", infraMappingService);
-    Set<String> nodes = splunkV2State.getCanaryNewHostNames(context);
+    Map<String, String> nodes = splunkV2State.getCanaryNewHostNames(context);
     assertEquals(5, nodes.size());
     for (int i = 0; i < 5; ++i) {
-      assertTrue(nodes.contains("serviceA"
+      assertTrue(nodes.keySet().contains("serviceA"
           + "-" + i + ".harness.com"));
+      assertEquals(DEFAULT_GROUP_NAME,
+          nodes.get("serviceA"
+              + "-" + i + ".harness.com"));
+      nodes.remove("serviceA"
+          + "-" + i + ".harness.com");
+    }
+    assertEquals(0, nodes.size());
+  }
+
+  @Test
+  public void testGetCanaryNewNodesHelm() throws NoSuchAlgorithmException, KeyManagementException {
+    when(infraMappingService.get(anyString(), anyString()))
+        .thenReturn(GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping()
+                        .withDeploymentType(DeploymentType.HELM.name())
+                        .build());
+    List<InstanceElement> instanceElements = new ArrayList<>();
+    for (int i = 0; i < 5; ++i) {
+      instanceElements.add(anInstanceElement()
+                               .withHostName("serviceA"
+                                   + "-" + i + ".harness.com")
+                               .withWorkloadName("workload-" + i)
+                               .build());
+    }
+    ExecutionContext context = Mockito.mock(ExecutionContext.class);
+    CanaryWorkflowStandardParams params = Mockito.mock(CanaryWorkflowStandardParams.class);
+    doReturn(instanceElements).when(params).getInstances();
+    when(context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM))
+        .thenReturn(aPhaseElement().withInfraMappingId(UUID.randomUUID().toString()).build());
+    when(context.getAppId()).thenReturn(appId);
+
+    doReturn(params).when(context).getContextElement(ContextElementType.STANDARD);
+    SplunkV2State splunkV2State = spy(new SplunkV2State("SplunkState"));
+
+    setInternalState(splunkV2State, "infraMappingService", infraMappingService);
+    Map<String, String> nodes = splunkV2State.getCanaryNewHostNames(context);
+    assertEquals(5, nodes.size());
+    for (int i = 0; i < 5; ++i) {
+      assertTrue(nodes.keySet().contains("serviceA"
+          + "-" + i + ".harness.com"));
+      assertEquals("workload-" + i,
+          nodes.get("serviceA"
+              + "-" + i + ".harness.com"));
       nodes.remove("serviceA"
           + "-" + i + ".harness.com");
     }

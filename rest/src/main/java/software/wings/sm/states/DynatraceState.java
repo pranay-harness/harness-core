@@ -3,10 +3,10 @@ package software.wings.sm.states;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -37,7 +37,9 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -96,7 +98,8 @@ public class DynatraceState extends AbstractMetricAnalysisState {
   }
 
   @Override
-  protected String triggerAnalysisDataCollection(ExecutionContext context, String correlationId, Set<String> hosts) {
+  protected String triggerAnalysisDataCollection(
+      ExecutionContext context, String correlationId, Map<String, String> hosts) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
     final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
@@ -150,12 +153,12 @@ public class DynatraceState extends AbstractMetricAnalysisState {
   }
 
   @Override
-  protected Set<String> getLastExecutionNodes(ExecutionContext context) {
-    return Sets.newHashSet(CONTROL_HOST_NAME);
+  protected Map<String, String> getLastExecutionNodes(ExecutionContext context) {
+    return Collections.singletonMap(CONTROL_HOST_NAME, DEFAULT_GROUP_NAME);
   }
 
   @Override
-  protected Set<String> getCanaryNewHostNames(ExecutionContext context) {
-    return Sets.newHashSet(TEST_HOST_NAME);
+  protected Map<String, String> getCanaryNewHostNames(ExecutionContext context) {
+    return Collections.singletonMap(TEST_HOST_NAME, DEFAULT_GROUP_NAME);
   }
 }

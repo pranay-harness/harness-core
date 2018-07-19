@@ -7,7 +7,7 @@ import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.TimeSeries;
 
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 /**
  * Created by rsingh on 5/18/17.
@@ -24,7 +24,7 @@ public class PrometheusDataCollectionInfo {
   private long startTime;
   private int collectionTime;
   private List<TimeSeries> timeSeriesToCollect;
-  private Set<String> hosts;
+  private Map<String, String> hosts;
   private AnalysisComparisonStrategy analysisComparisonStrategy;
   private int dataCollectionMinute;
 }

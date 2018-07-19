@@ -2,11 +2,13 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 
 import com.google.common.base.Preconditions;
@@ -19,6 +21,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
+import software.wings.api.DeploymentType;
 import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
@@ -87,7 +90,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -215,18 +217,19 @@ public abstract class AbstractAnalysisState extends State {
     }
   }
 
-  protected Set<String> getLastExecutionNodes(ExecutionContext context) {
+  protected Map<String, String> getLastExecutionNodes(ExecutionContext context) {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String serviceId = phaseElement.getServiceElement().getUuid();
-    String infraMappingId = phaseElement.getInfraMappingId();
 
-    InfrastructureMapping infrastructureMapping = infraMappingService.get(context.getAppId(), infraMappingId);
+    InfrastructureMapping infrastructureMapping = getInfrastructureMapping(context);
+    String infraMappingId = infrastructureMapping.getUuid();
+    DeploymentType deploymentType = DeploymentType.valueOf(infrastructureMapping.getDeploymentType());
 
     if (infrastructureMapping instanceof PcfInfrastructureMapping) {
       return getPcfHostNames(context, true);
     }
 
-    Set<String> phaseHosts = getHostsDeployedSoFar(context, serviceId);
+    Map<String, String> phaseHosts = getHostsDeployedSoFar(context, serviceId, deploymentType);
     getLogger().info("Deployed hosts so far: {}", phaseHosts);
 
     if (containerInstanceHandler.isContainerDeployment(infrastructureMapping)) {
@@ -236,13 +239,13 @@ public abstract class AbstractAnalysisState extends State {
       if (isEmpty(containerServiceNames)) {
         getLogger().info("state {} has no containers deployed for service {} infra {}. Returning empty",
             context.getStateExecutionInstanceId(), serviceId, infraMappingId);
-        return Collections.emptySet();
+        return Collections.emptyMap();
       }
 
       if (infrastructureMapping instanceof EcsInfrastructureMapping) {
-        Set<String> hosts =
+        Map<String, String> hosts =
             getEcsLastExecutionNodes(context, (EcsInfrastructureMapping) infrastructureMapping, containerServiceNames);
-        hosts.removeAll(phaseHosts);
+        phaseHosts.keySet().forEach(host -> hosts.remove(host));
         return hosts;
       }
 
@@ -264,17 +267,18 @@ public abstract class AbstractAnalysisState extends State {
                                        throw new IllegalStateException("Invalid type " + containerInfo);
                                      })
                                      .collect(Collectors.toSet());
-      final Set<String> hosts = new HashSet<>();
+      final Map<String, String> hosts = new HashMap<>();
       serviceHosts.forEach(serviceHost -> {
         if (isEmpty(hostnameTemplate)) {
-          hosts.add(serviceHost);
+          hosts.put(serviceHost, DEFAULT_GROUP_NAME);
         } else {
-          hosts.add(context.renderExpression(hostnameTemplate,
-              Lists.newArrayList(
-                  aHostElement().withHostName(serviceHost).withIp(podNameToIp.get(serviceHost)).build())));
+          hosts.put(context.renderExpression(hostnameTemplate,
+                        Lists.newArrayList(
+                            aHostElement().withHostName(serviceHost).withIp(podNameToIp.get(serviceHost)).build())),
+              DEFAULT_GROUP_NAME);
         }
       });
-      hosts.removeAll(phaseHosts);
+      phaseHosts.keySet().forEach(host -> hosts.remove(host));
       return hosts;
     }
     int offSet = 0;
@@ -295,7 +299,7 @@ public abstract class AbstractAnalysisState extends State {
 
       if (workflowExecutions == null) {
         getLogger().info("Did not find a successful workflow with service {}. It will be a baseline run", serviceId);
-        return emptySet();
+        return emptyMap();
       }
 
       for (WorkflowExecution workflowExecution : workflowExecutions) {
@@ -309,20 +313,21 @@ public abstract class AbstractAnalysisState extends State {
 
         if (executionSummary != null) {
           if (isEmpty(executionSummary.getInstanceStatusSummaries())) {
-            return emptySet();
+            return emptyMap();
           }
-          Set<String> hosts = new HashSet<>();
+          Map<String, String> hosts = new HashMap<>();
           for (InstanceStatusSummary instanceStatusSummary : executionSummary.getInstanceStatusSummaries()) {
             if (isEmpty(getHostnameTemplate())) {
-              hosts.add(instanceStatusSummary.getInstanceElement().getHostName());
+              hosts.put(instanceStatusSummary.getInstanceElement().getHostName(), DEFAULT_GROUP_NAME);
             } else {
               fillHostDetail(instanceStatusSummary.getInstanceElement(), context);
-              hosts.add(context.renderExpression(
-                  getHostnameTemplate(), Lists.newArrayList(instanceStatusSummary.getInstanceElement())));
+              hosts.put(context.renderExpression(
+                            getHostnameTemplate(), Lists.newArrayList(instanceStatusSummary.getInstanceElement())),
+                  DEFAULT_GROUP_NAME);
             }
           }
           getLogger().info("hosts deployed with last workflow execution: {}", hosts);
-          hosts.removeAll(phaseHosts);
+          phaseHosts.keySet().forEach(host -> hosts.remove(host));
           return hosts;
         }
       }
@@ -332,10 +337,10 @@ public abstract class AbstractAnalysisState extends State {
     } while (workflowExecutions.size() >= PageRequest.DEFAULT_PAGE_SIZE);
 
     getLogger().info("Did not find a successful workflow with service {}. It will be a baseline run", serviceId);
-    return emptySet();
+    return emptyMap();
   }
 
-  private Set<String> getEcsLastExecutionNodes(ExecutionContext context,
+  private Map<String, String> getEcsLastExecutionNodes(ExecutionContext context,
       EcsInfrastructureMapping containerInfrastructureMapping, Set<String> containerServiceNames) {
     String clusterName = containerInfrastructureMapping.getClusterName();
     String region = containerInfrastructureMapping.getRegion();
@@ -365,11 +370,13 @@ public abstract class AbstractAnalysisState extends State {
                                      .settingAttribute(settingAttribute)
                                      .build());
 
-    return containerInfos.stream().map(containerInfo -> containerInfo.getContainerId()).collect(Collectors.toSet());
+    return containerInfos.stream().collect(
+        Collectors.toMap(containerInfo -> containerInfo.getContainerId(), containerInfo -> DEFAULT_GROUP_NAME));
   }
 
-  private Set<String> getHostsDeployedSoFar(ExecutionContext context, String serviceId) {
-    Set<String> hosts = new HashSet<>();
+  private Map<String, String> getHostsDeployedSoFar(
+      ExecutionContext context, String serviceId, DeploymentType deploymentType) {
+    Map<String, String> hosts = new HashMap<>();
     StateExecutionInstance stateExecutionInstance = ((ExecutionContextImpl) context).getStateExecutionInstance();
     Preconditions.checkNotNull(stateExecutionInstance);
     Map<String, StateExecutionData> stateExecutionMap = stateExecutionInstance.getStateExecutionMap();
@@ -399,10 +406,12 @@ public abstract class AbstractAnalysisState extends State {
               if (isNotEmpty(elementExecutionSummary.getInstanceStatusSummaries())) {
                 elementExecutionSummary.getInstanceStatusSummaries().forEach(instanceStatusSummary -> {
                   if (isEmpty(getHostnameTemplate())) {
-                    hosts.add(instanceStatusSummary.getInstanceElement().getHostName());
+                    hosts.put(instanceStatusSummary.getInstanceElement().getHostName(),
+                        getGroupName(instanceStatusSummary.getInstanceElement(), deploymentType));
                   } else {
-                    hosts.add(context.renderExpression(
-                        getHostnameTemplate(), Lists.newArrayList(instanceStatusSummary.getInstanceElement())));
+                    hosts.put(context.renderExpression(getHostnameTemplate(),
+                                  Lists.newArrayList(instanceStatusSummary.getInstanceElement())),
+                        getGroupName(instanceStatusSummary.getInstanceElement(), deploymentType));
                   }
                 });
               } else {
@@ -416,17 +425,15 @@ public abstract class AbstractAnalysisState extends State {
     return hosts;
   }
 
-  protected Set<String> getCanaryNewHostNames(ExecutionContext context) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-    String infraMappingId = phaseElement.getInfraMappingId();
-
-    InfrastructureMapping infrastructureMapping = infraMappingService.get(context.getAppId(), infraMappingId);
+  protected Map<String, String> getCanaryNewHostNames(ExecutionContext context) {
+    InfrastructureMapping infrastructureMapping = getInfrastructureMapping(context);
+    DeploymentType deploymentType = DeploymentType.valueOf(infrastructureMapping.getDeploymentType());
     if (infrastructureMapping instanceof PcfInfrastructureMapping) {
       return getPcfHostNames(context, false);
     }
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    Set<String> rv = new HashSet<>();
+    Map<String, String> rv = new HashMap<>();
     if (isEmpty(workflowStandardParams.getInstances())) {
       getLogger().warn(
           "No test nodes found for state: {}, id: {} ", getStateType(), context.getStateExecutionInstanceId());
@@ -434,18 +441,19 @@ public abstract class AbstractAnalysisState extends State {
     }
     for (InstanceElement instanceElement : workflowStandardParams.getInstances()) {
       if (isEmpty(getHostnameTemplate())) {
-        rv.add(instanceElement.getHostName());
+        rv.put(instanceElement.getHostName(), getGroupName(instanceElement, deploymentType));
       } else {
-        rv.add(context.renderExpression(getHostnameTemplate(), Lists.newArrayList(instanceElement)));
+        rv.put(context.renderExpression(getHostnameTemplate(), Lists.newArrayList(instanceElement)),
+            getGroupName(instanceElement, deploymentType));
       }
     }
     return rv;
   }
 
-  private Set<String> getPcfHostNames(ExecutionContext context, boolean includePrevious) {
+  private Map<String, String> getPcfHostNames(ExecutionContext context, boolean includePrevious) {
     StateExecutionInstance stateExecutionInstance = ((ExecutionContextImpl) context).getStateExecutionInstance();
     WingsDeque<ContextElement> contextElements = stateExecutionInstance.getContextElements();
-    Set<String> rv = new HashSet<>();
+    Map<String, String> rv = new HashMap<>();
     if (isEmpty(contextElements)) {
       return rv;
     }
@@ -456,7 +464,7 @@ public abstract class AbstractAnalysisState extends State {
         instances.getPcfInstanceElements().forEach(pcfInstanceElement -> {
           String pcfHostName = getPcfHostName(pcfInstanceElement, includePrevious);
           if (isNotEmpty(pcfHostName)) {
-            rv.add(pcfHostName);
+            rv.put(pcfHostName, DEFAULT_GROUP_NAME);
           }
         });
       }
@@ -503,9 +511,6 @@ public abstract class AbstractAnalysisState extends State {
   public abstract String getAnalysisServerConfigId();
 
   public abstract void setAnalysisServerConfigId(String analysisServerConfigId);
-
-  protected abstract String triggerAnalysisDataCollection(
-      ExecutionContext context, String correlationId, Set<String> hosts);
 
   protected String generateAuthToken() throws UnsupportedEncodingException {
     return generateAuthToken(configuration.getPortal().getJwtExternalServiceSecret());
@@ -569,5 +574,21 @@ public abstract class AbstractAnalysisState extends State {
       };
     }
     return null;
+  }
+
+  protected InfrastructureMapping getInfrastructureMapping(ExecutionContext context) {
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    String infraMappingId = phaseElement.getInfraMappingId();
+
+    return infraMappingService.get(context.getAppId(), infraMappingId);
+  }
+
+  private String getGroupName(InstanceElement instanceElement, DeploymentType deploymentType) {
+    if (deploymentType == null || !deploymentType.equals(DeploymentType.HELM)
+        || isEmpty(instanceElement.getWorkloadName())) {
+      return DEFAULT_GROUP_NAME;
+    }
+
+    return instanceElement.getWorkloadName();
   }
 }

@@ -55,7 +55,7 @@ import software.wings.sm.StateExecutionInstance;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
-import java.util.Set;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -143,7 +143,7 @@ public class EcsContainerInfoIntegrationTest extends WingsBaseTest {
     setInternalState(splunkV2State, "appService", appService);
     setInternalState(splunkV2State, "delegateProxyFactory", delegateProxyFactory);
     Reflect.on(splunkV2State).set("workflowExecutionService", workflowExecutionService);
-    Set<String> nodes = splunkV2State.getLastExecutionNodes(context);
+    Map<String, String> nodes = splunkV2State.getLastExecutionNodes(context);
     assertTrue(nodes.size() >= 1);
     logger.info("do_not_delete__ecs__container__integration__test__Prod: " + nodes);
   }

@@ -115,7 +115,8 @@ public class DatadogState extends AbstractMetricAnalysisState {
   }
 
   @Override
-  protected String triggerAnalysisDataCollection(ExecutionContext context, String correlationId, Set<String> hosts) {
+  protected String triggerAnalysisDataCollection(
+      ExecutionContext context, String correlationId, Map<String, String> hosts) {
     List<String> metricNames = Arrays.asList(metrics.split(","));
     metricAnalysisService.saveMetricTemplates(context.getAppId(), StateType.DATA_DOG,
         context.getStateExecutionInstanceId(), metricDefinitions(metrics(metricNames).values()));

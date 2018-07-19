@@ -6,9 +6,9 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import org.junit.Before;
@@ -83,10 +83,10 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
   @Test
   public void compareTestAndControl() {
     DynatraceState dynatraceState = new DynatraceState("DynatraceState");
-    assertEquals(
-        Sets.newHashSet(DynatraceState.CONTROL_HOST_NAME), dynatraceState.getLastExecutionNodes(executionContext));
-    assertEquals(
-        Sets.newHashSet(DynatraceState.TEST_HOST_NAME), dynatraceState.getCanaryNewHostNames(executionContext));
+    assertEquals(Collections.singletonMap(DynatraceState.CONTROL_HOST_NAME, DEFAULT_GROUP_NAME),
+        dynatraceState.getLastExecutionNodes(executionContext));
+    assertEquals(Collections.singletonMap(DynatraceState.TEST_HOST_NAME, DEFAULT_GROUP_NAME),
+        dynatraceState.getCanaryNewHostNames(executionContext));
   }
 
   @Test
@@ -105,8 +105,12 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
     wingsPersistence.save(settingAttribute);
     dynatraceState.setAnalysisServerConfigId(settingAttribute.getUuid());
     DynatraceState spyState = spy(dynatraceState);
-    doReturn(Collections.singleton("test")).when(spyState).getCanaryNewHostNames(executionContext);
-    doReturn(Collections.singleton("control")).when(spyState).getLastExecutionNodes(executionContext);
+    doReturn(Collections.singletonMap("test", DEFAULT_GROUP_NAME))
+        .when(spyState)
+        .getCanaryNewHostNames(executionContext);
+    doReturn(Collections.singletonMap("control", DEFAULT_GROUP_NAME))
+        .when(spyState)
+        .getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
     when(workflowStandardParams.getEnv())

@@ -115,7 +115,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
       for (AppdynamicsMetric appdynamicsMetric : tierMetrics) {
         switch (dataCollectionInfo.getTimeSeriesMlAnalysisType()) {
           case COMPARATIVE:
-            for (String hostName : dataCollectionInfo.getHosts()) {
+            for (String hostName : dataCollectionInfo.getHosts().keySet()) {
               callables.add(()
                                 -> appdynamicsDelegateService.getTierBTMetricData(appDynamicsConfig, appId, tierId,
                                     appdynamicsMetric.getName(), hostName, DURATION_TO_ASK_MINUTES, encryptionDetails,
@@ -175,7 +175,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
             ? tierName
             : appdynamicsPathPieces[5];
         if (dataCollectionInfo.getTimeSeriesMlAnalysisType().equals(TimeSeriesMlAnalysisType.COMPARATIVE)
-            && !dataCollectionInfo.getHosts().contains(nodeName)) {
+            && !dataCollectionInfo.getHosts().keySet().contains(nodeName)) {
           logger.info("skipping: {}", nodeName);
           continue;
         }

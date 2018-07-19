@@ -2,7 +2,6 @@ package software.wings.delegatetasks;
 
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
-import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.states.AbstractAnalysisState.END_TIME_PLACE_HOLDER;
 import static software.wings.sm.states.AbstractAnalysisState.HOST_NAME_PLACE_HOLDER;
 import static software.wings.sm.states.AbstractAnalysisState.START_TIME_PLACE_HOLDER;
@@ -103,21 +102,6 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
         while (!completed.get() && retry < RETRIES) {
           try {
             TreeBasedTable<String, Long, NewRelicMetricDataRecord> metricDataRecords = getMetricsData();
-            // HeartBeat
-            metricDataRecords.put(HARNESS_HEARTBEAT_METRIC_NAME, 0L,
-                NewRelicMetricDataRecord.builder()
-                    .stateType(getStateType())
-                    .name(HARNESS_HEARTBEAT_METRIC_NAME)
-                    .appId(dataCollectionInfo.getApplicationId())
-                    .workflowId(dataCollectionInfo.getWorkflowId())
-                    .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
-                    .serviceId(dataCollectionInfo.getServiceId())
-                    .stateExecutionId(dataCollectionInfo.getStateExecutionId())
-                    .dataCollectionMinute(dataCollectionMinute)
-                    .timeStamp(collectionStartTime)
-                    .groupName(DEFAULT_GROUP_NAME)
-                    .level(ClusterLevel.H0)
-                    .build());
 
             List<NewRelicMetricDataRecord> recordsToSave = getAllMetricRecords(metricDataRecords);
             if (!saveMetrics(dataCollectionInfo.getPrometheusConfig().getAccountId(),
@@ -166,7 +150,7 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
     public TreeBasedTable<String, Long, NewRelicMetricDataRecord> getMetricsData() throws IOException {
       final TreeBasedTable<String, Long, NewRelicMetricDataRecord> metricDataResponses = TreeBasedTable.create();
       List<Callable<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> callables = new ArrayList<>();
-      for (String host : dataCollectionInfo.getHosts()) {
+      for (String host : dataCollectionInfo.getHosts().keySet()) {
         callables.add(() -> getMetricDataRecords(host));
       }
 
@@ -204,7 +188,8 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
           TreeBasedTable<String, Long, NewRelicMetricDataRecord> metricRecords = response.getMetricRecords(
               timeSeries.getTxnName(), timeSeries.getMetricName(), dataCollectionInfo.getApplicationId(),
               dataCollectionInfo.getWorkflowId(), dataCollectionInfo.getWorkflowExecutionId(),
-              dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getServiceId(), host, dataCollectionMinute);
+              dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getServiceId(), host,
+              dataCollectionInfo.getHosts().get(host), dataCollectionMinute);
           metricRecords.cellSet().forEach(cell -> {
             if (rv.contains(cell.getRowKey(), cell.getColumnKey())) {
               NewRelicMetricDataRecord metricDataRecord = rv.get(cell.getRowKey(), cell.getColumnKey());
@@ -217,6 +202,20 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
           throw new WingsException("Error fetchin metrics", e);
         }
       });
+      rv.put(HARNESS_HEARTBEAT_METRIC_NAME, 0L,
+          NewRelicMetricDataRecord.builder()
+              .stateType(getStateType())
+              .name(HARNESS_HEARTBEAT_METRIC_NAME)
+              .appId(dataCollectionInfo.getApplicationId())
+              .workflowId(dataCollectionInfo.getWorkflowId())
+              .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
+              .serviceId(dataCollectionInfo.getServiceId())
+              .stateExecutionId(dataCollectionInfo.getStateExecutionId())
+              .dataCollectionMinute(dataCollectionMinute)
+              .timeStamp(collectionStartTime)
+              .groupName(dataCollectionInfo.getHosts().get(host))
+              .level(ClusterLevel.H0)
+              .build());
       return rv;
     }
 

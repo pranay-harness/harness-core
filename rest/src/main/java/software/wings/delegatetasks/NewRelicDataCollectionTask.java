@@ -5,7 +5,6 @@ import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 import static software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl.batchMetricsToCollect;
 import static software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl.getApdexMetricNames;
 import static software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl.getErrorMetricNames;
-import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.APDEX_SCORE;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.AVERAGE_RESPONSE_TIME;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.CALL_COUNT;
@@ -183,7 +182,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                       .timeStamp(timeStamp)
                       .host(node.getHost())
                       .values(new HashMap<>())
-                      .groupName(DEFAULT_GROUP_NAME)
+                      .groupName(dataCollectionInfo.getHosts().get(node.getHost()))
                       .build();
 
               metricDataRecord.setDataCollectionMinute(
@@ -341,7 +340,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
 
             List<Callable<Boolean>> callables = new ArrayList<>();
             for (NewRelicApplicationInstance node : instances) {
-              if (!dataCollectionInfo.getHosts().contains(node.getHost())) {
+              if (!dataCollectionInfo.getHosts().keySet().contains(node.getHost())) {
                 logger.info("Skipping host {} for stateExecutionId {} ", node.getHost(),
                     dataCollectionInfo.getStateExecutionId());
                 continue;
@@ -349,7 +348,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
 
               logger.info("Going to collect for host {} for stateExecutionId {}, for metrics {}", node.getHost(),
                   dataCollectionInfo.getStateExecutionId(), metricBatches);
-              callables.add(() -> fetchAndSaveMetricsForNode(node, metricBatches, windowEndTimeManager));
+              callables.add(
+                  () -> fetchAndSaveMetricsForNode(node, metricBatches, windowEndTimeManager, dataCollectionMinuteEnd));
             }
 
             logger.info("submitting parallel tasks {}", callables.size());
@@ -361,33 +361,6 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
             }
 
             logger.info("done processing parallel tasks {}", callables.size());
-            TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
-            // HeartBeat
-            records.put(HARNESS_HEARTBEAT_METRIC_NAME, 0l,
-                NewRelicMetricDataRecord.builder()
-                    .stateType(getStateType())
-                    .name(HARNESS_HEARTBEAT_METRIC_NAME)
-                    .appId(dataCollectionInfo.getApplicationId())
-                    .workflowId(dataCollectionInfo.getWorkflowId())
-                    .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
-                    .serviceId(dataCollectionInfo.getServiceId())
-                    .stateExecutionId(dataCollectionInfo.getStateExecutionId())
-                    .dataCollectionMinute(dataCollectionMinuteEnd)
-                    .timeStamp(windowStartTimeManager)
-                    .level(ClusterLevel.H0)
-                    .groupName(DEFAULT_GROUP_NAME)
-                    .build());
-            logger.info(
-                "Sending heartbeat new relic metric record to the server for minute " + dataCollectionMinuteEnd);
-
-            boolean result = saveMetrics(dataCollectionInfo.getNewRelicConfig().getAccountId(),
-                dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(),
-                getAllMetricRecords(records));
-            if (!result) {
-              retry = RETRIES;
-              throw new WingsException("Cannot save new relic metric records. Server returned error");
-            }
-            records.clear();
             windowStartTimeManager = windowEndTimeManager;
 
             dataCollectionMinute = dataCollectionMinuteEnd + 1;
@@ -429,10 +402,25 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       }
     }
 
-    private boolean fetchAndSaveMetricsForNode(
-        NewRelicApplicationInstance node, List<Set<String>> metricBatches, long endTime) throws Exception {
+    private boolean fetchAndSaveMetricsForNode(NewRelicApplicationInstance node, List<Set<String>> metricBatches,
+        long endTime, int dataCollectionMinuteEnd) throws Exception {
       TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
-
+      records.put(HARNESS_HEARTBEAT_METRIC_NAME, 0l,
+          NewRelicMetricDataRecord.builder()
+              .stateType(getStateType())
+              .name(HARNESS_HEARTBEAT_METRIC_NAME)
+              .appId(dataCollectionInfo.getApplicationId())
+              .workflowId(dataCollectionInfo.getWorkflowId())
+              .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
+              .serviceId(dataCollectionInfo.getServiceId())
+              .stateExecutionId(dataCollectionInfo.getStateExecutionId())
+              .dataCollectionMinute(dataCollectionMinuteEnd)
+              .timeStamp(windowStartTimeManager)
+              .level(ClusterLevel.H0)
+              .groupName(dataCollectionInfo.getHosts().get(node.getHost()))
+              .build());
+      logger.info("adding heartbeat new relic metric record for host {} for minute {}", node.getHost(),
+          dataCollectionMinuteEnd);
       final long startTime = System.currentTimeMillis();
       for (Set<String> metricNames : metricBatches) {
         records.putAll(getMetricData(node, metricNames, endTime));
