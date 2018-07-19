@@ -28,6 +28,7 @@ import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.exception.WingsException.USER;
+import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_HELM_VALUE_YAML;
 import static software.wings.utils.Validator.duplicateCheck;
 import static software.wings.utils.Validator.notNullCheck;
 import static software.wings.yaml.YamlHelper.trimYaml;
@@ -98,6 +99,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
+import software.wings.helpers.ext.helm.HelmHelper;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.ServiceHelper;
@@ -173,6 +175,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private CommandHelper commandHelper;
   @Inject private TemplateService templateService;
   @Inject private TemplateHelper templateHelper;
+  @Inject private HelmHelper helmHelper;
 
   /**
    * {@inheritDoc}
@@ -210,6 +213,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       savedService = addDefaultCommands(savedService, !createdFromYaml);
     }
 
+    savedService = createDefaultHelmValueYaml(savedService);
     serviceTemplateService.createDefaultTemplatesByService(savedService);
 
     sendNotificationAsync(savedService, NotificationMessageType.ENTITY_CREATE_NOTIFICATION);
@@ -1443,6 +1447,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     notNullCheck("Service", savedService);
 
     String helmValueYaml = trimYaml(kubernetesPayload.getAdvancedConfig());
+    // helmHelper.validateHelmValueYamlFile(helmValueYaml);
+
     UpdateOperations<Service> updateOperations;
     if (isNotBlank(helmValueYaml)) {
       updateOperations = wingsPersistence.createUpdateOperations(Service.class).set("helmValueYaml", helmValueYaml);
@@ -1555,5 +1561,18 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   private List<ContainerTask> findContainerTaskForService(String serviceId) {
     PageRequest<ContainerTask> pageRequest = aPageRequest().addFilter("serviceId", EQ, serviceId).build();
     return wingsPersistence.query(ContainerTask.class, pageRequest).getResponse();
+  }
+
+  private Service createDefaultHelmValueYaml(Service service) {
+    ArtifactType artifactType = service.getArtifactType();
+
+    if (artifactType != null && artifactType.equals(ArtifactType.DOCKER)) {
+      KubernetesPayload kubernetesPayload = new KubernetesPayload();
+
+      kubernetesPayload.setAdvancedConfig(DEFAULT_HELM_VALUE_YAML);
+      return setHelmValueYaml(service.getAppId(), service.getUuid(), kubernetesPayload);
+    }
+
+    return service;
   }
 }

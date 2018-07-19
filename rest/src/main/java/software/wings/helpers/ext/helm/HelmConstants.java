@@ -6,6 +6,9 @@ import java.util.concurrent.TimeUnit;
  * Created by anubhaw on 3/23/18.
  */
 public class HelmConstants {
+  public static final String HELM_NAMESPACE_PLACEHOLDER_REGEX = "\\$\\{NAMESPACE}";
+  public static final String HELM_NAMESPACE_PLACEHOLDER = "${NAMESPACE}";
+
   public static final String KUBE_CONFIG_TEMPLATE = "apiVersion: v1\n"
       + "clusters:\n"
       + "- cluster:\n"
@@ -46,4 +49,22 @@ public class HelmConstants {
 
   public static final long DEFAULT_HELM_COMMAND_TIMEOUT = TimeUnit.MINUTES.toMillis(30);
   public static final String DEFAULT_TILLER_CONNECTION_TIMEOUT = "60"; // seconds
+
+  public static final String DEFAULT_HELM_VALUE_YAML = "# Enter your Helm value YAML\n"
+      + "#\n"
+      + "# Placeholders:\n"
+      + "#\n"
+      + "# Required: ${NAMESPACE}\n"
+      + "#   - Replaced with the namespace\n"
+      + "#     Harness will set the namespace from infrastructure\n"
+      + "#     mapping namespace\n"
+      + "#\n"
+      + "# Optional: ${DOCKER_IMAGE_NAME}\n"
+      + "#   - Replaced with the Docker image name\n"
+      + "#\n"
+      + "# Optional: ${DOCKER_IMAGE_TAG}\n"
+      + "#   - Replaced with the Docker image tag\n"
+      + "#\n"
+      + "# ---\n"
+      + "namespace : ${NAMESPACE}\n";
 }

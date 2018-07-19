@@ -9,14 +9,13 @@ import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
+import static software.wings.helpers.ext.helm.HelmConstants.HELM_NAMESPACE_PLACEHOLDER_REGEX;
 
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.HelmDeployStateExecutionData;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
@@ -56,8 +55,6 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
-import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -89,8 +86,6 @@ public class HelmDeployState extends State {
   @Inject private transient ServiceResourceService serviceResourceService;
   @Inject private transient InfrastructureMappingService infrastructureMappingService;
   @Inject private transient DelegateService delegateService;
-  @Inject private transient SecretManager secretManager;
-  @Inject private transient SettingsService settingsService;
   @Inject private transient ServiceTemplateService serviceTemplateService;
   @Inject private transient ActivityService activityService;
   @Inject private transient ContainerDeploymentManagerHelper containerDeploymentHelper;
@@ -102,9 +97,6 @@ public class HelmDeployState extends State {
   public static final String HELM_COMMAND_NAME = "Helm Deploy";
   private static final String DOCKER_IMAGE_TAG_PLACEHOLDER_REGEX = "\\$\\{DOCKER_IMAGE_TAG}";
   private static final String DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX = "\\$\\{DOCKER_IMAGE_NAME}";
-  private static final String DOCKER_IMAGE_NAME_REGEX = "(\\s*\"?image\"?\\s*:\\s*\"?)";
-
-  private static final Logger logger = LoggerFactory.getLogger(HelmDeployState.class);
 
   /**
    * Instantiates a new state.
@@ -154,8 +146,8 @@ public class HelmDeployState extends State {
 
     HelmChartSpecification helmChartSpecification =
         serviceResourceService.getHelmChartSpecification(context.getAppId(), serviceElement.getUuid());
-    evaluateHelmChartSpecificationExpression(context, helmChartSpecification);
     validateChartSpecification(helmChartSpecification);
+    evaluateHelmChartSpecificationExpression(context, helmChartSpecification);
 
     HelmDeployStateExecutionData stateExecutionData = HelmDeployStateExecutionData.builder()
                                                           .activityId(activity.getUuid())
@@ -225,7 +217,8 @@ public class HelmDeployState extends State {
               .map(yamlFileContent
                   -> yamlFileContent.replaceAll(DOCKER_IMAGE_TAG_PLACEHOLDER_REGEX, imageDetails.getTag())
                          .replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX,
-                             getImageName(yamlFileContent, imageDetails.getName(), imageDetails.getDomainName())))
+                             getImageName(yamlFileContent, imageDetails.getName(), imageDetails.getDomainName()))
+                         .replaceAll(HELM_NAMESPACE_PLACEHOLDER_REGEX, infrastructureMapping.getNamespace()))
               .map(context::renderExpression)
               .collect(Collectors.toList());
     }
