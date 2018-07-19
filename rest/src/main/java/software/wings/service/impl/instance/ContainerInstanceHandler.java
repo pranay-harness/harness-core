@@ -358,16 +358,20 @@ public class ContainerInstanceHandler extends InstanceHandler {
 
           List<Label> labels = new ArrayList<>();
 
+          DeploymentInfo deploymentInfo;
           if (stepExecutionSummary instanceof HelmSetupExecutionSummary) {
             HelmSetupExecutionSummary helmSetupExecutionSummary = (HelmSetupExecutionSummary) stepExecutionSummary;
             labels.add(aLabel().withName("release").withValue(helmSetupExecutionSummary.getReleaseName()).build());
+            deploymentInfo =
+                getContainerDeploymentInfosWithLablesForHelm(clusterName, labels, helmSetupExecutionSummary);
           } else {
             KubernetesSteadyStateCheckExecutionSummary kubernetesSteadyStateCheckExecutionSummary =
                 (KubernetesSteadyStateCheckExecutionSummary) stepExecutionSummary;
             labels.addAll(kubernetesSteadyStateCheckExecutionSummary.getLabels());
+            deploymentInfo = getContainerDeploymentInfosWithLables(clusterName, labels);
           }
 
-          return Optional.of(singletonList(getContainerDeploymentInfosWithLables(clusterName, labels)));
+          return Optional.of(singletonList(deploymentInfo));
         }
       }
     }
@@ -376,6 +380,17 @@ public class ContainerInstanceHandler extends InstanceHandler {
 
   private DeploymentInfo getContainerDeploymentInfosWithLables(String clusterName, List<Label> labels) {
     return ContainerDeploymentInfoWithLabels.builder().clusterName(clusterName).labels(labels).build();
+  }
+
+  private DeploymentInfo getContainerDeploymentInfosWithLablesForHelm(
+      String clusterName, List<Label> labels, HelmSetupExecutionSummary executionSummary) {
+    Integer version = executionSummary.getRollbackVersion() == null ? executionSummary.getNewVersion()
+                                                                    : executionSummary.getRollbackVersion();
+    return ContainerDeploymentInfoWithLabels.builder()
+        .clusterName(clusterName)
+        .labels(labels)
+        .newVersion(version.toString())
+        .build();
   }
 
   private List<DeploymentInfo> getContainerDeploymentInfos(String clusterName, Set<String> containerSvcNameSet) {
@@ -582,9 +597,14 @@ public class ContainerInstanceHandler extends InstanceHandler {
           .containerServiceName(((ContainerDeploymentInfoWithNames) deploymentInfo).getContainerSvcName())
           .build();
     } else if (deploymentInfo instanceof ContainerDeploymentInfoWithLabels) {
-      return ContainerDeploymentKey.builder()
-          .labels(((ContainerDeploymentInfoWithLabels) deploymentInfo).getLabels())
-          .build();
+      ContainerDeploymentInfoWithLabels info = (ContainerDeploymentInfoWithLabels) deploymentInfo;
+      ContainerDeploymentKey key = ContainerDeploymentKey.builder().labels(info.getLabels()).build();
+
+      // For Helm
+      if (EmptyPredicate.isNotEmpty(info.getNewVersion())) {
+        key.setNewVersion(info.getNewVersion());
+      }
+      return key;
     } else {
       throw new WingsException("Unsupported DeploymentINfo type for Container: " + deploymentInfo);
     }

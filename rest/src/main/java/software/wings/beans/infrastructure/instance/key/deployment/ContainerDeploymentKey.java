@@ -18,4 +18,5 @@ import java.util.List;
 public class ContainerDeploymentKey extends DeploymentKey {
   private String containerServiceName;
   @Indexed private List<Label> labels;
+  private String newVersion;
 }

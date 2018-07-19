@@ -1,9 +1,10 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.data.structure.EmptyPredicate;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.slf4j.Logger;
@@ -92,10 +93,13 @@ public class DeploymentServiceImpl implements DeploymentService {
   private DeploymentKey AddDeploymentKeyFilterForContainer(
       Query<DeploymentSummary> query, DeploymentSummary deploymentSummary) {
     ContainerDeploymentKey containerDeploymentKey = deploymentSummary.getContainerDeploymentKey();
-    if (EmptyPredicate.isNotEmpty(containerDeploymentKey.getContainerServiceName())) {
+    if (isNotEmpty(containerDeploymentKey.getContainerServiceName())) {
       query.filter("containerDeploymentKey.containerServiceName", containerDeploymentKey.getContainerServiceName());
-    } else if (EmptyPredicate.isNotEmpty(containerDeploymentKey.getLabels())) {
+    } else if (isNotEmpty(containerDeploymentKey.getLabels())) {
       query.field("containerDeploymentKey.labels").hasAllOf(containerDeploymentKey.getLabels());
+      if (isNotEmpty(containerDeploymentKey.getNewVersion())) {
+        query.filter("containerDeploymentKey.newVersion", containerDeploymentKey.getNewVersion());
+      }
     }
     return containerDeploymentKey;
   }

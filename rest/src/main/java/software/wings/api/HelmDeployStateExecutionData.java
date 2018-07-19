@@ -79,6 +79,7 @@ public class HelmDeployStateExecutionData extends StateExecutionData implements 
         .releaseName(releaseName)
         .prevVersion(releaseOldVersion)
         .newVersion(releaseNewVersion)
+        .rollbackVersion(rollbackVersion)
         .build();
   }
 }

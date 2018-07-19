@@ -18,10 +18,12 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class ContainerDeploymentInfoWithLabels extends BaseContainerDeploymentInfo {
   private List<Label> labels;
+  private String newVersion;
 
   @Builder
-  public ContainerDeploymentInfoWithLabels(String clusterName, List<Label> labels) {
+  public ContainerDeploymentInfoWithLabels(String clusterName, List<Label> labels, String newVersion) {
     super(clusterName);
     this.labels = labels;
+    this.newVersion = newVersion;
   }
 }
