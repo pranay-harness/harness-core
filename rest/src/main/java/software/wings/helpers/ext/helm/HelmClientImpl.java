@@ -5,7 +5,6 @@ import static software.wings.beans.command.CommandExecutionResult.CommandExecuti
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper.lockObjects;
 import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_HELM_COMMAND_TIMEOUT;
-import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_ADD_REPO_COMMAND_TEMPLATE;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_INSTALL_COMMAND_TEMPLATE;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_LIST_RELEASE_COMMAND_TEMPLATE;
@@ -128,8 +127,7 @@ public class HelmClientImpl implements HelmClient {
   public HelmCliResponse getClientAndServerVersion(HelmCommandRequest commandRequest)
       throws InterruptedException, TimeoutException, IOException {
     String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
-    String command = HELM_VERSION_COMMAND_TEMPLATE.replace("${KUBECONFIG_PATH}", kubeConfigLocation)
-                         .replace("${TILLER_CONN_TIMEOUT}", DEFAULT_TILLER_CONNECTION_TIMEOUT);
+    String command = HELM_VERSION_COMMAND_TEMPLATE.replace("${KUBECONFIG_PATH}", kubeConfigLocation);
     return executeHelmCLICommand(command);
   }
 

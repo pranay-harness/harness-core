@@ -115,8 +115,7 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
     public void saveExecutionLog(String line, LogLevel logLevel, CommandExecutionStatus commandExecutionStatus) {}
   }
 
-  private void ensureHelmCliAndTillerInstalled(HelmCommandRequest helmCommandRequest)
-      throws InterruptedException, IOException, TimeoutException {
+  private void ensureHelmCliAndTillerInstalled(HelmCommandRequest helmCommandRequest) throws Exception {
     LogCallback executionLogCallback = getExecutionLogCallback(helmCommandRequest);
 
     executionLogCallback.saveExecutionLog(

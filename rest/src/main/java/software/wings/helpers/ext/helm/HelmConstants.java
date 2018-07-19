@@ -41,8 +41,7 @@ public class HelmConstants {
       "KUBECONFIG=${KUBECONFIG_PATH} helm list ${FLAGS} ${RELEASE_NAME}";
   public static final String HELM_RELEASE_HIST_COMMAND_TEMPLATE =
       "KUBECONFIG=${KUBECONFIG_PATH} helm hist ${RELEASE_NAME} ${FLAGS}";
-  public static final String HELM_VERSION_COMMAND_TEMPLATE =
-      "KUBECONFIG=${KUBECONFIG_PATH} helm version  --tiller-connection-timeout ${TILLER_CONN_TIMEOUT}";
+  public static final String HELM_VERSION_COMMAND_TEMPLATE = "KUBECONFIG=${KUBECONFIG_PATH} helm version";
   public static final String HELM_ADD_REPO_COMMAND_TEMPLATE =
       "KUBECONFIG=${KUBECONFIG_PATH} helm repo add ${REPO_NAME} ${REPO_URL}";
   public static final String HELM_REPO_LIST_COMMAND_TEMPLATE = "KUBECONFIG=${KUBECONFIG_PATH} helm repo list";
