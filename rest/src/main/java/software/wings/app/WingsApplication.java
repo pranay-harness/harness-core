@@ -63,6 +63,7 @@ import software.wings.jersey.KryoFeature;
 import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
 import software.wings.resources.AppResource;
+import software.wings.scheduler.AdministrativeJob;
 import software.wings.scheduler.ArchivalManager;
 import software.wings.scheduler.BarrierBackupJob;
 import software.wings.scheduler.PersistentLockCleanupJob;
@@ -376,6 +377,7 @@ public class WingsApplication extends Application<MainConfiguration> {
         BarrierBackupJob.addJob(jobScheduler);
         PersistentLockCleanupJob.add(jobScheduler);
         ZombieHunterJob.scheduleJobs(jobScheduler);
+        AdministrativeJob.addJob(jobScheduler);
       }
     }
   }

@@ -562,6 +562,7 @@ public class SecretManagerImpl implements SecretManager {
         .forEach(accountId -> {
           vaildateKmsConfigs(accountId);
           validateVaultConfigs(accountId);
+          vaultService.renewTokens(accountId);
         });
   }
 

@@ -26,4 +26,6 @@ public interface SecretManagementDelegateService {
   char[] decrypt(EncryptedData data, VaultConfig vaultConfig) throws IOException;
 
   void deleteVaultSecret(String path, VaultConfig vaultConfig) throws IOException;
+
+  @DelegateTaskType(TaskType.VAULT_RENEW_TOKEN) boolean renewVaultToken(VaultConfig vaultConfig) throws IOException;
 }

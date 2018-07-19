@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
@@ -19,10 +20,14 @@ import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
+import software.wings.beans.alert.AlertType;
+import software.wings.beans.alert.KmsSetupAlert;
+import software.wings.common.Constants;
 import software.wings.dl.HIterator;
 import software.wings.exception.WingsException;
 import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.VaultService;
@@ -37,7 +42,9 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by rsingh on 11/2/17.
@@ -45,6 +52,7 @@ import java.util.List;
 public class VaultServiceImpl extends AbstractSecretServiceImpl implements VaultService {
   public static final String VAULT_VAILDATION_URL = "harness_vault_validation";
   @Inject private KmsService kmsService;
+  @Inject private AlertService alertService;
 
   @Override
   public EncryptedData encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
@@ -105,12 +113,72 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   }
 
   @Override
+  public void renewTokens(String accountId) {
+    long currentTime = System.currentTimeMillis();
+    logger.info("renewing vault token for {}", accountId);
+    try (HIterator<VaultConfig> query =
+             new HIterator<>(wingsPersistence.createQuery(VaultConfig.class).filter("accountId", accountId).fetch())) {
+      while (query.hasNext()) {
+        VaultConfig vaultConfig = query.next();
+        // don't renew if renewal interval not configured
+        if (vaultConfig.getRenewIntervalHours() <= 0) {
+          logger.info("renewing not configured for {} for account {}", vaultConfig.getUuid(), accountId);
+          continue;
+        }
+        // don't renew if renewed within configured time
+        if (TimeUnit.MILLISECONDS.toHours(currentTime - vaultConfig.getRenewedAt())
+            < vaultConfig.getRenewIntervalHours()) {
+          logger.info("{} renewed at {} not renewing now for account {}", vaultConfig.getUuid(),
+              new Date(vaultConfig.getRenewedAt()), accountId);
+          continue;
+        }
+
+        VaultConfig decryptedVaultConfig = getVaultConfig(accountId, vaultConfig.getUuid());
+        SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
+        KmsSetupAlert kmsSetupAlert =
+            KmsSetupAlert.builder()
+                .kmsId(vaultConfig.getUuid())
+                .message(vaultConfig.getName()
+                    + "(Hashicorp Vault) is not able to renew the token. Please check your setup and ensure that token is renewable")
+                .build();
+        try {
+          delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
+              .renewVaultToken(decryptedVaultConfig);
+          alertService.closeAlert(accountId, Base.GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
+          vaultConfig.setRenewedAt(System.currentTimeMillis());
+          wingsPersistence.save(vaultConfig);
+        } catch (Exception e) {
+          logger.error("Error while renewing token for : " + vaultConfig, e);
+          alertService.openAlert(accountId, Base.GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
+        }
+      }
+    }
+  }
+
+  @Override
   public String saveVaultConfig(String accountId, VaultConfig vaultConfig) {
-    try {
-      validateVaultConfig(accountId, vaultConfig);
-    } catch (WingsException exception) {
-      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, exception)
-          .addParam("reason", "Validation failed. Please check your token");
+    boolean shouldVerify = true;
+    if (!isEmpty(vaultConfig.getUuid())) {
+      VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfig.getUuid());
+      shouldVerify = !savedVaultConfig.getVaultUrl().equals(vaultConfig.getVaultUrl())
+          || !Constants.SECRET_MASK.equals(vaultConfig.getAuthToken());
+    }
+    if (shouldVerify) {
+      try {
+        validateVaultConfig(accountId, vaultConfig);
+      } catch (WingsException exception) {
+        throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, exception)
+            .addParam("reason", "Validation failed. Please check your token");
+      }
+    }
+
+    // update without token or url changes
+    if (!shouldVerify) {
+      VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfig.getUuid());
+      savedVaultConfig.setName(vaultConfig.getName());
+      savedVaultConfig.setRenewIntervalHours(vaultConfig.getRenewIntervalHours());
+      savedVaultConfig.setDefault(vaultConfig.isDefault());
+      return wingsPersistence.save(savedVaultConfig);
     }
 
     vaultConfig.setAccountId(accountId);
