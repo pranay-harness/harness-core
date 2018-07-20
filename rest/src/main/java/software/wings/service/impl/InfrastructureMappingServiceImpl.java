@@ -48,6 +48,7 @@ import com.google.inject.name.Named;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.model.Tag;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.data.validator.EntityNameValidator;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -284,16 +285,22 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   @ValidationGroups(Create.class)
   public InfrastructureMapping save(InfrastructureMapping infraMapping, boolean fromYaml) {
+    String requestId = UUIDGenerator.generateUuid();
+    long start = System.currentTimeMillis();
+    logger.info("Checkpoint1: for request {}, time taken: {}", requestId, start);
     // The default name uses a bunch of user inputs, which is why we generate it at the time of save.
     if (infraMapping.isAutoPopulate()) {
       setAutoPopulatedName(infraMapping);
+      logger.info("Checkpoint2: for request {}, time taken: {}", requestId, System.currentTimeMillis() - start);
     }
 
     SettingAttribute computeProviderSetting = settingsService.get(infraMapping.getComputeProviderSettingId());
+    logger.info("Checkpoint3: for request {}, time taken: {}", requestId, System.currentTimeMillis() - start);
 
     ServiceTemplate serviceTemplate =
         serviceTemplateService.get(infraMapping.getAppId(), infraMapping.getServiceTemplateId());
     notNullCheck("Service Template", serviceTemplate, USER);
+    logger.info("Checkpoint4: for request {}, time taken: {}", requestId, System.currentTimeMillis() - start);
 
     infraMapping.setServiceId(serviceTemplate.getServiceId());
     if (computeProviderSetting != null) {
@@ -301,10 +308,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
 
     validateInfraMapping(infraMapping, fromYaml);
+    logger.info("Checkpoint5: for request {}, time taken: {}", requestId, System.currentTimeMillis() - start);
 
     InfrastructureMapping savedInfraMapping = duplicateCheck(
         () -> wingsPersistence.saveAndGet(InfrastructureMapping.class, infraMapping), "name", infraMapping.getName());
+    logger.info("Checkpoint6: for request {}, time taken: {}", requestId, System.currentTimeMillis() - start);
     executorService.submit(() -> saveYamlChangeSet(savedInfraMapping, ChangeType.ADD));
+    logger.info("Checkpoint7: for request {}, time taken: {}", requestId, System.currentTimeMillis() - start);
     return savedInfraMapping;
   }
 
