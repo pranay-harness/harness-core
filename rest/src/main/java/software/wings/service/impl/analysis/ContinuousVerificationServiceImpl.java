@@ -181,7 +181,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     pageRequest.addFilter("workflowStartTs", Operator.GE, beginEpochTs);
     pageRequest.addFilter("workflowStartTs", Operator.LT, endEpochTs);
     pageRequest.setFieldsIncluded(Arrays.asList("stateExecutionId", "workflowExecutionId", "envId", "serviceId",
-        "accountId", "executionStatus", "applicationId", "workflowStartTs"));
+        "accountId", "executionStatus", "applicationId", "workflowStartTs", "stateType"));
     pageRequest.addOrder("workflowStartTs", OrderType.DESC);
     pageRequest.addOrder("stateStartTs", OrderType.DESC);
 
