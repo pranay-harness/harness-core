@@ -30,6 +30,8 @@ import software.wings.exception.WingsException;
 import software.wings.helpers.ext.newrelic.NewRelicRestClient;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
+import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.JsonUtils;
@@ -82,16 +84,21 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     }
     int pageCount = 1;
     while (true) {
-      apiCallLog = (ThirdPartyApiCallLog) apiCallLog.clone();
+      apiCallLog = apiCallLog.copy();
+      apiCallLog.setTitle("Fetching applications from " + newRelicConfig.getNewRelicUrl());
       apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
-      apiCallLog.setRequest(newRelicConfig.getNewRelicUrl() + "/v2/applications.json?page=" + pageCount);
+      apiCallLog.addFieldToRequest(
+          ThirdPartyApiCallField.builder()
+              .name("url")
+              .value(newRelicConfig.getNewRelicUrl() + "/v2/applications.json?page=" + pageCount)
+              .type(FieldType.URL)
+              .build());
       final Call<NewRelicApplicationsResponse> request =
           getNewRelicRestClient(newRelicConfig, encryptedDataDetails).listAllApplications(pageCount);
       final Response<NewRelicApplicationsResponse> response = request.execute();
       apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
-      apiCallLog.setStatusCode(response.code());
       if (response.isSuccessful()) {
-        apiCallLog.setJsonResponse(response.body());
+        apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
         List<NewRelicApplication> applications = response.body().getApplications();
         delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
         if (isEmpty(applications)) {
@@ -100,7 +107,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
           rv.addAll(applications);
         }
       } else {
-        apiCallLog.setResponse(response.errorBody().string());
+        apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
         delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
         throw new WingsException(response.errorBody().string());
       }
@@ -121,18 +128,22 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     }
     int pageCount = 1;
     while (true) {
-      apiCallLog = (ThirdPartyApiCallLog) apiCallLog.clone();
+      apiCallLog = apiCallLog.copy();
+      apiCallLog.setTitle("Fetching application instances from " + newRelicConfig.getNewRelicUrl());
       apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
-      apiCallLog.setRequest(newRelicConfig.getNewRelicUrl() + "/v2/applications/" + newRelicApplicationId
-          + "/instances.json?page=" + pageCount);
+      apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                       .name("url")
+                                       .value(newRelicConfig.getNewRelicUrl() + "/v2/applications/"
+                                           + newRelicApplicationId + "/instances.json?page=" + pageCount)
+                                       .type(FieldType.URL)
+                                       .build());
       final Call<NewRelicApplicationInstancesResponse> request =
           getNewRelicRestClient(newRelicConfig, encryptedDataDetails)
               .listAppInstances(newRelicApplicationId, pageCount);
       final Response<NewRelicApplicationInstancesResponse> response = request.execute();
       apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
-      apiCallLog.setStatusCode(response.code());
       if (response.isSuccessful()) {
-        apiCallLog.setJsonResponse(response.body());
+        apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
         List<NewRelicApplicationInstance> applicationInstances = response.body().getApplication_instances();
         delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
         if (isEmpty(applicationInstances)) {
@@ -141,7 +152,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
           rv.addAll(applicationInstances);
         }
       } else {
-        apiCallLog.setResponse(response.errorBody().string());
+        apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
         delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
         throw new WingsException(response.errorBody().string());
       }
@@ -173,16 +184,20 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     }
     for (int retry = 0; retry <= NUM_OF_RETRIES; retry++) {
       try {
-        apiCallLog.setRequest(newRelicConfig.getNewRelicUrl() + "/v2/applications/" + newRelicAppId
-            + "/metrics.json?name=WebTransaction");
+        apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                         .name("url")
+                                         .value(newRelicConfig.getNewRelicUrl() + "/v2/applications/" + newRelicAppId
+                                             + "/metrics.json?name=WebTransaction")
+                                         .type(FieldType.URL)
+                                         .build());
+        apiCallLog.setTitle("Fetching web transactions names from " + newRelicConfig.getNewRelicUrl());
         apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
         final Call<NewRelicMetricResponse> request =
             getNewRelicRestClient(newRelicConfig, encryptedDataDetails).listMetricNames(newRelicAppId);
         final Response<NewRelicMetricResponse> response = request.execute();
         apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
-        apiCallLog.setStatusCode(response.code());
         if (response.isSuccessful()) {
-          apiCallLog.setJsonResponse(response.body());
+          apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
           List<NewRelicMetric> metrics = response.body().getMetrics();
           if (isNotEmpty(metrics)) {
             metrics.forEach(metric -> {
@@ -192,7 +207,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
             });
           }
         } else if (response.code() != HttpServletResponse.SC_NOT_FOUND) {
-          apiCallLog.setResponse(response.errorBody().string());
+          apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
           throw new WingsException(response.errorBody().string());
         }
         return newRelicMetrics;
@@ -316,21 +331,22 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     metricsToCollectString = StringUtils.removeEnd(metricsToCollectString, "&");
 
     final String url = baseUrl + metricsToCollectString;
-    apiCallLog.setRequest(url);
+    apiCallLog.setTitle(
+        "Fetching metric data for " + metricNames.size() + " transactions from " + newRelicConfig.getNewRelicUrl());
+    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder().name("url").value(url).type(FieldType.URL).build());
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
     final Call<NewRelicMetricDataResponse> request =
         getNewRelicRestClient(newRelicConfig, encryptedDataDetails)
             .getRawMetricData(url, dateFormatter.format(new Date(fromTime)), dateFormatter.format(new Date(toTime)));
     final Response<NewRelicMetricDataResponse> response = request.execute();
     apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
-    apiCallLog.setStatusCode(response.code());
     if (response.isSuccessful()) {
-      apiCallLog.setJsonResponse(response.body());
+      apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
       delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
       return response.body().getMetric_data();
     }
 
-    apiCallLog.setResponse(response.errorBody().string());
+    apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
     delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
     throw new WingsException(response.errorBody().string());
   }
@@ -345,19 +361,21 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     final String baseUrl =
         config.getNewRelicUrl().endsWith("/") ? config.getNewRelicUrl() : config.getNewRelicUrl() + "/";
     final String url = baseUrl + "v2/applications/" + newRelicApplicationId + "/deployments.json";
-    apiCallLog.setRequest("ur: " + url + " body: " + body);
+    apiCallLog.setTitle("Posting deployment marker to " + config.getNewRelicUrl());
+    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder().name("url").value(url).type(FieldType.URL).build());
+    apiCallLog.addFieldToRequest(
+        ThirdPartyApiCallField.builder().name("payload").value(JsonUtils.asJson(body)).type(FieldType.JSON).build());
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
     final Call<Object> request = getNewRelicRestClient(config, encryptedDataDetails).postDeploymentMarker(url, body);
     final Response<Object> response = request.execute();
     apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
-    apiCallLog.setStatusCode(response.code());
     if (response.isSuccessful()) {
-      apiCallLog.setJsonResponse(response.body());
+      apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
       delegateLogService.save(config.getAccountId(), apiCallLog);
       return "Successfully posted deployment marker to NewRelic";
     }
 
-    apiCallLog.setResponse(response.errorBody().string());
+    apiCallLog.addFieldToResponse(response.code(), response.errorBody(), FieldType.TEXT);
     delegateLogService.save(config.getAccountId(), apiCallLog);
     throw new WingsException(response.errorBody().string());
   }

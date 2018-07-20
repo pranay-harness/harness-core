@@ -18,6 +18,8 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.SplunkConfig;
 import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
+import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.analysis.LogElement;
@@ -245,21 +247,28 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
 
       // A blocking search returns the job when the search is done
       ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
-      apiCallLog.setRequest("triggering splunk query startTime: " + collectionStartTime + " endTime: " + endTime
-          + " query: " + searchQuery + " url: " + dataCollectionInfo.getSplunkConfig().getSplunkUrl());
+      apiCallLog.setTitle("Fetch request to " + dataCollectionInfo.getSplunkConfig().getSplunkUrl());
+      apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                       .name("url")
+                                       .value(dataCollectionInfo.getSplunkConfig().getSplunkUrl())
+                                       .type(FieldType.URL)
+                                       .build());
+      apiCallLog.addFieldToRequest(
+          ThirdPartyApiCallField.builder().name("query").value(searchQuery).type(FieldType.TEXT).build());
       apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
-      logger.info(apiCallLog.getRequest());
+      logger.info("triggering splunk query startTime: " + collectionStartTime + " endTime: " + endTime
+          + " query: " + searchQuery + " url: " + dataCollectionInfo.getSplunkConfig().getSplunkUrl());
       Job job = splunkService.getJobs().create(searchQuery, jobargs);
       logger.info("splunk query done. Num of events: " + job.getEventCount() + " application: "
           + dataCollectionInfo.getApplicationId() + " stateExecutionId: " + dataCollectionInfo.getStateExecutionId());
-      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
-      apiCallLog.setResponse("splunk query done. Num of events: " + job.getEventCount());
-      delegateLogService.save(getAccountId(), apiCallLog);
 
       JobResultsArgs resultsArgs = new JobResultsArgs();
       resultsArgs.setOutputMode(JobResultsArgs.OutputMode.JSON);
 
       InputStream results = job.getResults(resultsArgs);
+      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
+      apiCallLog.addFieldToResponse(200, "splunk query done. Num of events: " + job.getEventCount(), FieldType.TEXT);
+      delegateLogService.save(getAccountId(), apiCallLog);
       ResultsReaderJson resultsReader = new ResultsReaderJson(results);
       Map<String, String> event;
 
