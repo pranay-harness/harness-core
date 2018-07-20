@@ -31,6 +31,8 @@ import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
 import de.flapdoodle.embed.mongo.Command;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodStarter;
+import de.flapdoodle.embed.mongo.config.DownloadConfigBuilder;
+import de.flapdoodle.embed.mongo.config.ExtractedArtifactStoreBuilder;
 import de.flapdoodle.embed.mongo.config.IMongodConfig;
 import de.flapdoodle.embed.mongo.config.MongodConfigBuilder;
 import de.flapdoodle.embed.mongo.config.Net;
@@ -113,7 +115,14 @@ public class WingsRule implements MethodRule {
   private static final Logger logger = LoggerFactory.getLogger(WingsRule.class);
 
   private static IRuntimeConfig runtimeConfig =
-      new RuntimeConfigBuilder().defaultsWithLogger(Command.MongoD, LoggerFactory.getLogger(RealMongo.class)).build();
+      new RuntimeConfigBuilder()
+          .defaultsWithLogger(Command.MongoD, LoggerFactory.getLogger(RealMongo.class))
+          .artifactStore(new ExtractedArtifactStoreBuilder()
+                             .defaults(Command.MongoD)
+                             .download(new DownloadConfigBuilder()
+                                           .defaultsForCommand(Command.MongoD)
+                                           .downloadPath("https://storage.googleapis.com/harness-tests/")))
+          .build();
 
   private static MongodStarter starter = MongodStarter.getInstance(runtimeConfig);
 
