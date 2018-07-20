@@ -14,6 +14,7 @@ import okhttp3.Route;
 import org.apache.http.HttpHost;
 import org.apache.http.client.fluent.Executor;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -84,7 +85,9 @@ public class ProxyTest {
   /**
    * Using proxy with Auth
    */
+
   @Test
+  @Ignore
   public void testWithProxyAuthSuccess_OkHttpClient() throws IOException {
     Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, proxyPort));
     OkHttpClient.Builder builder = new OkHttpClient.Builder().proxy(proxy);
@@ -175,6 +178,7 @@ public class ProxyTest {
   //  }
 
   @Test
+  @Ignore
   public void testGetResponseFromUrlProxyAuth() throws IOException {
     Executor executor = Executor.newInstance();
     org.apache.http.client.fluent.Request request =
@@ -190,6 +194,7 @@ public class ProxyTest {
   }
 
   @Test
+  @Ignore
   public void testGetResponseFromUrlProxyAuth_Fail() throws IOException {
     Executor executor = Executor.newInstance();
     org.apache.http.client.fluent.Request requestObj =
