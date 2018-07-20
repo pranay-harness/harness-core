@@ -271,7 +271,7 @@ def parse(cli_args):
 def k8_performance():
     from sources.FileLoader import FileLoader
 
-    result_file = "../k8_data.json"
+    result_file = "k8_data.json"
     data = FileLoader.load_data(result_file)
 
     def parse_k8(cli_args):
@@ -302,7 +302,6 @@ def main(options):
 
             lnn = LogNeuralNet(corpus, options)
             corpus = lnn.run()
-            k8_performance()
 
             logger.info(corpus.save_to_harness(options.log_analysis_save_url,
                                                corpus.get_output_as_json(options), options.version_file_path,
