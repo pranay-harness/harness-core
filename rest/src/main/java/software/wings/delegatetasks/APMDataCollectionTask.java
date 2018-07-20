@@ -42,6 +42,7 @@ import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -275,8 +276,16 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
     }
 
     private List<APMResponseParser.APMResponseData> collect(String baseUrl, Map<String, String> headers,
-        Map<String, String> options, final String initialUrl, List<APMMetricInfo> metricInfos,
+        Map<String, String> options, String initialUrl, List<APMMetricInfo> metricInfos,
         AnalysisComparisonStrategy strategy) throws IOException {
+      // OkHttp seems to have issues encoding backtick, so explictly encoding it.
+      if (initialUrl.contains("`")) {
+        try {
+          initialUrl = initialUrl.replaceAll("`", URLEncoder.encode("`", "UTF-8"));
+        } catch (Exception e) {
+          logger.warn("Unsupported exception caught when encoding a back-tick");
+        }
+      }
       List<APMResponseParser.APMResponseData> responses = new ArrayList<>();
 
       BiMap<String, Object> headersBiMap = resolveDollarReferences(headers);
