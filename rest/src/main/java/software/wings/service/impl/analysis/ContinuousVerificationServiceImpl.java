@@ -89,12 +89,12 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     Map<String, Long> pipelineTimeStampMap = new HashMap<>();
 
     for (ContinuousVerificationExecutionMetaData executionMetaData : continuousVerificationExecutionMetaData) {
-      if (executionMetaData.getPipelineId() != null) {
-        if (!pipelineTimeStampMap.containsKey(executionMetaData.getPipelineId())) {
-          pipelineTimeStampMap.put(executionMetaData.getPipelineId(), executionMetaData.getWorkflowStartTs());
+      if (executionMetaData.getPipelineExecutionId() != null) {
+        if (!pipelineTimeStampMap.containsKey(executionMetaData.getPipelineExecutionId())) {
+          pipelineTimeStampMap.put(executionMetaData.getPipelineExecutionId(), executionMetaData.getWorkflowStartTs());
         } else if (executionMetaData.getWorkflowStartTs()
-            > pipelineTimeStampMap.get(executionMetaData.getPipelineId())) {
-          pipelineTimeStampMap.put(executionMetaData.getPipelineId(), executionMetaData.getWorkflowStartTs());
+            > pipelineTimeStampMap.get(executionMetaData.getPipelineExecutionId())) {
+          pipelineTimeStampMap.put(executionMetaData.getPipelineExecutionId(), executionMetaData.getWorkflowStartTs());
         }
       }
     }
@@ -105,7 +105,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         validatePermissionsAndGetAllowedExecutionList(user, accountId, continuousVerificationExecutionMetaData);
     for (ContinuousVerificationExecutionMetaData executionMetaData : continuousVerificationExecutionMetaData) {
       if (executionMetaData.getPipelineId() != null) {
-        startTimeTs = pipelineTimeStampMap.get(executionMetaData.getPipelineId());
+        startTimeTs = pipelineTimeStampMap.get(executionMetaData.getPipelineExecutionId());
       } else {
         startTimeTs = executionMetaData.getWorkflowStartTs();
       }
