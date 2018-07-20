@@ -53,7 +53,7 @@ public class HelmConstants {
       + "#\n"
       + "# Placeholders:\n"
       + "#\n"
-      + "# Required: ${NAMESPACE}\n"
+      + "# Optional: ${NAMESPACE}\n"
       + "#   - Replaced with the namespace\n"
       + "#     Harness will set the namespace from infrastructure\n"
       + "#     mapping namespace\n"
