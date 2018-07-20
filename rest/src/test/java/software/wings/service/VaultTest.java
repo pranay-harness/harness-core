@@ -1306,8 +1306,11 @@ public class VaultTest extends WingsBaseTest {
     String secretFileId =
         secretManager.saveFile(accountId, secretName, null, new BoundedInputStream(new FileInputStream(fileToSave)));
 
-    String encryptedUuid =
-        wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE).get().getUuid();
+    String encryptedUuid = wingsPersistence.createQuery(EncryptedData.class)
+                               .filter("type", CONFIG_FILE)
+                               .filter("accountId", accountId)
+                               .get()
+                               .getUuid();
 
     Service service = Service.builder().name(UUID.randomUUID().toString()).appId(appId).build();
     wingsPersistence.save(service);
@@ -1345,7 +1348,8 @@ public class VaultTest extends WingsBaseTest {
     File download = configService.download(appId, configFileId);
     assertEquals(FileUtils.readFileToString(fileToSave, Charset.defaultCharset()),
         FileUtils.readFileToString(download, Charset.defaultCharset()));
-    assertEquals(numOfEncRecords + 1, wingsPersistence.createQuery(EncryptedData.class).count());
+    assertEquals(
+        numOfEncRecords + 1, wingsPersistence.createQuery(EncryptedData.class).filter("accountId", accountId).count());
 
     List<EncryptedData> encryptedFileData = wingsPersistence.createQuery(EncryptedData.class)
                                                 .filter("type", CONFIG_FILE)
@@ -1362,7 +1366,8 @@ public class VaultTest extends WingsBaseTest {
     download = configService.download(appId, configFileId);
     assertEquals(FileUtils.readFileToString(fileToUpdate, Charset.defaultCharset()),
         FileUtils.readFileToString(download, Charset.defaultCharset()));
-    assertEquals(numOfEncRecords + 1, wingsPersistence.createQuery(EncryptedData.class).count());
+    assertEquals(
+        numOfEncRecords + 1, wingsPersistence.createQuery(EncryptedData.class).filter("accountId", accountId).count());
 
     encryptedFileData = wingsPersistence.createQuery(EncryptedData.class)
                             .filter("accountId", accountId)
