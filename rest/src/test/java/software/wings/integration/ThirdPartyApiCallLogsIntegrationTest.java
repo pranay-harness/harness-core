@@ -8,12 +8,16 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static software.wings.beans.Application.Builder.anApplication;
 
+import com.google.common.collect.Lists;
+
 import io.harness.data.structure.CollectionUtils;
 import org.junit.Before;
 import org.junit.Test;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageResponse;
 import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
+import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,8 +53,16 @@ public class ThirdPartyApiCallLogsIntegrationTest extends BaseIntegrationTest {
                           .accountId(accountId)
                           .stateExecutionId(stateExecutionId)
                           .requestTimeStamp(i)
-                          .request("request-" + i)
-                          .response("response-" + i)
+                          .request(Lists.newArrayList(ThirdPartyApiCallField.builder()
+                                                          .name(generateUuid())
+                                                          .value(generateUuid())
+                                                          .type(FieldType.TEXT)
+                                                          .build()))
+                          .response(Lists.newArrayList(ThirdPartyApiCallField.builder()
+                                                           .name(generateUuid())
+                                                           .value(generateUuid())
+                                                           .type(FieldType.TEXT)
+                                                           .build()))
                           .delegateId(delegateId)
                           .delegateTaskId(delegateTaskId)
                           .build());

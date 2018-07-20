@@ -17,6 +17,8 @@ import software.wings.exception.WingsException;
 import software.wings.helpers.ext.logz.LogzRestClient;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
+import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
 import software.wings.service.intfc.logz.LogzDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -56,21 +58,29 @@ public class LogzDelegateServiceImpl implements LogzDelegateService {
       ElkLogFetchRequest logFetchRequest, ThirdPartyApiCallLog apiCallLog) throws IOException {
     Preconditions.checkNotNull(apiCallLog);
 
+    apiCallLog.setTitle("Fetching logs from " + logzConfig.getLogzUrl());
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
-    apiCallLog.setRequest(logzConfig.getLogzUrl() + "/v1/search?size=10000"
-        + " request: " + JsonUtils.asJson(logFetchRequest.toElasticSearchJsonObject()));
+    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                     .name("url")
+                                     .value(logzConfig.getLogzUrl() + "/v1/search?size=10000")
+                                     .type(FieldType.URL)
+                                     .build());
+    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                     .name("payload")
+                                     .value(JsonUtils.asJson(logFetchRequest))
+                                     .type(FieldType.JSON)
+                                     .build());
     final Call<Object> request =
         getLogzRestClient(logzConfig, encryptedDataDetails).search(logFetchRequest.toElasticSearchJsonObject());
     final Response<Object> response = request.execute();
     apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
-    apiCallLog.setStatusCode(response.code());
     if (response.isSuccessful()) {
-      apiCallLog.setJsonResponse(response.body());
+      apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
       delegateLogService.save(logzConfig.getAccountId(), apiCallLog);
       return response.body();
     }
 
-    apiCallLog.setResponse(response.errorBody().string());
+    apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
     delegateLogService.save(logzConfig.getAccountId(), apiCallLog);
     throw new WingsException(response.errorBody().string());
   }

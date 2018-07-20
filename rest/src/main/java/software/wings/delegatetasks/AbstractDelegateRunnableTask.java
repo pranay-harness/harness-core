@@ -125,6 +125,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
         .delegateId(getDelegateId())
         .delegateTaskId(getTaskId())
         .stateExecutionId(stateExecutionId)
+        .appId(getAppId())
         .build();
   }
 

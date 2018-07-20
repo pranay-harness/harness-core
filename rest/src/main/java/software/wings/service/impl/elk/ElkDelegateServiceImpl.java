@@ -9,6 +9,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.network.Http;
@@ -29,11 +30,12 @@ import software.wings.helpers.ext.elk.ElkRestClient;
 import software.wings.helpers.ext.elk.KibanaRestClient;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
+import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.ElkValidationType;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 
 import java.io.IOException;
@@ -85,9 +87,19 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
       apiCallLog = apiCallLogWithDummyStateExecution(elkConfig.getAccountId());
     }
 
+    apiCallLog.setTitle("Fetching logs from " + elkConfig.getElkUrl());
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
-    apiCallLog.setRequest("connector: " + elkConfig.getElkConnector() + " url: " + elkConfig.getElkUrl() + "/"
-        + logFetchRequest.getIndices() + " request: " + JsonUtils.asJson(logFetchRequest.toElasticSearchJsonObject()));
+    apiCallLog.setRequest(Lists.newArrayList(ThirdPartyApiCallField.builder()
+                                                 .name("connector")
+                                                 .value(elkConfig.getElkConnector().getName())
+                                                 .type(FieldType.TEXT)
+                                                 .build(),
+        ThirdPartyApiCallField.builder()
+            .name("indices")
+            .value(logFetchRequest.getIndices())
+            .type(FieldType.TEXT)
+            .build(),
+        ThirdPartyApiCallField.builder().name("url").value(elkConfig.getElkUrl()).type(FieldType.URL).build()));
     final Call<Object> request = elkConfig.getElkConnector() == ElkConnector.KIBANA_SERVER
         ? getKibanaRestClient(elkConfig, encryptedDataDetails)
               .getLogSample(format(KibanaRestClient.searchPathPattern, logFetchRequest.getIndices(), 10000),
@@ -96,14 +108,13 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
               .search(logFetchRequest.getIndices(), logFetchRequest.toElasticSearchJsonObject());
     final Response<Object> response = request.execute();
     apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
-    apiCallLog.setStatusCode(response.code());
     if (response.isSuccessful()) {
-      apiCallLog.setJsonResponse(response.body());
+      apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
       delegateLogService.save(elkConfig.getAccountId(), apiCallLog);
       return response.body();
     }
 
-    apiCallLog.setResponse(response.errorBody().string());
+    apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
     delegateLogService.save(elkConfig.getAccountId(), apiCallLog);
     throw new WingsException(response.errorBody().string());
   }
@@ -114,23 +125,31 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
     if (apiCallLog == null) {
       apiCallLog = apiCallLogWithDummyStateExecution(elkConfig.getAccountId());
     }
+    apiCallLog.setTitle("Fetching indices from " + elkConfig.getElkUrl());
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
-    apiCallLog.setRequest(
-        "connector: " + elkConfig.getElkConnector() + " url: " + elkConfig.getElkUrl() + "/_template");
+    apiCallLog.setRequest(Lists.newArrayList(ThirdPartyApiCallField.builder()
+                                                 .name("connector")
+                                                 .value(elkConfig.getElkConnector().getName())
+                                                 .type(FieldType.TEXT)
+                                                 .build(),
+        ThirdPartyApiCallField.builder()
+            .name("url")
+            .value(elkConfig.getElkUrl() + "/_template")
+            .type(FieldType.URL)
+            .build()));
     final Call<Map<String, Map<String, Object>>> request = elkConfig.getElkConnector() == ElkConnector.KIBANA_SERVER
         ? getKibanaRestClient(elkConfig, encryptedDataDetails).template()
         : getElkRestClient(elkConfig, encryptedDataDetails).template();
     final Response<Map<String, Map<String, Object>>> response = request.execute();
 
     apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
-    apiCallLog.setStatusCode(response.code());
     if (!response.isSuccessful()) {
-      apiCallLog.setResponse(response.errorBody().string());
+      apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
       delegateLogService.save(elkConfig.getAccountId(), apiCallLog);
       throw new WingsException(response.errorBody().string());
     }
 
-    apiCallLog.setJsonResponse(response.body());
+    apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
     final Map<String, ElkIndexTemplate> rv = new HashMap<>();
     for (Entry<String, Map<String, Object>> indexEntry : response.body().entrySet()) {
       if (indexEntry.getKey().charAt(0) != '.') {

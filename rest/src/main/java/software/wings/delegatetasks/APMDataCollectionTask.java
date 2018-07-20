@@ -27,6 +27,8 @@ import software.wings.exception.WingsException;
 import software.wings.helpers.ext.apm.APMRestClient;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
+import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
@@ -245,18 +247,20 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
       final Response<Object> response;
       try {
         ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
-        apiCallLog.setRequest(urlToLog);
+        apiCallLog.setTitle("Fetch request to " + urlToLog);
+        apiCallLog.addFieldToRequest(
+            ThirdPartyApiCallField.builder().name("url").value(urlToLog).type(FieldType.URL).build());
         apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
         response = request.execute();
         apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
-        apiCallLog.setStatusCode(response.code());
-        apiCallLog.setJsonResponse(response.body());
-        delegateLogService.save(getAccountId(), apiCallLog);
         if (response.isSuccessful()) {
+          apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
+          delegateLogService.save(getAccountId(), apiCallLog);
           return JsonUtils.asJson(response.body());
         } else {
           logger.error(dataCollectionInfo.getStateType() + ": Request not successful. Reason: {}, {}", response.code(),
               response.message());
+          apiCallLog.addFieldToResponse(response.code(), response.errorBody(), FieldType.TEXT);
           throw new WingsException(response.errorBody().string());
         }
       } catch (Exception e) {

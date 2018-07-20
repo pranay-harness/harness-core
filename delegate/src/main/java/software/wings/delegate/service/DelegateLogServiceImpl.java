@@ -80,6 +80,7 @@ public class DelegateLogServiceImpl implements DelegateLogService {
   @Override
   @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
   public void save(String accountId, ThirdPartyApiCallLog thirdPartyApiCallLog) {
+    thirdPartyApiCallLog.setUuid(null);
     apiCallLogCache.get(accountId, s -> new ArrayList<>()).add(thirdPartyApiCallLog);
   }
 

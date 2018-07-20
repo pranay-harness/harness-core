@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -16,6 +17,7 @@ import software.wings.beans.EmbeddedUser;
 import software.wings.utils.JsonUtils;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -27,16 +29,16 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 @NoArgsConstructor
 @ToString(exclude = {"validUntil"})
-public class ThirdPartyApiCallLog extends Base implements Cloneable {
+public class ThirdPartyApiCallLog extends Base {
   private static final String NO_STATE_EXECUTION_ID = "NO_STATE_EXECUTION";
-  private static final int MAX_JSON_RESPONSE_LENGTH = 1024;
+  private static final int MAX_JSON_RESPONSE_LENGTH = 4096;
   private @NotEmpty @Indexed String stateExecutionId;
   private @NotEmpty @Indexed String accountId;
   private @NotEmpty String delegateId;
   private @NotEmpty String delegateTaskId;
-  private @NotEmpty String request;
-  private int statusCode;
-  private String response;
+  private String title;
+  @Default private List<ThirdPartyApiCallField> request = new ArrayList<>();
+  @Default private List<ThirdPartyApiCallField> response = new ArrayList<>();
   private long requestTimeStamp;
   private long responseTimeStamp;
 
@@ -48,32 +50,69 @@ public class ThirdPartyApiCallLog extends Base implements Cloneable {
   @Builder
   public ThirdPartyApiCallLog(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords, String entityYamlPath,
-      String stateExecutionId, String accountId, String delegateId, String delegateTaskId, String request,
-      int statusCode, String response, long requestTimeStamp, long responseTimeStamp) {
+      String stateExecutionId, String accountId, String delegateId, String delegateTaskId, String title,
+      List<ThirdPartyApiCallField> request, List<ThirdPartyApiCallField> response, long requestTimeStamp,
+      long responseTimeStamp) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
     this.stateExecutionId = stateExecutionId;
     this.accountId = accountId;
     this.delegateId = delegateId;
     this.delegateTaskId = delegateTaskId;
+    this.title = title;
     this.request = request;
-    this.statusCode = statusCode;
     this.response = response;
     this.requestTimeStamp = requestTimeStamp;
     this.responseTimeStamp = responseTimeStamp;
   }
 
-  @Override
-  public Object clone() throws CloneNotSupportedException {
-    return super.clone();
+  public ThirdPartyApiCallLog copy() {
+    return ThirdPartyApiCallLog.builder()
+        .stateExecutionId(stateExecutionId)
+        .accountId(accountId)
+        .delegateId(delegateId)
+        .delegateTaskId(delegateTaskId)
+        .appId(appId)
+        .request(new ArrayList<>())
+        .response(new ArrayList<>())
+        .build();
   }
 
-  public void setJsonResponse(Object response) {
-    String jsonResponse = JsonUtils.asJson(response);
-    setResponse(jsonResponse.substring(
-        0, jsonResponse.length() < MAX_JSON_RESPONSE_LENGTH ? jsonResponse.length() : MAX_JSON_RESPONSE_LENGTH));
+  public void addFieldToResponse(int statusCode, Object response, FieldType fieldType) {
+    if (this.response == null) {
+      this.response = new ArrayList<>();
+    }
+    String jsonResponse = fieldType == FieldType.JSON ? JsonUtils.asJson(response) : response.toString();
+    this.response.add(ThirdPartyApiCallField.builder()
+                          .type(FieldType.NUMBER)
+                          .name("statusCode")
+                          .value(Integer.toString(statusCode))
+                          .build());
+    this.response.add(
+        ThirdPartyApiCallField.builder()
+            .type(fieldType)
+            .name("response")
+            .value(jsonResponse.substring(
+                0, jsonResponse.length() < MAX_JSON_RESPONSE_LENGTH ? jsonResponse.length() : MAX_JSON_RESPONSE_LENGTH))
+            .build());
+  }
+
+  public void addFieldToRequest(ThirdPartyApiCallField field) {
+    if (request == null) {
+      request = new ArrayList<>();
+    }
+    request.add(field);
   }
 
   public static ThirdPartyApiCallLog apiCallLogWithDummyStateExecution(String accountId) {
     return ThirdPartyApiCallLog.builder().accountId(accountId).stateExecutionId(NO_STATE_EXECUTION_ID).build();
   }
+
+  @Data
+  @Builder
+  public static class ThirdPartyApiCallField {
+    private String name;
+    private String value;
+    @Default private FieldType type = FieldType.TEXT;
+  }
+  public enum FieldType { JSON, XML, NUMBER, URL, TEXT, TIMESTAMP }
 }

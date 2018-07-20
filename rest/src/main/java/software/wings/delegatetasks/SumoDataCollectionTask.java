@@ -12,10 +12,13 @@ import com.sumologic.client.searchjob.model.GetMessagesForSearchJobResponse;
 import com.sumologic.client.searchjob.model.GetSearchJobStatusResponse;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.time.Timestamp;
+import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
+import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.analysis.LogElement;
@@ -142,10 +145,32 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
 
               final long endTime = collectionStartTime + TimeUnit.MINUTES.toMillis(1) - 1;
               ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
-              apiCallLog.setRequest("triggering sumo query startTime: " + collectionStartTime + " endTime: " + endTime
-                  + " query: " + searchQuery + " url: " + dataCollectionInfo.getSumoConfig().getSumoUrl());
+              apiCallLog.setTitle("Fetch request to " + dataCollectionInfo.getSumoConfig().getSumoUrl());
+              apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                               .name("url")
+                                               .value(dataCollectionInfo.getSumoConfig().getSumoUrl())
+                                               .type(FieldType.URL)
+                                               .build());
+              apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                               .name("url")
+                                               .value(dataCollectionInfo.getSumoConfig().getSumoUrl())
+                                               .type(FieldType.URL)
+                                               .build());
+              apiCallLog.addFieldToRequest(
+                  ThirdPartyApiCallField.builder().name("searchQuery").value(searchQuery).type(FieldType.TEXT).build());
+              apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                               .name("startTime")
+                                               .value(Long.toString(collectionStartTime))
+                                               .type(FieldType.TIMESTAMP)
+                                               .build());
+              apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                               .name("endTime")
+                                               .value(Long.toString(endTime))
+                                               .type(FieldType.TIMESTAMP)
+                                               .build());
               apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
-              logger.info(apiCallLog.getRequest());
+              logger.info("triggering sumo query startTime: " + collectionStartTime + " endTime: " + endTime
+                  + " query: " + searchQuery + " url: " + dataCollectionInfo.getSumoConfig().getSumoUrl());
               String searchJobId = sumoClient.createSearchJob(
                   searchQuery, Long.toString(collectionStartTime), Long.toString(endTime), "UTC");
 
@@ -166,7 +191,7 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
               }
 
               apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
-              apiCallLog.setJsonResponse(getSearchJobStatusResponse);
+              apiCallLog.addFieldToResponse(HttpStatus.SC_OK, getSearchJobStatusResponse, FieldType.JSON);
               // If the last search job status indicated
               // that the search job was "CANCELLED", we
               // can't get messages or records.

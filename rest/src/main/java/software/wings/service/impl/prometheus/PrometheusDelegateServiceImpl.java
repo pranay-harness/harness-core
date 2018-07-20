@@ -15,6 +15,8 @@ import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.prometheus.PrometheusRestClient;
 import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
+import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 import software.wings.service.intfc.prometheus.PrometheusDelegateService;
 import software.wings.utils.Misc;
 
@@ -49,19 +51,19 @@ public class PrometheusDelegateServiceImpl implements PrometheusDelegateService 
   public PrometheusMetricDataResponse fetchMetricData(
       PrometheusConfig prometheusConfig, String url, ThirdPartyApiCallLog apiCallLog) throws IOException {
     Preconditions.checkNotNull(apiCallLog);
-    apiCallLog.setRequest(url);
+    apiCallLog.setTitle("Fetching metric data from " + prometheusConfig.getUrl());
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
+    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder().name("url").value(url).type(FieldType.URL).build());
     final Call<PrometheusMetricDataResponse> request = getRestClient(prometheusConfig).fetchMetricData(url);
     final Response<PrometheusMetricDataResponse> response = request.execute();
     apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
-    apiCallLog.setStatusCode(response.code());
     if (response.isSuccessful()) {
-      apiCallLog.setJsonResponse(response.body());
+      apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
       delegateLogService.save(prometheusConfig.getAccountId(), apiCallLog);
       return response.body();
     } else {
       logger.error("Request not successful. Reason: {}, url: {}", response, url);
-      apiCallLog.setResponse(response.errorBody().string());
+      apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
       delegateLogService.save(prometheusConfig.getAccountId(), apiCallLog);
       throw new WingsException(response.errorBody().string());
     }
