@@ -40,6 +40,7 @@ import migrations.all.SetRollbackFlagToWorkflows;
 import migrations.all.SystemTemplateGalleryMigration;
 import migrations.all.TimeSeriesAnalysisRecordsMigration;
 import migrations.all.TimeSeriesMLScoresMigration;
+import migrations.all.UnregisteredUserNameMigration;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
@@ -98,6 +99,7 @@ public class MigrationList {
         .add(Pair.of(173, SystemTemplateGalleryMigration.class))
         .add(Pair.of(174, AppKeywordsMigration.class))
         .add(Pair.of(175, DeleteOldThirdPartyApiCallsMigration.class))
+        .add(Pair.of(176, UnregisteredUserNameMigration.class))
         .build();
   }
 }
