@@ -268,6 +268,27 @@ def parse(cli_args):
     return parser.parse_args(cli_args)
 
 
+def k8_performance():
+    from sources.FileLoader import FileLoader
+
+    result_file = "../k8_data.json"
+    data = FileLoader.load_data(result_file)
+
+    def parse_k8(cli_args):
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--sim_threshold", type=float)
+        parser.add_argument("--state_execution_id", type=str)
+        return parser.parse_args(cli_args)
+
+    corpus = LogCorpus()
+    corpus.control_events = data['control_events']
+    corpus.test_events = data['test_events']
+    logger.info('---------------------------------------testing performance------------------------------------------')
+
+    options_here = parse_k8(['--sim_threshold', '0.96', '--state_execution_id', 'test_k8'])
+    doc_vec_cluster = LogNeuralNet(corpus, options_here)
+    result = doc_vec_cluster.run()
+
 
 def main(options):
     try:
@@ -281,6 +302,7 @@ def main(options):
 
             lnn = LogNeuralNet(corpus, options)
             corpus = lnn.run()
+            k8_performance()
 
             logger.info(corpus.save_to_harness(options.log_analysis_save_url,
                                                corpus.get_output_as_json(options), options.version_file_path,
