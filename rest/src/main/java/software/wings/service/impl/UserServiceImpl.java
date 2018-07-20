@@ -86,7 +86,6 @@ import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.beans.ZendeskSsoLoginResponse;
 import software.wings.beans.security.UserGroup;
-import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -407,8 +406,7 @@ public class UserServiceImpl implements UserService {
       user = anUser()
                  .withAccounts(Lists.newArrayList(account))
                  .withEmail(userInvite.getEmail().trim().toLowerCase())
-                 .withEmailVerified(true)
-                 .withName(Constants.NOT_REGISTERED)
+                 .withName(userInvite.getEmail().trim().toLowerCase())
                  .withRoles(userInvite.getRoles())
                  .withAppId(Base.GLOBAL_APP_ID)
                  .withEmailVerified(false)
@@ -422,7 +420,7 @@ public class UserServiceImpl implements UserService {
       } else {
         addAccountRoles(user, account, userInvite.getRoles());
       }
-      if (StringUtils.equals(user.getName(), Constants.NOT_REGISTERED)) {
+      if (StringUtils.equals(user.getName(), user.getEmail())) {
         sendNewInvitationMail(userInvite, account);
       } else {
         sendAddedRoleEmail(user, account, userInvite.getRoles());

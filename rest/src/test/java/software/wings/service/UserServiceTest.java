@@ -83,7 +83,6 @@ import software.wings.beans.SearchFilter;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.beans.UserInvite.UserInviteBuilder;
-import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
@@ -435,7 +434,8 @@ public class UserServiceTest extends WingsBaseTest {
     assertThat(emailDataArgumentCaptor.getValue().getTemplateName()).isEqualTo(INVITE_EMAIL_TEMPLATE_NAME);
 
     User sameUser = new User();
-    sameUser.setName(Constants.NOT_REGISTERED);
+    sameUser.setEmail(USER_EMAIL);
+    sameUser.setName(USER_EMAIL);
     when(wingsPersistence.createQuery(User.class).get()).thenReturn(sameUser);
     // mock out addToSet
     when(updateOperations.addToSet(anyString(), any(Account.class))).thenReturn(updateOperations);
