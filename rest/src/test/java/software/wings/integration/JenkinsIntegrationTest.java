@@ -6,6 +6,7 @@ import static software.wings.generator.SettingGenerator.Settings.HARNESS_JENKINS
 
 import com.google.inject.Inject;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;
@@ -49,6 +50,7 @@ public class JenkinsIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Ignore
   public void testGetJobs() {
     JenkinsConfig jenkinsConfig = obtainJenkinsConfig();
 
