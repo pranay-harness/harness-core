@@ -1895,15 +1895,44 @@ public class KmsTest extends WingsBaseTest {
         accountConfig++;
         assertEquals(kmsConfig.getName(), actualConfig.getName());
         assertEquals(kmsConfig.getAccessKey(), actualConfig.getAccessKey());
-        assertEquals(kmsConfig.getKmsArn(), actualConfig.getKmsArn());
+        assertEquals(Constants.SECRET_MASK, actualConfig.getKmsArn());
         assertEquals(Constants.SECRET_MASK, actualConfig.getSecretKey());
         assertFalse(isEmpty(actualConfig.getUuid()));
       } else {
         defaultConfig++;
         assertEquals(globalKmsConfig.getName(), actualConfig.getName());
         assertEquals(globalKmsConfig.getAccessKey(), actualConfig.getAccessKey());
-        assertEquals(globalKmsConfig.getKmsArn(), actualConfig.getKmsArn());
+        assertEquals(Constants.SECRET_MASK, actualConfig.getKmsArn());
         assertEquals(Constants.SECRET_MASK, actualConfig.getSecretKey());
+        assertFalse(isEmpty(actualConfig.getUuid()));
+        assertEquals(Base.GLOBAL_ACCOUNT_ID, actualConfig.getAccountId());
+      }
+    }
+
+    assertEquals(1, defaultConfig);
+    assertEquals(1, accountConfig);
+
+    // test with unmasked
+    kmsConfigs = kmsService.listKmsConfigs(accountId, false);
+    assertEquals(2, kmsConfigs.size());
+
+    defaultConfig = 0;
+    accountConfig = 0;
+
+    for (KmsConfig actualConfig : kmsConfigs) {
+      if (actualConfig.isDefault()) {
+        accountConfig++;
+        assertEquals(kmsConfig.getName(), actualConfig.getName());
+        assertEquals(kmsConfig.getAccessKey(), actualConfig.getAccessKey());
+        assertEquals(kmsConfig.getKmsArn(), actualConfig.getKmsArn());
+        assertEquals(kmsConfig.getSecretKey(), actualConfig.getSecretKey());
+        assertFalse(isEmpty(actualConfig.getUuid()));
+      } else {
+        defaultConfig++;
+        assertEquals(globalKmsConfig.getName(), actualConfig.getName());
+        assertEquals(globalKmsConfig.getAccessKey(), actualConfig.getAccessKey());
+        assertEquals(globalKmsConfig.getKmsArn(), actualConfig.getKmsArn());
+        assertEquals(globalKmsConfig.getSecretKey(), actualConfig.getSecretKey());
         assertFalse(isEmpty(actualConfig.getUuid()));
         assertEquals(Base.GLOBAL_ACCOUNT_ID, actualConfig.getAccountId());
       }
@@ -1924,7 +1953,7 @@ public class KmsTest extends WingsBaseTest {
     KmsConfig actualConfig = kmsConfigs.iterator().next();
     assertEquals(kmsConfig.getName(), actualConfig.getName());
     assertEquals(kmsConfig.getAccessKey(), actualConfig.getAccessKey());
-    assertEquals(kmsConfig.getKmsArn(), actualConfig.getKmsArn());
+    assertEquals(Constants.SECRET_MASK, actualConfig.getKmsArn());
     assertEquals(Constants.SECRET_MASK, actualConfig.getSecretKey());
     assertFalse(isEmpty(actualConfig.getUuid()));
     assertTrue(actualConfig.isDefault());
