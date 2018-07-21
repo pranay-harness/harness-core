@@ -9,7 +9,6 @@ import com.google.inject.Singleton;
 
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.model.ResourceType;
-import io.harness.data.structure.EmptyPredicate;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
@@ -37,16 +36,11 @@ public class AwsHelperResourceServiceImpl implements AwsHelperResourceService {
   @Inject private SecretManager secretManager;
 
   public Map<String, String> getRegions() {
-    Map<String, String> awsRegionIdToName = mainConfiguration.getAwsRegionIdToName();
-    if (EmptyPredicate.isNotEmpty(awsRegionIdToName)) {
-      awsRegionIdToName.remove(Regions.GovCloud.getName());
-      return awsRegionIdToName;
-    }
     return Arrays.stream(Regions.values())
         .filter(regions -> regions != Regions.GovCloud)
         .collect(toMap(Regions::getName,
             regions
-            -> Optional.ofNullable(awsRegionIdToName)
+            -> Optional.ofNullable(mainConfiguration.getAwsRegionIdToName())
                    .orElse(ImmutableMap.of(regions.getName(), regions.getName()))
                    .get(regions.getName())));
   }
