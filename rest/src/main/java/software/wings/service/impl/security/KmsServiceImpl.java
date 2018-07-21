@@ -259,6 +259,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
         if (maskSecret) {
           kmsConfig.setSecretKey(Constants.SECRET_MASK);
+          kmsConfig.setKmsArn(Constants.SECRET_MASK);
         } else {
           EncryptedData secretData = wingsPersistence.get(EncryptedData.class, kmsConfig.getSecretKey());
           Preconditions.checkNotNull(secretData, "encrypted secret key can't be null for " + kmsConfig);
