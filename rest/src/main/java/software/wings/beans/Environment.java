@@ -5,11 +5,13 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.yaml.YamlHelper.trimYaml;
 
+import com.mongodb.client.model.CollationStrength;
 import io.harness.data.validator.EntityName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.annotations.Collation;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -30,8 +32,15 @@ import javax.validation.constraints.NotNull;
  * @author Rishi
  */
 @Entity(value = "environments", noClassnameStored = true)
-@Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("appId")
-                                                                                  , @Field("name") }))
+@Indexes(value =
+    {
+      @Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("appId")
+                                                                               , @Field("name") })
+      ,
+          @Index(options = @IndexOptions(
+                     name = "collation", collation = @Collation(locale = "en", strength = CollationStrength.PRIMARY)),
+              fields = { @Field("name") })
+    })
 public class Environment extends Base {
   public static final String NAME_KEY = "name";
   public static final String ENVIRONMENT_TYPE_KEY = "environmentType";
