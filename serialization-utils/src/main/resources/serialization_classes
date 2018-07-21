@@ -479,3 +479,6 @@ software.wings.service.impl.aws.model.AwsCodeDeployListDeploymentGroupRequest, 5
 software.wings.service.impl.aws.model.AwsCodeDeployListDeploymentGroupResponse, 5440
 software.wings.service.impl.aws.model.AwsCodeDeployListDeploymentInstancesRequest, 5441
 software.wings.service.impl.aws.model.AwsCodeDeployListDeploymentInstancesResponse, 5442
+software.wings.service.impl.newrelic.NewRelicMetricData, 5443
+software.wings.service.impl.newrelic.NewRelicMetricData$NewRelicMetricSlice, 5444
+software.wings.service.impl.newrelic.NewRelicMetricData$NewRelicMetricTimeSlice, 5445

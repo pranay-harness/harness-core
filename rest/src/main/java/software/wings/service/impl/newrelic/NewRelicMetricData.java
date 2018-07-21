@@ -1,6 +1,7 @@
 package software.wings.service.impl.newrelic;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -12,6 +13,7 @@ import java.util.Set;
  */
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Builder
 public class NewRelicMetricData {
   private String from;
   private String to;
