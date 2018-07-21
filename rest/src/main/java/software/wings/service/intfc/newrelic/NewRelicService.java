@@ -6,6 +6,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicApplicationInstance;
 import software.wings.service.impl.newrelic.NewRelicMetric;
+import software.wings.service.impl.newrelic.NewRelicMetricData;
 import software.wings.sm.StateType;
 
 import java.util.List;
@@ -22,4 +23,6 @@ public interface NewRelicService {
   List<NewRelicApplicationInstance> getApplicationInstances(
       @NotNull String settingId, long applicationId, @NotNull StateType stateType);
   List<NewRelicMetric> getTxnsWithData(String settingId, long applicationId);
+  NewRelicMetricData getMetricsWithDataForNode(
+      @NotNull String settingId, long newRelicApplicationId, long instanceId, long fromTime, long toTime);
 }

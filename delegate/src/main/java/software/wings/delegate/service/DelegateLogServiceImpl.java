@@ -144,7 +144,8 @@ public class DelegateLogServiceImpl implements DelegateLogService {
             logger.info("Dispatching {} api call logs for [{}] [{}]", logsList.size(), stateExecutionId, accountId);
             RestResponse restResponse = execute(managerClient.saveApiCallLogs(delegateId, accountId, logsList));
             logger.info("Dispatched {} api call logs for [{}] [{}]",
-                restResponse.getResource() != null ? logsList.size() : 0, stateExecutionId, accountId);
+                restResponse == null || restResponse.getResource() != null ? logsList.size() : 0, stateExecutionId,
+                accountId);
           } catch (IOException e) {
             logger.error("Dispatch log failed for {}. printing lost logs[{}]", stateExecutionId, logsList.size(), e);
             logsList.forEach(log -> logger.error(log.toString()));

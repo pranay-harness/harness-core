@@ -1,6 +1,7 @@
 package software.wings.service.impl.newrelic;
 
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
+import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
 
 import com.google.inject.Inject;
 
@@ -206,7 +207,30 @@ public class NewRelicServiceImpl implements NewRelicService {
           .getTxnsWithData((NewRelicConfig) settingAttribute.getValue(), encryptionDetails, applicationId, null);
     } catch (Exception e) {
       throw new WingsException(ErrorCode.NEWRELIC_ERROR)
-          .addParam("message", "Error in getting new relic applications. " + e.getMessage());
+          .addParam("message", "Error in getting txns with data. " + e.getMessage());
+    }
+  }
+
+  @Override
+  public NewRelicMetricData getMetricsWithDataForNode(
+      String settingId, long newRelicApplicationId, long instanceId, long fromTime, long toTime) {
+    try {
+      final SettingAttribute settingAttribute = settingsService.get(settingId);
+      List<EncryptedDataDetail> encryptionDetails =
+          secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
+      SyncTaskContext syncTaskContext = aContext()
+                                            .withAccountId(settingAttribute.getAccountId())
+                                            .withAppId(Base.GLOBAL_APP_ID)
+                                            .withTimeout(Constants.DEFAULT_SYNC_CALL_TIMEOUT * 3)
+                                            .build();
+      return delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
+          .getMetricsWithDataForNode((NewRelicConfig) settingAttribute.getValue(), encryptionDetails,
+              newRelicApplicationId, instanceId, fromTime, toTime,
+              apiCallLogWithDummyStateExecution(settingAttribute.getAccountId()));
+    } catch (Exception e) {
+      logger.info("error getting metric data for node", e);
+      throw new WingsException(ErrorCode.NEWRELIC_ERROR)
+          .addParam("message", "Error in getting metric data for the node. " + e.getMessage());
     }
   }
 }

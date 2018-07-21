@@ -51,6 +51,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletResponse;
 
 /**
@@ -378,6 +379,22 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     apiCallLog.addFieldToResponse(response.code(), response.errorBody(), FieldType.TEXT);
     delegateLogService.save(config.getAccountId(), apiCallLog);
     throw new WingsException(response.errorBody().string());
+  }
+
+  @Override
+  public NewRelicMetricData getMetricsWithDataForNode(NewRelicConfig newRelicConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, long newRelicApplicationId, long instanceId, long fromTime,
+      long toTime, ThirdPartyApiCallLog apiCallLog) throws IOException {
+    List<NewRelicMetric> txnsWithData =
+        getTxnsWithData(newRelicConfig, encryptedDataDetails, newRelicApplicationId, apiCallLog);
+    if (isEmpty(txnsWithData)) {
+      return NewRelicMetricData.builder().build();
+    }
+    Set<String> metricNames = txnsWithData.stream().map(NewRelicMetric::getName).collect(Collectors.toSet());
+    String baseUrl = newRelicConfig.getNewRelicUrl().endsWith("/") ? newRelicConfig.getNewRelicUrl()
+                                                                   : newRelicConfig.getNewRelicUrl() + "/";
+    baseUrl += "v2/applications/" + newRelicApplicationId + "/instances/" + instanceId + "/metrics/data.json?";
+    return getMetricData(newRelicConfig, encryptedDataDetails, baseUrl, metricNames, fromTime, toTime, apiCallLog);
   }
 
   private NewRelicRestClient getNewRelicRestClient(

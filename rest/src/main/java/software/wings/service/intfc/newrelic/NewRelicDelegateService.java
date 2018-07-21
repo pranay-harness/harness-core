@@ -57,4 +57,9 @@ public interface NewRelicDelegateService {
   @DelegateTaskType(TaskType.NEWRELIC_GET_TXNS_WITH_DATA)
   List<NewRelicMetric> getTxnsWithData(NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptionDetails,
       long newRelicAppId, ThirdPartyApiCallLog thirdPartyApiCallLog) throws IOException;
+
+  @DelegateTaskType(TaskType.NEWRELIC_GET_TXNS_WITH_DATA_FOR_NODE)
+  NewRelicMetricData getMetricsWithDataForNode(NewRelicConfig newRelicConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, long newRelicApplicationId, long instanceId, long fromTime,
+      long toTime, ThirdPartyApiCallLog apiCallLog) throws IOException;
 }

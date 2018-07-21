@@ -14,6 +14,7 @@ import software.wings.security.annotations.Scope;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicApplicationInstance;
 import software.wings.service.impl.newrelic.NewRelicMetric;
+import software.wings.service.impl.newrelic.NewRelicMetricData;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.MetricDataAnalysisService;
@@ -25,6 +26,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -132,5 +134,21 @@ public class NewRelicResource {
       throws IOException {
     return new RestResponse<>(metricDataAnalysisService.saveMetricData(
         accountId, applicationId, stateExecutionId, delegateTaskId, metricData));
+  }
+
+  @GET
+  @Path("/node-data")
+  @Timed
+  @DelegateAuth
+  @ExceptionMetered
+  public RestResponse<NewRelicMetricData> getMetricsWithDataForNode(@QueryParam("accountId") final String accountId,
+      @QueryParam("settingId") final String settingId, @QueryParam("applicationId") final long applicationId,
+      @QueryParam("instanceId") long instanceId, @QueryParam("from") long fromTime, @QueryParam("to") long toTime) {
+    if (toTime <= 0 || fromTime <= 0) {
+      toTime = System.currentTimeMillis();
+      fromTime = toTime - TimeUnit.MINUTES.toMillis(15);
+    }
+    return new RestResponse<>(
+        newRelicService.getMetricsWithDataForNode(settingId, applicationId, instanceId, fromTime, toTime));
   }
 }

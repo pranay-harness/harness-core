@@ -1,5 +1,6 @@
 package software.wings.integration;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -8,6 +9,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -51,6 +53,7 @@ import software.wings.service.impl.newrelic.NewRelicApplicationInstance;
 import software.wings.service.impl.newrelic.NewRelicMetric;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
+import software.wings.service.impl.newrelic.NewRelicMetricData;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -182,6 +185,38 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
 
     assertEquals(0, restResponse.getResponseMessages().size());
     assertTrue(restResponse.getResource().size() >= 0);
+  }
+
+  @Test
+  public void getNewRelicDataForNode() throws Exception {
+    WebTarget target = client.target(API_BASE + "/newrelic/nodes?settingId=" + newRelicConfigId
+        + "&accountId=" + accountId + "&applicationId=" + 107019083);
+    RestResponse<List<NewRelicApplicationInstance>> nodesResponse = getRequestBuilderWithAuthHeader(target).get(
+        new GenericType<RestResponse<List<NewRelicApplicationInstance>>>() {});
+    List<NewRelicApplicationInstance> nodes = nodesResponse.getResource();
+    assertFalse(nodes.isEmpty());
+
+    for (NewRelicApplicationInstance node : nodes) {
+      target = client.target(API_BASE + "/newrelic/node-data?settingId=" + newRelicConfigId + "&accountId=" + accountId
+          + "&applicationId=" + 107019083 + "&instanceId=" + node.getId());
+      RestResponse<NewRelicMetricData> metricResponse =
+          getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<NewRelicMetricData>>() {});
+      assertEquals(0, metricResponse.getResponseMessages().size());
+      NewRelicMetricData newRelicMetricData = metricResponse.getResource();
+
+      // found at least a node with data
+      if (!newRelicMetricData.getMetrics_found().isEmpty()) {
+        assertTrue(newRelicMetricData.getMetrics().size() > 0);
+        newRelicMetricData.getMetrics().forEach(newRelicMetricSlice -> {
+          assertTrue(!isEmpty(newRelicMetricSlice.getName()));
+          assertTrue(newRelicMetricSlice.getTimeslices().size() > 0);
+        });
+
+        return;
+      }
+    }
+
+    fail("No node with data found");
   }
 
   @Test
