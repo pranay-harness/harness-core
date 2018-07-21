@@ -120,8 +120,8 @@ public class LogMLAnalysisGenerator implements Runnable {
 
       if (logAnalysisMinute == 0) {
         feedback_url = "/api/" + LogAnalysisResource.LOG_ANALYSIS + LogAnalysisResource.ANALYSIS_USER_FEEDBACK
-            + "?accountId=" + accountId + "&serviceId=" + serviceId + "&workflowId=" + workflowId
-            + "&workflowExecutionId=" + context.getWorkflowExecutionId();
+            + "?accountId=" + accountId + "&appId=" + context.getAppId() + "&serviceId=" + serviceId
+            + "&workflowId=" + workflowId + "&workflowExecutionId=" + context.getWorkflowExecutionId();
       }
 
       if (createExperiment) {
@@ -146,8 +146,8 @@ public class LogMLAnalysisGenerator implements Runnable {
                 .log_analysis_get_url(logAnalysisGetUrl)
                 .ml_analysis_type(MLAnalysisType.LOG_ML)
                 .feedback_url("/api/" + LogAnalysisResource.LOG_ANALYSIS + LogAnalysisResource.ANALYSIS_USER_FEEDBACK
-                    + "?accountId=" + accountId + "&serviceId=" + serviceId + "&workflowId=" + workflowId
-                    + "&workflowExecutionId=" + context.getWorkflowExecutionId())
+                    + "?accountId=" + accountId + "&appId=" + context.getAppId() + "&serviceId=" + serviceId
+                    + "&workflowId=" + workflowId + "&workflowExecutionId=" + context.getWorkflowExecutionId())
                 .stateType(context.getStateType());
 
         if (!isEmpty(feedback_url)) {

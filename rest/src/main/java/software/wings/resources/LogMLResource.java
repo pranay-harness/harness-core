@@ -154,8 +154,8 @@ public class LogMLResource {
   @ExceptionMetered
   @LearningEngineAuth
   public RestResponse<List<LogMLFeedbackRecord>> getFeedback(@QueryParam("accountId") String accountId,
-      @QueryParam("serviceId") String serviceId, @QueryParam("workflowId") String workflowId,
-      @QueryParam("workflowExecutionId") String workflowExecutionId) {
-    return new RestResponse<>(analysisService.getMLFeedback(serviceId, workflowId, workflowExecutionId));
+      @QueryParam("appId") String appId, @QueryParam("serviceId") String serviceId,
+      @QueryParam("workflowId") String workflowId, @QueryParam("workflowExecutionId") String workflowExecutionId) {
+    return new RestResponse<>(analysisService.getMLFeedback(appId, serviceId, workflowId, workflowExecutionId));
   }
 }
