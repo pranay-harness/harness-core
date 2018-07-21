@@ -6,20 +6,14 @@ import static java.util.Arrays.asList;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.mongodb.client.model.CollationStrength;
 import io.harness.data.validator.EntityName;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.annotations.Collation;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
 import software.wings.utils.validation.Create;
@@ -32,9 +26,6 @@ import java.util.List;
 @NoArgsConstructor
 @JsonInclude(NON_NULL)
 @EqualsAndHashCode(callSuper = false)
-@Indexes(@Index(options = @IndexOptions(
-                    name = "collation", collation = @Collation(locale = "en", strength = CollationStrength.PRIMARY)),
-    fields = { @Field("name") }))
 public class TemplateFolder extends Base {
   public static final String PATH_KEY = "path";
   public static final String PATH_ID_KEY = "pathId";
