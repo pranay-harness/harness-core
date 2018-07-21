@@ -96,7 +96,9 @@ import software.wings.api.AwsAmiDeployStateExecutionData;
 import software.wings.api.CanaryWorkflowStandardParams;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.EnvStateExecutionData;
+import software.wings.api.HelmDeployStateExecutionData;
 import software.wings.api.InstanceElement;
+import software.wings.api.KubernetesSteadyStateCheckExecutionData;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseStepExecutionData;
@@ -2142,6 +2144,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           AwsAmiDeployStateExecutionData awsAmiDeployStateExecutionData =
               (AwsAmiDeployStateExecutionData) next.getStateExecutionData();
           instanceStatusSummaries.addAll(awsAmiDeployStateExecutionData.getNewInstanceStatusSummaries());
+        } else if (nextStateType == nextStateType.HELM_DEPLOY) {
+          HelmDeployStateExecutionData helmDeployStateExecutionData =
+              (HelmDeployStateExecutionData) next.getStateExecutionData();
+          instanceStatusSummaries.addAll(helmDeployStateExecutionData.getNewInstanceStatusSummaries());
+        } else if (nextStateType == nextStateType.KUBERNETES_STEADY_STATE_CHECK) {
+          KubernetesSteadyStateCheckExecutionData kubernetesSteadyStateCheckExecutionData =
+              (KubernetesSteadyStateCheckExecutionData) next.getStateExecutionData();
+          instanceStatusSummaries.addAll(kubernetesSteadyStateCheckExecutionData.getNewInstanceStatusSummaries());
         }
         last = next;
       }
