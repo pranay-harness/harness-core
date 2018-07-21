@@ -22,11 +22,12 @@ import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.REQUSET_PER_MINUTE;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.THROUGHPUT;
 
+import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
+import com.google.common.io.Resources;
 import com.google.inject.Inject;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mongodb.morphia.query.Query;
 import org.quartz.JobDataMap;
@@ -44,6 +45,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.WorkflowExecution;
 import software.wings.metrics.RiskLevel;
+import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
@@ -67,6 +69,7 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
+import software.wings.sm.states.APMVerificationStateTest;
 import software.wings.sm.states.AbstractAnalysisState;
 import software.wings.sm.states.DatadogState;
 import software.wings.utils.JsonUtils;
@@ -301,8 +304,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     }
   }
 
-  @Test
-  public void testFeatureflagDemoSuccess() throws Exception {
+  private void featureflagDemoSuccess() throws Exception {
     final String stateExecutionId = UUID.randomUUID().toString();
     final String appId = createApp(UUID.randomUUID().toString()).getUuid();
     final String workflowId = UUID.randomUUID().toString();
@@ -361,8 +363,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     assertEquals("CV-Demo", savedRecord.getWorkflowExecutionId());
   }
 
-  @Test
-  public void testFeatureflagDemoFail() throws Exception {
+  private void featureflagDemoFail() throws Exception {
     final String stateExecutionId = UUID.randomUUID().toString();
     final String appId = createApp(UUID.randomUUID().toString()).getUuid();
     final String workflowId = UUID.randomUUID().toString();
@@ -420,8 +421,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     assertEquals("CV-Demo", savedRecord.getWorkflowExecutionId());
   }
 
-  @Test
-  public void testAnalysisSorted() throws Exception {
+  private void analysisSorted() throws Exception {
     final String workflowId = UUID.randomUUID().toString();
     final String workflowExecutionId = UUID.randomUUID().toString();
     final String stateExecutionId = UUID.randomUUID().toString();
@@ -478,7 +478,19 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Ignore
+  public void generateMetricsTest() throws Exception {
+    // because of the CV_DEMO flag tests, all generate metrics tests should go here.
+    // the CV_DEMO tests should run last
+
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", "CV_DEMO"));
+
+    analysisSorted();
+    featureflagDemoFail();
+    featureflagDemoSuccess();
+  }
+
+  @Test
   public void fetch() throws Exception {
     APMVerificationConfig config = new APMVerificationConfig();
     config.setAccountId(accountId);
@@ -912,8 +924,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Ignore
-  public void txnInTestButNotControl() throws IOException {
+  public void txnInTestButNotControl() throws IOException, InterruptedException {
     final String workflowId = UUID.randomUUID().toString();
     final String workflowExecutionId = UUID.randomUUID().toString();
     final String serviceId = UUID.randomUUID().toString();
@@ -932,6 +943,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
         aWorkflowExecution()
             .withWorkflowId(workflowId)
             .withAppId(appId)
+            .withServiceIds(Lists.newArrayList(serviceId))
             .withName(workflowId + "-prev-execution-" + 0)
             .withStatus(ExecutionStatus.SUCCESS)
             .withBreakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
@@ -940,6 +952,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
 
     NewRelicMetricDataRecord record = new NewRelicMetricDataRecord();
     record.setName("New Relic Heartbeat");
+    record.setAppId(appId);
     record.setWorkflowId(workflowId);
     record.setWorkflowExecutionId(prevWorkFlowExecutionId);
     record.setServiceId(serviceId);
@@ -951,6 +964,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
 
     NewRelicMetricDataRecord record1 = new NewRelicMetricDataRecord();
     record1.setName("Dummy txn1");
+    record1.setAppId(appId);
     record1.setWorkflowId(workflowId);
     record1.setWorkflowExecutionId(prevWorkFlowExecutionId);
     record1.setServiceId(serviceId);
@@ -987,6 +1001,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
 
     record = new NewRelicMetricDataRecord();
     record.setName("New Relic Heartbeat");
+    record.setAppId(appId);
     record.setWorkflowId(workflowId);
     record.setWorkflowExecutionId(workflowExecutionId);
     record.setServiceId(serviceId);
@@ -998,6 +1013,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
 
     record1 = new NewRelicMetricDataRecord();
     record1.setName("Dummy txn2");
+    record1.setAppId(appId);
     record1.setWorkflowId(workflowId);
     record1.setWorkflowExecutionId(workflowExecutionId);
     record1.setServiceId(serviceId);
@@ -1014,8 +1030,9 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     metricDataAnalysisService.saveMetricData(
         accountId, appId, stateExecutionId, delegateTaskId, Lists.newArrayList(record, record1));
 
-    String prevWorkflowExecutionID = metricDataAnalysisService.getLastSuccessfulWorkflowExecutionIdWithData(
-        StateType.NEW_RELIC, appId, workflowId, serviceId);
+    String lastSuccessfulWorkflowExecutionIdWithData =
+        metricDataAnalysisService.getLastSuccessfulWorkflowExecutionIdWithData(
+            StateType.NEW_RELIC, appId, workflowId, serviceId);
     AnalysisContext analysisContext =
         AnalysisContext.builder()
             .accountId(accountId)
@@ -1033,7 +1050,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
             .stateType(StateType.NEW_RELIC)
             .authToken(AbstractAnalysisState.generateAuthToken("nhUmut2NMcUnsR01OgOz0e51MZ51AqUwrOATJ3fJ"))
             .correlationId(UUID.randomUUID().toString())
-            .prevWorkflowExecutionId(prevWorkflowExecutionID == null ? "-1" : prevWorkflowExecutionID)
+            .prevWorkflowExecutionId(lastSuccessfulWorkflowExecutionIdWithData)
             .smooth_window(1)
             .parallelProcesses(1)
             .comparisonWindow(1)
@@ -1051,6 +1068,9 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
         analysisContext, jobExecutionContext, delegateTaskId)
         .run();
 
+    // TODO I know....
+    Thread.sleep(10000);
+
     List<NewRelicMetricAnalysisRecord> metricAnalysisRecords =
         metricDataAnalysisService.getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId);
     assertEquals(1, metricAnalysisRecords.size());
@@ -1064,7 +1084,33 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Ignore
+  public void getMetricTemplate() throws IOException, InterruptedException {
+    final String workflowId = UUID.randomUUID().toString();
+    final String workflowExecutionId = UUID.randomUUID().toString();
+    final String serviceId = UUID.randomUUID().toString();
+    final String stateExecutionId = UUID.randomUUID().toString();
+    final String appId = UUID.randomUUID().toString();
+    final String delegateTaskId = UUID.randomUUID().toString();
+
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    String prevStateExecutionId = UUID.randomUUID().toString();
+    stateExecutionInstance.setAppId(appId);
+    stateExecutionInstance.setUuid(prevStateExecutionId);
+    stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
+    wingsPersistence.save(stateExecutionInstance);
+
+    WebTarget target = client.target(API_BASE + "/timeseries/get-metric-template?accountId=" + accountId
+        + "&stateType=NEW_RELIC&stateExecutionId=" + stateExecutionId + "&serviceId=" + serviceId
+        + "&groupName=default");
+    RestResponse<Map<String, Map<String, TimeSeriesMetricDefinition>>> restResponse =
+        getRequestBuilderWithAuthHeader(target).post(entity("{}", APPLICATION_JSON),
+            new GenericType<RestResponse<Map<String, Map<String, TimeSeriesMetricDefinition>>>>() {});
+
+    String expectedTemplate = Resources.toString(
+        APMVerificationStateTest.class.getResource("/apm/NewRelicMetricTemplate.json"), Charsets.UTF_8);
+    assertEquals(expectedTemplate, JsonUtils.asJson(restResponse.getResource()));
+  }
+  @Test
   public void txnDatadog() throws IOException, InterruptedException {
     final String workflowId = UUID.randomUUID().toString();
     final String workflowExecutionId = UUID.randomUUID().toString();
@@ -1084,6 +1130,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
         aWorkflowExecution()
             .withWorkflowId(workflowId)
             .withAppId(appId)
+            .withServiceIds(Lists.newArrayList(serviceId))
             .withName(workflowId + "-prev-execution-" + 0)
             .withStatus(ExecutionStatus.SUCCESS)
             .withBreakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
@@ -1092,6 +1139,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
 
     NewRelicMetricDataRecord record = new NewRelicMetricDataRecord();
     record.setName("New Relic Heartbeat");
+    record.setAppId(appId);
     record.setWorkflowId(workflowId);
     record.setWorkflowExecutionId(prevWorkFlowExecutionId);
     record.setServiceId(serviceId);
@@ -1103,6 +1151,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
 
     NewRelicMetricDataRecord record1 = new NewRelicMetricDataRecord();
     record1.setName("Dummy txn1");
+    record1.setAppId(appId);
     record1.setWorkflowId(workflowId);
     record1.setWorkflowExecutionId(prevWorkFlowExecutionId);
     record1.setServiceId(serviceId);
@@ -1138,6 +1187,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
 
     record = new NewRelicMetricDataRecord();
     record.setName("New Relic Heartbeat");
+    record.setAppId(appId);
     record.setWorkflowId(workflowId);
     record.setWorkflowExecutionId(workflowExecutionId);
     record.setServiceId(serviceId);
@@ -1149,6 +1199,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
 
     record1 = new NewRelicMetricDataRecord();
     record1.setName("Dummy txn1");
+    record1.setAppId(appId);
     record1.setWorkflowId(workflowId);
     record1.setWorkflowExecutionId(workflowExecutionId);
     record1.setServiceId(serviceId);
@@ -1170,8 +1221,9 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
             DatadogState.metrics(Lists.newArrayList("trace.servlet.request.duration", "trace.servlet.request.hits"))
                 .values()));
 
-    String prevWorkflowExecutionID = metricDataAnalysisService.getLastSuccessfulWorkflowExecutionIdWithData(
-        StateType.DATA_DOG, appId, workflowId, serviceId);
+    String lastSuccessfulWorkflowExecutionIdWithData =
+        metricDataAnalysisService.getLastSuccessfulWorkflowExecutionIdWithData(
+            StateType.DATA_DOG, appId, workflowId, serviceId);
     AnalysisContext analysisContext =
         AnalysisContext.builder()
             .accountId(accountId)
@@ -1189,11 +1241,12 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
             .stateType(StateType.DATA_DOG)
             .authToken(AbstractAnalysisState.generateAuthToken("nhUmut2NMcUnsR01OgOz0e51MZ51AqUwrOATJ3fJ"))
             .correlationId(UUID.randomUUID().toString())
-            .prevWorkflowExecutionId(prevWorkflowExecutionID == null ? "-1" : prevWorkflowExecutionID)
+            .prevWorkflowExecutionId(lastSuccessfulWorkflowExecutionIdWithData)
             .smooth_window(1)
             .parallelProcesses(1)
             .comparisonWindow(1)
             .tolerance(1)
+            .prevWorkflowExecutionId(prevWorkFlowExecutionId)
             .build();
     JobExecutionContext jobExecutionContext = mock(JobExecutionContext.class);
     JobDataMap jobDataMap = mock(JobDataMap.class);

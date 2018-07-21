@@ -89,7 +89,8 @@ public interface AnalysisService {
   boolean saveExperimentalLogAnalysisRecords(
       ExperimentalLogMLAnalysisRecord mlAnalysisResponse, StateType stateType, Optional<String> taskId);
 
-  List<LogMLFeedbackRecord> getMLFeedback(String serviceId, String workflowId, String workflowExecutionId);
+  List<LogMLFeedbackRecord> getMLFeedback(
+      String appId, String serviceId, String workflowId, String workflowExecutionId);
 
   void cleanUpForLogRetry(String stateExecutionId);
 
