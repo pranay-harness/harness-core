@@ -2,12 +2,18 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
+import com.mongodb.client.model.CollationStrength;
 import io.harness.data.validator.Trimmed;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.annotations.Collation;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexes;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.util.List;
@@ -17,6 +23,9 @@ import java.util.List;
 @JsonTypeInfo(use = Id.NAME, property = "infrastructureProvisionerType")
 @Entity(value = "infrastructureProvisioner")
 @NoArgsConstructor
+@Indexes(@Index(options = @IndexOptions(
+                    name = "collation", collation = @Collation(locale = "en", strength = CollationStrength.PRIMARY)),
+    fields = { @Field("name") }))
 public abstract class InfrastructureProvisioner extends Base {
   public static final String INFRASTRUCTURE_PROVISIONER_TYPE_KEY = "infrastructureProvisionerType";
   public static final String MAPPING_BLUEPRINTS_KEY = "mappingBlueprints";

@@ -3,12 +3,14 @@ package software.wings.beans;
 import static java.util.Arrays.asList;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.mongodb.client.model.CollationStrength;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.mongodb.morphia.annotations.Collation;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -32,8 +34,16 @@ import java.util.List;
  */
 @Entity(value = "services", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("appId")
-                                                                                  , @Field("name") }))
+@Indexes(value =
+    {
+      @Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("appId")
+                                                                               , @Field("name") })
+      ,
+          @Index(options = @IndexOptions(
+                     name = "collation", collation = @Collation(locale = "en", strength = CollationStrength.PRIMARY)),
+              fields = { @Field("name") })
+    })
+
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
