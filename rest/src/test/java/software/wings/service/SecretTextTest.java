@@ -1,8 +1,10 @@
-package software.wings.integration;
+package software.wings.service;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -78,6 +80,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
@@ -104,7 +107,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Created by rsingh on 11/3/17.
  */
 @RunWith(Parameterized.class)
-@RealMongo
 public class SecretTextTest extends WingsBaseTest {
   private static final Logger logger = LoggerFactory.getLogger(SecretTextTest.class);
 
@@ -115,6 +117,7 @@ public class SecretTextTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ConfigService configService;
   @Inject private EncryptionService encryptionService;
+  @Inject private ManagerDecryptionService managerDecryptionService;
   @Inject private ServiceVariableService serviceVariableService;
   @Inject private ServiceVariableResource serviceVariableResource;
   @Inject private FileService fileService;
@@ -173,15 +176,18 @@ public class SecretTextTest extends WingsBaseTest {
 
     when(delegateProxyFactory.get(eq(SecretManagementDelegateService.class), any(SyncTaskContext.class)))
         .thenReturn(secretManagementDelegateService);
+    when(delegateProxyFactory.get(eq(EncryptionService.class), any(SyncTaskContext.class)))
+        .thenReturn(encryptionService);
     setInternalState(vaultService, "delegateProxyFactory", delegateProxyFactory);
     setInternalState(kmsService, "delegateProxyFactory", delegateProxyFactory);
+    setInternalState(managerDecryptionService, "delegateProxyFactory", delegateProxyFactory);
     setInternalState(secretManager, "kmsService", kmsService);
     setInternalState(secretManager, "vaultService", vaultService);
     setInternalState(wingsPersistence, "secretManager", secretManager);
     setInternalState(vaultService, "kmsService", kmsService);
     setInternalState(configService, "secretManager", secretManager);
     setInternalState(encryptionService, "secretManagementDelegateService", secretManagementDelegateService);
-    setInternalState(secretManager, "encryptionService", encryptionService);
+    setInternalState(secretManager, "managerDecryptionService", managerDecryptionService);
     setInternalState(secretManagementResource, "secretManager", secretManager);
     wingsPersistence.save(user);
     UserThreadLocal.set(user);
@@ -348,6 +354,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
+  @RealMongo
   public void updateSecretRef() {
     String secretName1 = "s1" + generateUuid();
     String secretValue1 = "v2";
@@ -756,6 +763,7 @@ public class SecretTextTest extends WingsBaseTest {
                        .getResource();
     secrets = pageResponse.getResponse();
 
+    assertFalse(isEmpty(secrets));
     for (EncryptedData secret : secrets) {
       assertEquals(numOfVariable, secret.getSetupUsage());
       assertEquals(numOfAccess * numOfVariable, secret.getRunTimeUsage());
@@ -824,6 +832,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
+  @RealMongo
   public void saveAndUpdateFile() throws IOException, IllegalAccessException {
     final long seed = System.currentTimeMillis();
     logger.info("seed: " + seed);
@@ -961,6 +970,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
+  @RealMongo
   public void multipleFileRefrence() throws IOException, IllegalAccessException {
     final long seed = System.currentTimeMillis();
     logger.info("seed: " + seed);
@@ -1078,6 +1088,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
+  @RealMongo
   public void deleteSecretFile() throws IOException, IllegalAccessException, InterruptedException {
     final long seed = System.currentTimeMillis();
     logger.info("seed: " + seed);
@@ -1182,6 +1193,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
+  @RealMongo
   public void deleteEncryptedConfigFile() throws IOException, IllegalAccessException, InterruptedException {
     final long seed = System.currentTimeMillis();
     logger.info("seed: " + seed);
@@ -1265,6 +1277,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
+  @RealMongo
   public void yamlPasswordDecryption() throws IOException, IllegalAccessException {
     final String accountId = generateUuid();
     KmsConfig fromConfig = getKmsConfig();
@@ -1387,6 +1400,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
+  @RealMongo
   public void serviceVariableSearchTags() throws IllegalAccessException, InterruptedException {
     String secretName = generateUuid();
     String secretValue = generateUuid();
@@ -1545,6 +1559,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
+  @RealMongo
   public void serviceVariableTemplateSearchTags() throws IllegalAccessException {
     String secretName = generateUuid();
     String secretValue = generateUuid();
@@ -1726,6 +1741,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
+  @RealMongo
   public void serviceVariableEnvironmentSearchTags() throws IllegalAccessException {
     String secretName = generateUuid();
     String secretValue = generateUuid();
