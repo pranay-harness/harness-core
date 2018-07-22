@@ -41,7 +41,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
-import software.wings.app.MainConfiguration;
 import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.ReadPref;
@@ -84,7 +83,6 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   @Inject private SecretManager secretManager;
   private AdvancedDatastore primaryDatastore;
   private AdvancedDatastore secondaryDatastore;
-  @Inject private MainConfiguration mainConfiguration;
 
   private Map<ReadPref, AdvancedDatastore> datastoreMap;
 
@@ -409,7 +407,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     ((HQuery) query).setQueryChecks(queryChecks);
     Mapper mapper = ((DatastoreImpl) advancedDatastore).getMapper();
 
-    return MongoHelper.queryPageRequest(advancedDatastore, query, mapper, cls, req, mainConfiguration.isFakeMongo());
+    return MongoHelper.queryPageRequest(advancedDatastore, query, mapper, cls, req);
   }
 
   @Override
