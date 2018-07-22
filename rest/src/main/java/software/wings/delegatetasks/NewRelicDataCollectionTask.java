@@ -45,7 +45,9 @@ import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -340,6 +342,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
 
             List<Callable<Boolean>> callables = new ArrayList<>();
             for (NewRelicApplicationInstance node : instances) {
+              // TODO what if there are no hosts that match
               if (!dataCollectionInfo.getHosts().keySet().contains(node.getHost())) {
                 logger.info("Skipping host {} for stateExecutionId {} ", node.getHost(),
                     dataCollectionInfo.getStateExecutionId());
@@ -356,8 +359,14 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
             List<Optional<Boolean>> results = executeParrallel(callables);
             for (Optional<Boolean> result : results) {
               if (!result.isPresent() || !result.get()) {
-                throw new WingsException("Cannot save new relic metric records. Server returned error");
+                throw new WingsException("Cannot save new relic metric records. Server returned error "
+                    + dataCollectionInfo.getStateExecutionId());
               }
+            }
+
+            if (!saveHeartBeats(dataCollectionMinuteEnd)) {
+              throw new WingsException(
+                  "Cannot save heartbeat records. Server returned error " + dataCollectionInfo.getStateExecutionId());
             }
 
             logger.info("done processing parallel tasks {}", callables.size());
@@ -402,25 +411,40 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       }
     }
 
+    private boolean saveHeartBeats(int dataCollectionMinuteEnd) {
+      Set<String> groups = new HashSet<>();
+      TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
+      for (Map.Entry<String, String> entry : dataCollectionInfo.getHosts().entrySet()) {
+        if (!groups.contains(entry.getKey())) {
+          records.put(HARNESS_HEARTBEAT_METRIC_NAME, 0l,
+              NewRelicMetricDataRecord.builder()
+                  .stateType(getStateType())
+                  .name(HARNESS_HEARTBEAT_METRIC_NAME)
+                  .appId(dataCollectionInfo.getApplicationId())
+                  .workflowId(dataCollectionInfo.getWorkflowId())
+                  .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
+                  .serviceId(dataCollectionInfo.getServiceId())
+                  .stateExecutionId(dataCollectionInfo.getStateExecutionId())
+                  .dataCollectionMinute(dataCollectionMinuteEnd)
+                  .timeStamp(windowStartTimeManager)
+                  .level(ClusterLevel.H0)
+                  .groupName(entry.getKey())
+                  .build());
+          logger.info("adding heartbeat new relic metric record for group {} for minute {}", entry.getKey(),
+              dataCollectionMinuteEnd);
+          groups.add(entry.getKey());
+        }
+      }
+      List<NewRelicMetricDataRecord> metricRecords = getAllMetricRecords(records);
+      logger.info(
+          "Sending {} new relic heart  beat records for minute {}", records.cellSet().size(), dataCollectionMinuteEnd);
+      return saveMetrics(dataCollectionInfo.getNewRelicConfig().getAccountId(), dataCollectionInfo.getApplicationId(),
+          dataCollectionInfo.getStateExecutionId(), metricRecords);
+    }
+
     private boolean fetchAndSaveMetricsForNode(NewRelicApplicationInstance node, List<Set<String>> metricBatches,
         long endTime, int dataCollectionMinuteEnd) throws Exception {
       TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
-      records.put(HARNESS_HEARTBEAT_METRIC_NAME, 0l,
-          NewRelicMetricDataRecord.builder()
-              .stateType(getStateType())
-              .name(HARNESS_HEARTBEAT_METRIC_NAME)
-              .appId(dataCollectionInfo.getApplicationId())
-              .workflowId(dataCollectionInfo.getWorkflowId())
-              .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
-              .serviceId(dataCollectionInfo.getServiceId())
-              .stateExecutionId(dataCollectionInfo.getStateExecutionId())
-              .dataCollectionMinute(dataCollectionMinuteEnd)
-              .timeStamp(windowStartTimeManager)
-              .level(ClusterLevel.H0)
-              .groupName(dataCollectionInfo.getHosts().get(node.getHost()))
-              .build());
-      logger.info("adding heartbeat new relic metric record for host {} for minute {}", node.getHost(),
-          dataCollectionMinuteEnd);
       final long startTime = System.currentTimeMillis();
       for (Set<String> metricNames : metricBatches) {
         records.putAll(getMetricData(node, metricNames, endTime));
