@@ -415,7 +415,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       Set<String> groups = new HashSet<>();
       TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
       for (Map.Entry<String, String> entry : dataCollectionInfo.getHosts().entrySet()) {
-        if (!groups.contains(entry.getKey())) {
+        if (!groups.contains(entry.getValue())) {
           records.put(HARNESS_HEARTBEAT_METRIC_NAME, 0l,
               NewRelicMetricDataRecord.builder()
                   .stateType(getStateType())
@@ -428,11 +428,11 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                   .dataCollectionMinute(dataCollectionMinuteEnd)
                   .timeStamp(windowStartTimeManager)
                   .level(ClusterLevel.H0)
-                  .groupName(entry.getKey())
+                  .groupName(entry.getValue())
                   .build());
-          logger.info("adding heartbeat new relic metric record for group {} for minute {}", entry.getKey(),
+          logger.info("adding heartbeat new relic metric record for group {} for minute {}", entry.getValue(),
               dataCollectionMinuteEnd);
-          groups.add(entry.getKey());
+          groups.add(entry.getValue());
         }
       }
       List<NewRelicMetricDataRecord> metricRecords = getAllMetricRecords(records);
