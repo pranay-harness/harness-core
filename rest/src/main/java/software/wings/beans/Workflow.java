@@ -10,16 +10,10 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 
-import com.mongodb.client.model.CollationStrength;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.data.validator.EntityName;
-import org.mongodb.morphia.annotations.Collation;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 
 import java.util.ArrayList;
@@ -32,9 +26,6 @@ import javax.validation.constraints.NotNull;
  * @author Rishi
  */
 @Entity(value = "workflows", noClassnameStored = true)
-@Indexes(@Index(options = @IndexOptions(
-                    name = "collation", collation = @Collation(locale = "en", strength = CollationStrength.PRIMARY)),
-    fields = { @Field("name") }))
 @SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 public class Workflow extends Base {
   @NotNull @EntityName private String name;

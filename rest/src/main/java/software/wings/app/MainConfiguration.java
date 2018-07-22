@@ -63,7 +63,6 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("featuresEnabled") private String featureNames;
   private int applicationPort;
   private boolean sslEnabled;
-  private boolean fakeMongo;
 
   /**
    * Instantiates a new Main configuration.

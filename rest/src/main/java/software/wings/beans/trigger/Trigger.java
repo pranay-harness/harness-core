@@ -3,13 +3,11 @@ package software.wings.beans.trigger;
 import static software.wings.beans.WorkflowType.PIPELINE;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.mongodb.client.model.CollationStrength;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.annotations.Collation;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -32,15 +30,8 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @Entity(value = "triggers")
-@Indexes(value =
-    {
-      @Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("appId")
-                                                                               , @Field("name") })
-      ,
-          @Index(options = @IndexOptions(
-                     name = "collation", collation = @Collation(locale = "en", strength = CollationStrength.PRIMARY)),
-              fields = { @Field("name") })
-    })
+@Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("appId")
+                                                                                  , @Field("name") }))
 public class Trigger extends Base {
   @NotEmpty private String name;
   private String description;
