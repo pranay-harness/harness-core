@@ -14,11 +14,14 @@ import static software.wings.beans.SortOrder.OrderType.DESC;
 
 import com.google.common.base.Preconditions;
 
+import com.mongodb.client.model.Collation;
+import com.mongodb.client.model.CollationStrength;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.mapping.MappedClass;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Criteria;
 import org.mongodb.morphia.query.FieldEnd;
+import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -51,7 +54,7 @@ public class MongoHelper {
    * @return the page response
    */
   public static <T> PageResponse<T> queryPageRequest(
-      Datastore datastore, Query<T> q, Mapper mapper, Class<T> cls, PageRequest<T> req) {
+      Datastore datastore, Query<T> q, Mapper mapper, Class<T> cls, PageRequest<T> req, boolean fakeMongo) {
     q = MongoHelper.applyPageRequest(datastore, q, req, cls, mapper);
 
     PageResponse<T> response = new PageResponse<>(req);
@@ -62,7 +65,13 @@ public class MongoHelper {
       int limit = PageRequest.UNLIMITED.equals(req.getLimit()) ? PageRequest.DEFAULT_UNLIMITED : req.getPageSize();
       q.limit(limit);
 
-      List<T> list = q.asList();
+      List<T> list;
+      if (fakeMongo) {
+        list = q.asList();
+      } else {
+        list = q.asList(new FindOptions().collation(
+            Collation.builder().locale("en").collationStrength(CollationStrength.PRIMARY).build()));
+      }
       response.setResponse(list);
 
       if (req.getOptions() == null || req.getOptions().contains(PageRequest.Option.COUNT)) {
@@ -182,7 +191,6 @@ public class MongoHelper {
     } else if (isNotEmpty(fieldsExcluded)) {
       query.retrievedFields(false, fieldsExcluded.toArray(new String[0]));
     }
-
     return query;
   }
 

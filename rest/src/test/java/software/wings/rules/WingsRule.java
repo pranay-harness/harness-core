@@ -230,6 +230,7 @@ public class WingsRule implements MethodRule {
     configuration.getMongoConnectionFactory().setUri(
         System.getProperty("mongoUri", "mongodb://localhost:27017/" + dbName));
     configuration.getSchedulerConfig().setAutoStart(System.getProperty("setupScheduler", "false"));
+    configuration.setFakeMongo(fakeMongo);
     if (annotations.stream().anyMatch(SetupScheduler.class ::isInstance)) {
       configuration.getSchedulerConfig().setAutoStart("true");
       if (fakeMongo) {

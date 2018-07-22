@@ -4,10 +4,12 @@ import static java.util.Arrays.asList;
 
 import com.google.common.base.MoreObjects;
 
+import com.mongodb.client.model.CollationStrength;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.annotations.Collation;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -29,12 +31,17 @@ import java.util.Objects;
  * @author Rishi
  */
 @Entity(value = "applications", noClassnameStored = true)
-@Indexes(
-    @Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("accountId")
-                                                                             , @Field("name") }))
+@Indexes(value =
+    {
+      @Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("accountId")
+                                                                               , @Field("name") })
+      ,
+          @Index(options = @IndexOptions(
+                     name = "collation", collation = @Collation(locale = "en", strength = CollationStrength.PRIMARY)),
+              fields = { @Field("name") })
+    })
 public class Application extends Base {
   public static final String NAME_KEY = "name";
-
   @NotEmpty private String name;
   private String description;
 

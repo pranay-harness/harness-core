@@ -23,6 +23,7 @@ import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_COLLECTED
 import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_DEPLOYED;
 import static software.wings.beans.trigger.ArtifactSelection.Type.PIPELINE_SOURCE;
 import static software.wings.beans.trigger.ArtifactSelection.Type.WEBHOOK_VARIABLE;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.artifact;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.assertWebhookToken;
@@ -67,6 +68,7 @@ import org.quartz.TriggerKey;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.WebHookToken;
 import software.wings.beans.Workflow;
@@ -160,8 +162,8 @@ public class TriggerServiceTest extends WingsBaseTest {
   public void shouldListTriggers() {
     Trigger trigger = triggerService.save(artifactConditionTrigger);
     assertThat(trigger).isNotNull();
-    PageRequest<Trigger> pageRequest = new PageRequest<>();
-    PageResponse<Trigger> triggers = triggerService.list(pageRequest);
+    PageResponse<Trigger> triggers =
+        triggerService.list(aPageRequest().addFilter(Trigger.APP_ID_KEY, Operator.EQ, APP_ID).build());
     assertThat(triggers.size()).isEqualTo(1);
   }
 
