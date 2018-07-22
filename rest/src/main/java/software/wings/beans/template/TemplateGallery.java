@@ -2,12 +2,14 @@ package software.wings.beans.template;
 
 import static java.util.Arrays.asList;
 
+import com.mongodb.client.model.CollationStrength;
 import io.harness.data.validator.EntityName;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.annotations.Collation;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -21,9 +23,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity("templateGalleries")
-@Indexes(
-    @Index(fields = { @Field("name")
-                      , @Field("accountId") }, options = @IndexOptions(name = "yaml", unique = true)))
+@Indexes(value =
+    {
+      @Index(fields = { @Field("name")
+                        , @Field("accountId") }, options = @IndexOptions(name = "yaml", unique = true))
+      ,
+          @Index(options = @IndexOptions(
+                     name = "collation", collation = @Collation(locale = "en", strength = CollationStrength.PRIMARY)),
+              fields = { @Field("name") })
+    })
 @Data
 @EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
