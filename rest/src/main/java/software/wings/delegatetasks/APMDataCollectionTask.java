@@ -330,8 +330,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
             .forEach(index
                 -> callabels.add(
                     ()
-                        -> new APMResponseParser.APMResponseData(getHostNameForTestControl(index),
-                            dataCollectionInfo.getHosts().get(getHostNameForTestControl(index)),
+                        -> new APMResponseParser.APMResponseData(getHostNameForTestControl(index), DEFAULT_GROUP_NAME,
                             collect(getAPMRestClient(baseUrl).collect(curUrls.get(index), headersBiMap, optionsBiMap),
                                 baseUrl + curUrls.get(index)),
                             metricInfos)));
@@ -492,6 +491,12 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
         groupNameSet = new HashSet<>(Arrays.asList(DEFAULT_GROUP_NAME));
       }
       for (String group : groupNameSet) {
+        if (group == null) {
+          final String errorMsg =
+              "Unexpected null groupName received while sending APM Heartbeat. Please contact Harness Support.";
+          logger.error(errorMsg);
+          throw new WingsException(errorMsg);
+        }
         // HeartBeat
         int heartbeatCounter = 0;
         records.put(HARNESS_HEARTBEAT_METRIC_NAME + group, (long) heartbeatCounter++,
