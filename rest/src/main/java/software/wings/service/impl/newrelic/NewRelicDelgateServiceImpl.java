@@ -238,8 +238,9 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     List<Set<String>> metricBatches = batchMetricsToCollect(metrics);
     List<Callable<Set<String>>> metricDataCallabels = new ArrayList<>();
     for (Collection<String> metricNames : metricBatches) {
-      metricDataCallabels.add(
-          () -> getMetricsWithNoData(metricNames, newRelicConfig, encryptedDataDetails, applicationId, apiCallLog));
+      metricDataCallabels.add(()
+                                  -> getMetricsWithNoData(metricNames, newRelicConfig, encryptedDataDetails,
+                                      applicationId, apiCallLog.copy()));
     }
     List<Optional<Set<String>>> results = dataCollectionService.executeParrallel(metricDataCallabels);
     results.forEach(result -> {
