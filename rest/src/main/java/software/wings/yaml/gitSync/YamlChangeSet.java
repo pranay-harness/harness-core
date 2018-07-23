@@ -5,7 +5,11 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.yaml.GitFileChange;
 
@@ -19,6 +23,9 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "yamlChangeSet")
 @Data
 @EqualsAndHashCode(callSuper = false)
+@Indexes({ @Index(fields = { @Field("accountId")
+                             , @Field("status") }, options = @IndexOptions(name = "searchIdx")) })
+
 public class YamlChangeSet extends Base {
   @Indexed @NotEmpty private String accountId;
   @NotNull private List<GitFileChange> gitFileChanges = new ArrayList<>();
