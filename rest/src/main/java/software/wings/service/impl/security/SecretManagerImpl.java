@@ -90,6 +90,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -938,12 +939,11 @@ public class SecretManagerImpl implements SecretManager {
 
     List<EncryptedData> filteredEncryptedDataList = Lists.newArrayList();
 
-    for (EncryptedData encryptedData : encryptedDataList) {
-      if (!usageRestrictionsService.hasAccess(
-              encryptedData.getUsageRestrictions(), accountId, appIdFromRequest, envIdFromRequest)) {
-        continue;
-      }
+    Map<String, Set<String>> appEnvMapFromPermissions = usageRestrictionsService.getAppEnvMapFromPermissions(accountId);
+    UsageRestrictions restrictionsFromUserPermissions =
+        usageRestrictionsService.getUsageRestrictionsFromUserPermissions(accountId);
 
+    for (EncryptedData encryptedData : encryptedDataList) {
       encryptedData.setEncryptedValue(SECRET_MASK.toCharArray());
       encryptedData.setEncryptionKey(SECRET_MASK);
       encryptedData.setEncryptedBy(getSecretManagerName(encryptedData.getType(), encryptedData.getUuid(),
@@ -955,13 +955,27 @@ public class SecretManagerImpl implements SecretManager {
           getChangeLogs(encryptedData.getAccountId(), encryptedData.getUuid(), SettingVariableTypes.SECRET_TEXT)
               .size());
 
-      if (encryptedData.getUsageRestrictions() != null) {
-        if (isNotEmpty(encryptedData.getUsageRestrictions().getAppEnvRestrictions())) {
-          encryptedData.getUsageRestrictions().setEditable(usageRestrictionsService.userHasPermissionsToChangeEntity(
-              encryptedData.getAccountId(), encryptedData.getUsageRestrictions()));
-        } else {
-          encryptedData.getUsageRestrictions().setEditable(true);
-        }
+      UsageRestrictions usageRestrictionsFromEntity = encryptedData.getUsageRestrictions();
+      if (usageRestrictionsFromEntity == null || isEmpty(usageRestrictionsFromEntity.getAppEnvRestrictions())) {
+        filteredEncryptedDataList.add(encryptedData);
+        continue;
+      }
+
+      Map<String, Set<String>> appEnvMapFromEntityRestrictions =
+          usageRestrictionsService.getAppEnvMap(accountId, usageRestrictionsFromEntity.getAppEnvRestrictions());
+
+      if (!usageRestrictionsService.hasAccess(accountId, appIdFromRequest, envIdFromRequest,
+              usageRestrictionsFromEntity, appEnvMapFromEntityRestrictions, restrictionsFromUserPermissions,
+              appEnvMapFromPermissions)) {
+        continue;
+      }
+
+      if (isNotEmpty(encryptedData.getUsageRestrictions().getAppEnvRestrictions())) {
+        encryptedData.getUsageRestrictions().setEditable(usageRestrictionsService.userHasPermissionsToChangeEntity(
+            encryptedData.getAccountId(), usageRestrictionsFromEntity, appEnvMapFromEntityRestrictions,
+            restrictionsFromUserPermissions, appEnvMapFromPermissions));
+      } else {
+        encryptedData.getUsageRestrictions().setEditable(true);
       }
 
       filteredEncryptedDataList.add(encryptedData);

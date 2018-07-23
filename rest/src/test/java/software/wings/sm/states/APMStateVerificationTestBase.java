@@ -159,7 +159,7 @@ public class APMStateVerificationTestBase extends WingsBaseTest {
     return AppPermissionSummary.builder()
         .envPermissions(null)
         .servicePermissions(servicePermissions)
-        .envPermissions(envPermissions)
+        //        .envPermissions(envPermissions)
         .workflowPermissions(workflowPermissions)
         .pipelinePermissions(pipelinePermissions)
         .build();

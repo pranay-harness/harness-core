@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.Base;
 import software.wings.beans.Environment;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.HttpMethod;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Pipeline;
@@ -65,6 +66,7 @@ import software.wings.security.AccountPermissionSummary;
 import software.wings.security.AccountPermissionSummary.AccountPermissionSummaryBuilder;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.AppPermissionSummaryBuilder;
+import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.AppPermissionSummaryForUI;
 import software.wings.security.EnvFilter;
 import software.wings.security.Filter;
@@ -148,7 +150,7 @@ public class AuthHandler {
         .accountPermissionSummary(accountPermissionSummaryBuilder.build());
 
     UserPermissionInfo userPermissionInfo = userPermissionInfoBuilder.build();
-    setAppPermissionMapInternal(userPermissionInfo);
+    setAppPermissionMapInternal(userPermissionInfo, permissionTypeAppIdEntityMap.get(PermissionType.ENV));
     return userPermissionInfo;
   }
 
@@ -589,6 +591,16 @@ public class AuthHandler {
     return getAppIdsByFilter(Sets.newHashSet(appIdsByAccountId), appFilter);
   }
 
+  public Set<String> getEnvIdsByFilter(Set<Environment> appIds, EnvFilter envFilter) {
+    PageRequest<Environment> pageRequest = aPageRequest()
+                                               .addFilter("appId", Operator.IN, appIds.toArray(new String[0]))
+                                               .addFieldsIncluded("_id", "environmentType")
+                                               .build();
+    List<Environment> envList = getAllEntities(pageRequest, () -> environmentService.list(pageRequest, false));
+
+    return getEnvIdsByFilter(envList, envFilter);
+  }
+
   public Set<String> getEnvIdsByFilter(String appId, EnvFilter envFilter) {
     PageRequest<Environment> pageRequest =
         aPageRequest().addFilter("appId", Operator.EQ, appId).addFieldsIncluded("_id", "environmentType").build();
@@ -673,7 +685,14 @@ public class AuthHandler {
         } else if (permissionType == PROVISIONER) {
           entityPermissions = appPermissionSummary.getProvisionerPermissions();
         } else if (permissionType == ENV) {
-          entityPermissions = appPermissionSummary.getEnvPermissions();
+          Map<Action, Set<EnvInfo>> envEntityPermissions = appPermissionSummary.getEnvPermissions();
+          if (isNotEmpty(envEntityPermissions)) {
+            Set<EnvInfo> envInfoSet = envEntityPermissions.get(action);
+            if (isNotEmpty(envInfoSet)) {
+              envInfoSet.forEach(envInfo -> entityIds.add(envInfo.getEnvId()));
+            }
+          }
+          continue;
         } else if (permissionType == WORKFLOW) {
           entityPermissions = appPermissionSummary.getWorkflowPermissions();
         } else if (permissionType == PIPELINE) {
@@ -682,7 +701,7 @@ public class AuthHandler {
           entityPermissions = appPermissionSummary.getDeploymentPermissions();
         }
 
-        if (entityPermissions == null) {
+        if (isEmpty(entityPermissions)) {
           continue;
         }
 
@@ -1001,7 +1020,7 @@ public class AuthHandler {
         .isPresent();
   }
 
-  private void setAppPermissionMapInternal(UserPermissionInfo userPermissionInfo) {
+  private void setAppPermissionMapInternal(UserPermissionInfo userPermissionInfo, Map<String, List<Base>> appIdEnvMap) {
     Map<String, AppPermissionSummaryForUI> fromAppPermissionMap = userPermissionInfo.getAppPermissionMap();
     Map<String, AppPermissionSummary> toAppPermissionSummaryMap = new HashMap<>();
     if (MapUtils.isEmpty(fromAppPermissionMap)) {
@@ -1009,14 +1028,15 @@ public class AuthHandler {
     }
 
     fromAppPermissionMap.forEach((key, summary) -> {
-      AppPermissionSummary toAppPermissionSummary = convertToAppSummaryInternal(summary);
+      AppPermissionSummary toAppPermissionSummary = convertToAppSummaryInternal(summary, appIdEnvMap.get(key));
       toAppPermissionSummaryMap.put(key, toAppPermissionSummary);
     });
 
     userPermissionInfo.setAppPermissionMapInternal(toAppPermissionSummaryMap);
   }
 
-  private AppPermissionSummary convertToAppSummaryInternal(AppPermissionSummaryForUI fromSummary) {
+  private AppPermissionSummary convertToAppSummaryInternal(
+      AppPermissionSummaryForUI fromSummary, List<? extends Base> envList) {
     AppPermissionSummaryBuilder toAppPermissionSummaryBuilder =
         AppPermissionSummary.builder()
             .canCreateService(fromSummary.isCanCreateService())
@@ -1026,7 +1046,7 @@ public class AuthHandler {
             .canCreatePipeline(fromSummary.isCanCreatePipeline())
             .servicePermissions(convertToInternal(fromSummary.getServicePermissions()))
             .provisionerPermissions(convertToInternal(fromSummary.getProvisionerPermissions()))
-            .envPermissions(convertToInternal(fromSummary.getEnvPermissions()))
+            .envPermissions(convertEnvToInternal(fromSummary.getEnvPermissions(), envList))
             .workflowPermissions(convertToInternal(fromSummary.getWorkflowPermissions()))
             .pipelinePermissions(convertToInternal(fromSummary.getPipelinePermissions()))
             .deploymentPermissions(convertToInternal(fromSummary.getDeploymentPermissions()));
@@ -1055,6 +1075,50 @@ public class AuthHandler {
             deleteSet.add(entityId);
           } else if (action == Action.EXECUTE) {
             executeSet.add(entityId);
+          }
+        });
+      }
+    });
+
+    toMap.put(Action.READ, readSet);
+    toMap.put(Action.UPDATE, updateSet);
+    toMap.put(Action.DELETE, deleteSet);
+    toMap.put(Action.EXECUTE, executeSet);
+    return toMap;
+  }
+
+  private Map<Action, Set<EnvInfo>> convertEnvToInternal(
+      Map<String, Set<Action>> fromMap, List<? extends Base> envList) {
+    Map<Action, Set<EnvInfo>> toMap = new HashMap<>();
+    final Set<EnvInfo> readSet = new HashSet<>();
+    final Set<EnvInfo> updateSet = new HashSet<>();
+    final Set<EnvInfo> deleteSet = new HashSet<>();
+    final Set<EnvInfo> executeSet = new HashSet<>();
+
+    if (fromMap == null || isEmpty(envList)) {
+      return new HashMap<>();
+    }
+
+    Map<String, EnvironmentType> envIdTypeMap = envList.stream().collect(
+        Collectors.toMap(env -> env.getUuid(), env -> ((Environment) env).getEnvironmentType()));
+
+    fromMap.forEach((envId, actions) -> {
+      if (CollectionUtils.isNotEmpty(actions)) {
+        EnvironmentType environmentType = envIdTypeMap.get(envId);
+        if (environmentType == null) {
+          logger.error("Error while looking up env info for Id: {}", envId);
+          return;
+        }
+        EnvInfo envInfo = EnvInfo.builder().envId(envId).envType(environmentType.name()).build();
+        actions.forEach(action -> {
+          if (action == Action.READ) {
+            readSet.add(envInfo);
+          } else if (action == Action.UPDATE) {
+            updateSet.add(envInfo);
+          } else if (action == Action.DELETE) {
+            deleteSet.add(envInfo);
+          } else if (action == Action.EXECUTE) {
+            executeSet.add(envInfo);
           }
         });
       }

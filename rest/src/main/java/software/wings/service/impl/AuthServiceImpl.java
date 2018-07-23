@@ -33,7 +33,6 @@ import com.nimbusds.jwt.EncryptedJWT;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.Key;
 import org.slf4j.Logger;
@@ -56,6 +55,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.security.AppPermissionSummary;
+import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.GenericEntityFilter;
 import software.wings.security.GenericEntityFilter.FilterType;
 import software.wings.security.PermissionAttribute;
@@ -468,8 +468,17 @@ public class AuthServiceImpl implements AuthService {
         actionPermissionMap = appPermissionSummary.getServicePermissions();
         break;
       case ENV:
-        actionPermissionMap = appPermissionSummary.getEnvPermissions();
-        break;
+        Map<Action, Set<EnvInfo>> envPermissions = appPermissionSummary.getEnvPermissions();
+        if (isEmpty(envPermissions)) {
+          return emptySet();
+        }
+
+        Set<EnvInfo> envInfos = envPermissions.get(action);
+        if (isEmpty(envInfos)) {
+          return emptySet();
+        }
+
+        return envInfos.stream().map(envInfo -> envInfo.getEnvId()).collect(toSet());
       case WORKFLOW:
         actionPermissionMap = appPermissionSummary.getWorkflowPermissions();
         break;
@@ -644,7 +653,19 @@ public class AuthServiceImpl implements AuthService {
     } else if (requiredPermissionType == PermissionType.PROVISIONER) {
       actionEntityIdMap = appPermissionSummary.getProvisionerPermissions();
     } else if (requiredPermissionType == PermissionType.ENV) {
-      actionEntityIdMap = appPermissionSummary.getEnvPermissions();
+      Map<Action, Set<EnvInfo>> actionEnvPermissionsMap = appPermissionSummary.getEnvPermissions();
+      if (isEmpty(actionEnvPermissionsMap)) {
+        return false;
+      }
+
+      Set<EnvInfo> envInfoSet = actionEnvPermissionsMap.get(requiredAction);
+      if (isEmpty(envInfoSet)) {
+        return false;
+      }
+
+      Set<String> envIdSet = envInfoSet.stream().map(envInfo -> envInfo.getEnvId()).collect(toSet());
+      return envIdSet.contains(entityId);
+
     } else if (requiredPermissionType == PermissionType.WORKFLOW) {
       actionEntityIdMap = appPermissionSummary.getWorkflowPermissions();
     } else if (requiredPermissionType == PermissionType.PIPELINE) {
@@ -657,12 +678,12 @@ public class AuthServiceImpl implements AuthService {
       throw new WingsException(msg);
     }
 
-    if (actionEntityIdMap == null) {
+    if (isEmpty(actionEntityIdMap)) {
       return false;
     }
 
     Collection<String> entityIds = actionEntityIdMap.get(requiredAction);
-    if (CollectionUtils.isEmpty(entityIds)) {
+    if (isEmpty(entityIds)) {
       return false;
     }
 

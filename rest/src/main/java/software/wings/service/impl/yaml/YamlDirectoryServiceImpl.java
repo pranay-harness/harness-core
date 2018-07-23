@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.Collections.emptySet;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
@@ -69,6 +70,7 @@ import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
 import software.wings.security.AccountPermissionSummary;
 import software.wings.security.AppPermissionSummary;
+import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserPermissionInfo;
@@ -119,6 +121,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 @Singleton
 public class YamlDirectoryServiceImpl implements YamlDirectoryService {
@@ -456,9 +459,15 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
           provisionerSet = provisionerPermissions.get(Action.READ);
         }
 
-        Map<Action, Set<String>> envPermissions = appPermissionSummary.getEnvPermissions();
+        Map<Action, Set<EnvInfo>> envPermissions = appPermissionSummary.getEnvPermissions();
+
         if (envPermissions != null) {
-          envSet = envPermissions.get(Action.READ);
+          Set<EnvInfo> envInfos = envPermissions.get(Action.READ);
+          if (isEmpty(envInfos)) {
+            envSet = emptySet();
+          } else {
+            envSet = envInfos.stream().map(envInfo -> envInfo.getEnvId()).collect(Collectors.toSet());
+          }
         }
 
         Map<Action, Set<String>> workflowPermissions = appPermissionSummary.getWorkflowPermissions();
