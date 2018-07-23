@@ -36,7 +36,6 @@ import migrations.all.NewRelicMetricDataRecordsMigration;
 import migrations.all.PreferenceUserIdRemoveDollarSignMigration;
 import migrations.all.RemoveResizeFromStatefulSetWorkflows;
 import migrations.all.RenameProvisionNodeToInfrastructureNodeWorkflows;
-import migrations.all.SecretTextFilterMigration;
 import migrations.all.SetRollbackFlagToWorkflows;
 import migrations.all.SystemTemplateGalleryMigration;
 import migrations.all.TimeSeriesAnalysisRecordsMigration;
@@ -83,7 +82,7 @@ public class MigrationList {
         .add(Pair.of(156, BaseMigration.class))
         .add(Pair.of(157, BaseMigration.class))
         .add(Pair.of(158, EntityNameValidationMigration_All_02.class))
-        .add(Pair.of(159, SecretTextFilterMigration.class))
+        .add(Pair.of(159, BaseMigration.class))
         .add(Pair.of(160, EntityNameValidationMigration_All_03.class))
         .add(Pair.of(161, DropStringCollectionMigration.class))
         .add(Pair.of(162, DropDelegateScopeCollectionMigration.class))
