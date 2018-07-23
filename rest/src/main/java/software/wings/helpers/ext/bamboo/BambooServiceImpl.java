@@ -126,7 +126,7 @@ public class BambooServiceImpl implements BambooService {
       if (response != null && !response.isSuccessful()) {
         IOUtils.closeQuietly(response.errorBody());
       }
-      logger.error("Failed to get the last successful build for plan key {}", e);
+      logger.error("Failed to get the last successful build for plan key {}", e, planKey);
       throw new WingsException(ARTIFACT_SERVER_ERROR, SRE).addParam("message", ExceptionUtils.getRootCauseMessage(e));
     }
     return null;
@@ -202,7 +202,7 @@ public class BambooServiceImpl implements BambooService {
       return;
     }
     if (response.code() == 401) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER).addParam("message", "Invalid Bamboo credentials");
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "Invalid Bamboo credentials");
     }
     if (response.errorBody() == null) {
       throw new WingsException(ARTIFACT_SERVER_ERROR).addParam("message", response.message());
