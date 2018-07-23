@@ -121,8 +121,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
   private String saveKmsConfigInternal(String accountId, KmsConfig kmsConfig) {
     kmsConfig.setAccountId(accountId);
-    Query<KmsConfig> query = wingsPersistence.createQuery(KmsConfig.class).filter("accountId", accountId);
-    Collection<KmsConfig> savedConfigs = query.asList();
+
     Query<VaultConfig> vaultConfigQuery =
         wingsPersistence.createQuery(VaultConfig.class).filter("accountId", accountId);
     List<VaultConfig> vaultConfigs = vaultConfigQuery.asList();
@@ -183,6 +182,8 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     arnKeyData.addParent(parentId);
     wingsPersistence.save(arnKeyData);
 
+    Query<KmsConfig> query = wingsPersistence.createQuery(KmsConfig.class).filter("accountId", accountId);
+    Collection<KmsConfig> savedConfigs = query.asList();
     if (kmsConfig.isDefault() && (!savedConfigs.isEmpty() || !vaultConfigs.isEmpty())) {
       for (KmsConfig savedConfig : savedConfigs) {
         if (kmsConfig.getUuid().equals(savedConfig.getUuid())) {
