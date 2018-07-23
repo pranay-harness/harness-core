@@ -1,8 +1,10 @@
 package software.wings.service.impl.analysis;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static java.util.Collections.emptySet;
+
 import com.google.inject.Inject;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.time.Timestamp;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
@@ -16,6 +18,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.AppPermissionSummary;
+import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -33,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
 @ValidateOnExecution
@@ -212,8 +216,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         // If it's  not present for servicePermissions,it's not present for anything. So fill up the map.
         servicePermissionsByApp.put(
             applicationId, userAppPermissions.get(applicationId).getServicePermissions().get(Action.READ));
-        envPermissionsByApp.put(
-            applicationId, userAppPermissions.get(applicationId).getEnvPermissions().get(Action.READ));
+        envPermissionsByApp.put(applicationId, getEnvPermissions(userAppPermissions, applicationId));
       }
       servicePermissions = servicePermissionsByApp.get(applicationId);
       envPermissions = envPermissionsByApp.get(applicationId);
@@ -235,6 +238,31 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     return finalList;
   }
 
+  private Set<String> getEnvPermissions(Map<String, AppPermissionSummary> userAppPermissions, String applicationId) {
+    if (isEmpty(userAppPermissions)) {
+      return emptySet();
+    }
+
+    AppPermissionSummary appPermissionSummary = userAppPermissions.get(applicationId);
+
+    if (appPermissionSummary == null) {
+      return emptySet();
+    }
+
+    Map<Action, Set<EnvInfo>> envPermissions = appPermissionSummary.getEnvPermissions();
+
+    if (isEmpty(envPermissions)) {
+      return emptySet();
+    }
+
+    Set<EnvInfo> envInfoSet = envPermissions.get(Action.READ);
+    if (isEmpty(envInfoSet)) {
+      return emptySet();
+    }
+
+    return envInfoSet.stream().map(envInfo -> envInfo.getEnvId()).collect(Collectors.toSet());
+  }
+
   /**
    *
    * @param setToCheck
@@ -242,11 +270,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
    * @return False if set is either empty or it does not contain value. True otherwise.
    */
   private boolean checkIfPermissionsApproved(final Set<String> setToCheck, final String value) {
-    if (EmptyPredicate.isEmpty(value)) {
+    if (isEmpty(value)) {
       return true;
     }
 
-    if (EmptyPredicate.isEmpty(setToCheck) || !setToCheck.contains(value)) {
+    if (isEmpty(setToCheck) || !setToCheck.contains(value)) {
       logger.info("Permissions rejected for value {} in set {}", value, setToCheck);
       return false;
     }

@@ -22,18 +22,25 @@ public class AppPermissionSummary {
   private boolean canCreateWorkflow;
   private boolean canCreatePipeline;
 
-  // Key - entityId, Value - set of actions
+  // Key - action, Value - set of entity ids
   private Map<Action, Set<String>> servicePermissions;
   private Map<Action, Set<String>> provisionerPermissions;
-  private Map<Action, Set<String>> envPermissions;
+  private Map<Action, Set<EnvInfo>> envPermissions;
   private Map<Action, Set<String>> workflowPermissions;
   private Map<Action, Set<String>> deploymentPermissions;
   private Map<Action, Set<String>> pipelinePermissions;
 
+  @Data
+  @Builder
+  public static class EnvInfo {
+    private String envId;
+    private String envType;
+  }
+
   @Builder
   public AppPermissionSummary(boolean canCreateService, boolean canCreateProvisioner, boolean canCreateEnvironment,
       boolean canCreateWorkflow, boolean canCreatePipeline, Map<Action, Set<String>> servicePermissions,
-      Map<Action, Set<String>> provisionerPermissions, Map<Action, Set<String>> envPermissions,
+      Map<Action, Set<String>> provisionerPermissions, Map<Action, Set<EnvInfo>> envPermissions,
       Map<Action, Set<String>> workflowPermissions, Map<Action, Set<String>> deploymentPermissions,
       Map<Action, Set<String>> pipelinePermissions) {
     this.canCreateService = canCreateService;

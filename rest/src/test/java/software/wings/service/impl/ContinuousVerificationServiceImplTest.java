@@ -15,9 +15,11 @@ import org.mockito.MockitoAnnotations;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.AppPermissionSummary;
+import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserPermissionInfo;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
@@ -107,8 +109,10 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
     Map<Action, Set<String>> servicePermissions = new HashMap<Action, Set<String>>() {
       { put(Action.READ, Sets.newHashSet(serviceId)); }
     };
-    Map<Action, Set<String>> envPermissions = new HashMap<Action, Set<String>>() {
-      { put(Action.READ, Sets.newHashSet(envId)); }
+    Map<Action, Set<EnvInfo>> envPermissions = new HashMap<Action, Set<EnvInfo>>() {
+      {
+        put(Action.READ, Sets.newHashSet(EnvInfo.builder().envId(envId).envType(EnvironmentType.PROD.name()).build()));
+      }
     };
     Map<Action, Set<String>> pipelinePermissions = new HashMap<Action, Set<String>>() {
       { put(Action.READ, Sets.newHashSet()); }
@@ -118,7 +122,6 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
     };
 
     return AppPermissionSummary.builder()
-        .envPermissions(null)
         .servicePermissions(servicePermissions)
         .envPermissions(envPermissions)
         .workflowPermissions(workflowPermissions)
@@ -148,7 +151,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
         execData = cvService.getCVExecutionMetaData(accountId, 1519200000000L, 1519200000001L, user);
 
     assertNotNull("Execution data is not null", execData);
-    assertEquals("Execution data should be empty", 1, execData.size());
+    assertEquals("Execution data should not be empty", 1, execData.size());
   }
 
   @Test

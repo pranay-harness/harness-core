@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -73,11 +74,15 @@ import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.UsageRestrictions;
 import software.wings.utils.CacheHelper;
 import software.wings.utils.Misc;
 import software.wings.utils.validation.Create;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -139,24 +144,47 @@ public class SettingsServiceImpl implements SettingsService {
 
   private List<SettingAttribute> getFilteredSettingAttributes(
       List<SettingAttribute> inputSettingAttributes, String appIdFromRequest, String envIdFromRequest) {
-    List<SettingAttribute> filteredSettingAttributes = Lists.newArrayList();
-    if (isNotEmpty(inputSettingAttributes)) {
-      inputSettingAttributes.forEach(settingAttribute -> {
-        if (usageRestrictionsService.hasAccess(settingAttribute.getUsageRestrictions(), settingAttribute.getAccountId(),
-                appIdFromRequest, envIdFromRequest)) {
-          if (settingAttribute.getUsageRestrictions() != null) {
-            if (isNotEmpty(settingAttribute.getUsageRestrictions().getAppEnvRestrictions())) {
-              settingAttribute.getUsageRestrictions().setEditable(
-                  usageRestrictionsService.userHasPermissionsToChangeEntity(
-                      settingAttribute.getAccountId(), settingAttribute.getUsageRestrictions()));
-            } else {
-              settingAttribute.getUsageRestrictions().setEditable(true);
-            }
-          }
-          filteredSettingAttributes.add(settingAttribute);
-        }
-      });
+    if (inputSettingAttributes == null) {
+      return Collections.emptyList();
     }
+
+    if (inputSettingAttributes.size() == 0) {
+      return inputSettingAttributes;
+    }
+
+    String accountId = inputSettingAttributes.get(0).getAccountId();
+    List<SettingAttribute> filteredSettingAttributes = Lists.newArrayList();
+    Map<String, Set<String>> appEnvMapFromUserPermissions =
+        usageRestrictionsService.getAppEnvMapFromPermissions(accountId);
+    UsageRestrictions restrictionsFromUserPermissions =
+        usageRestrictionsService.getUsageRestrictionsFromUserPermissions(accountId);
+
+    inputSettingAttributes.forEach(settingAttribute -> {
+      UsageRestrictions usageRestrictionsFromEntity = settingAttribute.getUsageRestrictions();
+
+      if (usageRestrictionsFromEntity == null || isEmpty(usageRestrictionsFromEntity.getAppEnvRestrictions())) {
+        filteredSettingAttributes.add(settingAttribute);
+        return;
+      }
+
+      Map<String, Set<String>> appEnvMapFromEntityRestrictions =
+          usageRestrictionsService.getAppEnvMap(accountId, usageRestrictionsFromEntity.getAppEnvRestrictions());
+
+      if (usageRestrictionsService.hasAccess(accountId, appIdFromRequest, envIdFromRequest, usageRestrictionsFromEntity,
+              appEnvMapFromEntityRestrictions, restrictionsFromUserPermissions, appEnvMapFromUserPermissions)) {
+        if (usageRestrictionsFromEntity != null) {
+          if (isNotEmpty(usageRestrictionsFromEntity.getAppEnvRestrictions())) {
+            usageRestrictionsFromEntity.setEditable(usageRestrictionsService.userHasPermissionsToChangeEntity(
+                settingAttribute.getAccountId(), usageRestrictionsFromEntity, appEnvMapFromEntityRestrictions,
+                restrictionsFromUserPermissions, appEnvMapFromUserPermissions));
+          } else {
+            usageRestrictionsFromEntity.setEditable(true);
+          }
+        }
+        filteredSettingAttributes.add(settingAttribute);
+      }
+    });
+
     return filteredSettingAttributes;
   }
 
@@ -358,9 +386,10 @@ public class SettingsServiceImpl implements SettingsService {
   public void delete(String appId, String varId, boolean pushToGit) {
     SettingAttribute settingAttribute = get(varId);
     notNullCheck("Setting Value", settingAttribute, USER);
+    String accountId = settingAttribute.getAccountId();
 
     if (!usageRestrictionsService.userHasPermissionsToChangeEntity(
-            settingAttribute.getAccountId(), settingAttribute.getUsageRestrictions())) {
+            accountId, settingAttribute.getUsageRestrictions())) {
       throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
     }
 

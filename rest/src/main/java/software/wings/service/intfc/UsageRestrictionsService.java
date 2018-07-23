@@ -2,6 +2,10 @@ package software.wings.service.intfc;
 
 import software.wings.beans.security.restrictions.RestrictionsSummary;
 import software.wings.settings.UsageRestrictions;
+import software.wings.settings.UsageRestrictions.AppEnvRestriction;
+
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Usage restrictions related service apis. Account level entities (cloud providers, connectors, secrets) has concept of
@@ -11,22 +15,36 @@ import software.wings.settings.UsageRestrictions;
  */
 public interface UsageRestrictionsService {
   /**
+   *
+   * @param accountId
+   * @param appEnvRestrictions
+   * @return
+   */
+  Map<String, Set<String>> getAppEnvMap(String accountId, Set<AppEnvRestriction> appEnvRestrictions);
+
+  /**
    * Derive the user restrictions from user permissions.
    * @param accountId account Id
    * @return Usage restrictions
    */
-  UsageRestrictions getUsageRestrictionsFromUserPermissions(String accountId, boolean evaluateIfEditable);
+  UsageRestrictions getUsageRestrictionsFromUserPermissions(String accountId);
 
   /**
    * Check if the user has access to an entity from the given context.
    * Access is determined from Usage restrictions, permissions and context.
-   * @param usageRestrictions usage restrictions
-   * @param accountId account id
-   * @param appId app id
-   * @param envId env id
+   *
+   * @param accountId account
+   * @param appIdFromRequest current app context
+   * @param envIdFromRequest current env context
+   * @param entityUsageRestrictions
+   * @param appEnvMapFromEntityRestrictions
+   * @param restrictionsFromUserPermissions
+   * @param appEnvMapFromPermissions
    * @return boolean if the user needs to be provided access or not
    */
-  boolean hasAccess(UsageRestrictions usageRestrictions, String accountId, String appId, String envId);
+  boolean hasAccess(String accountId, String appIdFromRequest, String envIdFromRequest,
+      UsageRestrictions entityUsageRestrictions, Map<String, Set<String>> appEnvMapFromEntityRestrictions,
+      UsageRestrictions restrictionsFromUserPermissions, Map<String, Set<String>> appEnvMapFromPermissions);
 
   /**
    * Lists all the applications and environments that the user has update permissions on.
@@ -45,6 +63,29 @@ public interface UsageRestrictionsService {
    * @return usage restrictions
    */
   UsageRestrictions getDefaultUsageRestrictions(String accountId, String appId, String envId);
+
+  /**
+   * Checks if the user can update / delete entity based on the user permissions and restrictions set on the entity.
+   * @param accountId account id
+   * @param entityUsageRestrictions entity usage restrictions
+   * @param appEnvMapFromEntityRestrictions app env map from entity restrictions
+   * @param restrictionsFromUserPermissions usage restrictions from user permissions
+   * @param appEnvMapFromUserPermissions app env map from user permissions
+   * @return boolean
+   */
+  boolean userHasPermissionsToChangeEntity(String accountId, UsageRestrictions entityUsageRestrictions,
+      Map<String, Set<String>> appEnvMapFromEntityRestrictions, UsageRestrictions restrictionsFromUserPermissions,
+      Map<String, Set<String>> appEnvMapFromUserPermissions);
+
+  /**
+   * Checks if the user can update / delete entity based on the user permissions and restrictions set on the entity.
+   * @param accountId account id
+   * @param entityUsageRestrictions entity usage restrictions
+   * @param restrictionsFromUserPermissions restrictions from user permissions
+   * @return boolean
+   */
+  boolean userHasPermissionsToChangeEntity(
+      String accountId, UsageRestrictions entityUsageRestrictions, UsageRestrictions restrictionsFromUserPermissions);
 
   /**
    * Checks if the user can update / delete entity based on the user permissions and restrictions set on the entity.
@@ -69,4 +110,6 @@ public interface UsageRestrictionsService {
    * @param accountId account id
    */
   void validateUsageRestrictionsOnEntitySave(String accountId, UsageRestrictions newUsageRestrictions);
+
+  Map<String, Set<String>> getAppEnvMapFromPermissions(String accountId);
 }

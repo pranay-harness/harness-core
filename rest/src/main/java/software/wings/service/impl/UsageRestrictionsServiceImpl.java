@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.Collections.emptyMap;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.exception.WingsException.USER;
 
@@ -27,6 +28,8 @@ import software.wings.dl.PageRequest.PageRequestBuilder;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
 import software.wings.security.AccountPermissionSummary;
+import software.wings.security.AppPermissionSummary;
+import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.EnvFilter;
 import software.wings.security.EnvFilter.EnvFilterBuilder;
 import software.wings.security.EnvFilter.FilterType;
@@ -69,24 +72,13 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   private Set<AppEnvRestriction> allAppEnvRestrictions = getAllAppEnvRestrictions();
 
   @Override
-  public boolean hasAccess(
-      UsageRestrictions usageRestrictions, String accountId, String appIdFromRequest, String envIdFromRequest) {
-    if (usageRestrictions == null) {
-      return true;
-    }
-
-    Set<AppEnvRestriction> appEnvRestrictions = usageRestrictions.getAppEnvRestrictions();
-
-    if (isEmpty(appEnvRestrictions)) {
-      return true;
-    }
-
-    Map<String, Set<String>> appEnvMap = getAppEnvMap(accountId, appEnvRestrictions);
-
+  public boolean hasAccess(String accountId, String appIdFromRequest, String envIdFromRequest,
+      UsageRestrictions entityUsageRestrictions, Map<String, Set<String>> appEnvMapFromEntityRestrictions,
+      UsageRestrictions restrictionsFromUserPermissions, Map<String, Set<String>> appEnvMapFromPermissions) {
     if (appIdFromRequest != null && !appIdFromRequest.equals(GLOBAL_APP_ID)) {
       if (envIdFromRequest != null) {
         // Restrict it to both app and env
-        Set<String> envIds = appEnvMap.get(appIdFromRequest);
+        Set<String> envIds = appEnvMapFromEntityRestrictions.get(appIdFromRequest);
 
         if (isEmpty(envIds)) {
           return false;
@@ -95,7 +87,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
         return envIds.contains(envIdFromRequest);
       } else {
         // Restrict it to app
-        return appEnvMap.containsKey(appIdFromRequest);
+        return appEnvMapFromEntityRestrictions.containsKey(appIdFromRequest);
       }
     } else {
       User user = UserThreadLocal.get();
@@ -104,7 +96,8 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
         return true;
       }
 
-      return hasAccess(accountId, appEnvMap, usageRestrictions);
+      return hasAccess(accountId, appEnvMapFromEntityRestrictions, entityUsageRestrictions, appEnvMapFromPermissions,
+          restrictionsFromUserPermissions);
     }
   }
 
@@ -113,16 +106,16 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   }
 
   private boolean hasAccess(String accountId, Map<String, Set<String>> appEnvMapFromEntityRestrictions,
-      UsageRestrictions entityUsageRestrictions) {
+      UsageRestrictions entityUsageRestrictions, Map<String, Set<String>> appEnvMapFromPermissions,
+      UsageRestrictions restrictionsFromUserPermissions) {
     if (hasNoRestrictions(entityUsageRestrictions)
         || (hasAllEnvAccessOfType(entityUsageRestrictions, FilterType.PROD)
                && hasAllEnvAccessOfType(entityUsageRestrictions, FilterType.NON_PROD))) {
       return true;
     }
 
-    UsageRestrictions restrictionsFromUserPermissions = getUsageRestrictionsFromUserPermissions(accountId, false);
-
-    if (hasNoRestrictions(restrictionsFromUserPermissions)) {
+    if (isEmpty(appEnvMapFromPermissions) || restrictionsFromUserPermissions == null
+        || isEmpty(restrictionsFromUserPermissions.getAppEnvRestrictions())) {
       return false;
     }
 
@@ -137,13 +130,11 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       return hasCommonEnv(entityUsageRestrictions, restrictionsFromUserPermissions);
     }
 
-    Map<String, Set<String>> appEnvMapOfUser =
-        getAppEnvMap(accountId, restrictionsFromUserPermissions.getAppEnvRestrictions());
     return appEnvMapFromEntityRestrictions.entrySet().stream().anyMatch(
         (Entry<String, Set<String>> appEnvEntryOfEntity) -> {
           String appId = appEnvEntryOfEntity.getKey();
 
-          if (!appEnvMapOfUser.containsKey(appId)) {
+          if (!appEnvMapFromPermissions.containsKey(appId)) {
             return false;
           }
 
@@ -152,7 +143,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
             return hasCommonEnv(appId, entityUsageRestrictionsFinal, restrictionsFromUserPermissions);
           }
 
-          Set<String> envIdsOfUser = appEnvMapOfUser.get(appId);
+          Set<String> envIdsOfUser = appEnvMapFromPermissions.get(appId);
           if (isEmpty(envIdsOfUser)) {
             return false;
           }
@@ -178,20 +169,93 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
                && hasAllEnvAccessOfType(restrictionsFromUserPermissions, FilterType.NON_PROD));
   }
 
-  private Map<String, Set<String>> getAppEnvMap(String accountId, Set<AppEnvRestriction> appEnvRestrictions) {
+  @Override
+  public Map<String, Set<String>> getAppEnvMapFromPermissions(String accountId) {
     Map<String, Set<String>> appEnvMap = Maps.newHashMap();
+    User user = UserThreadLocal.get();
+    if (user == null) {
+      return appEnvMap;
+    }
+
+    if (user.getUserRequestContext() == null) {
+      logger.error("User request context is null, returning");
+      return appEnvMap;
+    }
+
+    UserPermissionInfo userPermissionInfo = user.getUserRequestContext().getUserPermissionInfo();
+    Map<String, AppPermissionSummary> appPermissionMap = userPermissionInfo.getAppPermissionMapInternal();
+
+    if (isEmpty(appPermissionMap)) {
+      return appEnvMap;
+    }
+
+    Set<Entry<String, AppPermissionSummary>> entrySet = appPermissionMap.entrySet();
+    entrySet.forEach(appPermission -> {
+      String appId = appPermission.getKey();
+
+      // Multimap is deliberately not used since we want to be able to insert the key with null values.
+      Set<String> envSet = appEnvMap.get(appId);
+      if (envSet == null) {
+        envSet = new HashSet<>();
+        appEnvMap.put(appId, envSet);
+      }
+
+      final Set<String> envSetFinal = envSet;
+      AppPermissionSummary appPermissionSummary = appPermission.getValue();
+
+      if (appPermissionSummary == null) {
+        return;
+      }
+
+      Map<Action, Set<EnvInfo>> envPermissions = appPermissionSummary.getEnvPermissions();
+      if (isEmpty(envPermissions)) {
+        return;
+      }
+
+      Set<EnvInfo> envInfoSet = envPermissions.get(Action.UPDATE);
+
+      if (isEmpty(envInfoSet)) {
+        return;
+      }
+
+      envInfoSet.forEach(envInfo -> envSetFinal.add(envInfo.getEnvId()));
+    });
+
+    return appEnvMap;
+  }
+
+  @Override
+  public Map<String, Set<String>> getAppEnvMap(String accountId, Set<AppEnvRestriction> appEnvRestrictions) {
+    Map<String, Set<String>> appEnvMap = Maps.newHashMap();
+    User user = UserThreadLocal.get();
+    if (user == null) {
+      return appEnvMap;
+    }
+
+    if (user.getUserRequestContext() == null) {
+      logger.error("User request context is null, returning");
+      return appEnvMap;
+    }
+    UserPermissionInfo userPermissionInfo = user.getUserRequestContext().getUserPermissionInfo();
+    if (userPermissionInfo.getAppPermissionMapInternal() == null) {
+      return appEnvMap;
+    }
+
+    Set<String> appSetFromPermissions = userPermissionInfo.getAppPermissionMapInternal().keySet();
 
     appEnvRestrictions.forEach(appEnvRestriction -> {
       GenericEntityFilter appFilter = appEnvRestriction.getAppFilter();
-      Set<String> appIds = authHandler.getAppIdsByFilter(accountId, appFilter);
-      if (isEmpty(appIds)) {
+      Set<String> appSet = getAppIdsByFilter(appFilter, appSetFromPermissions);
+
+      if (isEmpty(appSet)) {
         return;
       }
 
       EnvFilter envFilter = appEnvRestriction.getEnvFilter();
-      appIds.forEach(appId -> {
-        Set<String> envIdsByFilter = authHandler.getEnvIdsByFilter(appId, envFilter);
-
+      appSet.forEach(appId -> {
+        Set<String> envIdsByFilter =
+            getEnvIdsByFilter(envFilter, userPermissionInfo.getAppPermissionMapInternal().get(appId));
+        // Multimap is deliberately not used since we want to be able to insert the key with null values.
         Set<String> valueSet = appEnvMap.get(appId);
         if (valueSet == null) {
           valueSet = new HashSet<>();
@@ -203,7 +267,74 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
         }
       });
     });
+
     return appEnvMap;
+  }
+
+  private Set<String> getAppIdsByFilter(GenericEntityFilter appFilter, Set<String> appSetFromPermissions) {
+    Set<String> appSet;
+    switch (appFilter.getFilterType()) {
+      case GenericEntityFilter.FilterType.ALL:
+        appSet = appSetFromPermissions;
+        break;
+      case GenericEntityFilter.FilterType.SELECTED:
+        appSet = Sets.intersection(appSetFromPermissions, appFilter.getIds());
+        break;
+      default:
+        throw new WingsException("Unsupported app filter type" + appFilter.getFilterType());
+    }
+
+    return appSet;
+  }
+
+  private Set<String> getEnvIdsByFilter(EnvFilter envFilter, AppPermissionSummary appPermissionSummary) {
+    Set<String> envSet = new HashSet<>();
+    if (appPermissionSummary == null) {
+      return envSet;
+    }
+
+    Set<String> filterTypes = envFilter.getFilterTypes();
+
+    if (isEmpty(filterTypes)) {
+      return envSet;
+    }
+
+    Map<Action, Set<EnvInfo>> envActionMap = appPermissionSummary.getEnvPermissions();
+    if (isEmpty(envActionMap)) {
+      return envSet;
+    }
+
+    Set<EnvInfo> envSetFromPermissions = envActionMap.get(Action.UPDATE);
+
+    if (filterTypes.contains(FilterType.PROD) && filterTypes.contains(FilterType.NON_PROD)) {
+      return envSetFromPermissions.stream().map(envInfo -> envInfo.getEnvId()).collect(Collectors.toSet());
+    }
+
+    filterTypes.forEach(filterType -> {
+      switch (filterType) {
+        case FilterType.PROD:
+          Set<String> envs = envSetFromPermissions.stream()
+                                 .filter(envInfo -> FilterType.PROD.equals(envInfo.getEnvType()))
+                                 .map(envInfo -> envInfo.getEnvId())
+                                 .collect(Collectors.toSet());
+          envSet.addAll(envs);
+          break;
+        case FilterType.NON_PROD:
+          envs = envSetFromPermissions.stream()
+                     .filter(envInfo -> FilterType.NON_PROD.equals(envInfo.getEnvType()))
+                     .map(envInfo -> envInfo.getEnvId())
+                     .collect(Collectors.toSet());
+          envSet.addAll(envs);
+          break;
+        case FilterType.SELECTED:
+          envSet.addAll(envFilter.getIds());
+          break;
+        default:
+          throw new WingsException("Unsupported env filter type" + envFilter.getFilterTypes());
+      }
+    });
+
+    return envSet;
   }
 
   private boolean hasUserContext() {
@@ -215,7 +346,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   }
 
   @Override
-  public UsageRestrictions getUsageRestrictionsFromUserPermissions(String accountId, boolean evaluateIfEditable) {
+  public UsageRestrictions getUsageRestrictionsFromUserPermissions(String accountId) {
     if (!hasUserContext()) {
       return null;
     }
@@ -267,12 +398,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       return null;
     }
 
-    UsageRestrictions usageRestrictions = UsageRestrictions.builder().appEnvRestrictions(appEnvRestrictions).build();
-    if (evaluateIfEditable) {
-      boolean isEditable = userHasPermissionsToChangeEntity(accountId, usageRestrictions);
-      usageRestrictions.setEditable(isEditable);
-    }
-    return usageRestrictions;
+    return UsageRestrictions.builder().appEnvRestrictions(appEnvRestrictions).build();
   }
 
   public Set<EnvFilter> getEnvFilterForApp(String accountId, String appId) {
@@ -371,14 +497,13 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     Map<String, String> envMap =
         envPageResponse.getResponse().stream().collect(Collectors.toMap(env -> env.getUuid(), env -> env.getName()));
 
-    UsageRestrictions usageRestrictionsFromUserPermissions = getUsageRestrictionsFromUserPermissions(accountId, true);
+    UsageRestrictions usageRestrictionsFromUserPermissions = getUsageRestrictionsFromUserPermissions(accountId);
 
     if (usageRestrictionsFromUserPermissions == null) {
       throw new WingsException(ErrorCode.USER_HAS_NO_PERMISSIONS);
     }
 
-    Map<String, Set<String>> appEnvMapOfUser =
-        getAppEnvMap(accountId, usageRestrictionsFromUserPermissions.getAppEnvRestrictions());
+    Map<String, Set<String>> appEnvMapOfUser = getAppEnvMapFromPermissions(accountId);
 
     boolean hasAllAppAccess = hasAllAppAccess(usageRestrictionsFromUserPermissions);
     boolean hasAllProdEnvAccessForAllApps =
@@ -505,37 +630,58 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
         return null;
       }
 
-      return getUsageRestrictionsFromUserPermissions(accountId, true);
+      return getUsageRestrictionsFromUserPermissions(accountId);
     }
   }
 
   @Override
-  public boolean userHasPermissionsToChangeEntity(String accountId, UsageRestrictions entityUsageRestrictions) {
+  public boolean userHasPermissionsToChangeEntity(String accountId, UsageRestrictions entityUsageRestrictions,
+      Map<String, Set<String>> appEnvMapFromEntityRestrictions, UsageRestrictions restrictionsFromUserPermissions,
+      Map<String, Set<String>> appEnvMapFromUserPermissions) {
     if (!hasUserContext()) {
       return true;
     }
 
-    UsageRestrictions restrictionsFromUserPermissions = getUsageRestrictionsFromUserPermissions(accountId, false);
-    return userHasPermissions(accountId, entityUsageRestrictions, restrictionsFromUserPermissions);
+    return userHasPermissions(accountId, entityUsageRestrictions, appEnvMapFromEntityRestrictions,
+        restrictionsFromUserPermissions, appEnvMapFromUserPermissions);
   }
 
-  private boolean userHasPermissions(
+  @Override
+  public boolean userHasPermissionsToChangeEntity(
       String accountId, UsageRestrictions entityUsageRestrictions, UsageRestrictions restrictionsFromUserPermissions) {
+    if (!hasUserContext()) {
+      return true;
+    }
+
+    Map<String, Set<String>> appEnvMapFromUserPermissions = restrictionsFromUserPermissions != null
+        ? getAppEnvMap(accountId, restrictionsFromUserPermissions.getAppEnvRestrictions())
+        : emptyMap();
+
+    Map<String, Set<String>> appEnvMapFromEntityRestrictions = entityUsageRestrictions != null
+        ? getAppEnvMap(accountId, entityUsageRestrictions.getAppEnvRestrictions())
+        : emptyMap();
+
+    return userHasPermissions(accountId, entityUsageRestrictions, appEnvMapFromEntityRestrictions,
+        restrictionsFromUserPermissions, appEnvMapFromUserPermissions);
+  }
+
+  @Override
+  public boolean userHasPermissionsToChangeEntity(String accountId, UsageRestrictions entityUsageRestrictions) {
+    return this.userHasPermissionsToChangeEntity(
+        accountId, entityUsageRestrictions, getUsageRestrictionsFromUserPermissions(accountId));
+  }
+
+  private boolean userHasPermissions(String accountId, UsageRestrictions entityUsageRestrictions,
+      Map<String, Set<String>> appEnvMapFromEntityRestrictions, UsageRestrictions restrictionsFromUserPermissions,
+      Map<String, Set<String>> appEnvMapFromUserPermissions) {
     if (hasNoRestrictions(restrictionsFromUserPermissions)) {
       return false;
     }
-
-    Map<String, Set<String>> appEnvMapFromUserPermissions =
-        getAppEnvMap(accountId, restrictionsFromUserPermissions.getAppEnvRestrictions());
-
-    Map<String, Set<String>> appEnvMapFromEntityRestrictions;
 
     // If no restrictions, its equivalent to selecting all apps -> prod and non-prod
     if (hasNoRestrictions(entityUsageRestrictions)) {
       entityUsageRestrictions = UsageRestrictions.builder().appEnvRestrictions(allAppEnvRestrictions).build();
       appEnvMapFromEntityRestrictions = getAppEnvMap(accountId, allAppEnvRestrictions);
-    } else {
-      appEnvMapFromEntityRestrictions = getAppEnvMap(accountId, entityUsageRestrictions.getAppEnvRestrictions());
     }
 
     if (isEmpty(appEnvMapFromEntityRestrictions)) {
@@ -637,7 +783,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       return;
     }
 
-    UsageRestrictions restrictionsFromUserPermissions = getUsageRestrictionsFromUserPermissions(accountId, false);
+    UsageRestrictions restrictionsFromUserPermissions = getUsageRestrictionsFromUserPermissions(accountId);
     boolean allowed =
         checkIfUserCanSetWithNoUsageRestrictions(accountId, usageRestrictions, restrictionsFromUserPermissions);
 
@@ -645,7 +791,8 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       throw new WingsException(ErrorCode.NOT_ACCOUNT_MGR_NOR_HAS_ALL_APP_ACCESS, USER);
     }
 
-    boolean canUpdateEntity = userHasPermissions(accountId, usageRestrictions, restrictionsFromUserPermissions);
+    boolean canUpdateEntity =
+        userHasPermissionsToChangeEntity(accountId, usageRestrictions, restrictionsFromUserPermissions);
 
     if (!canUpdateEntity) {
       throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
@@ -661,7 +808,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       return;
     }
 
-    UsageRestrictions restrictionsFromUserPermissions = getUsageRestrictionsFromUserPermissions(accountId, false);
+    UsageRestrictions restrictionsFromUserPermissions = getUsageRestrictionsFromUserPermissions(accountId);
     boolean allowed =
         checkIfUserCanSetWithNoUsageRestrictions(accountId, newUsageRestrictions, restrictionsFromUserPermissions);
 
@@ -669,7 +816,8 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       throw new WingsException(ErrorCode.NOT_ACCOUNT_MGR_NOR_HAS_ALL_APP_ACCESS, USER);
     }
 
-    boolean canUpdateEntity = userHasPermissions(accountId, oldUsageRestrictions, restrictionsFromUserPermissions);
+    boolean canUpdateEntity =
+        userHasPermissionsToChangeEntity(accountId, oldUsageRestrictions, restrictionsFromUserPermissions);
 
     if (!canUpdateEntity) {
       throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
