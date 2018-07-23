@@ -127,21 +127,6 @@ public class SettingsServiceImpl implements SettingsService {
     }
   }
 
-  private SettingAttribute getFilteredSettingAttribute(
-      SettingAttribute settingAttribute, String appIdFromRequest, String envIdFromRequest) {
-    if (settingAttribute == null) {
-      return null;
-    }
-
-    List<SettingAttribute> filteredSettingAttributes =
-        getFilteredSettingAttributes(asList(settingAttribute), appIdFromRequest, envIdFromRequest);
-    if (isNotEmpty(filteredSettingAttributes)) {
-      return filteredSettingAttributes.get(0);
-    }
-
-    return null;
-  }
-
   private List<SettingAttribute> getFilteredSettingAttributes(
       List<SettingAttribute> inputSettingAttributes, String appIdFromRequest, String envIdFromRequest) {
     if (inputSettingAttributes == null) {
@@ -289,8 +274,7 @@ public class SettingsServiceImpl implements SettingsService {
 
   @Override
   public SettingAttribute get(String varId) {
-    SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, varId);
-    return getFilteredSettingAttribute(settingAttribute, null, null);
+    return wingsPersistence.get(SettingAttribute.class, varId);
   }
 
   @Override
