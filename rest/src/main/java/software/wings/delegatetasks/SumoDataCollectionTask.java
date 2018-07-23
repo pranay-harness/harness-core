@@ -5,7 +5,6 @@ import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 
 import com.google.inject.Inject;
 
-import com.sumologic.client.Credentials;
 import com.sumologic.client.SumoLogicClient;
 import com.sumologic.client.model.LogMessage;
 import com.sumologic.client.searchjob.model.GetMessagesForSearchJobResponse;
@@ -23,6 +22,7 @@ import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
+import software.wings.service.impl.sumo.SumoDelegateServiceImpl;
 import software.wings.sm.StateType;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
@@ -63,12 +63,9 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
         DataCollectionTaskResult.builder().status(DataCollectionTaskStatus.SUCCESS).stateType(StateType.SUMO).build();
     this.dataCollectionInfo = (SumoDataCollectionInfo) parameters[0];
     logger.info("log collection - dataCollectionInfo: {}", dataCollectionInfo);
-    encryptionService.decrypt(dataCollectionInfo.getSumoConfig(), dataCollectionInfo.getEncryptedDataDetails());
-    Credentials credential = new Credentials(new String(dataCollectionInfo.getSumoConfig().getAccessId()),
-        new String(dataCollectionInfo.getSumoConfig().getAccessKey()));
-    sumoClient = new SumoLogicClient(credential);
     try {
-      sumoClient.setURL(dataCollectionInfo.getSumoConfig().getSumoUrl());
+      sumoClient = SumoDelegateServiceImpl.getSumoClient(
+          dataCollectionInfo.getSumoConfig(), dataCollectionInfo.getEncryptedDataDetails(), encryptionService);
     } catch (MalformedURLException e) {
       taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
       taskResult.setErrorMessage("Invalid server URL " + dataCollectionInfo.getSumoConfig().getSumoUrl());
