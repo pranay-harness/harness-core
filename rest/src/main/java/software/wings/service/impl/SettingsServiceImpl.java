@@ -147,7 +147,15 @@ public class SettingsServiceImpl implements SettingsService {
     inputSettingAttributes.forEach(settingAttribute -> {
       UsageRestrictions usageRestrictionsFromEntity = settingAttribute.getUsageRestrictions();
 
-      if (usageRestrictionsFromEntity == null || isEmpty(usageRestrictionsFromEntity.getAppEnvRestrictions())) {
+      if (usageRestrictionsFromEntity == null) {
+        filteredSettingAttributes.add(settingAttribute);
+        return;
+      }
+
+      // Observed some entities having empty usage restrictions. Covering that case.
+      // Could have been due to a ui bug at some point.
+      if (isEmpty(usageRestrictionsFromEntity.getAppEnvRestrictions())) {
+        usageRestrictionsFromEntity.setEditable(true);
         filteredSettingAttributes.add(settingAttribute);
         return;
       }
@@ -157,15 +165,10 @@ public class SettingsServiceImpl implements SettingsService {
 
       if (usageRestrictionsService.hasAccess(accountId, appIdFromRequest, envIdFromRequest, usageRestrictionsFromEntity,
               appEnvMapFromEntityRestrictions, restrictionsFromUserPermissions, appEnvMapFromUserPermissions)) {
-        if (usageRestrictionsFromEntity != null) {
-          if (isNotEmpty(usageRestrictionsFromEntity.getAppEnvRestrictions())) {
-            usageRestrictionsFromEntity.setEditable(usageRestrictionsService.userHasPermissionsToChangeEntity(
-                settingAttribute.getAccountId(), usageRestrictionsFromEntity, appEnvMapFromEntityRestrictions,
-                restrictionsFromUserPermissions, appEnvMapFromUserPermissions));
-          } else {
-            usageRestrictionsFromEntity.setEditable(true);
-          }
-        }
+        usageRestrictionsFromEntity.setEditable(usageRestrictionsService.userHasPermissionsToChangeEntity(
+            settingAttribute.getAccountId(), usageRestrictionsFromEntity, appEnvMapFromEntityRestrictions,
+            restrictionsFromUserPermissions, appEnvMapFromUserPermissions));
+
         filteredSettingAttributes.add(settingAttribute);
       }
     });

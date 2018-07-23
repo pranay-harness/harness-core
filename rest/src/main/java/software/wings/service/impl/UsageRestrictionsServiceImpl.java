@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.exception.WingsException.USER;
 
@@ -190,6 +191,11 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     }
 
     Set<Entry<String, AppPermissionSummary>> entrySet = appPermissionMap.entrySet();
+
+    if (isEmpty(entrySet)) {
+      return appEnvMap;
+    }
+
     entrySet.forEach(appPermission -> {
       String appId = appPermission.getKey();
 
@@ -242,6 +248,10 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     }
 
     Set<String> appSetFromPermissions = userPermissionInfo.getAppPermissionMapInternal().keySet();
+
+    if (isEmpty(appSetFromPermissions)) {
+      return appEnvMap;
+    }
 
     appEnvRestrictions.forEach(appEnvRestriction -> {
       GenericEntityFilter appFilter = appEnvRestriction.getAppFilter();
@@ -478,6 +488,12 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
 
   @Override
   public RestrictionsSummary listAppsWithEnvUpdatePermissions(String accountId) {
+    UsageRestrictions usageRestrictionsFromUserPermissions = getUsageRestrictionsFromUserPermissions(accountId);
+
+    if (usageRestrictionsFromUserPermissions == null) {
+      throw new WingsException(ErrorCode.USER_HAS_NO_PERMISSIONS);
+    }
+
     PageResponse<Application> pageResponse = appService.list(PageRequestBuilder.aPageRequest()
                                                                  .addFilter("accountId", Operator.EQ, accountId)
                                                                  .addFieldsIncluded("_id", "name")
@@ -486,6 +502,15 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
 
     Map<String, String> appMap =
         pageResponse.getResponse().stream().collect(Collectors.toMap(app -> app.getUuid(), app -> app.getName()));
+
+    if (isEmpty(appMap)) {
+      return RestrictionsSummary.builder()
+          .hasAllAppAccess(true)
+          .hasAllNonProdEnvAccess(true)
+          .hasAllProdEnvAccess(true)
+          .applications(emptySet())
+          .build();
+    }
 
     PageResponse<Environment> envPageResponse =
         environmentService.list(PageRequestBuilder.aPageRequest()
@@ -496,12 +521,6 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
 
     Map<String, String> envMap =
         envPageResponse.getResponse().stream().collect(Collectors.toMap(env -> env.getUuid(), env -> env.getName()));
-
-    UsageRestrictions usageRestrictionsFromUserPermissions = getUsageRestrictionsFromUserPermissions(accountId);
-
-    if (usageRestrictionsFromUserPermissions == null) {
-      throw new WingsException(ErrorCode.USER_HAS_NO_PERMISSIONS);
-    }
 
     Map<String, Set<String>> appEnvMapOfUser = getAppEnvMapFromPermissions(accountId);
 
