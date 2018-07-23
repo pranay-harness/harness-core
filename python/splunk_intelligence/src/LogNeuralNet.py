@@ -270,9 +270,22 @@ def parse(cli_args):
 
 def k8_performance():
     from sources.FileLoader import FileLoader
+    import platform, subprocess
 
     result_file = "k8_data.json"
     data = FileLoader.load_data(result_file)
+
+    def get_processor_info():
+        if platform.system() == "Windows":
+            return platform.processor()
+        elif platform.system() == "Darwin":
+            return subprocess.check_output(['/usr/sbin/sysctl', "-n", "machdep.cpu.brand_string"]).strip()
+        elif platform.system() == "Linux":
+            command = "cat /proc/cpuinfo"
+            return subprocess.check_output(command, shell=True).strip()
+        return ""
+    cpu_info = get_processor_info()
+    out_text = 'cpu_info: ' + cpu_info
 
     def parse_k8(cli_args):
         parser = argparse.ArgumentParser()
@@ -285,7 +298,7 @@ def k8_performance():
     corpus.test_events = data['test_events']
     logger.info('---------------------------------------testing performance------------------------------------------')
 
-    options_here = parse_k8(['--sim_threshold', '0.96', '--state_execution_id', 'test_k8'])
+    options_here = parse_k8(['--sim_threshold', '0.96', '--state_execution_id', out_text])
     doc_vec_cluster = LogNeuralNet(corpus, options_here)
     result = doc_vec_cluster.run()
 

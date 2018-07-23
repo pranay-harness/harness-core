@@ -31,4 +31,5 @@ class WordToVec(object):
         model = gensim.models.Word2Vec(doc_features, min_count=self.min_count, size=self.word_vec_dim, sg=self.sg, workers=self.workers)
         model.train(doc_features, total_examples=model.corpus_count, epochs=self.epochs)
         logger.info("Finished training, time taken: " + str(time.time() - start_time) + ' seconds.')
+        logger.info('gensim fast version is ' + str(gensim.models.word2vec_inner.FAST_VERSION))
         return model
