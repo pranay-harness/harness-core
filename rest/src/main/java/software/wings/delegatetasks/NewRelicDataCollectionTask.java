@@ -315,12 +315,15 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
     public void run() {
       try {
         int retry = 0;
-        while (!completed.get() && retry < RETRIES) {
-          logger.info("Running new relic data collection");
-          long startTime = System.currentTimeMillis();
-          try {
-            int totalAnalysisTime = timeDeltaInMins(System.currentTimeMillis(), windowStartTimeManager);
+        long startTime = System.currentTimeMillis();
+        int collectionLength = timeDeltaInMins(System.currentTimeMillis(), windowStartTimeManager);
+        final long windowEndTimeManager = windowStartTimeManager + TimeUnit.MINUTES.toMillis(collectionLength);
+        int dataCollectionMinuteEnd = dataCollectionMinute + collectionLength - 1;
+        logger.info("Running new relic data collection for minute {}, state execution {}", dataCollectionMinuteEnd,
+            dataCollectionInfo.getStateExecutionId());
 
+        while (!completed.get() && retry < RETRIES) {
+          try {
             Set<NewRelicMetric> txnsToCollect = getTxnsToCollect();
             if (txnsToCollect != null) {
               logger.info("Found total new relic metrics " + txnsToCollect.size());
@@ -332,10 +335,6 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                 dataCollectionInfo.getNewRelicConfig(), dataCollectionInfo.getEncryptedDataDetails(),
                 dataCollectionInfo.getNewRelicAppId(), createApiCallLog(dataCollectionInfo.getStateExecutionId()));
             logger.info("Got {} new relic nodes.", instances.size());
-
-            final long windowEndTimeManager = windowStartTimeManager + TimeUnit.MINUTES.toMillis(totalAnalysisTime);
-            final int collectionLength = timeDeltaInMins(windowEndTimeManager, windowStartTimeManager);
-            int dataCollectionMinuteEnd = dataCollectionMinute + collectionLength - 1;
 
             List<Set<String>> metricBatches = batchMetricsToCollect(txnsToCollect);
             logger.info("Found total new relic metric batches " + metricBatches.size());
