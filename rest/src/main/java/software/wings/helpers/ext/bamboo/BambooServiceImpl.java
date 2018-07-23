@@ -126,7 +126,7 @@ public class BambooServiceImpl implements BambooService {
       if (response != null && !response.isSuccessful()) {
         IOUtils.closeQuietly(response.errorBody());
       }
-      logger.error("Failed to get the last successful build for plan key {}", e, planKey);
+      logger.error("Failed to get the last successful build for plan key {}", planKey, e);
       throw new WingsException(ARTIFACT_SERVER_ERROR, SRE).addParam("message", ExceptionUtils.getRootCauseMessage(e));
     }
     return null;
