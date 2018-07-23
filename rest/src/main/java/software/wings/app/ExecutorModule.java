@@ -62,7 +62,7 @@ public class ExecutorModule extends AbstractModule {
         .toInstance(new ManagedScheduledExecutorService("GitChangeSet"));
     bind(ExecutorService.class)
         .annotatedWith(Names.named("artifactCollectionExecutor"))
-        .toInstance(ThreadPool.create(10, 50, 500L, TimeUnit.MILLISECONDS,
+        .toInstance(ThreadPool.create(10, 100, 500L, TimeUnit.MILLISECONDS,
             new ThreadFactoryBuilder()
                 .setNameFormat("Artifact-Collection-%d")
                 .setPriority(Thread.MIN_PRIORITY)
