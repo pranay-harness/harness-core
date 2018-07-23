@@ -29,7 +29,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
   public boolean validateConfig(SumoConfig sumoConfig, List<EncryptedDataDetail> encryptedDataDetails)
       throws IOException {
     try {
-      getSumoClient(sumoConfig, encryptedDataDetails)
+      getSumoClient(sumoConfig, encryptedDataDetails, encryptionService)
           .createSearchJob("*exception*", String.valueOf(Timestamp.currentMinuteBoundary() - 1),
               String.valueOf(Timestamp.currentMinuteBoundary()), TimeZone.getDefault().getID());
       return true;
@@ -43,8 +43,8 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
     }
   }
 
-  SumoLogicClient getSumoClient(SumoConfig sumoConfig, List<EncryptedDataDetail> encryptedDataDetails)
-      throws MalformedURLException {
+  public static SumoLogicClient getSumoClient(SumoConfig sumoConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      EncryptionService encryptionService) throws MalformedURLException {
     encryptionService.decrypt(sumoConfig, encryptedDataDetails);
     final Credentials credentials =
         new Credentials(new String(sumoConfig.getAccessId()), new String(sumoConfig.getAccessKey()));

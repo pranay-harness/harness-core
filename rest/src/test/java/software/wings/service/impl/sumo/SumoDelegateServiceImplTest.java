@@ -1,12 +1,7 @@
 package software.wings.service.impl.sumo;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
@@ -17,13 +12,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.SumoConfig;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.security.EncryptionServiceImpl;
+import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -38,6 +33,8 @@ public class SumoDelegateServiceImplTest {
   @Mock SumoConfig sumoConfig;
 
   @Mock SumoLogicClient sumoLogicClient;
+
+  @Mock EncryptionService encryptionService;
 
   @Before
   public void setUp() {
@@ -74,18 +71,5 @@ public class SumoDelegateServiceImplTest {
       exceptionMsg = ex.getMessage();
     }
     assertThat(exceptionMsg).isEqualTo(msg);
-  }
-
-  @Test
-  public void testValidateConfig() throws IOException {
-    SumoDelegateServiceImpl sumoDelegateService = Mockito.spy(new SumoDelegateServiceImpl());
-    doReturn(sumoLogicClient).when(sumoDelegateService).getSumoClient(sumoConfig, Collections.emptyList());
-    try {
-      sumoDelegateService.validateConfig(sumoConfig, Collections.emptyList());
-    } catch (RuntimeException exception) {
-      logger.error("", exception);
-    }
-    verify(sumoDelegateService, times(1)).getSumoClient(sumoConfig, Collections.emptyList());
-    verify(sumoLogicClient, times(1)).createSearchJob(eq("*exception*"), any(), any(), any());
   }
 }
