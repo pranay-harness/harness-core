@@ -897,7 +897,7 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public boolean deleteFile(String accountId, String uuId) {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, uuId);
-    Preconditions.checkNotNull("No encrypted record found with id " + uuId);
+    Preconditions.checkNotNull(encryptedData, "No encrypted record found with id " + uuId);
     if (!usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, encryptedData.getUsageRestrictions())) {
       throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
     }
@@ -956,7 +956,15 @@ public class SecretManagerImpl implements SecretManager {
               .size());
 
       UsageRestrictions usageRestrictionsFromEntity = encryptedData.getUsageRestrictions();
-      if (usageRestrictionsFromEntity == null || isEmpty(usageRestrictionsFromEntity.getAppEnvRestrictions())) {
+      if (usageRestrictionsFromEntity == null) {
+        filteredEncryptedDataList.add(encryptedData);
+        continue;
+      }
+
+      // Observed some entities having empty usage restrictions. Covering that case.
+      // Could have been due to a ui bug at some point.
+      if (isEmpty(usageRestrictionsFromEntity.getAppEnvRestrictions())) {
+        usageRestrictionsFromEntity.setEditable(true);
         filteredEncryptedDataList.add(encryptedData);
         continue;
       }
@@ -964,21 +972,14 @@ public class SecretManagerImpl implements SecretManager {
       Map<String, Set<String>> appEnvMapFromEntityRestrictions =
           usageRestrictionsService.getAppEnvMap(accountId, usageRestrictionsFromEntity.getAppEnvRestrictions());
 
-      if (!usageRestrictionsService.hasAccess(accountId, appIdFromRequest, envIdFromRequest,
-              usageRestrictionsFromEntity, appEnvMapFromEntityRestrictions, restrictionsFromUserPermissions,
-              appEnvMapFromPermissions)) {
-        continue;
-      }
-
-      if (isNotEmpty(encryptedData.getUsageRestrictions().getAppEnvRestrictions())) {
-        encryptedData.getUsageRestrictions().setEditable(usageRestrictionsService.userHasPermissionsToChangeEntity(
+      if (usageRestrictionsService.hasAccess(accountId, appIdFromRequest, envIdFromRequest, usageRestrictionsFromEntity,
+              appEnvMapFromEntityRestrictions, restrictionsFromUserPermissions, appEnvMapFromPermissions)) {
+        usageRestrictionsFromEntity.setEditable(usageRestrictionsService.userHasPermissionsToChangeEntity(
             encryptedData.getAccountId(), usageRestrictionsFromEntity, appEnvMapFromEntityRestrictions,
             restrictionsFromUserPermissions, appEnvMapFromPermissions));
-      } else {
-        encryptedData.getUsageRestrictions().setEditable(true);
-      }
 
-      filteredEncryptedDataList.add(encryptedData);
+        filteredEncryptedDataList.add(encryptedData);
+      }
     }
 
     pageResponse.setResponse(filteredEncryptedDataList);
