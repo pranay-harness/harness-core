@@ -69,6 +69,7 @@ import software.wings.scheduler.BarrierBackupJob;
 import software.wings.scheduler.PersistentLockCleanupJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.scheduler.WorkflowExecutionMonitorJob;
+import software.wings.scheduler.YamlChangeSetPruneJob;
 import software.wings.scheduler.ZombieHunterJob;
 import software.wings.security.AuthResponseFilter;
 import software.wings.security.AuthRuleFilter;
@@ -378,6 +379,7 @@ public class WingsApplication extends Application<MainConfiguration> {
         PersistentLockCleanupJob.add(jobScheduler);
         ZombieHunterJob.scheduleJobs(jobScheduler);
         AdministrativeJob.addJob(jobScheduler);
+        YamlChangeSetPruneJob.add(jobScheduler);
       }
     }
   }

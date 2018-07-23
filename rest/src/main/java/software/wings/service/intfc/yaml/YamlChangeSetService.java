@@ -84,4 +84,7 @@ public interface YamlChangeSetService {
   List<YamlChangeSet> getChangeSetsToSync(String accountId);
 
   List<YamlChangeSet> getChangeSetsToBeMarkedSkipped(String accountId);
+
+  void deleteChangeSets(
+      String accountId, Status[] statuses, Integer maxDeleteCount, String batchSize, int retentionPeriodInDays);
 }

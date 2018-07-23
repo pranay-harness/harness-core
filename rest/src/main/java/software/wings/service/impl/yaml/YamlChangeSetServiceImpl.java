@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
@@ -7,7 +9,6 @@ import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.data.structure.EmptyPredicate;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -15,6 +16,7 @@ import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Base;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.FeatureName;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder.OrderType;
@@ -37,6 +39,7 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -127,7 +130,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
                                .build())
             .getResponse();
 
-    return EmptyPredicate.isNotEmpty(changeSetsWithCompletedStatus) ? changeSetsWithCompletedStatus.get(0) : null;
+    return isNotEmpty(changeSetsWithCompletedStatus) ? changeSetsWithCompletedStatus.get(0) : null;
   }
 
   /**
@@ -161,7 +164,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
       logger.error("Error seen in fetching changeSet", exception);
     }
 
-    if (EmptyPredicate.isEmpty(yamlChangeSets)) {
+    if (isEmpty(yamlChangeSets)) {
       logger.info("No Change set was found for processing for account: " + accountId);
       return Collections.EMPTY_LIST;
     }
@@ -217,7 +220,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   public boolean updateStatusForGivenYamlChangeSets(
       String accountId, Status newStatus, List<Status> currentStatuses, List<String> yamlChangeSetIds) {
     try (AcquiredLock lock = persistentLocker.acquireLock(YamlChangeSet.class, accountId, Duration.ofMinutes(1))) {
-      if (EmptyPredicate.isEmpty(yamlChangeSetIds)) {
+      if (isEmpty(yamlChangeSetIds)) {
         return true;
       }
 
@@ -248,6 +251,38 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
     return wingsPersistence.delete(wingsPersistence.createQuery(YamlChangeSet.class)
                                        .filter("accountId", accountId)
                                        .filter(Mapper.ID_KEY, changeSetId));
+  }
+
+  @Override
+  public void deleteChangeSets(
+      String accountId, Status[] statuses, Integer maxDeleteCount, String batchSize, int retentionPeriodInDays) {
+    long cutOffTime = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(retentionPeriodInDays);
+    int deletedCount = 0;
+
+    try {
+      boolean shouldContinue = true;
+      while (shouldContinue && deletedCount < maxDeleteCount) {
+        PageRequestBuilder pageRequestBuilder = aPageRequest()
+                                                    .addFilter("accountId", Operator.EQ, accountId)
+                                                    .addFilter("status", Operator.IN, statuses)
+                                                    .addFilter("createdAt", Operator.LT, cutOffTime)
+                                                    .addFieldsIncluded("_id")
+                                                    .withLimit(batchSize);
+
+        List<YamlChangeSet> yamlChangeSets = listYamlChangeSets(pageRequestBuilder.build()).getResponse();
+        if (isNotEmpty(yamlChangeSets)) {
+          List<String> ids =
+              yamlChangeSets.stream().map(yamlChangeSet -> yamlChangeSet.getUuid()).collect(Collectors.toList());
+          wingsPersistence.delete(wingsPersistence.createQuery(YamlChangeSet.class).field("_id").in(ids));
+          deletedCount = deletedCount + Integer.parseInt(batchSize);
+        } else {
+          shouldContinue = false;
+        }
+      }
+    } catch (Exception e) {
+      throw new WingsException(ErrorCode.GENERAL_ERROR, WingsException.USER)
+          .addParam("message", "deleting YamlChangeSets failed with error: " + e.getMessage());
+    }
   }
 
   @Override

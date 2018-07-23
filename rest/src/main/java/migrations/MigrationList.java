@@ -10,6 +10,7 @@ import migrations.all.AddValidUntilToDelegateConnectionResults;
 import migrations.all.AddValidUntilToDelegateTask;
 import migrations.all.AppKeywordsMigration;
 import migrations.all.DeleteOldThirdPartyApiCallsMigration;
+import migrations.all.DeleteStaleYamlChangeSetsMigration;
 import migrations.all.DirectKubernetesOrphanRemoval;
 import migrations.all.DirectKubernetesOrphanRemovalMirgation;
 import migrations.all.DropDelegateScopeCollectionMigration;
@@ -100,6 +101,7 @@ public class MigrationList {
         .add(Pair.of(174, AppKeywordsMigration.class))
         .add(Pair.of(175, DeleteOldThirdPartyApiCallsMigration.class))
         .add(Pair.of(176, UnregisteredUserNameMigration.class))
+        .add(Pair.of(177, DeleteStaleYamlChangeSetsMigration.class))
         .build();
   }
 }
