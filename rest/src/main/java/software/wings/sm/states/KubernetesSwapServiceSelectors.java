@@ -81,7 +81,7 @@ public class KubernetesSwapServiceSelectors extends State {
   public static final String KUBERNETES_SWAP_SERVICE_SELECTORS_COMMAND_NAME = "Kubernetes Swap Service Selectors";
 
   public KubernetesSwapServiceSelectors(String name) {
-    super(name, StateType.KUBERNETES_STEADY_STATE_CHECK.name());
+    super(name, StateType.KUBERNETES_SWAP_SERVICE_SELECTORS.name());
   }
 
   @Override
