@@ -70,6 +70,7 @@ public class PreferenceServiceImpl implements PreferenceService {
       setUnset(updateOperations, "status", deployPref.getStatus());
       setUnset(updateOperations, "startTime", deployPref.getStartTime());
       setUnset(updateOperations, "endTime", deployPref.getEndTime());
+      setUnset(updateOperations, "keywords", deployPref.getKeywords());
 
       wingsPersistence.update(wingsPersistence.createQuery(Preference.class)
                                   .filter(ACCOUNT_ID_KEY, accountId)
