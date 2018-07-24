@@ -236,13 +236,17 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
         int retry = 0;
         while (!completed.get() && retry < RETRIES) {
           try {
+            logger.info("starting metric data collection for {} for minute {}",
+                dataCollectionInfo.getStateExecutionId(), dataCollectionMinute);
             AppdynamicsTier appdynamicsTier = appdynamicsDelegateService.getAppdynamicsTier(
                 dataCollectionInfo.getAppDynamicsConfig(), dataCollectionInfo.getAppId(),
                 dataCollectionInfo.getTierId(), dataCollectionInfo.getEncryptedDataDetails());
             Preconditions.checkNotNull("No trier found for {}", dataCollectionInfo);
             List<AppdynamicsMetricData> metricsData = getMetricsData();
-            logger.info("Got {} metrics from appdynamics", metricsData.size());
+            logger.info(
+                "Got {} metrics from appdynamics for {}", metricsData.size(), dataCollectionInfo.getStateExecutionId());
             TreeBasedTable<String, Long, Map<String, NewRelicMetricDataRecord>> records = TreeBasedTable.create();
+            records.putAll(processMetricData(metricsData));
 
             // HeartBeat
             records.put(HARNESS_HEARTBEAT_METRIC_NAME, 0L, new HashMap<>());
@@ -265,7 +269,6 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
                         .groupName(appdynamicsTier.getName())
                         .build());
 
-            records.putAll(processMetricData(metricsData));
             List<NewRelicMetricDataRecord> recordsToSave = getAllMetricRecords(records);
             if (!saveMetrics(dataCollectionInfo.getAppDynamicsConfig().getAccountId(),
                     dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(), recordsToSave)) {
@@ -273,10 +276,11 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
               taskResult.setErrorMessage(
                   "Cannot save new AppDynamics metric records to Harness. Server returned error");
               throw new RuntimeException(
-                  "Cannot save new AppDynamics metric records to Harness. Server returned error");
+                  "Cannot save new AppDynamics metric records to Harness. Server returned error for "
+                  + dataCollectionInfo.getStateExecutionId());
             }
-            logger.info("Sent {} appdynamics metric records to the server for minute {}", recordsToSave.size(),
-                dataCollectionMinute);
+            logger.info("Sent {} appdynamics metric records to the server for minute {} for state {}",
+                recordsToSave.size(), dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
 
             dataCollectionMinute++;
             collectionStartTime += TimeUnit.MINUTES.toMillis(1);
@@ -292,9 +296,9 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
               if (retry == 1) {
                 taskResult.setErrorMessage(Misc.getMessage(ex));
               }
-              logger.warn("error fetching appdynamics metrics for minute " + dataCollectionMinute + ". retrying in "
-                      + RETRY_SLEEP + "s",
-                  ex);
+              logger.info(
+                  "error fetching appdynamics metrics for minute {} for state {}. retrying in " + RETRY_SLEEP + "s",
+                  dataCollectionMinute, dataCollectionInfo.getStateExecutionId(), ex);
               sleep(RETRY_SLEEP);
             }
           }
