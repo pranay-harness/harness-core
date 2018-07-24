@@ -129,8 +129,14 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
       awsClusterService.createService(
           setupParams.getRegion(), cloudProviderSetting, encryptedDataDetails, createServiceRequest);
 
-      downsizeOldOrUnhealthy(
-          cloudProviderSetting, setupParams, containerServiceName, encryptedDataDetails, executionLogCallback);
+      try {
+        // This should not halt workflow execution.
+        downsizeOldOrUnhealthy(
+            cloudProviderSetting, setupParams, containerServiceName, encryptedDataDetails, executionLogCallback);
+      } catch (Exception e) {
+        logger.warn("Cleaning up of old or unhealthy instances failed while setting up ECS service: ", e);
+      }
+
       cleanup(cloudProviderSetting, setupParams.getRegion(), containerServiceName, setupParams.getClusterName(),
           encryptedDataDetails, executionLogCallback);
 
