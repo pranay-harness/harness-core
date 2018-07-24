@@ -231,6 +231,9 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   public Set<NewRelicMetric> getTxnsWithDataInLastHour(Collection<NewRelicMetric> metrics,
       NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails, long applicationId,
       ThirdPartyApiCallLog apiCallLog) throws IOException {
+    if (apiCallLog == null) {
+      apiCallLog = ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution(newRelicConfig.getAccountId());
+    }
     Map<String, NewRelicMetric> webTransactionMetrics = new HashMap<>();
     for (NewRelicMetric metric : metrics) {
       webTransactionMetrics.put(metric.getName(), metric);
@@ -238,9 +241,9 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     List<Set<String>> metricBatches = batchMetricsToCollect(metrics);
     List<Callable<Set<String>>> metricDataCallabels = new ArrayList<>();
     for (Collection<String> metricNames : metricBatches) {
-      metricDataCallabels.add(()
-                                  -> getMetricsWithNoData(metricNames, newRelicConfig, encryptedDataDetails,
-                                      applicationId, apiCallLog.copy()));
+      final ThirdPartyApiCallLog apiCallLogCopy = apiCallLog.copy();
+      metricDataCallabels.add(
+          () -> getMetricsWithNoData(metricNames, newRelicConfig, encryptedDataDetails, applicationId, apiCallLogCopy));
     }
     List<Optional<Set<String>>> results = dataCollectionService.executeParrallel(metricDataCallabels);
     results.forEach(result -> {
