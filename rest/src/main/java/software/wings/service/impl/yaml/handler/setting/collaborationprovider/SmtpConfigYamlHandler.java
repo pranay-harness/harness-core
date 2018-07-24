@@ -8,7 +8,6 @@ import software.wings.exception.HarnessException;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.helpers.ext.mail.SmtpConfig.Yaml;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -38,18 +37,10 @@ public class SmtpConfigYamlHandler extends CollaborationProviderYamlHandler<Yaml
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
-    char[] decryptedPassword;
-    try {
-      decryptedPassword = secretManager.decryptYamlRef(yaml.getPassword());
-    } catch (IllegalAccessException | IOException e) {
-      throw new HarnessException("Exception while decrypting the password ref:" + yaml.getPassword());
-    }
-
     SmtpConfig config = SmtpConfig.builder()
                             .accountId(accountId)
                             .host(yaml.getHost())
                             .port(yaml.getPort())
-                            .password(decryptedPassword)
                             .encryptedPassword(yaml.getPassword())
                             .username(yaml.getUsername())
                             .fromAddress(yaml.getFromAddress())

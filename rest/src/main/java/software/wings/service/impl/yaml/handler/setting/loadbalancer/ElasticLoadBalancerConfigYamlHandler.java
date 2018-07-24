@@ -10,7 +10,6 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 import software.wings.utils.Util;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -37,13 +36,6 @@ public class ElasticLoadBalancerConfigYamlHandler extends LoadBalancerYamlHandle
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
-    char[] decryptedSecretKey;
-    try {
-      decryptedSecretKey = secretManager.decryptYamlRef(yaml.getSecretKey());
-    } catch (IllegalAccessException | IOException e) {
-      throw new HarnessException("Exception while decrypting the secret key ref:" + yaml.getSecretKey());
-    }
-
     // Regions region = Regions.fromName(yaml.getRegion());
     Regions region = Util.getEnumFromString(Regions.class, yaml.getRegion());
     ElasticLoadBalancerConfig config = ElasticLoadBalancerConfig.builder()
@@ -51,7 +43,6 @@ public class ElasticLoadBalancerConfigYamlHandler extends LoadBalancerYamlHandle
                                            .accessKey(yaml.getAccessKey())
                                            .loadBalancerName(yaml.getLoadBalancerName())
                                            .region(region)
-                                           .secretKey(decryptedSecretKey)
                                            .encryptedSecretKey(yaml.getSecretKey())
                                            .build();
     return buildSettingAttribute(accountId, changeContext.getChange().getFilePath(), uuid, config);

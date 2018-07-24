@@ -62,8 +62,6 @@ public interface SecretManager {
   void changeSecretManager(String accountId, String entityId, EncryptionType fromEncryptionType, String fromKmsId,
       EncryptionType toEncryptionType, String toKmsId) throws IOException;
 
-  char[] decryptYamlRef(String encryptedYamlRef) throws IllegalAccessException, IOException;
-
   void checkAndAlertForInvalidManagers();
 
   String saveSecret(String accountId, String name, String value, UsageRestrictions usageRestrictions);

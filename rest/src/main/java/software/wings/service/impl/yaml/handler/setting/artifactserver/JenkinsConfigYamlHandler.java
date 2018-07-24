@@ -1,7 +1,6 @@
 package software.wings.service.impl.yaml.handler.setting.artifactserver;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.inject.Singleton;
 
@@ -39,40 +38,14 @@ public class JenkinsConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, Je
     String uuid = previous != null ? previous.getUuid() : null;
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
-
-    char[] decryptedPassword = null;
-    char[] decryptedToken = null;
-    try {
-      if (isEmpty(yaml.getAuthMechanism())) {
-        yaml.setAuthMechanism(Constants.USERNAME_PASSWORD_FIELD);
-      }
-
-      switch (yaml.getAuthMechanism()) {
-        case Constants.USERNAME_PASSWORD_FIELD:
-          if (isEmpty(yaml.getPassword())) {
-            throw new HarnessException("Password cannot be empty");
-          }
-          decryptedPassword = isNotEmpty(yaml.getPassword()) ? secretManager.decryptYamlRef(yaml.getPassword()) : null;
-          break;
-        case Constants.TOKEN_FIELD:
-          if (isEmpty(yaml.getToken())) {
-            throw new HarnessException("Token cannot be empty");
-          }
-          decryptedToken = isNotEmpty(yaml.getToken()) ? secretManager.decryptYamlRef(yaml.getToken()) : null;
-          break;
-        default:
-          throw new HarnessException("Invalid auth mechanism :" + yaml.getAuthMechanism());
-      }
-    } catch (Exception e) {
-      throw new HarnessException(e);
+    if (isEmpty(yaml.getAuthMechanism())) {
+      yaml.setAuthMechanism(Constants.USERNAME_PASSWORD_FIELD);
     }
 
     JenkinsConfig config = JenkinsConfig.builder()
                                .accountId(accountId)
                                .jenkinsUrl(yaml.getUrl())
-                               .password(decryptedPassword)
                                .encryptedPassword(yaml.getPassword())
-                               .token(decryptedToken)
                                .encryptedToken(yaml.getToken())
                                .authMechanism(yaml.getAuthMechanism())
                                .username(yaml.getUsername())

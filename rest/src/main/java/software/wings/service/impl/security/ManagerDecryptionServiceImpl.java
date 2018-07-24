@@ -81,32 +81,4 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
       throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, e).addParam("reason", Misc.getMessage(e));
     }
   }
-
-  @Override
-  public char[] getDecryptedValue(EncryptedDataDetail encryptedDataDetail) {
-    if (encryptedDataDetail.getEncryptedData() == null) {
-      return null;
-    }
-    switch (encryptedDataDetail.getEncryptionType()) {
-      case LOCAL:
-        SimpleEncryption encryption = new SimpleEncryption(encryptedDataDetail.getEncryptedData().getEncryptionKey());
-        return encryption.decryptChars(encryptedDataDetail.getEncryptedData().getEncryptedValue());
-
-      case KMS:
-      case VAULT:
-        SyncTaskContext syncTaskContext = aContext()
-                                              .withAccountId(encryptedDataDetail.getEncryptedData().getAccountId())
-                                              .withAppId(Base.GLOBAL_APP_ID)
-                                              .build();
-        try {
-          return delegateProxyFactory.get(EncryptionService.class, syncTaskContext)
-              .getDecryptedValue(encryptedDataDetail);
-        } catch (Exception e) {
-          throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, e).addParam("reason", Misc.getMessage(e));
-        }
-
-      default:
-        throw new WingsException("invalid encryption type " + encryptedDataDetail.getEncryptionType());
-    }
-  }
 }

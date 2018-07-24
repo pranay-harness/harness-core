@@ -6,7 +6,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -32,17 +31,9 @@ public class DynaTraceConfigYamlHandler extends VerificationProviderYamlHandler<
     DynaTraceYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
-    char[] decryptedApiToken;
-    try {
-      decryptedApiToken = secretManager.decryptYamlRef(yaml.getApiToken());
-    } catch (IllegalAccessException | IOException e) {
-      throw new HarnessException("Exception while decrypting the api key ref:" + yaml.getApiToken());
-    }
-
     DynaTraceConfig config = DynaTraceConfig.builder()
                                  .accountId(accountId)
                                  .dynaTraceUrl(yaml.getDynaTraceUrl())
-                                 .apiToken(decryptedApiToken)
                                  .encryptedApiToken(yaml.getApiToken())
                                  .build();
 

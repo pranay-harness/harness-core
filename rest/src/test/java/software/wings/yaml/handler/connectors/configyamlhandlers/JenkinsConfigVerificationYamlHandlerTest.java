@@ -112,22 +112,6 @@ public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueCo
     }
   }
 
-  @Test
-  public void testToBeanForInvalidPassword() throws Exception {
-    ChangeContext<VerificationYaml> changeContext =
-        aChangeContext()
-            .withYaml(VerificationYaml.builder().password("t:t").build())
-            .withChange(Change.Builder.aFileChange().withAccountId("ACCOUNT_ID").build())
-            .build();
-    try {
-      MethodUtils.invokeMethod(yamlHandler, true, "toBean",
-          new Object[] {aSettingAttribute().build(), changeContext, Collections.EMPTY_LIST});
-      fail("Exception expected");
-    } catch (Exception e) {
-      assertTrue(((InvocationTargetException) e).getTargetException() instanceof HarnessException);
-    }
-  }
-
   private SettingAttribute createJenkinsVerificationProvider(String jenkinsProviderName) {
     // Generate Jenkins verification connector
     when(settingValidationService.validate(any(SettingAttribute.class))).thenReturn(true);

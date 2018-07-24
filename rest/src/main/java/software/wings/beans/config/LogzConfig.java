@@ -16,6 +16,7 @@ import software.wings.annotation.Encrypted;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
+import software.wings.sm.StateType;
 import software.wings.yaml.setting.VerificationProviderYaml;
 
 /**
@@ -25,6 +26,7 @@ import software.wings.yaml.setting.VerificationProviderYaml;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @ToString(exclude = "token")
+@Builder
 public class LogzConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Logz.io URL", required = true) @NotEmpty private String logzUrl;
 
@@ -37,33 +39,16 @@ public class LogzConfig extends SettingValue implements Encryptable {
    * Instantiates a new Splunk config.
    */
   public LogzConfig() {
-    super(SettingVariableTypes.LOGZ.name());
-  }
-
-  public String getLogzUrl() {
-    return logzUrl;
-  }
-
-  public void setLogzUrl(String logzUrl) {
-    this.logzUrl = logzUrl;
-  }
-
-  @SuppressFBWarnings("EI_EXPOSE_REP")
-  public char[] getToken() {
-    return token;
+    super(StateType.LOGZ.name());
   }
 
   @SuppressFBWarnings("EI_EXPOSE_REP2")
-  public void setToken(char[] token) {
+  private LogzConfig(String logzUrl, char[] token, String accountId, String encryptedToken) {
+    this();
+    this.logzUrl = logzUrl;
     this.token = token;
-  }
-
-  public String getAccountId() {
-    return accountId;
-  }
-
-  public void setAccountId(String accountId) {
     this.accountId = accountId;
+    this.encryptedToken = encryptedToken;
   }
 
   @Data
