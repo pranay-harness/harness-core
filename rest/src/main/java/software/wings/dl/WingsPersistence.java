@@ -132,6 +132,8 @@ public interface WingsPersistence {
    */
   <T extends Base> T saveAndGet(Class<T> cls, T t);
 
+  <T extends Base> T saveAndGet(Class<T> cls, T t, String requestId, long start);
+
   /**
    * Gets count.
    *

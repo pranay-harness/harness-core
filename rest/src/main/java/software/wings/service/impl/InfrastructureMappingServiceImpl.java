@@ -310,8 +310,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     validateInfraMapping(infraMapping, fromYaml);
     logger.info("Checkpoint5: for request {}, time taken: {}", requestId, System.currentTimeMillis() - start);
 
-    InfrastructureMapping savedInfraMapping = duplicateCheck(
-        () -> wingsPersistence.saveAndGet(InfrastructureMapping.class, infraMapping), "name", infraMapping.getName());
+    InfrastructureMapping savedInfraMapping =
+        duplicateCheck(()
+                           -> wingsPersistence.saveAndGet(InfrastructureMapping.class, infraMapping, requestId, start),
+            "name", infraMapping.getName());
     logger.info("Checkpoint6: for request {}, time taken: {}", requestId, System.currentTimeMillis() - start);
     executorService.submit(() -> saveYamlChangeSet(savedInfraMapping, ChangeType.ADD));
     logger.info("Checkpoint7: for request {}, time taken: {}", requestId, System.currentTimeMillis() - start);
