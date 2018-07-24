@@ -12,7 +12,6 @@ import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.inframapping.DirectKubernetesInfraMappingYamlHandler;
 
-import java.io.IOException;
 import java.util.List;
 
 @Singleton
@@ -98,41 +97,34 @@ public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler
     kubernetesClusterConfig.setEncryptedClientKey(yaml.getClientKey());
     kubernetesClusterConfig.setEncryptedClientKeyPassphrase(yaml.getClientKeyPassphrase());
 
-    char[] decryptedValue;
-    String encryptedRef = null;
-    try {
-      encryptedRef = yaml.getPassword();
-      if (encryptedRef != null) {
-        decryptedValue = secretManager.decryptYamlRef(encryptedRef);
-        kubernetesClusterConfig.setPassword(decryptedValue);
-      }
+    String encryptedRef = yaml.getPassword();
+    if (encryptedRef != null) {
+      kubernetesClusterConfig.setPassword(null);
+      kubernetesClusterConfig.setEncryptedPassword(encryptedRef);
+    }
 
-      encryptedRef = yaml.getCaCert();
-      if (encryptedRef != null) {
-        decryptedValue = secretManager.decryptYamlRef(encryptedRef);
-        kubernetesClusterConfig.setCaCert(decryptedValue);
-      }
+    encryptedRef = yaml.getCaCert();
+    if (encryptedRef != null) {
+      kubernetesClusterConfig.setCaCert(null);
+      kubernetesClusterConfig.setEncryptedCaCert(encryptedRef);
+    }
 
-      encryptedRef = yaml.getClientCert();
-      if (encryptedRef != null) {
-        decryptedValue = secretManager.decryptYamlRef(encryptedRef);
-        kubernetesClusterConfig.setClientCert(decryptedValue);
-      }
+    encryptedRef = yaml.getClientCert();
+    if (encryptedRef != null) {
+      kubernetesClusterConfig.setClientCert(null);
+      kubernetesClusterConfig.setEncryptedClientCert(encryptedRef);
+    }
 
-      encryptedRef = yaml.getClientKey();
-      if (encryptedRef != null) {
-        decryptedValue = secretManager.decryptYamlRef(encryptedRef);
-        kubernetesClusterConfig.setClientKey(decryptedValue);
-      }
+    encryptedRef = yaml.getClientKey();
+    if (encryptedRef != null) {
+      kubernetesClusterConfig.setClientKey(null);
+      kubernetesClusterConfig.setEncryptedClientKey(encryptedRef);
+    }
 
-      encryptedRef = yaml.getClientKeyPassphrase();
-      if (encryptedRef != null) {
-        decryptedValue = secretManager.decryptYamlRef(encryptedRef);
-        kubernetesClusterConfig.setClientKeyPassphrase(decryptedValue);
-      }
-
-    } catch (IllegalAccessException | IOException e) {
-      throw new HarnessException("Exception while decrypting the encrypted ref: " + encryptedRef);
+    encryptedRef = yaml.getClientKeyPassphrase();
+    if (encryptedRef != null) {
+      kubernetesClusterConfig.setClientKeyPassphrase(null);
+      kubernetesClusterConfig.setEncryptedClientKeyPassphrase(encryptedRef);
     }
 
     return buildSettingAttribute(accountId, changeContext.getChange().getFilePath(), uuid, kubernetesClusterConfig);

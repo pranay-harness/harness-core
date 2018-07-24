@@ -39,7 +39,6 @@ import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
-import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ConfigFile.ConfigOverrideType;
@@ -53,8 +52,6 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.OverrideType;
 import software.wings.beans.ServiceVariable.Type;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.User;
 import software.wings.beans.UuidAware;
 import software.wings.beans.VaultConfig;
@@ -1274,38 +1271,6 @@ public class SecretTextTest extends WingsBaseTest {
     query =
         wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE).filter("accountId", accountId);
     assertTrue(query.asList().isEmpty());
-  }
-
-  @Test
-  @RealMongo
-  public void yamlPasswordDecryption() throws IOException, IllegalAccessException {
-    final String accountId = generateUuid();
-    KmsConfig fromConfig = getKmsConfig();
-    kmsService.saveKmsConfig(accountId, fromConfig);
-
-    String password = generateUuid();
-    AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                              .accountId(accountId)
-                                              .controllerUrl(generateUuid())
-                                              .username(generateUuid())
-                                              .password(password.toCharArray())
-                                              .accountname(generateUuid())
-                                              .build();
-
-    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId(accountId)
-                                            .withValue(appDynamicsConfig)
-                                            .withAppId(generateUuid())
-                                            .withCategory(Category.CONNECTOR)
-                                            .withEnvId(generateUuid())
-                                            .withName(generateUuid())
-                                            .build();
-    wingsPersistence.save(settingAttribute);
-
-    String yamlRef = secretManager.getEncryptedYamlRef(appDynamicsConfig);
-
-    char[] decryptedRef = secretManager.decryptYamlRef(yamlRef);
-    assertEquals(password, String.valueOf(decryptedRef));
   }
 
   @Test

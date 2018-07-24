@@ -453,21 +453,6 @@ public class SecretManagerImpl implements SecretManager {
     return true;
   }
 
-  public char[] decryptYamlRef(String encryptedYamlRef) throws IllegalAccessException, IOException {
-    EncryptedData encryptedData = getEncryptedDataFromYamlRef(encryptedYamlRef);
-    if (encryptedData == null) {
-      throw new WingsException("encryptedData is null", USER);
-    }
-
-    EncryptionConfig encryptionConfig =
-        getEncryptionConfig(encryptedData.getAccountId(), encryptedData.getKmsId(), encryptedData.getEncryptionType());
-    return managerDecryptionService.getDecryptedValue(EncryptedDataDetail.builder()
-                                                          .encryptedData(encryptedData)
-                                                          .encryptionConfig(encryptionConfig)
-                                                          .encryptionType(encryptedData.getEncryptionType())
-                                                          .build());
-  }
-
   @Override
   public void changeSecretManager(String accountId, String entityId, EncryptionType fromEncryptionType,
       String fromKmsId, EncryptionType toEncryptionType, String toKmsId) throws IOException {

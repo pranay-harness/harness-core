@@ -8,7 +8,6 @@ import software.wings.beans.config.ArtifactoryConfig.Yaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -39,17 +38,9 @@ public class ArtifactoryConfigYamlHandler extends ArtifactServerYamlHandler<Yaml
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
-    char[] decryptedPassword;
-    try {
-      decryptedPassword = secretManager.decryptYamlRef(yaml.getPassword());
-    } catch (IllegalAccessException | IOException e) {
-      throw new HarnessException("Exception while decrypting the password ref:" + yaml.getPassword());
-    }
-
     ArtifactoryConfig config = ArtifactoryConfig.builder()
                                    .accountId(accountId)
                                    .artifactoryUrl(yaml.getUrl())
-                                   .password(decryptedPassword)
                                    .encryptedPassword(yaml.getPassword())
                                    .username(yaml.getUsername())
                                    .build();

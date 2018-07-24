@@ -8,7 +8,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -35,17 +34,9 @@ public class DockerRegistryConfigYamlHandler extends ArtifactServerYamlHandler<Y
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
-    char[] decryptedPassword;
-    try {
-      decryptedPassword = secretManager.decryptYamlRef(yaml.getPassword());
-    } catch (IllegalAccessException | IOException e) {
-      throw new HarnessException("Exception while decrypting the password ref:" + yaml.getPassword());
-    }
-
     DockerConfig config = DockerConfig.builder()
                               .accountId(accountId)
                               .dockerRegistryUrl(yaml.getUrl())
-                              .password(decryptedPassword)
                               .encryptedPassword(yaml.getPassword())
                               .username(yaml.getUsername())
                               .build();

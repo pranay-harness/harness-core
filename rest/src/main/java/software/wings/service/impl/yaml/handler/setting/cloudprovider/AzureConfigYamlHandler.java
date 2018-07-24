@@ -8,7 +8,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 
-import java.io.IOException;
 import java.util.List;
 
 @Singleton
@@ -32,18 +31,11 @@ public class AzureConfigYamlHandler extends CloudProviderYamlHandler<Yaml, Azure
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
-    char[] decryptedKey;
-    try {
-      decryptedKey = secretManager.decryptYamlRef(yaml.getKey());
-    } catch (IllegalAccessException | IOException e) {
-      throw new HarnessException("Exception while decrypting the key ref:" + yaml.getKey());
-    }
-
     AzureConfig azureConfig = AzureConfig.builder()
                                   .accountId(accountId)
                                   .clientId(yaml.getClientId())
                                   .tenantId(yaml.getTenantId())
-                                  .key(decryptedKey)
+                                  .encryptedKey(yaml.getKey())
                                   .build();
     return buildSettingAttribute(accountId, changeContext.getChange().getFilePath(), uuid, azureConfig);
   }

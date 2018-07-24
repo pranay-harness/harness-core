@@ -10,7 +10,6 @@ import software.wings.exception.HarnessException;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.utils.Util;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -39,23 +38,15 @@ public class ElkConfigYamlHandler extends VerificationProviderYamlHandler<Yaml, 
     String uuid = previous != null ? previous.getUuid() : null;
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
-    ElkConfig config = new ElkConfig();
-    config.setAccountId(accountId);
-    config.setElkUrl(yaml.getElkUrl());
-    config.setEncryptedPassword(yaml.getPassword());
-    config.setElkValidationType(yaml.getValidationType());
-
-    char[] decryptedPassword;
-    try {
-      decryptedPassword = secretManager.decryptYamlRef(yaml.getPassword());
-    } catch (IllegalAccessException | IOException e) {
-      throw new HarnessException("Exception while decrypting the password ref:" + yaml.getPassword());
-    }
-
-    config.setPassword(decryptedPassword);
-    config.setUsername(yaml.getUsername());
     ElkConnector elkConnector = Util.getEnumFromString(ElkConnector.class, yaml.getConnectorType());
-    config.setElkConnector(elkConnector);
+    ElkConfig config = ElkConfig.builder()
+                           .accountId(accountId)
+                           .elkUrl(yaml.getElkUrl())
+                           .encryptedPassword(yaml.getPassword())
+                           .validationType(yaml.getValidationType())
+                           .username(yaml.getUsername())
+                           .elkConnector(elkConnector)
+                           .build();
 
     return buildSettingAttribute(accountId, changeContext.getChange().getFilePath(), uuid, config);
   }

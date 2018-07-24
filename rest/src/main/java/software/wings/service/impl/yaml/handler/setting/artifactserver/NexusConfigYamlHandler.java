@@ -8,7 +8,6 @@ import software.wings.beans.config.NexusConfig.Yaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -34,17 +33,9 @@ public class NexusConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, Nexu
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
-    char[] decryptedPassword;
-    try {
-      decryptedPassword = secretManager.decryptYamlRef(yaml.getPassword());
-    } catch (IllegalAccessException | IOException e) {
-      throw new HarnessException("Exception while decrypting the password ref:" + yaml.getPassword());
-    }
-
     NexusConfig config = NexusConfig.builder()
                              .accountId(accountId)
                              .nexusUrl(yaml.getUrl())
-                             .password(decryptedPassword)
                              .encryptedPassword(yaml.getPassword())
                              .username(yaml.getUsername())
                              .build();

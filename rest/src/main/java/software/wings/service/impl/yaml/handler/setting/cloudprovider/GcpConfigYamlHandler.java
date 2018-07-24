@@ -8,7 +8,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -33,17 +32,8 @@ public class GcpConfigYamlHandler extends CloudProviderYamlHandler<Yaml, GcpConf
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
-    char[] decryptedFileContent;
-    try {
-      decryptedFileContent = secretManager.decryptYamlRef(yaml.getServiceAccountKeyFileContent());
-    } catch (IllegalAccessException | IOException e) {
-      throw new HarnessException(
-          "Exception while decrypting the file content ref:" + yaml.getServiceAccountKeyFileContent());
-    }
-
     GcpConfig config = GcpConfig.builder()
                            .accountId(accountId)
-                           .serviceAccountKeyFileContent(decryptedFileContent)
                            .encryptedServiceAccountKeyFileContent(yaml.getServiceAccountKeyFileContent())
                            .build();
     return buildSettingAttribute(accountId, changeContext.getChange().getFilePath(), uuid, config);

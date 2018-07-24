@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler.setting.verificationprovider;
 
+import static software.wings.utils.Validator.notNullCheck;
+
 import com.google.inject.Singleton;
 
 import software.wings.beans.NewRelicConfig;
@@ -8,7 +10,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -31,19 +32,12 @@ public class NewRelicConfigYamlHandler extends VerificationProviderYamlHandler<Y
       List<ChangeContext> changeSetContext) throws HarnessException {
     String uuid = previous != null ? previous.getUuid() : null;
     Yaml yaml = changeContext.getYaml();
+    notNullCheck("api key is null", yaml.getApiKey());
     String accountId = changeContext.getChange().getAccountId();
-
-    char[] decryptedApiKey;
-    try {
-      decryptedApiKey = secretManager.decryptYamlRef(yaml.getApiKey());
-    } catch (IllegalAccessException | IOException e) {
-      throw new HarnessException("Exception while decrypting the api key ref:" + yaml.getApiKey());
-    }
 
     NewRelicConfig config = NewRelicConfig.builder()
                                 .accountId(accountId)
                                 .newRelicUrl("https://api.newrelic.com")
-                                .apiKey(decryptedApiKey)
                                 .encryptedApiKey(yaml.getApiKey())
                                 .build();
     return buildSettingAttribute(accountId, changeContext.getChange().getFilePath(), uuid, config);

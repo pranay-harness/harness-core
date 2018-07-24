@@ -1,9 +1,6 @@
 package software.wings.service.impl.security;
 
 import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static software.wings.service.impl.security.SecretManagerImpl.ENCRYPTED_FIELD_MASK;
 import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -19,7 +16,6 @@ import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsException;
 import software.wings.service.intfc.security.SecretManager;
 
 public class SecretManagerTest extends WingsBaseTest {
@@ -29,22 +25,6 @@ public class SecretManagerTest extends WingsBaseTest {
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
-  }
-  @Test
-  public void testDecryptYamlRef() throws Exception {
-    try {
-      secretManager.decryptYamlRef(null);
-      fail("Exception expected");
-    } catch (IllegalStateException e) {
-      assertTrue(true);
-    }
-
-    try {
-      secretManager.decryptYamlRef("test:123");
-      fail("Exception expected");
-    } catch (WingsException e) {
-      assertEquals("encryptedData is null", e.getMessage());
-    }
   }
 
   @Test

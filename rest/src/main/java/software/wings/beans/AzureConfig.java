@@ -28,7 +28,7 @@ public class AzureConfig extends SettingValue implements Encryptable {
 
   @Attributes(title = "Tenant ID", required = true) @NotEmpty private String tenantId;
 
-  @Attributes(title = "Key", required = true) @Encrypted @NotEmpty private char[] key;
+  @Attributes(title = "Key", required = true) @Encrypted private char[] key;
 
   @SchemaIgnore @NotEmpty private String accountId;
 

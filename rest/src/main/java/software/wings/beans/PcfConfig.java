@@ -26,7 +26,7 @@ import software.wings.yaml.setting.CloudProviderYaml;
 public class PcfConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Endpoint URL", required = true) @NotEmpty private String endpointUrl;
   @Attributes(title = "Username", required = true) @NotEmpty private String username;
-  @Attributes(title = "Password", required = true) @Encrypted @NotEmpty private char[] password;
+  @Attributes(title = "Password", required = true) @Encrypted private char[] password;
   @SchemaIgnore @NotEmpty private String accountId;
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
