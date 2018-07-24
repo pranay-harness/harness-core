@@ -233,6 +233,11 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   @Override
   public Map<String, Set<String>> getAppEnvMap(String accountId, Set<AppEnvRestriction> appEnvRestrictions) {
     Map<String, Set<String>> appEnvMap = Maps.newHashMap();
+
+    if (isEmpty(appEnvRestrictions)) {
+      return appEnvMap;
+    }
+
     User user = UserThreadLocal.get();
     if (user == null) {
       return appEnvMap;
