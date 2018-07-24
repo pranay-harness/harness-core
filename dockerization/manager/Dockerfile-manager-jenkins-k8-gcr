@@ -1,13 +1,13 @@
 # to be used when building in Jenkins
 FROM us.gcr.io/platform-205701/harness/serverjre_8:131
-RUN yum install -y hostname
+RUN yum install -y hostname tar gzip
 
 # we need to install the JCE extensions
 COPY common-resources/local_policy.jar /usr/java/jdk1.8.0_131/jre/lib/security/
 COPY common-resources/US_export_policy.jar /usr/java/jdk1.8.0_131/jre/lib/security/
 
 # Add the capsule JAR and config.yml
-COPY rest-0.0.1-SNAPSHOT-capsule.jar newrelic.yml keystore.jks config.yml hazelcast.xml javaagent.jar /opt/harness/
+COPY rest-0.0.1-SNAPSHOT-capsule.jar AppServerAgent-4.5.0.23604.tar.gz newrelic.yml keystore.jks config.yml hazelcast.xml javaagent.jar /opt/harness/
 
 COPY scripts /opt/harness
 

@@ -1,13 +1,13 @@
 # to be used when building in Jenkins
 FROM harness/serverjre_8:131
-RUN yum install -y hostname
+RUN yum install -y hostname tar gzip
 
 # we need to install the JCE extensions
 COPY dockerization/common-resources/local_policy.jar /usr/java/jdk1.8.0_131/jre/lib/security/
 COPY dockerization/common-resources/US_export_policy.jar /usr/java/jdk1.8.0_131/jre/lib/security/
 
 # Add the capsule JAR and config.yml
-COPY docker-image-files/rest-0.0.1-SNAPSHOT-capsule.jar rest/newrelic.yml keystore.jks docker-image-files/config.yml docker-image-files/hazelcast.xml /opt/harness/
+COPY docker-image-files/rest-0.0.1-SNAPSHOT-capsule.jar docker-image-files/AppServerAgent-4.5.0.23604.tar.gz rest/newrelic.yml keystore.jks docker-image-files/config.yml docker-image-files/hazelcast.xml /opt/harness/
 
 COPY dockerization/manager/scripts /opt/harness
 
