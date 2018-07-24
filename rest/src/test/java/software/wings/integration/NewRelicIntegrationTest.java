@@ -48,6 +48,7 @@ import software.wings.metrics.RiskLevel;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
+import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.impl.newrelic.MetricAnalysisJob.MetricAnalysisGenerator;
 import software.wings.service.impl.newrelic.NewRelicApplication;
@@ -202,11 +203,17 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     for (NewRelicApplicationInstance node : nodes) {
       target = client.target(API_BASE + "/newrelic/node-data?settingId=" + newRelicConfigId + "&accountId=" + accountId
           + "&applicationId=" + 107019083 + "&instanceId=" + node.getId());
-      RestResponse<NewRelicMetricData> metricResponse =
-          getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<NewRelicMetricData>>() {});
+      RestResponse<VerificationNodeDataSetupResponse> metricResponse = getRequestBuilderWithAuthHeader(target).get(
+          new GenericType<RestResponse<VerificationNodeDataSetupResponse>>() {});
       assertEquals(0, metricResponse.getResponseMessages().size());
-      NewRelicMetricData newRelicMetricData = metricResponse.getResource();
-
+      assertTrue(metricResponse.getResource().isProviderReachable());
+      assertTrue(metricResponse.getResource().getLoadResponse().isLoadPresent());
+      assertNotNull(metricResponse.getResource().getLoadResponse().getLoadResponse());
+      List<NewRelicMetric> txnsWithData =
+          (List<NewRelicMetric>) metricResponse.getResource().getLoadResponse().getLoadResponse();
+      assertFalse(txnsWithData.isEmpty());
+      NewRelicMetricData newRelicMetricData =
+          JsonUtils.asObject(JsonUtils.asJson(metricResponse.getResource().getDataForNode()), NewRelicMetricData.class);
       // found at least a node with data
       if (!newRelicMetricData.getMetrics_found().isEmpty()) {
         assertTrue(newRelicMetricData.getMetrics().size() > 0);

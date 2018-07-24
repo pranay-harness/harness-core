@@ -11,10 +11,10 @@ import software.wings.beans.RestResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicApplicationInstance;
 import software.wings.service.impl.newrelic.NewRelicMetric;
-import software.wings.service.impl.newrelic.NewRelicMetricData;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.MetricDataAnalysisService;
@@ -57,7 +57,6 @@ import javax.ws.rs.QueryParam;
  *
  *
  * For now, only apis used by the learning engine are versioned.
- *
  */
 @Api("newrelic")
 @Path("/newrelic")
@@ -113,16 +112,6 @@ public class NewRelicResource {
     return new RestResponse<>(newRelicService.getApplicationInstances(settingId, applicationId, StateType.NEW_RELIC));
   }
 
-  @GET
-  @Path("/txns-with-data")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<List<NewRelicMetric>> getTxnsWithData(@QueryParam("accountId") String accountId,
-      @QueryParam("settingId") final String settingId, @QueryParam("applicationId") final long applicationId)
-      throws IOException {
-    return new RestResponse<>(newRelicService.getTxnsWithData(settingId, applicationId));
-  }
-
   @POST
   @Path("/save-metrics")
   @Timed
@@ -137,13 +126,24 @@ public class NewRelicResource {
   }
 
   @GET
+  @Path("/txns-with-data")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<NewRelicMetric>> getTxnsWithData(@QueryParam("accountId") String accountId,
+      @QueryParam("settingId") final String settingId, @QueryParam("applicationId") final long applicationId,
+      @QueryParam("instanceId") long instanceId) throws IOException {
+    return new RestResponse<>(newRelicService.getTxnsWithData(settingId, applicationId, instanceId));
+  }
+
+  @GET
   @Path("/node-data")
   @Timed
   @DelegateAuth
   @ExceptionMetered
-  public RestResponse<NewRelicMetricData> getMetricsWithDataForNode(@QueryParam("accountId") final String accountId,
-      @QueryParam("settingId") final String settingId, @QueryParam("applicationId") final long applicationId,
-      @QueryParam("instanceId") long instanceId, @QueryParam("from") long fromTime, @QueryParam("to") long toTime) {
+  public RestResponse<VerificationNodeDataSetupResponse> getMetricsWithDataForNode(
+      @QueryParam("accountId") final String accountId, @QueryParam("settingId") final String settingId,
+      @QueryParam("applicationId") final long applicationId, @QueryParam("instanceId") long instanceId,
+      @QueryParam("from") long fromTime, @QueryParam("to") long toTime) {
     if (toTime <= 0 || fromTime <= 0) {
       toTime = System.currentTimeMillis();
       fromTime = toTime - TimeUnit.MINUTES.toMillis(15);
