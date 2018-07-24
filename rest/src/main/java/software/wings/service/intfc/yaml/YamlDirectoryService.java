@@ -102,4 +102,8 @@ public interface YamlDirectoryService {
   String getRootPathByPcfServiceSpecification(Service service, PcfServiceSpecification pcfServiceSpecification);
 
   String getRootPathByInfraProvisioner(InfrastructureProvisioner provisioner);
+
+  void getGitFileChange(DirectoryNode dn, String path, String accountId, boolean includeFiles,
+      List<GitFileChange> gitFileChanges, boolean failFast, Optional<List<String>> listOfYamlErrors,
+      boolean gitSyncPath);
 }

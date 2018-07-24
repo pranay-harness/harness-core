@@ -47,6 +47,7 @@ import software.wings.service.intfc.yaml.YamlArtifactStreamService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlResourceService;
+import software.wings.service.intfc.yaml.clone.YamlCloneService;
 import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.utils.BoundedInputStream;
 import software.wings.yaml.YamlPayload;
@@ -89,6 +90,7 @@ public class YamlResource {
   private AuthService authService;
   private HarnessUserGroupService harnessUserGroupService;
   @Inject private MainConfiguration configuration;
+  @Inject private YamlCloneService yamlCloneService;
 
   /**
    * Instantiates a new service resource.
@@ -889,5 +891,15 @@ public class YamlResource {
     return yamlService.processYamlFilesAsZip(accountId,
         new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getAppContainerLimit()),
         yamlPath);
+  }
+
+  @POST
+  @Path("clone")
+  @Timed
+  @ExceptionMetered
+  public RestResponse clone(@QueryParam("accountId") String accountId, @QueryParam("appId") String appId,
+      @QueryParam("entityType") String entityType, @QueryParam("entityId") String entityId,
+      @QueryParam("newEntityName") String newEntityName) {
+    return yamlCloneService.cloneEntityUsingYaml(accountId, appId, false, entityType, entityId, newEntityName);
   }
 }

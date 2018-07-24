@@ -23,6 +23,7 @@ public interface YamlService<Y extends BaseYaml, B extends Base> {
    */
   List<ChangeContext> processChangeSet(List<Change> changeList) throws YamlProcessingException;
 
+  List<ChangeContext> processChangeSet(List<Change> changeList, boolean isGitSyncPath) throws YamlProcessingException;
   /**
    *
    * @param yamlPayload
