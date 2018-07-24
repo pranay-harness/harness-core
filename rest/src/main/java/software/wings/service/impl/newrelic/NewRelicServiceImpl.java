@@ -24,6 +24,7 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.APMDelegateService;
+import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.newrelic.NewRelicApplication.NewRelicApplications;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
@@ -193,7 +194,7 @@ public class NewRelicServiceImpl implements NewRelicService {
   }
 
   @Override
-  public List<NewRelicMetric> getTxnsWithData(String settingId, long applicationId) {
+  public List<NewRelicMetric> getTxnsWithData(String settingId, long applicationId, long instanceId) {
     try {
       final SettingAttribute settingAttribute = settingsService.get(settingId);
       List<EncryptedDataDetail> encryptionDetails =
@@ -212,7 +213,7 @@ public class NewRelicServiceImpl implements NewRelicService {
   }
 
   @Override
-  public NewRelicMetricData getMetricsWithDataForNode(
+  public VerificationNodeDataSetupResponse getMetricsWithDataForNode(
       String settingId, long newRelicApplicationId, long instanceId, long fromTime, long toTime) {
     try {
       final SettingAttribute settingAttribute = settingsService.get(settingId);

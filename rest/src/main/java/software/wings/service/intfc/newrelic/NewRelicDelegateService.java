@@ -6,6 +6,7 @@ import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicApplicationInstance;
 import software.wings.service.impl.newrelic.NewRelicMetric;
@@ -59,7 +60,7 @@ public interface NewRelicDelegateService {
       long newRelicAppId, ThirdPartyApiCallLog thirdPartyApiCallLog) throws IOException;
 
   @DelegateTaskType(TaskType.NEWRELIC_GET_TXNS_WITH_DATA_FOR_NODE)
-  NewRelicMetricData getMetricsWithDataForNode(NewRelicConfig newRelicConfig,
+  VerificationNodeDataSetupResponse getMetricsWithDataForNode(NewRelicConfig newRelicConfig,
       List<EncryptedDataDetail> encryptedDataDetails, long newRelicApplicationId, long instanceId, long fromTime,
       long toTime, ThirdPartyApiCallLog apiCallLog) throws IOException;
 }

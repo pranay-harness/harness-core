@@ -32,6 +32,8 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
 import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
+import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
+import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse.VerificationLoadResponse;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.JsonUtils;
@@ -386,19 +388,33 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   }
 
   @Override
-  public NewRelicMetricData getMetricsWithDataForNode(NewRelicConfig newRelicConfig,
+  public VerificationNodeDataSetupResponse getMetricsWithDataForNode(NewRelicConfig newRelicConfig,
       List<EncryptedDataDetail> encryptedDataDetails, long newRelicApplicationId, long instanceId, long fromTime,
       long toTime, ThirdPartyApiCallLog apiCallLog) throws IOException {
-    List<NewRelicMetric> txnsWithData =
-        getTxnsWithData(newRelicConfig, encryptedDataDetails, newRelicApplicationId, apiCallLog);
-    if (isEmpty(txnsWithData)) {
-      return NewRelicMetricData.builder().build();
+    try {
+      List<NewRelicMetric> txnsWithData =
+          getTxnsWithData(newRelicConfig, encryptedDataDetails, newRelicApplicationId, apiCallLog);
+      if (isEmpty(txnsWithData)) {
+        return VerificationNodeDataSetupResponse.builder()
+            .providerReachable(true)
+            .loadResponse(VerificationLoadResponse.builder().isLoadPresent(false).build())
+            .build();
+      }
+      Set<String> metricNames = txnsWithData.stream().map(NewRelicMetric::getName).collect(Collectors.toSet());
+      String baseUrl = newRelicConfig.getNewRelicUrl().endsWith("/") ? newRelicConfig.getNewRelicUrl()
+                                                                     : newRelicConfig.getNewRelicUrl() + "/";
+      baseUrl += "v2/applications/" + newRelicApplicationId + "/instances/" + instanceId + "/metrics/data.json?";
+      NewRelicMetricData newRelicMetricData =
+          getMetricData(newRelicConfig, encryptedDataDetails, baseUrl, metricNames, fromTime, toTime, apiCallLog);
+      return VerificationNodeDataSetupResponse.builder()
+          .providerReachable(true)
+          .dataForNode(newRelicMetricData)
+          .loadResponse(VerificationLoadResponse.builder().isLoadPresent(true).loadResponse(txnsWithData).build())
+          .build();
+    } catch (Exception e) {
+      logger.info("Error while getting data for node", e);
+      return VerificationNodeDataSetupResponse.builder().providerReachable(false).build();
     }
-    Set<String> metricNames = txnsWithData.stream().map(NewRelicMetric::getName).collect(Collectors.toSet());
-    String baseUrl = newRelicConfig.getNewRelicUrl().endsWith("/") ? newRelicConfig.getNewRelicUrl()
-                                                                   : newRelicConfig.getNewRelicUrl() + "/";
-    baseUrl += "v2/applications/" + newRelicApplicationId + "/instances/" + instanceId + "/metrics/data.json?";
-    return getMetricData(newRelicConfig, encryptedDataDetails, baseUrl, metricNames, fromTime, toTime, apiCallLog);
   }
 
   private NewRelicRestClient getNewRelicRestClient(

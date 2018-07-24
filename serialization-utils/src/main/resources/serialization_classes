@@ -491,3 +491,5 @@ software.wings.service.impl.aws.model.AwsLambdaExecuteWfResponse, 5451
 software.wings.service.impl.aws.model.AwsLambdaFunctionResult, 5452
 software.wings.service.impl.aws.model.AwsLambdaExecuteFunctionRequest, 5453
 software.wings.service.impl.aws.model.AwsLambdaExecuteFunctionResponse, 5454
+software.wings.service.impl.analysis.VerificationNodeDataSetupResponse, 5455
+software.wings.service.impl.analysis.VerificationNodeDataSetupResponse$VerificationLoadResponse, 5456
