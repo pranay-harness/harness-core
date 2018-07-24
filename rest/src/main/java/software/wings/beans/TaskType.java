@@ -35,6 +35,8 @@ import software.wings.delegatetasks.aws.AwsEcrTask;
 import software.wings.delegatetasks.aws.AwsEcsTask;
 import software.wings.delegatetasks.aws.AwsElbTask;
 import software.wings.delegatetasks.aws.AwsIamTask;
+import software.wings.delegatetasks.aws.AwsLambdaAsyncTask;
+import software.wings.delegatetasks.aws.AwsLambdaTask;
 import software.wings.delegatetasks.cloudformation.CloudFormationCommandTask;
 import software.wings.delegatetasks.collect.artifacts.AmazonS3CollectionTask;
 import software.wings.delegatetasks.collect.artifacts.ArtifactoryCollectionTask;
@@ -221,7 +223,9 @@ public enum TaskType {
   AWS_IAM_TASK(TaskGroup.AWS, AwsIamTask.class, AlwaysTrueValidation.class),
   AWS_EC2_TASK(TaskGroup.AWS, AwsEc2Task.class, AlwaysTrueValidation.class),
   AWS_ASG_TASK(TaskGroup.AWS, AwsAsgTask.class, AlwaysTrueValidation.class),
-  AWS_CODE_DEPLOY_TASK(TaskGroup.AWS, AwsCodeDeployTask.class, AlwaysTrueValidation.class);
+  AWS_CODE_DEPLOY_TASK(TaskGroup.AWS, AwsCodeDeployTask.class, AlwaysTrueValidation.class),
+  AWS_LAMBDA_TASK(TaskGroup.AWS, AwsLambdaTask.class, AlwaysTrueValidation.class),
+  AWS_LAMBDA_ASYNC_TASK(TaskGroup.AWS, AwsLambdaAsyncTask.class, AlwaysTrueValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;

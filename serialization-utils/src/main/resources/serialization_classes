@@ -482,3 +482,12 @@ software.wings.service.impl.aws.model.AwsCodeDeployListDeploymentInstancesRespon
 software.wings.service.impl.newrelic.NewRelicMetricData, 5443
 software.wings.service.impl.newrelic.NewRelicMetricData$NewRelicMetricSlice, 5444
 software.wings.service.impl.newrelic.NewRelicMetricData$NewRelicMetricTimeSlice, 5445
+software.wings.service.impl.aws.model.AwsLambdaRequest, 5446
+software.wings.service.impl.aws.model.AwsLambdaRequest$AwsLambdaRequestType, 5447
+software.wings.service.impl.aws.model.AwsLambdaExecuteWfRequest, 5448
+software.wings.service.impl.aws.model.AwsLambdaFunctionParams, 5449
+software.wings.service.impl.aws.model.AwsLambdaVpcConfig, 5450
+software.wings.service.impl.aws.model.AwsLambdaExecuteWfResponse, 5451
+software.wings.service.impl.aws.model.AwsLambdaFunctionResult, 5452
+software.wings.service.impl.aws.model.AwsLambdaExecuteFunctionRequest, 5453
+software.wings.service.impl.aws.model.AwsLambdaExecuteFunctionResponse, 5454
