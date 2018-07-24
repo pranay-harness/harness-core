@@ -69,8 +69,11 @@ import software.wings.exception.YamlProcessingException;
 import software.wings.exception.YamlProcessingException.ChangeWithErrorMsg;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlGitService;
+import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.utils.Misc;
 import software.wings.yaml.BaseYaml;
@@ -113,6 +116,9 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   @Inject private AuthService authService;
   @Inject private ExecutorService executorService;
   @Inject private TimeLimiter timeLimiter;
+  @Inject private YamlResourceService yamlResourceService;
+  @Inject private WorkflowService workflowService;
+  @Inject private AppService appService;
 
   private final List<YamlType> yamlProcessingOrder = getEntityProcessingOrder();
 
@@ -125,12 +131,17 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
 
   @Override
   public List<ChangeContext> processChangeSet(List<Change> changeList) throws YamlProcessingException {
+    return processChangeSet(changeList, true);
+  }
+
+  public List<ChangeContext> processChangeSet(List<Change> changeList, boolean isGitSyncPath)
+      throws YamlProcessingException {
     // compute the order of processing
     computeProcessingOrder(changeList);
     // validate
     List<ChangeContext> changeContextList = validate(changeList);
     // process in the given order
-    process(changeContextList);
+    process(changeContextList, isGitSyncPath);
 
     return changeContextList;
   }
@@ -372,7 +383,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     return (String) map.get("type");
   }
 
-  private void process(List<ChangeContext> changeContextList) throws YamlProcessingException {
+  private void process(List<ChangeContext> changeContextList, boolean gitSyncPath) throws YamlProcessingException {
     if (isEmpty(changeContextList)) {
       logger.info("No changes to process in the change set");
       return;
@@ -401,7 +412,9 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         try {
           logger.info("Processing file: [{}]", changeContext.getChange().getFilePath());
           processYamlChange(changeContext, changeContextList);
-          yamlGitService.discardGitSyncError(changeContext.getChange().getAccountId(), yamlFilePath);
+          if (gitSyncPath) {
+            yamlGitService.discardGitSyncError(changeContext.getChange().getAccountId(), yamlFilePath);
+          }
 
           logger.info("Processing done for file [{}]", changeContext.getChange().getFilePath());
         } catch (Exception ex) {

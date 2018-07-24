@@ -7,6 +7,7 @@ import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 
+import io.harness.data.structure.EmptyPredicate;
 import software.wings.beans.Application;
 import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.InfrastructureProvisioner;
@@ -24,6 +25,7 @@ import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.Util;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,11 +39,14 @@ public abstract class InfrastructureProvisionerYamlHandler<Y extends Yaml, B ext
   private InfrastructureMappingBlueprint.Yaml mapBluePrintBeanToYaml(
       InfrastructureMappingBlueprint blueprint, String appId) {
     NameValuePairYamlHandler nameValuePairYamlHandler = getNameValuePairYamlHandler();
-    List<NameValuePair.Yaml> nameValueYamls =
-        blueprint.getProperties()
-            .stream()
-            .map(nameValuePair -> nameValuePairYamlHandler.toYaml(nameValuePair, appId))
-            .collect(toList());
+
+    List<NameValuePair.Yaml> nameValueYamls = Collections.EMPTY_LIST;
+    if (EmptyPredicate.isNotEmpty(blueprint.getProperties())) {
+      nameValueYamls = blueprint.getProperties()
+                           .stream()
+                           .map(nameValuePair -> nameValuePairYamlHandler.toYaml(nameValuePair, appId))
+                           .collect(toList());
+    }
 
     return InfrastructureMappingBlueprint.Yaml.builder()
         .cloudProviderType(blueprint.getCloudProviderType())
