@@ -370,8 +370,11 @@ public abstract class AbstractAnalysisState extends State {
                                      .settingAttribute(settingAttribute)
                                      .build());
 
-    return containerInfos.stream().collect(
-        Collectors.toMap(containerInfo -> containerInfo.getContainerId(), containerInfo -> DEFAULT_GROUP_NAME));
+    Map<String, String> map = new HashMap<>();
+    for (software.wings.cloudprovider.ContainerInfo containerInfo : containerInfos) {
+      map.put(containerInfo.getContainerId(), DEFAULT_GROUP_NAME);
+    }
+    return map;
   }
 
   private Map<String, String> getHostsDeployedSoFar(
