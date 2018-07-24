@@ -6,12 +6,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
-import com.amazonaws.services.lambda.model.InvokeRequest;
-import com.amazonaws.services.lambda.model.InvokeResult;
-import com.amazonaws.services.lambda.model.LogType;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import org.apache.commons.codec.binary.Base64;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,12 +20,13 @@ import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Environment;
 import software.wings.beans.LambdaTestEvent;
-import software.wings.service.impl.AwsHelperService;
+import software.wings.service.impl.aws.model.AwsLambdaExecuteFunctionResponse;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.aws.manager.AwsLambdaHelperServiceManager;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.LambdaConvention;
 import software.wings.utils.Misc;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -38,7 +35,8 @@ public class AwsLambdaVerification extends State {
   @Attributes(title = "Function Test Events") private List<LambdaTestEvent> lambdaTestEvents = new ArrayList<>();
 
   @Transient @Inject private ActivityService activityService;
-  @Transient @Inject private AwsHelperService awsHelperService;
+  @Transient @Inject private SecretManager secretManager;
+  @Transient @Inject private AwsLambdaHelperServiceManager awsLambdaHelperServiceManager;
   @Transient private static final Logger logger = LoggerFactory.getLogger(AwsLambdaVerification.class);
 
   /**
@@ -77,27 +75,18 @@ public class AwsLambdaVerification extends State {
       LambdaTestEvent lambdaTestEvent =
           functionNameMap.getOrDefault(functionMeta.getFunctionName(), LambdaTestEvent.builder().build());
 
-      InvokeRequest invokeRequest = new InvokeRequest()
-                                        .withFunctionName(functionMeta.getFunctionArn())
-                                        .withQualifier(functionMeta.getVersion())
-                                        .withLogType(LogType.Tail);
+      AwsLambdaExecuteFunctionResponse functionResponse = awsLambdaHelperServiceManager.executeFunction(awsConfig,
+          secretManager.getEncryptionDetails(awsConfig, context.getAppId(), context.getWorkflowId()),
+          awsLambdaFunctionElement.getRegion(), functionMeta.getFunctionArn(), functionMeta.getVersion(),
+          isNotBlank(lambdaTestEvent.getPayload()) ? lambdaTestEvent.getPayload() : null);
 
-      if (isNotBlank(lambdaTestEvent.getPayload())) {
-        invokeRequest.setPayload(lambdaTestEvent.getPayload());
-      }
-
-      InvokeResult invokeResult = awsHelperService.invokeFunction(
-          awsLambdaFunctionElement.getRegion(), awsConfig.getAccessKey(), awsConfig.getSecretKey(), invokeRequest);
-      logger.info("Lambda invocation result: " + invokeResult.toString());
-
-      awsLambdaExecutionData.setStatusCode(invokeResult.getStatusCode());
-      awsLambdaExecutionData.setFunctionError(invokeResult.getFunctionError());
-      String logResult = invokeResult.getLogResult();
+      awsLambdaExecutionData.setStatusCode(functionResponse.getStatusCode());
+      awsLambdaExecutionData.setFunctionError(functionResponse.getFunctionError());
+      String logResult = functionResponse.getLogResult();
       if (logResult != null) {
-        logResult = new String(Base64.decodeBase64(logResult), "UTF-8");
+        awsLambdaExecutionData.setLogResult(logResult);
       }
-      awsLambdaExecutionData.setLogResult(logResult);
-      awsLambdaExecutionData.setPayload(StandardCharsets.UTF_8.decode(invokeResult.getPayload()).toString());
+      awsLambdaExecutionData.setPayload(functionResponse.getPayload());
       awsLambdaExecutionData.setAssertionStatement(lambdaTestEvent.getAssertion());
 
       if (isNotBlank(lambdaTestEvent.getAssertion())) {

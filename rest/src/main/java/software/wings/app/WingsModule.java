@@ -156,6 +156,7 @@ import software.wings.service.impl.aws.manager.AwsEcrHelperServiceManagerImpl;
 import software.wings.service.impl.aws.manager.AwsEcsHelperServiceManagerImpl;
 import software.wings.service.impl.aws.manager.AwsElbHelperServiceManagerImpl;
 import software.wings.service.impl.aws.manager.AwsIamHelperServiceManagerImpl;
+import software.wings.service.impl.aws.manager.AwsLambdaHelperServiceManagerImpl;
 import software.wings.service.impl.elk.ElkAnalysisServiceImpl;
 import software.wings.service.impl.expression.ExpressionBuilderServiceImpl;
 import software.wings.service.impl.infra.InfraDownloadService;
@@ -270,6 +271,7 @@ import software.wings.service.intfc.aws.manager.AwsEcrHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsEcsHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsElbHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsIamHelperServiceManager;
+import software.wings.service.intfc.aws.manager.AwsLambdaHelperServiceManager;
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.service.intfc.expression.ExpressionBuilderService;
 import software.wings.service.intfc.instance.DashboardStatisticsService;
@@ -449,6 +451,7 @@ public class WingsModule extends AbstractModule {
     bind(AwsEc2HelperServiceManager.class).to(AwsEc2HelperServiceManagerImpl.class);
     bind(AwsAsgHelperServiceManager.class).to(AwsAsgHelperServiceManagerImpl.class);
     bind(AwsCodeDeployHelperServiceManager.class).to(AwsCodeDeployHelperServiceManagerImpl.class);
+    bind(AwsLambdaHelperServiceManager.class).to(AwsLambdaHelperServiceManagerImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);
