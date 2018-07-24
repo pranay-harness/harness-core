@@ -19,6 +19,7 @@ import com.google.inject.Inject;
 import com.amazonaws.regions.Regions;
 import org.joor.Reflect;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.slf4j.Logger;
@@ -90,6 +91,7 @@ public class EcsContainerInfoIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Ignore
   public void testGetLastExecutionNodesECS() throws NoSuchAlgorithmException, KeyManagementException {
     AwsConfig awsConfig = AwsConfig.builder()
                               .accessKey("AKIAI6QUDIAUPQ2VC63A")

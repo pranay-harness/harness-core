@@ -7,6 +7,7 @@ import static org.junit.Assert.fail;
 import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkResponse;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.RestResponse;
@@ -62,6 +63,7 @@ public class ElkResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Ignore
   public void queryHostData() throws Exception {
     WebTarget getTarget = client.target(API_BASE + "/" + LogAnalysisResource.ELK_RESOURCE_BASE_URL
         + LogAnalysisResource.ANALYSIS_STATE_GET_HOST_RECORD_URL + "?accountId=" + accountId
