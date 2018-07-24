@@ -4,7 +4,7 @@ import org.slf4j.MDC;
 
 public class TaskLogContext implements AutoCloseable {
   public TaskLogContext(String taskId) {
-    MDC.put("taskId", taskId);
+    MDC.put("taskId", '[' + taskId + ']');
   }
 
   @Override

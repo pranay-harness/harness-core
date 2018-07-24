@@ -86,6 +86,7 @@ import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.scheduler.NotifyJob;
 import software.wings.scheduler.QuartzScheduler;
+import software.wings.service.impl.ExecutionLogContext;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
@@ -336,6 +337,8 @@ public class StateMachineExecutor {
     StateExecutionInstance stateExecutionInstance = pageResponse.get(0);
     StateMachine stateMachine =
         wingsPersistence.get(StateMachine.class, stateExecutionInstance.getStateMachineId(), CRITICAL);
+    logger.info("Starting execution of StateMachine {} with initialState {}", stateMachine.getName(),
+        stateMachine.getInitialStateName());
     startExecution(stateMachine, stateExecutionInstance);
     return true;
   }
@@ -450,6 +453,9 @@ public class StateMachineExecutor {
       StateMachine stateMachine = context.getStateMachine();
       State currentState =
           stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
+
+      logger.info("startStateExecution for State {} of type {}", currentState.getName(), currentState.getStateType());
+
       if (stateExecutionInstance.getStateParams() != null) {
         MapperUtils.mapObject(stateExecutionInstance.getStateParams(), currentState);
       }
@@ -1537,7 +1543,7 @@ public class StateMachineExecutor {
      */
     @Override
     public void run() {
-      try {
+      try (ExecutionLogContext ctx = new ExecutionLogContext(context.getWorkflowExecutionId())) {
         stateMachineExecutor.startExecution(context);
       } catch (WingsException exception) {
         addContext(context, exception);
@@ -1610,7 +1616,7 @@ public class StateMachineExecutor {
      */
     @Override
     public void run() {
-      try {
+      try (ExecutionLogContext ctx = new ExecutionLogContext(context.getWorkflowExecutionId())) {
         if (asyncError) {
           StateExecutionData stateExecutionData = context.getStateExecutionInstance().getStateExecutionData();
           ErrorNotifyResponseData errorNotifyResponseData =

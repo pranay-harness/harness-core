@@ -1173,6 +1173,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecution.setReleaseNo(String.valueOf(entityVersion.getVersion()));
     workflowExecution = wingsPersistence.saveAndGet(WorkflowExecution.class, workflowExecution);
 
+    logger.info("Created workflow execution {}", workflowExecution.getUuid());
+
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setAppId(workflowExecution.getAppId());
     stateExecutionInstance.setExecutionName(workflowExecution.getName());

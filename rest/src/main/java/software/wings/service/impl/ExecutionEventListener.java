@@ -78,24 +78,30 @@ public class ExecutionEventListener extends AbstractQueueListener<ExecutionEvent
         return;
       }
 
-      boolean started = stateMachineExecutor.startQueuedExecution(message.getAppId(), workflowExecution.getUuid());
-      ExecutionStatus status = RUNNING;
-      if (!started) {
-        status = FAILED;
-        logger.error("WorkflowExecution could not be started from QUEUED state- appId:{}, WorkflowExecution:{}",
-            message.getAppId(), workflowExecution.getUuid());
-      }
+      try (ExecutionLogContext ctx = new ExecutionLogContext(workflowExecution.getUuid())) {
+        logger.info("Starting Queued execution..");
 
-      // TODO: findAndModify
-      Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
-                                           .filter("appId", workflowExecution.getAppId())
-                                           .filter(ID_KEY, workflowExecution.getUuid())
-                                           .field("status")
-                                           .in(asList(NEW, QUEUED));
-      UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
-                                                          .set("status", status)
-                                                          .set("startTs", System.currentTimeMillis());
-      wingsPersistence.update(query, updateOps);
+        boolean started = stateMachineExecutor.startQueuedExecution(message.getAppId(), workflowExecution.getUuid());
+        ExecutionStatus status = RUNNING;
+        if (!started) {
+          status = FAILED;
+          logger.error("WorkflowExecution could not be started from QUEUED state- appId:{}, WorkflowExecution:{}",
+              message.getAppId(), workflowExecution.getUuid());
+        }
+
+        // TODO: findAndModify
+        Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
+                                             .filter("appId", workflowExecution.getAppId())
+                                             .filter(ID_KEY, workflowExecution.getUuid())
+                                             .field("status")
+                                             .in(asList(NEW, QUEUED));
+        UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
+                                                            .set("status", status)
+                                                            .set("startTs", System.currentTimeMillis());
+        wingsPersistence.update(query, updateOps);
+      } catch (Exception e) {
+        logger.error("Exception in generating execution log context", e);
+      }
     }
   }
 }
