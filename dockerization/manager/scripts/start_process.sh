@@ -21,7 +21,8 @@ fi
 export JAVA_OPTS="-Xms${MEMORY}m -Xmx${MEMORY}m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Dfile.encoding=UTF-8"
 
 if [[ "${ENABLE_APPDYNAMICS}" == "true" ]] && [[ "${DISABLE_NEW_RELIC}" == "true" ]]; then
-    JAVA_OPTS=$JAVA_OPTS" -javaagent:/opt/harness/javaagent.jar"
+    tar -xvzf AppServerAgent-4.5.0.23604.tar.gz
+    JAVA_OPTS=$JAVA_OPTS" -javaagent:/opt/harness/AppServerAgent-4.5.0.23604/javaagent.jar"
     echo "Using Appdynamics java agent"
 fi
 
