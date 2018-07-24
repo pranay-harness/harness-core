@@ -315,11 +315,11 @@ def main(options):
 
             lnn = LogNeuralNet(corpus, options)
             corpus = lnn.run()
-            k8_performance()
 
             logger.info(corpus.save_to_harness(options.log_analysis_save_url,
                                                corpus.get_output_as_json(options), options.version_file_path,
                                                options.service_secret))
+            #k8_performance()
         else:
             corpus.save_to_harness(options.log_analysis_save_url,
                                    {}, options.version_file_path,

@@ -106,6 +106,7 @@ def run_learning_engine(parameters): #
                             logger.info('Starting neural nets analysis')
                             dtv_child = subprocess.Popen(['python', child_file_name, options])
                             dtv_child.wait()
+                            k8_performance()
                         else:
                             SplunkIntelOptimized.main(options)
                     elif options_dict['ml_analysis_type'] == 'TIME_SERIES':
@@ -132,6 +133,45 @@ def run_learning_engine(parameters): #
         #     print('Process is killed')
         #     sys.exit(5)
 
+
+def k8_performance():
+    from core.util.lelogging import get_log
+    import argparse
+    from sources.FileLoader import FileLoader
+    import platform, subprocess
+    from sources.LogCorpus import LogCorpus
+    from LogNeuralNet import LogNeuralNet
+
+
+    result_file = "k8_data.json"
+    data = FileLoader.load_data(result_file)
+
+    def get_processor_info():
+        if platform.system() == "Windows":
+            return platform.processor()
+        elif platform.system() == "Darwin":
+            return subprocess.check_output(['/usr/sbin/sysctl', "-n", "machdep.cpu.brand_string"]).strip()
+        elif platform.system() == "Linux":
+            command = "cat /proc/cpuinfo"
+            return subprocess.check_output(command, shell=True).strip()
+        return ""
+    cpu_info = get_processor_info()
+    out_text = 'cpu_info: ' + cpu_info
+
+    def parse_k8(cli_args):
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--sim_threshold", type=float)
+        parser.add_argument("--state_execution_id", type=str)
+        return parser.parse_args(cli_args)
+
+    corpus = LogCorpus()
+    corpus.control_events = data['control_events']
+    corpus.test_events = data['test_events']
+    logger.info('---------------------------------------testing performance------------------------------------------')
+
+    options_here = parse_k8(['--sim_threshold', '0.96', '--state_execution_id', out_text])
+    doc_vec_cluster = LogNeuralNet(corpus, options_here)
+    result = doc_vec_cluster.run()
 
 def parse(cli_args):
     parser = argparse.ArgumentParser()
