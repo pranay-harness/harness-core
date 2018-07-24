@@ -429,8 +429,13 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           }
         }
       } else {
-        downsizeOldOrUnhealthy(kubernetesConfig, encryptedDataDetails, containerServiceName, setupParams,
-            executionLogCallback, useDashInHostname);
+        try {
+          // This should not halt workflow execution.
+          downsizeOldOrUnhealthy(kubernetesConfig, encryptedDataDetails, containerServiceName, setupParams,
+              executionLogCallback, useDashInHostname);
+        } catch (Exception e) {
+          logger.warn("Cleaning up of old or unhealthy instances failed while setting up Kubernetes service: ", e);
+        }
         if (setupParams.isUseNewLabelMechanism()) {
           cleanupWithLabels(kubernetesConfig, encryptedDataDetails, executionLogCallback);
 

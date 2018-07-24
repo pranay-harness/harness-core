@@ -1131,7 +1131,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
             Optional<TaskMetadata.Task> optionalTask =
                 taskMetadata.getTasks().stream().filter(task -> taskArns.contains(task.getArn())).findFirst();
 
-            if (optionalTask.isPresent()) {
+            if (optionalTask.isPresent() && isNotEmpty(optionalTask.get().getContainers())) {
               String containerId =
                   StringUtils.substring(optionalTask.get().getContainers().get(0).getDockerId(), 0, 12);
               ContainerInfo containerInfo = ContainerInfo.builder()
