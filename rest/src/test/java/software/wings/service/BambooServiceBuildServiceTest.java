@@ -3,6 +3,7 @@ package software.wings.service;
 import com.google.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -12,6 +13,8 @@ import software.wings.beans.BambooConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.generator.SecretGenerator;
+import software.wings.generator.SecretGenerator.SecretName;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.service.intfc.SettingsService;
 
@@ -26,13 +29,17 @@ public class BambooServiceBuildServiceTest extends WingsBaseTest {
 
   @Inject BambooService bambooService;
   @Inject SettingsService settingsService;
+  @Inject SecretGenerator secretGenerator;
+  private BambooConfig bambooConfig;
 
-  private BambooConfig bambooConfig =
-      BambooConfig.builder()
-          .bambooUrl("http://ec2-54-144-126-230.compute-1.amazonaws.com:8085/rest/api/latest/")
-          .username("wingsbuild")
-          .password("0db28aa0f4fc0685df9a216fc7af0ca96254b7c2".toCharArray())
-          .build();
+  @Before
+  public void setUp() {
+    bambooConfig = BambooConfig.builder()
+                       .bambooUrl("http://ec2-54-144-126-230.compute-1.amazonaws.com:8085/rest/api/latest/")
+                       .username("wingsbuild")
+                       .password(secretGenerator.decryptToCharArray(new SecretName("bamboo_config_password")))
+                       .build();
+  }
 
   @Test
   public void shouldFetchBambooSettings() {

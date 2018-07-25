@@ -20,7 +20,9 @@ public class SecretGeneratorTest extends WingsBaseTest {
       return;
     }
 
-    final byte[] bytes = "this is a test of the cipher".getBytes();
+    String text = "this is a test of the cipher";
+
+    final byte[] bytes = text.getBytes();
     String test = secretGenerator.encrypt(bytes);
 
     for (int i = 0; i < test.length() / 118; i++) {
@@ -32,6 +34,9 @@ public class SecretGeneratorTest extends WingsBaseTest {
       logger.info(test.substring(skip, test.length()));
     }
 
+    logger.info(test.substring(skip, test.length()));
+
+    logger.info(test);
     assertThat(secretGenerator.decrypt(test)).isEqualTo(bytes);
   }
 }

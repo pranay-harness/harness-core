@@ -19,6 +19,8 @@ import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
+import software.wings.generator.SecretGenerator;
+import software.wings.generator.SecretGenerator.SecretName;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
@@ -38,6 +40,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   private static final Logger logger = LoggerFactory.getLogger(AppdynamicsIntegrationTest.class);
 
   @Inject private AppdynamicsDelegateService appdynamicsDelegateService;
+  @Inject SecretGenerator secretGenerator;
 
   private String appdynamicsSettingId;
 
@@ -55,7 +58,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
                            .controllerUrl("https://harness-test.saas.appdynamics.com/controller")
                            .username("raghu@harness.io")
                            .accountname("harness-test")
-                           .password("(idlk2e9idcs@ej".toCharArray())
+                           .password(secretGenerator.decryptToCharArray(new SecretName("appd_config_password")))
                            .build())
             .build();
     appdynamicsSettingId = wingsPersistence.saveAndGet(SettingAttribute.class, appdSettingAttribute).getUuid();

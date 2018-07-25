@@ -55,6 +55,8 @@ import software.wings.beans.config.NexusConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.generator.SecretGenerator;
+import software.wings.generator.SecretGenerator.SecretName;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.security.UserThreadLocal;
@@ -106,6 +108,7 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
   @Inject private ArtifactoryBuildService artifactoryBuildService;
   @Inject private EcrBuildService ecrBuildService;
   @Inject private SecretManagementDelegateService secretManagementDelegateService;
+  @Inject private SecretGenerator secretGenerator;
   private final String userEmail = "rsingh@harness.io";
   private final String userName = "raghu";
   private final User user = User.Builder.anUser().withEmail(userEmail).withName(userName).build();
@@ -161,17 +164,19 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
         break;
       case BAMBOO:
         when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(bambooBuildService);
-        settingAttribute = aSettingAttribute()
-                               .withName(HARNESS_BAMBOO)
-                               .withCategory(CONNECTOR)
-                               .withAccountId(accountId)
-                               .withValue(BambooConfig.builder()
-                                              .accountId(accountId)
-                                              .bambooUrl("http://ec2-34-205-16-35.compute-1.amazonaws.com:8085/")
-                                              .username("wingsbuild")
-                                              .password("0db28aa0f4fc0685df9a216fc7af0ca96254b7c2".toCharArray())
-                                              .build())
-                               .build();
+        settingAttribute =
+            aSettingAttribute()
+                .withName(HARNESS_BAMBOO)
+                .withCategory(CONNECTOR)
+                .withAccountId(accountId)
+                .withValue(
+                    BambooConfig.builder()
+                        .accountId(accountId)
+                        .bambooUrl("http://ec2-34-205-16-35.compute-1.amazonaws.com:8085/")
+                        .username("wingsbuild")
+                        .password(secretGenerator.decryptToCharArray(new SecretName("bamboo_connector_password")))
+                        .build())
+                .build();
         artifactStream = new BambooArtifactStream();
         ((BambooArtifactStream) artifactStream).setJobname(jobName);
         ((BambooArtifactStream) artifactStream).setArtifactPaths(Collections.singletonList(artifactPath));
@@ -181,17 +186,18 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
 
       case NEXUS:
         when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(nexusBuildService);
-        settingAttribute = aSettingAttribute()
-                               .withName(HARNESS_NEXUS)
-                               .withCategory(CONNECTOR)
-                               .withAccountId(accountId)
-                               .withValue(NexusConfig.builder()
-                                              .accountId(accountId)
-                                              .nexusUrl("https://nexus.wings.software")
-                                              .username("admin")
-                                              .password("wings123!".toCharArray())
-                                              .build())
-                               .build();
+        settingAttribute =
+            aSettingAttribute()
+                .withName(HARNESS_NEXUS)
+                .withCategory(CONNECTOR)
+                .withAccountId(accountId)
+                .withValue(NexusConfig.builder()
+                               .accountId(accountId)
+                               .nexusUrl("https://nexus.wings.software")
+                               .username("admin")
+                               .password(secretGenerator.decryptToCharArray(new SecretName("nexus_connector_password")))
+                               .build())
+                .build();
         artifactStream = new NexusArtifactStream();
         ((NexusArtifactStream) artifactStream).setJobname(jobName);
         ((NexusArtifactStream) artifactStream).setArtifactPaths(Collections.singletonList(artifactPath));
@@ -202,17 +208,19 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
 
       case DOCKER:
         when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(dockerBuildService);
-        settingAttribute = aSettingAttribute()
-                               .withName(HARNESS_DOCKER_REGISTRY)
-                               .withCategory(CONNECTOR)
-                               .withAccountId(accountId)
-                               .withValue(DockerConfig.builder()
-                                              .accountId(accountId)
-                                              .dockerRegistryUrl("https://registry.hub.docker.com/v2/")
-                                              .username("wingsplugins")
-                                              .password("W!ngs@DockerHub".toCharArray())
-                                              .build())
-                               .build();
+        settingAttribute =
+            aSettingAttribute()
+                .withName(HARNESS_DOCKER_REGISTRY)
+                .withCategory(CONNECTOR)
+                .withAccountId(accountId)
+                .withValue(
+                    DockerConfig.builder()
+                        .accountId(accountId)
+                        .dockerRegistryUrl("https://registry.hub.docker.com/v2/")
+                        .username("wingsplugins")
+                        .password(secretGenerator.decryptToCharArray(new SecretName("docker_connector_password")))
+                        .build())
+                .build();
         artifactStream = new DockerArtifactStream();
         ((DockerArtifactStream) artifactStream).setImageName(artifactPath);
         artifactStream.setServiceId(service.getUuid());
@@ -220,17 +228,19 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
         break;
       case ARTIFACTORY:
         when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(artifactoryBuildService);
-        settingAttribute = aSettingAttribute()
-                               .withName(HARNESS_ARTIFACTORY)
-                               .withCategory(CONNECTOR)
-                               .withAccountId(accountId)
-                               .withValue(ArtifactoryConfig.builder()
-                                              .accountId(accountId)
-                                              .artifactoryUrl("https://harness.jfrog.io/harness")
-                                              .username("admin")
-                                              .password("harness123!".toCharArray())
-                                              .build())
-                               .build();
+        settingAttribute =
+            aSettingAttribute()
+                .withName(HARNESS_ARTIFACTORY)
+                .withCategory(CONNECTOR)
+                .withAccountId(accountId)
+                .withValue(
+                    ArtifactoryConfig.builder()
+                        .accountId(accountId)
+                        .artifactoryUrl("https://harness.jfrog.io/harness")
+                        .username("admin")
+                        .password(secretGenerator.decryptToCharArray(new SecretName("artifactory_connector_password")))
+                        .build())
+                .build();
         artifactStream = new ArtifactoryArtifactStream();
         ((ArtifactoryArtifactStream) artifactStream).setJobname(jobName);
         ((ArtifactoryArtifactStream) artifactStream).setArtifactPattern(groupId);
@@ -241,16 +251,18 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
         break;
       case ECR:
         when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(ecrBuildService);
-        settingAttribute = aSettingAttribute()
-                               .withName("AWS")
-                               .withCategory(CLOUD_PROVIDER)
-                               .withAccountId(accountId)
-                               .withValue(AwsConfig.builder()
-                                              .accountId(accountId)
-                                              .accessKey("AKIAIKL7FYYF2TIYHCLQ")
-                                              .secretKey("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".toCharArray())
-                                              .build())
-                               .build();
+        settingAttribute =
+            aSettingAttribute()
+                .withName("AWS")
+                .withCategory(CLOUD_PROVIDER)
+                .withAccountId(accountId)
+                .withValue(
+                    AwsConfig.builder()
+                        .accountId(accountId)
+                        .accessKey(secretGenerator.decryptToString(new SecretName("ecr_connector_access_key")))
+                        .secretKey(secretGenerator.decryptToCharArray(new SecretName("ecr_connector_secret_key")))
+                        .build())
+                .build();
         artifactStream = new EcrArtifactStream();
         ((EcrArtifactStream) artifactStream).setRegion(Regions.US_EAST_1.getName());
         ((EcrArtifactStream) artifactStream).setImageName(groupId);

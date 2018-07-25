@@ -74,8 +74,11 @@ public class InfrastructureProvisionerGenerator {
         TerraformInfrastructureProvisioner.builder()
             .name("Harness Terraform Test")
             .sourceRepoSettingId(gitSourceSettingAttribute.getUuid())
-            .variables(asList(
-                NameValuePair.builder().name("access_key").value("AKIAIQHVMR7P5UESAUJQ").valueType("TEXT").build(),
+            .variables(asList(NameValuePair.builder()
+                                  .name("access_key")
+                                  .value(secretGenerator.decryptToString(new SecretName("aws_playground_access_key")))
+                                  .valueType("TEXT")
+                                  .build(),
                 NameValuePair.builder()
                     .name("secret_key")
                     .value(secretGenerator.decryptToString(new SecretName("aws_playground_secret_key")))

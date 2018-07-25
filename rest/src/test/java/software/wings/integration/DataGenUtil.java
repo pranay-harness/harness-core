@@ -123,6 +123,8 @@ import software.wings.generator.OwnerManager;
 import software.wings.generator.OwnerManager.Owners;
 import software.wings.generator.PipelineGenerator;
 import software.wings.generator.Randomizer.Seed;
+import software.wings.generator.SecretGenerator;
+import software.wings.generator.SecretGenerator.SecretName;
 import software.wings.generator.ServiceGenerator;
 import software.wings.generator.ServiceGenerator.Services;
 import software.wings.generator.ServiceTemplateGenerator;
@@ -178,6 +180,8 @@ public class DataGenUtil extends BaseIntegrationTest {
   private static final int TAG_HIERARCHY_DEPTH = 3; /* Max 10   */
   public static final String AWS_PLAY_GROUND = "aws-playground";
   public static final String WINGS_KEY = "Wings Key";
+
+  @Inject SecretGenerator secretGenerator;
 
   /**
    * The Test folder.
@@ -455,20 +459,21 @@ public class DataGenUtil extends BaseIntegrationTest {
     settingGenerator.ensurePredefined(seed, HARNESS_DOCKER_REGISTRY);
     settingGenerator.ensurePredefined(seed, HARNESS_GCP_EXPLORATION);
 
-    SettingAttribute smtpSettingAttribute = aSettingAttribute()
-                                                .withCategory(Category.CONNECTOR)
-                                                .withName("SMTP")
-                                                .withAccountId(accountId)
-                                                .withValue(SmtpConfig.builder()
-                                                               .accountId(accountId)
-                                                               .fromAddress("support@harness.io")
-                                                               .username("support@harness.io")
-                                                               .host("smtp.gmail.com")
-                                                               .password("@wes0me@pp".toCharArray())
-                                                               .port(465)
-                                                               .useSSL(true)
-                                                               .build())
-                                                .build();
+    SettingAttribute smtpSettingAttribute =
+        aSettingAttribute()
+            .withCategory(Category.CONNECTOR)
+            .withName("SMTP")
+            .withAccountId(accountId)
+            .withValue(SmtpConfig.builder()
+                           .accountId(accountId)
+                           .fromAddress("support@harness.io")
+                           .username("support@harness.io")
+                           .host("smtp.gmail.com")
+                           .password(secretGenerator.decryptToCharArray(new SecretName("smtp_config_password")))
+                           .port(465)
+                           .useSSL(true)
+                           .build())
+            .build();
     wingsPersistence.save(smtpSettingAttribute);
 
     SettingAttribute splunkSettingAttribute =
@@ -479,7 +484,7 @@ public class DataGenUtil extends BaseIntegrationTest {
             .withValue(SplunkConfig.builder()
                            .accountId(accountId)
                            .splunkUrl("https://ec2-52-54-103-49.compute-1.amazonaws.com:8089")
-                           .password("W!ngs@Splunk".toCharArray())
+                           .password(secretGenerator.decryptToCharArray(new SecretName("splunk_config_password")))
                            .username("admin")
                            .build())
             .build();
@@ -495,7 +500,7 @@ public class DataGenUtil extends BaseIntegrationTest {
                            .controllerUrl("https://harness-test.saas.appdynamics.com/controller")
                            .username("raghu@harness.io")
                            .accountname("harness-test")
-                           .password("(idlk2e9idcs@ej".toCharArray())
+                           .password(secretGenerator.decryptToCharArray(new SecretName("appd_config_password")))
                            .build())
             .build();
     wingsPersistence.save(appdSettingAttribute);
@@ -522,8 +527,8 @@ public class DataGenUtil extends BaseIntegrationTest {
             .withEnvId(GLOBAL_ENV_ID)
             .withAccountId(accountId)
             .withValue(AwsConfig.builder()
-                           .accessKey("AKIAJYPT24SZETVEFYMQ")
-                           .secretKey("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".toCharArray())
+                           .accessKey(secretGenerator.decryptToString(new SecretName("aws_playground_access_key")))
+                           .secretKey(secretGenerator.decryptToCharArray(new SecretName("aws_playground_secret_key")))
                            .accountId(accountId)
                            .build())
             .build();
@@ -540,30 +545,7 @@ public class DataGenUtil extends BaseIntegrationTest {
                            .withAccessType(KEY)
                            .withAccountId(accountId)
                            .withUserName("ubuntu")
-                           .withKey(("-----BEGIN RSA PRIVATE KEY-----\n"
-                               + "MIIEogIBAAKCAQEArCtMvZebz8vGCUah4C4kThYOAEjrdgaGe8M8w+66jPKEnX1GDXj4mrlIxRxO\n"
-                               + "ErJTwNirPLhIhw/8mGojcsbc5iY7wK6TThJI0uyzUtPfZ1g8zzcQxh7aMOYso/Nxoz6YtO6HRQhd\n"
-                               + "rxiFuadVo+RuVUeBvVBiQauZMoESh1vGZ2r1eTuXKrSiStaafSfVzSEfvtJYNWnPguqcuGlrX3yv\n"
-                               + "sNOlIWzU3YETk0bMG3bejChGAKh35AhZdDO+U4g7zH8NI5KjT9IH7MyKAFxiCPYkNm7Y2Bw8j2eL\n"
-                               + "DIkqIA1YX0VxXBiCC2Vg78o7TxJ7Df7f3V+Q+Xhtj4rRtYCFw1pqBwIDAQABAoIBAGA//LDpNuQe\n"
-                               + "SWIaKJkJcqZs0fr6yRe8YiaCaVAoAAaX9eeNh0I05NaqyrHXNxZgt03SUzio1XMcTtxuSc76ube4\n"
-                               + "nCMF9bfppOi2BzJA3F4MCELXx/raeKRpqX8ms9rNPdW4m8rN+IHQtcGqeMgdBkmKpk9NxwBrjEOd\n"
-                               + "wNwHRI2/Y/ZCApkQDhRPXfEJXnY65SJJ8Vh1NAm6RuiKXv9+8J1//OHAeRfIXTJI4KiwP2EFHeXF\n"
-                               + "6K0EBVEb/M2kg81bh7iq2OoDxBVrF1Uozg4KUK2EMoCe5OidcSdD1G8ICTsRQlb9iW5e/c2UeCrb\n"
-                               + "HGkcmQyvDniyfFmVVymyr0vJTnECgYEA6FsPq4T+M0Cj6yUqsIdijqgpY31iX2BAibrLTOFUYhj3\n"
-                               + "oPpy2bciREXffMGpqiAY8czy3aEroNDC5c7lcwS1HuMgNls0nKuaPLaSg0rSXX9wRn0mYpasBEZ8\n"
-                               + "5pxFX44FnqTDa37Y7MqKykoMpEB71s1DtG9Ug1cMRuPftZZQ5qsCgYEAvbBcEiPFyKf5g2QRVA/k\n"
-                               + "FDQcX9hVm7cvDTo6+Qq6XUwrQ2cm9ZJ+zf+Jak+NSN88GNTzAPCWzd8zbZ2D7q4qAyDcSSy0PR3K\n"
-                               + "bHpLFZnYYOIkSfYcM3CwDhIFTnb9uvG8mypfMFGZ2qUZY/jbI0/cCctsUaXt03g4cM4Q04peehUC\n"
-                               + "gYAcsWoM9z5g2+GiHxPXetB75149D/W+62bs2ylR1B2Ug5rIwUS/h/LuVWaUxGGMRaxu560yGz4E\n"
-                               + "/OKkeFkzS+iF6OxIahjkI/jG+JC9L9csfplByyCbWhnh6UZxP+j9NM+S2KvdMWveSeC7vEs1WVUx\n"
-                               + "oGV0+a6JDY3Rj0BH70kMQwKBgD1ZaK3FPBalnSFNn/0cFpwiLnshMK7oFCOnDaO2QIgkNmnaVtNd\n"
-                               + "yf0+BGeJyxwidwFg/ibzqRJ0eeGd7Cmp0pSocBaKitCpbeqfsuENnNnYyfvRyVUpwQcL9QNnoLBx\n"
-                               + "tppInfi2q5f3hbq7pcRJ89SHIkVV8RFP9JEnVHHWcq/xAoGAJNbaYQMmLOpGRVwt7bdK5FXXV5OX\n"
-                               + "uzSUPICQJsflhj4KPxJ7sdthiFNLslAOyNYEP+mRy90ANbI1x7XildsB2wqBmqiXaQsyHBXRh37j\n"
-                               + "dMX4iYY1mW7JjS9Y2jy7xbxIBYDpwnqHLTMPSKFQpwsi7thP+0DRthj62sCjM/YB7Es=\n"
-                               + "-----END RSA PRIVATE KEY-----")
-                                        .toCharArray())
+                           .withKey(secretGenerator.decryptToCharArray(new SecretName("ubuntu_ssh_key")))
                            .build())
             .build();
     wingsPersistence.save(hostConnection);
