@@ -26,7 +26,6 @@ import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
-import software.wings.service.impl.newrelic.NewRelicSettingProvider;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
@@ -44,9 +43,7 @@ import java.util.concurrent.TimeUnit;
 public class NewRelicState extends AbstractMetricAnalysisState {
   @Transient @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(NewRelicState.class);
 
-  @EnumData(enumDataProvider = NewRelicSettingProvider.class)
-  @Attributes(required = true, title = "New Relic Server")
-  private String analysisServerConfigId;
+  @Attributes(required = true, title = "New Relic Server") private String analysisServerConfigId;
 
   @Attributes(required = true, title = "Application Name") private String applicationId;
 

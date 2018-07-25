@@ -39,7 +39,6 @@ import software.wings.beans.TaskType;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.command.JenkinsTaskParams;
 import software.wings.common.Constants;
-import software.wings.service.impl.JenkinsSettingProvider;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.security.SecretManager;
@@ -52,7 +51,6 @@ import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
-import software.wings.stencils.EnumData;
 import software.wings.waitnotify.DelegateTaskNotifyResponseData;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -70,8 +68,6 @@ public class JenkinsState extends State {
 
   @Inject private DelegateService delegateService;
 
-  @EnumData(enumDataProvider = JenkinsSettingProvider.class)
-  @Attributes(title = "Jenkins Server")
   private String jenkinsConfigId;
 
   @Attributes(title = "Job Name") private String jobName;

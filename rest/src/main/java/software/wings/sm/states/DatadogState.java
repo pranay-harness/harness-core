@@ -41,7 +41,6 @@ import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
 import software.wings.service.impl.apm.APMMetricInfo;
 import software.wings.service.impl.apm.APMMetricInfo.APMMetricInfoBuilder;
-import software.wings.service.impl.datadog.DatadogSettingProvider;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
@@ -74,9 +73,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
     return logger;
   }
 
-  @EnumData(enumDataProvider = DatadogSettingProvider.class)
-  @Attributes(required = true, title = "Datadog Server")
-  private String analysisServerConfigId;
+  @Attributes(required = true, title = "Datadog Server") private String analysisServerConfigId;
 
   @Attributes(required = false, title = "Datadog Service Name") private String datadogServiceName;
 
