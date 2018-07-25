@@ -46,7 +46,8 @@ public class PcfValidationCommandTaskHandler extends PcfCommandTaskHandler {
       pcfCommandExecutionResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
 
     } catch (Exception e) {
-      logger.error("Exception in processing PCF validation task [{}]", pcfInfraMappingDataRequest, e);
+      logger.error("Exception in processing PCF validation task for Account {} ",
+          pcfInfraMappingDataRequest.getPcfConfig().getAccountId(), e);
       pcfCommandExecutionResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
       pcfCommandExecutionResponse.setErrorMessage(Misc.getMessage(e));
     }

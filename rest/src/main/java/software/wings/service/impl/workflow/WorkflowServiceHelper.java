@@ -12,6 +12,7 @@ import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
+import static software.wings.beans.InfrastructureMappingType.PCF_PCF;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
 import static software.wings.beans.OrchestrationWorkflowType.BASIC;
 import static software.wings.beans.OrchestrationWorkflowType.BLUE_GREEN;
@@ -181,7 +182,8 @@ public class WorkflowServiceHelper {
           .stream()
           .anyMatch((InfrastructureMapping infra)
                         -> AWS_SSH.name().equals(infra.getInfraMappingType())
-                  || PHYSICAL_DATA_CENTER_SSH.name().equals(infra.getInfraMappingType()));
+                  || PHYSICAL_DATA_CENTER_SSH.name().equals(infra.getInfraMappingType())
+                  || PCF_PCF.name().equals(infra.getInfraMappingType()));
     }
     return false;
   }
