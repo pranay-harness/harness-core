@@ -714,39 +714,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       if (latestVersion != null) {
         logger.info("Downloading artifacts from artifactory for repoType {}, groupId {}, artifactId {} and version {}",
             repoType, groupId, artifactId, latestVersion);
-        List<RepoPath> results = artifactory.searches()
-                                     .artifactsByGavc()
-                                     .groupId(groupId)
-                                     .artifactId(artifactId)
-                                     .version(latestVersion)
-                                     .repositories(repoType)
-                                     .doSearch();
-        for (RepoPath searchItem : results) {
-          String repoKey = searchItem.getRepoKey();
-          String itemPath = searchItem.getItemPath();
-          String artifactName = itemPath.substring(itemPath.lastIndexOf('/') + 1);
-          try {
-            if (pattern.matcher(itemPath).find()) {
-              logger.info("Artifact name {}", artifactName);
-              if (artifactName.endsWith("pom") || artifactName.equals("maven-metadata.xml")) {
-                continue;
-              }
-
-              if (artifactNames.add(artifactName)) {
-                logger.info("Downloading file {} ", searchItem.getItemPath());
-                InputStream inputStream = artifactory.repository(repoKey).download(itemPath).doDownload();
-                logger.info("Downloading file {} success", searchItem.getItemPath());
-                artifactCollectionTaskHelper.addDataToResponse(
-                    new ImmutablePair<>(artifactName, inputStream), itemPath, res, delegateId, taskId, accountId);
-              }
-            } else {
-              logger.info("Repo path {} not matching with the artifact pattern {}", itemPath, artifactPattern);
-            }
-
-          } catch (Exception e) {
-            logger.error("Failed to download the artifact from path {}", itemPath, e);
-          }
-        }
+        downloadMavenArtifacts(repoType, groupId, artifactPattern, delegateId, taskId, accountId, res, artifactory,
+            pattern, artifactId, artifactNames, latestVersion);
         logger.info(
             "Downloading artifacts from artifactory for repoType {}, groupId {}, artifactId {} and version {} success",
             repoType, groupId, artifactId, latestVersion);
@@ -758,6 +727,44 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       prepareAndThrowException(msg + "Reason:" + ExceptionUtils.getRootCauseMessage(e), ADMIN, e);
     }
     return res;
+  }
+
+  private void downloadMavenArtifacts(String repoType, String groupId, String artifactPattern, String delegateId,
+      String taskId, String accountId, ListNotifyResponseData res, Artifactory artifactory, Pattern pattern,
+      String artifactId, Set<String> artifactNames, String latestVersion) {
+    List<RepoPath> results = artifactory.searches()
+                                 .artifactsByGavc()
+                                 .groupId(groupId)
+                                 .artifactId(artifactId)
+                                 .version(latestVersion)
+                                 .repositories(repoType)
+                                 .doSearch();
+    for (RepoPath searchItem : results) {
+      String repoKey = searchItem.getRepoKey();
+      String itemPath = searchItem.getItemPath();
+      String artifactName = itemPath.substring(itemPath.lastIndexOf('/') + 1);
+      try {
+        if (pattern.matcher(itemPath).find()) {
+          logger.info("Artifact name {}", artifactName);
+          if (artifactName.endsWith("pom") || artifactName.equals("maven-metadata.xml")) {
+            continue;
+          }
+
+          if (artifactNames.add(artifactName)) {
+            logger.info("Downloading file {} ", searchItem.getItemPath());
+            InputStream inputStream = artifactory.repository(repoKey).download(itemPath).doDownload();
+            logger.info("Downloading file {} success", searchItem.getItemPath());
+            artifactCollectionTaskHelper.addDataToResponse(
+                new ImmutablePair<>(artifactName, inputStream), itemPath, res, delegateId, taskId, accountId);
+          }
+        } else {
+          logger.info("Repo path {} not matching with the artifact pattern {}", itemPath, artifactPattern);
+        }
+
+      } catch (Exception e) {
+        logger.error("Failed to download the artifact from path {}", itemPath, e);
+      }
+    }
   }
 
   @Override
@@ -827,7 +834,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     ListNotifyResponseData res = new ListNotifyResponseData();
     Artifactory artifactory = getArtifactoryClient(artifactoryConfig, encryptionDetails);
     Set<String> artifactNames = new HashSet<>();
-    String artifactPath = metadata.get(ARTIFACT_PATH).replace(repoKey, "").substring(1);
+    String artifactPath = metadata.get(ARTIFACT_PATH).split("/")[1];
     String artifactName = metadata.get(ARTIFACT_FILE_NAME);
 
     try {
