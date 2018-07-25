@@ -14,11 +14,13 @@ import okhttp3.Response;
 import okhttp3.Route;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.apache.http.HttpHost;
+import org.apache.http.client.fluent.Content;
 import org.apache.http.client.fluent.Executor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
@@ -93,8 +95,8 @@ public class Http {
     return false;
   }
 
-  private static HttpURLConnection getHttpsURLConnection(String url) throws MalformedURLException, IOException {
-    HttpURLConnection connection = null;
+  private static HttpURLConnection getHttpsURLConnection(String url) throws IOException {
+    HttpURLConnection connection;
     if (shouldUseNonProxy(url)) {
       connection = (HttpURLConnection) new URL(url).openConnection(Proxy.NO_PROXY);
     } else {
@@ -352,8 +354,18 @@ public class Http {
     return proxyPort;
   }
 
-  public static String getResponseFromUrl(String url, HttpHost httpProxyHost, int socketTimeout, int connectTimeout)
-      throws IOException {
+  public static String getResponseStringFromUrl(
+      String url, HttpHost httpProxyHost, int socketTimeout, int connectTimeout) throws IOException {
+    return getResponseContentFromUrl(url, httpProxyHost, socketTimeout, connectTimeout).asString();
+  }
+
+  public static InputStream getResponseStreamFromUrl(
+      String url, HttpHost httpProxyHost, int socketTimeout, int connectTimeout) throws IOException {
+    return getResponseContentFromUrl(url, httpProxyHost, socketTimeout, connectTimeout).asStream();
+  }
+
+  private static Content getResponseContentFromUrl(
+      String url, HttpHost httpProxyHost, int socketTimeout, int connectTimeout) throws IOException {
     Executor executor = Executor.newInstance();
     org.apache.http.client.fluent.Request request =
         org.apache.http.client.fluent.Request.Get(url).connectTimeout(connectTimeout).socketTimeout(socketTimeout);
@@ -370,6 +382,6 @@ public class Http {
     }
 
     org.apache.http.client.fluent.Response response = executor.execute(request);
-    return response.returnContent().asString();
+    return response.returnContent();
   }
 }

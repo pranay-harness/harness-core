@@ -29,6 +29,7 @@ import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskRes
 import static software.wings.beans.ErrorCode.UNAVAILABLE_DELEGATES;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.FeatureName.DELEGATE_TASK_VERSIONING;
+import static software.wings.beans.FeatureName.MULTI_VERSION_DELEGATE;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
@@ -105,6 +106,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.EventEmitter.Channel;
+import software.wings.service.impl.infra.InfraDownloadService;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AssignDelegateService;
@@ -139,9 +141,6 @@ import java.util.zip.GZIPOutputStream;
 import javax.validation.executable.ValidateOnExecution;
 import javax.ws.rs.NotFoundException;
 
-/**
- * Created by peeyushaggarwal on 11/28/16.
- */
 @Singleton
 @ValidateOnExecution
 public class DelegateServiceImpl implements DelegateService {
@@ -150,7 +149,8 @@ public class DelegateServiceImpl implements DelegateService {
   private static final String ACCOUNT_ID = "accountId";
   private static final Configuration cfg = new Configuration(VERSION_2_3_23);
   private static final int MAX_DELEGATE_META_INFO_ENTRIES = 10000;
-  public static final int DELEGATE_METADATA_HTTP_CALL_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(10);
+  private static final int DELEGATE_METADATA_HTTP_CALL_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(10);
+  private static final String NEW_DELEGATE_VERSION = "new-delegate-version";
 
   static {
     cfg.setTemplateLoader(new ClassTemplateLoader(DelegateServiceImpl.class, "/delegatetemplates"));
@@ -173,6 +173,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private VersionInfoManager versionInfoManager;
   @Inject private Injector injector;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private InfraDownloadService infraDownloadService;
 
   private LoadingCache<String, String> delegateVersionCache =
       CacheBuilder.newBuilder()
@@ -180,7 +181,7 @@ public class DelegateServiceImpl implements DelegateService {
           .expireAfterWrite(1, TimeUnit.MINUTES)
           .build(new CacheLoader<String, String>() {
             public String load(String accountId) {
-              return fetchAccountDelegateMetadataFromS3(accountId);
+              return fetchAccountDelegateMetadataFromStorage(accountId);
             }
           });
 
@@ -356,7 +357,11 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public DelegateScripts checkForUpgrade(String accountId, String delegateId, String version, String managerHost)
       throws IOException, TemplateException {
-    logger.info("Checking delegate for upgrade: {}", delegateId);
+    if (NEW_DELEGATE_VERSION.equals(delegateId)) {
+      logger.info("Returning scripts for new delegate version: {}", version);
+    } else {
+      logger.info("Checking delegate for upgrade: {}", delegateId);
+    }
 
     ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(accountId, version, managerHost);
 
@@ -394,11 +399,11 @@ public class DelegateServiceImpl implements DelegateService {
     return substringBefore(delegateMatadata, " ").trim();
   }
 
-  private String fetchAccountDelegateMetadataFromS3(String acccountId) {
+  private String fetchAccountDelegateMetadataFromStorage(String acccountId) {
     // TODO:: Specific restriction for account can be handled here.
     String delegateMetadataUrl = mainConfiguration.getDelegateMetadataUrl().trim();
     try {
-      logger.info("Fetching delegate metadata from S3: {}", delegateMetadataUrl);
+      logger.info("Fetching delegate metadata from storage: {}", delegateMetadataUrl);
       String result = Request.Get(delegateMetadataUrl)
                           .connectTimeout(DELEGATE_METADATA_HTTP_CALL_TIMEOUT)
                           .socketTimeout(DELEGATE_METADATA_HTTP_CALL_TIMEOUT)
@@ -406,7 +411,7 @@ public class DelegateServiceImpl implements DelegateService {
                           .returnContent()
                           .asString()
                           .trim();
-      logger.info("Received from S3: {}", result);
+      logger.info("Received from storage: {}", result);
       return result;
     } catch (IOException e) {
       logger.warn("Exception in fetching delegate version", e);
@@ -429,20 +434,33 @@ public class DelegateServiceImpl implements DelegateService {
     boolean jarFileExists = false;
     boolean versionChanged = false;
 
+    boolean multiVersion = featureFlagService.isEnabled(MULTI_VERSION_DELEGATE, accountId);
+
     try {
       String delegateMetadataUrl = mainConfiguration.getDelegateMetadataUrl().trim();
-      logger.info("Delegate metaData URL is " + delegateMetadataUrl);
-      String delegateMatadata = delegateVersionCache.get(accountId);
-      logger.info("Delegate meta data: [{}]", delegateMatadata);
-      latestVersion = substringBefore(delegateMatadata, " ").trim();
-      versionChanged = !(Version.valueOf(version).equals(Version.valueOf(latestVersion)));
+      String delegateMatadata;
+      if (multiVersion) {
+        latestVersion = version;
+        delegateStorageUrl = "";
+        delegateCheckLocation = "";
 
-      if (versionChanged) {
+        String minorVersion = getMinorVersion(version).toString();
+        delegateJarDownloadUrl = infraDownloadService.getDownloadUrlForDelegate(minorVersion);
+
+        versionChanged = true;
+      } else {
+        logger.info("Delegate metaData URL is " + delegateMetadataUrl);
+        delegateMatadata = delegateVersionCache.get(accountId);
+        logger.info("Delegate meta data: [{}]", delegateMatadata);
+        latestVersion = substringBefore(delegateMatadata, " ").trim();
+        versionChanged = !(Version.valueOf(version).equals(Version.valueOf(latestVersion)));
         jarRelativePath = substringAfter(delegateMatadata, " ").trim();
-
         delegateStorageUrl = delegateMetadataUrl.substring(0, delegateMetadataUrl.lastIndexOf('/'));
         delegateCheckLocation = delegateMetadataUrl.substring(delegateMetadataUrl.lastIndexOf('/') + 1);
         delegateJarDownloadUrl = delegateStorageUrl + "/" + jarRelativePath;
+      }
+
+      if (versionChanged) {
         jarFileExists = Request.Head(delegateJarDownloadUrl)
                             .connectTimeout(10000)
                             .socketTimeout(10000)
@@ -473,13 +491,26 @@ public class DelegateServiceImpl implements DelegateService {
                                                         .put("delegateStorageUrl", delegateStorageUrl)
                                                         .put("delegateCheckLocation", delegateCheckLocation)
                                                         .put("deployMode", mainConfiguration.getDeployMode().name())
-                                                        .put("kubernetesAccountLabel", getAccountIdentifier(accountId));
+                                                        .put("kubernetesAccountLabel", getAccountIdentifier(accountId))
+                                                        .put("multiVersion", Boolean.toString(multiVersion));
       if (isNotBlank(delegateName)) {
         params.put("delegateName", delegateName);
       }
       return params.build();
     }
     return null;
+  }
+
+  private Integer getMinorVersion(String delegateVersion) {
+    Integer delegateVersionNumber = null;
+    if (isNotBlank(delegateVersion)) {
+      try {
+        delegateVersionNumber = Integer.parseInt(delegateVersion.substring(delegateVersion.lastIndexOf('.') + 1));
+      } catch (NumberFormatException e) {
+        // Leave it null
+      }
+    }
+    return delegateVersionNumber;
   }
 
   @Override

@@ -1,8 +1,7 @@
 package software.wings.integration.network;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import okhttp3.Authenticator;
 import okhttp3.Credentials;
@@ -78,7 +77,7 @@ public class ProxyTest {
     try {
       assertEquals("OK", executor.execute(request).returnResponse().getStatusLine().getReasonPhrase());
     } catch (Exception e) {
-      assertTrue("Should not reach here", false);
+      fail("Should not reach here");
     }
   }
 
@@ -115,7 +114,7 @@ public class ProxyTest {
       String responsePhrase = executor.execute(requestObj).returnResponse().getStatusLine().getReasonPhrase();
       assertEquals("OK", responsePhrase);
     } catch (Exception e) {
-      assertTrue("Should not reach here", false);
+      fail("Should not reach here");
     }
   }
 
@@ -138,9 +137,9 @@ public class ProxyTest {
     Request request = new Request.Builder().url(targetUrl).build();
     try {
       Response response = builder.build().newCall(request).execute();
-      assertFalse("expected to fail auth", true);
+      fail("expected to fail auth");
     } catch (Exception ex) {
-      assertTrue(true);
+      // expected
     }
   }
 

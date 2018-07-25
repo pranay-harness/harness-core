@@ -18,6 +18,7 @@ import org.apache.log4j.LogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
+import software.wings.managerclient.ManagerClientModule;
 import software.wings.utils.message.MessageService;
 import software.wings.watcher.service.WatcherService;
 
@@ -77,12 +78,16 @@ public class WatcherApplication {
   @SuppressFBWarnings("DM_EXIT")
   private void run(WatcherConfiguration configuration, boolean upgrade, String previousWatcherProcess)
       throws Exception {
-    Injector injector = Guice.createInjector(new AbstractModule() {
-      @Override
-      protected void configure() {
-        bind(WatcherConfiguration.class).toInstance(configuration);
-      }
-    }, new WatcherModule());
+    Injector injector = Guice.createInjector(
+        new AbstractModule() {
+          @Override
+          protected void configure() {
+            bind(WatcherConfiguration.class).toInstance(configuration);
+          }
+        },
+        new ManagerClientModule(
+            configuration.getManagerUrl(), configuration.getAccountId(), configuration.getAccountSecret()),
+        new WatcherModule());
     if (upgrade) {
       MessageService messageService = injector.getInstance(MessageService.class);
       logger.info("Sending previous watcher process {} new watcher process ID: {}", previousWatcherProcess, processId);

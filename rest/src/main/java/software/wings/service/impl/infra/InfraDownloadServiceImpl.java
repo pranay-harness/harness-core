@@ -11,13 +11,15 @@ import software.wings.beans.ErrorCode;
 import software.wings.exception.WingsException;
 import software.wings.utils.GcsUtil;
 
+import java.util.Optional;
 import javax.validation.executable.ValidateOnExecution;
 
 @Singleton
 @ValidateOnExecution
 public class InfraDownloadServiceImpl implements InfraDownloadService {
   private static final Logger logger = LoggerFactory.getLogger(InfraDownloadServiceImpl.class);
-  final String BUILDS_PATH = "/builds/";
+
+  private static final String BUILDS_PATH = "/builds/";
 
   @Inject private GcsUtil gcsUtil;
 
@@ -65,12 +67,7 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
   }
 
   protected String getEnv() {
-    final String enviornment = System.getenv().get("ENV");
-    if (enviornment != null) {
-      return enviornment;
-    } else {
-      return "ci";
-    }
+    return Optional.ofNullable(System.getenv().get("ENV")).orElse("ci");
   }
 
   protected String getServiceAccountJson(String env) {

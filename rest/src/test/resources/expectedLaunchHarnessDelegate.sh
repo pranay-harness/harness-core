@@ -11,6 +11,7 @@ sudo docker run -d --restart unless-stopped --hostname=$(hostname -f) \
 -e DELEGATE_STORAGE_URL=http://localhost:8888 \
 -e DELEGATE_CHECK_LOCATION=delegateci.txt \
 -e DEPLOY_MODE=AWS \
+-e MULTI_VERSION=false \
 -e PROXY_HOST= \
 -e PROXY_PORT= \
 -e PROXY_SCHEME= \
