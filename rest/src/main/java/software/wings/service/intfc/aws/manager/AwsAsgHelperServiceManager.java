@@ -11,4 +11,5 @@ public interface AwsAsgHelperServiceManager {
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region);
   List<Instance> listAutoScalingGroupInstances(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName);
+  // Map<String, Integer> listDesiredCapacitiesForAutoScalingGroups(List<String> autoScalingGroupNames);
 }

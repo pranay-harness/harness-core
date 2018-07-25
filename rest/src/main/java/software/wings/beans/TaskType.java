@@ -28,6 +28,7 @@ import software.wings.delegatetasks.ShellScriptTask;
 import software.wings.delegatetasks.SplunkDataCollectionTask;
 import software.wings.delegatetasks.SumoDataCollectionTask;
 import software.wings.delegatetasks.TerraformProvisionTask;
+import software.wings.delegatetasks.aws.AwsAmiAsyncTask;
 import software.wings.delegatetasks.aws.AwsAsgTask;
 import software.wings.delegatetasks.aws.AwsCodeDeployTask;
 import software.wings.delegatetasks.aws.AwsEc2Task;
@@ -225,7 +226,8 @@ public enum TaskType {
   AWS_ASG_TASK(TaskGroup.AWS, AwsAsgTask.class, AlwaysTrueValidation.class),
   AWS_CODE_DEPLOY_TASK(TaskGroup.AWS, AwsCodeDeployTask.class, AlwaysTrueValidation.class),
   AWS_LAMBDA_TASK(TaskGroup.AWS, AwsLambdaTask.class, AlwaysTrueValidation.class),
-  AWS_LAMBDA_ASYNC_TASK(TaskGroup.AWS, AwsLambdaAsyncTask.class, AlwaysTrueValidation.class);
+  AWS_LAMBDA_ASYNC_TASK(TaskGroup.AWS, AwsLambdaAsyncTask.class, AlwaysTrueValidation.class),
+  AWS_AMI_ASYNC_TASK(TaskGroup.AWS, AwsAmiAsyncTask.class, AlwaysTrueValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;
