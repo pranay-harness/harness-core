@@ -8,6 +8,8 @@ import lombok.Data;
 @Data
 public class WatcherConfiguration {
   private String accountId;
+  private String accountSecret;
+  private String managerUrl;
   private boolean doUpgrade;
   private String upgradeCheckLocation;
   private long upgradeCheckIntervalSeconds;

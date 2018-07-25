@@ -6,6 +6,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.network.Localhost.getLocalHostAddress;
 import static io.harness.network.Localhost.getLocalHostName;
 import static io.harness.threading.Morpheus.sleep;
+import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofMillis;
@@ -195,16 +196,17 @@ public class DelegateServiceImpl implements DelegateService {
   private String accountId;
   private long watcherVersionMatchedAt = System.currentTimeMillis();
   private HttpHost httpProxyHost;
-  private List<String> nonProxyHosts;
 
   private final String delegateConnectionId = generateUuid();
   private DelegateConnectionHeartbeat connectionHeartbeat;
+
+  private final boolean multiVersionSupport = TRUE.toString().equals(System.getenv().get("MULTI_VERSION"));
 
   public static String getHostName() {
     return hostName;
   }
 
-  public static String getDelegateId() {
+  static String getDelegateId() {
     return delegateId;
   }
 
@@ -249,7 +251,7 @@ public class DelegateServiceImpl implements DelegateService {
         String nonProxyHostsString = System.getProperty("http.nonProxyHosts");
         if (isNotBlank(nonProxyHostsString)) {
           String[] suffixes = nonProxyHostsString.split("\\|");
-          nonProxyHosts = Stream.of(suffixes).map(suffix -> suffix.substring(1)).collect(toList());
+          List<String> nonProxyHosts = Stream.of(suffixes).map(suffix -> suffix.substring(1)).collect(toList());
           logger.info("No proxy for hosts with suffix in: {}", nonProxyHosts);
         }
       } else {
@@ -353,7 +355,9 @@ public class DelegateServiceImpl implements DelegateService {
         startHeartbeat(builder, socket);
       }
 
-      startUpgradeCheck(getVersion());
+      if (!multiVersionSupport) {
+        startUpgradeCheck(getVersion());
+      }
 
       logger.info("Delegate started");
 
@@ -776,6 +780,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   private String findExpectedWatcherVersion() {
     try {
+      // TODO - if multiVersion, get versions from manager endpoint
       String watcherMetadata = getResponseFromUrl(delegateConfiguration.getWatcherCheckLocation());
       return substringBefore(watcherMetadata, " ").trim();
     } catch (IOException e) {
@@ -785,7 +790,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private String getResponseFromUrl(String url) throws IOException {
-    return Http.getResponseFromUrl(url, httpProxyHost, 10000, 10000);
+    return Http.getResponseStringFromUrl(url, httpProxyHost, 10000, 10000);
   }
 
   private boolean doRestartDelegate() {

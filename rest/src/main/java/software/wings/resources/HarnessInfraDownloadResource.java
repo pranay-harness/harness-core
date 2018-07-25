@@ -26,7 +26,7 @@ public class HarnessInfraDownloadResource {
   @Produces(MediaType.APPLICATION_JSON)
   @DelegateAuth
   public RestResponse<String> getWatcherDownloadUrlFromDelegate(@PathParam("version") String version) {
-    return new RestResponse<String>(infraDownloadService.getDownloadUrlForWatcher(version));
+    return new RestResponse<>(infraDownloadService.getDownloadUrlForWatcher(version));
   }
 
   @GET
@@ -34,7 +34,7 @@ public class HarnessInfraDownloadResource {
   @Produces(MediaType.APPLICATION_JSON)
   @DelegateAuth
   public RestResponse<String> getDelegateDownloadUrlFromDelegate(@PathParam("version") String version) {
-    return new RestResponse<String>(infraDownloadService.getDownloadUrlForDelegate(version));
+    return new RestResponse<>(infraDownloadService.getDownloadUrlForDelegate(version));
   }
 
   @GET
@@ -42,7 +42,7 @@ public class HarnessInfraDownloadResource {
   @Produces(MediaType.APPLICATION_JSON)
   public RestResponse<String> getWatcherDownloadUrlFromDefaultAuth(@PathParam("version") String version,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("env") @DefaultValue("") String env) {
-    return new RestResponse<String>(infraDownloadService.getDownloadUrlForWatcher(version, env));
+    return new RestResponse<>(infraDownloadService.getDownloadUrlForWatcher(version, env));
   }
 
   @GET
@@ -50,6 +50,6 @@ public class HarnessInfraDownloadResource {
   @Produces(MediaType.APPLICATION_JSON)
   public RestResponse<String> getDelegateDownloadUrlFromDefaultAuth(@PathParam("version") String version,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("env") @DefaultValue("") String env) {
-    return new RestResponse<String>(infraDownloadService.getDownloadUrlForDelegate(version, env));
+    return new RestResponse<>(infraDownloadService.getDownloadUrlForDelegate(version, env));
   }
 }

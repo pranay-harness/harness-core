@@ -57,19 +57,19 @@ if [ -e proxy.config ]
 then
   source proxy.config
 
-# when using authenticated proxy, need to use format curl -x <http/s://username:password@host:port> <actual_url>
-PROXY_CURL=""
+  # when using authenticated proxy, need to use format curl -x <http/s://username:password@host:port> <actual_url>
+  PROXY_CURL=""
   if [[ $PROXY_HOST != "" ]]
   then
     echo "Using $PROXY_SCHEME proxy $PROXY_HOST:$PROXY_PORT"
     if [[ $PROXY_USER != "" ]]
     then
-       PROXY_CURL="-x "$PROXY_SCHEME"://"$PROXY_USER:$PROXY_PASSWORD@$PROXY_HOST:$PROXY_PORT
-       PROXY_SYS_PROPS="-Dhttp.proxyUser=$PROXY_USER -Dhttp.proxyPassword=$PROXY_PASSWORD -Dhttps.proxyUser=$PROXY_USER -Dhttps.proxyPassword=$PROXY_PASSWORD "
+      PROXY_CURL="-x "$PROXY_SCHEME"://"$PROXY_USER:$PROXY_PASSWORD@$PROXY_HOST:$PROXY_PORT
+      PROXY_SYS_PROPS="-Dhttp.proxyUser=$PROXY_USER -Dhttp.proxyPassword=$PROXY_PASSWORD -Dhttps.proxyUser=$PROXY_USER -Dhttps.proxyPassword=$PROXY_PASSWORD "
     else
-       PROXY_CURL="-x "$PROXY_SCHEME"://"$PROXY_HOST:$PROXY_PORT
-       export http_proxy=$PROXY_HOST:$PROXY_PORT
-       export https_proxy=$PROXY_HOST:$PROXY_PORT
+      PROXY_CURL="-x "$PROXY_SCHEME"://"$PROXY_HOST:$PROXY_PORT
+      export http_proxy=$PROXY_HOST:$PROXY_PORT
+      export https_proxy=$PROXY_HOST:$PROXY_PORT
     fi
     PROXY_SYS_PROPS=$PROXY_SYS_PROPS" -DproxyScheme=$PROXY_SCHEME -Dhttp.proxyHost=$PROXY_HOST -Dhttp.proxyPort=$PROXY_PORT -Dhttps.proxyHost=$PROXY_HOST -Dhttps.proxyPort=$PROXY_PORT"
   fi
@@ -81,7 +81,8 @@ PROXY_CURL=""
     SYSTEM_PROPERTY_NO_PROXY=`echo $NO_PROXY | sed "s/\,/|*/g"`
     PROXY_SYS_PROPS=$PROXY_SYS_PROPS" -Dhttp.nonProxyHosts=*$SYSTEM_PROPERTY_NO_PROXY"
   fi
-echo $PROXY_SYS_PROPS
+
+  echo $PROXY_SYS_PROPS
 fi
 
 if [ ! -d $JRE_DIR  -o ! -d jre -o ! -e $JRE_BINARY ]
@@ -101,25 +102,30 @@ then
   ln -s $JRE_DIR jre
 fi
 
-echo "Checking Delegate latest version..."
-DELEGATE_STORAGE_URL=http://localhost:8888
-REMOTE_DELEGATE_LATEST=$(curl $PROXY_CURL -#k $DELEGATE_STORAGE_URL/delegateci.txt)
-REMOTE_DELEGATE_URL=$DELEGATE_STORAGE_URL/$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f2)
-REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f1)
-DEPLOY_MODE=AWS
+export MULTI_VERSION=false
 
-if [ ! -e delegate.jar ]
+if [[ $MULTI_VERSION != "true" ]]
 then
-  echo "Downloading Delegate $REMOTE_DELEGATE_VERSION ..."
-  curl $PROXY_CURL -#k $REMOTE_DELEGATE_URL -o delegate.jar
-else
-  CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
-  if [[ $REMOTE_DELEGATE_VERSION != $CURRENT_VERSION ]]
+  echo "Checking Delegate latest version..."
+  DELEGATE_STORAGE_URL=http://localhost:8888
+  REMOTE_DELEGATE_LATEST=$(curl $PROXY_CURL -#k $DELEGATE_STORAGE_URL/delegateci.txt)
+  REMOTE_DELEGATE_URL=$DELEGATE_STORAGE_URL/$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f2)
+  REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f1)
+  DEPLOY_MODE=AWS
+
+  if [ ! -e delegate.jar ]
   then
     echo "Downloading Delegate $REMOTE_DELEGATE_VERSION ..."
-    mkdir -p backup.$CURRENT_VERSION
-    cp delegate.jar backup.$CURRENT_VERSION
     curl $PROXY_CURL -#k $REMOTE_DELEGATE_URL -o delegate.jar
+  else
+    CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
+    if [[ $REMOTE_DELEGATE_VERSION != $CURRENT_VERSION ]]
+    then
+      echo "Downloading Delegate $REMOTE_DELEGATE_VERSION ..."
+      mkdir -p backup.$CURRENT_VERSION
+      cp delegate.jar backup.$CURRENT_VERSION
+      curl $PROXY_CURL -#k $REMOTE_DELEGATE_URL -o delegate.jar
+    fi
   fi
 fi
 
@@ -160,8 +166,16 @@ fi
 
 export HOSTNAME
 export CAPSULE_CACHE_DIR="$DIR/.cache"
-echo "Starting delegate - version $REMOTE_DELEGATE_VERSION"
-$JRE_BINARY $PROXY_SYS_PROPS -Ddelegatesourcedir="$DIR" -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar delegate.jar config-delegate.yml watched $1
+
+if [[ $MULTI_VERSION == "true" ]]
+then
+  echo "Starting delegate - version $2"
+  $JRE_BINARY $PROXY_SYS_PROPS -Ddelegatesourcedir="$DIR" -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar $2/delegate.jar config-delegate.yml watched $1
+else
+  echo "Starting delegate - version $REMOTE_DELEGATE_VERSION"
+  $JRE_BINARY $PROXY_SYS_PROPS -Ddelegatesourcedir="$DIR" -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar delegate.jar config-delegate.yml watched $1
+fi
+
 sleep 3
 if `pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null`
 then

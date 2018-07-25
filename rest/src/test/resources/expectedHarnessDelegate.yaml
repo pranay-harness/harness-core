@@ -69,6 +69,8 @@ spec:
           value: delegateci.txt
         - name: DEPLOY_MODE
           value: AWS
+        - name: MULTI_VERSION
+          value: "false"
         - name: DELEGATE_NAME
           value: harness-delegate
         - name: PROXY_HOST

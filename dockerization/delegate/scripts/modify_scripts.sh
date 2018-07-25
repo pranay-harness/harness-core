@@ -6,11 +6,13 @@ if [[ -v "ACCOUNT_ID" ]]; then
 fi
 
 if [[ -v "ACCOUNT_SECRET" ]]; then
+    sed -i "s|_accountSecret_|${ACCOUNT_SECRET}|" /opt/harness-delegate/start.sh
     sed -i "s|_accountSecret_|${ACCOUNT_SECRET}|" /opt/harness-delegate/delegate.sh
 fi
 
 if [[ -v "MANAGER_HOST_AND_PORT" ]]
 then
+    sed -i "s|_managerHostAndPort_|${MANAGER_HOST_AND_PORT}|" /opt/harness-delegate/start.sh
     sed -i "s|_managerHostAndPort_|${MANAGER_HOST_AND_PORT}|" /opt/harness-delegate/delegate.sh
 fi
 
@@ -36,6 +38,12 @@ if [[ -v "DELEGATE_CHECK_LOCATION" ]]
 then
     sed -i "s|_delegateCheckLocation_|${DELEGATE_CHECK_LOCATION}|" /opt/harness-delegate/start.sh
     sed -i "s|_delegateCheckLocation_|${DELEGATE_CHECK_LOCATION}|" /opt/harness-delegate/delegate.sh
+fi
+
+if [[ -v "MULTI_VERSION" ]]
+then
+    sed -i "s|_multiVersion_|${MULTI_VERSION}|" /opt/harness-delegate/start.sh
+    sed -i "s|_multiVersion_|${MULTI_VERSION}|" /opt/harness-delegate/delegate.sh
 fi
 
 if [[ -v "DESCRIPTION" ]]
