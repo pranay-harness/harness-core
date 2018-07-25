@@ -39,6 +39,7 @@ import software.wings.beans.template.TemplateHelper;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.template.TemplateFolderService;
 import software.wings.service.intfc.template.TemplateGalleryService;
@@ -122,6 +123,9 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
   public boolean delete(String templateFolderUuid) {
     // Delete all the templates
     TemplateFolder templateFolder = get(templateFolderUuid);
+    if (templateFolder.getParentId() == null) {
+      throw new InvalidRequestException("Root folder [" + templateFolder.getName() + "] can not be deleted", USER);
+    }
     if (templateService.deleteByFolder(templateFolder)) {
       // Delete children
       wingsPersistence.delete(wingsPersistence.createQuery(TemplateFolder.class)
