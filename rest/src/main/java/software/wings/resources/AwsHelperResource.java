@@ -8,10 +8,12 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.RestResponse;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AwsHelperResourceService;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.ws.rs.Consumes;
@@ -41,8 +43,24 @@ public class AwsHelperResource {
   @Path("/regions")
   @Timed
   @ExceptionMetered
+  @Deprecated
   public RestResponse<Map<String, String>> list(@QueryParam("accountId") String accountId) {
     return new RestResponse(awsHelperResourceService.getRegions());
+  }
+
+  /**
+   * List.
+   *
+   * @param accountId                the account id
+   * @return the rest response
+   */
+  @GET
+  @Path("/aws-regions")
+  @Timed
+  @ExceptionMetered
+  @Deprecated
+  public RestResponse<List<NameValuePair>> listAwsRegions(@QueryParam("accountId") String accountId) {
+    return new RestResponse(awsHelperResourceService.getAwsRegions());
   }
 
   @GET
