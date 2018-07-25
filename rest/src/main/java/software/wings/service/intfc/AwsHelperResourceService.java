@@ -1,5 +1,8 @@
 package software.wings.service.intfc;
 
+import software.wings.beans.NameValuePair;
+
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -9,10 +12,12 @@ import java.util.Set;
 
 public interface AwsHelperResourceService {
   /**
-   *
+   * The method will be removed after a while.
    * @return
    */
-  Map<String, String> getRegions();
+  @Deprecated Map<String, String> getRegions();
+
+  List<NameValuePair> getAwsRegions();
 
   /**
    * List tags list.
