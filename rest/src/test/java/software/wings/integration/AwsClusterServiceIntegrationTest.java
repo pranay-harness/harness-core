@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 
 import com.amazonaws.regions.Regions;
 import org.apache.commons.text.StrSubstitutor;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
@@ -16,6 +17,8 @@ import software.wings.cloudprovider.aws.AwsClusterConfiguration;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.cloudprovider.aws.EcsContainerServiceImpl;
+import software.wings.generator.SecretGenerator;
+import software.wings.generator.SecretGenerator.SecretName;
 import software.wings.service.impl.AwsHelperService;
 
 import java.util.Collections;
@@ -30,25 +33,24 @@ public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
   @Inject private AwsClusterService awsClusterService;
   @Inject private EcsContainerService ecsContainerService;
   @Inject private AwsHelperService awsHelperService;
+  @Inject SecretGenerator secretGenerator;
+  private SettingAttribute awsConnectorSetting;
 
-  private SettingAttribute awsConnectorSetting =
-      aSettingAttribute()
-          .withValue(AwsConfig.builder()
-                         .accessKey("AKIAJLEKM45P4PO5QUFQ")
-                         .secretKey("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".toCharArray())
-                         .build())
-          .build();
-
-  /*
-  {
-    "cluster": "${CLUSTER_NAME}_${SERVICE_VERSION},
-    "desiredCount": "${CLUSTER_SIZE}",
-    "serviceName": "${SERVICE_NAME}_${SERVICE_VERSION}",
-    "taskDefinition": "${TASK_TEMPLATE}"
-  }
-   */
   private String serviceJson =
       "{\"cluster\":\"${CLUSTER_NAME}_${SERVICE_VERSION}\",\"desiredCount\":\"${CLUSTER_SIZE}\",\"serviceName\":\"${SERVICE_NAME}_${SERVICE_VERSION}\",\"taskDefinition\":\"${TASK_TEMPLATE}\"}";
+
+  @Before
+  public void setUp() {
+    awsConnectorSetting =
+        aSettingAttribute()
+            .withValue(
+                AwsConfig.builder()
+                    .accessKey(secretGenerator.decrypt(new SecretName("aws_config_access_key")).toString())
+                    .secretKey(secretGenerator.decryptToCharArray(new SecretName("aws_setting_attribute_secret_key")))
+
+                    .build())
+            .build();
+  }
 
   private String getServiceDefinition(String serviceJson, Map<String, Object> params) {
     return StrSubstitutor.replace(serviceJson, params);

@@ -22,6 +22,8 @@ import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.User;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
+import software.wings.generator.SecretGenerator;
+import software.wings.generator.SecretGenerator.SecretName;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.newrelic.NewRelicApplication;
@@ -42,6 +44,7 @@ public class AppdynamicsTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private EncryptionService encryptionService;
   @Inject private AppdynamicsDelegateService appdynamicsDelegateService;
+  @Inject private SecretGenerator secretGenerator;
   @Mock private DelegateProxyFactory appdDelegateProxyFactory;
   @Mock private DelegateProxyFactory kmsDelegateProxyFactory;
   private SettingAttribute settingAttribute;
@@ -61,13 +64,14 @@ public class AppdynamicsTest extends WingsBaseTest {
 
     accountId = UUID.randomUUID().toString();
 
-    AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                              .accountId(accountId)
-                                              .controllerUrl("https://harness-test.saas.appdynamics.com/controller")
-                                              .username("raghu@harness.io")
-                                              .accountname("harness-test")
-                                              .password("(idlk2e9idcs@ej".toCharArray())
-                                              .build();
+    AppDynamicsConfig appDynamicsConfig =
+        AppDynamicsConfig.builder()
+            .accountId(accountId)
+            .controllerUrl("https://harness-test.saas.appdynamics.com/controller")
+            .accountname("harness-test")
+            .username("raghu@harness.io")
+            .password(secretGenerator.decryptToCharArray(new SecretName("appd_config_password")))
+            .build();
     settingAttribute = aSettingAttribute()
                            .withName("AppD")
                            .withCategory(Category.CONNECTOR)
@@ -80,7 +84,8 @@ public class AppdynamicsTest extends WingsBaseTest {
   @Test
   @Repeat(times = 5, successes = 1)
   public void validateConfig() {
-    ((AppDynamicsConfig) settingAttribute.getValue()).setPassword("(idlk2e9idcs@ej".toCharArray());
+    ((AppDynamicsConfig) settingAttribute.getValue())
+        .setPassword(secretGenerator.decryptToCharArray(new SecretName("appd_config_password")));
     appdynamicsService.validateConfig(settingAttribute);
   }
 

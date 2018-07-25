@@ -15,6 +15,8 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.exception.WingsException;
+import software.wings.generator.SecretGenerator;
+import software.wings.generator.SecretGenerator.SecretName;
 import software.wings.helpers.ext.docker.DockerRegistryService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.rules.Integration;
@@ -34,6 +36,7 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
 
   @Inject private DockerRegistryService dockerRegistryService;
   @Inject private ArtifactStreamService artifactStreamService;
+  @Inject private SecretGenerator secretGenerator;
 
   @Inject @InjectMocks private DockerBuildService dockerBuildService;
 
@@ -53,22 +56,24 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldGetLastSuccessfulBuild() {
-    DockerConfig dockerConfig = DockerConfig.builder()
-                                    .dockerRegistryUrl("https://registry.hub.docker.com/v2/")
-                                    .username("anubhaw")
-                                    .password("anubhaw@Dhub".toCharArray())
-                                    .build();
+    DockerConfig dockerConfig =
+        DockerConfig.builder()
+            .dockerRegistryUrl("https://registry.hub.docker.com/v2/")
+            .username("anubhaw")
+            .password(secretGenerator.decryptToCharArray(new SecretName("docker_config_anubhaw_password")))
+            .build();
     List<BuildDetails> builds = dockerRegistryService.getBuilds(dockerConfig, null, "library/mysql", 5);
     logger.info(builds.toString());
   }
 
   @Test
   public void shouldValidateInvalidUrl() {
-    DockerConfig dockerConfig = DockerConfig.builder()
-                                    .dockerRegistryUrl("invalid_url")
-                                    .username("anubhaw")
-                                    .password("anubhaw@Dhub".toCharArray())
-                                    .build();
+    DockerConfig dockerConfig =
+        DockerConfig.builder()
+            .dockerRegistryUrl("invalid_url")
+            .username("anubhaw")
+            .password(secretGenerator.decryptToCharArray(new SecretName("docker_config_anubhaw_password")))
+            .build();
     try {
       dockerBuildService.validateArtifactServer(dockerConfig);
     } catch (WingsException e) {
@@ -80,11 +85,12 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldValidateCredentials() {
-    DockerConfig dockerConfig = DockerConfig.builder()
-                                    .dockerRegistryUrl("https://registry.hub.docker.com/v2/")
-                                    .username("invalid")
-                                    .password("anubhaw@Dhub".toCharArray())
-                                    .build();
+    DockerConfig dockerConfig =
+        DockerConfig.builder()
+            .dockerRegistryUrl("https://registry.hub.docker.com/v2/")
+            .username("invalid")
+            .password(secretGenerator.decryptToCharArray(new SecretName("docker_config_anubhaw_password")))
+            .build();
     try {
       dockerRegistryService.validateCredentials(dockerConfig, null);
     } catch (WingsException e) {

@@ -25,6 +25,8 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.BambooArtifactStream;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
+import software.wings.generator.SecretGenerator;
+import software.wings.generator.SecretGenerator.SecretName;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.service.intfc.BambooBuildService;
@@ -50,6 +52,7 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   @Inject private BuildSourceService buildSourceService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private BambooBuildService bambooBuildService;
+  @Inject SecretGenerator secretGenerator;
 
   @Before
   public void setup() {
@@ -59,17 +62,18 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
     when(delegateProxyFactory.get(Mockito.anyObject(), Mockito.any(SyncTaskContext.class)))
         .thenReturn(bambooBuildService);
     setInternalState(buildSourceService, "delegateProxyFactory", delegateProxyFactory);
-    settingAttribute = aSettingAttribute()
-                           .withName("bamboo")
-                           .withCategory(Category.CONNECTOR)
-                           .withAccountId(accountId)
-                           .withValue(BambooConfig.builder()
-                                          .accountId(accountId)
-                                          .bambooUrl("http://ec2-34-205-16-35.compute-1.amazonaws.com:8085/")
-                                          .username("wingsbuild")
-                                          .password("0db28aa0f4fc0685df9a216fc7af0ca96254b7c2".toCharArray())
-                                          .build())
-                           .build();
+    settingAttribute =
+        aSettingAttribute()
+            .withName("bamboo")
+            .withCategory(Category.CONNECTOR)
+            .withAccountId(accountId)
+            .withValue(BambooConfig.builder()
+                           .accountId(accountId)
+                           .bambooUrl("http://ec2-34-205-16-35.compute-1.amazonaws.com:8085/")
+                           .username("wingsbuild")
+                           .password(secretGenerator.decryptToCharArray(new SecretName("bamboo_config_password")))
+                           .build())
+            .build();
     wingsPersistence.save(settingAttribute);
   }
 

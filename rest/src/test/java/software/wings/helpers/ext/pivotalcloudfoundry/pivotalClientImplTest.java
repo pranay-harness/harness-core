@@ -1,22 +1,25 @@
 package software.wings.helpers.ext.pivotalcloudfoundry;
 
+import com.google.inject.Inject;
+
 import org.junit.Test;
 import software.wings.WingsBaseTest;
+import software.wings.generator.SecretGenerator;
 import software.wings.helpers.ext.pcf.PcfClient;
 import software.wings.helpers.ext.pcf.PcfClientImpl;
 
 //
 
 public class pivotalClientImplTest extends WingsBaseTest {
+  @Inject SecretGenerator secretGenerator;
   PcfClient pcfClient = new PcfClientImpl();
 
   @Test
   public void testGet() throws Exception {
     /*  PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder()
                                               .userName("adwait.bhandare@harness.io")
-                                              .password("GbgvgdmsJsr13!")
-                                              .endpointUrl("api.run.pivotal.io")
-                                              .build();
+                                              .password(secretGenerator.decryptToCharArray(new
+    SecretName("pcf_request_config_password"))) .endpointUrl("api.run.pivotal.io") .build();
 
       // Get Organization list
       List<OrganizationSummary> organizationList = pcfClient.getOrganizations(pcfRequestConfig);
