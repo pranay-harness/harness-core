@@ -589,10 +589,13 @@ public enum StateType implements StateTypeDescriptor {
   @Override
   public boolean matches(Object context) {
     InfrastructureMapping infrastructureMapping = (InfrastructureMapping) context;
-    InfrastructureMappingType infrastructureMappingType =
-        InfrastructureMappingType.valueOf(infrastructureMapping.getInfraMappingType());
-    return (stencilCategory != COMMANDS && stencilCategory != CLOUD)
-        || supportedInfrastructureMappingTypes.contains(infrastructureMappingType);
+    if (infrastructureMapping.getInfraMappingType() != null) {
+      InfrastructureMappingType infrastructureMappingType =
+          InfrastructureMappingType.valueOf(infrastructureMapping.getInfraMappingType());
+      return (stencilCategory != COMMANDS && stencilCategory != CLOUD)
+          || supportedInfrastructureMappingTypes.contains(infrastructureMappingType);
+    }
+    return false;
   }
 
   @Override

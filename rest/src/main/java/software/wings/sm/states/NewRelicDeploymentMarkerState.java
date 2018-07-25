@@ -24,7 +24,6 @@ import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicMarkerExecutionData;
-import software.wings.service.impl.newrelic.NewRelicSettingProvider;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
@@ -35,7 +34,6 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.stencils.EnumData;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
@@ -60,9 +58,7 @@ public class NewRelicDeploymentMarkerState extends State {
 
   @Transient @Inject protected TemplateExpressionProcessor templateExpressionProcessor;
 
-  @EnumData(enumDataProvider = NewRelicSettingProvider.class)
-  @Attributes(required = true, title = "New Relic Server")
-  private String analysisServerConfigId;
+  @Attributes(required = true, title = "New Relic Server") private String analysisServerConfigId;
 
   @Attributes(required = true, title = "Application Name") private String applicationId;
 

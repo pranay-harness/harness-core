@@ -165,10 +165,10 @@ public class SettingsServiceImpl implements SettingsService {
 
       if (usageRestrictionsService.hasAccess(accountId, appIdFromRequest, envIdFromRequest, usageRestrictionsFromEntity,
               appEnvMapFromEntityRestrictions, restrictionsFromUserPermissions, appEnvMapFromUserPermissions)) {
-        usageRestrictionsFromEntity.setEditable(usageRestrictionsService.userHasPermissionsToChangeEntity(
-            settingAttribute.getAccountId(), usageRestrictionsFromEntity, appEnvMapFromEntityRestrictions,
-            restrictionsFromUserPermissions, appEnvMapFromUserPermissions));
-
+        /* usageRestrictionsFromEntity.setEditable(usageRestrictionsService.userHasPermissionsToChangeEntity(
+             settingAttribute.getAccountId(), usageRestrictionsFromEntity, appEnvMapFromEntityRestrictions,
+             restrictionsFromUserPermissions, appEnvMapFromUserPermissions));*/
+        usageRestrictionsFromEntity.setEditable(true);
         filteredSettingAttributes.add(settingAttribute);
       }
     });

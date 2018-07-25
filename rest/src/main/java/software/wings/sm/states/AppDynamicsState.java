@@ -32,7 +32,6 @@ import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
-import software.wings.service.impl.appdynamics.AppDynamicsSettingProvider;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
@@ -62,9 +61,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
 
   @Transient @Inject protected AppdynamicsService appdynamicsService;
 
-  @EnumData(enumDataProvider = AppDynamicsSettingProvider.class)
-  @Attributes(required = true, title = "AppDynamics Server")
-  private String analysisServerConfigId;
+  @Attributes(required = true, title = "AppDynamics Server") private String analysisServerConfigId;
 
   @Attributes(required = true, title = "Application Name") private String applicationId;
 

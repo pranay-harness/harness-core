@@ -30,7 +30,6 @@ import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.analysis.TimeSeries;
 import software.wings.service.impl.prometheus.PrometheusDataCollectionInfo;
-import software.wings.service.impl.prometheus.PrometheusSettingProvider;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
@@ -53,9 +52,7 @@ public class PrometheusState extends AbstractMetricAnalysisState {
   @Transient @SchemaIgnore public static final String TEST_HOST_NAME = "testNode";
   @Transient @SchemaIgnore public static final String CONTROL_HOST_NAME = "controlNode";
 
-  @EnumData(enumDataProvider = PrometheusSettingProvider.class)
-  @Attributes(required = true, title = "Prometheus Server")
-  private String analysisServerConfigId;
+  @Attributes(required = true, title = "Prometheus Server") private String analysisServerConfigId;
 
   private List<TimeSeries> timeSeriesToAnalyze;
 
