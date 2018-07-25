@@ -20,10 +20,17 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import org.junit.Test;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateGallery;
+import software.wings.exception.InvalidRequestException;
 
 import java.util.Arrays;
 
 public class TemplateFolderServiceTest extends TemplateBaseTest {
+  @Test(expected = InvalidRequestException.class)
+  public void shouldNotDeleteRootFolder() {
+    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    templateFolderService.delete(parentFolder.getUuid());
+  }
+
   @Test
   public void shouldSaveTemplateFolder() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
