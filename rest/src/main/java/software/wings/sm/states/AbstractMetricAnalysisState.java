@@ -75,99 +75,103 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    getLogger().info("Executing {} state, id: {} ", getStateType(), context.getStateExecutionInstanceId());
-    cleanUpForRetry(context);
-    this.analysisContext = getAnalysisContext(context, UUID.randomUUID().toString());
-    getLogger().info("id: {} context: {}", context.getStateExecutionInstanceId(), analysisContext);
-    saveMetaDataForDashboard(analysisContext.getAccountId(), context);
+    String corelationId = UUID.randomUUID().toString();
+    MetricAnalysisExecutionData executionData;
+    try {
+      getLogger().info("Executing {} state, id: {} ", getStateType(), context.getStateExecutionInstanceId());
+      cleanUpForRetry(context);
+      this.analysisContext = getAnalysisContext(context, corelationId);
+      getLogger().info("id: {} context: {}", context.getStateExecutionInstanceId(), analysisContext);
+      saveMetaDataForDashboard(analysisContext.getAccountId(), context);
 
-    if (isDemoPath(analysisContext.getAccountId()) && getStateType().equals(StateType.NEW_RELIC.name())) {
-      if (settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev")
-          || settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("prod")) {
-        boolean failedState = settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev");
-        if (failedState) {
-          return generateAnalysisResponse(context, ExecutionStatus.FAILED, "Demo CV");
-        } else {
-          return generateAnalysisResponse(context, ExecutionStatus.SUCCESS, "Demo CV");
+      if (isDemoPath(analysisContext.getAccountId()) && getStateType().equals(StateType.NEW_RELIC.name())) {
+        if (settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev")
+            || settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("prod")) {
+          boolean failedState =
+              settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev");
+          if (failedState) {
+            return generateAnalysisResponse(context, ExecutionStatus.FAILED, "Demo CV");
+          } else {
+            return generateAnalysisResponse(context, ExecutionStatus.SUCCESS, "Demo CV");
+          }
         }
       }
-    }
 
-    Map<String, String> canaryNewHostNames = analysisContext.getTestNodes();
-    if (isEmpty(canaryNewHostNames)) {
-      getLogger().warn("id: {}, Could not find test nodes to compare the data", context.getStateExecutionInstanceId());
-      return generateAnalysisResponse(context, ExecutionStatus.SUCCESS, "Could not find nodes to analyze!");
-    }
-
-    Map<String, String> lastExecutionNodes = analysisContext.getControlNodes();
-    if (isEmpty(lastExecutionNodes)) {
-      if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
-        getLogger().info("id: {}, No nodes with older version found to compare the logs. Skipping analysis",
-            context.getStateExecutionInstanceId());
-        return generateAnalysisResponse(context, ExecutionStatus.SUCCESS,
-            "Skipping analysis due to lack of baseline data (First time deployment or Last phase).");
+      Map<String, String> canaryNewHostNames = analysisContext.getTestNodes();
+      if (isEmpty(canaryNewHostNames)) {
+        getLogger().warn(
+            "id: {}, Could not find test nodes to compare the data", context.getStateExecutionInstanceId());
+        return generateAnalysisResponse(context, ExecutionStatus.SUCCESS, "Could not find nodes to analyze!");
       }
 
-      getLogger().info(
-          "id: {}, It seems that there is no successful run for this workflow yet. Metric data will be collected to be analyzed for next deployment run",
-          context.getStateExecutionInstanceId());
-    }
+      Map<String, String> lastExecutionNodes = analysisContext.getControlNodes();
+      if (isEmpty(lastExecutionNodes)) {
+        if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
+          getLogger().info("id: {}, No nodes with older version found to compare the logs. Skipping analysis",
+              context.getStateExecutionInstanceId());
+          return generateAnalysisResponse(context, ExecutionStatus.SUCCESS,
+              "Skipping analysis due to lack of baseline data (First time deployment or Last phase).");
+        }
 
-    if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
-        && lastExecutionNodes.equals(canaryNewHostNames)) {
-      getLogger().warn("id: {} Control and test nodes are same. Will not be running Log analysis",
-          context.getStateExecutionInstanceId());
-      return generateAnalysisResponse(context, ExecutionStatus.FAILED,
-          "Skipping analysis due to lack of baseline data (Minimum two phases are required).");
-    }
-
-    String responseMessage = "Metric Verification running";
-    if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS) {
-      WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-      String baselineWorkflowExecutionId = workflowExecutionBaselineService.getBaselineExecutionId(context.getAppId(),
-          context.getWorkflowId(), workflowStandardParams.getEnv().getUuid(), analysisContext.getServiceId());
-      if (isEmpty(baselineWorkflowExecutionId)) {
-        responseMessage = "No baseline was set for the workflow. Workflow running with auto baseline.";
-        getLogger().info(responseMessage);
-        baselineWorkflowExecutionId =
-            metricAnalysisService.getLastSuccessfulWorkflowExecutionIdWithData(analysisContext.getStateType(),
-                analysisContext.getAppId(), analysisContext.getWorkflowId(), analysisContext.getServiceId());
-      } else {
-        responseMessage = "Baseline is fixed for the workflow. Analyzing against fixed baseline.";
         getLogger().info(
-            "Baseline execution for {} is {}", analysisContext.getStateExecutionId(), baselineWorkflowExecutionId);
+            "id: {}, It seems that there is no successful run for this workflow yet. Metric data will be collected to be analyzed for next deployment run",
+            context.getStateExecutionInstanceId());
       }
-      if (baselineWorkflowExecutionId == null) {
-        responseMessage += " No previous execution found. This will be the baseline run";
-        getLogger().warn("No previous execution found. This will be the baseline run");
-      }
-      analysisContext.setPrevWorkflowExecutionId(baselineWorkflowExecutionId);
-    }
-    int timeDurationInt = Integer.parseInt(timeDuration);
-    final MetricAnalysisExecutionData executionData =
-        MetricAnalysisExecutionData.builder()
-            .appId(context.getAppId())
-            .workflowExecutionId(context.getWorkflowExecutionId())
-            .stateExecutionInstanceId(context.getStateExecutionInstanceId())
-            .serverConfigId(getAnalysisServerConfigId())
-            .timeDuration(timeDurationInt)
-            .canaryNewHostNames(canaryNewHostNames.keySet())
-            .lastExecutionNodes(lastExecutionNodes == null ? new HashSet<>() : lastExecutionNodes.keySet())
-            .correlationId(analysisContext.getCorrelationId())
-            .canaryNewHostNames(analysisContext.getTestNodes().keySet())
-            .lastExecutionNodes(analysisContext.getControlNodes().keySet())
-            .build();
-    executionData.setErrorMsg(responseMessage);
-    executionData.setStatus(ExecutionStatus.RUNNING);
-    Map<String, String> hostsToCollect = new HashMap<>();
-    if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS) {
-      hostsToCollect.putAll(canaryNewHostNames);
-    } else {
-      hostsToCollect.putAll(canaryNewHostNames);
-      hostsToCollect.putAll(lastExecutionNodes);
-    }
 
-    try {
+      if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
+          && lastExecutionNodes.equals(canaryNewHostNames)) {
+        getLogger().warn("id: {} Control and test nodes are same. Will not be running Log analysis",
+            context.getStateExecutionInstanceId());
+        return generateAnalysisResponse(context, ExecutionStatus.FAILED,
+            "Skipping analysis due to lack of baseline data (Minimum two phases are required).");
+      }
+
+      String responseMessage = "Metric Verification running";
+      if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS) {
+        WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+        String baselineWorkflowExecutionId = workflowExecutionBaselineService.getBaselineExecutionId(context.getAppId(),
+            context.getWorkflowId(), workflowStandardParams.getEnv().getUuid(), analysisContext.getServiceId());
+        if (isEmpty(baselineWorkflowExecutionId)) {
+          responseMessage = "No baseline was set for the workflow. Workflow running with auto baseline.";
+          getLogger().info(responseMessage);
+          baselineWorkflowExecutionId =
+              metricAnalysisService.getLastSuccessfulWorkflowExecutionIdWithData(analysisContext.getStateType(),
+                  analysisContext.getAppId(), analysisContext.getWorkflowId(), analysisContext.getServiceId());
+        } else {
+          responseMessage = "Baseline is fixed for the workflow. Analyzing against fixed baseline.";
+          getLogger().info(
+              "Baseline execution for {} is {}", analysisContext.getStateExecutionId(), baselineWorkflowExecutionId);
+        }
+        if (baselineWorkflowExecutionId == null) {
+          responseMessage += " No previous execution found. This will be the baseline run";
+          getLogger().warn("No previous execution found. This will be the baseline run");
+        }
+        analysisContext.setPrevWorkflowExecutionId(baselineWorkflowExecutionId);
+      }
+      int timeDurationInt = Integer.parseInt(timeDuration);
+      executionData =
+          MetricAnalysisExecutionData.builder()
+              .appId(context.getAppId())
+              .workflowExecutionId(context.getWorkflowExecutionId())
+              .stateExecutionInstanceId(context.getStateExecutionInstanceId())
+              .serverConfigId(getAnalysisServerConfigId())
+              .timeDuration(timeDurationInt)
+              .canaryNewHostNames(canaryNewHostNames.keySet())
+              .lastExecutionNodes(lastExecutionNodes == null ? new HashSet<>() : lastExecutionNodes.keySet())
+              .correlationId(analysisContext.getCorrelationId())
+              .canaryNewHostNames(analysisContext.getTestNodes().keySet())
+              .lastExecutionNodes(analysisContext.getControlNodes().keySet())
+              .build();
+      executionData.setErrorMsg(responseMessage);
+      executionData.setStatus(ExecutionStatus.RUNNING);
+      Map<String, String> hostsToCollect = new HashMap<>();
+      if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS) {
+        hostsToCollect.putAll(canaryNewHostNames);
+      } else {
+        hostsToCollect.putAll(canaryNewHostNames);
+        hostsToCollect.putAll(lastExecutionNodes);
+      }
+
       getLogger().info(
           "triggering data collection for {} state, id: {} ", getStateType(), context.getStateExecutionInstanceId());
       hostsToCollect.remove(null);
@@ -191,10 +195,15 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       getLogger().error("metric analysis state failed", ex);
       return anExecutionResponse()
           .withAsync(false)
-          .withCorrelationIds(Collections.singletonList(executionData.getCorrelationId()))
+          .withCorrelationIds(Collections.singletonList(corelationId))
           .withExecutionStatus(ExecutionStatus.ERROR)
           .withErrorMessage(Misc.getMessage(ex))
-          .withStateExecutionData(executionData)
+          .withStateExecutionData(MetricAnalysisExecutionData.builder()
+                                      .appId(context.getAppId())
+                                      .workflowExecutionId(context.getWorkflowExecutionId())
+                                      .stateExecutionInstanceId(context.getStateExecutionInstanceId())
+                                      .serverConfigId(getAnalysisServerConfigId())
+                                      .build())
           .build();
     }
   }
