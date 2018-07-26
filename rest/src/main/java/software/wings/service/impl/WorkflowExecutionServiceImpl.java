@@ -2149,11 +2149,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         } else if (nextStateType == nextStateType.HELM_DEPLOY) {
           HelmDeployStateExecutionData helmDeployStateExecutionData =
               (HelmDeployStateExecutionData) next.getStateExecutionData();
-          instanceStatusSummaries.addAll(helmDeployStateExecutionData.getNewInstanceStatusSummaries());
+          if (isNotEmpty(helmDeployStateExecutionData.getNewInstanceStatusSummaries())) {
+            instanceStatusSummaries.addAll(helmDeployStateExecutionData.getNewInstanceStatusSummaries());
+          }
         } else if (nextStateType == nextStateType.KUBERNETES_STEADY_STATE_CHECK) {
           KubernetesSteadyStateCheckExecutionData kubernetesSteadyStateCheckExecutionData =
               (KubernetesSteadyStateCheckExecutionData) next.getStateExecutionData();
-          instanceStatusSummaries.addAll(kubernetesSteadyStateCheckExecutionData.getNewInstanceStatusSummaries());
+          if (isNotEmpty(kubernetesSteadyStateCheckExecutionData.getNewInstanceStatusSummaries())) {
+            instanceStatusSummaries.addAll(kubernetesSteadyStateCheckExecutionData.getNewInstanceStatusSummaries());
+          }
         }
         last = next;
       }
