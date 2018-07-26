@@ -4,6 +4,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
+import static software.wings.common.Constants.PAYLOAD;
+import static software.wings.common.Constants.URL_STRING;
 import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
 import static software.wings.service.impl.security.SecretManagementDelegateServiceImpl.NUM_OF_RETRIES;
 
@@ -92,7 +94,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
       apiCallLog.addFieldToRequest(
           ThirdPartyApiCallField.builder()
-              .name("url")
+              .name(URL_STRING)
               .value(newRelicConfig.getNewRelicUrl() + "/v2/applications.json?page=" + pageCount)
               .type(FieldType.URL)
               .build());
@@ -135,7 +137,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       apiCallLog.setTitle("Fetching application instances from " + newRelicConfig.getNewRelicUrl());
       apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
       apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                       .name("url")
+                                       .name(URL_STRING)
                                        .value(newRelicConfig.getNewRelicUrl() + "/v2/applications/"
                                            + newRelicApplicationId + "/instances.json?page=" + pageCount)
                                        .type(FieldType.URL)
@@ -188,7 +190,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     for (int retry = 0; retry <= NUM_OF_RETRIES; retry++) {
       try {
         apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                         .name("url")
+                                         .name(URL_STRING)
                                          .value(newRelicConfig.getNewRelicUrl() + "/v2/applications/" + newRelicAppId
                                              + "/metrics.json?name=WebTransaction")
                                          .type(FieldType.URL)
@@ -340,7 +342,8 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     final String url = baseUrl + metricsToCollectString;
     apiCallLog.setTitle(
         "Fetching metric data for " + metricNames.size() + " transactions from " + newRelicConfig.getNewRelicUrl());
-    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder().name("url").value(url).type(FieldType.URL).build());
+    apiCallLog.addFieldToRequest(
+        ThirdPartyApiCallField.builder().name(URL_STRING).value(url).type(FieldType.URL).build());
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
     final Call<NewRelicMetricDataResponse> request =
         getNewRelicRestClient(newRelicConfig, encryptedDataDetails)
@@ -369,9 +372,10 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
         config.getNewRelicUrl().endsWith("/") ? config.getNewRelicUrl() : config.getNewRelicUrl() + "/";
     final String url = baseUrl + "v2/applications/" + newRelicApplicationId + "/deployments.json";
     apiCallLog.setTitle("Posting deployment marker to " + config.getNewRelicUrl());
-    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder().name("url").value(url).type(FieldType.URL).build());
     apiCallLog.addFieldToRequest(
-        ThirdPartyApiCallField.builder().name("payload").value(JsonUtils.asJson(body)).type(FieldType.JSON).build());
+        ThirdPartyApiCallField.builder().name(URL_STRING).value(url).type(FieldType.URL).build());
+    apiCallLog.addFieldToRequest(
+        ThirdPartyApiCallField.builder().name(PAYLOAD).value(JsonUtils.asJson(body)).type(FieldType.JSON).build());
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
     final Call<Object> request = getNewRelicRestClient(config, encryptedDataDetails).postDeploymentMarker(url, body);
     final Response<Object> response = request.execute();

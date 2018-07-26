@@ -1,5 +1,7 @@
 package software.wings.service.impl.prometheus;
 
+import static software.wings.common.Constants.URL_STRING;
+
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
@@ -53,7 +55,8 @@ public class PrometheusDelegateServiceImpl implements PrometheusDelegateService 
     Preconditions.checkNotNull(apiCallLog);
     apiCallLog.setTitle("Fetching metric data from " + prometheusConfig.getUrl());
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
-    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder().name("url").value(url).type(FieldType.URL).build());
+    apiCallLog.addFieldToRequest(
+        ThirdPartyApiCallField.builder().name(URL_STRING).value(url).type(FieldType.URL).build());
     final Call<PrometheusMetricDataResponse> request = getRestClient(prometheusConfig).fetchMetricData(url);
     final Response<PrometheusMetricDataResponse> response = request.execute();
     apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());

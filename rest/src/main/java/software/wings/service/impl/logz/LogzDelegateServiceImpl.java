@@ -1,6 +1,8 @@
 package software.wings.service.impl.logz;
 
 import static io.harness.network.Http.getOkHttpClientBuilder;
+import static software.wings.common.Constants.PAYLOAD;
+import static software.wings.common.Constants.URL_STRING;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -61,12 +63,12 @@ public class LogzDelegateServiceImpl implements LogzDelegateService {
     apiCallLog.setTitle("Fetching logs from " + logzConfig.getLogzUrl());
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
     apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                     .name("url")
+                                     .name(URL_STRING)
                                      .value(logzConfig.getLogzUrl() + "/v1/search?size=10000")
                                      .type(FieldType.URL)
                                      .build());
     apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                     .name("payload")
+                                     .name(PAYLOAD)
                                      .value(JsonUtils.asJson(logFetchRequest))
                                      .type(FieldType.JSON)
                                      .build());

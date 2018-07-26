@@ -1,6 +1,7 @@
 package software.wings.delegatetasks;
 
 import static io.harness.threading.Morpheus.sleep;
+import static software.wings.common.Constants.URL_STRING;
 
 import com.google.inject.Inject;
 
@@ -249,12 +250,12 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
       ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
       apiCallLog.setTitle("Fetch request to " + dataCollectionInfo.getSplunkConfig().getSplunkUrl());
       apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                       .name("url")
+                                       .name(URL_STRING)
                                        .value(dataCollectionInfo.getSplunkConfig().getSplunkUrl())
                                        .type(FieldType.URL)
                                        .build());
       apiCallLog.addFieldToRequest(
-          ThirdPartyApiCallField.builder().name("query").value(searchQuery).type(FieldType.TEXT).build());
+          ThirdPartyApiCallField.builder().name("Query").value(searchQuery).type(FieldType.TEXT).build());
       apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
       logger.info("triggering splunk query startTime: " + collectionStartTime + " endTime: " + endTime
           + " query: " + searchQuery + " url: " + dataCollectionInfo.getSplunkConfig().getSplunkUrl());
