@@ -856,4 +856,9 @@ public interface Constants {
   String HARNESS_KUBERNETES_ENV_LABEL_KEY = "harness.io/environment";
   String HARNESS_KUBERNETES_REVISION_LABEL_KEY = "harness.io/revision";
   String HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY = "harness.io/service-infra-id";
+
+  String URL_STRING = "Url";
+  String STATUS_CODE = "Status Code";
+  String PAYLOAD = "Payload";
+  String RESPONSE_BODY = "Response Body";
 }

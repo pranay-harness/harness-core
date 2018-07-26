@@ -1,6 +1,7 @@
 package software.wings.delegatetasks;
 
 import static io.harness.threading.Morpheus.sleep;
+import static software.wings.common.Constants.URL_STRING;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 
 import com.google.inject.Inject;
@@ -144,24 +145,22 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
               ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
               apiCallLog.setTitle("Fetch request to " + dataCollectionInfo.getSumoConfig().getSumoUrl());
               apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                               .name("url")
+                                               .name(URL_STRING)
                                                .value(dataCollectionInfo.getSumoConfig().getSumoUrl())
                                                .type(FieldType.URL)
                                                .build());
               apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                               .name("url")
-                                               .value(dataCollectionInfo.getSumoConfig().getSumoUrl())
-                                               .type(FieldType.URL)
+                                               .name("Search Query")
+                                               .value(searchQuery)
+                                               .type(FieldType.TEXT)
                                                .build());
-              apiCallLog.addFieldToRequest(
-                  ThirdPartyApiCallField.builder().name("searchQuery").value(searchQuery).type(FieldType.TEXT).build());
               apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                               .name("startTime")
+                                               .name("Start Time")
                                                .value(Long.toString(collectionStartTime))
                                                .type(FieldType.TIMESTAMP)
                                                .build());
               apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                               .name("endTime")
+                                               .name("End Time")
                                                .value(Long.toString(endTime))
                                                .type(FieldType.TIMESTAMP)
                                                .build());

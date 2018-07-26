@@ -1,5 +1,8 @@
 package software.wings.service.impl;
 
+import static software.wings.common.Constants.RESPONSE_BODY;
+import static software.wings.common.Constants.STATUS_CODE;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
@@ -84,13 +87,13 @@ public class ThirdPartyApiCallLog extends Base {
     String jsonResponse = fieldType == FieldType.JSON ? JsonUtils.asJson(response) : response.toString();
     this.response.add(ThirdPartyApiCallField.builder()
                           .type(FieldType.NUMBER)
-                          .name("statusCode")
+                          .name(STATUS_CODE)
                           .value(Integer.toString(statusCode))
                           .build());
     this.response.add(
         ThirdPartyApiCallField.builder()
             .type(fieldType)
-            .name("response")
+            .name(RESPONSE_BODY)
             .value(jsonResponse.substring(
                 0, jsonResponse.length() < MAX_JSON_RESPONSE_LENGTH ? jsonResponse.length() : MAX_JSON_RESPONSE_LENGTH))
             .build());
