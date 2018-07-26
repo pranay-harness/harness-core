@@ -326,6 +326,7 @@ public class MetricAnalysisJob implements Job {
       boolean error = false;
       String errMsg = "";
 
+      int analysisMinute = -1;
       try {
         /**
          * Work flow is invalid
@@ -388,7 +389,7 @@ public class MetricAnalysisJob implements Job {
             logger.info("for {} Skipping time series analysis. No new data.", context.getStateExecutionId());
             continue;
           }
-          int analysisMinute = analysisDataRecord.getDataCollectionMinute();
+          analysisMinute = analysisDataRecord.getDataCollectionMinute();
 
           logger.info("running analysis for {} for minute {}", context.getStateExecutionId(), analysisMinute);
 
@@ -471,7 +472,7 @@ public class MetricAnalysisJob implements Job {
           if (completeCron || !analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
             try {
               delegateService.abortTask(context.getAccountId(), delegateTaskId);
-              sendStateNotification(context, error, errMsg);
+              sendStateNotification(context, error, errMsg, analysisMinute);
             } catch (Exception e) {
               logger.error("Send notification failed for new relic analysis manager", e);
             } finally {
@@ -504,7 +505,7 @@ public class MetricAnalysisJob implements Job {
       return rv;
     }
 
-    private void sendStateNotification(AnalysisContext context, boolean error, String errMsg) {
+    private void sendStateNotification(AnalysisContext context, boolean error, String errMsg, int analysisMinute) {
       if (analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
         final ExecutionStatus status = error ? ExecutionStatus.ERROR : ExecutionStatus.SUCCESS;
         final MetricAnalysisExecutionData executionData =
@@ -518,6 +519,7 @@ public class MetricAnalysisJob implements Job {
                 .lastExecutionNodes(
                     context.getControlNodes() == null ? new HashSet<>() : context.getControlNodes().keySet())
                 .correlationId(context.getCorrelationId())
+                .analysisMinute(analysisMinute)
                 .build();
         executionData.setStatus(status);
         if (error) {

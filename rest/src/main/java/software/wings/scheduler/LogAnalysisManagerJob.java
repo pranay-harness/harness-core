@@ -126,6 +126,7 @@ public class LogAnalysisManagerJob implements Job {
       boolean completeCron = false;
       boolean error = false;
       String errorMsg = "";
+      int logAnalysisMinute = -1;
       try {
         logger.info("running log ml analysis for " + context.getStateExecutionId());
         /*
@@ -159,7 +160,7 @@ public class LogAnalysisManagerJob implements Job {
             }
           }
 
-          int logAnalysisMinute = analysisService.getCollectionMinuteForLevel(context.getQuery(), context.getAppId(),
+          logAnalysisMinute = analysisService.getCollectionMinuteForLevel(context.getQuery(), context.getAppId(),
               context.getStateExecutionId(), context.getStateType(), ClusterLevel.L2, getCollectedNodes());
           if (logAnalysisMinute != -1) {
             if (learningEngineService.hasAnalysisTimedOut(
@@ -212,7 +213,7 @@ public class LogAnalysisManagerJob implements Job {
                   logger.error("Delegate abort failed for log analysis manager for delegate task id " + id, e);
                 }
               }
-              sendStateNotification(context, error, errorMsg);
+              sendStateNotification(context, error, errorMsg, logAnalysisMinute);
             } catch (Exception e) {
               logger.error("Send notification failed for log analysis manager", e);
             } finally {
@@ -229,7 +230,7 @@ public class LogAnalysisManagerJob implements Job {
       }
     }
 
-    private void sendStateNotification(AnalysisContext context, boolean error, String errorMsg) {
+    private void sendStateNotification(AnalysisContext context, boolean error, String errorMsg, int logAnalysisMinute) {
       if (analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
         final ExecutionStatus status = error ? ExecutionStatus.ERROR : ExecutionStatus.SUCCESS;
 
@@ -243,6 +244,7 @@ public class LogAnalysisManagerJob implements Job {
                 .lastExecutionNodes(
                     context.getControlNodes() == null ? Collections.emptySet() : context.getControlNodes().keySet())
                 .correlationId(context.getCorrelationId())
+                .analysisMinute(logAnalysisMinute)
                 .build();
 
         logAnalysisExecutionData.setStatus(status);
