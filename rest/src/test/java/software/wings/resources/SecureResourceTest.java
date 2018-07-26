@@ -85,6 +85,7 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.LearningEngineService;
+import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WhitelistService;
@@ -132,6 +133,7 @@ public class SecureResourceTest {
   private static UserService userService = mock(UserService.class);
   private static WorkflowService workflowService = mock(WorkflowService.class);
   private static UserGroupService userGroupService = mock(UserGroupService.class);
+  private static UsageRestrictionsService usageRestrictionsService = mock(UsageRestrictionsService.class);
   private static EnvironmentService envService = mock(EnvironmentService.class);
   private static LearningEngineService learningEngineService = mock(LearningEngineService.class);
   private static MainConfiguration configuration = mock(MainConfiguration.class);
@@ -140,9 +142,9 @@ public class SecureResourceTest {
   private static WhitelistService whitelistService = mock(WhitelistService.class);
   private static HarnessUserGroupService harnessUserGroupService = mock(HarnessUserGroupService.class);
 
-  private static AuthService authService =
-      new AuthServiceImpl(genericDbCache, wingsPersistence, userService, userGroupService, workflowService, envService,
-          cacheHelper, configuration, learningEngineService, authHandler, featureFlagService, harnessUserGroupService);
+  private static AuthService authService = new AuthServiceImpl(genericDbCache, wingsPersistence, userService,
+      userGroupService, usageRestrictionsService, workflowService, envService, cacheHelper, configuration,
+      learningEngineService, authHandler, featureFlagService, harnessUserGroupService);
 
   private static AuthRuleFilter authRuleFilter = new AuthRuleFilter(auditService, auditHelper, authService, authHandler,
       appService, userService, featureFlagService, whitelistService, harnessUserGroupService);

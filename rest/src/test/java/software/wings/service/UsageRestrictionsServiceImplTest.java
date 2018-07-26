@@ -29,7 +29,6 @@ import static software.wings.utils.WingsTestConstants.USER_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
@@ -128,6 +127,22 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
 
       Set<Action> allActions = newHashSet(Action.CREATE, Action.UPDATE, Action.READ, Action.DELETE, Action.EXECUTE);
 
+      GenericEntityFilter appFilterFromPermissions = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
+      HashSet<String> envFiltersFromPermissions = newHashSet(PROD, NON_PROD);
+      EnvFilter envFilterForPermissions = EnvFilter.builder().filterTypes(envFiltersFromPermissions).build();
+      AppEnvRestriction appEnvRestrictionForPermissions =
+          AppEnvRestriction.builder().appFilter(appFilterFromPermissions).envFilter(envFilterForPermissions).build();
+      UsageRestrictions usageRestrictionsFromPermissions = new UsageRestrictions();
+      usageRestrictionsFromPermissions.setAppEnvRestrictions(newHashSet(appEnvRestrictionForPermissions));
+
+      Map<String, Set<String>> appEnvMap = Maps.newHashMap();
+      appEnvMap.put(APP_ID_1, newHashSet(ENV_ID_1));
+      appEnvMap.put(APP_ID_2, newHashSet(ENV_ID_2));
+      appEnvMap.put(APP_ID_3, newHashSet(ENV_ID_3));
+
+      setPermissions(asList(APP_ID_1, APP_ID_2, APP_ID_3), asList(ENV_ID_1, ENV_ID_2, ENV_ID_3), allActions, false,
+          usageRestrictionsFromPermissions, appEnvMap);
+
       // Scenario 1
       GenericEntityFilter appFilter =
           GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(APP_ID)).build();
@@ -143,19 +158,21 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       assertEquals(defaultUsageRestrictions, expected);
 
       // Scenario 2 admin
-      setPermissions(asList(APP_ID_1), asList(ENV_ID_1), allActions, true);
+      setPermissions(asList(APP_ID_1), asList(ENV_ID_1), allActions, true, usageRestrictionsFromPermissions, appEnvMap);
       expected = null;
 
       defaultUsageRestrictions = usageRestrictionsService.getDefaultUsageRestrictions(ACCOUNT_ID, APP_ID, null);
       assertEquals(defaultUsageRestrictions, expected);
 
       // Scenario 3
-      setPermissions(asList(APP_ID_1, APP_ID_2, APP_ID_3), asList(ENV_ID_1, ENV_ID_2, ENV_ID_3), allActions, true);
+      setPermissions(asList(APP_ID_1, APP_ID_2, APP_ID_3), asList(ENV_ID_1, ENV_ID_2, ENV_ID_3), allActions, true,
+          usageRestrictionsFromPermissions, appEnvMap);
       defaultUsageRestrictions = usageRestrictionsService.getDefaultUsageRestrictions(ACCOUNT_ID, null, null);
       assertNull(defaultUsageRestrictions);
 
       // Scenario 4
-      setPermissions(asList(APP_ID_1, APP_ID_2, APP_ID_3), asList(ENV_ID_1, ENV_ID_2, ENV_ID_3), allActions, false);
+      setPermissions(asList(APP_ID_1, APP_ID_2, APP_ID_3), asList(ENV_ID_1, ENV_ID_2, ENV_ID_3), allActions, false,
+          usageRestrictionsFromPermissions, appEnvMap);
       appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
       envFilters = newHashSet(PROD, NON_PROD);
       envFilter = EnvFilter.builder().filterTypes(envFilters).build();
@@ -184,7 +201,8 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       assertEquals(defaultUsageRestrictions, expected);
 
       // Scenario 6
-      setPermissions(asList(APP_ID_1), asList(ENV_ID_1), allActions, false);
+      setPermissions(
+          asList(APP_ID_1), asList(ENV_ID_1), allActions, false, usageRestrictionsFromPermissions, appEnvMap);
       appFilter = GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(APP_ID_1)).build();
       envFilters = newHashSet(NON_PROD);
       envFilter = EnvFilter.builder().filterTypes(envFilters).build();
@@ -212,6 +230,28 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
           .thenReturn(aPageResponse().withResponse(userGroups).build());
 
       // Scenario 8
+      appFilterFromPermissions =
+          GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(APP_ID)).build();
+      envFiltersFromPermissions = newHashSet(SELECTED);
+      envFilterForPermissions =
+          EnvFilter.builder().filterTypes(envFiltersFromPermissions).ids(newHashSet(ENV_ID)).build();
+      appEnvRestrictionForPermissions =
+          AppEnvRestriction.builder().appFilter(appFilterFromPermissions).envFilter(envFilterForPermissions).build();
+      usageRestrictionsFromPermissions = new UsageRestrictions();
+      usageRestrictionsFromPermissions.setAppEnvRestrictions(newHashSet(appEnvRestrictionForPermissions));
+
+      appEnvMap.clear();
+      appEnvMap.put(APP_ID_1, newHashSet(ENV_ID_1));
+
+      setPermissions(
+          asList(APP_ID_1), asList(ENV_ID_1), allActions, false, usageRestrictionsFromPermissions, appEnvMap);
+
+      appFilter = GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(APP_ID)).build();
+      envFilters = newHashSet(SELECTED);
+      envFilter = EnvFilter.builder().filterTypes(envFilters).ids(newHashSet(ENV_ID)).build();
+      appEnvRestriction = AppEnvRestriction.builder().appFilter(appFilter).envFilter(envFilter).build();
+      expected = UsageRestrictions.builder().appEnvRestrictions(newHashSet(appEnvRestriction)).build();
+
       defaultUsageRestrictions = usageRestrictionsService.getDefaultUsageRestrictions(ACCOUNT_ID, null, null);
       assertEquals(defaultUsageRestrictions, expected);
 
@@ -223,10 +263,10 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
           AppPermission.builder()
               .permissionType(PermissionType.APP)
               .appFilter(
-                  GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(Sets.newHashSet(APP_ID_1)).build())
+                  GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(APP_ID_1)).build())
               .entityFilter(EnvFilter.builder()
-                                .filterTypes(Sets.newHashSet(EnvFilter.FilterType.SELECTED))
-                                .ids(Sets.newHashSet(ENV_ID_1))
+                                .filterTypes(newHashSet(EnvFilter.FilterType.SELECTED))
+                                .ids(newHashSet(ENV_ID_1))
                                 .build())
               .actions(newHashSet(allActions))
               .build();
@@ -239,9 +279,10 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
           .thenReturn(aPageResponse().withResponse(userGroups).build());
 
       // Scenario 9
-      setPermissions(asList(APP_ID_1), asList(ENV_ID_1), allActions, false);
+      setPermissions(
+          asList(APP_ID_1), asList(ENV_ID_1), allActions, false, usageRestrictionsFromPermissions, appEnvMap);
       appFilter = GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(APP_ID_1)).build();
-      envFilter = EnvFilter.builder().filterTypes(Sets.newHashSet(SELECTED)).ids(Sets.newHashSet(ENV_ID_1)).build();
+      envFilter = EnvFilter.builder().filterTypes(newHashSet(SELECTED)).ids(newHashSet(ENV_ID_1)).build();
       appEnvRestriction = AppEnvRestriction.builder().appFilter(appFilter).envFilter(envFilter).build();
       expected = UsageRestrictions.builder().appEnvRestrictions(newHashSet(appEnvRestriction)).build();
 
@@ -279,9 +320,10 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       when(authHandler.getEnvIdsByFilter(anyString(), any(EnvFilter.class)))
           .thenReturn(newHashSet(ENV_ID, ENV_ID_1, ENV_ID_2, ENV_ID_3));
       UsageRestrictions restrictionsFromUserPermissions =
-          usageRestrictionsService.getUsageRestrictionsFromUserPermissions(ACCOUNT_ID);
+
+          usageRestrictionsService.getUsageRestrictionsFromUserPermissions(ACCOUNT_ID, null, null);
       Map<String, Set<String>> appEnvMapFromPermissions =
-          usageRestrictionsService.getAppEnvMapFromPermissions(ACCOUNT_ID);
+          usageRestrictionsService.getAppEnvMapFromPermissions(ACCOUNT_ID, null);
       Map<String, Set<String>> appEnvMapFromEntityRestrictions =
           usageRestrictionsService.getAppEnvMap(ACCOUNT_ID, usageRestrictions.getAppEnvRestrictions());
 
@@ -492,7 +534,21 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       when(userGroupService.list(anyString(), any(PageRequest.class), anyBoolean()))
           .thenReturn(aPageResponse().withResponse(userGroups).build());
 
-      setPermissions(asList(APP_ID_1, APP_ID_2, APP_ID_3), asList(ENV_ID_1, ENV_ID_2, ENV_ID_3), allActions, false);
+      GenericEntityFilter appFilterFromPermissions = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
+      HashSet<String> envFiltersFromPermissions = newHashSet(PROD, NON_PROD);
+      EnvFilter envFilterForPermissions = EnvFilter.builder().filterTypes(envFiltersFromPermissions).build();
+      AppEnvRestriction appEnvRestrictionForPermissions =
+          AppEnvRestriction.builder().appFilter(appFilterFromPermissions).envFilter(envFilterForPermissions).build();
+      UsageRestrictions usageRestrictionsFromPermissions = new UsageRestrictions();
+      usageRestrictionsFromPermissions.setAppEnvRestrictions(newHashSet(appEnvRestrictionForPermissions));
+
+      Map<String, Set<String>> appEnvMap = Maps.newHashMap();
+      appEnvMap.put(APP_ID_1, newHashSet(ENV_ID_1));
+      appEnvMap.put(APP_ID_2, newHashSet(ENV_ID_2));
+      appEnvMap.put(APP_ID_3, newHashSet(ENV_ID_3));
+
+      setPermissions(asList(APP_ID_1, APP_ID_2, APP_ID_3), asList(ENV_ID_1, ENV_ID_2, ENV_ID_3), allActions, false,
+          usageRestrictionsFromPermissions, appEnvMap);
 
       // Valid Scenarios
       GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
@@ -647,19 +703,23 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
           .thenReturn(newHashSet(ENV_ID, ENV_ID_1, ENV_ID_2, ENV_ID_3));
 
       UsageRestrictions usageRestrictions1 = UsageRestrictions.builder().appEnvRestrictions(newHashSet()).build();
-      doReturn(usageRestrictions1).when(usageRestrictionsService).getUsageRestrictionsFromUserPermissions(ACCOUNT_ID);
+      doReturn(usageRestrictions1)
+          .when(usageRestrictionsService)
+          .getUsageRestrictionsFromUserPermissions(any(), any(), any());
 
       UsageRestrictions restrictionsFromUserPermissions = null;
+      Map<String, Set<String>> appEnvMap = null;
 
       // Scenario 1 non-admin user
-      setPermissions(asList(APP_ID_1, APP_ID_2, APP_ID_3), asList(ENV_ID_1, ENV_ID_2, ENV_ID_3), allActions, false);
+      setPermissions(asList(APP_ID_1, APP_ID_2, APP_ID_3), asList(ENV_ID_1, ENV_ID_2, ENV_ID_3), allActions, false,
+          restrictionsFromUserPermissions, appEnvMap);
       boolean canUserUpdateOrDeleteEntity =
           usageRestrictionsService.userHasPermissionsToChangeEntity(ACCOUNT_ID, null, restrictionsFromUserPermissions);
       assertFalse(canUserUpdateOrDeleteEntity);
 
       // Scenario 1 user with all app access
       setPermissions(asList(ENV_ID, APP_ID_1, APP_ID_2, APP_ID_3), asList(ENV_ID, ENV_ID_1, ENV_ID_2, ENV_ID_3),
-          allActions, false);
+          allActions, false, restrictionsFromUserPermissions, appEnvMap);
       GenericEntityFilter appFilter1 = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
       HashSet<String> envFilters1 = newHashSet(PROD, NON_PROD);
       EnvFilter envFilter1 = EnvFilter.builder().filterTypes(envFilters1).build();
@@ -667,14 +727,17 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
           AppEnvRestriction.builder().appFilter(appFilter1).envFilter(envFilter1).build();
 
       usageRestrictions1 = UsageRestrictions.builder().appEnvRestrictions(newHashSet(appEnvRestriction1)).build();
-      doReturn(usageRestrictions1).when(usageRestrictionsService).getUsageRestrictionsFromUserPermissions(ACCOUNT_ID);
+      doReturn(usageRestrictions1)
+          .when(usageRestrictionsService)
+          .getUsageRestrictionsFromUserPermissions(any(), any(), any());
 
       canUserUpdateOrDeleteEntity =
           usageRestrictionsService.userHasPermissionsToChangeEntity(ACCOUNT_ID, null, restrictionsFromUserPermissions);
       assertTrue(canUserUpdateOrDeleteEntity);
 
       // Scenario 2
-      setPermissions(asList(APP_ID_1, APP_ID_2, APP_ID_3), asList(ENV_ID_1, ENV_ID_2, ENV_ID_3), allActions, false);
+      setPermissions(asList(APP_ID_1, APP_ID_2, APP_ID_3), asList(ENV_ID_1, ENV_ID_2, ENV_ID_3), allActions, false,
+          restrictionsFromUserPermissions, appEnvMap);
       appFilter1 = GenericEntityFilter.builder()
                        .filterType(FilterType.SELECTED)
                        .ids(newHashSet(APP_ID_1, APP_ID_2, APP_ID_3))
@@ -684,7 +747,9 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       appEnvRestriction1 = AppEnvRestriction.builder().appFilter(appFilter1).envFilter(envFilter1).build();
 
       usageRestrictions1 = UsageRestrictions.builder().appEnvRestrictions(newHashSet(appEnvRestriction1)).build();
-      doReturn(usageRestrictions1).when(usageRestrictionsService).getUsageRestrictionsFromUserPermissions(ACCOUNT_ID);
+      doReturn(usageRestrictions1)
+          .when(usageRestrictionsService)
+          .getUsageRestrictionsFromUserPermissions(any(), any(), any());
 
       GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
       HashSet<String> envFilters = newHashSet(PROD, NON_PROD);
@@ -709,14 +774,16 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       assertTrue(canUserUpdateOrDeleteEntity);
 
       // Scenario 3
-      setPermissions(asList(APP_ID_1), asList(ENV_ID_1), allActions, false);
+      setPermissions(asList(APP_ID_1), asList(ENV_ID_1), allActions, false, restrictionsFromUserPermissions, appEnvMap);
       appFilter1 = GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(APP_ID_1)).build();
       envFilters1 = newHashSet(SELECTED);
       envFilter1 = EnvFilter.builder().filterTypes(envFilters1).ids(newHashSet(ENV_ID_1)).build();
       appEnvRestriction1 = AppEnvRestriction.builder().appFilter(appFilter1).envFilter(envFilter1).build();
 
       usageRestrictions1 = UsageRestrictions.builder().appEnvRestrictions(newHashSet(appEnvRestriction1)).build();
-      doReturn(usageRestrictions1).when(usageRestrictionsService).getUsageRestrictionsFromUserPermissions(ACCOUNT_ID);
+      doReturn(usageRestrictions1)
+          .when(usageRestrictionsService)
+          .getUsageRestrictionsFromUserPermissions(any(), any(), any());
 
       when(authHandler.getAppIdsByFilter(ACCOUNT_ID, appFilter))
           .thenReturn(newHashSet(APP_ID, APP_ID_1, APP_ID_2, APP_ID_3));
@@ -737,7 +804,8 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       assertFalse(canUserUpdateOrDeleteEntity);
 
       // Scenario 4
-      setPermissions(asList(APP_ID_1, APP_ID_2, APP_ID_3), asList(ENV_ID_1, ENV_ID_2, ENV_ID_3), allActions, false);
+      setPermissions(asList(APP_ID_1, APP_ID_2, APP_ID_3), asList(ENV_ID_1, ENV_ID_2, ENV_ID_3), allActions, false,
+          restrictionsFromUserPermissions, appEnvMap);
       appFilter1 = GenericEntityFilter.builder()
                        .filterType(FilterType.SELECTED)
                        .ids(newHashSet(APP_ID_1, APP_ID_2, APP_ID_3))
@@ -747,7 +815,9 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       appEnvRestriction1 = AppEnvRestriction.builder().appFilter(appFilter1).envFilter(envFilter1).build();
 
       usageRestrictions1 = UsageRestrictions.builder().appEnvRestrictions(newHashSet(appEnvRestriction1)).build();
-      doReturn(usageRestrictions1).when(usageRestrictionsService).getUsageRestrictionsFromUserPermissions(ACCOUNT_ID);
+      doReturn(usageRestrictions1)
+          .when(usageRestrictionsService)
+          .getUsageRestrictionsFromUserPermissions(any(), any(), any());
 
       when(authHandler.getAppIdsByFilter(ACCOUNT_ID, appFilter))
           .thenReturn(newHashSet(APP_ID, APP_ID_1, APP_ID_2, APP_ID_3));
@@ -772,7 +842,8 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
     }
   }
 
-  private void setPermissions(List<String> appIds, List<String> envIds, Set<Action> actions, boolean isAccountAdmin) {
+  private void setPermissions(List<String> appIds, List<String> envIds, Set<Action> actions, boolean isAccountAdmin,
+      UsageRestrictions usageRestrictions, Map<String, Set<String>> appEnvMap) {
     User user = User.Builder.anUser().withName(USER_NAME).withUuid(USER_ID).build();
     Map<String, AppPermissionSummaryForUI> appPermissionsMap = Maps.newHashMap();
 
@@ -788,6 +859,8 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
                                                 .accountId(ACCOUNT_ID)
                                                 .isRbacEnabled(true)
                                                 .appPermissionMap(appPermissionsMap)
+                                                .usageRestrictions(usageRestrictions)
+                                                .appEnvMap(appEnvMap)
                                                 .build();
     if (isAccountAdmin) {
       AccountPermissionSummary accountPermissionSummary =

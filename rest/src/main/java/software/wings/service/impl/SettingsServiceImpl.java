@@ -72,6 +72,7 @@ import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.manipulation.SettingsServiceManipulationObserver;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.settings.RestrictionsAndAppEnvMap;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
@@ -139,10 +140,10 @@ public class SettingsServiceImpl implements SettingsService {
 
     String accountId = inputSettingAttributes.get(0).getAccountId();
     List<SettingAttribute> filteredSettingAttributes = Lists.newArrayList();
-    Map<String, Set<String>> appEnvMapFromUserPermissions =
-        usageRestrictionsService.getAppEnvMapFromPermissions(accountId);
-    UsageRestrictions restrictionsFromUserPermissions =
-        usageRestrictionsService.getUsageRestrictionsFromUserPermissions(accountId);
+
+    RestrictionsAndAppEnvMap restrictionsAndAppEnvMap = usageRestrictionsService.getRestrictionsAndAppEnvMap(accountId);
+    Map<String, Set<String>> appEnvMapFromUserPermissions = restrictionsAndAppEnvMap.getAppEnvMap();
+    UsageRestrictions restrictionsFromUserPermissions = restrictionsAndAppEnvMap.getUsageRestrictions();
 
     inputSettingAttributes.forEach(settingAttribute -> {
       UsageRestrictions usageRestrictionsFromEntity = settingAttribute.getUsageRestrictions();
