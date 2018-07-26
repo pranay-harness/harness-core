@@ -28,6 +28,7 @@ import static software.wings.beans.ErrorCode.USER_INVITATION_DOES_NOT_EXIST;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.User.Builder.anUser;
+import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
@@ -1196,5 +1197,23 @@ public class UserServiceImpl implements UserService {
   @Override
   public boolean isUserAssignedToAccount(User user, String accountId) {
     return user.getAccounts().stream().anyMatch(account -> account.getUuid().equals(accountId));
+  }
+
+  @Override
+  public List<String> fetchUserEmailAddressesFromUserIds(List<String> userIds) {
+    if (isEmpty(userIds)) {
+      return asList();
+    }
+
+    return wingsPersistence.createQuery(User.class, excludeAuthority)
+        .field(User.ID_KEY)
+        .in(userIds)
+        .project(User.EMAIL_KEY, true)
+        .project(User.EMAIL_VERIFIED_KEY, true)
+        .asList()
+        .stream()
+        .filter(User::isEmailVerified)
+        .map(user -> user.getEmail())
+        .collect(toList());
   }
 }

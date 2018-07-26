@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -12,6 +13,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import software.wings.api.ApprovalStateExecutionData;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.GraphNode;
@@ -252,9 +254,16 @@ public class ExecutionResource {
   public RestResponse approveOrRejectExecution(@QueryParam("appId") String appId,
       @QueryParam("stateExecutionId") String stateExecutionId,
       @PathParam("workflowExecutionId") String workflowExecutionId, ApprovalDetails approvalDetails) {
-    authorize(appId, workflowExecutionId, EXECUTE);
+    ApprovalStateExecutionData approvalStateExecutionData =
+        workflowExecutionService.fetchApprovalStateExecutionDataFromWorkflowExecution(
+            appId, workflowExecutionId, stateExecutionId, approvalDetails);
+
+    if (isEmpty(approvalStateExecutionData.getUserGroups())) {
+      authorize(appId, workflowExecutionId, EXECUTE);
+    }
+
     return new RestResponse<>(workflowExecutionService.approveOrRejectExecution(
-        appId, workflowExecutionId, stateExecutionId, approvalDetails));
+        appId, approvalStateExecutionData.getUserGroups(), approvalDetails));
   }
 
   /**

@@ -47,6 +47,7 @@ import software.wings.security.GenericEntityFilter;
 import software.wings.security.GenericEntityFilter.FilterType;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
+import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.RoleService;
@@ -281,5 +282,50 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     assertThat(userGroup1.getMemberIds()).containsExactly(user.getUuid());
     assertThat(userGroup2.getMemberIds()).isNullOrEmpty();
     assertThat(userGroup3.getMemberIds()).containsExactly(user.getUuid());
+  }
+
+  @Test
+  public void testIsUserAuthorizedToAcceptOrRejectApproval() {
+    User user = createUser("User");
+    wingsPersistence.save(user);
+    UserThreadLocal.set(user);
+
+    assertThat(userGroupService.verifyUserAuthorizedToAcceptOrRejectApproval(ACCOUNT_ID, null)).isFalse();
+    assertThat(userGroupService.verifyUserAuthorizedToAcceptOrRejectApproval(null, null)).isFalse();
+
+    UserGroup userGroup = createUserGroup(null);
+    wingsPersistence.save(userGroup);
+    assertThat(userGroupService.verifyUserAuthorizedToAcceptOrRejectApproval(ACCOUNT_ID, asList(userGroup.getUuid())))
+        .isFalse();
+    assertThat(userGroupService.verifyUserAuthorizedToAcceptOrRejectApproval(null, asList(userGroup.getUuid())))
+        .isFalse();
+
+    userGroup = createUserGroup(asList(user.getUuid()));
+    wingsPersistence.save(userGroup);
+    assertThat(userGroupService.verifyUserAuthorizedToAcceptOrRejectApproval(ACCOUNT_ID, asList(userGroup.getUuid())))
+        .isTrue();
+    assertThat(userGroupService.verifyUserAuthorizedToAcceptOrRejectApproval(null, asList(userGroup.getUuid())))
+        .isTrue();
+
+    User user1 = createUser("User1");
+    wingsPersistence.save(user1);
+    UserThreadLocal.set(user1);
+    assertThat(userGroupService.verifyUserAuthorizedToAcceptOrRejectApproval(ACCOUNT_ID, asList(userGroup.getUuid())))
+        .isFalse();
+    assertThat(userGroupService.verifyUserAuthorizedToAcceptOrRejectApproval(null, asList(userGroup.getUuid())))
+        .isFalse();
+
+    user.setEmailVerified(false);
+    UserThreadLocal.set(user);
+    assertThat(userGroupService.verifyUserAuthorizedToAcceptOrRejectApproval(ACCOUNT_ID, asList(userGroup.getUuid())))
+        .isFalse();
+  }
+
+  private User createUser(String userId) {
+    return anUser().withUuid(userId).withAppId(APP_ID).withEmailVerified(true).withEmail(USER_EMAIL).build();
+  }
+
+  private UserGroup createUserGroup(List<String> memberIds) {
+    return UserGroup.builder().accountId(ACCOUNT_ID).uuid(USER_GROUP_ID).memberIds(memberIds).build();
   }
 }

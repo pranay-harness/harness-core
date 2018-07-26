@@ -30,6 +30,9 @@ import java.util.Set;
 @EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 public class UserGroup extends Base {
+  public static final String MEMBER_IDS_KEY = "memberIds";
+  public static final String NAME_KEY = "name";
+
   @Indexed @NotEmpty private String name;
   private String description;
 

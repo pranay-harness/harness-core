@@ -91,4 +91,6 @@ public interface NotificationSetupService {
    * @return
    */
   List<NotificationGroup> listDefaultNotificationGroup(String accountId);
+
+  List<String> getUserEmailAddressFromNotificationGroups(String accountId, List<NotificationGroup> notificationGroups);
 }

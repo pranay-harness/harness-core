@@ -1,8 +1,12 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.exception.WingsException.USER;
@@ -20,6 +24,7 @@ import software.wings.beans.security.UserGroup;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserGroupService;
@@ -201,5 +206,62 @@ public class UserGroupServiceImpl implements UserGroupService {
                                              .build();
     PageResponse<UserGroup> pageResponse = list(accountId, pageRequest, true);
     return pageResponse.getResponse();
+  }
+
+  @Override
+  public List<String> fetchUserGroupsMemberIds(String accountId, List<String> userGroupIds) {
+    if (isEmpty(userGroupIds)) {
+      return asList();
+    }
+
+    List<UserGroup> userGroupList;
+    if (isNotBlank(accountId)) {
+      userGroupList = wingsPersistence.createQuery(UserGroup.class)
+                          .filter(UserGroup.ACCOUNT_ID_KEY, accountId)
+                          .field(UserGroup.ID_KEY)
+                          .in(userGroupIds)
+                          .project(UserGroup.MEMBER_IDS_KEY, true)
+                          .asList();
+    } else {
+      userGroupList = wingsPersistence.createQuery(UserGroup.class, excludeAuthority)
+                          .field(UserGroup.ID_KEY)
+                          .in(userGroupIds)
+                          .project(UserGroup.MEMBER_IDS_KEY, true)
+                          .asList();
+    }
+
+    return userGroupList.stream()
+        .filter(userGroup -> !isEmpty(userGroup.getMemberIds()))
+        .flatMap(userGroup -> userGroup.getMemberIds().stream())
+        .collect(toList());
+  }
+
+  @Override
+  public List<UserGroup> fetchUserGroupNamesFromIds(List<String> userGroupIds) {
+    if (isEmpty(userGroupIds)) {
+      return asList();
+    }
+
+    return wingsPersistence.createQuery(UserGroup.class, excludeAuthority)
+        .field(UserGroup.ID_KEY)
+        .in(userGroupIds)
+        .project(UserGroup.NAME_KEY, true)
+        .project(UserGroup.ID_KEY, true)
+        .asList()
+        .stream()
+        .filter(userGroup -> !isEmpty(userGroup.getName()))
+        .collect(toList());
+  }
+
+  @Override
+  public boolean verifyUserAuthorizedToAcceptOrRejectApproval(String accountId, List<String> userGroupIds) {
+    if (isEmpty(userGroupIds)) {
+      return false;
+    }
+
+    User user = UserThreadLocal.get();
+    List<String> userGroupMembers = fetchUserGroupsMemberIds(accountId, userGroupIds);
+
+    return user.isEmailVerified() && isNotEmpty(userGroupMembers) && userGroupMembers.contains(user.getUuid());
   }
 }

@@ -47,6 +47,7 @@ import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
 import static software.wings.exception.WingsException.USER;
+import static software.wings.security.PermissionAttribute.Action.EXECUTE;
 import static software.wings.service.impl.ExecutionEvent.ExecutionEventBuilder.anExecutionEvent;
 import static software.wings.sm.ExecutionInterruptType.ABORT_ALL;
 import static software.wings.sm.ExecutionInterruptType.PAUSE_ALL;
@@ -156,8 +157,11 @@ import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
+import software.wings.security.PermissionAttribute;
+import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.WorkflowExecutionServiceImpl.Tree.TreeBuilder;
+import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.BarrierService;
@@ -170,6 +174,7 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.StateExecutionService;
+import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowExecutionBaselineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
@@ -258,6 +263,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private FeatureFlagService featureFlagService;
 
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private UserGroupService userGroupService;
+  @Inject private AuthHandler authHandler;
 
   /**
    * {@inheritDoc}
@@ -361,71 +368,94 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
-  public boolean approveOrRejectExecution(
-      String appId, String workflowExecutionId, String stateExecutionId, ApprovalDetails approvalDetails) {
-    notNullCheck("ApprovalDetails", approvalDetails, USER);
-    String approvalId = approvalDetails.getApprovalId();
-
-    WorkflowExecution workflowExecution = getWorkflowExecution(appId, workflowExecutionId);
-    notNullCheck("workflowExecution", workflowExecution, USER);
-
-    notNullCheck("appId", appId, USER);
-    notNullCheck("workflowExecutionId", workflowExecutionId, USER);
-
-    // Pipeline approval
-    if (workflowExecution.getWorkflowType().equals(WorkflowType.PIPELINE)) {
-      if (!isPipelineWaitingApproval(workflowExecution.getPipelineExecution(), approvalId)) {
-        throw new WingsException(INVALID_ARGUMENT, USER)
-            .addParam("args",
-                "No Pipeline execution [" + workflowExecutionId
-                    + "] waiting for approval id: " + approvalDetails.getApprovalId());
-      }
-    }
-
-    // Workflow approval
-    if (workflowExecution.getWorkflowType().equals(WorkflowType.ORCHESTRATION)) {
-      if (!isWorkflowWaitingApproval(workflowExecution, workflowExecutionId, stateExecutionId, approvalDetails)) {
-        throw new WingsException(INVALID_ARGUMENT, USER)
-            .addParam("args",
-                "No Workflow execution [" + workflowExecutionId
-                    + "] waiting for approval id: " + approvalDetails.getApprovalId());
+  public boolean approveOrRejectExecution(String appId, List<String> userGroupIds, ApprovalDetails approvalDetails) {
+    if (isNotEmpty(userGroupIds)) {
+      if (!verifyAuthorizedToAcceptOrReject(userGroupIds, asList(appId), null)) {
+        throw new InvalidRequestException("User not authorized to accept or reject the approval");
       }
     }
 
     User user = UserThreadLocal.get();
-    if (user != null) {
-      approvalDetails.setApprovedBy(EmbeddedUser.builder().email(user.getEmail()).name(user.getName()).build());
-    }
+    approvalDetails.setApprovedBy(EmbeddedUser.builder().email(user.getEmail()).name(user.getName()).build());
     ApprovalStateExecutionData executionData = ApprovalStateExecutionData.builder()
                                                    .approvalId(approvalDetails.getApprovalId())
                                                    .approvedBy(approvalDetails.getApprovedBy())
                                                    .comments(approvalDetails.getComments())
                                                    .build();
 
-    if (approvalDetails.getAction() == null || approvalDetails.getAction().equals(APPROVE)) {
+    if (approvalDetails.getAction().equals(APPROVE)) {
       executionData.setStatus(ExecutionStatus.SUCCESS);
-    } else if (approvalDetails.getAction() == null || approvalDetails.getAction().equals(REJECT)) {
+    } else if (approvalDetails.getAction().equals(REJECT)) {
       executionData.setStatus(ExecutionStatus.REJECTED);
     }
+
     waitNotifyEngine.notify(approvalDetails.getApprovalId(), executionData);
     return true;
   }
 
-  private boolean isPipelineWaitingApproval(PipelineExecution pipelineExecution, String approvalId) {
-    if (pipelineExecution == null || pipelineExecution.getPipelineStageExecutions() == null) {
-      return false;
+  @Override
+  public ApprovalStateExecutionData fetchApprovalStateExecutionDataFromWorkflowExecution(
+      String appId, String workflowExecutionId, String stateExecutionId, ApprovalDetails approvalDetails) {
+    notNullCheck("appId", appId, USER);
+
+    notNullCheck("ApprovalDetails", approvalDetails, USER);
+    notNullCheck("ApprovalId", approvalDetails.getApprovalId());
+    notNullCheck("Approval action", approvalDetails.getAction());
+    String approvalId = approvalDetails.getApprovalId();
+
+    notNullCheck("workflowExecutionId", workflowExecutionId, USER);
+    WorkflowExecution workflowExecution = getWorkflowExecution(appId, workflowExecutionId);
+    notNullCheck("workflowExecution", workflowExecution, USER);
+
+    ApprovalStateExecutionData approvalStateExecutionData = null;
+    String workflowType = "";
+
+    // Pipeline approval
+    if (workflowExecution.getWorkflowType().equals(WorkflowType.PIPELINE)) {
+      workflowType = "Pipeline";
+      approvalStateExecutionData =
+          fetchPipelineWaitingApprovalStateExecutionData(workflowExecution.getPipelineExecution(), approvalId);
     }
 
-    return pipelineExecution.getPipelineStageExecutions().stream().anyMatch(pe
-        -> pe.getStatus() == PAUSED && pe.getStateExecutionData() instanceof ApprovalStateExecutionData
-            && approvalId.equals(((ApprovalStateExecutionData) pe.getStateExecutionData()).getApprovalId()));
+    // Workflow approval
+    if (workflowExecution.getWorkflowType().equals(WorkflowType.ORCHESTRATION)) {
+      workflowType = "Workflow";
+      approvalStateExecutionData =
+          fetchWorkflowWaitingApprovalStateExecutionData(workflowExecution, stateExecutionId, approvalId);
+    }
+
+    if (approvalStateExecutionData == null) {
+      throw new WingsException(INVALID_ARGUMENT, USER)
+          .addParam("args",
+              "No " + workflowType + " execution [" + workflowExecutionId + "] waiting for approval id: " + approvalId);
+    }
+
+    return approvalStateExecutionData;
   }
 
-  private boolean isWorkflowWaitingApproval(WorkflowExecution workflowExecution, String workflowExecutionId,
-      String stateExecutionId, ApprovalDetails approvalDetails) {
-    if (workflowExecution == null || approvalDetails == null || workflowExecutionId == null) {
-      return false;
+  private ApprovalStateExecutionData fetchPipelineWaitingApprovalStateExecutionData(
+      PipelineExecution pipelineExecution, String approvalId) {
+    if (pipelineExecution == null || pipelineExecution.getPipelineStageExecutions() == null) {
+      return null;
     }
+
+    for (PipelineStageExecution pe : pipelineExecution.getPipelineStageExecutions()) {
+      if (pe.getStateExecutionData() instanceof ApprovalStateExecutionData) {
+        ApprovalStateExecutionData approvalStateExecutionData = (ApprovalStateExecutionData) pe.getStateExecutionData();
+
+        if (pe.getStatus().equals(ExecutionStatus.PAUSED)
+            && approvalStateExecutionData.getStatus().equals(ExecutionStatus.PAUSED)
+            && approvalId.equals(approvalStateExecutionData.getApprovalId())) {
+          return approvalStateExecutionData;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  private ApprovalStateExecutionData fetchWorkflowWaitingApprovalStateExecutionData(
+      WorkflowExecution workflowExecution, String stateExecutionId, String approvalId) {
     if (stateExecutionId != null) {
       StateExecutionInstance stateExecutionInstance =
           wingsPersistence.createQuery(StateExecutionInstance.class).filter(ID_KEY, stateExecutionId).get();
@@ -433,9 +463,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       ApprovalStateExecutionData approvalStateExecutionData =
           (ApprovalStateExecutionData) stateExecutionInstance.getStateExecutionData();
       // Check for Approval Id in PAUSED status
-      if (approvalStateExecutionData != null) {
-        return approvalStateExecutionData.getStatus().equals(ExecutionStatus.PAUSED)
-            && approvalStateExecutionData.getApprovalId().equals(approvalDetails.getApprovalId());
+      if (approvalStateExecutionData != null && approvalStateExecutionData.getStatus().equals(ExecutionStatus.PAUSED)
+          && approvalStateExecutionData.getApprovalId().equals(approvalId)) {
+        return approvalStateExecutionData;
       }
     } else {
       List<StateExecutionInstance> stateExecutionInstances = getStateExecutionInstances(workflowExecution);
@@ -446,13 +476,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           // Check for Approval Id in PAUSED status
           if (approvalStateExecutionData != null
               && approvalStateExecutionData.getStatus().equals(ExecutionStatus.PAUSED)
-              && approvalStateExecutionData.getApprovalId().equals(approvalDetails.getApprovalId())) {
-            return true;
+              && approvalStateExecutionData.getApprovalId().equals(approvalId)) {
+            return approvalStateExecutionData;
           }
         }
       }
     }
-    return false;
+
+    return null;
   }
 
   private void refreshPipelineExecution(WorkflowExecution workflowExecution) {
@@ -501,6 +532,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
             if (stateExecutionData instanceof ApprovalStateExecutionData) {
               stageExecution.setStateExecutionData(stateExecutionData);
+
+              ApprovalStateExecutionData approvalStateExecutionData = (ApprovalStateExecutionData) stateExecutionData;
+              approvalStateExecutionData.setUserGroupList(
+                  userGroupService.fetchUserGroupNamesFromIds(approvalStateExecutionData.getUserGroups()));
+              approvalStateExecutionData.setAuthorized(
+                  verifyAuthorizedToAcceptOrReject(approvalStateExecutionData.getUserGroups(),
+                      asList(pipeline.getAppId()), pipelineExecution.getPipelineId()));
+              approvalStateExecutionData.setAppId(pipeline.getAppId());
+              approvalStateExecutionData.setWorkflowId(pipelineExecution.getPipelineId());
             }
             stageExecutionDataList.add(stageExecution);
 
@@ -2491,5 +2531,31 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         .in(envIds)
         .order(Sort.descending("createdAt"))
         .get(new FindOptions().skip(1));
+  }
+
+  @Override
+  public boolean verifyAuthorizedToAcceptOrReject(List<String> userGroupIds, List<String> appIds, String workflowId) {
+    User user = UserThreadLocal.get();
+    if (user == null) {
+      return true;
+    }
+
+    if (isEmpty(userGroupIds)) {
+      try {
+        if (isEmpty(appIds) || isBlank(workflowId)) {
+          return true;
+        }
+
+        PermissionAttribute permissionAttribute = new PermissionAttribute(PermissionType.DEPLOYMENT, EXECUTE);
+        List<PermissionAttribute> permissionAttributeList = asList(permissionAttribute);
+
+        authHandler.authorize(permissionAttributeList, appIds, workflowId);
+        return true;
+      } catch (WingsException e) {
+        return false;
+      }
+    } else {
+      return userGroupService.verifyUserAuthorizedToAcceptOrRejectApproval(null, userGroupIds);
+    }
   }
 }

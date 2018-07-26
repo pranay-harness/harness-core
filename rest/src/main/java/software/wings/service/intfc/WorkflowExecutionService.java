@@ -1,6 +1,7 @@
 package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.api.ApprovalStateExecutionData;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.BuildExecutionSummary;
 import software.wings.beans.CountsByStatuses;
@@ -110,7 +111,9 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
 
   boolean updateNotes(String appId, String workflowExecutionId, ExecutionArgs executionArgs);
 
-  boolean approveOrRejectExecution(
+  boolean approveOrRejectExecution(String appId, List<String> userGroupIds, ApprovalDetails approvalDetails);
+
+  ApprovalStateExecutionData fetchApprovalStateExecutionDataFromWorkflowExecution(
       String appId, String workflowExecutionId, String stateExecutionId, ApprovalDetails approvalDetails);
 
   List<Artifact> getArtifactsCollected(String appId, String executionUuid);
@@ -131,4 +134,6 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
 
   WorkflowExecution fetchWorkflowExecution(
       String appId, List<String> serviceIds, List<String> envIds, String workflowId);
+
+  boolean verifyAuthorizedToAcceptOrReject(List<String> userGroupIds, List<String> appIds, String workflowId);
 }
