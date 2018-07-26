@@ -80,6 +80,7 @@ import org.atmosphere.wasync.Socket.STATUS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 import retrofit2.Response;
 import software.wings.beans.Delegate;
@@ -136,9 +137,6 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
 import javax.validation.constraints.NotNull;
 
-/**
- * Created by peeyushaggarwal on 11/29/16
- */
 @Singleton
 public class DelegateServiceImpl implements DelegateService {
   private static final int MAX_CONNECT_ATTEMPTS = 50;
@@ -190,6 +188,7 @@ public class DelegateServiceImpl implements DelegateService {
   private Socket socket;
   private RequestBuilder request;
   private String upgradeVersion;
+  private long startTime;
   private long upgradeStartedAt;
   private long stoppedAcquiringAt;
   private static String delegateId;
@@ -200,7 +199,7 @@ public class DelegateServiceImpl implements DelegateService {
   private final String delegateConnectionId = generateUuid();
   private DelegateConnectionHeartbeat connectionHeartbeat;
 
-  private final boolean multiVersionSupport = TRUE.toString().equals(System.getenv().get("MULTI_VERSION"));
+  private final boolean multiVersion = TRUE.toString().equals(System.getenv().get("MULTI_VERSION"));
 
   public static String getHostName() {
     return hostName;
@@ -218,8 +217,8 @@ public class DelegateServiceImpl implements DelegateService {
   run(boolean watched) {
     try {
       hostName = getLocalHostName();
-
       accountId = delegateConfiguration.getAccountId();
+      startTime = clock.millis();
 
       connectionHeartbeat = DelegateConnectionHeartbeat.builder()
                                 .delegateConnectionId(delegateConnectionId)
@@ -355,7 +354,7 @@ public class DelegateServiceImpl implements DelegateService {
         startHeartbeat(builder, socket);
       }
 
-      if (!multiVersionSupport) {
+      if (!multiVersion) {
         startUpgradeCheck(getVersion());
       }
 
@@ -750,7 +749,10 @@ public class DelegateServiceImpl implements DelegateService {
           WATCHER_VERSION_MATCH_TIMEOUT / 1000L, watcherVersion, expectedVersion);
     }
 
-    if (heartbeatTimedOut || versionMatchTimedOut) {
+    boolean multiVersionRestartNeeded =
+        multiVersion && clock.millis() - startTime > WATCHER_VERSION_MATCH_TIMEOUT && !new File(getVersion()).exists();
+
+    if (heartbeatTimedOut || versionMatchTimedOut || multiVersionRestartNeeded) {
       String watcherProcess = messageService.getData(WATCHER_DATA, WATCHER_PROCESS, String.class);
       logger.warn("Watcher process {} needs restart", watcherProcess);
 
@@ -763,14 +765,20 @@ public class DelegateServiceImpl implements DelegateService {
           // resetting version matched timestamp
           messageService.putData(WATCHER_DATA, WATCHER_HEARTBEAT, clock.millis());
           watcherVersionMatchedAt = clock.millis();
-          new ProcessExecutor()
-              .timeout(1, TimeUnit.MINUTES)
-              .command("nohup", "./start.sh")
-              .redirectError(Slf4jStream.of("RestartWatcherScript").asError())
-              .redirectOutput(Slf4jStream.of("RestartWatcherScript").asInfo())
-              .readOutput(true)
-              .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
-              .start();
+          StartedProcess newWatcher = new ProcessExecutor()
+                                          .timeout(1, TimeUnit.MINUTES)
+                                          .command("nohup", "./start.sh")
+                                          .redirectError(Slf4jStream.of("RestartWatcherScript").asError())
+                                          .redirectOutput(Slf4jStream.of("RestartWatcherScript").asInfo())
+                                          .readOutput(true)
+                                          .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
+                                          .start();
+          if (multiVersionRestartNeeded && newWatcher.getProcess().isAlive()) {
+            sleep(ofSeconds(10L));
+            FileUtils.forceDelete(new File("delegate.sh"));
+            FileUtils.forceDelete(new File("delegate.jar"));
+            handleStopAcquiringMessage("[self] - watcher restart");
+          }
         } catch (Exception e) {
           logger.error("Error restarting watcher {}", watcherProcess, e);
         }
