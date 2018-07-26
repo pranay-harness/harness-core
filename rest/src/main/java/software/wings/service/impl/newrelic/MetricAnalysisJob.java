@@ -237,7 +237,7 @@ public class MetricAnalysisJob implements Job {
         learningEngineService.markStatus(
             context.getWorkflowExecutionId(), context.getStateExecutionId(), analysisMinute, ExecutionStatus.FAILED);
         throw new WingsException("Error running time series analysis. Finished all retries. stateExecutionId: "
-            + context.getStateExecutionId());
+            + context.getStateExecutionId() + ". Please contact the Harness support team. ");
       }
       int analysisStartMin = getAnalysisStartMinute(analysisMinute, mlAnalysisType);
 

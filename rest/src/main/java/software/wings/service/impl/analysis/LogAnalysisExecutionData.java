@@ -67,7 +67,10 @@ public class LogAnalysisExecutionData extends StateExecutionData {
     putNotNull(executionDetails, "timeDuration",
         ExecutionDataValue.builder().displayName("Analysis duration").value(timeDuration).build());
     putNotNull(executionDetails, "queries", ExecutionDataValue.builder().displayName("Queries").value(query).build());
-
+    putNotNull(executionDetails, "newVersionNodes",
+        ExecutionDataValue.builder().displayName("New version nodes").value(canaryNewHostNames).build());
+    putNotNull(executionDetails, "previousVersionNodes",
+        ExecutionDataValue.builder().displayName("Previous version nodes").value(lastExecutionNodes).build());
     return executionDetails;
   }
 }
