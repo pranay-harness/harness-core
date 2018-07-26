@@ -79,91 +79,94 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
   @Override
   public ExecutionResponse execute(ExecutionContext executionContext) {
-    getLogger().info("Executing {} state, id: {} ", getStateType(), executionContext.getStateExecutionInstanceId());
-    cleanUpForRetry(executionContext);
-    analysisContext = getLogAnalysisContext(executionContext, UUID.randomUUID().toString());
-    getLogger().info("id: {} context: {}", executionContext.getStateExecutionInstanceId(), analysisContext);
-    saveMetaDataForDashboard(analysisContext.getAccountId(), executionContext);
+    String corelationId = UUID.randomUUID().toString();
+    try {
+      getLogger().info("Executing {} state, id: {} ", getStateType(), executionContext.getStateExecutionInstanceId());
+      cleanUpForRetry(executionContext);
+      analysisContext = getLogAnalysisContext(executionContext, corelationId);
+      getLogger().info("id: {} context: {}", executionContext.getStateExecutionInstanceId(), analysisContext);
+      saveMetaDataForDashboard(analysisContext.getAccountId(), executionContext);
 
-    Set<String> canaryNewHostNames = analysisContext.getTestNodes().keySet();
-    if (isDemoPath(analysisContext.getAccountId()) && getStateType().equals(StateType.ELK.name())) {
-      if (settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev")
-          || settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("prod")) {
-        boolean failedState = settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev");
-        if (failedState) {
-          return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED, "Demo CV");
-        } else {
-          return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS, "Demo CV");
+      Set<String> canaryNewHostNames = analysisContext.getTestNodes().keySet();
+      if (isDemoPath(analysisContext.getAccountId()) && getStateType().equals(StateType.ELK.name())) {
+        if (settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev")
+            || settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("prod")) {
+          boolean failedState =
+              settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev");
+          if (failedState) {
+            return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED, "Demo CV");
+          } else {
+            return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS, "Demo CV");
+          }
         }
       }
-    }
 
-    if (isEmpty(canaryNewHostNames)) {
-      getLogger().warn(
-          "id: {}, Could not find test nodes to compare the data", executionContext.getStateExecutionInstanceId());
-      return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS, "Could not find hosts to analyze!");
-    }
-
-    Set<String> lastExecutionNodes = analysisContext.getControlNodes().keySet();
-    if (isEmpty(lastExecutionNodes)) {
-      if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
-        getLogger().info("id: {}, No nodes with older version found to compare the logs. Skipping analysis",
-            executionContext.getStateExecutionInstanceId());
-        return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS,
-            "Skipping analysis due to lack of baseline hosts. Make sure you have at least two phases defined.");
+      if (isEmpty(canaryNewHostNames)) {
+        getLogger().warn(
+            "id: {}, Could not find test nodes to compare the data", executionContext.getStateExecutionInstanceId());
+        return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS, "Could not find hosts to analyze!");
       }
 
-      getLogger().warn(
-          "id: {}, It seems that there is no successful run for this workflow yet. Log data will be collected to be analyzed for next deployment run",
-          executionContext.getStateExecutionInstanceId());
-    }
+      Set<String> lastExecutionNodes = analysisContext.getControlNodes().keySet();
+      if (isEmpty(lastExecutionNodes)) {
+        if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
+          getLogger().info("id: {}, No nodes with older version found to compare the logs. Skipping analysis",
+              executionContext.getStateExecutionInstanceId());
+          return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS,
+              "Skipping analysis due to lack of baseline hosts. Make sure you have at least two phases defined.");
+        }
 
-    String responseMessage = "Log Verification running.";
-    if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS) {
-      WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
-      String baselineWorkflowExecutionId = workflowExecutionBaselineService.getBaselineExecutionId(
-          analysisContext.getAppId(), analysisContext.getWorkflowId(), workflowStandardParams.getEnv().getUuid(),
-          analysisContext.getServiceId());
-      if (isEmpty(baselineWorkflowExecutionId)) {
-        responseMessage = "No baseline was set for the workflow. Workflow running with auto baseline.";
-        getLogger().info("id: {}, {}", executionContext.getStateExecutionInstanceId(), responseMessage);
-        baselineWorkflowExecutionId =
-            analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(analysisContext.getStateType(),
-                analysisContext.getAppId(), analysisContext.getServiceId(), analysisContext.getWorkflowId());
-      } else {
-        responseMessage = "Baseline is pinned for the workflow. Analyzing against pinned baseline.";
-        getLogger().info("Baseline is pinned for stateExecution: {}, baselineId: ",
-            analysisContext.getStateExecutionId(), baselineWorkflowExecutionId);
-      }
-      if (baselineWorkflowExecutionId == null) {
-        responseMessage += " No previous execution found. This will be the baseline run.";
-        getLogger().warn("id: {}, No previous execution found. This will be the baseline run",
+        getLogger().warn(
+            "id: {}, It seems that there is no successful run for this workflow yet. Log data will be collected to be analyzed for next deployment run",
             executionContext.getStateExecutionInstanceId());
       }
-      getLogger().info(
-          "Baseline execution for {} is {}", analysisContext.getStateExecutionId(), baselineWorkflowExecutionId);
-      analysisContext.setPrevWorkflowExecutionId(baselineWorkflowExecutionId);
-    }
 
-    final LogAnalysisExecutionData executionData =
-        LogAnalysisExecutionData.builder()
-            .stateExecutionInstanceId(analysisContext.getStateExecutionId())
-            .serverConfigId(getAnalysisServerConfigId())
-            .query(query)
-            .timeDuration(Integer.parseInt(timeDuration))
-            .canaryNewHostNames(canaryNewHostNames)
-            .lastExecutionNodes(lastExecutionNodes == null ? new HashSet<>() : new HashSet<>(lastExecutionNodes))
-            .correlationId(analysisContext.getCorrelationId())
-            .build();
+      String responseMessage = "Log Verification running.";
+      if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS) {
+        WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
+        String baselineWorkflowExecutionId = workflowExecutionBaselineService.getBaselineExecutionId(
+            analysisContext.getAppId(), analysisContext.getWorkflowId(), workflowStandardParams.getEnv().getUuid(),
+            analysisContext.getServiceId());
+        if (isEmpty(baselineWorkflowExecutionId)) {
+          responseMessage = "No baseline was set for the workflow. Workflow running with auto baseline.";
+          getLogger().info("id: {}, {}", executionContext.getStateExecutionInstanceId(), responseMessage);
+          baselineWorkflowExecutionId =
+              analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(analysisContext.getStateType(),
+                  analysisContext.getAppId(), analysisContext.getServiceId(), analysisContext.getWorkflowId());
+        } else {
+          responseMessage = "Baseline is pinned for the workflow. Analyzing against pinned baseline.";
+          getLogger().info("Baseline is pinned for stateExecution: {}, baselineId: ",
+              analysisContext.getStateExecutionId(), baselineWorkflowExecutionId);
+        }
+        if (baselineWorkflowExecutionId == null) {
+          responseMessage += " No previous execution found. This will be the baseline run.";
+          getLogger().warn("id: {}, No previous execution found. This will be the baseline run",
+              executionContext.getStateExecutionInstanceId());
+        }
+        getLogger().info(
+            "Baseline execution for {} is {}", analysisContext.getStateExecutionId(), baselineWorkflowExecutionId);
+        analysisContext.setPrevWorkflowExecutionId(baselineWorkflowExecutionId);
+      }
 
-    executionData.setStatus(ExecutionStatus.RUNNING);
-    executionData.setErrorMsg(responseMessage);
+      final LogAnalysisExecutionData executionData =
+          LogAnalysisExecutionData.builder()
+              .stateExecutionInstanceId(analysisContext.getStateExecutionId())
+              .serverConfigId(getAnalysisServerConfigId())
+              .query(query)
+              .timeDuration(Integer.parseInt(timeDuration))
+              .canaryNewHostNames(canaryNewHostNames)
+              .lastExecutionNodes(lastExecutionNodes == null ? new HashSet<>() : new HashSet<>(lastExecutionNodes))
+              .correlationId(analysisContext.getCorrelationId())
+              .build();
 
-    Set<String> hostsToBeCollected = new HashSet<>();
-    if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT && lastExecutionNodes != null) {
-      hostsToBeCollected.addAll(lastExecutionNodes);
-    }
-    try {
+      executionData.setStatus(ExecutionStatus.RUNNING);
+      executionData.setErrorMsg(responseMessage);
+
+      Set<String> hostsToBeCollected = new HashSet<>();
+      if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT && lastExecutionNodes != null) {
+        hostsToBeCollected.addAll(lastExecutionNodes);
+      }
+
       hostsToBeCollected.addAll(canaryNewHostNames);
       hostsToBeCollected.remove(null);
       getLogger().info("triggering data collection for {} state, id: {} ", getStateType(),
@@ -187,10 +190,15 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       getLogger().error("log analysis state failed ", ex);
       return anExecutionResponse()
           .withAsync(false)
-          .withCorrelationIds(Collections.singletonList(analysisContext.getCorrelationId()))
+          .withCorrelationIds(Collections.singletonList(corelationId))
           .withExecutionStatus(ExecutionStatus.ERROR)
           .withErrorMessage(Misc.getMessage(ex))
-          .withStateExecutionData(executionData)
+          .withStateExecutionData(LogAnalysisExecutionData.builder()
+                                      .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
+                                      .serverConfigId(getAnalysisServerConfigId())
+                                      .query(query)
+                                      .timeDuration(Integer.parseInt(timeDuration))
+                                      .build())
           .build();
     }
   }
