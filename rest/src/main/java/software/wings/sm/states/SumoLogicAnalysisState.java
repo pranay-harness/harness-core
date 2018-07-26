@@ -26,7 +26,6 @@ import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
-import software.wings.service.impl.sumo.SumoSettingProvider;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
@@ -84,7 +83,6 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
   }
 
   @Override
-  @EnumData(enumDataProvider = SumoSettingProvider.class)
   @Attributes(required = true, title = "Sumo Logic Server")
   public String getAnalysisServerConfigId() {
     return analysisServerConfigId;

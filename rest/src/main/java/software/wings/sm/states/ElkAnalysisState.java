@@ -32,7 +32,6 @@ import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
 import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.service.impl.elk.ElkQueryTypeProvider;
-import software.wings.service.impl.elk.ElkSettingProvider;
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -273,7 +272,6 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
   }
 
   @Override
-  @EnumData(enumDataProvider = ElkSettingProvider.class)
   public String getAnalysisServerConfigId() {
     return analysisServerConfigId;
   }

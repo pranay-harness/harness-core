@@ -23,7 +23,6 @@ import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.service.impl.logz.LogzDataCollectionInfo;
-import software.wings.service.impl.logz.LogzSettingProvider;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
@@ -107,7 +106,6 @@ public class LogzAnalysisState extends ElkAnalysisState {
   }
 
   @Override
-  @EnumData(enumDataProvider = LogzSettingProvider.class)
   @Attributes(required = true, title = "Logz Server")
   public String getAnalysisServerConfigId() {
     return analysisServerConfigId;

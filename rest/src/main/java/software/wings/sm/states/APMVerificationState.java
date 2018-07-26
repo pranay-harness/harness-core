@@ -41,7 +41,6 @@ import software.wings.service.impl.analysis.TimeSeriesMetricGroup;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
 import software.wings.service.impl.apm.APMMetricInfo;
-import software.wings.service.impl.apm.APMSettingProvider;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
@@ -64,9 +63,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     super(name, StateType.APM_VERIFICATION);
   }
 
-  @EnumData(enumDataProvider = APMSettingProvider.class)
-  @Attributes(required = true, title = "APM Server")
-  private String analysisServerConfigId;
+  @Attributes(required = true, title = "APM Server") private String analysisServerConfigId;
 
   private List<MetricCollectionInfo> metricCollectionInfos;
 

@@ -325,7 +325,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             && !workflowPhase.checkInfraTemplatized()) {
           InfrastructureMapping infrastructureMapping =
               infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
-          predicate = stencil -> stencil.matches(infrastructureMapping);
+          if (infrastructureMapping != null) {
+            predicate = stencil -> stencil.matches(infrastructureMapping);
+          }
         }
       } else {
         predicate = stencil
