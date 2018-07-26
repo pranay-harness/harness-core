@@ -18,7 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.PhaseElement;
 import software.wings.beans.AwsConfig;
-import software.wings.beans.AwsInfrastructureMapping.AwsRegionDataProvider;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
@@ -27,7 +26,6 @@ import software.wings.exception.WingsException;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.AwsHelperService;
-import software.wings.service.impl.AwsSettingProvider;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.AnalysisTolerance;
@@ -64,14 +62,9 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
   @Inject private transient SecretManager secretManager;
   @Inject private transient CloudWatchService cloudWatchService;
 
-  @EnumData(enumDataProvider = AwsSettingProvider.class)
-  @Attributes(required = true, title = "AWS account")
-  private String analysisServerConfigId;
+  @Attributes(required = true, title = "AWS account") private String analysisServerConfigId;
 
-  @Attributes(title = "Region")
-  @DefaultValue("us-east-1")
-  @EnumData(enumDataProvider = AwsRegionDataProvider.class)
-  private String region = "us-east-1";
+  @Attributes(title = "Region") @DefaultValue("us-east-1") private String region = "us-east-1";
 
   @SchemaIgnore @Builder.Default private Map<String, List<CloudWatchMetric>> loadBalancerMetrics = new HashMap<>();
 

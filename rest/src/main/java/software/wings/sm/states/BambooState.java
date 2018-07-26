@@ -35,7 +35,6 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
 import software.wings.beans.TaskType;
 import software.wings.common.Constants;
-import software.wings.service.impl.BambooSettingProvider;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.security.SecretManager;
@@ -47,7 +46,6 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
-import software.wings.stencils.EnumData;
 import software.wings.waitnotify.DelegateTaskNotifyResponseData;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -62,9 +60,7 @@ import java.util.Map;
 public class BambooState extends State {
   @Transient private static final Logger logger = LoggerFactory.getLogger(BambooState.class);
 
-  @EnumData(enumDataProvider = BambooSettingProvider.class)
-  @Attributes(title = "Bamboo Server")
-  private String bambooConfigId;
+  @Attributes(title = "Bamboo Server") private String bambooConfigId;
 
   @Attributes(title = "Plan Name") private String planName;
 

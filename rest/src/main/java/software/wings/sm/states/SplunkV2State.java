@@ -25,7 +25,6 @@ import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
-import software.wings.service.impl.splunk.SplunkSettingProvider;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
@@ -44,9 +43,7 @@ import java.util.concurrent.TimeUnit;
 public class SplunkV2State extends AbstractLogAnalysisState {
   @SchemaIgnore @Transient private static final Logger logger = LoggerFactory.getLogger(SplunkV2State.class);
 
-  @EnumData(enumDataProvider = SplunkSettingProvider.class)
-  @Attributes(required = true, title = "Splunk Server")
-  private String analysisServerConfigId;
+  @Attributes(required = true, title = "Splunk Server") private String analysisServerConfigId;
 
   public SplunkV2State(String name) {
     super(name, StateType.SPLUNKV2.getType());

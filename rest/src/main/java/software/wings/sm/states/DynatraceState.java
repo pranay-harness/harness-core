@@ -28,7 +28,6 @@ import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.dynatrace.DynaTraceDataCollectionInfo;
-import software.wings.service.impl.dynatrace.DynaTraceSettingProvider;
 import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -53,9 +52,7 @@ public class DynatraceState extends AbstractMetricAnalysisState {
   @Transient @SchemaIgnore public static final String TEST_HOST_NAME = "testNode";
   @Transient @SchemaIgnore public static final String CONTROL_HOST_NAME = "controlNode";
 
-  @EnumData(enumDataProvider = DynaTraceSettingProvider.class)
-  @Attributes(required = true, title = "Dynatrace Server")
-  private String analysisServerConfigId;
+  @Attributes(required = true, title = "Dynatrace Server") private String analysisServerConfigId;
 
   @Attributes(required = true, title = "Service Methods") private String serviceMethods;
 
