@@ -10,7 +10,7 @@ class WordToVec(object):
         self.word_vec_dim = word_vec_dim
         self.min_count = min_count
         self.sg = sg
-        self.workers = 1 #multiprocessing.cpu_count()
+        self.workers = 4 #multiprocessing.cpu_count()
         self.epochs = epochs
 
     def train(self, docs_control, docs_test):
