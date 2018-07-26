@@ -44,6 +44,7 @@ import java.util.concurrent.ExecutionException;
 @Singleton
 public class PcfCommandTaskHelper {
   private static final String PCF_ARTIFACT_DOWNLOAD_DIR_PATH = "./repository/pcfartifacts";
+  private static final String REPOSITORY_DIR_PATH = "./repository";
   private static final String IMAGE_FILE_LOCATION_PLACEHOLDER = "\\$\\{FILE_LOCATION}";
   private static final String APPLICATION_NAME_PLACEHOLDER = "\\$\\{APPLICATION_NAME}";
   private static final String INSTANCE_COUNT_PLACEHOLDER = "\\$\\{INSTANCE_COUNT}";
@@ -294,6 +295,8 @@ public class PcfCommandTaskHelper {
     List<Pair<String, String>> fileIds = Lists.newArrayList();
     artifactFiles.forEach(artifactFile -> fileIds.add(Pair.of(artifactFile.getFileUuid(), null)));
 
+    // check if repository exists, if not create it
+    FileIo.createDirectoryIfDoesNotExist(REPOSITORY_DIR_PATH);
     FileIo.createDirectoryIfDoesNotExist(PCF_ARTIFACT_DOWNLOAD_DIR_PATH);
     File dir = new File(PCF_ARTIFACT_DOWNLOAD_DIR_PATH);
 
@@ -354,6 +357,8 @@ public class PcfCommandTaskHelper {
                        .replaceAll(INSTANCE_COUNT_PLACEHOLDER, "0");
 
     String directoryPath = getPcfArtifactDownloadDirPath();
+    // check if repository exists, if not create it
+    FileIo.createDirectoryIfDoesNotExist(REPOSITORY_DIR_PATH);
     FileIo.createDirectoryIfDoesNotExist(directoryPath);
     File dir = new File(directoryPath);
 

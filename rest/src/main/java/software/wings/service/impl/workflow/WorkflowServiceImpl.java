@@ -1027,7 +1027,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     workflowPhase.setStatefulSet(isStatefulSet(appId, workflowPhase.getServiceId()));
     attachWorkflowPhase(workflow, workflowPhase);
 
-    if (workflowPhase.getDeploymentType() == SSH && orchestrationWorkflow.getOrchestrationWorkflowType() != BUILD) {
+    if (artifactCheckRequiredForDeployment(workflowPhase, orchestrationWorkflow)) {
       workflowServiceHelper.ensureArtifactCheckInPreDeployment(
           (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow());
     }
@@ -1035,6 +1035,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow).getOrchestrationWorkflow();
     return orchestrationWorkflow.getWorkflowPhaseIdMap().get(workflowPhase.getUuid());
+  }
+
+  private boolean artifactCheckRequiredForDeployment(
+      WorkflowPhase workflowPhase, CanaryOrchestrationWorkflow orchestrationWorkflow) {
+    return (workflowPhase.getDeploymentType() == SSH || workflowPhase.getDeploymentType() == DeploymentType.PCF)
+        && orchestrationWorkflow.getOrchestrationWorkflowType() != BUILD;
   }
 
   @Override
