@@ -1,10 +1,10 @@
 package software.wings.watcher.service;
 
+import static com.google.common.collect.Sets.newHashSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.Boolean.TRUE;
-import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -13,6 +13,7 @@ import static java.util.Collections.synchronizedList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
+import static org.apache.commons.io.filefilter.FileFilterUtils.trueFileFilter;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
@@ -47,7 +48,6 @@ import static software.wings.utils.message.MessengerType.DELEGATE;
 import static software.wings.utils.message.MessengerType.WATCHER;
 import static software.wings.watcher.app.WatcherApplication.getProcessId;
 
-import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
@@ -59,6 +59,7 @@ import io.harness.network.Http;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.io.filefilter.FileFilterUtils;
+import org.apache.commons.io.filefilter.IOFileFilter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHost;
 import org.slf4j.Logger;
@@ -392,6 +393,10 @@ public class WatcherServiceImpl implements WatcherService {
         if (isNotEmpty(drainingNeededList)) {
           logger.info("Delegate processes {} to be drained.", drainingNeededList);
           drainingNeededList.forEach(this ::drainDelegateProcess);
+          Set<String> allVersions = new HashSet<>(expectedVersions);
+          allVersions.addAll(runningVersions);
+          removeDelegateVersionsFromCapsule(allVersions);
+          cleanupOldDelegateVersions(allVersions);
         }
         if (isNotEmpty(shutdownNeededList)) {
           logger.warn("Delegate processes {} exceeded grace period. Forcing shutdown", shutdownNeededList);
@@ -500,7 +505,7 @@ public class WatcherServiceImpl implements WatcherService {
           }
           logger.info("Done replacing file [{}]. Set User and Group permission", scriptFile);
           Files.setPosixFilePermissions(scriptFile.toPath(),
-              Sets.newHashSet(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_EXECUTE,
+              newHashSet(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_EXECUTE,
                   PosixFilePermission.OWNER_WRITE, PosixFilePermission.GROUP_READ, PosixFilePermission.OTHERS_READ));
           logger.info("Done setting file permissions");
         } else {
@@ -811,23 +816,45 @@ public class WatcherServiceImpl implements WatcherService {
 
   private void cleanupOldWatcherVersionFromBackup(String version, String newVersion) {
     try {
-      cleanup(new File(System.getProperty("user.dir")), version, newVersion, "watcherBackup.");
+      cleanup(new File(System.getProperty("user.dir")), newHashSet(version, newVersion), "watcherBackup.");
     } catch (Exception ex) {
-      logger.error(format("Failed to clean watcher version [%s] from Backup", newVersion), ex);
+      logger.error("Failed to clean watcher version from Backup", ex);
     }
   }
 
   private void removeWatcherVersionFromCapsule(String version, String newVersion) {
     try {
-      cleanup(new File(System.getProperty("capsule.dir")).getParentFile(), version, newVersion, "watcher-");
+      cleanup(new File(System.getProperty("capsule.dir")).getParentFile(), newHashSet(version, newVersion), "watcher-");
     } catch (Exception ex) {
-      logger.error(format("Failed to clean watcher version [%s] from Capsule", newVersion), ex);
+      logger.error("Failed to clean watcher version from Capsule", ex);
     }
   }
 
-  private void cleanup(File dir, String currentVersion, String newVersion, String pattern) {
-    FileUtils.listFilesAndDirs(dir, falseFileFilter(), FileFilterUtils.prefixFileFilter(pattern)).forEach(file -> {
-      if (!dir.equals(file) && !file.getName().contains(currentVersion) && !file.getName().contains(newVersion)) {
+  private void cleanupOldDelegateVersions(Set<String> keepVersions) {
+    try {
+      cleanup(new File(System.getProperty("user.dir")), keepVersions, null);
+      cleanup(new File(System.getProperty("user.dir")), keepVersions, "backup.");
+    } catch (Exception ex) {
+      logger.error("Failed to clean delegate version from Backup", ex);
+    }
+  }
+
+  private void removeDelegateVersionsFromCapsule(Set<String> keepVersions) {
+    try {
+      cleanup(new File(System.getProperty("capsule.dir")).getParentFile(), keepVersions, "delegate-");
+    } catch (Exception ex) {
+      logger.error("Failed to clean delegate version from Capsule", ex);
+    }
+  }
+
+  private void cleanup(File dir, Set<String> keepVersions, String pattern) {
+    IOFileFilter fileFilter = falseFileFilter();
+    IOFileFilter dirFilter = isNotBlank(pattern) ? FileFilterUtils.prefixFileFilter(pattern) : trueFileFilter();
+    FileUtils.listFilesAndDirs(dir, fileFilter, dirFilter).forEach(file -> {
+      String name = file.getName();
+      if (!dir.equals(file)
+          && keepVersions.stream().noneMatch(
+                 version -> isNotBlank(pattern) ? name.contains(version) : name.equals(version))) {
         logger.info("[Old] File Name to be deleted = " + file.getAbsolutePath());
         FileUtils.deleteQuietly(file);
       }
