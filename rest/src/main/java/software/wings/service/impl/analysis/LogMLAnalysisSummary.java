@@ -25,4 +25,5 @@ public class LogMLAnalysisSummary {
   private List<LogMLClusterSummary> unknownClusters;
   private List<LogMLClusterSummary> ignoreClusters;
   private StateType stateType;
+  private int analysisMinute;
 }

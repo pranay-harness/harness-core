@@ -1,6 +1,9 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.threading.Morpheus.sleep;
+import static java.time.Duration.ofMillis;
+import static software.wings.service.impl.security.SecretManagementDelegateServiceImpl.NUM_OF_RETRIES;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
@@ -224,39 +227,56 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     } else {
       AnalysisContext context =
           getLogAnalysisContext(executionContext, executionResponse.getLogAnalysisExecutionData().getCorrelationId());
-      final LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(
-          context.getStateExecutionId(), context.getAppId(), StateType.valueOf(getStateType()));
-      if (analysisSummary == null) {
-        getLogger().info("for {} No analysis summary. This can happen if there is no data with the given queries",
-            context.getStateExecutionId());
+      int analysisMinute = executionResponse.getLogAnalysisExecutionData().getAnalysisMinute();
+      for (int i = 0; i < NUM_OF_RETRIES; i++) {
+        final LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(
+            context.getStateExecutionId(), context.getAppId(), StateType.valueOf(getStateType()));
+        if (analysisSummary == null) {
+          getLogger().info("for {} No analysis summary. This can happen if there is no data with the given queries",
+              context.getStateExecutionId());
+          continuousVerificationService.setMetaDataExecutionStatus(
+              executionContext.getStateExecutionInstanceId(), ExecutionStatus.SUCCESS);
+          return generateAnalysisResponse(
+              context, ExecutionStatus.SUCCESS, "No data found with given queries. Skipped Analysis");
+        }
+
+        if (analysisSummary.getAnalysisMinute() < analysisMinute) {
+          getLogger().info("for {} analysis for minute {} hasn't been found yet. Analysis found so far {}",
+              context.getStateExecutionId(), analysisMinute, analysisSummary);
+          sleep(ofMillis(5000));
+          continue;
+        }
+        getLogger().info("for {} found analysisSummary with message {}", context.getStateExecutionId(),
+            analysisSummary.getAnalysisSummaryMessage());
+
+        ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
+        if (analysisSummary.getRiskLevel() == RiskLevel.HIGH) {
+          getLogger().info(analysisSummary.getAnalysisSummaryMessage() + " Marking it failed.");
+          executionStatus = ExecutionStatus.FAILED;
+        } else if (analysisSummary.getRiskLevel() == RiskLevel.MEDIUM
+            && getAnalysisTolerance().compareTo(AnalysisTolerance.MEDIUM) <= 0) {
+          getLogger().info(analysisSummary.getAnalysisSummaryMessage() + " Marking it failed.");
+          executionStatus = ExecutionStatus.FAILED;
+        } else if (analysisSummary.getRiskLevel() == RiskLevel.LOW
+            && getAnalysisTolerance().compareTo(AnalysisTolerance.LOW) == 0) {
+          getLogger().info(analysisSummary.getAnalysisSummaryMessage() + " Marking it failed.");
+          executionStatus = ExecutionStatus.FAILED;
+        }
+
+        getLogger().info("for {} the final status is {}", context.getStateExecutionId(), executionStatus);
+        executionResponse.getLogAnalysisExecutionData().setStatus(executionStatus);
         continuousVerificationService.setMetaDataExecutionStatus(
-            executionContext.getStateExecutionInstanceId(), ExecutionStatus.SUCCESS);
-        return generateAnalysisResponse(
-            context, ExecutionStatus.SUCCESS, "No data found with given queries. Skipped Analysis");
-      }
-      getLogger().info("for {} found analysisSummary with message {}", context.getStateExecutionId(),
-          analysisSummary.getAnalysisSummaryMessage());
-
-      ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
-      if (analysisSummary.getRiskLevel() == RiskLevel.HIGH) {
-        getLogger().info(analysisSummary.getAnalysisSummaryMessage() + " Marking it failed.");
-        executionStatus = ExecutionStatus.FAILED;
-      } else if (analysisSummary.getRiskLevel() == RiskLevel.MEDIUM
-          && getAnalysisTolerance().compareTo(AnalysisTolerance.MEDIUM) <= 0) {
-        getLogger().info(analysisSummary.getAnalysisSummaryMessage() + " Marking it failed.");
-        executionStatus = ExecutionStatus.FAILED;
-      } else if (analysisSummary.getRiskLevel() == RiskLevel.LOW
-          && getAnalysisTolerance().compareTo(AnalysisTolerance.LOW) == 0) {
-        getLogger().info(analysisSummary.getAnalysisSummaryMessage() + " Marking it failed.");
-        executionStatus = ExecutionStatus.FAILED;
+            executionContext.getStateExecutionInstanceId(), executionStatus);
+        return anExecutionResponse()
+            .withExecutionStatus(executionStatus)
+            .withStateExecutionData(executionResponse.getLogAnalysisExecutionData())
+            .build();
       }
 
-      getLogger().info("for {} the final status is {}", context.getStateExecutionId(), executionStatus);
-      executionResponse.getLogAnalysisExecutionData().setStatus(executionStatus);
-      continuousVerificationService.setMetaDataExecutionStatus(
-          executionContext.getStateExecutionInstanceId(), executionStatus);
+      executionResponse.getLogAnalysisExecutionData().setErrorMsg(
+          "Analysis for minute " + analysisMinute + " failed to save in DB");
       return anExecutionResponse()
-          .withExecutionStatus(executionStatus)
+          .withExecutionStatus(ExecutionStatus.ERROR)
           .withStateExecutionData(executionResponse.getLogAnalysisExecutionData())
           .build();
     }

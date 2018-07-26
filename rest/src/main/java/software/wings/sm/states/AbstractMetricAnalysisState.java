@@ -1,6 +1,9 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.threading.Morpheus.sleep;
+import static java.time.Duration.ofMillis;
+import static software.wings.service.impl.security.SecretManagementDelegateServiceImpl.NUM_OF_RETRIES;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
@@ -265,28 +268,52 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           .build();
     }
 
-    List<NewRelicMetricAnalysisRecord> metricAnalysisRecords = metricAnalysisService.getMetricsAnalysis(
-        context.getAppId(), context.getStateExecutionInstanceId(), context.getWorkflowExecutionId());
-    if (isEmpty(metricAnalysisRecords)) {
-      getLogger().info("for {} No analysis summary.", context.getStateExecutionInstanceId());
-      continuousVerificationService.setMetaDataExecutionStatus(
-          context.getStateExecutionInstanceId(), ExecutionStatus.SUCCESS);
-      return generateAnalysisResponse(
-          context, ExecutionStatus.SUCCESS, "No data found for comparison. Please check load. Skipping analysis.");
+    int analysisMinute = executionResponse.getStateExecutionData().getAnalysisMinute();
+    for (int i = 0; i < NUM_OF_RETRIES; i++) {
+      List<NewRelicMetricAnalysisRecord> metricAnalysisRecords = metricAnalysisService.getMetricsAnalysis(
+          context.getAppId(), context.getStateExecutionInstanceId(), context.getWorkflowExecutionId());
+      if (isEmpty(metricAnalysisRecords)) {
+        getLogger().info("for {} No analysis summary.", context.getStateExecutionInstanceId());
+        continuousVerificationService.setMetaDataExecutionStatus(
+            context.getStateExecutionInstanceId(), ExecutionStatus.SUCCESS);
+        return generateAnalysisResponse(
+            context, ExecutionStatus.SUCCESS, "No data found for comparison. Please check load. Skipping analysis.");
+      }
+
+      boolean analysisFound = false;
+      for (NewRelicMetricAnalysisRecord analysisRecord : metricAnalysisRecords) {
+        if (analysisRecord.getAnalysisMinute() >= analysisMinute) {
+          analysisFound = true;
+          break;
+        }
+      }
+
+      if (!analysisFound) {
+        getLogger().info("for {} analysis for minute {} hasn't been found yet. Analysis found so far {}",
+            context.getStateExecutionInstanceId(), analysisMinute, metricAnalysisRecords);
+        sleep(ofMillis(5000));
+        continue;
+      }
+      getLogger().info("for {} found analysisSummary with analysis records {}", context.getStateExecutionInstanceId(),
+          metricAnalysisRecords.size());
+      for (NewRelicMetricAnalysisRecord metricAnalysisRecord : metricAnalysisRecords) {
+        if (metricAnalysisRecord.getRiskLevel() == RiskLevel.HIGH) {
+          executionStatus = ExecutionStatus.FAILED;
+        }
+      }
+      executionResponse.getStateExecutionData().setStatus(executionStatus);
+      getLogger().info("State done with status {}, id: {}", executionStatus, context.getStateExecutionInstanceId());
+      continuousVerificationService.setMetaDataExecutionStatus(context.getStateExecutionInstanceId(), executionStatus);
+      return anExecutionResponse()
+          .withExecutionStatus(executionStatus)
+          .withStateExecutionData(executionResponse.getStateExecutionData())
+          .build();
     }
 
-    getLogger().info("for {} found analysisSummary with analysis records {}", context.getStateExecutionInstanceId(),
-        metricAnalysisRecords.size());
-    for (NewRelicMetricAnalysisRecord metricAnalysisRecord : metricAnalysisRecords) {
-      if (metricAnalysisRecord.getRiskLevel() == RiskLevel.HIGH) {
-        executionStatus = ExecutionStatus.FAILED;
-      }
-    }
-    executionResponse.getStateExecutionData().setStatus(executionStatus);
-    getLogger().info("State done with status {}, id: {}", executionStatus, context.getStateExecutionInstanceId());
-    continuousVerificationService.setMetaDataExecutionStatus(context.getStateExecutionInstanceId(), executionStatus);
+    executionResponse.getStateExecutionData().setErrorMsg(
+        "Analysis for minute " + analysisMinute + " failed to save in DB");
     return anExecutionResponse()
-        .withExecutionStatus(executionStatus)
+        .withExecutionStatus(ExecutionStatus.ERROR)
         .withStateExecutionData(executionResponse.getStateExecutionData())
         .build();
   }

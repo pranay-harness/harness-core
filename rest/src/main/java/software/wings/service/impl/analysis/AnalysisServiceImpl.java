@@ -801,6 +801,7 @@ public class AnalysisServiceImpl implements AnalysisService {
 
     final LogMLAnalysisSummary analysisSummary = new LogMLAnalysisSummary();
     analysisSummary.setQuery(analysisRecord.getQuery());
+    analysisSummary.setAnalysisMinute(analysisRecord.getLogCollectionMinute());
     analysisSummary.setScore(analysisRecord.getScore() * 100);
     analysisSummary.setBaseLineExecutionId(analysisRecord.getBaseLineExecutionId());
     analysisSummary.setControlClusters(
