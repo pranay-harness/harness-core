@@ -1,7 +1,10 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static org.atteo.evo.inflector.English.plural;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
@@ -18,6 +21,7 @@ import software.wings.beans.NotificationGroup;
 import software.wings.beans.Role;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.dl.HIterator;
@@ -28,6 +32,7 @@ import software.wings.exception.InvalidRequestException;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.Validator;
 
@@ -35,6 +40,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -49,6 +55,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
 
   @Inject private WorkflowService workflowService;
   @Inject private YamlChangeSetHelper yamlChangeSetHelper;
+  @Inject private UserService userService;
 
   /**
    * Gets supported channel type details.
@@ -207,5 +214,47 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
         updateNotificationGroup(previousDefaultNotificationGroup);
       }
     }
+  }
+
+  @Override
+  public List<String> getUserEmailAddressFromNotificationGroups(
+      String accountId, List<NotificationGroup> notificationGroups) {
+    if (isEmpty(notificationGroups)) {
+      return asList();
+    }
+
+    notificationGroups = notificationGroups.stream()
+                             .map(notificationGroup -> readNotificationGroup(accountId, notificationGroup.getUuid()))
+                             .filter(notificationGroup -> notificationGroup.getAddressesByChannelType() != null)
+                             .collect(toList());
+
+    List<String> emailAddresses = new ArrayList<>();
+    for (NotificationGroup notificationGroup : notificationGroups) {
+      if (notificationGroup.getRoles() != null) {
+        notificationGroup.getRoles().forEach(role -> {
+          try (HIterator<User> iterator = new HIterator<>(wingsPersistence.createQuery(User.class)
+                                                              .filter(APP_ID_KEY, notificationGroup.getAppId())
+                                                              .field(User.ROLES_KEY)
+                                                              .in(asList(role))
+                                                              .fetch())) {
+            while (iterator.hasNext()) {
+              User user = iterator.next();
+              if (user.isEmailVerified()) {
+                emailAddresses.add(user.getEmail());
+              }
+            }
+          }
+        });
+      }
+
+      for (Entry<NotificationChannelType, List<String>> entry :
+          notificationGroup.getAddressesByChannelType().entrySet()) {
+        if (entry.getKey() == NotificationChannelType.EMAIL) {
+          emailAddresses.addAll(entry.getValue());
+        }
+      }
+    }
+
+    return emailAddresses;
   }
 }

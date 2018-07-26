@@ -44,6 +44,7 @@ import software.wings.utils.Misc;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 /**
  * Created by rishi on 10/30/16.
@@ -199,5 +200,19 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
         .replaceAll("<<img-suffix>>",
             ".png\" height=\"13\" width=\"13\" style=\"padding-right:5px; padding-top:5px;\"></span>"
                 + "<span style=\"color:gray; display:inline-block; vertical-align:top; margin-top:4px;\">");
+  }
+
+  @Override
+  public EmailData obtainEmailData(String notificationTemplateId, Map<String, String> placeholderValues) {
+    EmailTemplate emailTemplate = notificationMessageResolver.getEmailTemplate(notificationTemplateId);
+    String body =
+        notificationMessageResolver.getDecoratedNotificationMessage(emailTemplate.getBody(), placeholderValues);
+    String subject =
+        notificationMessageResolver.getDecoratedNotificationMessage(emailTemplate.getSubject(), placeholderValues);
+
+    String emailBody = processEmailHtml(body);
+    String emailSubject = processEmailHtml(subject);
+
+    return EmailData.builder().subject(emailSubject).body(emailBody).build();
   }
 }

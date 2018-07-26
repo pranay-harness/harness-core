@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
@@ -20,8 +21,8 @@ import static software.wings.sm.ExecutionStatus.SKIPPED;
 
 import com.google.inject.Inject;
 
-import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.Getter;
+import lombok.Setter;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.beans.Application;
 import software.wings.beans.NotificationGroup;
@@ -31,10 +32,15 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
+import software.wings.helpers.ext.mail.EmailData;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AlertService;
+import software.wings.service.intfc.EmailNotificationService;
+import software.wings.service.intfc.NotificationDispatcherService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
+import software.wings.service.intfc.UserGroupService;
+import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -45,32 +51,25 @@ import software.wings.sm.StateType;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-/**
- * A Pause state to pause state machine execution.
- *
- * @author Rishi
- */
 public class ApprovalState extends State {
-  @Attributes(required = true, title = "Group Name") private String groupName;
+  @Getter @Setter private String groupName;
+  @Getter @Setter private List<String> userGroups = new ArrayList<>();
+  @Getter @Setter private boolean disable;
 
   @Inject private AlertService alertService;
   @Inject private NotificationService notificationService;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private NotificationSetupService notificationSetupService;
   @Inject private NotificationMessageResolver notificationMessageResolver;
-
-  private boolean disable;
-
-  public boolean isDisable() {
-    return disable;
-  }
-
-  public void setDisable(boolean disable) {
-    this.disable = disable;
-  }
+  @Inject private NotificationDispatcherService notificationDispatcherService;
+  @Inject private EmailNotificationService emailNotificationService;
+  @Inject private UserGroupService userGroupService;
+  @Inject private UserService userService;
 
   public ApprovalState(String name) {
     super(name, StateType.APPROVAL.name());
@@ -82,7 +81,8 @@ public class ApprovalState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     String approvalId = generateUuid();
-    ApprovalStateExecutionData executionData = ApprovalStateExecutionData.builder().approvalId(approvalId).build();
+    ApprovalStateExecutionData executionData =
+        ApprovalStateExecutionData.builder().approvalId(approvalId).userGroups(userGroups).build();
 
     if (disable) {
       return anExecutionResponse()
@@ -103,6 +103,18 @@ public class ApprovalState extends State {
 
     Map<String, String> placeholderValues = getPlaceholderValues(context, "", PAUSED);
     sendApprovalNotification(app.getAccountId(), APPROVAL_NEEDED_NOTIFICATION, placeholderValues);
+    sendEmailToUserGroupMembers(userGroups, app.getAccountId(), APPROVAL_NEEDED_NOTIFICATION, placeholderValues);
+
+    WorkflowExecution workflowExecution =
+        workflowExecutionService.getExecutionDetailsWithoutGraph(app.getAppId(), context.getWorkflowExecutionId());
+    if (workflowExecution != null) {
+      if (workflowExecution.getPipelineSummary() != null) {
+        executionData.setWorkflowId(workflowExecution.getPipelineSummary().getPipelineId());
+      } else {
+        executionData.setWorkflowId(workflowExecution.getWorkflowId());
+      }
+    }
+    executionData.setAppId(app.getAppId());
 
     return anExecutionResponse()
         .withAsync(true)
@@ -133,6 +145,7 @@ public class ApprovalState extends State {
     Map<String, String> placeholderValues = getPlaceholderValues(
         context, approvalNotifyResponse.getApprovedBy().getName(), approvalNotifyResponse.getStatus());
     sendApprovalNotification(app.getAccountId(), APPROVAL_STATE_CHANGE_NOTIFICATION, placeholderValues);
+    sendEmailToUserGroupMembers(userGroups, app.getAccountId(), APPROVAL_STATE_CHANGE_NOTIFICATION, placeholderValues);
 
     return anExecutionResponse()
         .withStateExecutionData(executionData)
@@ -174,7 +187,7 @@ public class ApprovalState extends State {
       }
       Map<String, String> placeholderValues = getPlaceholderValues(context, errorMsg);
       sendApprovalNotification(app.getAccountId(), APPROVAL_EXPIRED_NOTIFICATION, placeholderValues);
-
+      sendEmailToUserGroupMembers(userGroups, app.getAccountId(), APPROVAL_EXPIRED_NOTIFICATION, placeholderValues);
     } else {
       if (approvalType != null && approvalType.equalsIgnoreCase("PIPELINE")) {
         errorMsg = "Pipeline was aborted";
@@ -188,36 +201,19 @@ public class ApprovalState extends State {
       String userName = (user != null && user.getName() != null) ? user.getName() : "System";
       Map<String, String> placeholderValues = getPlaceholderValues(context, userName, ABORTED);
       sendApprovalNotification(app.getAccountId(), APPROVAL_STATE_CHANGE_NOTIFICATION, placeholderValues);
+      sendEmailToUserGroupMembers(
+          userGroups, app.getAccountId(), APPROVAL_STATE_CHANGE_NOTIFICATION, placeholderValues);
     }
 
     context.getStateExecutionData().setErrorMsg(errorMsg);
   }
 
-  @SchemaIgnore
   @Override
   public Integer getTimeoutMillis() {
     if (super.getTimeoutMillis() == null) {
       return DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS;
     }
     return super.getTimeoutMillis();
-  }
-
-  /**
-   * Gets group name.
-   *
-   * @return the group name
-   */
-  public String getGroupName() {
-    return groupName;
-  }
-
-  /**
-   * Sets group name.
-   *
-   * @param groupName the group name
-   */
-  public void setGroupName(String groupName) {
-    this.groupName = groupName;
   }
 
   private void sendApprovalNotification(
@@ -270,5 +266,48 @@ public class ApprovalState extends State {
   private Map<String, String> getPlaceholderValues(ExecutionContext context, String timeout) {
     return notificationMessageResolver.getPlaceholderValues(
         context, "", 0, 0, timeout, "", "", EXPIRED, ApprovalNeeded);
+  }
+
+  private void sendEmailToUserGroupMembers(List<String> userGroups, String accountId,
+      NotificationMessageType notificationMessageType, Map<String, String> placeHolderValues) {
+    List<String> userEmailAddress = getUserGroupMemberEmailAddresses(accountId, userGroups);
+    if (isEmpty(userEmailAddress)) {
+      return;
+    }
+
+    List<String> excludeEmailAddress = getNotificationGroupMemberEmailAddresses(accountId);
+    userEmailAddress.removeAll(excludeEmailAddress);
+    if (isEmpty(userEmailAddress)) {
+      return;
+    }
+
+    EmailData emailData =
+        notificationDispatcherService.obtainEmailData(notificationMessageType.toString(), placeHolderValues);
+    if (isEmpty(emailData.getBody()) || isEmpty(emailData.getSubject())) {
+      return;
+    }
+
+    emailData.setSystem(true);
+    emailData.setCc(Collections.emptyList());
+    emailData.setTo(userEmailAddress);
+    emailNotificationService.sendAsync(emailData);
+  }
+
+  private List<String> getNotificationGroupMemberEmailAddresses(String accountId) {
+    List<NotificationGroup> notificationGroups = notificationSetupService.listDefaultNotificationGroup(accountId);
+    return notificationSetupService.getUserEmailAddressFromNotificationGroups(accountId, notificationGroups);
+  }
+
+  private List<String> getUserGroupMemberEmailAddresses(String accountId, List<String> userGroups) {
+    if (isEmpty(userGroups)) {
+      return asList();
+    }
+
+    List<String> userGroupMembers = userGroupService.fetchUserGroupsMemberIds(accountId, userGroups);
+    if (isEmpty(userGroupMembers)) {
+      return asList();
+    }
+
+    return userService.fetchUserEmailAddressesFromUserIds(userGroupMembers);
   }
 }

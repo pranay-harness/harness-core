@@ -31,6 +31,10 @@ import javax.security.auth.Subject;
 @JsonInclude(NON_EMPTY)
 @Entity(value = "users", noClassnameStored = true)
 public class User extends Base implements Principal {
+  public static final String EMAIL_KEY = "email";
+  public static final String ROLES_KEY = "roles";
+  public static final String EMAIL_VERIFIED_KEY = "emailVerified";
+
   @NotEmpty private String name;
 
   @Indexed(options = @IndexOptions(unique = true)) @Email private String email;

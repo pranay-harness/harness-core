@@ -281,4 +281,6 @@ public interface UserService {
   User verifyJWTToken(@NotEmpty String jwtToken, @NotNull SecretManager.JWT_CATEGORY category);
 
   boolean isUserAssignedToAccount(User user, String accountId);
+
+  List<String> fetchUserEmailAddressesFromUserIds(List<String> userIds);
 }
