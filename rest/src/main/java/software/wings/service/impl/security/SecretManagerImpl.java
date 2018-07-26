@@ -70,6 +70,7 @@ import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
+import software.wings.settings.RestrictionsAndAppEnvMap;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.utils.BoundedInputStream;
@@ -924,9 +925,9 @@ public class SecretManagerImpl implements SecretManager {
 
     List<EncryptedData> filteredEncryptedDataList = Lists.newArrayList();
 
-    Map<String, Set<String>> appEnvMapFromPermissions = usageRestrictionsService.getAppEnvMapFromPermissions(accountId);
-    UsageRestrictions restrictionsFromUserPermissions =
-        usageRestrictionsService.getUsageRestrictionsFromUserPermissions(accountId);
+    RestrictionsAndAppEnvMap restrictionsAndAppEnvMap = usageRestrictionsService.getRestrictionsAndAppEnvMap(accountId);
+    Map<String, Set<String>> appEnvMapFromPermissions = restrictionsAndAppEnvMap.getAppEnvMap();
+    UsageRestrictions restrictionsFromUserPermissions = restrictionsAndAppEnvMap.getUsageRestrictions();
 
     for (EncryptedData encryptedData : encryptedDataList) {
       encryptedData.setEncryptedValue(SECRET_MASK.toCharArray());

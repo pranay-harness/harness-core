@@ -1,6 +1,9 @@
 package software.wings.service.intfc;
 
+import software.wings.beans.User;
 import software.wings.beans.security.restrictions.RestrictionsSummary;
+import software.wings.security.UserPermissionInfo;
+import software.wings.settings.RestrictionsAndAppEnvMap;
 import software.wings.settings.UsageRestrictions;
 import software.wings.settings.UsageRestrictions.AppEnvRestriction;
 
@@ -27,7 +30,8 @@ public interface UsageRestrictionsService {
    * @param accountId account Id
    * @return Usage restrictions
    */
-  UsageRestrictions getUsageRestrictionsFromUserPermissions(String accountId);
+  UsageRestrictions getUsageRestrictionsFromUserPermissions(
+      String accountId, UserPermissionInfo userPermissionInfo, User user);
 
   /**
    * Check if the user has access to an entity from the given context.
@@ -111,5 +115,7 @@ public interface UsageRestrictionsService {
    */
   void validateUsageRestrictionsOnEntitySave(String accountId, UsageRestrictions newUsageRestrictions);
 
-  Map<String, Set<String>> getAppEnvMapFromPermissions(String accountId);
+  Map<String, Set<String>> getAppEnvMapFromPermissions(String accountId, UserPermissionInfo userPermissionInfo);
+
+  RestrictionsAndAppEnvMap getRestrictionsAndAppEnvMap(String accountId);
 }

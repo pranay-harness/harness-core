@@ -70,6 +70,7 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.LearningEngineService;
+import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowService;
@@ -96,6 +97,7 @@ public class AuthServiceImpl implements AuthService {
   private WingsPersistence wingsPersistence;
   private UserService userService;
   private UserGroupService userGroupService;
+  private UsageRestrictionsService usageRestrictionsService;
   private WorkflowService workflowService;
   private EnvironmentService environmentService;
   private CacheHelper cacheHelper;
@@ -107,13 +109,15 @@ public class AuthServiceImpl implements AuthService {
 
   @Inject
   public AuthServiceImpl(GenericDbCache dbCache, WingsPersistence wingsPersistence, UserService userService,
-      UserGroupService userGroupService, WorkflowService workflowService, EnvironmentService environmentService,
-      CacheHelper cacheHelper, MainConfiguration configuration, LearningEngineService learningEngineService,
-      AuthHandler authHandler, FeatureFlagService featureFlagService, HarnessUserGroupService harnessUserGroupService) {
+      UserGroupService userGroupService, UsageRestrictionsService usageRestrictionsService,
+      WorkflowService workflowService, EnvironmentService environmentService, CacheHelper cacheHelper,
+      MainConfiguration configuration, LearningEngineService learningEngineService, AuthHandler authHandler,
+      FeatureFlagService featureFlagService, HarnessUserGroupService harnessUserGroupService) {
     this.dbCache = dbCache;
     this.wingsPersistence = wingsPersistence;
     this.userService = userService;
     this.userGroupService = userGroupService;
+    this.usageRestrictionsService = usageRestrictionsService;
     this.workflowService = workflowService;
     this.environmentService = environmentService;
     this.cacheHelper = cacheHelper;
@@ -592,7 +596,12 @@ public class AuthServiceImpl implements AuthService {
         userGroups = Lists.newArrayList(harnessUserGroup.get());
       }
     }
-    return authHandler.getUserPermissionInfo(accountId, userGroups);
+    UserPermissionInfo userPermissionInfo = authHandler.getUserPermissionInfo(accountId, userGroups);
+    userPermissionInfo.setAppEnvMap(
+        usageRestrictionsService.getAppEnvMapFromPermissions(accountId, userPermissionInfo));
+    userPermissionInfo.setUsageRestrictions(
+        usageRestrictionsService.getUsageRestrictionsFromUserPermissions(accountId, userPermissionInfo, user));
+    return userPermissionInfo;
   }
 
   private Optional<UserGroup> getHarnessUserGroupsByAccountId(String accountId, User user) {
