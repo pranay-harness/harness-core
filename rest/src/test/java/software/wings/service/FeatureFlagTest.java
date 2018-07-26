@@ -27,7 +27,7 @@ import java.util.Set;
 
 public class FeatureFlagTest extends WingsBaseTest {
   private static final FeatureName FEATURE =
-      FeatureName.PIVOTAL_CLOUD_FOUNDRY_SUPPORT; // Just pick a different one if this one should be deleted.
+      FeatureName.GIT_BATCH_SYNC; // Just pick a different one if this one should be deleted.
 
   private static final String TEST_ACCOUNT_ID = "TEST_ACCOUNT_ID";
   private static final String TEST_ACCOUNT_ID_X = "TEST_ACCOUNT_ID_X";
