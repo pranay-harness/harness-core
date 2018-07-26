@@ -2,11 +2,9 @@ package software.wings.service;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.AccountPlugin.Builder.anAccountPlugin;
-import static software.wings.beans.FeatureName.PIVOTAL_CLOUD_FOUNDRY_SUPPORT;
 import static software.wings.beans.PluginCategory.Artifact;
 import static software.wings.beans.PluginCategory.CloudProvider;
 import static software.wings.beans.PluginCategory.Collaboration;
@@ -59,7 +57,6 @@ public class PluginServiceTest {
   private PluginService pluginService = new PluginServiceImpl();
 
   private String accountId = "ACCOUNT_ID";
-  private String pcfEnabledAccountId = "PCF_ENABLED_ACCOUNT_ID";
 
   //  @Inject private FeatureFlagService featureFlagService;
   @Mock private FeatureFlagService mockFeatureFlagService;
@@ -68,16 +65,12 @@ public class PluginServiceTest {
   public void setup() throws IOException {
     initMocks(this);
     setInternalState(pluginService, "featureFlagService", mockFeatureFlagService);
-    when(mockFeatureFlagService.isEnabled(PIVOTAL_CLOUD_FOUNDRY_SUPPORT, pcfEnabledAccountId)).thenReturn(false);
-
-    when(mockFeatureFlagService.isEnabled(PIVOTAL_CLOUD_FOUNDRY_SUPPORT, accountId)).thenReturn(false);
-    when(mockFeatureFlagService.isEnabled(PIVOTAL_CLOUD_FOUNDRY_SUPPORT, pcfEnabledAccountId)).thenReturn(true);
   }
 
   @Test
   public void shouldGetInstalledPlugins() throws Exception {
     assertThat(pluginService.getInstalledPlugins(accountId))
-        .hasSize(25)
+        .hasSize(26)
         .containsExactly(anAccountPlugin()
                              .withSettingClass(JenkinsConfig.class)
                              .withAccountId(accountId)
@@ -271,6 +264,14 @@ public class PluginServiceTest {
                 .withPluginCategories(asList(LoadBalancer))
                 .build(),
             anAccountPlugin()
+                .withSettingClass(PcfConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName("Pivotal Cloud Foundry")
+                .withType("PCF")
+                .withPluginCategories(asList(CloudProvider))
+                .build(),
+            anAccountPlugin()
                 .withSettingClass(GitConfig.class)
                 .withAccountId(accountId)
                 .withIsEnabled(true)
@@ -278,29 +279,11 @@ public class PluginServiceTest {
                 .withType("GIT")
                 .withPluginCategories(asList(SourceRepo))
                 .build());
-
-    assertThat(pluginService.getInstalledPlugins(pcfEnabledAccountId))
-        .hasSize(26)
-        .contains(anAccountPlugin()
-                      .withSettingClass(PcfConfig.class)
-                      .withAccountId(pcfEnabledAccountId)
-                      .withIsEnabled(true)
-                      .withDisplayName("Pivotal Cloud Foundry")
-                      .withType("PCF")
-                      .withPluginCategories(asList(CloudProvider))
-                      .build());
   }
 
   @Test
   public void shouldGetPluginSettingSchema() throws Exception {
     assertThat(pluginService.getPluginSettingSchema(accountId))
-        .hasSize(25)
-        .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "PROMETHEUS", "APM_VERIFICATION", "DATA_DOG",
-            "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "ELK", "LOGZ", "SUMO", "AWS", "GCP", "AZURE",
-            "PHYSICAL_DATA_CENTER", "KUBERNETES_CLUSTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS",
-            "ARTIFACTORY", "GIT");
-
-    assertThat(pluginService.getPluginSettingSchema(pcfEnabledAccountId))
         .hasSize(26)
         .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "PROMETHEUS", "APM_VERIFICATION", "DATA_DOG",
             "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "ELK", "LOGZ", "SUMO", "AWS", "GCP", "AZURE",

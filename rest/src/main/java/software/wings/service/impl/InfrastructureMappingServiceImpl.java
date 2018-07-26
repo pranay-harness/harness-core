@@ -22,7 +22,6 @@ import static software.wings.api.DeploymentType.SSH;
 import static software.wings.api.DeploymentType.WINRM;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
-import static software.wings.beans.FeatureName.PIVOTAL_CLOUD_FOUNDRY_SUPPORT;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.dl.HQuery.allChecks;
@@ -1620,10 +1619,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         || artifactType == ArtifactType.IIS_VirtualDirectory) {
       infraTypes.put(WINRM, asList(SettingVariableTypes.PHYSICAL_DATA_CENTER, SettingVariableTypes.AWS));
     } else if (artifactType == ArtifactType.PCF) {
-      String accountId = appService.getAccountIdByAppId(appId);
-      if (featureFlagService.isEnabled(PIVOTAL_CLOUD_FOUNDRY_SUPPORT, accountId)) {
-        infraTypes.put(PCF, asList(SettingVariableTypes.PCF));
-      }
+      infraTypes.put(PCF, asList(SettingVariableTypes.PCF));
     } else {
       infraTypes.put(SSH, asList(SettingVariableTypes.PHYSICAL_DATA_CENTER, SettingVariableTypes.AWS));
     }

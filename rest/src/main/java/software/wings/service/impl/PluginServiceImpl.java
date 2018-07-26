@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.AccountPlugin.Builder.anAccountPlugin;
-import static software.wings.beans.FeatureName.PIVOTAL_CLOUD_FOUNDRY_SUPPORT;
 import static software.wings.beans.PluginCategory.Artifact;
 import static software.wings.beans.PluginCategory.CloudProvider;
 import static software.wings.beans.PluginCategory.Collaboration;
@@ -294,19 +293,16 @@ public class PluginServiceImpl implements PluginService {
             .withType("ELB")
             .withPluginCategories(asList(LoadBalancer))
             .withUiSchema(readUiSchema("ELB"))
+            .build(),
+        anAccountPlugin()
+            .withSettingClass(PcfConfig.class)
+            .withAccountId(accountId)
+            .withIsEnabled(true)
+            .withDisplayName("Pivotal Cloud Foundry")
+            .withType("PCF")
+            .withPluginCategories(asList(CloudProvider))
+            .withUiSchema(readUiSchema("PCF"))
             .build());
-
-    if (featureFlagService.isEnabled(PIVOTAL_CLOUD_FOUNDRY_SUPPORT, accountId)) {
-      pluginList.add(anAccountPlugin()
-                         .withSettingClass(PcfConfig.class)
-                         .withAccountId(accountId)
-                         .withIsEnabled(true)
-                         .withDisplayName("Pivotal Cloud Foundry")
-                         .withType("PCF")
-                         .withPluginCategories(asList(CloudProvider))
-                         .withUiSchema(readUiSchema("PCF"))
-                         .build());
-    }
 
     pluginList.add(anAccountPlugin()
                        .withSettingClass(GitConfig.class)

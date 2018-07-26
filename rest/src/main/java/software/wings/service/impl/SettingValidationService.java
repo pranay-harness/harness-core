@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static java.util.Collections.emptyList;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
-import static software.wings.beans.FeatureName.PIVOTAL_CLOUD_FOUNDRY_SUPPORT;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.WingsReflectionUtils.getEncryptedRefField;
 
@@ -178,9 +177,6 @@ public class SettingValidationService {
   }
 
   private void validatePcfConfig(SettingAttribute settingAttribute, PcfConfig pcfConfig) {
-    if (!featureFlagService.isEnabled(PIVOTAL_CLOUD_FOUNDRY_SUPPORT, settingAttribute.getAccountId())) {
-      throw new InvalidRequestException("Adding Pivotal Cloud Foundry as Cloud Provider is not supported yet.");
-    }
     pcfHelperService.validate(pcfConfig);
   }
 
