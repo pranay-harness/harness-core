@@ -74,6 +74,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.SecretManager;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.AuthServiceImpl;
 import software.wings.service.impl.security.auth.AuthHandler;
@@ -141,10 +142,11 @@ public class SecureResourceTest {
   private static FeatureFlagService featureFlagService = mock(FeatureFlagService.class);
   private static WhitelistService whitelistService = mock(WhitelistService.class);
   private static HarnessUserGroupService harnessUserGroupService = mock(HarnessUserGroupService.class);
+  private static SecretManager secretManager = mock(SecretManager.class);
 
   private static AuthService authService = new AuthServiceImpl(genericDbCache, wingsPersistence, userService,
       userGroupService, usageRestrictionsService, workflowService, envService, cacheHelper, configuration,
-      learningEngineService, authHandler, featureFlagService, harnessUserGroupService);
+      learningEngineService, authHandler, featureFlagService, harnessUserGroupService, secretManager);
 
   private static AuthRuleFilter authRuleFilter = new AuthRuleFilter(auditService, auditHelper, authService, authHandler,
       appService, userService, featureFlagService, whitelistService, harnessUserGroupService);

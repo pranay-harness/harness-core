@@ -26,6 +26,7 @@ import software.wings.exception.WingsException.ReportTarget;
 import software.wings.security.saml.SamlClientService;
 import software.wings.security.saml.SamlRequest;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserService;
 
@@ -41,6 +42,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   @Mock private AccountService ACCOUNT_SERVICE;
   @Mock private SSOSettingService SSO_SETTING_SERVICE;
   @Mock private AuthenticationUtil AUTHENTICATION_UTL;
+  @Mock private AuthService AUTHSERVICE;
 
   @Inject @InjectMocks private AuthenticationManager authenticationManager;
 
@@ -112,7 +114,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
     when(PASSWORD_BASED_AUTH_HANDLER.authenticate(Matchers.anyString(), Matchers.anyString())).thenReturn(mockUser);
     User authenticatedUser = mock(User.class);
     when(authenticatedUser.getToken()).thenReturn("TestToken");
-    when(AUTHENTICATION_UTL.generateBearerTokenForUser(mockUser)).thenReturn(authenticatedUser);
+    when(AUTHSERVICE.generateBearerTokenForUser(mockUser)).thenReturn(authenticatedUser);
     User user = authenticationManager.defaultLogin(Base64.encodeBase64String("testUser@test.com:password".getBytes()));
     assertThat(user.getToken()).isEqualTo("TestToken");
   }

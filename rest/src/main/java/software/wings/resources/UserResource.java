@@ -643,6 +643,14 @@ public class UserResource {
     return new RestResponse<>(userService.inviteUsers(userInvite));
   }
 
+  @GET
+  @Path("refresh-token")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<String> refreshToken(@HeaderParam(HttpHeaders.AUTHORIZATION) String oldToken) {
+    return new RestResponse<String>(authenticationManager.refreshToken(oldToken));
+  }
+
   /**
    * Complete invite rest response.
    *

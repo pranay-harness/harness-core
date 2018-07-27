@@ -2,19 +2,28 @@ package software.wings.beans;
 
 import static software.wings.utils.CryptoUtil.secureRandAlphaNumString;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexed;
 import org.simpleframework.xml.Transient;
+
+import java.util.Date;
 
 /**
  * Created by anubhaw on 3/14/16.
  */
 @Entity(value = "authTokens", noClassnameStored = true)
-@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
+@Data
+@EqualsAndHashCode(callSuper = true)
 public class AuthToken extends Base {
   @Transient private User user;
   private String userId;
   private long expireAt;
+  private String jwtToken;
+  private boolean refreshed;
+  @Indexed(options = @IndexOptions(expireAfterSeconds = 0)) private Date ttl;
 
   /**
    * Instantiates a new auth token.
@@ -27,39 +36,6 @@ public class AuthToken extends Base {
     setUuid(secureRandAlphaNumString(32));
     setAppId(Base.GLOBAL_APP_ID);
     expireAt = System.currentTimeMillis() + tokenExpiryInMillis;
-  }
-
-  /**
-   * Gets expire at.
-   *
-   * @return the expire at
-   */
-  public long getExpireAt() {
-    return expireAt;
-  }
-
-  /**
-   * Sets expire at.
-   *
-   * @param expireAt the expire at
-   */
-  public void setExpireAt(long expireAt) {
-    this.expireAt = expireAt;
-  }
-
-  public String getUserId() {
-    return userId;
-  }
-
-  public void setUserId(String userId) {
-    this.userId = userId;
-  }
-
-  public User getUser() {
-    return user;
-  }
-
-  public void setUser(User user) {
-    this.user = user;
+    ttl = new Date(System.currentTimeMillis() + 7 * 24 * 60 * 60 * 1000);
   }
 }

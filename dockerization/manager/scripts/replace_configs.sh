@@ -77,6 +77,10 @@ if [[ -v "jwtSsoRedirectSecret" ]]; then
     sed -i "s|qY4GXZAlPJQPEV8JCPTNhgmDmnHZSAgorzGxvOY03Xptr8N9xDfAYbwGohr2pCRLfFG69vBQaNpeTjcV|${jwtSsoRedirectSecret}|" /opt/harness/config.yml
 fi
 
+if [[ -v "jwtAuthSecret" ]]; then
+    sed -i "s|dOkdsVqdRPPRJG31XU0qY4MPqmBBMk0PTAGIKM6O7TGqhjyxScIdJe80mwh5Yb5zF3KxYBHw6B3Lfzlq|${jwtAuthSecret}|" /opt/harness/config.yml
+fi
+
 if [[ -v "FEATURES" ]]; then
     sed -i "s|featuresEnabled:|featuresEnabled: ${FEATURES}|" /opt/harness/config.yml
 fi

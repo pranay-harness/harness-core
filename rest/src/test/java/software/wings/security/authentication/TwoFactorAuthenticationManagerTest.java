@@ -23,6 +23,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.User;
 import software.wings.exception.WingsException;
 import software.wings.security.SecretManager.JWT_CATEGORY;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserService;
 
 import java.security.GeneralSecurityException;
@@ -30,9 +31,10 @@ import java.util.Base64;
 
 public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   @Mock UserService userService;
-  @Mock AuthenticationUtil authenticationUtil;
+  @Mock AuthService authService;
   @Inject @InjectMocks TOTPAuthHandler totpAuthHandler;
   @Inject @InjectMocks TwoFactorAuthenticationManager twoFactorAuthenticationManager;
+  @Mock AuthenticationUtil authenticationUtil;
 
   @Test
   @Repeat(times = 5, successes = 1)
@@ -50,7 +52,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
       User authenticatedUser = spy(new User());
       authenticatedUser.setToken("ValidToken");
 
-      when(authenticationUtil.generateBearerTokenForUser(user)).thenReturn(authenticatedUser);
+      when(authService.generateBearerTokenForUser(user)).thenReturn(authenticatedUser);
       String encryptedCode = Base64.getEncoder().encodeToString(("testJWTToken:" + code).getBytes());
       assertThat(twoFactorAuthenticationManager.authenticate(encryptedCode)).isEqualTo(authenticatedUser);
 

@@ -20,6 +20,7 @@ import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.security.authentication.LoginTypeResponse.LoginTypeResponseBuilder;
 import software.wings.security.saml.SamlClientService;
 import software.wings.security.saml.SamlRequest;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserService;
 
 import java.net.URI;
@@ -39,6 +40,7 @@ public class AuthenticationManager {
   @Inject private MainConfiguration configuration;
   @Inject private UserService userService;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private AuthService authService;
 
   private static Logger logger = LoggerFactory.getLogger(AuthenticationManager.class);
 
@@ -112,7 +114,7 @@ public class AuthenticationManager {
       if (user.isTwoFactorAuthenticationEnabled()) {
         return generate2faJWTToken(user);
       } else {
-        return authenticationUtil.generateBearerTokenForUser(user);
+        return authService.generateBearerTokenForUser(user);
       }
     } catch (Exception e) {
       logger.warn("Failed to login via default mechanism", e);
@@ -129,7 +131,7 @@ public class AuthenticationManager {
       if (user.isTwoFactorAuthenticationEnabled()) {
         return generate2faJWTToken(user);
       } else {
-        return authenticationUtil.generateBearerTokenForUser(user);
+        return authService.generateBearerTokenForUser(user);
       }
     } catch (Exception e) {
       logger.warn("Failed to login via SSO", e);
@@ -160,5 +162,10 @@ public class AuthenticationManager {
       throw new WingsException(INVALID_TOKEN, USER_ADMIN);
     }
     return authorizationHeader.substring(prefix.length()).trim();
+  }
+
+  public String refreshToken(String oldToken) {
+    String token = oldToken.substring("Bearer".length()).trim();
+    return authService.refreshToken(token).getToken();
   }
 }
