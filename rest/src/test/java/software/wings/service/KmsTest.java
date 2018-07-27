@@ -20,6 +20,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_FILE;
@@ -29,7 +30,6 @@ import com.google.inject.Inject;
 import io.harness.rule.RepeatRule.Repeat;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mongodb.morphia.mapping.Mapper;
@@ -51,6 +51,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.KmsConfig;
+import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
@@ -63,10 +64,10 @@ import software.wings.beans.User;
 import software.wings.beans.UuidAware;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
 import software.wings.beans.config.ArtifactoryConfig;
-import software.wings.common.Constants;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.core.queue.Queue;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.dl.PageRequest.PageRequestBuilder;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
@@ -1316,7 +1317,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Ignore
+  @RealMongo
   public void kmsEncryptionSaveServiceVariable() throws IOException, IllegalAccessException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
@@ -1426,7 +1427,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Ignore
+  @RealMongo
   public void kmsEncryptionUpdateServiceVariable() throws IOException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
@@ -1698,10 +1699,19 @@ public class KmsTest extends WingsBaseTest {
     for (UuidAware encryptedValue : encryptedValues) {
       assertEquals(EncryptionType.KMS, ((SettingAttribute) encryptedValue).getEncryptionType());
     }
+
+    RestResponse<PageResponse<UuidAware>> restResponse = secretManagementResource.listEncryptedValues(
+        accountId, SettingVariableTypes.APP_DYNAMICS, PageRequestBuilder.aPageRequest().build());
+    encryptedValues = restResponse.getResource().getResponse();
+    assertEquals(encryptedEntities.size(), encryptedValues.size());
+    assertTrue(encryptedEntities.containsAll(encryptedValues));
+
+    for (UuidAware encryptedValue : encryptedValues) {
+      assertEquals(EncryptionType.KMS, ((SettingAttribute) encryptedValue).getEncryptionType());
+    }
   }
 
   @Test
-  @Ignore
   public void listKmsConfigMultiple() throws IOException {
     KmsConfig kmsConfig1 = getKmsConfig();
     kmsConfig1.setDefault(true);
@@ -1728,16 +1738,16 @@ public class KmsTest extends WingsBaseTest {
         defaultConfig++;
         assertEquals(kmsConfig1.getName(), actualConfig.getName());
         assertEquals(kmsConfig1.getAccessKey(), actualConfig.getAccessKey());
-        assertEquals(kmsConfig1.getKmsArn(), actualConfig.getKmsArn());
-        assertEquals(Constants.SECRET_MASK, actualConfig.getSecretKey());
+        assertEquals(SECRET_MASK, actualConfig.getKmsArn());
+        assertEquals(SECRET_MASK, actualConfig.getSecretKey());
         assertFalse(isEmpty(actualConfig.getUuid()));
         assertEquals(accountId, actualConfig.getAccountId());
       } else {
         nonDefaultConfig++;
         assertEquals(kmsConfig2.getName(), actualConfig.getName());
         assertEquals(kmsConfig2.getAccessKey(), actualConfig.getAccessKey());
-        assertEquals(kmsConfig2.getKmsArn(), actualConfig.getKmsArn());
-        assertEquals(Constants.SECRET_MASK, actualConfig.getSecretKey());
+        assertEquals(SECRET_MASK, actualConfig.getKmsArn());
+        assertEquals(SECRET_MASK, actualConfig.getSecretKey());
         assertFalse(isEmpty(actualConfig.getUuid()));
         assertEquals(accountId, actualConfig.getAccountId());
       }
@@ -1764,16 +1774,16 @@ public class KmsTest extends WingsBaseTest {
         defaultConfig++;
         assertEquals(kmsConfig2.getName(), actualConfig.getName());
         assertEquals(kmsConfig2.getAccessKey(), actualConfig.getAccessKey());
-        assertEquals(kmsConfig2.getKmsArn(), actualConfig.getKmsArn());
-        assertEquals(Constants.SECRET_MASK, actualConfig.getSecretKey());
+        assertEquals(SECRET_MASK, actualConfig.getKmsArn());
+        assertEquals(SECRET_MASK, actualConfig.getSecretKey());
         assertFalse(isEmpty(actualConfig.getUuid()));
         assertEquals(accountId, actualConfig.getAccountId());
       } else {
         nonDefaultConfig++;
         assertEquals(kmsConfig1.getName(), actualConfig.getName());
         assertEquals(kmsConfig1.getAccessKey(), actualConfig.getAccessKey());
-        assertEquals(kmsConfig1.getKmsArn(), actualConfig.getKmsArn());
-        assertEquals(Constants.SECRET_MASK, actualConfig.getSecretKey());
+        assertEquals(SECRET_MASK, actualConfig.getKmsArn());
+        assertEquals(SECRET_MASK, actualConfig.getSecretKey());
         assertFalse(isEmpty(actualConfig.getUuid()));
         assertEquals(accountId, actualConfig.getAccountId());
       }
@@ -1895,15 +1905,15 @@ public class KmsTest extends WingsBaseTest {
         accountConfig++;
         assertEquals(kmsConfig.getName(), actualConfig.getName());
         assertEquals(kmsConfig.getAccessKey(), actualConfig.getAccessKey());
-        assertEquals(Constants.SECRET_MASK, actualConfig.getKmsArn());
-        assertEquals(Constants.SECRET_MASK, actualConfig.getSecretKey());
+        assertEquals(SECRET_MASK, actualConfig.getKmsArn());
+        assertEquals(SECRET_MASK, actualConfig.getSecretKey());
         assertFalse(isEmpty(actualConfig.getUuid()));
       } else {
         defaultConfig++;
         assertEquals(globalKmsConfig.getName(), actualConfig.getName());
         assertEquals(globalKmsConfig.getAccessKey(), actualConfig.getAccessKey());
-        assertEquals(Constants.SECRET_MASK, actualConfig.getKmsArn());
-        assertEquals(Constants.SECRET_MASK, actualConfig.getSecretKey());
+        assertEquals(SECRET_MASK, actualConfig.getKmsArn());
+        assertEquals(SECRET_MASK, actualConfig.getSecretKey());
         assertFalse(isEmpty(actualConfig.getUuid()));
         assertEquals(Base.GLOBAL_ACCOUNT_ID, actualConfig.getAccountId());
       }
@@ -1953,8 +1963,8 @@ public class KmsTest extends WingsBaseTest {
     KmsConfig actualConfig = kmsConfigs.iterator().next();
     assertEquals(kmsConfig.getName(), actualConfig.getName());
     assertEquals(kmsConfig.getAccessKey(), actualConfig.getAccessKey());
-    assertEquals(Constants.SECRET_MASK, actualConfig.getKmsArn());
-    assertEquals(Constants.SECRET_MASK, actualConfig.getSecretKey());
+    assertEquals(SECRET_MASK, actualConfig.getKmsArn());
+    assertEquals(SECRET_MASK, actualConfig.getSecretKey());
     assertFalse(isEmpty(actualConfig.getUuid()));
     assertTrue(actualConfig.isDefault());
 

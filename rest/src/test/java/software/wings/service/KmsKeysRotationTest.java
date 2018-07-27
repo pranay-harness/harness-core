@@ -157,9 +157,11 @@ public class KmsKeysRotationTest extends WingsBaseTest {
                                  .filter("accountId", account.getUuid())
                                  .filter("kmsId", oldKmsConfig.getUuid())
                                  .count();
-          logger.info("for {} with id {} still {} non migrated secrets are present. Will wait.",
-              account.getAccountName(), account.getUuid(), remainingSecrets);
-          Thread.sleep(5000);
+          if (remainingSecrets > 0) {
+            logger.info("for {} with id {} still {} non migrated secrets are present. Will wait.",
+                account.getAccountName(), account.getUuid(), remainingSecrets);
+            Thread.sleep(5000);
+          }
         } while (remainingSecrets > 0);
         logger.info("rotation of kms for {} id {} is done", account.getAccountName(), account.getUuid());
       }
