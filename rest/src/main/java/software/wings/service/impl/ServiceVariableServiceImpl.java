@@ -27,6 +27,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
@@ -43,7 +44,6 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
-import software.wings.expression.ExpressionEvaluator;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
@@ -54,6 +54,7 @@ import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.utils.validation.Create;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
@@ -64,11 +65,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import javax.validation.Valid;
+import javax.validation.executable.ValidateOnExecution;
 
 /**
  * Created by peeyushaggarwal on 9/14/16.
  */
 @Singleton
+@ValidateOnExecution
 public class ServiceVariableServiceImpl implements ServiceVariableService {
   private static final Logger logger = LoggerFactory.getLogger(ServiceVariableServiceImpl.class);
   @Inject private WingsPersistence wingsPersistence;
@@ -97,21 +100,13 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   }
 
   @Override
+  @ValidationGroups(Create.class)
   public ServiceVariable save(@Valid ServiceVariable serviceVariable) {
     if (!asList(SERVICE, EntityType.SERVICE_TEMPLATE, EntityType.ENVIRONMENT, EntityType.HOST)
              .contains(serviceVariable.getEntityType())) {
       throw new WingsException(INVALID_ARGUMENT)
           .addParam("args", "Service setting not supported for entityType " + serviceVariable.getEntityType());
     }
-
-    ExpressionEvaluator.isValidVariableName(serviceVariable.getName());
-    // TODO:: revisit. for environment envId can be specific
-    String envId =
-        serviceVariable.getEntityType().equals(SERVICE) || serviceVariable.getEntityType().equals(ENVIRONMENT)
-        ? GLOBAL_ENV_ID
-        : serviceTemplateService.get(serviceVariable.getAppId(), serviceVariable.getTemplateId()).getEnvId();
-
-    serviceVariable.setEnvId(envId);
 
     ServiceVariable newServiceVariable = duplicateCheck(
         () -> wingsPersistence.saveAndGet(ServiceVariable.class, serviceVariable), "name", serviceVariable.getName());
@@ -151,8 +146,6 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
         throw new InvalidRequestException(format("Service variable name can not be changed."));
       }
     }
-
-    ExpressionEvaluator.isValidVariableName(serviceVariable.getName());
 
     Map<String, Object> updateMap = new HashMap<>();
     if (isNotEmpty(serviceVariable.getValue())) {

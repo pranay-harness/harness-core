@@ -213,6 +213,10 @@ public class SecretTextTest extends WingsBaseTest {
     }
   }
 
+  private String getRandomServiceVariableName() {
+    return generateUuid().replaceAll("-", "_");
+  }
+
   @Test
   public void saveSecret() throws IllegalAccessException {
     String secretName = generateUuid();
@@ -263,7 +267,7 @@ public class SecretTextTest extends WingsBaseTest {
                                                 .instances(Collections.singletonList(generateUuid()))
                                                 .expression(generateUuid())
                                                 .accountId(accountId)
-                                                .name(generateUuid())
+                                                .name(getRandomServiceVariableName())
                                                 .value(secretId.toCharArray())
                                                 .encryptedValue(secretId)
                                                 .type(Type.ENCRYPTED_TEXT)
@@ -381,11 +385,11 @@ public class SecretTextTest extends WingsBaseTest {
                                                 .instances(Collections.singletonList(generateUuid()))
                                                 .expression(generateUuid())
                                                 .accountId(accountId)
-                                                .name("service_var" + generateUuid())
+                                                .name("service_var" + getRandomServiceVariableName())
                                                 .value(secretId1.toCharArray())
                                                 .type(Type.ENCRYPTED_TEXT)
                                                 .build();
-
+    serviceVariable.setAppId(generateUuid());
     String savedAttributeId = wingsPersistence.save(serviceVariable);
 
     ServiceVariable savedVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
@@ -438,7 +442,7 @@ public class SecretTextTest extends WingsBaseTest {
                         .get();
     assertNull(encryptedData.getParentIds());
 
-    String updatedName = "updatedName" + generateUuid();
+    String updatedName = "updatedName" + getRandomServiceVariableName();
     String updatedAppId = generateUuid();
     final Map<String, Object> keyValuePairs = new HashMap<>();
     keyValuePairs.put("name", updatedName);
@@ -1396,7 +1400,7 @@ public class SecretTextTest extends WingsBaseTest {
                                               .instances(Collections.singletonList(UUID.randomUUID().toString()))
                                               .expression(UUID.randomUUID().toString())
                                               .accountId(accountId)
-                                              .name("service-variable-" + i + "-j" + j)
+                                              .name("service_variable_" + i + "_j" + j)
                                               .value(secretId.toCharArray())
                                               .type(Type.ENCRYPTED_TEXT)
                                               .build();
@@ -1572,7 +1576,7 @@ public class SecretTextTest extends WingsBaseTest {
                                                 .instances(Collections.singletonList(UUID.randomUUID().toString()))
                                                 .expression(UUID.randomUUID().toString())
                                                 .accountId(accountId)
-                                                .name("service-variable-" + i + "-j" + j + "-k" + k)
+                                                .name("service_variable_" + i + "_j" + j + "_k" + k)
                                                 .value(secretId.toCharArray())
                                                 .type(Type.ENCRYPTED_TEXT)
                                                 .build();
@@ -1738,7 +1742,7 @@ public class SecretTextTest extends WingsBaseTest {
                                               .instances(Collections.singletonList(UUID.randomUUID().toString()))
                                               .expression(UUID.randomUUID().toString())
                                               .accountId(accountId)
-                                              .name("service-variable-j" + j + "-k" + k)
+                                              .name("service_variable_j" + j + "_k" + k)
                                               .value(secretId.toCharArray())
                                               .type(Type.ENCRYPTED_TEXT)
                                               .build();
@@ -1871,7 +1875,7 @@ public class SecretTextTest extends WingsBaseTest {
                                               .instances(Collections.singletonList(UUID.randomUUID().toString()))
                                               .expression(UUID.randomUUID().toString())
                                               .accountId(accountId)
-                                              .name("service-variable-" + i + "-j" + j)
+                                              .name("service_variable_" + i + "_j" + j)
                                               .value(secretId.toCharArray())
                                               .type(Type.ENCRYPTED_TEXT)
                                               .build();
@@ -1968,7 +1972,7 @@ public class SecretTextTest extends WingsBaseTest {
                                                 .instances(Collections.singletonList(UUID.randomUUID().toString()))
                                                 .expression(UUID.randomUUID().toString())
                                                 .accountId(accountId)
-                                                .name("service-variable-" + i + "-" + j + "-" + k)
+                                                .name("service_variable_" + i + "_" + j + "_" + k)
                                                 .value(secretIds.get(j * numOfServiceVariables).toCharArray())
                                                 .type(Type.ENCRYPTED_TEXT)
                                                 .build();

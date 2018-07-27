@@ -20,4 +20,5 @@ public @interface EntityName {
   String message() default "{io.harness.data.validator.EntityName.message}";
   Class<?>[] groups() default {};
   Class<? extends Payload>[] payload() default {};
+  String charSetString() default "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_ ";
 }

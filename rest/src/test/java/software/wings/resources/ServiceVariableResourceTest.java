@@ -13,8 +13,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
+import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
-import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import org.junit.ClassRule;
@@ -55,7 +55,7 @@ public class ServiceVariableResourceTest {
       ResourceTestRule.builder().addResource(VARIABLE_RESOURCE).addProvider(WingsExceptionMapper.class).build();
 
   private static final ServiceVariable SERVICE_VARIABLE = ServiceVariable.builder()
-                                                              .envId(ENV_ID)
+                                                              .envId(GLOBAL_ENV_ID)
                                                               .entityType(EntityType.ENVIRONMENT)
                                                               .entityId(TEMPLATE_ID)
                                                               .templateId(TEMPLATE_ID)
