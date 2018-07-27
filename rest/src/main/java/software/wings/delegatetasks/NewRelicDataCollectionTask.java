@@ -316,8 +316,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       try {
         int retry = 0;
         long startTime = System.currentTimeMillis();
-        int collectionLength = timeDeltaInMins(System.currentTimeMillis(), windowStartTimeManager);
-        final long windowEndTimeManager = windowStartTimeManager + TimeUnit.MINUTES.toMillis(collectionLength);
+        final long windowEndTimeManager = windowStartTimeManager + TimeUnit.MINUTES.toMillis(PERIOD_MINS);
+        int collectionLength = timeDeltaInMins(windowEndTimeManager, windowStartTimeManager);
         int dataCollectionMinuteEnd = dataCollectionMinute + collectionLength - 1;
         logger.info("Running new relic data collection for minute {}, state execution {}", dataCollectionMinuteEnd,
             dataCollectionInfo.getStateExecutionId());
@@ -373,7 +373,6 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
 
             dataCollectionMinute = dataCollectionMinuteEnd + 1;
             logger.info("Time take for data collection: " + (System.currentTimeMillis() - startTime));
-            // dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
             break;
           } catch (Exception ex) {
             if (++retry >= RETRIES) {
