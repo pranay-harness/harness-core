@@ -33,6 +33,10 @@ public class StreamModule extends AbstractModule {
 
     atmosphereServlet.framework()
         .addInitParameter(ApplicationConfig.WEBSOCKET_CONTENT_TYPE, "application/json")
+        .addInitParameter(ApplicationConfig.BROADCASTER_MESSAGE_PROCESSING_THREADPOOL_MAXSIZE, "100")
+        .addInitParameter(ApplicationConfig.BROADCASTER_ASYNC_WRITE_THREADPOOL_MAXSIZE, "100")
+        .addInitParameter(ApplicationConfig.SCHEDULER_THREADPOOL_MAXSIZE, "200")
+        .addInitParameter(ApplicationConfig.OUT_OF_ORDER_BROADCAST, "true")
         .addInitParameter(ApplicationConfig.WEBSOCKET_SUPPORT, "true")
         .addInitParameter(ApplicationConfig.ANNOTATION_PACKAGE, UiStreamHandler.class.getPackage().getName());
 
