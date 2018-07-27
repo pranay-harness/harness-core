@@ -251,9 +251,9 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
         apiCallLog.setTitle("Fetch request to " + urlToLog);
         apiCallLog.addFieldToRequest(
             ThirdPartyApiCallField.builder().name(URL_STRING).value(urlToLog).type(FieldType.URL).build());
-        apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
+        apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
         response = request.execute();
-        apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
+        apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
         if (response.isSuccessful()) {
           apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
           delegateLogService.save(getAccountId(), apiCallLog);

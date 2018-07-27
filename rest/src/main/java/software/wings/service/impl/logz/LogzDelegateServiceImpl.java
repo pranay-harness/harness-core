@@ -61,7 +61,7 @@ public class LogzDelegateServiceImpl implements LogzDelegateService {
     Preconditions.checkNotNull(apiCallLog);
 
     apiCallLog.setTitle("Fetching logs from " + logzConfig.getLogzUrl());
-    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
+    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
                                      .name(URL_STRING)
                                      .value(logzConfig.getLogzUrl() + "/v1/search?size=10000")
@@ -75,7 +75,7 @@ public class LogzDelegateServiceImpl implements LogzDelegateService {
     final Call<Object> request =
         getLogzRestClient(logzConfig, encryptedDataDetails).search(logFetchRequest.toElasticSearchJsonObject());
     final Response<Object> response = request.execute();
-    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
+    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     if (response.isSuccessful()) {
       apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
       delegateLogService.save(logzConfig.getAccountId(), apiCallLog);

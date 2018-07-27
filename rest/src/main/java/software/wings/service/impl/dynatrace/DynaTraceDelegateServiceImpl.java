@@ -55,7 +55,7 @@ public class DynaTraceDelegateServiceImpl implements DynaTraceDelegateService {
       ThirdPartyApiCallLog apiCallLog) throws IOException {
     Preconditions.checkNotNull(apiCallLog);
     apiCallLog.setTitle("Fetching metric data from " + dynaTraceConfig.getDynaTraceUrl());
-    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
+    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
                                      .name("url")
                                      .value(dynaTraceConfig.getDynaTraceUrl())
@@ -70,7 +70,7 @@ public class DynaTraceDelegateServiceImpl implements DynaTraceDelegateService {
         getDynaTraceRestClient(dynaTraceConfig)
             .fetchMetricData(getHeaderWithCredentials(dynaTraceConfig, encryptedDataDetails), dataRequest);
     final Response<DynaTraceMetricDataResponse> response = request.execute();
-    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
+    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     if (response.isSuccessful()) {
       apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
       delegateLogService.save(dynaTraceConfig.getAccountId(), apiCallLog);

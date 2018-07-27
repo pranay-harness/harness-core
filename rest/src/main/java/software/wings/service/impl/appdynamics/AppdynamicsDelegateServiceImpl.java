@@ -188,14 +188,14 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
                                      .type(FieldType.URL)
                                      .build());
     apiCallLog.setTitle("Fetching business transactions for tier from " + appDynamicsConfig.getControllerUrl());
-    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
+    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     Call<List<AppdynamicsMetric>> tierBTMetricRequest =
         getAppdynamicsRestClient(appDynamicsConfig)
             .listMetrices(
                 getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId, tierBTsPath);
 
     final Response<List<AppdynamicsMetric>> tierBTResponse = tierBTMetricRequest.execute();
-    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
+    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     if (!tierBTResponse.isSuccessful()) {
       apiCallLog.addFieldToResponse(tierBTResponse.code(), tierBTResponse.errorBody().string(), FieldType.TEXT);
       delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
@@ -237,14 +237,14 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
             .type(FieldType.URL)
             .build());
     apiCallLog.setTitle("Fetching metric data for " + metricPath);
-    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
+    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     Call<List<AppdynamicsMetricData>> tierBTMetricRequest =
         getAppdynamicsRestClient(appDynamicsConfig)
             .getMetricData(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId, metricPath,
                 durantionInMinutes);
 
     final Response<List<AppdynamicsMetricData>> tierBTMResponse = tierBTMetricRequest.execute();
-    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
+    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     if (tierBTMResponse.isSuccessful()) {
       apiCallLog.addFieldToResponse(tierBTMResponse.code(), tierBTMResponse.body(), FieldType.JSON);
       delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
@@ -298,13 +298,13 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
                                      .type(FieldType.URL)
                                      .build());
     apiCallLog.setTitle("Fetching metric names from " + appDynamicsConfig.getControllerUrl());
-    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
+    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     Call<List<AppdynamicsMetric>> request =
         getAppdynamicsRestClient(appDynamicsConfig)
             .listMetrices(
                 getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), applicationId, childMetricPath);
     final Response<List<AppdynamicsMetric>> response = request.execute();
-    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
+    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     if (response.isSuccessful()) {
       apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
       delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
@@ -354,13 +354,13 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
                                      .type(FieldType.URL)
                                      .build());
     apiCallLog.setTitle("Fetching external calls metric names from " + appDynamicsConfig.getControllerUrl());
-    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
+    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     Call<List<AppdynamicsMetric>> request =
         getAppdynamicsRestClient(appDynamicsConfig)
             .listMetrices(
                 getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), applicationId, childMetricPath);
     final Response<List<AppdynamicsMetric>> response = request.execute();
-    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
+    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     if (response.isSuccessful()) {
       apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
       delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);

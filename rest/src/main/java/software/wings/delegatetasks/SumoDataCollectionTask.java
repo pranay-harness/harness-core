@@ -164,7 +164,7 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
                                                .value(Long.toString(endTime))
                                                .type(FieldType.TIMESTAMP)
                                                .build());
-              apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
+              apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
               logger.info("triggering sumo query startTime: " + collectionStartTime + " endTime: " + endTime
                   + " query: " + searchQuery + " url: " + dataCollectionInfo.getSumoConfig().getSumoUrl());
               String searchJobId = sumoClient.createSearchJob(
@@ -186,7 +186,7 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
                     "Waiting on search job ID: " + searchJobId + " status: " + getSearchJobStatusResponse.getState());
               }
 
-              apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
+              apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
               apiCallLog.addFieldToResponse(HttpStatus.SC_OK, getSearchJobStatusResponse, FieldType.JSON);
               // If the last search job status indicated
               // that the search job was "CANCELLED", we
