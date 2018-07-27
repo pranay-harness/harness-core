@@ -256,7 +256,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
                                        .build());
       apiCallLog.addFieldToRequest(
           ThirdPartyApiCallField.builder().name("Query").value(searchQuery).type(FieldType.TEXT).build());
-      apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
+      apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
       logger.info("triggering splunk query startTime: " + collectionStartTime + " endTime: " + endTime
           + " query: " + searchQuery + " url: " + dataCollectionInfo.getSplunkConfig().getSplunkUrl());
       Job job = splunkService.getJobs().create(searchQuery, jobargs);
@@ -267,7 +267,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
       resultsArgs.setOutputMode(JobResultsArgs.OutputMode.JSON);
 
       InputStream results = job.getResults(resultsArgs);
-      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
+      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
       apiCallLog.addFieldToResponse(200, "splunk query done. Num of events: " + job.getEventCount(), FieldType.TEXT);
       delegateLogService.save(getAccountId(), apiCallLog);
       ResultsReaderJson resultsReader = new ResultsReaderJson(results);

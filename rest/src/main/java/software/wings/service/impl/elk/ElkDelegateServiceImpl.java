@@ -88,7 +88,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
     }
 
     apiCallLog.setTitle("Fetching logs from " + elkConfig.getElkUrl());
-    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
+    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     apiCallLog.setRequest(Lists.newArrayList(ThirdPartyApiCallField.builder()
                                                  .name("connector")
                                                  .value(elkConfig.getElkConnector().getName())
@@ -107,7 +107,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
         : getElkRestClient(elkConfig, encryptedDataDetails)
               .search(logFetchRequest.getIndices(), logFetchRequest.toElasticSearchJsonObject());
     final Response<Object> response = request.execute();
-    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
+    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     if (response.isSuccessful()) {
       apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
       delegateLogService.save(elkConfig.getAccountId(), apiCallLog);
@@ -126,7 +126,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
       apiCallLog = apiCallLogWithDummyStateExecution(elkConfig.getAccountId());
     }
     apiCallLog.setTitle("Fetching indices from " + elkConfig.getElkUrl());
-    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
+    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     apiCallLog.setRequest(Lists.newArrayList(ThirdPartyApiCallField.builder()
                                                  .name("connector")
                                                  .value(elkConfig.getElkConnector().getName())
@@ -142,7 +142,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
         : getElkRestClient(elkConfig, encryptedDataDetails).template();
     final Response<Map<String, Map<String, Object>>> response = request.execute();
 
-    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
+    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     if (!response.isSuccessful()) {
       apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
       delegateLogService.save(elkConfig.getAccountId(), apiCallLog);

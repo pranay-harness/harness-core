@@ -54,12 +54,12 @@ public class PrometheusDelegateServiceImpl implements PrometheusDelegateService 
       PrometheusConfig prometheusConfig, String url, ThirdPartyApiCallLog apiCallLog) throws IOException {
     Preconditions.checkNotNull(apiCallLog);
     apiCallLog.setTitle("Fetching metric data from " + prometheusConfig.getUrl());
-    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toEpochSecond());
+    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     apiCallLog.addFieldToRequest(
         ThirdPartyApiCallField.builder().name(URL_STRING).value(url).type(FieldType.URL).build());
     final Call<PrometheusMetricDataResponse> request = getRestClient(prometheusConfig).fetchMetricData(url);
     final Response<PrometheusMetricDataResponse> response = request.execute();
-    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toEpochSecond());
+    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     if (response.isSuccessful()) {
       apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
       delegateLogService.save(prometheusConfig.getAccountId(), apiCallLog);
