@@ -49,6 +49,7 @@ import software.wings.delegatetasks.validation.APMValidation;
 import software.wings.delegatetasks.validation.AlwaysTrueValidation;
 import software.wings.delegatetasks.validation.AppdynamicsValidation;
 import software.wings.delegatetasks.validation.ArtifactoryValidation;
+import software.wings.delegatetasks.validation.AwsConnectionValidation;
 import software.wings.delegatetasks.validation.BambooValidation;
 import software.wings.delegatetasks.validation.CollaborationProviderTaskValidation;
 import software.wings.delegatetasks.validation.CommandValidation;
@@ -218,16 +219,16 @@ public enum TaskType {
       TaskGroup.CONTAINER, KubernetesSwapServiceSelectorsTask.class, KubernetesSwapServiceSelectorsValidation.class),
   ECS_STEADY_STATE_CHECK_TASK(TaskGroup.CONTAINER, EcsSteadyStateCheckTask.class, AlwaysTrueValidation.class),
   SECRET_DECRYPT_REF(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerDecryptValidation.class),
-  AWS_ECR_TASK(TaskGroup.AWS, AwsEcrTask.class, AlwaysTrueValidation.class),
-  AWS_ELB_TASK(TaskGroup.AWS, AwsElbTask.class, AlwaysTrueValidation.class),
-  AWS_ECS_TASK(TaskGroup.AWS, AwsEcsTask.class, AlwaysTrueValidation.class),
-  AWS_IAM_TASK(TaskGroup.AWS, AwsIamTask.class, AlwaysTrueValidation.class),
-  AWS_EC2_TASK(TaskGroup.AWS, AwsEc2Task.class, AlwaysTrueValidation.class),
-  AWS_ASG_TASK(TaskGroup.AWS, AwsAsgTask.class, AlwaysTrueValidation.class),
-  AWS_CODE_DEPLOY_TASK(TaskGroup.AWS, AwsCodeDeployTask.class, AlwaysTrueValidation.class),
-  AWS_LAMBDA_TASK(TaskGroup.AWS, AwsLambdaTask.class, AlwaysTrueValidation.class),
-  AWS_LAMBDA_ASYNC_TASK(TaskGroup.AWS, AwsLambdaAsyncTask.class, AlwaysTrueValidation.class),
-  AWS_AMI_ASYNC_TASK(TaskGroup.AWS, AwsAmiAsyncTask.class, AlwaysTrueValidation.class);
+  AWS_ECR_TASK(TaskGroup.AWS, AwsEcrTask.class, AwsConnectionValidation.class),
+  AWS_ELB_TASK(TaskGroup.AWS, AwsElbTask.class, AwsConnectionValidation.class),
+  AWS_ECS_TASK(TaskGroup.AWS, AwsEcsTask.class, AwsConnectionValidation.class),
+  AWS_IAM_TASK(TaskGroup.AWS, AwsIamTask.class, AwsConnectionValidation.class),
+  AWS_EC2_TASK(TaskGroup.AWS, AwsEc2Task.class, AwsConnectionValidation.class),
+  AWS_ASG_TASK(TaskGroup.AWS, AwsAsgTask.class, AwsConnectionValidation.class),
+  AWS_CODE_DEPLOY_TASK(TaskGroup.AWS, AwsCodeDeployTask.class, AwsConnectionValidation.class),
+  AWS_LAMBDA_TASK(TaskGroup.AWS, AwsLambdaTask.class, AwsConnectionValidation.class),
+  AWS_LAMBDA_ASYNC_TASK(TaskGroup.AWS, AwsLambdaAsyncTask.class, AwsConnectionValidation.class),
+  AWS_AMI_ASYNC_TASK(TaskGroup.AWS, AwsAmiAsyncTask.class, AwsConnectionValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;
