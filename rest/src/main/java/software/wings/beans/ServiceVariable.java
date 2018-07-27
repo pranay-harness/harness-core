@@ -1,7 +1,11 @@
 package software.wings.beans;
 
+import static io.harness.data.validator.EntityNameValidator.ALLOWED_CHARS_SERVICE_VARIABLE_MESSAGE;
+import static io.harness.data.validator.EntityNameValidator.ALLOWED_CHARS_SERVICE_VARIABLE_STRING;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.data.validator.EntityName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -66,6 +70,8 @@ public class ServiceVariable extends Base implements Encryptable {
 
   @SchemaIgnore private String accountId;
 
+  @NotEmpty(groups = {Create.class})
+  @EntityName(charSetString = ALLOWED_CHARS_SERVICE_VARIABLE_STRING, message = ALLOWED_CHARS_SERVICE_VARIABLE_MESSAGE)
   private String name;
 
   @Encrypted private char[] value;

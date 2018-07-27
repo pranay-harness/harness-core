@@ -1,5 +1,8 @@
 package software.wings.resources;
 
+import static software.wings.beans.Base.GLOBAL_ENV_ID;
+import static software.wings.beans.EntityType.ENVIRONMENT;
+import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.common.Constants.SECRET_MASK;
 
@@ -15,6 +18,7 @@ import software.wings.dl.PageResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 
 import javax.ws.rs.BeanParam;
@@ -39,6 +43,7 @@ import javax.ws.rs.QueryParam;
 public class ServiceVariableResource {
   @Inject private ServiceVariableService serviceVariablesService;
   @Inject private AppService appService;
+  @Inject private ServiceTemplateService serviceTemplateService;
 
   /**
    * List rest response.
@@ -66,6 +71,13 @@ public class ServiceVariableResource {
   public RestResponse<ServiceVariable> save(@QueryParam("appId") String appId, ServiceVariable serviceVariable) {
     serviceVariable.setAppId(appId);
     serviceVariable.setAccountId(appService.get(appId).getAccountId());
+
+    // TODO:: revisit. for environment envId can be specific
+    String envId =
+        serviceVariable.getEntityType().equals(SERVICE) || serviceVariable.getEntityType().equals(ENVIRONMENT)
+        ? GLOBAL_ENV_ID
+        : serviceTemplateService.get(serviceVariable.getAppId(), serviceVariable.getTemplateId()).getEnvId();
+    serviceVariable.setEnvId(envId);
     ServiceVariable savedServiceVariable = serviceVariablesService.save(serviceVariable);
     if (savedServiceVariable.getType().equals(ENCRYPTED_TEXT)) {
       serviceVariable.setValue(SECRET_MASK.toCharArray());

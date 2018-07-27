@@ -140,10 +140,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldSave() {
-    when(serviceTemplateService.get(APP_ID, TEMPLATE_ID))
-        .thenReturn(aServiceTemplate().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(TEMPLATE_ID).build());
     serviceVariableService.save(SERVICE_VARIABLE);
-    verify(serviceTemplateService).get(APP_ID, TEMPLATE_ID);
     verify(wingsPersistence).saveAndGet(ServiceVariable.class, SERVICE_VARIABLE);
   }
 
@@ -154,6 +151,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
   public void shouldThrowExceptionForUnsupportedEntityTypes() {
     ServiceVariable serviceVariable = ServiceVariable.builder()
                                           .envId(ENV_ID)
+                                          .name(SERVICE_VARIABLE_NAME)
                                           .entityType(EntityType.APPLICATION)
                                           .entityId(TEMPLATE_ID)
                                           .templateId(TEMPLATE_ID)
