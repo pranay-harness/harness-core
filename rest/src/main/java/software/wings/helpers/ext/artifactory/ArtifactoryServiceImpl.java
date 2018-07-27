@@ -834,7 +834,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     ListNotifyResponseData res = new ListNotifyResponseData();
     Artifactory artifactory = getArtifactoryClient(artifactoryConfig, encryptionDetails);
     Set<String> artifactNames = new HashSet<>();
-    String artifactPath = metadata.get(ARTIFACT_PATH).split("/")[1];
+    String artifactPath = metadata.get(ARTIFACT_PATH).replaceFirst(repoKey, "").substring(1);
     String artifactName = metadata.get(ARTIFACT_FILE_NAME);
 
     try {
@@ -847,6 +847,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
             new ImmutablePair<>(artifactName, inputStream), artifactPath, res, delegateId, taskId, accountId);
       }
     } catch (Exception e) {
+      logger.error("Failed to download the artifact of repository {} from path {}", repoKey, artifactPath, e);
       String msg =
           "Failed to download the latest artifacts  of repository [" + repoKey + "] file path [" + artifactPath;
       throw new WingsException(ARTIFACT_SERVER_ERROR, ADMIN)
