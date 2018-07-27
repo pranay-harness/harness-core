@@ -12,7 +12,6 @@ import com.google.inject.Inject;
 
 import io.harness.rule.RepeatRule.Repeat;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -83,7 +82,6 @@ public class AppdynamicsTest extends WingsBaseTest {
   }
 
   @Test
-  @Ignore
   @Repeat(times = 5, successes = 1)
   public void validateConfig() {
     ((AppDynamicsConfig) settingAttribute.getValue())
@@ -92,7 +90,6 @@ public class AppdynamicsTest extends WingsBaseTest {
   }
 
   @Test
-  @Ignore
   @Repeat(times = 5, successes = 1)
   public void getAllApplications() throws IOException {
     List<NewRelicApplication> applications = appdynamicsService.getApplications(settingAttribute.getUuid());
@@ -100,7 +97,6 @@ public class AppdynamicsTest extends WingsBaseTest {
   }
 
   @Test
-  @Ignore
   @Repeat(times = 5, successes = 1)
   public void getTiers() throws IOException {
     List<NewRelicApplication> applications = appdynamicsService.getApplications(settingAttribute.getUuid());
