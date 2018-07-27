@@ -84,6 +84,17 @@ public class SecretManagementResource {
   }
 
   @GET
+  @Path("/list-values-page")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<PageResponse<UuidAware>> listEncryptedValues(@QueryParam("accountId") final String accountId,
+      @QueryParam("type") final SettingVariableTypes type, @BeanParam PageRequest<EncryptedData> pageRequest) {
+    pageRequest.addFilter("type", Operator.EQ, type);
+    pageRequest.addFilter("accountId", Operator.EQ, accountId);
+    return new RestResponse<>(secretManager.listEncryptedValues(accountId, pageRequest));
+  }
+
+  @GET
   @Path("/list-configs")
   @Timed
   @ExceptionMetered

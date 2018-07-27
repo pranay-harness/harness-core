@@ -52,6 +52,8 @@ public interface SecretManager {
 
   Collection<UuidAware> listEncryptedValues(String accountId);
 
+  PageResponse<UuidAware> listEncryptedValues(String accountId, PageRequest<EncryptedData> pageRequest);
+
   String getEncryptedYamlRef(Encryptable object, String... fieldName) throws IllegalAccessException;
 
   EncryptedData getEncryptedDataFromYamlRef(String encryptedYamlRef) throws IllegalAccessException;

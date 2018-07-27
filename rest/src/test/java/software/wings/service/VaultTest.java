@@ -25,7 +25,6 @@ import com.google.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -868,7 +867,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
-  @Ignore
+  @RealMongo
   public void vaultEncryptionSaveServiceVariable() throws IOException, IllegalAccessException {
     VaultConfig vaultConfig = getVaultConfig();
     vaultService.saveVaultConfig(accountId, vaultConfig);
@@ -930,7 +929,6 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
-  @Ignore
   public void vaultEncryptionSaveServiceVariableTemplate() throws IOException {
     VaultConfig vaultConfig = getVaultConfig();
     vaultService.saveVaultConfig(accountId, vaultConfig);
