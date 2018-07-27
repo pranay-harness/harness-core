@@ -14,7 +14,8 @@ public class SecretManager {
     SSO_REDIRECT(60 * 1000), // 1 min
     PASSWORD_SECRET(4 * 60 * 60 * 1000), // 4 hrs
     ZENDESK_SECRET(4 * 60 * 60 * 1000), // 4 hrs
-    EXTERNAL_SERVICE_SECRET(60 * 60 * 1000); // 1hr
+    EXTERNAL_SERVICE_SECRET(60 * 60 * 1000), // 1hr
+    AUTH_SECRET(24 * 60 * 60 * 1000); // 24 hr
 
     private int validityDuration;
 
@@ -39,6 +40,8 @@ public class SecretManager {
         return configuration.getPortal().getJwtExternalServiceSecret();
       case SSO_REDIRECT:
         return configuration.getPortal().getJwtSsoRedirectSecret();
+      case AUTH_SECRET:
+        return configuration.getPortal().getJwtAuthSecret();
       default:
         return configuration.getPortal().getJwtMultiAuthSecret();
     }

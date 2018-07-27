@@ -3,6 +3,8 @@ package software.wings.service;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.fail;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -19,18 +21,26 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import com.google.inject.Inject;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTVerifier;
+import com.auth0.jwt.algorithms.Algorithm;
 import org.apache.commons.codec.binary.Hex;
+import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
+import org.mockito.Matchers;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.app.MainConfiguration;
+import software.wings.app.PortalConfig;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.AuthToken;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.User;
@@ -43,9 +53,12 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.TokenGenerator;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.utils.CacheHelper;
 
+import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import javax.cache.Cache;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
@@ -57,13 +70,16 @@ public class AuthServiceTest extends WingsBaseTest {
   private final String VALID_TOKEN = "VALID_TOKEN";
   private final String INVALID_TOKEN = "INVALID_TOKEN";
   private final String EXPIRED_TOKEN = "EXPIRED_TOKEN";
+  private final String AUTH_SECRET = "AUTH_SECRET";
 
   @Mock private GenericDbCache cache;
   @Mock private static CacheHelper cacheHelper;
   @Mock private Cache<String, User> userCache;
 
   @Mock private AccountService accountService;
-
+  @Mock FeatureFlagService featureFlagService;
+  @Mock PortalConfig portalConfig;
+  @Inject @InjectMocks MainConfiguration mainConfiguration;
   @Inject @InjectMocks private AuthService authService;
   private Builder userBuilder =
       anUser().withAppId(APP_ID).withEmail(USER_EMAIL).withName(USER_NAME).withPassword(PASSWORD);
@@ -89,6 +105,7 @@ public class AuthServiceTest extends WingsBaseTest {
         .thenReturn(anAccount().withUuid(ACCOUNT_ID).withAccountKey(accountKey).build());
     when(cache.get(Account.class, ACCOUNT_ID))
         .thenReturn(anAccount().withUuid(ACCOUNT_ID).withAccountKey(accountKey).build());
+    when(portalConfig.getJwtAuthSecret()).thenReturn(AUTH_SECRET);
   }
 
   /**
@@ -226,5 +243,86 @@ public class AuthServiceTest extends WingsBaseTest {
     byte[] encoded = secretKey.getEncoded();
     TokenGenerator tokenGenerator = new TokenGenerator(ACCOUNT_ID, Hex.encodeHexString(encoded));
     return tokenGenerator.getToken("https", "localhost", 9090, "hostname");
+  }
+
+  @Test
+  public void testGenerateBearerTokenWithJWTToken() throws UnsupportedEncodingException {
+    when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(true);
+    Account mockAccount = Account.Builder.anAccount().withAccountKey("TestAccount").build();
+    User mockUser = Builder.anUser().withUuid(USER_ID).withAccounts(Arrays.asList(mockAccount)).build();
+    when(userCache.get(USER_ID)).thenReturn(mockUser);
+    User user = authService.generateBearerTokenForUser(mockUser);
+    assertThat(user.getToken().length()).isGreaterThan(32);
+
+    Algorithm algorithm = Algorithm.HMAC256(AUTH_SECRET);
+    JWTVerifier verifier = JWT.require(algorithm).withIssuer("Harness Inc").build();
+    String authTokenId = JWT.decode(user.getToken()).getClaim("authToken").asString();
+
+    String tokenString = user.getToken();
+    AuthToken authToken = new AuthToken(USER_ID, 8640000L);
+    authToken.setJwtToken(user.getToken());
+    when(cache.get(Matchers.any(), Matchers.matches(authTokenId))).thenReturn(authToken);
+    assertThat(authService.validateToken(tokenString)).isEqualTo(authToken);
+
+    try {
+      authService.validateToken(tokenString + "FakeToken");
+      fail("WingsException should have been thrown");
+    } catch (WingsException e) {
+      Assertions.assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_CREDENTIAL.name());
+    }
+  }
+
+  @Test
+  public void testGenerateBearerTokenWithoutJWTToken() {
+    when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(false);
+    Account mockAccount = Account.Builder.anAccount().withAccountKey("TestAccount").build();
+    User mockUser = Builder.anUser().withUuid(USER_ID).withAccounts(Arrays.asList(mockAccount)).build();
+    when(userCache.get(USER_ID)).thenReturn(mockUser);
+    User user = authService.generateBearerTokenForUser(mockUser);
+    AuthToken authToken = new AuthToken(USER_ID, 8640000L);
+    when(cache.get(Matchers.any(), Matchers.matches(user.getToken()))).thenReturn(authToken);
+    assertThat(user.getToken().length()).isEqualTo(32);
+    authService.validateToken(user.getToken());
+  }
+
+  @Test
+  public void testRefreshTokenWithFeatureFlagEnabled() throws UnsupportedEncodingException {
+    when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(true);
+    Account mockAccount = Account.Builder.anAccount().withAccountKey("TestAccount").build();
+    User mockUser = Builder.anUser().withUuid(USER_ID).withAccounts(Arrays.asList(mockAccount)).build();
+    when(userCache.get(USER_ID)).thenReturn(mockUser);
+    User user = authService.generateBearerTokenForUser(mockUser);
+    assertThat(user.getToken().length()).isGreaterThan(32);
+    Algorithm algorithm = Algorithm.HMAC256(AUTH_SECRET);
+    JWTVerifier verifier = JWT.require(algorithm).withIssuer("Harness Inc").build();
+    String authTokenId = JWT.decode(user.getToken()).getClaim("authToken").asString();
+    String tokenString = user.getToken();
+    AuthToken authToken = new AuthToken(USER_ID, 8640000L);
+    authToken.setJwtToken(user.getToken());
+    when(cache.get(Matchers.any(), Matchers.matches(authTokenId))).thenReturn(authToken);
+    user = authService.refreshToken(user.getToken());
+    assertThat(user.getToken().length()).isGreaterThan(32);
+    authTokenId = JWT.decode(user.getToken()).getClaim("authToken").asString();
+    verifier.verify(user.getToken());
+  }
+
+  @Test
+  public void testRefreshTokenWithFeatureFlagDisabled() {
+    when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(false);
+    Account mockAccount = Account.Builder.anAccount().withAccountKey("TestAccount").build();
+    User mockUser = Builder.anUser().withUuid(USER_ID).withAccounts(Arrays.asList(mockAccount)).build();
+    when(userCache.get(USER_ID)).thenReturn(mockUser);
+    User user = authService.generateBearerTokenForUser(mockUser);
+    String token = user.getToken();
+    assertThat(token.length()).isEqualTo(32);
+    /**
+     * Simulating the old token
+     */
+    AuthToken authToken = new AuthToken(USER_ID, 8640000L);
+    authToken.setUuid(token);
+    when(cache.get(Matchers.any(), Matchers.matches(token))).thenReturn(authToken);
+    user = authService.refreshToken(token);
+
+    assertThat(user.getToken()).isEqualTo(token);
   }
 }

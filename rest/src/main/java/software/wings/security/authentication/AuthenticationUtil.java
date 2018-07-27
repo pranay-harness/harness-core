@@ -8,7 +8,6 @@ import com.google.inject.Singleton;
 import org.apache.http.client.utils.URIBuilder;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
-import software.wings.beans.AuthToken;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
@@ -19,21 +18,12 @@ import software.wings.service.intfc.UserService;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
-import javax.validation.constraints.NotNull;
 
 @Singleton
 public class AuthenticationUtil {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private UserService userService;
   @Inject private MainConfiguration configuration;
-
-  public User generateBearerTokenForUser(@NotNull User user) {
-    AuthToken authToken = new AuthToken(user.getUuid(), configuration.getPortal().getAuthTokenExpiryInMillis());
-    userService.evictUserFromCache(user.getUuid());
-    wingsPersistence.save(authToken);
-    user.setToken(authToken.getUuid());
-    return user;
-  }
 
   public User getUser(String userName) {
     return getUser(userName, null);

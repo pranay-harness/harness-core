@@ -1171,7 +1171,6 @@ public class UserServiceImpl implements UserService {
     }
   }
 
-  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   @Override
   public User verifyJWTToken(String jwtToken, SecretManager.JWT_CATEGORY category) {
     String jwtPasswordSecret = secretManager.getJWTSecret(category);
@@ -1182,10 +1181,8 @@ public class UserServiceImpl implements UserService {
     try {
       Algorithm algorithm = Algorithm.HMAC256(jwtPasswordSecret);
       JWTVerifier verifier = JWT.require(algorithm).withIssuer("Harness Inc").build();
-      DecodedJWT jwt = verifier.verify(jwtToken);
-      JWT decode = JWT.decode(jwtToken);
-      String claimEmail = decode.getClaim("email").asString();
-      return getUserByEmail(claimEmail);
+      verifier.verify(jwtToken);
+      return getUserByEmail(JWT.decode(jwtToken).getClaim("email").asString());
     } catch (UnsupportedEncodingException | JWTCreationException exception) {
       throw new WingsException(UNKNOWN_ERROR, exception).addParam("message", "JWTToken validation failed");
     } catch (JWTDecodeException | SignatureVerificationException e) {

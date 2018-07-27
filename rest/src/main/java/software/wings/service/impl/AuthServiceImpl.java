@@ -10,7 +10,10 @@ import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.ErrorCode.ACCESS_DENIED;
 import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
 import static software.wings.beans.ErrorCode.EXPIRED_TOKEN;
+import static software.wings.beans.ErrorCode.INVALID_CREDENTIAL;
 import static software.wings.beans.ErrorCode.INVALID_TOKEN;
+import static software.wings.beans.ErrorCode.TOKEN_ALREADY_REFRESHED_ONCE;
+import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
 import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
 import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.exception.WingsException.USER;
@@ -24,7 +27,11 @@ import com.google.inject.Singleton;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.InvalidClaimException;
+import com.auth0.jwt.exceptions.JWTCreationException;
+import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.exceptions.SignatureVerificationException;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWEDecrypter;
 import com.nimbusds.jose.KeyLengthException;
@@ -61,6 +68,8 @@ import software.wings.security.GenericEntityFilter.FilterType;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
+import software.wings.security.SecretManager;
+import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserRequestInfo;
@@ -76,8 +85,10 @@ import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.CacheHelper;
 
+import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -106,13 +117,15 @@ public class AuthServiceImpl implements AuthService {
   private FeatureFlagService featureFlagService;
   private AuthHandler authHandler;
   private HarnessUserGroupService harnessUserGroupService;
+  private SecretManager secretManager;
 
   @Inject
   public AuthServiceImpl(GenericDbCache dbCache, WingsPersistence wingsPersistence, UserService userService,
       UserGroupService userGroupService, UsageRestrictionsService usageRestrictionsService,
       WorkflowService workflowService, EnvironmentService environmentService, CacheHelper cacheHelper,
       MainConfiguration configuration, LearningEngineService learningEngineService, AuthHandler authHandler,
-      FeatureFlagService featureFlagService, HarnessUserGroupService harnessUserGroupService) {
+      FeatureFlagService featureFlagService, HarnessUserGroupService harnessUserGroupService,
+      SecretManager secretManager) {
     this.dbCache = dbCache;
     this.wingsPersistence = wingsPersistence;
     this.userService = userService;
@@ -126,18 +139,35 @@ public class AuthServiceImpl implements AuthService {
     this.authHandler = authHandler;
     this.featureFlagService = featureFlagService;
     this.harnessUserGroupService = harnessUserGroupService;
+    this.secretManager = secretManager;
   }
 
   @Override
   public AuthToken validateToken(String tokenString) {
-    AuthToken authToken = dbCache.get(AuthToken.class, tokenString);
+    if (tokenString.length() <= 32) {
+      AuthToken authToken = dbCache.get(AuthToken.class, tokenString);
 
+      if (authToken == null) {
+        throw new WingsException(INVALID_TOKEN, USER);
+      } else if (authToken.getExpireAt() <= System.currentTimeMillis()) {
+        throw new WingsException(EXPIRED_TOKEN, USER);
+      }
+      return getAuthTokenWithUser(authToken);
+    } else {
+      return getAuthTokenWithUser(verifyToken(tokenString));
+    }
+  }
+
+  private AuthToken verifyToken(String tokenString) {
+    AuthToken authToken = verifyJWTToken(tokenString);
     if (authToken == null) {
       throw new WingsException(INVALID_TOKEN, USER);
-    } else if (authToken.getExpireAt() <= System.currentTimeMillis()) {
-      throw new WingsException(EXPIRED_TOKEN, USER);
     }
-    User user = getUserFromCacheOrDB(authToken);
+    return authToken;
+  }
+
+  private AuthToken getAuthTokenWithUser(AuthToken authToken) {
+    User user = getUserFromCacheOrDB(authToken.getUserId());
     if (user == null) {
       throw new WingsException(USER_DOES_NOT_EXIST);
     }
@@ -146,23 +176,23 @@ public class AuthServiceImpl implements AuthService {
     return authToken;
   }
 
-  private User getUserFromCacheOrDB(AuthToken authToken) {
+  private User getUserFromCacheOrDB(String userId) {
     Cache<String, User> userCache = cacheHelper.getUserCache();
     if (userCache == null) {
       logger.warn("userCache is null. Fetch from DB");
-      return userService.get(authToken.getUserId());
+      return userService.get(userId);
     } else {
       User user;
       try {
-        user = userCache.get(authToken.getUserId());
+        user = userCache.get(userId);
         if (user == null) {
-          user = userService.get(authToken.getUserId());
+          user = userService.get(userId);
           userCache.put(user.getUuid(), user);
         }
       } catch (Exception ex) {
         // If there was any exception, remove that entry from cache
-        userCache.remove(authToken.getUserId());
-        user = userService.get(authToken.getUserId());
+        userCache.remove(userId);
+        user = userService.get(userId);
         userCache.put(user.getUuid(), user);
       }
       return user;
@@ -697,5 +727,88 @@ public class AuthServiceImpl implements AuthService {
     }
 
     return entityIds.contains(entityId);
+  }
+
+  private AuthToken verifyJWTToken(String token) {
+    String jwtPasswordSecret = secretManager.getJWTSecret(JWT_CATEGORY.AUTH_SECRET);
+    try {
+      Algorithm algorithm = Algorithm.HMAC256(jwtPasswordSecret);
+      JWTVerifier verifier = JWT.require(algorithm).withIssuer("Harness Inc").build();
+      verifier.verify(token);
+      String authToken = JWT.decode(token).getClaim("authToken").asString();
+      return dbCache.get(AuthToken.class, authToken);
+    } catch (UnsupportedEncodingException | JWTCreationException exception) {
+      throw new WingsException(UNKNOWN_ERROR, exception).addParam("message", "JWTToken validation failed");
+    } catch (JWTDecodeException | SignatureVerificationException | InvalidClaimException e) {
+      throw new WingsException(INVALID_CREDENTIAL, e)
+          .addParam("message", "Invalid JWTToken received, failed to decode the token");
+    }
+  }
+
+  @Override
+  public User refreshToken(String oldToken) {
+    if (oldToken.length() <= 32) {
+      AuthToken authToken = dbCache.get(AuthToken.class, oldToken);
+      if (authToken == null) {
+        throw new WingsException(EXPIRED_TOKEN, USER);
+      }
+
+      User user = getUserFromAuthToken(authToken);
+      user.setToken(authToken.getUuid());
+      return user;
+    }
+
+    AuthToken authToken = verifyToken(oldToken);
+    if (authToken.isRefreshed()) {
+      throw new WingsException(TOKEN_ALREADY_REFRESHED_ONCE, USER);
+    }
+    User user = getUserFromAuthToken(authToken);
+    authToken.setRefreshed(true);
+    wingsPersistence.save(authToken);
+    return generateBearerTokenForUser(user);
+  }
+
+  private User getUserFromAuthToken(AuthToken authToken) {
+    User user = getUserFromCacheOrDB(authToken.getUserId());
+    if (user == null) {
+      logger.warn("No user found for userId:" + authToken.getUserId());
+      throw new WingsException(USER_DOES_NOT_EXIST, USER);
+    }
+    return user;
+  }
+
+  @Override
+  public User generateBearerTokenForUser(User user) {
+    AuthToken authToken = new AuthToken(user.getUuid(), configuration.getPortal().getAuthTokenExpiryInMillis());
+    authToken.setJwtToken(generateJWTSecret(authToken.getUuid()));
+    wingsPersistence.save(authToken);
+    userService.evictUserFromCache(user.getUuid());
+    if (isRefreshTokenEnabledForUser(user)) {
+      user.setToken(authToken.getJwtToken());
+    } else {
+      user.setToken(authToken.getUuid());
+    }
+    return user;
+  }
+
+  protected boolean isRefreshTokenEnabledForUser(User user) {
+    return user.getAccounts().stream().anyMatch(
+        account -> featureFlagService.isEnabled(FeatureName.REFRESH_TOKEN, account.getUuid()));
+  }
+
+  private String generateJWTSecret(String authToken) {
+    String jwtAuthSecret = secretManager.getJWTSecret(JWT_CATEGORY.AUTH_SECRET);
+    int duration = JWT_CATEGORY.AUTH_SECRET.getValidityDuration();
+    try {
+      Algorithm algorithm = Algorithm.HMAC256(jwtAuthSecret);
+      return JWT.create()
+          .withIssuer("Harness Inc")
+          .withIssuedAt(new Date())
+          .withExpiresAt(new Date(System.currentTimeMillis() + duration))
+          .withClaim("authToken", authToken)
+          .sign(algorithm);
+    } catch (UnsupportedEncodingException | JWTCreationException exception) {
+      throw new WingsException(UNKNOWN_ERROR, exception).addParam("message", "JWTToken could not be generated");
+    }
   }
 }

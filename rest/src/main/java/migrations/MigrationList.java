@@ -9,6 +9,7 @@ import migrations.all.AddValidUntilToAlert;
 import migrations.all.AddValidUntilToDelegateConnectionResults;
 import migrations.all.AddValidUntilToDelegateTask;
 import migrations.all.AppKeywordsMigration;
+import migrations.all.AuthTokenTtlMigration;
 import migrations.all.DeleteOldThirdPartyApiCallsMigration;
 import migrations.all.DeleteStaleYamlChangeSetsMigration;
 import migrations.all.DirectKubernetesOrphanRemoval;
@@ -101,6 +102,7 @@ public class MigrationList {
         .add(Pair.of(175, DeleteOldThirdPartyApiCallsMigration.class))
         .add(Pair.of(176, UnregisteredUserNameMigration.class))
         .add(Pair.of(177, DeleteStaleYamlChangeSetsMigration.class))
+        .add(Pair.of(178, AuthTokenTtlMigration.class))
         .build();
   }
 }

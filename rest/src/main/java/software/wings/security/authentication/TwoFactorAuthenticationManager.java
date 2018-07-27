@@ -14,6 +14,7 @@ import software.wings.beans.User;
 import software.wings.exception.WingsException;
 import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserService;
 
 import java.util.Base64;
@@ -25,7 +26,7 @@ public class TwoFactorAuthenticationManager {
   @Inject private TOTPAuthHandler totpHandler;
   @Inject private UserService userService;
   @Inject private AccountService accountService;
-  @Inject private AuthenticationUtil authenticationUtil;
+  @Inject private AuthService authService;
 
   public TwoFactorAuthHandler getTwoFactorAuthHandler(TwoFactorAuthenticationMechanism mechanism) {
     switch (mechanism) {
@@ -49,7 +50,7 @@ public class TwoFactorAuthenticationManager {
     }
 
     user = getTwoFactorAuthHandler(user.getTwoFactorAuthenticationMechanism()).authenticate(user, passcode);
-    return authenticationUtil.generateBearerTokenForUser(user);
+    return authService.generateBearerTokenForUser(user);
   }
 
   public TwoFactorAuthenticationSettings createTwoFactorAuthenticationSettings(

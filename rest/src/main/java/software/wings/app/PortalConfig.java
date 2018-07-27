@@ -29,6 +29,7 @@ public class PortalConfig {
   private String jwtZendeskSecret;
   private String jwtMultiAuthSecret;
   private String jwtSsoRedirectSecret;
+  private String jwtAuthSecret;
   private Long authTokenExpiryInMillis = 24 * 60 * 60 * 1000L;
 
   /**
