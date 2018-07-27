@@ -830,7 +830,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     Ingress ingress;
     if (useIngress) {
       ingress = kubernetesContainerService.createOrReplaceIngress(kubernetesConfig, encryptedDataDetails,
-          createIngressDefinition(ingressYaml, ingressName, labels, executionLogCallback));
+          createIngressDefinition(
+              ingressYaml, ingressName, kubernetesConfig.getNamespace(), labels, executionLogCallback));
     } else {
       try {
         ingress = kubernetesContainerService.getIngress(kubernetesConfig, encryptedDataDetails, ingressName);
@@ -1010,8 +1011,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     return null;
   }
 
-  private Ingress createIngressDefinition(
-      String ingressYaml, String ingressName, Map<String, String> labels, ExecutionLogCallback executionLogCallback) {
+  private Ingress createIngressDefinition(String ingressYaml, String ingressName, String namespace,
+      Map<String, String> labels, ExecutionLogCallback executionLogCallback) {
     try {
       Ingress ingress = KubernetesHelper.loadYaml(ingressYaml);
       if (ingress == null) {
@@ -1019,6 +1020,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             .addParam("args", "Couldn't parse Ingress YAML: " + ingressYaml);
       }
       ingress.getMetadata().setName(ingressName);
+      ingress.getMetadata().setNamespace(namespace);
       ingress.getMetadata().setAnnotations(mergeMaps(ingress.getMetadata().getAnnotations(), harnessAnnotations));
       ingress.getMetadata().setLabels(mergeMaps(ingress.getMetadata().getLabels(), labels));
       executionLogCallback.saveExecutionLog("Setting ingress:\n\n" + toDisplayYaml(ingress));
