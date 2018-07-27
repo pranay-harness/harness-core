@@ -266,7 +266,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
                           .withWaitId(waitId)
                           .withParameters(new Object[] {dataCollectionInfo})
                           .withEnvId(envId)
-                          .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 5))
+                          .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))
                           .build());
     return waitId;
   }
