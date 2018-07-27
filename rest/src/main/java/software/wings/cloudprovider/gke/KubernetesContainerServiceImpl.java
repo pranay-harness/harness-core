@@ -437,7 +437,9 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     String controllerNamePrefix = getPrefixFromControllerName(containerServiceName, useDashInHostname);
     listControllers(kubernetesConfig, encryptedDataDetails)
         .stream()
-        .filter(ctrl -> ctrl.getMetadata().getName().startsWith(controllerNamePrefix))
+        .filter(ctrl
+            -> controllerNamePrefix.equals(
+                getPrefixFromControllerName(ctrl.getMetadata().getName(), useDashInHostname)))
         .filter(ctrl -> !(ctrl.getKind().equals("ReplicaSet") && ctrl.getMetadata().getOwnerReferences() != null))
         .filter(ctrl -> getControllerPodCount(ctrl) > 0)
         .sorted(comparingInt(
