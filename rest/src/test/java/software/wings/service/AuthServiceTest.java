@@ -300,10 +300,19 @@ public class AuthServiceTest extends WingsBaseTest {
     AuthToken authToken = new AuthToken(USER_ID, 8640000L);
     authToken.setJwtToken(user.getToken());
     when(cache.get(Matchers.any(), Matchers.matches(authTokenId))).thenReturn(authToken);
-    user = authService.refreshToken(user.getToken());
+    final String oldToken = user.getToken();
+    user = authService.refreshToken(oldToken);
     assertThat(user.getToken().length()).isGreaterThan(32);
     authTokenId = JWT.decode(user.getToken()).getClaim("authToken").asString();
     verifier.verify(user.getToken());
+
+    try {
+      user = authService.refreshToken(oldToken);
+      fail("TOKEN_ALREADY_REFRESHED_ONCE should be thrown ");
+    } catch (Exception e) {
+      Assertions.assertThat(e).isInstanceOf(WingsException.class);
+      Assertions.assertThat((WingsException) e).hasMessage(ErrorCode.TOKEN_ALREADY_REFRESHED_ONCE.name());
+    }
   }
 
   @Test
