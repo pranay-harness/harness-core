@@ -43,6 +43,7 @@ public class ContainerServiceElement implements ContextElement {
   private KubernetesYamlConfig previousYamlConfig;
   private List<String[]> activeServiceCounts;
   private List<String[]> trafficWeights;
+  private String controllerNamePrefix;
 
   @Override
   public ContextElementType getElementType() {

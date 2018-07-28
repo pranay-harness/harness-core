@@ -40,6 +40,8 @@ import static software.wings.beans.PhaseStepType.STOP_SERVICE;
 import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
 import static software.wings.beans.PhaseStepType.WRAP_UP;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
+import static software.wings.common.Constants.PRIMARY_SERVICE_NAME_EXPRESSION;
+import static software.wings.common.Constants.STAGE_SERVICE_NAME_EXPRESSION;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 import static software.wings.sm.StateType.ARTIFACT_CHECK;
@@ -579,8 +581,8 @@ public class WorkflowServiceHelper {
                                    .build());
 
     Map<String, Object> defaultRouteUpdateProperties = new HashMap<>();
-    defaultRouteUpdateProperties.put("service1", "${app.name}-${service.name}-${env.name}-primary");
-    defaultRouteUpdateProperties.put("service2", "${app.name}-${service.name}-${env.name}-stage");
+    defaultRouteUpdateProperties.put("service1", PRIMARY_SERVICE_NAME_EXPRESSION);
+    defaultRouteUpdateProperties.put("service2", STAGE_SERVICE_NAME_EXPRESSION);
     workflowPhase.addPhaseStep(aPhaseStep(ROUTE_UPDATE, Constants.ROUTE_UPDATE)
                                    .addStep(aGraphNode()
                                                 .withId(generateUuid())
@@ -981,6 +983,10 @@ public class WorkflowServiceHelper {
       throw new InvalidRequestException("DaemonSet and StatefulSet are not supported with Blue/Green Deployment", USER);
     }
 
+    Map<String, Object> defaultRouteUpdateProperties = new HashMap<>();
+    defaultRouteUpdateProperties.put("service1", PRIMARY_SERVICE_NAME_EXPRESSION);
+    defaultRouteUpdateProperties.put("service2", STAGE_SERVICE_NAME_EXPRESSION);
+
     WorkflowPhaseBuilder workflowPhaseBuilder =
         aWorkflowPhase()
             .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
@@ -992,10 +998,12 @@ public class WorkflowServiceHelper {
             .withDeploymentType(workflowPhase.getDeploymentType())
             .withInfraMappingId(workflowPhase.getInfraMappingId())
             .addPhaseStep(aPhaseStep(ROUTE_UPDATE, Constants.ROUTE_UPDATE)
+                              .withPhaseStepNameForRollback(Constants.ROUTE_UPDATE)
                               .addStep(aGraphNode()
                                            .withId(generateUuid())
                                            .withType(KUBERNETES_SWAP_SERVICE_SELECTORS.name())
                                            .withName(Constants.KUBERNETES_SWAP_SERVICES_PRIMARY_STAGE)
+                                           .withProperties(defaultRouteUpdateProperties)
                                            .build())
                               .withRollback(true)
                               .build())

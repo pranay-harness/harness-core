@@ -5,6 +5,8 @@ import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static software.wings.common.Constants.PRIMARY_SERVICE_NAME_EXPRESSION;
+import static software.wings.common.Constants.STAGE_SERVICE_NAME_EXPRESSION;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.collect.Maps;
@@ -13,8 +15,10 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.Attributes;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.ContainerServiceElement;
 import software.wings.api.InstanceElement;
 import software.wings.api.KubernetesSwapServiceSelectorsExecutionData;
 import software.wings.api.PhaseElement;
@@ -46,7 +50,6 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.stencils.DefaultValue;
 import software.wings.utils.KubernetesConvention;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
@@ -66,17 +69,9 @@ public class KubernetesSwapServiceSelectors extends State {
   @Inject private transient ActivityService activityService;
   @Inject private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
 
-  @Getter
-  @Setter
-  @Attributes(title = "Service One")
-  @DefaultValue("${app.name}-${service.name}-${env.name}-primary")
-  private String service1;
+  @Getter @Setter @Attributes(title = "Service One") private String service1;
 
-  @Getter
-  @Setter
-  @Attributes(title = "Service Two")
-  @DefaultValue("${app.name}-${service.name}-${env.name}-stage")
-  private String service2;
+  @Getter @Setter @Attributes(title = "Service Two") private String service2;
 
   public static final String KUBERNETES_SWAP_SERVICE_SELECTORS_COMMAND_NAME = "Kubernetes Swap Service Selectors";
 
@@ -88,6 +83,8 @@ public class KubernetesSwapServiceSelectors extends State {
   public ExecutionResponse execute(ExecutionContext context) {
     try {
       return executeInternal(context);
+    } catch (InvalidRequestException e) {
+      throw e;
     } catch (Exception e) {
       throw new InvalidRequestException(Misc.getMessage(e), e);
     }
@@ -166,7 +163,34 @@ public class KubernetesSwapServiceSelectors extends State {
     return activityService.save(activity);
   }
 
+  private static String getRenderedServiceName(
+      ExecutionContext context, String baseServiceName, String serviceNameExpression) {
+    if (StringUtils.equals(PRIMARY_SERVICE_NAME_EXPRESSION, serviceNameExpression)) {
+      if (StringUtils.isEmpty(baseServiceName)) {
+        throw new InvalidRequestException(
+            "Service Name cannot to inferred from context. You have to specify a valid service Name instead of expression: "
+            + serviceNameExpression);
+      }
+      return KubernetesConvention.getPrimaryServiceName(KubernetesConvention.getKubernetesServiceName(baseServiceName));
+    }
+
+    if (StringUtils.equals(STAGE_SERVICE_NAME_EXPRESSION, serviceNameExpression)) {
+      if (StringUtils.isEmpty(baseServiceName)) {
+        throw new InvalidRequestException(
+            "Service Name cannot to inferred from context. You have to specify a valid service Name instead of expression: "
+            + serviceNameExpression);
+      }
+      return KubernetesConvention.getStageServiceName(KubernetesConvention.getKubernetesServiceName(baseServiceName));
+    }
+
+    return KubernetesConvention.getKubernetesServiceName(context.renderExpression(serviceNameExpression));
+  }
+
   private ExecutionResponse executeInternal(ExecutionContext context) {
+    if (StringUtils.isEmpty(service1) || StringUtils.isEmpty(service2)) {
+      throw new InvalidRequestException("Service Name cannot be empty");
+    }
+
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Application app = appService.get(context.getAppId());
@@ -175,8 +199,17 @@ public class KubernetesSwapServiceSelectors extends State {
         (ContainerInfrastructureMapping) infrastructureMappingService.get(
             app.getUuid(), phaseElement.getInfraMappingId());
 
-    String renderedService1 = KubernetesConvention.getKubernetesServiceName(context.renderExpression(service1));
-    String renderedService2 = KubernetesConvention.getKubernetesServiceName(context.renderExpression(service2));
+    ContainerServiceElement containerElement =
+        context.<ContainerServiceElement>getContextElementList(ContextElementType.CONTAINER_SERVICE)
+            .stream()
+            .filter(cse -> phaseElement.getDeploymentType().equals(cse.getDeploymentType().name()))
+            .filter(cse -> phaseElement.getInfraMappingId().equals(cse.getInfraMappingId()))
+            .findFirst()
+            .orElse(ContainerServiceElement.builder().build());
+
+    String baseServiceName = containerElement.getControllerNamePrefix();
+    String renderedService1 = getRenderedServiceName(context, baseServiceName, service1);
+    String renderedService2 = getRenderedServiceName(context, baseServiceName, service2);
 
     Activity activity = createActivity(context);
     KubernetesSwapServiceSelectorsParams kubernetesSwapServiceSelectorsParams =
