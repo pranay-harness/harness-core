@@ -261,6 +261,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
             .namespace(setupParams.getNamespace())
             .deploymentType(DeploymentType.KUBERNETES)
             .infraMappingId(setupParams.getInfraMappingId())
+            .controllerNamePrefix(setupParams.getControllerNamePrefix())
             .useIstioRouteRule(useIstioRouteRule);
     if (executionResult != null) {
       ContainerSetupCommandUnitExecutionData setupExecutionData =

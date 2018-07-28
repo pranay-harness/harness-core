@@ -831,6 +831,7 @@ public interface Constants {
   String ROUTE_UPDATE = "Route Update";
   String KUBERNETES_SWAP_SERVICES_PRIMARY_STAGE = "Swap Primary with Stage";
   String VERIFY_STAGE_SERVICE = "Verify Stage Service";
+  String ROUTE_UPDATE_ROLLBACK_REQUEST_PARAM = "ROUTE_UPDATE_ROLLBACK_REQUEST_PARAM";
 
   // Expression Builder Constants
   String ARTIFACT_SOURCE_USER_NAME_KEY = "username";
@@ -861,4 +862,7 @@ public interface Constants {
   String STATUS_CODE = "Status Code";
   String PAYLOAD = "Payload";
   String RESPONSE_BODY = "Response Body";
+
+  String PRIMARY_SERVICE_NAME_EXPRESSION = "${PRIMARY_SERVICE_NAME}";
+  String STAGE_SERVICE_NAME_EXPRESSION = "${STAGE_SERVICE_NAME}";
 }

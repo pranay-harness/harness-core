@@ -36,6 +36,7 @@ import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseStepExecutionData;
+import software.wings.api.RouteUpdateRollbackElement;
 import software.wings.api.ScriptStateExecutionSummary;
 import software.wings.api.ServiceInstanceArtifactParam;
 import software.wings.api.ServiceInstanceIdsParam;
@@ -241,6 +242,9 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
                                  .controllerNamePrefix(commandStepExecutionSummary.getControllerNamePrefix())
                                  .previousYamlConfig(commandStepExecutionSummary.getPreviousYamlConfig())
                                  .build());
+      }
+      case ROUTE_UPDATE: {
+        return singletonList(RouteUpdateRollbackElement.builder().build());
       }
       case HELM_DEPLOY: {
         Optional<StepExecutionSummary> first = phaseStepExecutionSummary.getStepExecutionSummaryList()
