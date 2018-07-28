@@ -12,6 +12,8 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateLogService;
+import software.wings.service.impl.aws.model.AwsAmiRequest;
+import software.wings.service.impl.aws.model.AwsAmiServiceDeployRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupRequest;
 import software.wings.service.intfc.aws.delegate.AwsAmiHelperServiceDelegate;
 
@@ -31,8 +33,11 @@ public class AwsAmiAsyncTaskTest extends WingsBaseTest {
 
   @Test
   public void testRun() {
-    AwsAmiServiceSetupRequest request = AwsAmiServiceSetupRequest.builder().build();
+    AwsAmiRequest request = AwsAmiServiceSetupRequest.builder().build();
     task.run(new Object[] {request});
     verify(mockAwsAmiHelperServiceDelegate).setUpAmiService(any(), any());
+    request = AwsAmiServiceDeployRequest.builder().build();
+    task.run(new Object[] {request});
+    verify(mockAwsAmiHelperServiceDelegate).deployAmiService(any(), any());
   }
 }

@@ -8,11 +8,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static software.wings.service.impl.aws.delegate.AwsAmiHelperServiceDelegateImpl.HARNESS_AUTOSCALING_GROUP_TAG;
 import static software.wings.service.impl.aws.delegate.AwsAmiHelperServiceDelegateImpl.NAME_TAG;
 
@@ -42,6 +45,26 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
   @Mock private AwsAsgHelperServiceDelegate mockAwsAsgHelperServiceDelegate;
 
   @InjectMocks private AwsAmiHelperServiceDelegateImpl awsAmiHelperServiceDelegate;
+
+  @Test
+  public void testResizeAsgs() {
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    doNothing()
+        .when(mockAwsAsgHelperServiceDelegate)
+        .setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
+            any(), anyList(), anyString(), anyString(), anyInt(), any(), anyInt());
+    try {
+      invokeMethod(awsAmiHelperServiceDelegate, true, "resizeAsgs",
+          new Object[] {"us-east-1", AwsConfig.builder().build(), emptyList(), "newName", 1, "oldName", 2, mockCallback,
+              true, 10});
+    } catch (Exception ex) {
+      fail(format("Exception: [%s]", ex.getMessage()));
+    }
+    verify(mockAwsAsgHelperServiceDelegate, times(2))
+        .setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
+            any(), anyList(), anyString(), anyString(), anyInt(), any(), anyInt());
+  }
 
   @Test
   public void testCreateNewAutoScalingGroupRequest() {

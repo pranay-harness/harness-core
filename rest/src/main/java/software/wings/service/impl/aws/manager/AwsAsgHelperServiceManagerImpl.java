@@ -17,6 +17,8 @@ import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.aws.model.AwsAsgListAllNamesRequest;
 import software.wings.service.impl.aws.model.AwsAsgListAllNamesResponse;
+import software.wings.service.impl.aws.model.AwsAsgListDesiredCapacitiesRequest;
+import software.wings.service.impl.aws.model.AwsAsgListDesiredCapacitiesResponse;
 import software.wings.service.impl.aws.model.AwsAsgListInstancesRequest;
 import software.wings.service.impl.aws.model.AwsAsgListInstancesResponse;
 import software.wings.service.impl.aws.model.AwsAsgRequest;
@@ -27,6 +29,7 @@ import software.wings.waitnotify.ErrorNotifyResponseData;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
@@ -58,6 +61,19 @@ public class AwsAsgHelperServiceManagerImpl implements AwsAsgHelperServiceManage
             .autoScalingGroupName(autoScalingGroupName)
             .build());
     return ((AwsAsgListInstancesResponse) response).getInstances();
+  }
+
+  @Override
+  public Map<String, Integer> getDesiredCapacitiesOfAsgs(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, List<String> asgs) {
+    AwsResponse response = executeTask(awsConfig.getAccountId(),
+        AwsAsgListDesiredCapacitiesRequest.builder()
+            .awsConfig(awsConfig)
+            .encryptionDetails(encryptionDetails)
+            .region(region)
+            .asgs(asgs)
+            .build());
+    return ((AwsAsgListDesiredCapacitiesResponse) response).getCapacities();
   }
 
   private AwsResponse executeTask(String accountId, AwsAsgRequest request) {

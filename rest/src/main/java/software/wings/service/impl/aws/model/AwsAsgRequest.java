@@ -11,7 +11,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class AwsAsgRequest extends AwsRequest {
-  public enum AwsAsgRequestType { LIST_ALL_ASG_NAMES, LIST_ASG_INSTANCES }
+  public enum AwsAsgRequestType { LIST_ALL_ASG_NAMES, LIST_ASG_INSTANCES, LIST_DESIRED_CAPACITIES }
 
   @NotNull private AwsAsgRequestType requestType;
   @NotNull private String region;

@@ -8,14 +8,18 @@ import com.amazonaws.services.autoscaling.model.CreateLaunchConfigurationResult;
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import com.amazonaws.services.ec2.model.Instance;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.command.LogCallback;
 import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
+import java.util.Map;
 
 public interface AwsAsgHelperServiceDelegate {
   List<String> listAutoScalingGroupNames(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region);
+  List<String> listAutoScalingGroupInstanceIds(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName);
   List<Instance> listAutoScalingGroupInstances(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName);
   AutoScalingGroup getAutoScalingGroup(
@@ -32,4 +36,9 @@ public interface AwsAsgHelperServiceDelegate {
       String region, CreateAutoScalingGroupRequest createAutoScalingGroupRequest, LogCallback logCallback);
   void deleteAutoScalingGroups(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       List<AutoScalingGroup> autoScalingGroups, LogCallback callback);
+  Map<String, Integer> getDesiredCapacitiesOfAsgs(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, List<String> asgs);
+  void setAutoScalingGroupCapacityAndWaitForInstancesReadyState(AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName, Integer desiredCapacity,
+      ExecutionLogCallback logCallback, Integer autoScalingSteadyStateTimeout);
 }

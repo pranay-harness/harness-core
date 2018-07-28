@@ -497,3 +497,7 @@ software.wings.service.impl.aws.model.AwsAmiRequest, 5457
 software.wings.service.impl.aws.model.AwsAmiRequest$AwsAmiRequestType, 5458
 software.wings.service.impl.aws.model.AwsAmiServiceSetupRequest, 5459
 software.wings.service.impl.aws.model.AwsAmiServiceSetupResponse, 5460
+software.wings.service.impl.aws.model.AwsAmiServiceDeployRequest, 5461
+software.wings.service.impl.aws.model.AwsAmiServiceDeployResponse, 5462
+software.wings.service.impl.aws.model.AwsAsgListDesiredCapacitiesRequest, 5463
+software.wings.service.impl.aws.model.AwsAsgListDesiredCapacitiesResponse, 5464
