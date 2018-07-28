@@ -8,6 +8,7 @@ import static software.wings.api.ServiceArtifactElement.ServiceArtifactElementBu
 import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.common.Constants.ENV_STATE_TIMEOUT_MILLIS;
+import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.SKIPPED;
@@ -19,6 +20,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.api.EnvStateExecutionData;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.ExecutionArgs;
@@ -34,6 +37,8 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionInterrupt;
+import software.wings.sm.ExecutionInterruptType;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
@@ -55,6 +60,8 @@ import java.util.Map;
  */
 @Attributes(title = "Env")
 public class EnvState extends State {
+  private static final Logger logger = LoggerFactory.getLogger(EnvState.class);
+
   @Expand(dataProvider = EnvironmentServiceImpl.class)
   @EnumData(enumDataProvider = EnvironmentServiceImpl.class)
   @Attributes(required = true, title = "Environment")
@@ -176,6 +183,19 @@ public class EnvState extends State {
     }
     context.getStateExecutionData().setErrorMsg(
         "Workflow not completed within " + Misc.getDurationString(getTimeoutMillis()));
+    try {
+      EnvStateExecutionData envStateExecutionData = (EnvStateExecutionData) context.getStateExecutionData();
+      if (envStateExecutionData != null && envStateExecutionData.getWorkflowExecutionId() != null) {
+        ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
+                                                    .withExecutionInterruptType(ExecutionInterruptType.ABORT_ALL)
+                                                    .withExecutionUuid(envStateExecutionData.getWorkflowExecutionId())
+                                                    .withAppId(context.getAppId())
+                                                    .build();
+        executionService.triggerExecutionInterrupt(executionInterrupt);
+      }
+    } catch (Exception e) {
+      logger.error("Could not abort workflows.", e);
+    }
   }
 
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {

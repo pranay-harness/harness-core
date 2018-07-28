@@ -430,7 +430,7 @@ public interface Constants {
   /**
    * The constant for Default Env State timeout
    */
-  Integer ENV_STATE_TIMEOUT_MILLIS = 4 * 60 * 60 * 1000; // 4 hours
+  Integer ENV_STATE_TIMEOUT_MILLIS = 12 * 60 * 60 * 1000; // 12 hours
 
   /**
    * The constant RUNTIME.
