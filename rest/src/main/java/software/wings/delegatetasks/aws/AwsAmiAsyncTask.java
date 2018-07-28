@@ -13,6 +13,7 @@ import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.aws.model.AwsAmiRequest;
 import software.wings.service.impl.aws.model.AwsAmiRequest.AwsAmiRequestType;
+import software.wings.service.impl.aws.model.AwsAmiServiceDeployRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupResponse;
 import software.wings.service.impl.aws.model.AwsResponse;
@@ -43,6 +44,12 @@ public class AwsAmiAsyncTask extends AbstractDelegateRunnableTask {
               awsAmiServiceSetupRequest.getAccountId(), awsAmiServiceSetupRequest.getAppId(),
               awsAmiServiceSetupRequest.getActivityId(), awsAmiServiceSetupRequest.getCommandName());
           return awsAmiHelperServiceDelegate.setUpAmiService(awsAmiServiceSetupRequest, logCallback);
+        }
+        case EXECUTE_AMI_SERVICE_DEPLOY: {
+          AwsAmiServiceDeployRequest deployRequest = (AwsAmiServiceDeployRequest) request;
+          ExecutionLogCallback logCallback = new ExecutionLogCallback(delegateLogService, deployRequest.getAccountId(),
+              deployRequest.getAppId(), deployRequest.getActivityId(), deployRequest.getCommandName());
+          return awsAmiHelperServiceDelegate.deployAmiService(deployRequest, logCallback);
         }
         default: {
           throw new InvalidRequestException("Invalid request type [" + requestType + "]", WingsException.USER);

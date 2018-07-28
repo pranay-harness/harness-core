@@ -3,6 +3,7 @@ package software.wings.service.impl.aws.delegate;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
@@ -13,6 +14,7 @@ import static software.wings.utils.Misc.getMessage;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -22,6 +24,7 @@ import com.amazonaws.services.autoscaling.model.CreateLaunchConfigurationRequest
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import com.amazonaws.services.autoscaling.model.Tag;
 import com.amazonaws.services.autoscaling.model.TagDescription;
+import com.amazonaws.services.ec2.model.Instance;
 import io.fabric8.utils.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +32,8 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.exception.InvalidRequestException;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.aws.model.AwsAmiServiceDeployRequest;
+import software.wings.service.impl.aws.model.AwsAmiServiceDeployResponse;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupResponse;
 import software.wings.service.intfc.aws.delegate.AwsAmiHelperServiceDelegate;
@@ -38,6 +43,7 @@ import software.wings.utils.AsgConvention;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
 @Singleton
@@ -50,6 +56,75 @@ public class AwsAmiHelperServiceDelegateImpl
   private static final int MAX_OLD_ASG_VERSION_TO_KEEP = 3;
   @Inject private ExecutorService executorService;
   @Inject private AwsAsgHelperServiceDelegate awsAsgHelperServiceDelegate;
+
+  @Override
+  public AwsAmiServiceDeployResponse deployAmiService(
+      AwsAmiServiceDeployRequest request, ExecutionLogCallback logCallback) {
+    try {
+      AwsConfig awsConfig = request.getAwsConfig();
+      List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      logCallback.saveExecutionLog("Starting AWS AMI Deploy", INFO);
+
+      logCallback.saveExecutionLog("Getting existing instance Ids");
+      Set<String> existingInstanceIds = Sets.newHashSet(awsAsgHelperServiceDelegate.listAutoScalingGroupInstanceIds(
+          awsConfig, encryptionDetails, request.getRegion(), request.getNewAutoScalingGroupName()));
+
+      logCallback.saveExecutionLog("Resizing Asgs", INFO);
+      resizeAsgs(request.getRegion(), awsConfig, encryptionDetails, request.getNewAutoScalingGroupName(),
+          request.getNewAsgFinalDesiredCount(), request.getOldAutoScalingGroupName(),
+          request.getOldAsgFinalDesiredCount(), logCallback, request.isResizeNewFirst(),
+          request.getAutoScalingSteadyStateTimeout());
+
+      List<Instance> allInstancesOfNewAsg = awsAsgHelperServiceDelegate.listAutoScalingGroupInstances(
+          awsConfig, encryptionDetails, request.getRegion(), request.getNewAutoScalingGroupName());
+      List<Instance> instancesAdded = allInstancesOfNewAsg.stream()
+                                          .filter(instance -> !existingInstanceIds.contains(instance.getInstanceId()))
+                                          .collect(toList());
+      return AwsAmiServiceDeployResponse.builder().instancesAdded(instancesAdded).executionStatus(SUCCESS).build();
+    } catch (Exception ex) {
+      logCallback.saveExecutionLog(format("Exception: [%s].", ex.getMessage()), ERROR);
+      logger.error(ex.getMessage(), ex);
+      return AwsAmiServiceDeployResponse.builder().errorMessage(getMessage(ex)).executionStatus(FAILED).build();
+    }
+  }
+
+  private void resizeAsgs(String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String newAutoScalingGroupName, Integer newAsgFinalDesiredCount, String oldAutoScalingGroupName,
+      Integer oldAsgFinalDesiredCount, ExecutionLogCallback executionLogCallback, boolean resizeNewFirst,
+      Integer autoScalingSteadyStateTimeout) {
+    if (isBlank(newAutoScalingGroupName) && isBlank(oldAutoScalingGroupName)) {
+      throw new InvalidRequestException("At least one AutoScaling Group must be present");
+    }
+    if (resizeNewFirst) {
+      if (isNotBlank(newAutoScalingGroupName)) {
+        executionLogCallback.saveExecutionLog(format("Upscale AutoScaling Group [%s]", newAutoScalingGroupName));
+        awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig,
+            encryptionDetails, region, newAutoScalingGroupName, newAsgFinalDesiredCount, executionLogCallback,
+            autoScalingSteadyStateTimeout);
+      }
+      if (isNotBlank(oldAutoScalingGroupName)) {
+        executionLogCallback.saveExecutionLog(format("Downscale AutoScaling Group [%s]", oldAutoScalingGroupName));
+        awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig,
+            encryptionDetails, region, oldAutoScalingGroupName, oldAsgFinalDesiredCount, executionLogCallback,
+            autoScalingSteadyStateTimeout);
+      }
+    } else {
+      if (isNotBlank(oldAutoScalingGroupName)) {
+        executionLogCallback.saveExecutionLog(format("Downscale AutoScaling Group [%s]", oldAutoScalingGroupName));
+        awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig,
+            encryptionDetails, region, oldAutoScalingGroupName, oldAsgFinalDesiredCount, executionLogCallback,
+            autoScalingSteadyStateTimeout);
+      }
+
+      if (isNotBlank(newAutoScalingGroupName)) {
+        executionLogCallback.saveExecutionLog(format("Upscale AutoScaling Group [%s]", newAutoScalingGroupName));
+        awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig,
+            encryptionDetails, region, newAutoScalingGroupName, newAsgFinalDesiredCount, executionLogCallback,
+            autoScalingSteadyStateTimeout);
+      }
+    }
+  }
 
   @Override
   public AwsAmiServiceSetupResponse setUpAmiService(
@@ -118,6 +193,7 @@ public class AwsAmiHelperServiceDelegateImpl
           .build();
     } catch (Exception exception) {
       logCallback.saveExecutionLog(format("Exception: [%s].", exception.getMessage()), ERROR);
+      logger.error(exception.getMessage(), exception);
       return AwsAmiServiceSetupResponse.builder().errorMessage(getMessage(exception)).executionStatus(FAILED).build();
     }
   }

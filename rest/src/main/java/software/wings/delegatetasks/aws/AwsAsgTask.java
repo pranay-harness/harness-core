@@ -13,6 +13,8 @@ import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.aws.model.AwsAsgListAllNamesResponse;
+import software.wings.service.impl.aws.model.AwsAsgListDesiredCapacitiesRequest;
+import software.wings.service.impl.aws.model.AwsAsgListDesiredCapacitiesResponse;
 import software.wings.service.impl.aws.model.AwsAsgListInstancesRequest;
 import software.wings.service.impl.aws.model.AwsAsgListInstancesResponse;
 import software.wings.service.impl.aws.model.AwsAsgRequest;
@@ -22,6 +24,7 @@ import software.wings.service.intfc.aws.delegate.AwsAsgHelperServiceDelegate;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -50,6 +53,12 @@ public class AwsAsgTask extends AbstractDelegateRunnableTask {
               request.getAwsConfig(), request.getEncryptionDetails(), request.getRegion(),
               ((AwsAsgListInstancesRequest) request).getAutoScalingGroupName());
           return AwsAsgListInstancesResponse.builder().instances(aSgInstances).executionStatus(SUCCESS).build();
+        }
+        case LIST_DESIRED_CAPACITIES: {
+          Map<String, Integer> capacities = awsAsgHelperServiceDelegate.getDesiredCapacitiesOfAsgs(
+              request.getAwsConfig(), request.getEncryptionDetails(), request.getRegion(),
+              ((AwsAsgListDesiredCapacitiesRequest) request).getAsgs());
+          return AwsAsgListDesiredCapacitiesResponse.builder().capacities(capacities).executionStatus(SUCCESS).build();
         }
         default: {
           throw new InvalidRequestException("Invalid request type [" + requestType + "]", WingsException.USER);

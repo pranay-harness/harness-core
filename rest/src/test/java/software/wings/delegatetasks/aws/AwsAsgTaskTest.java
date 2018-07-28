@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.TaskType;
 import software.wings.service.impl.aws.model.AwsAsgListAllNamesRequest;
+import software.wings.service.impl.aws.model.AwsAsgListDesiredCapacitiesRequest;
 import software.wings.service.impl.aws.model.AwsAsgListInstancesRequest;
 import software.wings.service.impl.aws.model.AwsAsgRequest;
 import software.wings.service.intfc.aws.delegate.AwsAsgHelperServiceDelegate;
@@ -38,5 +39,8 @@ public class AwsAsgTaskTest extends WingsBaseTest {
     request = AwsAsgListInstancesRequest.builder().build();
     task.run(new Object[] {request});
     verify(mockAwsAsgHelperServiceDelegate).listAutoScalingGroupInstances(any(), anyList(), anyString(), anyString());
+    request = AwsAsgListDesiredCapacitiesRequest.builder().build();
+    task.run(new Object[] {request});
+    verify(mockAwsAsgHelperServiceDelegate).getDesiredCapacitiesOfAsgs(any(), anyList(), anyString(), anyList());
   }
 }

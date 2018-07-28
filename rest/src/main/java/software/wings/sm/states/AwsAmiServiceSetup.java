@@ -76,7 +76,6 @@ public class AwsAmiServiceSetup extends State {
   private int maxInstances;
   private ResizeStrategy resizeStrategy;
 
-  // @Inject @Transient private transient AwsHelperService awsHelperService;
   @Inject @Transient protected transient SettingsService settingsService;
   @Inject @Transient protected transient ServiceResourceService serviceResourceService;
   @Inject @Transient protected transient InfrastructureMappingService infrastructureMappingService;
