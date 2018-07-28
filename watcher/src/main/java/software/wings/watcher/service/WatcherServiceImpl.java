@@ -59,7 +59,6 @@ import io.harness.network.Http;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.io.filefilter.FileFilterUtils;
-import org.apache.commons.io.filefilter.IOFileFilter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHost;
 import org.slf4j.Logger;
@@ -99,6 +98,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 /**
@@ -136,6 +136,7 @@ public class WatcherServiceImpl implements WatcherService {
   private HttpHost httpProxyHost;
 
   private final boolean multiVersion = TRUE.toString().equals(System.getenv().get("MULTI_VERSION"));
+  private static final Pattern VERSION_PATTERN = Pattern.compile("^[1-9]\\.[0-9]\\.[0-9]*$");
 
   @SuppressFBWarnings({"UW_UNCOND_WAIT", "WA_NOT_IN_LOOP"})
   @Override
@@ -832,7 +833,7 @@ public class WatcherServiceImpl implements WatcherService {
 
   private void cleanupOldDelegateVersions(Set<String> keepVersions) {
     try {
-      cleanup(new File(System.getProperty("user.dir")), keepVersions, null);
+      cleanupVersionFolders(new File(System.getProperty("user.dir")), keepVersions);
       cleanup(new File(System.getProperty("user.dir")), keepVersions, "backup.");
     } catch (Exception ex) {
       logger.error("Failed to clean delegate version from Backup", ex);
@@ -848,14 +849,19 @@ public class WatcherServiceImpl implements WatcherService {
   }
 
   private void cleanup(File dir, Set<String> keepVersions, String pattern) {
-    IOFileFilter fileFilter = falseFileFilter();
-    IOFileFilter dirFilter = isNotBlank(pattern) ? FileFilterUtils.prefixFileFilter(pattern) : trueFileFilter();
-    FileUtils.listFilesAndDirs(dir, fileFilter, dirFilter).forEach(file -> {
-      String name = file.getName();
-      if (!dir.equals(file)
-          && keepVersions.stream().noneMatch(
-                 version -> isNotBlank(pattern) ? name.contains(version) : name.equals(version))) {
-        logger.info("[Old] File Name to be deleted = " + file.getAbsolutePath());
+    FileUtils.listFilesAndDirs(dir, falseFileFilter(), FileFilterUtils.prefixFileFilter(pattern)).forEach(file -> {
+      if (!dir.equals(file) && keepVersions.stream().noneMatch(version -> file.getName().contains(version))) {
+        logger.info("Deleting directory matching [^{}.*] = {}", pattern, file.getAbsolutePath());
+        FileUtils.deleteQuietly(file);
+      }
+    });
+  }
+
+  private void cleanupVersionFolders(File dir, Set<String> keepVersions) {
+    FileUtils.listFilesAndDirs(dir, falseFileFilter(), trueFileFilter()).forEach(file -> {
+      if (VERSION_PATTERN.matcher(file.getName()).matches()
+          && keepVersions.stream().noneMatch(version -> file.getName().equals(version))) {
+        logger.info("Deleting version folder matching [{}] = {}", VERSION_PATTERN.pattern(), file.getAbsolutePath());
         FileUtils.deleteQuietly(file);
       }
     });
