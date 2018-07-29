@@ -7,8 +7,10 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.RestResponse;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.PageRequest;
+import software.wings.dl.PageRequest.PageRequestBuilder;
 import software.wings.dl.PageResponse;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -188,5 +190,25 @@ public class UserGroupResource {
   public RestResponse<Boolean> delete(
       @QueryParam("accountId") String accountId, @PathParam("userGroupId") String userGroupId) {
     return new RestResponse<>(userGroupService.delete(accountId, userGroupId));
+  }
+
+  /**
+   * List for approvals
+   *
+   * @param accountId   the account id
+   * @return the rest response
+   */
+  @GET
+  @Path("approvals")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  public RestResponse<PageResponse<UserGroup>> listForApprovals(@QueryParam("accountId") @NotEmpty String accountId) {
+    PageRequest<UserGroup> pageRequest = PageRequestBuilder.aPageRequest()
+                                             .addFilter("accountId", Operator.EQ, accountId)
+                                             .addFieldsIncluded("_id", "name")
+                                             .build();
+    PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest, false);
+    return new RestResponse<>(pageResponse);
   }
 }
