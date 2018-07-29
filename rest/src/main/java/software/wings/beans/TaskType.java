@@ -7,7 +7,6 @@ import com.google.inject.Injector;
 import software.wings.delegatetasks.APMDataCollectionTask;
 import software.wings.delegatetasks.AppdynamicsDataCollectionTask;
 import software.wings.delegatetasks.BambooTask;
-import software.wings.delegatetasks.BuildSourceTask;
 import software.wings.delegatetasks.CloudWatchDataCollectionTask;
 import software.wings.delegatetasks.CollaborationProviderTask;
 import software.wings.delegatetasks.CommandTask;
@@ -52,7 +51,6 @@ import software.wings.delegatetasks.validation.AppdynamicsValidation;
 import software.wings.delegatetasks.validation.ArtifactoryValidation;
 import software.wings.delegatetasks.validation.AwsConnectionValidation;
 import software.wings.delegatetasks.validation.BambooValidation;
-import software.wings.delegatetasks.validation.BuildSourceTaskValidation;
 import software.wings.delegatetasks.validation.CollaborationProviderTaskValidation;
 import software.wings.delegatetasks.validation.CommandValidation;
 import software.wings.delegatetasks.validation.ContainerValidation;
@@ -230,8 +228,7 @@ public enum TaskType {
   AWS_CODE_DEPLOY_TASK(TaskGroup.AWS, AwsCodeDeployTask.class, AwsConnectionValidation.class),
   AWS_LAMBDA_TASK(TaskGroup.AWS, AwsLambdaTask.class, AwsConnectionValidation.class),
   AWS_LAMBDA_ASYNC_TASK(TaskGroup.AWS, AwsLambdaAsyncTask.class, AwsConnectionValidation.class),
-  AWS_AMI_ASYNC_TASK(TaskGroup.AWS, AwsAmiAsyncTask.class, AwsConnectionValidation.class),
-  BUILD_SOURCE_TASK(TaskGroup.BUILD_SOURCE, BuildSourceTask.class, BuildSourceTaskValidation.class);
+  AWS_AMI_ASYNC_TASK(TaskGroup.AWS, AwsAmiAsyncTask.class, AwsConnectionValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;

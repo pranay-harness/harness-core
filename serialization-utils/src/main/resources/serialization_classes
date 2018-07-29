@@ -501,7 +501,3 @@ software.wings.service.impl.aws.model.AwsAmiServiceDeployRequest, 5461
 software.wings.service.impl.aws.model.AwsAmiServiceDeployResponse, 5462
 software.wings.service.impl.aws.model.AwsAsgListDesiredCapacitiesRequest, 5463
 software.wings.service.impl.aws.model.AwsAsgListDesiredCapacitiesResponse, 5464
-software.wings.delegatetasks.buildsource.BuildSourceRequest, 5465
-software.wings.delegatetasks.buildsource.BuildSourceResponse, 5466
-software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse, 5467
-software.wings.delegatetasks.buildsource.BuildSourceRequest$BuildSourceRequestType, 5468

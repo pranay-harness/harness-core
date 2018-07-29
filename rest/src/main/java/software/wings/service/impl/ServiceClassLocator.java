@@ -6,7 +6,6 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AmazonS3BuildService;
 import software.wings.service.intfc.AmiBuildService;
-import software.wings.service.intfc.ArtifactoryBuildService;
 import software.wings.service.intfc.BambooBuildService;
 import software.wings.service.intfc.BuildService;
 import software.wings.service.intfc.DockerBuildService;
@@ -36,7 +35,6 @@ public class ServiceClassLocator {
       case AMAZON_S3:
         return AmazonS3BuildService.class;
       case ARTIFACTORY:
-        return ArtifactoryBuildService.class;
       case BAMBOO:
         return BambooBuildService.class;
       case DOCKER:
@@ -53,8 +51,6 @@ public class ServiceClassLocator {
         return NexusBuildService.class;
       case AMI:
         return AmiBuildService.class;
-      case ACR:
-        return AcrBuildServiceImpl.class;
       default:
         throw new WingsException("Unsupported artifact stream type: " + artifactStreamType);
     }
