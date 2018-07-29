@@ -103,13 +103,14 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       }
     }
 
-    long startTimeTs;
+    Long startTimeTs;
 
     continuousVerificationExecutionMetaData =
         validatePermissionsAndGetAllowedExecutionList(user, accountId, continuousVerificationExecutionMetaData);
     for (ContinuousVerificationExecutionMetaData executionMetaData : continuousVerificationExecutionMetaData) {
-      if (executionMetaData.getPipelineId() != null) {
-        startTimeTs = pipelineTimeStampMap.get(executionMetaData.getPipelineExecutionId());
+      String pipeLineId = executionMetaData.getPipelineId();
+      if (pipeLineId != null && pipelineTimeStampMap.containsKey(pipeLineId)) {
+        startTimeTs = pipelineTimeStampMap.get(pipeLineId);
       } else {
         startTimeTs = executionMetaData.getWorkflowStartTs();
       }
