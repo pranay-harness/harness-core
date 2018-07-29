@@ -39,5 +39,6 @@ public enum TaskGroup {
   APM,
   CLOUD_FORMATION,
   TERRAFORM,
-  AWS
+  AWS,
+  BUILD_SOURCE
 }

@@ -97,7 +97,6 @@ import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -1002,15 +1001,16 @@ public class TriggerServiceTest extends WingsBaseTest {
 
     triggerService.save(webhookConditionTrigger);
 
-    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(buildJenkinsArtifactStream());
+    JenkinsArtifactStream jenkinsArtifactStream = buildJenkinsArtifactStream();
+    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
     when(artifactService.fetchLatestArtifactForArtifactStream(APP_ID, ARTIFACT_STREAM_ID, ARTIFACT_SOURCE_NAME))
         .thenReturn(artifact);
 
     triggerService.triggerExecutionByWebHook(
         APP_ID, webhookConditionTrigger.getWebHookToken(), ImmutableMap.of("Catalog", "123"), new HashMap<>());
 
-    when(artifactCollectionService.collectNewArtifacts(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(Arrays.asList(artifact));
-    verify(artifactCollectionService).collectNewArtifacts(APP_ID, ARTIFACT_STREAM_ID);
+    when(artifactCollectionService.collectNewArtifacts(APP_ID, jenkinsArtifactStream, "123")).thenReturn(artifact);
+    verify(artifactCollectionService).collectNewArtifacts(APP_ID, jenkinsArtifactStream, "123");
     verify(artifactService).fetchLastCollectedArtifact(APP_ID, ARTIFACT_STREAM_ID, ARTIFACT_SOURCE_NAME);
   }
 
@@ -1049,7 +1049,7 @@ public class TriggerServiceTest extends WingsBaseTest {
         APP_ID, webhookConditionTrigger.getWebHookToken(), ImmutableMap.of("Catalog", "123"), new HashMap<>());
 
     verify(workflowExecutionService).triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class));
-    verify(artifactStreamService, times(7)).get(APP_ID, ARTIFACT_STREAM_ID);
+    verify(artifactStreamService, times(6)).get(APP_ID, ARTIFACT_STREAM_ID);
     verify(artifactService)
         .getArtifactByBuildNumber(
             APP_ID, ARTIFACT_STREAM_ID, buildJenkinsArtifactStream().getSourceName(), ARTIFACT_FILTER, false);
@@ -1113,13 +1113,13 @@ public class TriggerServiceTest extends WingsBaseTest {
         APP_ID, webhookConditionTrigger.getWebHookToken(), ImmutableMap.of("Catalog", "123"), new HashMap<>());
 
     verify(workflowExecutionService).triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class));
-    verify(artifactStreamService, times(7)).get(APP_ID, ARTIFACT_STREAM_ID);
+    verify(artifactStreamService, times(6)).get(APP_ID, ARTIFACT_STREAM_ID);
     verify(artifactService)
         .getArtifactByBuildNumber(
             APP_ID, ARTIFACT_STREAM_ID, buildJenkinsArtifactStream().getSourceName(), ARTIFACT_FILTER, false);
 
     verify(workflowExecutionService).obtainLastGoodDeployedArtifacts(APP_ID, PIPELINE_ID);
-    verify(artifactService, times(2))
+    verify(artifactService, times(1))
         .getArtifactByBuildNumber(APP_ID, ARTIFACT_STREAM_ID, ARTIFACT_SOURCE_NAME, "123", false);
   }
 
@@ -1171,12 +1171,12 @@ public class TriggerServiceTest extends WingsBaseTest {
         APP_ID, workflowWebhookConditionTrigger.getWebHookToken(), ImmutableMap.of("Catalog", "123"), new HashMap<>());
 
     verify(workflowExecutionService).triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class));
-    verify(artifactStreamService, times(5)).get(APP_ID, ARTIFACT_STREAM_ID);
+    verify(artifactStreamService, times(4)).get(APP_ID, ARTIFACT_STREAM_ID);
     verify(artifactService)
         .getArtifactByBuildNumber(APP_ID, ARTIFACT_STREAM_ID, artifactStream.getSourceName(), ARTIFACT_FILTER, false);
 
     verify(workflowExecutionService).obtainLastGoodDeployedArtifacts(APP_ID, WORKFLOW_ID);
-    verify(artifactService, times(2))
+    verify(artifactService, times(1))
         .getArtifactByBuildNumber(APP_ID, ARTIFACT_STREAM_ID, ARTIFACT_SOURCE_NAME, "123", false);
     verify(workflowService).readWorkflowWithoutOrchestration(APP_ID, WORKFLOW_ID);
   }
