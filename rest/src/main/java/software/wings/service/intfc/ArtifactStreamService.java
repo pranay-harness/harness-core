@@ -74,7 +74,7 @@ public interface ArtifactStreamService extends OwnedByService {
   /**
    * Prune owned from the app entities.
    *
-   * @param appId            the app id
+   * @param appId the app id
    * @param artifactStreamId the id
    */
   void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String artifactStreamId);
@@ -95,6 +95,4 @@ public interface ArtifactStreamService extends OwnedByService {
   List<ArtifactStream> fetchArtifactStreamsForService(String appId, String serviceId);
 
   List<String> fetchArtifactStreamIdsForService(String appId, String serviceId);
-
-  boolean updateFailedCronAttempts(String appId, String artifactStreamId, int counter);
 }

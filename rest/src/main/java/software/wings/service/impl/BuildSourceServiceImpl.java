@@ -108,15 +108,9 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   @SuppressFBWarnings("NP_GUARANTEED_DEREF")
   @Override
   public List<BuildDetails> getBuilds(String appId, String artifactStreamId, String settingId) {
-    return getBuilds(appId, artifactStreamId, settingId, -1);
-  }
-
-  @Override
-  public List<BuildDetails> getBuilds(String appId, String artifactStreamId, String settingId, int limit) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     if (settingAttribute == null) {
       logger.warn("Artifact Server {} was deleted of artifactStreamId {}", settingId, artifactStreamId);
-      throw new InvalidRequestException("Artifact Server doesn't exist");
     }
     SettingValue settingValue = getSettingValue(settingAttribute);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((Encryptable) settingValue);
@@ -127,24 +121,33 @@ public class BuildSourceServiceImpl implements BuildSourceService {
 
     ArtifactStreamAttributes artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, service);
 
-    return getBuildDetails(appId, limit, settingAttribute, settingValue, encryptedDataDetails, artifactStreamType,
-        artifactStreamAttributes);
-  }
-
-  protected List<BuildDetails> getBuildDetails(String appId, int limit, SettingAttribute settingAttribute,
-      SettingValue settingValue, List<EncryptedDataDetail> encryptedDataDetails, String artifactStreamType,
-      ArtifactStreamAttributes artifactStreamAttributes) {
-    if (limit != -1 && ARTIFACTORY.name().equals(artifactStreamType)) {
-      // TODO: The limit supported only for Artifactory for now
-      return getBuildService(settingAttribute, appId)
-          .getBuilds(appId, artifactStreamAttributes, settingValue, encryptedDataDetails, limit);
-    } else if (AMAZON_S3.name().equals(artifactStreamType) || AMI.name().equals(artifactStreamType)
+    if (AMAZON_S3.name().equals(artifactStreamType) || AMI.name().equals(artifactStreamType)
         || GCS.name().equals(artifactStreamType)) {
       return getBuildService(settingAttribute, appId, artifactStreamType)
           .getBuilds(appId, artifactStreamAttributes, settingValue, encryptedDataDetails);
     } else {
       return getBuildService(settingAttribute, appId)
           .getBuilds(appId, artifactStreamAttributes, settingValue, encryptedDataDetails);
+    }
+  }
+
+  @Override
+  public List<BuildDetails> getBuilds(String appId, String artifactStreamId, String settingId, int limit) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((Encryptable) settingValue);
+
+    ArtifactStream artifactStream = getArtifactStream(appId, artifactStreamId);
+    Service service = getService(appId, artifactStream);
+    String artifactStreamType = artifactStream.getArtifactStreamType();
+
+    ArtifactStreamAttributes artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, service);
+    // TODO: The limit supported only for Artifactory for now
+    if (ARTIFACTORY.name().equals(artifactStreamType)) {
+      return getBuildService(settingAttribute, appId)
+          .getBuilds(appId, artifactStreamAttributes, settingValue, encryptedDataDetails, limit);
+    } else {
+      return getBuilds(appId, artifactStreamId, settingId);
     }
   }
 

@@ -52,7 +52,6 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable 
   transient @Deprecated private boolean autoDownload;
   transient @Deprecated private boolean autoApproveForProduction;
   private boolean metadataOnly;
-  private int failedCronAttempts;
 
   public ArtifactStream(String artifactStreamType) {
     this.artifactStreamType = artifactStreamType;
