@@ -65,6 +65,8 @@ import software.wings.licensing.LicenseManager;
 import software.wings.licensing.LicenseManagerImpl;
 import software.wings.licensing.LicenseProvider;
 import software.wings.scheduler.JobScheduler;
+import software.wings.scheduler.PermitService;
+import software.wings.scheduler.PermitServiceImpl;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.scheduler.VerificationJobScheduler;
 import software.wings.service.EcrClassicBuildServiceImpl;
@@ -497,6 +499,7 @@ public class WingsModule extends AbstractModule {
     bind(DeploymentService.class).to(DeploymentServiceImpl.class);
     bind(ThirdPartyApiService.class).to(ThirdPartyApiServiceImpl.class);
     bind(HelmDeployService.class).to(HelmDeployServiceUnsupported.class).in(Singleton.class);
+    bind(PermitService.class).to(PermitServiceImpl.class);
 
     try {
       VersionInfoManager versionInfoManager = new VersionInfoManager(IOUtils.toString(
