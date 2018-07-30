@@ -382,7 +382,7 @@ public class HelmDeployState extends State {
   }
 
   private String getRepoName(String appName, String serviceName) {
-    return appName + "-" + serviceName;
+    return KubernetesConvention.normalize(appName) + "-" + KubernetesConvention.normalize(serviceName);
   }
 
   private void evaluateHelmChartSpecificationExpression(
