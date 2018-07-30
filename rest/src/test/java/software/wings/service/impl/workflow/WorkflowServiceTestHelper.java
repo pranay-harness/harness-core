@@ -25,6 +25,7 @@ import static software.wings.beans.InfrastructureMappingType.GCP_KUBERNETES;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
 import static software.wings.beans.MultiServiceOrchestrationWorkflow.MultiServiceOrchestrationWorkflowBuilder.aMultiServiceOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
+import static software.wings.beans.PhaseStepType.HELM_DEPLOY;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
@@ -467,6 +468,31 @@ public class WorkflowServiceTestHelper {
                                                                      .withId(generateUuid())
                                                                      .withType(ECS_SERVICE_DEPLOY.name())
                                                                      .withName(UPGRADE_CONTAINERS)
+                                                                     .build())
+                                                        .build())
+                                      .build())
+                .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                .build())
+        .build();
+  }
+
+  public static Workflow constructHelmWorkflowWithProperties(Map<String, Object> properties) {
+    return aWorkflow()
+        .withName(WORKFLOW_NAME)
+        .withAppId(APP_ID)
+        .withEnvId(ENV_ID)
+        .withOrchestrationWorkflow(
+            aCanaryOrchestrationWorkflow()
+                .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                .addWorkflowPhase(aWorkflowPhase()
+                                      .withServiceId(SERVICE_ID)
+                                      .withInfraMappingId(INFRA_MAPPING_ID)
+                                      .addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
+                                                        .addStep(aGraphNode()
+                                                                     .withId(generateUuid())
+                                                                     .withType(HELM_DEPLOY.name())
+                                                                     .withName(UPGRADE_CONTAINERS)
+                                                                     .withProperties(properties)
                                                                      .build())
                                                         .build())
                                       .build())

@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
@@ -16,6 +17,9 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import lombok.Getter;
+import lombok.Setter;
+import software.wings.api.HelmDeployContextElement;
 import software.wings.api.HelmDeployStateExecutionData;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
@@ -71,6 +75,7 @@ import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -93,6 +98,8 @@ public class HelmDeployState extends State {
   @Attributes(title = "Deployment steady state timeout (in minutes).")
   @DefaultValue("10")
   private int steadyStateTimeout; // Minutes
+
+  @Attributes(title = "Helm release name prefix", required = true) @Getter @Setter private String helmReleaseNamePrefix;
 
   public static final String HELM_COMMAND_NAME = "Helm Deploy";
   private static final String DOCKER_IMAGE_TAG_PLACEHOLDER_REGEX = "\\$\\{DOCKER_IMAGE_TAG}";
@@ -138,9 +145,7 @@ public class HelmDeployState extends State {
 
     Activity activity = createActivity(context);
 
-    String releaseName = KubernetesConvention.getHelmReleaseName(
-        app.getName(), serviceElement.getName(), env.getName(), containerInfraMapping.getUuid());
-
+    String releaseName = obtainHelmReleaseNamePrefix(context, containerInfraMapping);
     ContainerServiceParams containerServiceParams =
         containerDeploymentHelper.getContainerServiceParams(containerInfraMapping, releaseName);
 
@@ -398,5 +403,32 @@ public class HelmDeployState extends State {
     if (isNotBlank(helmChartSpec.getChartName())) {
       helmChartSpec.setChartName(context.renderExpression(helmChartSpec.getChartName()));
     }
+  }
+
+  private String obtainHelmReleaseNamePrefix(
+      ExecutionContext context, ContainerInfrastructureMapping containerInfraMapping) {
+    if (getStateType().equals(StateType.HELM_DEPLOY.name())) {
+      if (isBlank(getHelmReleaseNamePrefix())) {
+        throw new InvalidRequestException("Helm release name prefix cannot be empty");
+      }
+      String helmReleaseNamePrefixEvaluated =
+          KubernetesConvention.normalize(context.renderExpression(getHelmReleaseNamePrefix()));
+      return KubernetesConvention.getHelmReleaseName(helmReleaseNamePrefixEvaluated, containerInfraMapping.getUuid());
+    } else {
+      HelmDeployContextElement contextElement = context.getContextElement(ContextElementType.HELM_DEPLOY);
+      if (contextElement == null || isBlank(contextElement.getReleaseName())) {
+        throw new InvalidRequestException("Helm rollback is not possible without deployment");
+      }
+      return contextElement.getReleaseName();
+    }
+  }
+
+  @Override
+  public Map<String, String> validateFields() {
+    Map<String, String> invalidFields = new HashMap<>();
+    if (isBlank(getHelmReleaseNamePrefix())) {
+      invalidFields.put("helmReleaseNamePrefix", "Helm release name prefix must not be blank");
+    }
+    return invalidFields;
   }
 }

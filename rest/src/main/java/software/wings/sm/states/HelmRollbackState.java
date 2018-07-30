@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import software.wings.api.HelmDeployContextElement;
 import software.wings.api.HelmDeployStateExecutionData;
@@ -20,6 +21,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -84,5 +86,15 @@ public class HelmRollbackState extends HelmDeployState {
   @DefaultValue("10")
   public int getSteadyStateTimeout() {
     return super.getSteadyStateTimeout();
+  }
+
+  @SchemaIgnore
+  public String getHelmReleaseNamePrefix() {
+    return super.getHelmReleaseNamePrefix();
+  }
+
+  @Override
+  public Map<String, String> validateFields() {
+    return null;
   }
 }
