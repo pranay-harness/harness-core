@@ -89,8 +89,7 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
         PrometheusDataCollectionInfo dataCollectionInfo, DataCollectionTaskResult taskResult) {
       this.dataCollectionInfo = dataCollectionInfo;
       this.taskResult = taskResult;
-      this.collectionStartTime = Timestamp.minuteBoundary(dataCollectionInfo.getStartTime())
-          - TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES);
+      this.collectionStartTime = Timestamp.minuteBoundary(dataCollectionInfo.getStartTime());
       this.dataCollectionMinute = dataCollectionInfo.getDataCollectionMinute();
     }
 
@@ -106,13 +105,12 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
             List<NewRelicMetricDataRecord> recordsToSave = getAllMetricRecords(metricDataRecords);
             if (!saveMetrics(dataCollectionInfo.getPrometheusConfig().getAccountId(),
                     dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(), recordsToSave)) {
-              retry = RETRIES;
-              taskResult.setErrorMessage("Cannot save new Prometheus metric records to Harness. Server returned error");
-              throw new RuntimeException("Cannot save new Prometheus metric records to Harness. Server returned error");
+              logger.error("Error saving metrics to the database. DatacollectionMin: {} StateexecutionId: {}",
+                  dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
+            } else {
+              logger.info("Sent {} Prometheus metric records to the server for minute {}", recordsToSave.size(),
+                  dataCollectionMinute);
             }
-            logger.info("Sent {} Prometheus metric records to the server for minute {}", recordsToSave.size(),
-                dataCollectionMinute);
-
             dataCollectionMinute++;
             collectionStartTime += TimeUnit.MINUTES.toMillis(1);
             break;

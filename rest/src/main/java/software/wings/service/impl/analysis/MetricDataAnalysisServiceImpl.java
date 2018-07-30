@@ -113,6 +113,8 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       final String workflowExecutionId, final String workflowId, String serviceId, String groupName,
       Integer analysisMinute, String taskId, String baseLineExecutionId,
       TimeSeriesMLAnalysisRecord mlAnalysisResponse) {
+    logger.info("saveAnalysisRecordsML stateType  {} stateExecutionId {} analysisMinute {}", stateType,
+        stateExecutionId, analysisMinute);
     mlAnalysisResponse.setStateType(stateType);
     mlAnalysisResponse.setAppId(appId);
     mlAnalysisResponse.setWorkflowExecutionId(workflowExecutionId);
@@ -707,6 +709,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   @Override
   public NewRelicMetricDataRecord getAnalysisMinute(StateType stateType, String appId, String stateExecutionId,
       String workflowExecutionId, String serviceId, String groupName) {
+    logger.info("getAnalysisMinute.Get latest analysis minute for record with stateExecutionId {}", stateExecutionId);
     NewRelicMetricDataRecord newRelicMetricDataRecord = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
                                                             .filter("stateType", stateType)
                                                             .filter("appId", appId)
@@ -732,6 +735,9 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   @Override
   public void bumpCollectionMinuteToProcess(StateType stateType, String appId, String stateExecutionId,
       String workflowExecutionId, String serviceId, String groupName, int analysisMinute) {
+    logger.info(
+        "bumpCollectionMinuteToProcess. Going to update the record for stateExecutionId {} and dataCollectionMinute {}",
+        stateExecutionId, analysisMinute);
     Query<NewRelicMetricDataRecord> query = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
                                                 .filter("stateType", stateType)
                                                 .filter("appId", appId)
