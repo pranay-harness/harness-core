@@ -207,11 +207,6 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     apiCallLog.addFieldToResponse(tierBTResponse.code(), tierBTResponse.body(), FieldType.JSON);
     delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
     List<AppdynamicsMetric> rv = tierBTResponse.body();
-    for (AppdynamicsMetric appdynamicsTierMetric : rv) {
-      appdynamicsTierMetric.setChildMetrices(getChildMetrics(appDynamicsConfig, appdynamicsAppId, appdynamicsTierMetric,
-          tierBTsPath + "|", false, encryptionDetails, apiCallLog.copy()));
-    }
-
     logger.info("metrics to analyze: " + rv);
     return rv;
   }
