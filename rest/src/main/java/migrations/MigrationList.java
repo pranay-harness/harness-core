@@ -106,7 +106,8 @@ public class MigrationList {
         .add(Pair.of(177, DeleteStaleYamlChangeSetsMigration.class))
         .add(Pair.of(178, AuthTokenTtlMigration.class))
         .add(Pair.of(179, DeleteStaleSecretUsageLogs.class))
-        .add(Pair.of(180, HelmReleaseNamePrefixMigration.class))
+        .add(Pair.of(180, BaseMigration.class))
+        .add(Pair.of(181, HelmReleaseNamePrefixMigration.class))
         .build();
   }
 }
