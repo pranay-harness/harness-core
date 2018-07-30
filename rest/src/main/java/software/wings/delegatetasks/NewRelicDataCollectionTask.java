@@ -358,14 +358,14 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
             List<Optional<Boolean>> results = executeParrallel(callables);
             for (Optional<Boolean> result : results) {
               if (!result.isPresent() || !result.get()) {
-                throw new WingsException("Cannot save new relic metric records. Server returned error "
-                    + dataCollectionInfo.getStateExecutionId());
+                logger.error("Error saving metrics to the database. DatacollectionMin: {} StateexecutionId: {}",
+                    dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
               }
             }
 
             if (!saveHeartBeats(dataCollectionMinuteEnd)) {
-              throw new WingsException(
-                  "Cannot save heartbeat records. Server returned error " + dataCollectionInfo.getStateExecutionId());
+              logger.error("Error saving heartbeat to the database. DatacollectionMin: {} StateexecutionId: {}",
+                  dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
             }
 
             logger.info("done processing parallel tasks {}", callables.size());

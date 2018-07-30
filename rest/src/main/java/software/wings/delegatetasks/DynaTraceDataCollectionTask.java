@@ -87,13 +87,14 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
     private final DataCollectionTaskResult taskResult;
     private long collectionStartTime;
     private int dataCollectionMinute;
+    private final long collectionStartMinute;
 
     private DynaTraceMetricCollector(
         DynaTraceDataCollectionInfo dataCollectionInfo, DataCollectionTaskResult taskResult) {
       this.dataCollectionInfo = dataCollectionInfo;
       this.taskResult = taskResult;
-      this.collectionStartTime = Timestamp.minuteBoundary(dataCollectionInfo.getStartTime())
-          - TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES);
+      this.collectionStartMinute = Timestamp.currentMinuteBoundary();
+      this.collectionStartTime = Timestamp.minuteBoundary(dataCollectionInfo.getStartTime());
       this.dataCollectionMinute = dataCollectionInfo.getDataCollectionMinute();
     }
 
@@ -126,12 +127,12 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
             List<NewRelicMetricDataRecord> recordsToSave = getAllMetricRecords(records);
             if (!saveMetrics(dataCollectionInfo.getDynaTraceConfig().getAccountId(),
                     dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(), recordsToSave)) {
-              retry = RETRIES;
-              taskResult.setErrorMessage("Cannot save new Dynatrace metric records to Harness. Server returned error");
-              throw new RuntimeException("Cannot save new Dynatrace metric records to Harness. Server returned error");
+              logger.error("Error saving metrics to the database. DatacollectionMin: {} StateexecutionId: {}",
+                  dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
+            } else {
+              logger.info("Sent {} Dynatrace metric records to the server for minute {}", recordsToSave.size(),
+                  dataCollectionMinute);
             }
-            logger.info("Sent {} Dynatrace metric records to the server for minute {}", recordsToSave.size(),
-                dataCollectionMinute);
 
             dataCollectionMinute++;
             collectionStartTime += TimeUnit.MINUTES.toMillis(1);
@@ -178,14 +179,15 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
         case COMPARE_WITH_PREVIOUS:
           for (DynaTraceTimeSeries timeSeries : dataCollectionInfo.getTimeSeriesDefinitions()) {
             callables.add(() -> {
-              DynaTraceMetricDataRequest dataRequest = DynaTraceMetricDataRequest.builder()
-                                                           .timeseriesId(timeSeries.getTimeseriesId())
-                                                           .entities(dataCollectionInfo.getServiceMethods())
-                                                           .aggregationType(timeSeries.getAggregationType())
-                                                           .percentile(timeSeries.getPercentile())
-                                                           .startTimestamp(collectionStartTime)
-                                                           .endTimestamp(System.currentTimeMillis())
-                                                           .build();
+              DynaTraceMetricDataRequest dataRequest =
+                  DynaTraceMetricDataRequest.builder()
+                      .timeseriesId(timeSeries.getTimeseriesId())
+                      .entities(dataCollectionInfo.getServiceMethods())
+                      .aggregationType(timeSeries.getAggregationType())
+                      .percentile(timeSeries.getPercentile())
+                      .startTimestamp(collectionStartTime)
+                      .endTimestamp(collectionStartTime + TimeUnit.MINUTES.toMillis(2))
+                      .build();
 
               DynaTraceMetricDataResponse metricDataResponse = dynaTraceDelegateService.fetchMetricData(dynaTraceConfig,
                   dataRequest, encryptionDetails, createApiCallLog(dataCollectionInfo.getStateExecutionId()));
@@ -196,7 +198,7 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
           break;
         case COMPARE_WITH_CURRENT:
           final long startTime = collectionStartTime;
-          final long endTime = System.currentTimeMillis();
+          final long endTime = collectionStartTime + TimeUnit.MINUTES.toMillis(2);
 
           for (int i = 0; i <= CANARY_DAYS_TO_COLLECT; i++) {
             String hostName = i == 0 ? DynatraceState.TEST_HOST_NAME : DynatraceState.CONTROL_HOST_NAME;
@@ -261,21 +263,29 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
 
               NewRelicMetricDataRecord metricDataRecord = records.get(btName, timeStamp.longValue());
               if (metricDataRecord == null) {
-                metricDataRecord = NewRelicMetricDataRecord.builder()
-                                       .name(btName)
-                                       .appId(dataCollectionInfo.getApplicationId())
-                                       .workflowId(dataCollectionInfo.getWorkflowId())
-                                       .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
-                                       .stateExecutionId(dataCollectionInfo.getStateExecutionId())
-                                       .serviceId(dataCollectionInfo.getServiceId())
-                                       .dataCollectionMinute(dataCollectionMinute)
-                                       .timeStamp(timeStamp.longValue())
-                                       .stateType(StateType.DYNA_TRACE)
-                                       .host(dataResponse.getResult().getHost())
-                                       .values(new HashMap<>())
-                                       .groupName(DEFAULT_GROUP_NAME)
-                                       .build();
-                records.put(btName, timeStamp.longValue(), metricDataRecord);
+                metricDataRecord =
+                    NewRelicMetricDataRecord.builder()
+                        .name(btName)
+                        .appId(dataCollectionInfo.getApplicationId())
+                        .workflowId(dataCollectionInfo.getWorkflowId())
+                        .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
+                        .stateExecutionId(dataCollectionInfo.getStateExecutionId())
+                        .serviceId(dataCollectionInfo.getServiceId())
+                        .dataCollectionMinute(
+                            (int) ((Timestamp.minuteBoundary(timeStamp.longValue()) - collectionStartMinute)
+                                / TimeUnit.MINUTES.toMillis(1)))
+                        .timeStamp(timeStamp.longValue())
+                        .stateType(StateType.DYNA_TRACE)
+                        .host(dataResponse.getResult().getHost())
+                        .values(new HashMap<>())
+                        .groupName(DEFAULT_GROUP_NAME)
+                        .build();
+                if (metricDataRecord.getTimeStamp() >= dataCollectionInfo.getStartTime()) {
+                  records.put(btName, timeStamp.longValue(), metricDataRecord);
+                } else {
+                  logger.info("Metric record for stateExecutionId {} is before the startTime. Ignoring.",
+                      dataCollectionInfo.getStateExecutionId());
+                }
               }
 
               metricDataRecord.getValues().put(timeSeries.getSavedFieldName(), value);

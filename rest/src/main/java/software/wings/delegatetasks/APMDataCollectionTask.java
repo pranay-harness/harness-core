@@ -443,14 +443,12 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
 
             if (!saveMetrics(dataCollectionInfo.getAccountId(), dataCollectionInfo.getApplicationId(),
                     dataCollectionInfo.getStateExecutionId(), allMetricRecords)) {
-              retry = RETRIES;
-              taskResult.setErrorMessage("Cannot save new apm metric records to Harness. Server returned error");
-              throw new RuntimeException(dataCollectionInfo.getStateType()
-                  + ": Cannot save new apm metric records to Harness. Server returned error");
+              logger.error("Error saving metrics to the database. DatacollectionMin: {} StateexecutionId: {}",
+                  dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
+            } else {
+              logger.info(dataCollectionInfo.getStateType() + ": Sent {} metric records to the server for minute {}",
+                  allMetricRecords.size(), dataCollectionMinute);
             }
-            logger.info(dataCollectionInfo.getStateType() + ": Sent {} metric records to the server for minute {}",
-                allMetricRecords.size(), dataCollectionMinute);
-
             lastEndTime = currentEndTime;
             collectionStartTime += TimeUnit.MINUTES.toMillis(collectionWindow);
             break;

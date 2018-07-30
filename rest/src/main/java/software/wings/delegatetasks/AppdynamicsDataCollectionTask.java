@@ -272,16 +272,12 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
             List<NewRelicMetricDataRecord> recordsToSave = getAllMetricRecords(records);
             if (!saveMetrics(dataCollectionInfo.getAppDynamicsConfig().getAccountId(),
                     dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(), recordsToSave)) {
-              retry = RETRIES;
-              taskResult.setErrorMessage(
-                  "Cannot save new AppDynamics metric records to Harness. Server returned error");
-              throw new RuntimeException(
-                  "Cannot save new AppDynamics metric records to Harness. Server returned error for "
-                  + dataCollectionInfo.getStateExecutionId());
+              logger.error("Error saving metrics to the database. DatacollectionMin: {} StateexecutionId: {}",
+                  dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
+            } else {
+              logger.info("Sent {} appdynamics metric records to the server for minute {} for state {}",
+                  recordsToSave.size(), dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
             }
-            logger.info("Sent {} appdynamics metric records to the server for minute {} for state {}",
-                recordsToSave.size(), dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
-
             dataCollectionMinute++;
             collectionStartTime += TimeUnit.MINUTES.toMillis(1);
             dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
