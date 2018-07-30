@@ -187,7 +187,7 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
               timeSeries.getTxnName(), timeSeries.getMetricName(), dataCollectionInfo.getApplicationId(),
               dataCollectionInfo.getWorkflowId(), dataCollectionInfo.getWorkflowExecutionId(),
               dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getServiceId(), host,
-              dataCollectionInfo.getHosts().get(host), dataCollectionMinute);
+              dataCollectionInfo.getHosts().get(host), dataCollectionInfo.getStartTime());
           metricRecords.cellSet().forEach(cell -> {
             if (rv.contains(cell.getRowKey(), cell.getColumnKey())) {
               NewRelicMetricDataRecord metricDataRecord = rv.get(cell.getRowKey(), cell.getColumnKey());
@@ -197,7 +197,7 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
             }
           });
         } catch (IOException e) {
-          throw new WingsException("Error fetchin metrics", e);
+          throw new WingsException("Error fetching metrics", e);
         }
       });
       rv.put(HARNESS_HEARTBEAT_METRIC_NAME, 0L,
