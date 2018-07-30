@@ -1,8 +1,6 @@
 package migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.sm.StateType.HELM_DEPLOY;
@@ -18,8 +16,7 @@ import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
+import software.wings.dl.HIterator;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
@@ -40,27 +37,22 @@ public class HelmReleaseNamePrefixMigration implements Migration {
   @Override
   public void migrate() {
     logger.info("Retrieving applications");
-    PageRequest<Application> pageRequest = aPageRequest().withLimit(UNLIMITED).build();
-    PageResponse<Application> pageResponse = wingsPersistence.query(Application.class, pageRequest, excludeAuthority);
 
-    List<Application> apps = pageResponse.getResponse();
-    if (pageResponse.isEmpty() || isEmpty(apps)) {
-      logger.info("No applications found");
-      return;
-    }
+    try (HIterator<Application> apps = new HIterator<>(wingsPersistence.createQuery(Application.class).fetch())) {
+      while (apps.hasNext()) {
+        Application application = apps.next();
+        logger.info("Updating app {}", application.getUuid());
+        List<Workflow> workflows =
+            workflowService
+                .listWorkflows(
+                    aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, application.getUuid()).build())
+                .getResponse();
 
-    logger.info("Updating {} applications", apps.size());
-    for (Application app : apps) {
-      logger.info("Updating app {}", app.getUuid());
-      List<Workflow> workflows =
-          workflowService
-              .listWorkflows(aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, app.getUuid()).build())
-              .getResponse();
-
-      for (Workflow workflow : workflows) {
-        updateWorkflowsWithHelmReleaseNamePrefix(workflow, HELM_DEPLOY);
+        for (Workflow workflow : workflows) {
+          updateWorkflowsWithHelmReleaseNamePrefix(workflow, HELM_DEPLOY);
+        }
+        logger.info("Completed updating app {}", application.getUuid());
       }
-      logger.info("Completed updating app {}", app.getUuid());
     }
 
     logger.info("Updated all apps");
@@ -71,6 +63,11 @@ public class HelmReleaseNamePrefixMigration implements Migration {
 
     if (workflow.getOrchestrationWorkflow() instanceof CanaryOrchestrationWorkflow) {
       CanaryOrchestrationWorkflow coWorkflow = (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+
+      if (coWorkflow.getWorkflowPhases() == null) {
+        return;
+      }
+
       for (WorkflowPhase workflowPhase : coWorkflow.getWorkflowPhases()) {
         List<WorkflowPhase> workflowPhases = new ArrayList<>();
         workflowPhases.add(workflowPhase);
@@ -84,7 +81,7 @@ public class HelmReleaseNamePrefixMigration implements Migration {
             for (GraphNode node : phaseStep.getSteps()) {
               if (stateType.name().equals(node.getType())) {
                 Map<String, Object> properties = node.getProperties();
-                if (!properties.containsKey(HELM_RELEASE_NAME_PREFIX_KEY)) {
+                if (properties != null && !properties.containsKey(HELM_RELEASE_NAME_PREFIX_KEY)) {
                   workflowModified = true;
                   properties.put(HELM_RELEASE_NAME_PREFIX_KEY, HELM_RELEASE_NAME_PREFIX_DEFAULT_VALUE);
                 }
