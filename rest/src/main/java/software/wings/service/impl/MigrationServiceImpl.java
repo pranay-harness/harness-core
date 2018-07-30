@@ -1,6 +1,8 @@
 package software.wings.service.impl;
 
 import static java.time.Duration.ofMinutes;
+import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
+import static software.wings.beans.Base.ID_KEY;
 import static software.wings.beans.Schema.SCHEMA_ID;
 import static software.wings.beans.Schema.SchemaBuilder.aSchema;
 import static software.wings.dl.HQuery.excludeAuthority;
@@ -62,6 +64,9 @@ public class MigrationServiceImpl implements MigrationService {
         throw new WingsException(ErrorCode.GENERAL_ERROR)
             .addParam("message", "The persistent lock was not acquired. That very unlikely, but yet it happened.");
       }
+
+      logger.info("[Migration] - Initializing Global DB Entries");
+      initializeGlobalDbEntriesIfNeeded();
 
       logger.info("[Migration] - Checking for new migrations");
       Schema schema = wingsPersistence.createQuery(Schema.class).get();
@@ -154,6 +159,21 @@ public class MigrationServiceImpl implements MigrationService {
       }
     } catch (Exception e) {
       logger.error("[Migration] - Migration failed.", e);
+    }
+  }
+
+  private void initializeGlobalDbEntriesIfNeeded() {
+    try {
+      Account globalAccount = wingsPersistence.createQuery(Account.class).filter(ID_KEY, GLOBAL_ACCOUNT_ID).get();
+      if (globalAccount == null) {
+        wingsPersistence.save(Account.Builder.anAccount()
+                                  .withUuid(GLOBAL_ACCOUNT_ID)
+                                  .withCompanyName("Global")
+                                  .withAccountName("Global")
+                                  .build());
+      }
+    } catch (Exception e) {
+      logger.error("[Migration] - initializeGlobalDbEntriesIfNeeded failed.", e);
     }
   }
 }
