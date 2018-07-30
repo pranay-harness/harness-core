@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
@@ -23,7 +24,9 @@ import software.wings.dl.PageResponse;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.SettingsService;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by rishi on 10/30/16.
@@ -199,6 +202,35 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
     assertThat(created).isNotNull().isEqualToComparingOnlyGivenFields(
         notificationGroup, "name", "accountId", "addressesByChannelType", "defaultNotificationGroupForAccount");
     return created;
+  }
+
+  @Test
+  public void TestGetUserEmailAddressFromNotificationGroups() {
+    String accountId = generateUuid();
+
+    NotificationGroup notificationGroup = createAndAssertNotificationGroup(accountId);
+    List userEmailAddresses =
+        notificationSetupService.getUserEmailAddressFromNotificationGroups(accountId, asList(notificationGroup));
+    assertThat(userEmailAddresses.size()).isEqualTo(2);
+    assertThat(userEmailAddresses).contains("a@b.com");
+    assertThat(userEmailAddresses).contains("b@c.com");
+    assertThat(userEmailAddresses).doesNotContain("xyz@abc.com");
+
+    Map<NotificationChannelType, List<String>> notificationChannelTypeListMap = new HashMap<>();
+    notificationChannelTypeListMap.put(NotificationChannelType.EMAIL, null);
+    notificationGroup.setAddressesByChannelType(notificationChannelTypeListMap);
+    notificationSetupService.updateNotificationGroup(notificationGroup);
+    userEmailAddresses =
+        notificationSetupService.getUserEmailAddressFromNotificationGroups(accountId, asList(notificationGroup));
+    assertThat(userEmailAddresses.size()).isEqualTo(0);
+
+    notificationChannelTypeListMap = new HashMap<>();
+    notificationChannelTypeListMap.put(NotificationChannelType.EMAIL, asList(""));
+    notificationGroup.setAddressesByChannelType(notificationChannelTypeListMap);
+    notificationSetupService.updateNotificationGroup(notificationGroup);
+    userEmailAddresses =
+        notificationSetupService.getUserEmailAddressFromNotificationGroups(accountId, asList(notificationGroup));
+    assertThat(userEmailAddresses.size()).isEqualTo(0);
   }
 
   // Move these under workflow service
