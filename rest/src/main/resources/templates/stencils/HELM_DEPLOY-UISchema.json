@@ -1,0 +1,5 @@
+{
+  "helmReleaseNamePrefix": {
+    "ui:placeholder" : "Prefix to be used in helm release name"
+  }
+}

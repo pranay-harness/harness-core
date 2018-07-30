@@ -27,6 +27,7 @@ import migrations.all.EntityNameValidationMigration_All_04;
 import migrations.all.FixInstanceData;
 import migrations.all.FixInstanceDataForAwsSSH;
 import migrations.all.GitSyncToAllAccounts;
+import migrations.all.HelmReleaseNamePrefixMigration;
 import migrations.all.LearningEngineTaskGroupNameMigration;
 import migrations.all.LogAnalysisExperimentalRecordsMigration;
 import migrations.all.MetricAnalysisRecordGroupNameMigration;
@@ -105,6 +106,7 @@ public class MigrationList {
         .add(Pair.of(177, DeleteStaleYamlChangeSetsMigration.class))
         .add(Pair.of(178, AuthTokenTtlMigration.class))
         .add(Pair.of(179, DeleteStaleSecretUsageLogs.class))
+        .add(Pair.of(180, HelmReleaseNamePrefixMigration.class))
         .build();
   }
 }

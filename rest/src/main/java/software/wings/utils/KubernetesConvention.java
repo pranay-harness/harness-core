@@ -194,11 +194,10 @@ public class KubernetesConvention {
     return str != null ? str.replaceAll("\\.", DASH) : "null";
   }
 
-  public static String getHelmReleaseName(String appName, String serviceName, String envName, String infraMappingId) {
-    String controllerNamePrefix = normalize(appName + DASH + serviceName + DASH + envName);
+  public static String getHelmReleaseName(String helmReleasePrefix, String infraMappingId) {
     String infraMappingIdPrefix = infraMappingId.substring(0, 7).toLowerCase().replace('-', 'z').replace('_', 'z');
     String revision = "harness" + DASH + infraMappingIdPrefix;
-    return normalize(controllerNamePrefix) + DASH + revision;
+    return normalize(helmReleasePrefix) + DASH + revision;
   }
 
   public static String getHelmHarnessReleaseRevision(String releaseName) {
