@@ -3215,8 +3215,6 @@ public class KmsTest extends WingsBaseTest {
     query = wingsPersistence.createQuery(EncryptedData.class).filter("type", SettingVariableTypes.DIRECT);
     assertEquals(6, query.count());
 
-    assertEquals(6, query.count());
-
     query = wingsPersistence.createQuery(EncryptedData.class)
                 .filter("type", SettingVariableTypes.DIRECT)
                 .filter("encryptionType", EncryptionType.KMS);
