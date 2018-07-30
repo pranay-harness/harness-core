@@ -210,7 +210,11 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
                              .stateType(getStateType())
                              .values(new HashMap<>())
                              .build();
-            hostVsRecordMap.put(nodeName, hostRecord);
+            if (hostRecord.getTimeStamp() >= dataCollectionInfo.getStartTime()) {
+              hostVsRecordMap.put(nodeName, hostRecord);
+            } else {
+              logger.info("Ignoring a record that was before the collectionStartTime.");
+            }
           }
 
           hostRecord.getValues().put(AppdynamicsTimeSeries.getVariableName(metricName), metricDataValue.getValue());
@@ -219,14 +223,13 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
       return records;
     }
 
-    private int getCollectionMinute(long metricTimeStamp) {
-      int collectionDuration =
+    private int getCollectionMinute(final long metricTimeStamp) {
+      long collectionStartTime =
           dataCollectionInfo.getTimeSeriesMlAnalysisType().equals(TimeSeriesMlAnalysisType.COMPARATIVE)
-          ? DURATION_TO_ASK_MINUTES
-          : PREDECTIVE_HISTORY_MINUTES + DURATION_TO_ASK_MINUTES;
+          ? dataCollectionInfo.getStartTime()
+          : dataCollectionInfo.getStartTime() - TimeUnit.MINUTES.toMillis(PREDECTIVE_HISTORY_MINUTES);
 
-      return (int) (TimeUnit.MILLISECONDS.toMinutes(metricTimeStamp - dataCollectionInfo.getStartTime())
-          + collectionDuration);
+      return (int) (TimeUnit.MILLISECONDS.toMinutes(metricTimeStamp - collectionStartTime));
     }
 
     @SuppressFBWarnings({"DMI_ARGUMENTS_WRONG_ORDER", "REC_CATCH_EXCEPTION"})
