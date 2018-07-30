@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.common.Constants.ABORTED_COLOR;
@@ -152,6 +153,17 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
       return;
     }
 
+    List<String> validToAddresses = new ArrayList<>();
+    for (String emailAddress : toAddress) {
+      if (isNotBlank(emailAddress)) {
+        validToAddresses.add(emailAddress);
+      }
+    }
+
+    if (isEmpty(validToAddresses)) {
+      return;
+    }
+
     List<String> emailBodyList = new ArrayList<>();
     List<String> emailSubjectList = new ArrayList<>();
     notifications.forEach(notification -> {
@@ -174,7 +186,7 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
     String body = processEmailHtml(String.join("<br>", emailBodyList));
     String subject = emailSubjectList.get(emailSubjectList.size() - 1);
 
-    EmailData emailData = EmailData.builder().to(toAddress).subject(subject).body(body).system(true).build();
+    EmailData emailData = EmailData.builder().to(validToAddresses).subject(subject).body(body).system(true).build();
     emailData.setRetries(2);
     emailData.setCc(Collections.emptyList());
     emailNotificationService.sendAsync(emailData);

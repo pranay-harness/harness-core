@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
@@ -249,8 +250,12 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
 
       for (Entry<NotificationChannelType, List<String>> entry :
           notificationGroup.getAddressesByChannelType().entrySet()) {
-        if (entry.getKey() == NotificationChannelType.EMAIL) {
-          emailAddresses.addAll(entry.getValue());
+        if (entry.getKey() == NotificationChannelType.EMAIL && isNotEmpty(entry.getValue())) {
+          for (String emailAddress : entry.getValue()) {
+            if (isNotBlank(emailAddress)) {
+              emailAddresses.add(emailAddress);
+            }
+          }
         }
       }
     }
