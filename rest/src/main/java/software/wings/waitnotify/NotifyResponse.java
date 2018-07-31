@@ -16,6 +16,8 @@ import java.util.Objects;
  */
 @Entity(value = "notifyResponses", noClassnameStored = true)
 public class NotifyResponse<T extends NotifyResponseData> extends Base {
+  public static final String STATUS_KEY = "status";
+
   private T response;
 
   private boolean error;

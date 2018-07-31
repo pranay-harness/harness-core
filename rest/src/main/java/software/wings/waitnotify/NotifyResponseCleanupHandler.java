@@ -1,29 +1,27 @@
 package software.wings.waitnotify;
 
-import static com.google.common.collect.Iterables.concat;
-import static com.google.common.collect.Lists.newArrayList;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 import static software.wings.dl.HQuery.excludeAuthority;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import org.mongodb.morphia.Key;
+import org.mongodb.morphia.query.FindOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.Base;
 import software.wings.core.managerConfiguration.ConfigurationController;
-import software.wings.dl.PageResponse;
+import software.wings.dl.HIterator;
 import software.wings.dl.WingsPersistence;
 import software.wings.sm.ExecutionStatus;
 
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * This is meant to cleanup notifyResponse objects that have already been used to callback waiting
@@ -51,34 +49,38 @@ public final class NotifyResponseCleanupHandler implements Runnable {
 
   public void execute() {
     try {
-      PageResponse<NotifyResponse> notifyPageResponses = wingsPersistence.query(NotifyResponse.class,
-          aPageRequest().addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS).addFieldsIncluded(ID_KEY).build(),
-          excludeAuthority);
-      if (isEmpty(notifyPageResponses)) {
+      // Get all successful notify responses
+      final List<Key<NotifyResponse>> keys = wingsPersistence.createQuery(NotifyResponse.class, excludeAuthority)
+                                                 .filter(NotifyResponse.STATUS_KEY, ExecutionStatus.SUCCESS)
+                                                 .field(Base.CREATED_AT_KEY)
+                                                 .lessThan(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(1))
+                                                 .asKeyList(new FindOptions().limit(2500));
+      if (isEmpty(keys)) {
         logger.debug("There are no NotifyResponse entries to cleanup");
         return;
       }
 
-      List<String> correlationIds = notifyPageResponses.stream().map(NotifyResponse::getUuid).collect(toList());
-      PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class,
-          aPageRequest().addFilter("correlationId", Operator.IN, correlationIds.toArray()).build(), excludeAuthority);
+      Set<String> notifyResponseUuids =
+          keys.stream().map(notifyResponseKey -> notifyResponseKey.getId().toString()).collect(Collectors.toSet());
 
-      Map<String, List<WaitQueue>> waitQueueMap = new HashMap<>();
-
-      if (isEmpty(waitQueuesResponse)) {
-        waitQueueMap = waitQueuesResponse.stream().collect(toMap(WaitQueue::getCorrelationId,
-            waitQueue
-            -> (List<WaitQueue>) newArrayList(waitQueue),
-            (waitQueues, waitQueues2) -> Lists.<WaitQueue>newArrayList(concat(waitQueues, waitQueues2))));
+      Set<String> waitQueueCorrelationIds = new HashSet<>();
+      try (HIterator<WaitQueue> waitQueues =
+               new HIterator<>(wingsPersistence.createQuery(WaitQueue.class, excludeAuthority)
+                                   .project(WaitQueue.CORRELATION_ID_KEY, true)
+                                   .field(WaitQueue.CORRELATION_ID_KEY)
+                                   .in(notifyResponseUuids)
+                                   .fetch())) {
+        while (waitQueues.hasNext()) {
+          waitQueueCorrelationIds.add(waitQueues.next().getCorrelationId());
+        }
       }
 
-      for (NotifyResponse notifyResponse : notifyPageResponses) {
-        if (waitQueueMap.get(notifyResponse.getUuid()) != null) {
-          logger.info("Some wait queues still present .. skipping notifyResponse : " + notifyResponse.getUuid());
-          continue;
-        }
+      Set<String> toBeDeletedResponseIds = new HashSet<>(notifyResponseUuids);
+      toBeDeletedResponseIds.removeAll(waitQueueCorrelationIds);
 
-        wingsPersistence.delete(notifyResponse);
+      if (isNotEmpty(toBeDeletedResponseIds)) {
+        wingsPersistence.delete(
+            wingsPersistence.createQuery(NotifyResponse.class).field(Base.ID_KEY).in(toBeDeletedResponseIds));
       }
     } catch (Exception exception) {
       logger.error("Error in NotifyResponseCleanupHandler", exception);

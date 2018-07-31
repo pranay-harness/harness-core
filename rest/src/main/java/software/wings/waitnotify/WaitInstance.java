@@ -33,7 +33,7 @@ public class WaitInstance extends Base {
   @SchemaIgnore
   @JsonIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
-  private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
+  private Date validUntil = Date.from(OffsetDateTime.now().plusWeeks(1).toInstant());
 
   /**
    * Instantiates a new wait instance.

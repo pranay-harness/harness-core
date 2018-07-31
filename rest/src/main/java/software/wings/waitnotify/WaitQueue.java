@@ -15,6 +15,8 @@ import java.util.Objects;
  */
 @Entity(value = "waitQueues", noClassnameStored = true)
 public class WaitQueue extends Base {
+  public static final String CORRELATION_ID_KEY = "correlationId";
+
   @Indexed private String waitInstanceId;
 
   @Indexed private String correlationId;
