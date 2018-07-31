@@ -481,7 +481,7 @@ public class AuthServiceImpl implements AuthService {
       }
       return value;
     } catch (Exception ignored) {
-      logger.error("Error in fetching user UserPermissionInfo from Cache for key:" + key, ignored);
+      logger.warn("Error in fetching user UserPermissionInfo from Cache for key:" + key, ignored);
     }
 
     // not found in cache. cache write through failed as well. rebuild anyway
