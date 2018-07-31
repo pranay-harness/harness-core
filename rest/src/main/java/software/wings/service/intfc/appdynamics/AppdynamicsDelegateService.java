@@ -38,8 +38,8 @@ public interface AppdynamicsDelegateService {
       throws IOException, CloneNotSupportedException;
 
   List<AppdynamicsMetricData> getTierBTMetricData(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
-      long tierId, String btName, String hostName, int durantionInMinutes, List<EncryptedDataDetail> encryptionDetails,
-      ThirdPartyApiCallLog apiCallLog) throws IOException;
+      String tierName, String btName, String hostName, int durantionInMinutes,
+      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) throws IOException;
 
   AppdynamicsTier getAppdynamicsTier(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId,
       List<EncryptedDataDetail> encryptionDetails) throws IOException;

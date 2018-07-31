@@ -107,6 +107,8 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
       final List<EncryptedDataDetail> encryptionDetails = dataCollectionInfo.getEncryptedDataDetails();
       final long appId = dataCollectionInfo.getAppId();
       final long tierId = dataCollectionInfo.getTierId();
+      final AppdynamicsTier tier =
+          appdynamicsDelegateService.getAppdynamicsTier(appDynamicsConfig, appId, tierId, encryptionDetails);
       final List<AppdynamicsMetric> tierMetrics = appdynamicsDelegateService.getTierBTMetrics(appDynamicsConfig, appId,
           tierId, encryptionDetails, createApiCallLog(dataCollectionInfo.getStateExecutionId()));
 
@@ -117,15 +119,15 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
           case COMPARATIVE:
             for (String hostName : dataCollectionInfo.getHosts().keySet()) {
               callables.add(()
-                                -> appdynamicsDelegateService.getTierBTMetricData(appDynamicsConfig, appId, tierId,
-                                    appdynamicsMetric.getName(), hostName, DURATION_TO_ASK_MINUTES, encryptionDetails,
-                                    createApiCallLog(dataCollectionInfo.getStateExecutionId())));
+                                -> appdynamicsDelegateService.getTierBTMetricData(appDynamicsConfig, appId,
+                                    tier.getName(), appdynamicsMetric.getName(), hostName, DURATION_TO_ASK_MINUTES,
+                                    encryptionDetails, createApiCallLog(dataCollectionInfo.getStateExecutionId())));
             }
             break;
           case PREDICTIVE:
             callables.add(
                 ()
-                    -> appdynamicsDelegateService.getTierBTMetricData(appDynamicsConfig, appId, tierId,
+                    -> appdynamicsDelegateService.getTierBTMetricData(appDynamicsConfig, appId, tier.getName(),
                         appdynamicsMetric.getName(), null, PREDECTIVE_HISTORY_MINUTES + DURATION_TO_ASK_MINUTES,
                         encryptionDetails, createApiCallLog(dataCollectionInfo.getStateExecutionId())));
             break;
