@@ -213,13 +213,12 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
 
   @Override
   public List<AppdynamicsMetricData> getTierBTMetricData(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
-      long tierId, String btName, String hostName, int durantionInMinutes, List<EncryptedDataDetail> encryptionDetails,
-      ThirdPartyApiCallLog apiCallLog) throws IOException {
+      String tierName, String btName, String hostName, int durantionInMinutes,
+      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) throws IOException {
     Preconditions.checkNotNull(apiCallLog);
     logger.info("getting AppDynamics metric data for host {}, app {}, tier {}, bt {}", hostName, appdynamicsAppId,
-        tierId, btName);
-    final AppdynamicsTier tier = getAppdynamicsTier(appDynamicsConfig, appdynamicsAppId, tierId, encryptionDetails);
-    String metricPath = BT_PERFORMANCE_PATH_PREFIX + tier.getName() + "|" + btName + "|";
+        tierName, btName);
+    String metricPath = BT_PERFORMANCE_PATH_PREFIX + tierName + "|" + btName + "|";
 
     metricPath += isEmpty(hostName) ? "*" : "Individual Nodes|" + hostName + "|*";
     logger.info("fetching metrics for path {} ", metricPath);

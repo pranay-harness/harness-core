@@ -1,5 +1,6 @@
 package software.wings.service.impl.appdynamics;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -336,8 +337,8 @@ public class AppdynamicsApiTest extends WingsBaseTest {
                                               .accountname(UUID.randomUUID().toString())
                                               .build();
     List<AppdynamicsMetricData> tierBTMetricData = delegateService.getTierBTMetricData(appDynamicsConfig,
-        new Random().nextLong(), new Random().nextLong(), UUID.randomUUID().toString(), UUID.randomUUID().toString(),
-        new Random().nextInt(), Collections.emptyList(), apiCallLogWithDummyStateExecution(accountId));
+        new Random().nextLong(), generateUuid(), generateUuid(), generateUuid(), new Random().nextInt(),
+        Collections.emptyList(), apiCallLogWithDummyStateExecution(accountId));
     assertEquals(2, tierBTMetricData.size());
     assertEquals(btData, tierBTMetricData);
   }
