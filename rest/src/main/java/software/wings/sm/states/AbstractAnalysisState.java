@@ -204,7 +204,7 @@ public abstract class AbstractAnalysisState extends State {
 
       if (workflowExecution.getPipelineExecutionId() != null) {
         WorkflowExecution pipelineExecutionDetails = workflowExecutionService.getExecutionDetails(
-            executionContext.getAppId(), workflowExecution.getPipelineExecutionId(), true, emptySet());
+            executionContext.getAppId(), workflowExecution.getPipelineExecutionId(), false, emptySet());
         cvExecutionMetaDataBuilder.pipelineName(pipelineExecutionDetails.getName())
             .pipelineStartTs(pipelineExecutionDetails.getStartTs())
             .pipelineExecutionId(workflowExecution.getPipelineExecutionId())

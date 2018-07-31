@@ -715,10 +715,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   public void stateExecutionStatusUpdated(
       String appId, String workflowExecution, String stateExecutionInstanceId, ExecutionStatus status) {
     // Starting is always followed with running. No need to force calculation for it.
-    if (status == STARTING) {
-      return;
-    }
-    executorService.submit(() -> { final Tree ignore = calculateTree(appId, workflowExecution); });
+    //    if (status == STARTING) {
+    //      return;
+    //    }
+    //    executorService.submit(() -> { final Tree ignore = calculateTree(appId, workflowExecution); });
   }
 
   @Value
@@ -731,6 +731,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     private ExecutionStatus overrideStatus;
     private GraphNode graph;
+    private long lastUpdatedAt = System.currentTimeMillis();
 
     @Override
     public long structureHash() {
@@ -813,9 +814,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     Tree tree = null;
     if (!upToDate) {
-      mongoStore.<Tree>get(GraphRenderer.algorithmId, Tree.structureHash, workflowExecution.getUuid());
+      tree = mongoStore.<Tree>get(GraphRenderer.algorithmId, Tree.structureHash, workflowExecution.getUuid());
     }
-    if (tree == null) {
+
+    if (upToDate || tree == null || tree.lastUpdatedAt < (System.currentTimeMillis() - 5000)) {
       tree = calculateTree(workflowExecution.getAppId(), workflowExecution.getUuid());
     }
 
