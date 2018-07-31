@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -89,6 +90,7 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
     private long collectionStartTime;
     private int dataCollectionMinute;
     private final long collectionStartMinute;
+    private Map<String, Long> hostStartTimeMap;
 
     private DynaTraceMetricCollector(
         DynaTraceDataCollectionInfo dataCollectionInfo, DataCollectionTaskResult taskResult) {
@@ -97,6 +99,7 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
       this.collectionStartMinute = Timestamp.currentMinuteBoundary();
       this.collectionStartTime = Timestamp.minuteBoundary(dataCollectionInfo.getStartTime());
       this.dataCollectionMinute = dataCollectionInfo.getDataCollectionMinute();
+      hostStartTimeMap = new HashMap<>();
     }
 
     @SuppressFBWarnings("REC_CATCH_EXCEPTION")
@@ -205,6 +208,7 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
             String hostName = i == 0 ? DynatraceState.TEST_HOST_NAME : DynatraceState.CONTROL_HOST_NAME;
             long startTimeStamp = startTime - TimeUnit.DAYS.toMillis(i);
             long endTimeStamp = endTime - TimeUnit.DAYS.toMillis(i);
+            hostStartTimeMap.put(hostName, startTimeStamp);
             for (DynaTraceTimeSeries timeSeries : dataCollectionInfo.getTimeSeriesDefinitions()) {
               callables.add(() -> {
                 DynaTraceMetricDataRequest dataRequest = DynaTraceMetricDataRequest.builder()
@@ -264,6 +268,10 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
 
               NewRelicMetricDataRecord metricDataRecord = records.get(btName, timeStamp.longValue());
               if (metricDataRecord == null) {
+                long startTime = collectionStartTime;
+                if (hostStartTimeMap.containsKey(dataResponse.getResult().getHost())) {
+                  startTime = hostStartTimeMap.get(dataResponse.getResult().getHost());
+                }
                 metricDataRecord =
                     NewRelicMetricDataRecord.builder()
                         .name(btName)
@@ -272,9 +280,8 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
                         .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
                         .stateExecutionId(dataCollectionInfo.getStateExecutionId())
                         .serviceId(dataCollectionInfo.getServiceId())
-                        .dataCollectionMinute(
-                            (int) ((Timestamp.minuteBoundary(timeStamp.longValue()) - collectionStartMinute)
-                                / TimeUnit.MINUTES.toMillis(1)))
+                        .dataCollectionMinute((int) ((Timestamp.minuteBoundary(timeStamp.longValue()) - startTime)
+                            / TimeUnit.MINUTES.toMillis(1)))
                         .timeStamp(timeStamp.longValue())
                         .stateType(StateType.DYNA_TRACE)
                         .host(dataResponse.getResult().getHost())
