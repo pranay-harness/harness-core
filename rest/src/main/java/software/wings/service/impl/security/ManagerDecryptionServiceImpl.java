@@ -2,6 +2,7 @@ package software.wings.service.impl.security;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
+import static software.wings.common.Constants.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.utils.WingsReflectionUtils.getFieldByName;
 
 import com.google.inject.Inject;
@@ -64,8 +65,11 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
       object.setDecrypted(true);
       return;
     }
-    SyncTaskContext syncTaskContext =
-        aContext().withAccountId(object.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+    SyncTaskContext syncTaskContext = aContext()
+                                          .withAccountId(object.getAccountId())
+                                          .withAppId(Base.GLOBAL_APP_ID)
+                                          .withTimeout(DEFAULT_SYNC_CALL_TIMEOUT * 2)
+                                          .build();
     try {
       Encryptable decrypted =
           delegateProxyFactory.get(EncryptionService.class, syncTaskContext).decrypt(object, nonLocalEncryptedDetails);
