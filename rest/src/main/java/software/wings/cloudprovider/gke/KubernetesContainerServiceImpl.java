@@ -169,8 +169,9 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       return timeLimiter.callWithTimeout(
           getControllerInternal(kubernetesConfig, encryptedDataDetails, name), 10, TimeUnit.SECONDS, true);
     } catch (UncheckedTimeoutException e) {
-      logger.error("Timed out getting controller", e);
+      logger.error("Timed out getting controller {}", name, e);
     } catch (Exception e) {
+      logger.error("Error while getting controller {}", name, e);
       throw new WingsException(ErrorCode.UNKNOWN_ERROR, e).addParam("message", "Error while getting controller");
     }
     return null;
@@ -180,6 +181,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
     return () -> {
       HasMetadata controller = null;
+      logger.info("Trying to get controller for name {}", name);
       if (isNotBlank(name)) {
         boolean success = false;
         while (!success) {
@@ -209,6 +211,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           }
         }
       }
+      logger.info("Got controller for name {}", name);
       return controller;
     };
   }

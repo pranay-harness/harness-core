@@ -108,6 +108,13 @@ public class ContainerInstanceHandler extends InstanceHandler {
 
     loadContainerSvcNameInstanceMap(appId, infraMappingId, containerSvcNameInstanceMap);
 
+    logger.info("Found {} containerSvcNames for app {} and infraMapping {} ",
+        containerSvcNameInstanceMap != null ? containerSvcNameInstanceMap.size() : 0, appId, infraMappingId);
+
+    if (containerSvcNameInstanceMap == null) {
+      return;
+    }
+
     // This is to handle the case of the instances stored in the new schema.
     if (containerSvcNameInstanceMap.size() > 0) {
       containerSvcNameInstanceMap.keySet().forEach(containerSvcName -> {
@@ -120,12 +127,17 @@ public class ContainerInstanceHandler extends InstanceHandler {
             instanceSyncResponse);
 
         List<ContainerInfo> latestContainerInfoList = instanceSyncResponse.getContainerInfoList();
+        logger.info("Found {} instances from remote server for app {} , infraMapping {} and containerSvcName {}",
+            latestContainerInfoList != null ? latestContainerInfoList.size() : 0, appId, infraMappingId,
+            containerSvcName);
 
         // Key - containerId(taskId in ECS / podId in Kubernetes), Value - ContainerInfo
         Map<String, ContainerInfo> latestContainerInfoMap = latestContainerInfoList.stream().collect(
             Collectors.toMap(this ::getContainerId, containerInfo -> containerInfo));
 
         Collection<Instance> instancesInDB = containerSvcNameInstanceMap.get(containerSvcName);
+        logger.info("Found {} instances in DB for app {} , infraMapping {} and containerSvcName {}",
+            instancesInDB != null ? instancesInDB.size() : 0, appId, infraMappingId, containerSvcName);
 
         // Key - containerId (taskId in ECS / podId in Kubernetes), Value - Instance
         Map<String, Instance> instancesInDBMap = Maps.newHashMap();
@@ -237,6 +249,8 @@ public class ContainerInstanceHandler extends InstanceHandler {
   private void loadContainerSvcNameInstanceMap(String appId, String infraMappingId,
       Multimap<String, Instance> containerSvcNameInstanceMap) throws HarnessException {
     List<Instance> instanceListInDBForInfraMapping = getInstances(appId, infraMappingId);
+    logger.info("Found {} instances for app {} and infraMapping {} ", instanceListInDBForInfraMapping.size(), appId,
+        infraMappingId);
     for (Instance instance : instanceListInDBForInfraMapping) {
       InstanceInfo instanceInfo = instance.getInstanceInfo();
       if (instanceInfo instanceof ContainerInfo) {
