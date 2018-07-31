@@ -118,11 +118,11 @@ public class Util {
     } else {
       if (index < existingName.length() - 1) {
         String revisionString = existingName.substring(index + 1);
-        int revision = -1;
+        int revision;
         try {
           revision = Integer.parseInt(revisionString);
         } catch (NumberFormatException ex) {
-          logger.error("", ex);
+          revision = -1;
         }
 
         if (revision != -1) {

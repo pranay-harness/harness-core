@@ -482,8 +482,14 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     RestrictionsAndAppEnvMap restrictionsAndAppEnvMap = getRestrictionsAndAppEnvMap(accountId);
     UsageRestrictions usageRestrictionsFromUserPermissions = restrictionsAndAppEnvMap.getUsageRestrictions();
 
+    Set<AppRestrictionsSummary> appRestrictionsSummarySet = Sets.newHashSet();
     if (usageRestrictionsFromUserPermissions == null) {
-      throw new WingsException(ErrorCode.USER_HAS_NO_PERMISSIONS);
+      return RestrictionsSummary.builder()
+          .hasAllAppAccess(false)
+          .hasAllNonProdEnvAccess(false)
+          .hasAllProdEnvAccess(false)
+          .applications(appRestrictionsSummarySet)
+          .build();
     }
 
     PageResponse<Application> pageResponse = appService.list(PageRequestBuilder.aPageRequest()
@@ -522,7 +528,6 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     boolean hasAllNonProdEnvAccessForAllApps =
         hasAllEnvAccessOfType(usageRestrictionsFromUserPermissions, FilterType.NON_PROD);
 
-    Set<AppRestrictionsSummary> appRestrictionsSummarySet = Sets.newHashSet();
     appEnvMapOfUser.forEach((key, value) -> {
       String appId = key;
       boolean hasAllProdEnvAccess = hasAllEnvAccessOfType(usageRestrictionsFromUserPermissions, appId, FilterType.PROD);

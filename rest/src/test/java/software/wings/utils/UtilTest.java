@@ -47,5 +47,6 @@ public class UtilTest {
         "todolist_war_copy2-do-not-delete-1");
     assertEquals(getNameWithNextRevision("todolist_war_copy2-do-not-delete-1", "todolist_war_copy2-do-not-delete"),
         "todolist_war_copy2-do-not-delete-2");
+    assertEquals(getNameWithNextRevision("ingress-nginx", "ingress-nginx"), "ingress-nginx-1");
   }
 }
