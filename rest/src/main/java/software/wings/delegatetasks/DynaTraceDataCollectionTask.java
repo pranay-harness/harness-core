@@ -2,6 +2,7 @@ package software.wings.delegatetasks;
 
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
+import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_CURRENT;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.base.Preconditions;
@@ -280,7 +281,8 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
                         .values(new HashMap<>())
                         .groupName(DEFAULT_GROUP_NAME)
                         .build();
-                if (metricDataRecord.getTimeStamp() >= dataCollectionInfo.getStartTime()) {
+                if (metricDataRecord.getTimeStamp() >= dataCollectionInfo.getStartTime()
+                    || dataCollectionInfo.getAnalysisComparisonStrategy().equals(COMPARE_WITH_CURRENT)) {
                   records.put(btName, timeStamp.longValue(), metricDataRecord);
                 } else {
                   logger.info("Metric record for stateExecutionId {} is before the startTime. Ignoring.",
