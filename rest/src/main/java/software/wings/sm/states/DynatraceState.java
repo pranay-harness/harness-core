@@ -37,6 +37,7 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -151,7 +152,11 @@ public class DynatraceState extends AbstractMetricAnalysisState {
 
   @Override
   protected Map<String, String> getLastExecutionNodes(ExecutionContext context) {
-    return Collections.singletonMap(CONTROL_HOST_NAME, DEFAULT_GROUP_NAME);
+    Map<String, String> controlHostMap = new HashMap<>();
+    for (int i = 1; i <= CANARY_DAYS_TO_COLLECT; i++) {
+      controlHostMap.put(CONTROL_HOST_NAME + i, DEFAULT_GROUP_NAME);
+    }
+    return controlHostMap;
   }
 
   @Override

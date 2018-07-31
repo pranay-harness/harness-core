@@ -205,7 +205,7 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
           final long endTime = collectionStartTime + TimeUnit.MINUTES.toMillis(2);
 
           for (int i = 0; i <= CANARY_DAYS_TO_COLLECT; i++) {
-            String hostName = i == 0 ? DynatraceState.TEST_HOST_NAME : DynatraceState.CONTROL_HOST_NAME;
+            String hostName = i == 0 ? DynatraceState.TEST_HOST_NAME : DynatraceState.CONTROL_HOST_NAME + i;
             long startTimeStamp = startTime - TimeUnit.DAYS.toMillis(i);
             long endTimeStamp = endTime - TimeUnit.DAYS.toMillis(i);
             hostStartTimeMap.put(hostName, startTimeStamp);

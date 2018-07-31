@@ -83,8 +83,11 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
   @Test
   public void compareTestAndControl() {
     DynatraceState dynatraceState = new DynatraceState("DynatraceState");
-    assertEquals(Collections.singletonMap(DynatraceState.CONTROL_HOST_NAME, DEFAULT_GROUP_NAME),
-        dynatraceState.getLastExecutionNodes(executionContext));
+    for (int i = 1; i <= 7; i++) {
+      assertEquals(DEFAULT_GROUP_NAME,
+          dynatraceState.getLastExecutionNodes(executionContext).get(DynatraceState.CONTROL_HOST_NAME + i));
+    }
+
     assertEquals(Collections.singletonMap(DynatraceState.TEST_HOST_NAME, DEFAULT_GROUP_NAME),
         dynatraceState.getCanaryNewHostNames(executionContext));
   }
