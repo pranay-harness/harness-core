@@ -20,6 +20,8 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.sm.ExecutionStatus;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * Test for checking notify cleanup handler.
  *
@@ -40,6 +42,7 @@ public class NotifyResponseCleanupHandlerTest extends WingsBaseTest {
     String corrId = generateUuid();
     NotifyResponse<StringNotifyResponseData> notifyResponse =
         new NotifyResponse<>(corrId, aStringNotifyResponseData().withData("TEST").build());
+    notifyResponse.setCreatedAt(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(1));
     notifyResponse.setStatus(ExecutionStatus.SUCCESS);
     wingsPersistence.save(notifyResponse);
 
