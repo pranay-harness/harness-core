@@ -138,8 +138,15 @@ public class ContainerSyncImpl implements ContainerSync {
   public ContainerSyncResponse getInstances(
       ContainerInfrastructureMapping containerInfraMapping, List<String> containerSvcNameList) {
     List<ContainerInfo> result = Lists.newArrayList();
+
+    logger.info("getInstances() call for app {} , infraMapping {}", containerInfraMapping.getAppId(),
+        containerInfraMapping.getUuid());
+
     containerSvcNameList.forEach(containerSvcName -> {
       try {
+        logger.info("getInstances() call for app {} , infraMapping {} and containerSvcName {}",
+            containerInfraMapping.getAppId(), containerInfraMapping.getUuid(), containerSvcName);
+
         ContainerServiceParams containerServiceParams =
             getContainerServiceParams(containerInfraMapping, containerSvcName);
         Application app = appService.get(containerInfraMapping.getAppId());
@@ -154,12 +161,14 @@ public class ContainerSyncImpl implements ContainerSync {
         result.addAll(delegateProxyFactory.get(ContainerService.class, syncTaskContext)
                           .getContainerInfos(containerServiceParams));
       } catch (Exception ex) {
-        logger.warn("Error while getting instances for container for appId {} and infraMappingId {}",
-            containerInfraMapping.getAppId(), containerInfraMapping.getUuid(), ex);
+        logger.warn(
+            "Error while getting instances for container for appId {} and infraMappingId {} and containerSvcName {}",
+            containerInfraMapping.getAppId(), containerInfraMapping.getUuid(), containerSvcName, ex);
         throw new WingsException(ErrorCode.UNKNOWN_ERROR, ex)
             .addParam("message",
                 "Error while getting instances for container for appId " + containerInfraMapping.getAppId()
-                    + " and infraMappingId " + containerInfraMapping.getUuid());
+                    + " and infraMappingId " + containerInfraMapping.getUuid() + " and containerSvcName "
+                    + containerSvcName);
       }
     });
     return ContainerSyncResponse.builder().containerInfoList(result).build();
