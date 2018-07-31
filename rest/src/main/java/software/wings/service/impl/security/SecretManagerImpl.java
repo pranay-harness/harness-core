@@ -6,7 +6,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.stream.Collectors.joining;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.common.Constants.SECRET_MASK;
-import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.HQuery.excludeCount;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
@@ -580,15 +579,15 @@ public class SecretManagerImpl implements SecretManager {
 
   @Override
   public void checkAndAlertForInvalidManagers() {
-    wingsPersistence.createQuery(Account.class, excludeAuthority)
-        .asKeyList()
-        .stream()
-        .map(key -> key.getId().toString())
-        .forEach(accountId -> {
-          vaildateKmsConfigs(accountId);
-          validateVaultConfigs(accountId);
-          vaultService.renewTokens(accountId);
-        });
+    Query<Account> query = wingsPersistence.createQuery(Account.class);
+    try (HIterator<Account> records = new HIterator<>(query.fetch())) {
+      while (records.hasNext()) {
+        Account account = records.next();
+        vaildateKmsConfigs(account.getUuid());
+        validateVaultConfigs(account.getUuid());
+        vaultService.renewTokens(account.getUuid());
+      }
+    }
   }
 
   @Override
