@@ -175,7 +175,9 @@ public class HelmDeployServiceImpl implements HelmDeployService {
           LogLevel.INFO, CommandExecutionStatus.RUNNING);
       cliResponse = helmClient.addPublicRepo(commandRequest);
       if (cliResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.FAILURE)) {
-        throw new InvalidRequestException(cliResponse.getOutput());
+        String msg = "Failed to add repository. Reason: " + cliResponse.getOutput();
+        executionLogCallback.saveExecutionLog(msg);
+        throw new InvalidRequestException(msg);
       }
       responseMsg = "Successfully added repository " + commandRequest.getChartSpecification().getChartUrl()
           + " with name " + commandRequest.getRepoName() + "\n";
