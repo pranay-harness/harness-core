@@ -31,7 +31,7 @@ def test_timeout():
     try:
         thread.start()
         print('test post timeout')
-        HarnessLoader.send_request('http://localhost:18080', dict(message='Dummy'), version_file_path, service_secret)
+        HarnessLoader.send_request('http://localhost:18080', 'Dummy', version_file_path, service_secret)
         print('test get timeout')
         headers = {"Accept": "application/json", "Content-Type": "application/json"}
         HarnessLoader.get_request('http://localhost:18080', version_file_path, service_secret)

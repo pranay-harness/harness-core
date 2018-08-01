@@ -73,10 +73,8 @@ class HarnessLoader(object):
 
         while max_retries > 0:
             http = urllib3.PoolManager(timeout=read_timeout, cert_reqs='CERT_NONE')
-            try:
-                r = http.request('POST', url, body=payload.encode('utf-8'), headers=headers)
-            except AttributeError:  # for when the body is dict
-                r = http.request('POST', url, body=json.dumps(payload), headers=headers)
+
+            r = http.request('POST', url.encode('utf-8'), body=payload.encode('utf-8'), headers=headers)
 
             if r.status == 200:
                 return r.data, r.status
