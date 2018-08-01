@@ -64,7 +64,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.aws.manager.AwsEcrHelperServiceManager;
-import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -86,7 +86,7 @@ import java.util.List;
 public class ContainerDeploymentManagerHelper {
   @Inject private SettingsService settingsService;
   @Inject private ArtifactStreamService artifactStreamService;
-  @Inject private EncryptionService encryptionService;
+  @Inject private ManagerDecryptionService managerDecryptionService;
   @Inject private SecretManager secretManager;
   @Inject private AwsHelperService awsHelperService;
   @Inject private AzureHelperService azureHelperService;
@@ -199,7 +199,7 @@ public class ContainerDeploymentManagerHelper {
     if (artifactStream.getArtifactStreamType().equals(DOCKER.name())) {
       DockerArtifactStream dockerArtifactStream = (DockerArtifactStream) artifactStream;
       DockerConfig dockerConfig = (DockerConfig) settingsService.get(settingId).getValue();
-      encryptionService.decrypt(
+      managerDecryptionService.decrypt(
           dockerConfig, secretManager.getEncryptionDetails(dockerConfig, appId, workflowExecutionId));
 
       String domainName = getDomainName(dockerConfig.getDockerRegistryUrl());
@@ -255,7 +255,7 @@ public class ContainerDeploymentManagerHelper {
     } else if (artifactStream.getArtifactStreamType().equals(ARTIFACTORY.name())) {
       ArtifactoryArtifactStream artifactoryArtifactStream = (ArtifactoryArtifactStream) artifactStream;
       ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) settingsService.get(settingId).getValue();
-      encryptionService.decrypt(
+      managerDecryptionService.decrypt(
           artifactoryConfig, secretManager.getEncryptionDetails(artifactoryConfig, appId, workflowExecutionId));
       String url = artifactoryConfig.getArtifactoryUrl();
       if (artifactoryArtifactStream.getDockerRepositoryServer() != null) {
@@ -284,7 +284,7 @@ public class ContainerDeploymentManagerHelper {
     } else if (artifactStream.getArtifactStreamType().equals(NEXUS.name())) {
       NexusArtifactStream nexusArtifactStream = (NexusArtifactStream) artifactStream;
       NexusConfig nexusConfig = (NexusConfig) settingsService.get(settingId).getValue();
-      encryptionService.decrypt(
+      managerDecryptionService.decrypt(
           nexusConfig, secretManager.getEncryptionDetails(nexusConfig, appId, workflowExecutionId));
 
       String url = nexusConfig.getNexusUrl();
