@@ -291,6 +291,7 @@ public class WatcherServiceImpl implements WatcherService {
       } else {
         List<String> obsolete = new ArrayList<>();
         List<String> restartNeededList = new ArrayList<>();
+        List<String> drainingRestartNeededList = new ArrayList<>();
         List<String> upgradeNeededList = new ArrayList<>();
         List<String> shutdownNeededList = new ArrayList<>();
         List<String> shutdownPendingList = new ArrayList<>();
@@ -357,15 +358,17 @@ public class WatcherServiceImpl implements WatcherService {
                 if (shutdownTimedOut || heartbeatTimedOut) {
                   shutdownNeededList.add(delegateProcess);
                 }
-              } else if (restartNeeded || heartbeatTimedOut || versionMatchTimedOut || delegateMinorVersionMismatch
-                  || upgradeTimedOut) {
-                logger.info("Restarting delegate process {}. Delegate request: {}, Local heartbeat timeout: {}, "
+              } else if (heartbeatTimedOut || versionMatchTimedOut || delegateMinorVersionMismatch || upgradeTimedOut) {
+                logger.info("Restarting delegate process {}. Local heartbeat timeout: {}, "
                         + "Version match timeout: {}, Version banned: {}, Upgrade timeout: {}",
-                    delegateProcess, restartNeeded, heartbeatTimedOut, versionMatchTimedOut,
-                    delegateMinorVersionMismatch, upgradeTimedOut);
+                    delegateProcess, heartbeatTimedOut, versionMatchTimedOut, delegateMinorVersionMismatch,
+                    upgradeTimedOut);
                 restartNeededList.add(delegateProcess);
                 minMinorVersion.set(0);
                 illegalVersions.clear();
+              } else if (restartNeeded) {
+                logger.info("Draining restart delegate process {} at delegate request", delegateProcess);
+                drainingRestartNeededList.add(delegateProcess);
               } else if (upgradeNeeded) {
                 upgradeNeededList.add(delegateProcess);
               }
@@ -410,6 +413,16 @@ public class WatcherServiceImpl implements WatcherService {
         if (isNotEmpty(restartNeededList)) {
           logger.warn("Delegate processes {} need restart. Shutting down", restartNeededList);
           restartNeededList.forEach(this ::shutdownDelegate);
+        }
+        if (isNotEmpty(drainingRestartNeededList)) {
+          if (multiVersion) {
+            // TODO(brett) - Handle draining in multi-version case
+            drainingRestartNeededList.forEach(this ::shutdownDelegate);
+          } else if (working.compareAndSet(false, true)) {
+            logger.warn(
+                "Delegate processes {} need restart. Starting new process and draining old", drainingRestartNeededList);
+            startDelegateProcess(".", drainingRestartNeededList, "DelegateRestartScript", getProcessId());
+          }
         }
         if (!multiVersion && isNotEmpty(upgradeNeededList)) {
           if (working.compareAndSet(false, true)) {
