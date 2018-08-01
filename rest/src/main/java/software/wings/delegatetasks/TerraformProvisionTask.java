@@ -37,6 +37,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -67,6 +68,19 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   @Override
   public TerraformExecutionData run(Object[] parameters) {
     return run((TerraformProvisionParameters) parameters[0]);
+  }
+
+  Pattern varList = Pattern.compile("^\\s*\\[.*?]\\s*$");
+
+  private void saveVariable(BufferedWriter writer, String key, String value) throws IOException {
+    // If the variable is wrapped with [] square brackets, we assume it is a list and we keep it as is.
+    if (varList.matcher(value).matches()) {
+      writer.write(String.format("%s = %s%n", key, value));
+      return;
+    }
+
+    // TODO: we should probably do some escaping here
+    writer.write(String.format("%s = \"%s\"%n", key, value));
   }
 
   @SuppressFBWarnings({"DM_DEFAULT_ENCODING", "DM_DEFAULT_ENCODING", "REC_CATCH_EXCEPTION"})
@@ -102,15 +116,12 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       if (!isEmpty(parameters.getVariables())) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(tfVariablesFile))) {
           for (Entry<String, String> entry : parameters.getVariables().entrySet()) {
-            // TODO: we should probably do some escaping here
-            writer.write(String.format("%s = \"%s\"%n", entry.getKey(), entry.getValue()));
+            saveVariable(writer, entry.getKey(), entry.getValue());
           }
 
           for (Entry<String, EncryptedDataDetail> entry : parameters.getEncryptedVariables().entrySet()) {
             String value = new String(encryptionService.getDecryptedValue(entry.getValue()));
-
-            // TODO: we should probably do some escaping here
-            writer.write(String.format("%s = \"%s\"%n", entry.getKey(), value));
+            saveVariable(writer, entry.getKey(), value);
           }
         }
       } else {
