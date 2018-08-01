@@ -363,17 +363,7 @@ public class WatcherServiceImpl implements WatcherService {
                         + "Version match timeout: {}, Version banned: {}, Upgrade timeout: {}",
                     delegateProcess, restartNeeded, heartbeatTimedOut, versionMatchTimedOut,
                     delegateMinorVersionMismatch, upgradeTimedOut);
-                if (multiVersion) {
-                  if (working.compareAndSet(false, true)) {
-                    logger.warn(
-                        "Delegate process {} needs restart. Starting new process and draining old", delegateProcess);
-                    startDelegateProcess(
-                        delegateVersion, emptyList(), "DelegateRestartScriptVersioned", getProcessId());
-                    drainDelegateProcess(delegateProcess);
-                  }
-                } else {
-                  restartNeededList.add(delegateProcess);
-                }
+                restartNeededList.add(delegateProcess);
                 minMinorVersion.set(0);
                 illegalVersions.clear();
               } else if (upgradeNeeded) {
@@ -418,10 +408,8 @@ public class WatcherServiceImpl implements WatcherService {
           }
         }
         if (isNotEmpty(restartNeededList)) {
-          if (working.compareAndSet(false, true)) {
-            logger.warn("Delegate processes {} need restart. Starting new process and draining old", restartNeededList);
-            startDelegateProcess(".", restartNeededList, "DelegateRestartScript", getProcessId());
-          }
+          logger.warn("Delegate processes {} need restart. Shutting down", restartNeededList);
+          restartNeededList.forEach(this ::shutdownDelegate);
         }
         if (!multiVersion && isNotEmpty(upgradeNeededList)) {
           if (working.compareAndSet(false, true)) {
