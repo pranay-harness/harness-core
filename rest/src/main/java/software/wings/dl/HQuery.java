@@ -8,7 +8,6 @@ import static software.wings.dl.HQuery.QueryChecks.VALIDATE;
 import com.google.common.collect.Sets;
 
 import com.mongodb.DBCollection;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Criteria;
@@ -22,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -29,7 +29,6 @@ import java.util.Set;
  *
  * @param <T> the type parameter
  */
-@SuppressFBWarnings("EQ_DOESNT_OVERRIDE_EQUALS")
 public class HQuery<T> extends QueryImpl<T> {
   private static final Logger logger = LoggerFactory.getLogger(HQuery.class);
 
@@ -137,5 +136,22 @@ public class HQuery<T> extends QueryImpl<T> {
       logger.warn("QUERY-ENFORCEMENT: appId or accountId must be present in List(Object/Key)/Get/Count/Search query",
           new Exception(""));
     }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass() || !super.equals(o)) {
+      return false;
+    }
+    HQuery<?> hQuery = (HQuery<?>) o;
+    return Objects.equals(queryChecks, hQuery.queryChecks);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), queryChecks);
   }
 }

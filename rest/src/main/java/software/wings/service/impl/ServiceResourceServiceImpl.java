@@ -307,12 +307,12 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     if (ArtifactType.DOCKER.equals(originalService.getArtifactType())) {
       cloneHelmChartSpecification(appId, clonedServiceId, originalServiceId);
-      cloneContainerTasks(clonedServiceId, originalServiceId);
+      cloneContainerTasks(appId, clonedServiceId, originalServiceId);
     }
   }
 
-  private void cloneContainerTasks(String clonedServiceId, String originalServiceId) {
-    List<ContainerTask> containerTasks = findContainerTaskForService(originalServiceId);
+  private void cloneContainerTasks(String appId, String clonedServiceId, String originalServiceId) {
+    List<ContainerTask> containerTasks = findContainerTaskForService(appId, originalServiceId);
     if (EmptyPredicate.isNotEmpty(containerTasks)) {
       containerTasks.forEach(containerTask -> {
         ContainerTask newContainerTask = containerTask.cloneInternal();
@@ -1558,8 +1558,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     return commandHelper.getCommandCategories(appId, serviceId, commandName);
   }
 
-  private List<ContainerTask> findContainerTaskForService(String serviceId) {
-    PageRequest<ContainerTask> pageRequest = aPageRequest().addFilter("serviceId", EQ, serviceId).build();
+  private List<ContainerTask> findContainerTaskForService(String appId, String serviceId) {
+    PageRequest<ContainerTask> pageRequest =
+        aPageRequest().addFilter("appId", EQ, appId).addFilter("serviceId", EQ, serviceId).build();
     return wingsPersistence.query(ContainerTask.class, pageRequest).getResponse();
   }
 

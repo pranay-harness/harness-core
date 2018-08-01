@@ -20,6 +20,7 @@ import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.EntityVersionCollection;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.dl.HQuery;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -37,7 +38,7 @@ public class EntityVersionServiceImpl implements EntityVersionService {
 
   @Override
   public PageResponse<EntityVersionCollection> listEntityVersions(PageRequest<EntityVersionCollection> pageRequest) {
-    return wingsPersistence.query(EntityVersionCollection.class, pageRequest);
+    return wingsPersistence.query(EntityVersionCollection.class, pageRequest, HQuery.excludeAuthority);
   }
 
   @Override
