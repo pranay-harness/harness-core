@@ -65,7 +65,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       executionLogCallback.saveExecutionLog(
           preProcessReleaseHistoryCommandOutput(helmCliResponse, commandRequest.getReleaseName()));
 
-      if (helmCliResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.FAILURE)) {
+      if (checkNewHelmInstall(commandRequest)) {
         executionLogCallback.saveExecutionLog("No previous deployment found for release. Installing chart");
         commandResponse = helmClient.install(commandRequest);
       } else {
@@ -91,6 +91,11 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     } catch (Exception e) {
       logger.error("Exception in deploying helm chart [{}]", commandRequest, e);
       return new HelmCommandResponse(CommandExecutionStatus.FAILURE, Misc.getMessage(e));
+    } finally {
+      if (checkDeleteReleaseNeeded(commandRequest)) {
+        executionLogCallback.saveExecutionLog("Deployment failed.");
+        deleteAndPurgeHelmRelease(commandRequest, executionLogCallback);
+      }
     }
   }
 
@@ -273,5 +278,41 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     }
 
     return helmCliResponse.getOutput();
+  }
+
+  private void deleteAndPurgeHelmRelease(HelmInstallCommandRequest commandRequest, LogCallback executionLogCallback) {
+    try {
+      String message = "Cleaning up. Deleting the release with --purge option";
+      executionLogCallback.saveExecutionLog(message);
+      HelmCliResponse deleteCommandResponse = helmClient.deleteHelmRelease(commandRequest);
+      executionLogCallback.saveExecutionLog(deleteCommandResponse.getOutput());
+    } catch (Exception e) {
+      logger.error("Helm delete failed", e);
+    }
+  }
+
+  private boolean checkNewHelmInstall(HelmInstallCommandRequest commandRequest) {
+    HelmListReleasesCommandResponse commandResponse = listReleases(commandRequest);
+
+    logger.info(commandResponse.getOutput());
+    return commandResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS)
+        && isEmpty(commandResponse.getReleaseInfoList());
+  }
+
+  private boolean checkDeleteReleaseNeeded(HelmInstallCommandRequest commandRequest) {
+    HelmListReleasesCommandResponse commandResponse = listReleases(commandRequest);
+
+    logger.info(commandResponse.getOutput());
+    if (commandResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS)) {
+      if (isEmpty(commandResponse.getReleaseInfoList())) {
+        return false;
+      }
+
+      return commandResponse.getReleaseInfoList().stream().anyMatch(releaseInfo
+          -> releaseInfo.getRevision().equals("1") && releaseInfo.getStatus().equals("FAILED")
+              && releaseInfo.getName().equals(commandRequest.getReleaseName()));
+    }
+
+    return false;
   }
 }

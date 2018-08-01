@@ -6,6 +6,7 @@ import static software.wings.beans.command.CommandExecutionResult.CommandExecuti
 import static software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper.lockObjects;
 import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_HELM_COMMAND_TIMEOUT;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_ADD_REPO_COMMAND_TEMPLATE;
+import static software.wings.helpers.ext.helm.HelmConstants.HELM_DELETE_RELEASE_TEMPLATE;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_INSTALL_COMMAND_TEMPLATE;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_LIST_RELEASE_COMMAND_TEMPLATE;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_RELEASE_HIST_COMMAND_TEMPLATE;
@@ -118,7 +119,6 @@ public class HelmClientImpl implements HelmClient {
       throws InterruptedException, TimeoutException, IOException {
     String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
     String listRelease = HELM_LIST_RELEASE_COMMAND_TEMPLATE.replace("${KUBECONFIG_PATH}", kubeConfigLocation)
-                             .replace("${FILTER}", "--deployed")
                              .replace("${RELEASE_NAME}", commandRequest.getReleaseName());
     return executeHelmCLICommand(listRelease);
   }
@@ -147,6 +147,17 @@ public class HelmClientImpl implements HelmClient {
       throws InterruptedException, TimeoutException, IOException {
     String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
     String command = HELM_REPO_LIST_COMMAND_TEMPLATE.replace("${KUBECONFIG_PATH}", kubeConfigLocation);
+
+    return executeHelmCLICommand(command);
+  }
+
+  @Override
+  public HelmCliResponse deleteHelmRelease(HelmCommandRequest commandRequest)
+      throws InterruptedException, TimeoutException, IOException {
+    String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
+    String command = HELM_DELETE_RELEASE_TEMPLATE.replace("${KUBECONFIG_PATH}", kubeConfigLocation)
+                         .replace("${RELEASE_NAME}", commandRequest.getReleaseName())
+                         .replace("${FLAGS}", "--purge");
 
     return executeHelmCLICommand(command);
   }
