@@ -583,9 +583,14 @@ public class SecretManagerImpl implements SecretManager {
     try (HIterator<Account> records = new HIterator<>(query.fetch())) {
       while (records.hasNext()) {
         Account account = records.next();
-        vaildateKmsConfigs(account.getUuid());
-        validateVaultConfigs(account.getUuid());
-        vaultService.renewTokens(account.getUuid());
+        try {
+          vaildateKmsConfigs(account.getUuid());
+          validateVaultConfigs(account.getUuid());
+          vaultService.renewTokens(account.getUuid());
+        } catch (Exception e) {
+          logger.info(
+              "Failed to validate secret manager for {} account id {}", account.getAccountName(), account.getUuid(), e);
+        }
       }
     }
   }
