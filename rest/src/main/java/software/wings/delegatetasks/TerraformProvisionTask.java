@@ -79,8 +79,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       return;
     }
 
-    // TODO: we should probably do some escaping here
-    writer.write(String.format("%s = \"%s\"%n", key, value));
+    writer.write(String.format("%s = \"%s\"%n", key, value.replaceAll("\"", "\\\"")));
   }
 
   @SuppressFBWarnings({"DM_DEFAULT_ENCODING", "DM_DEFAULT_ENCODING", "REC_CATCH_EXCEPTION"})
