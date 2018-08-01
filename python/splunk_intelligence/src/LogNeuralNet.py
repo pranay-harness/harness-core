@@ -322,7 +322,7 @@ def main(options):
             #k8_performance()
         else:
             corpus.save_to_harness(options.log_analysis_save_url,
-                                   {}, options.version_file_path,
+                                   json.dumps({}), options.version_file_path,
                                    options.service_secret)
 
     except Exception as e:
