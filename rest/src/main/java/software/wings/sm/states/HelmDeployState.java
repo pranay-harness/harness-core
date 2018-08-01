@@ -63,6 +63,7 @@ import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionResponse.Builder;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.State;
@@ -311,25 +312,29 @@ public class HelmDeployState extends State {
     stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
     stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
 
+    Builder executionResponseBuilder = Builder.anExecutionResponse()
+                                           .withExecutionStatus(executionStatus)
+                                           .withErrorMessage(executionResponse.getErrorMessage())
+                                           .withStateExecutionData(stateExecutionData);
+
     HelmInstallCommandResponse helmInstallCommandResponse =
         (HelmInstallCommandResponse) executionResponse.getHelmCommandResponse();
 
-    List<InstanceStatusSummary> instanceStatusSummaries = containerDeploymentHelper.getInstanceStatusSummaries(
-        context, helmInstallCommandResponse.getContainerInfoList());
-    stateExecutionData.setNewInstanceStatusSummaries(instanceStatusSummaries);
+    if (helmInstallCommandResponse != null) {
+      List<InstanceStatusSummary> instanceStatusSummaries = containerDeploymentHelper.getInstanceStatusSummaries(
+          context, helmInstallCommandResponse.getContainerInfoList());
+      stateExecutionData.setNewInstanceStatusSummaries(instanceStatusSummaries);
 
-    List<InstanceElement> instanceElements =
-        instanceStatusSummaries.stream().map(InstanceStatusSummary::getInstanceElement).collect(toList());
-    InstanceElementListParam instanceElementListParam =
-        InstanceElementListParamBuilder.anInstanceElementListParam().withInstanceElements(instanceElements).build();
+      List<InstanceElement> instanceElements =
+          instanceStatusSummaries.stream().map(InstanceStatusSummary::getInstanceElement).collect(toList());
+      InstanceElementListParam instanceElementListParam =
+          InstanceElementListParamBuilder.anInstanceElementListParam().withInstanceElements(instanceElements).build();
 
-    return ExecutionResponse.Builder.anExecutionResponse()
-        .withExecutionStatus(executionStatus)
-        .withErrorMessage(executionResponse.getErrorMessage())
-        .withStateExecutionData(stateExecutionData)
-        .addContextElement(instanceElementListParam)
-        .addNotifyElement(instanceElementListParam)
-        .build();
+      executionResponseBuilder.addContextElement(instanceElementListParam);
+      executionResponseBuilder.addNotifyElement(instanceElementListParam);
+    }
+
+    return executionResponseBuilder.build();
   }
 
   @Override

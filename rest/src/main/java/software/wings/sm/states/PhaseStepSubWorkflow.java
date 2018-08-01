@@ -412,7 +412,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       throw new InvalidRequestException("Response data has wrong type");
     }
     ElementNotifyResponseData elementNotifyResponseData = (ElementNotifyResponseData) notifiedResponseData;
-    if (ExecutionStatus.isDiscontinueStatus(elementNotifyResponseData.getExecutionStatus())) {
+    if (ExecutionStatus.isNegativeStatus(elementNotifyResponseData.getExecutionStatus())) {
       return;
     }
 
