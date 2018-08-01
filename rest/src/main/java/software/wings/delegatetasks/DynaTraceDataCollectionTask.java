@@ -49,6 +49,7 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
   private static final Logger logger = LoggerFactory.getLogger(DynaTraceDataCollectionTask.class);
   private static final int DURATION_TO_ASK_MINUTES = 5;
   private static final int CANARY_DAYS_TO_COLLECT = 7;
+  private static final int PERIODIC_GAP_IN_DAYS = 7;
   private DynaTraceDataCollectionInfo dataCollectionInfo;
 
   @Inject private DynaTraceDelegateService dynaTraceDelegateService;
@@ -174,6 +175,12 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
       }
     }
 
+    /**
+     * Method to fetch metric data
+     *
+     * @return List of DynaTraceMetricDataResponse
+     * @throws IOException
+     */
     public List<DynaTraceMetricDataResponse> getMetricsData() throws IOException {
       final DynaTraceConfig dynaTraceConfig = dataCollectionInfo.getDynaTraceConfig();
       final List<EncryptedDataDetail> encryptionDetails = dataCollectionInfo.getEncryptedDataDetails();
@@ -206,8 +213,8 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
 
           for (int i = 0; i <= CANARY_DAYS_TO_COLLECT; i++) {
             String hostName = i == 0 ? DynatraceState.TEST_HOST_NAME : DynatraceState.CONTROL_HOST_NAME + i;
-            long startTimeStamp = startTime - TimeUnit.DAYS.toMillis(i);
-            long endTimeStamp = endTime - TimeUnit.DAYS.toMillis(i);
+            long startTimeStamp = startTime - TimeUnit.DAYS.toMillis(PERIODIC_GAP_IN_DAYS * i);
+            long endTimeStamp = endTime - TimeUnit.DAYS.toMillis(PERIODIC_GAP_IN_DAYS * i);
             hostStartTimeMap.put(hostName, startTimeStamp);
             for (DynaTraceTimeSeries timeSeries : dataCollectionInfo.getTimeSeriesDefinitions()) {
               callables.add(() -> {
