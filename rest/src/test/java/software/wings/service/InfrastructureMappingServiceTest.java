@@ -8,7 +8,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -242,7 +241,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
     doReturn(savedPhysicalInfrastructureMapping)
         .when(wingsPersistence)
-        .saveAndGet(any(), any(), anyString(), anyLong());
+        .saveAndGet(InfrastructureMapping.class, physicalInfrastructureMapping);
     doReturn(aServiceTemplate().withAppId(APP_ID).withServiceId(SERVICE_ID).withUuid(TEMPLATE_ID).build())
         .when(serviceTemplateService)
         .get(APP_ID, TEMPLATE_ID);
