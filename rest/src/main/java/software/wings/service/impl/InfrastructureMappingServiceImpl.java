@@ -123,6 +123,7 @@ import software.wings.service.intfc.aws.manager.AwsCodeDeployHelperServiceManage
 import software.wings.service.intfc.aws.manager.AwsEc2HelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsEcsHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsIamHelperServiceManager;
+import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.ownership.OwnedByInfrastructureMapping;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.EntityUpdateService;
@@ -166,6 +167,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private Map<String, InfrastructureProvider> infrastructureProviders;
   @Inject private AppService appService;
   @Inject private EnvironmentService envService;
+  // DO NOT DELETE THIS, PRUNE logic needs it
+  @SuppressWarnings("unused") @Inject private InstanceService instanceService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private EntityUpdateService entityUpdateService;
   @Inject private ExecutorService executorService;

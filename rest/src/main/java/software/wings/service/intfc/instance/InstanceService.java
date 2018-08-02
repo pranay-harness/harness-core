@@ -5,7 +5,11 @@ import software.wings.beans.infrastructure.instance.ContainerDeploymentInfo;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.service.intfc.ownership.OwnedByApplication;
+import software.wings.service.intfc.ownership.OwnedByEnvironment;
+import software.wings.service.intfc.ownership.OwnedByInfrastructureMapping;
+import software.wings.service.intfc.ownership.OwnedByService;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
@@ -16,7 +20,8 @@ import javax.validation.Valid;
 /**
  * @author rktummala on 08/17/17
  */
-public interface InstanceService extends OwnedByApplication {
+public interface InstanceService
+    extends OwnedByApplication, OwnedByService, OwnedByEnvironment, OwnedByInfrastructureMapping, OwnedByAccount {
   /**
    * Save instance information.
    *

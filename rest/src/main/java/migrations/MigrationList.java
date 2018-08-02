@@ -10,6 +10,7 @@ import migrations.all.AddValidUntilToDelegateConnectionResults;
 import migrations.all.AddValidUntilToDelegateTask;
 import migrations.all.AppKeywordsMigration;
 import migrations.all.AuthTokenTtlMigration;
+import migrations.all.CleanupOrphanInstances;
 import migrations.all.DeleteOldThirdPartyApiCallsMigration;
 import migrations.all.DeleteStaleSecretUsageLogs;
 import migrations.all.DeleteStaleYamlChangeSetsMigration;
@@ -108,6 +109,7 @@ public class MigrationList {
         .add(Pair.of(179, DeleteStaleSecretUsageLogs.class))
         .add(Pair.of(180, BaseMigration.class))
         .add(Pair.of(181, HelmReleaseNamePrefixMigration.class))
+        .add(Pair.of(182, CleanupOrphanInstances.class))
         .build();
   }
 }

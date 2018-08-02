@@ -75,6 +75,7 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.ownership.OwnedByEnvironment;
 import software.wings.stencils.DataProvider;
 import software.wings.utils.BoundedInputStream;
@@ -102,6 +103,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ActivityService activityService;
+  // DO NOT DELETE THIS, PRUNE logic needs it
+  @SuppressWarnings("unused") @Inject private InstanceService instanceService;
   @Inject private AppService appService;
   @Inject private ConfigService configService;
   @Inject private InfrastructureMappingService infrastructureMappingService;

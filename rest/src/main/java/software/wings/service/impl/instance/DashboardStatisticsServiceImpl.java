@@ -465,7 +465,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     List<PipelineExecutionHistory> pipelineExecutionHistory = getPipelineExecutionHistory(appId, serviceId);
     List<DeploymentHistory> deploymentHistoryList = getDeploymentHistory(appId, serviceId);
     Service service = serviceResourceService.get(appId, serviceId);
-    Validator.notNullCheck("Service", service);
+    Validator.notNullCheck("Service not found", service);
     EntitySummary serviceSummary = getEntitySummary(service.getName(), serviceId, EntityType.SERVICE.name());
     return ServiceInstanceDashboard.Builder.aServiceInstanceDashboard()
         .withServiceSummary(serviceSummary)
