@@ -247,8 +247,8 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     Environment env = ((ExecutionContextImpl) context).getEnv();
     PageRequestBuilder pageRequest = aPageRequest().withLimit(UNLIMITED);
 
-    applyServiceTemplatesFilter(app.getUuid(), env.getUuid(), pageRequest);
-    applyHostNamesFilter(app.getUuid(), pageRequest);
+    //    applyServiceTemplatesFilter(app.getUuid(), env.getUuid(), pageRequest);
+    //    applyHostNamesFilter(app.getUuid(), pageRequest);
     applyServiceInstanceIdsFilter(pageRequest);
 
     PageRequest<ServiceInstance> req = pageRequest.build();

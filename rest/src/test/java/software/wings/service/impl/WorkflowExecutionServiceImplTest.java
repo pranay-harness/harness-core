@@ -185,6 +185,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Ignore
   public void shouldTriggerSimpleWorkflow() throws InterruptedException {
     Graph graph =
         aGraph()
@@ -439,6 +440,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Ignore
   public void shouldTriggerComplexWorkflow() throws InterruptedException {
     Host host1 = wingsPersistence.saveAndGet(
         Host.class, aHost().withAppId(app.getUuid()).withEnvId(env.getUuid()).withHostName("host1").build());
@@ -612,6 +614,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Ignore
   public void triggerPipeline() throws InterruptedException {
     Host host = wingsPersistence.saveAndGet(
         Host.class, aHost().withAppId(app.getUuid()).withEnvId(env.getUuid()).withHostName("host").build());
@@ -1398,6 +1401,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Ignore
   public void shouldWaitOnError() throws InterruptedException {
     Host applicationHost1 = wingsPersistence.saveAndGet(
         Host.class, aHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHostName("host1").build());
@@ -1600,6 +1604,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Ignore
   public void shouldRetryOnError() throws InterruptedException {
     Host host1 = wingsPersistence.saveAndGet(
         Host.class, aHost().withAppId(app.getUuid()).withEnvId(env.getUuid()).withHostName("host1").build());
