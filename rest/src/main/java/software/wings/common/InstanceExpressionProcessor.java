@@ -21,7 +21,6 @@ import software.wings.api.PartitionElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceInstanceIdsParam;
 import software.wings.beans.Application;
-import software.wings.beans.Environment;
 import software.wings.beans.ReadPref;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
@@ -244,7 +243,6 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
    */
   PageRequest<ServiceInstance> buildPageRequest() {
     Application app = ((ExecutionContextImpl) context).getApp();
-    Environment env = ((ExecutionContextImpl) context).getEnv();
     PageRequestBuilder pageRequest = aPageRequest().withLimit(UNLIMITED);
 
     //    applyServiceTemplatesFilter(app.getUuid(), env.getUuid(), pageRequest);
