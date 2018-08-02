@@ -41,6 +41,8 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -204,9 +206,25 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
         if (response.isSuccessful()) {
           apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
           List<NewRelicMetric> metrics = response.body().getMetrics();
+
           if (isNotEmpty(metrics)) {
             metrics.forEach(metric -> {
               if (metric.getName().startsWith("WebTransaction/") || metric.getName().equals("WebTransaction")) {
+                try {
+                  String[] splits = metric.getName().split("/");
+                  StringBuffer sb = new StringBuffer();
+                  String slash = "/";
+                  for (String part : splits) {
+                    sb.append(URLEncoder.encode(part, "UTF-8"));
+                    sb.append(slash);
+                  }
+                  if (!metric.getName().equals("WebTransaction")) {
+                    metric.setName(sb.toString());
+                    logger.info("Encoded metric name is {}", metric.getName());
+                  }
+                } catch (UnsupportedEncodingException ex) {
+                  logger.error("Encoding was not supported when setting metric names.");
+                }
                 newRelicMetrics.add(metric);
               }
             });
