@@ -219,7 +219,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
                     sb.append(slash);
                   }
                   if (!metric.getName().equals("WebTransaction")) {
-                    metric.setName(sb.toString());
+                    metric.setName(sb.substring(0, sb.length() - 1));
                     logger.info("Encoded metric name is {}", metric.getName());
                   }
                 } catch (UnsupportedEncodingException ex) {
