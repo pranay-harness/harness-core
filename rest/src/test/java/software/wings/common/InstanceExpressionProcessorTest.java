@@ -423,6 +423,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
    * Should fetch context element.
    */
   @Test
+  @Ignore
   public void shouldFetchInstanceElements() {
     Application app = anApplication().withName("AppA").withAccountId(ACCOUNT_ID).build();
     app = appService.save(app);
