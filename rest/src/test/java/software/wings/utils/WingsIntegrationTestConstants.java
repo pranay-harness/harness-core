@@ -13,6 +13,14 @@ public interface WingsIntegrationTestConstants {
   String readOnlyEmail = "readonlyuser@harness.io";
   char[] readOnlyPassword = "readonlyuser".toCharArray();
 
+  String rbac1UserName = "rbac1";
+  String rbac1Email = "rbac1@harness.io";
+  char[] rbac1Password = "rbac1".toCharArray();
+
+  String rbac2UserName = "rbac2";
+  String rbac2Email = "rbac2@harness.io";
+  char[] rbac2Password = "rbac2".toCharArray();
+
   String defaultUserName = "default";
   String defaultEmail = "default@harness.io";
   char[] defaultPassword = "default".toCharArray();

@@ -389,7 +389,8 @@ public class DataGenUtil extends BaseIntegrationTest {
     User adminUser = addUser(adminUserName, adminUserEmail, adminPassword, account);
     addUser(defaultUserName, defaultEmail, defaultPassword, account);
     User readOnlyUser = addUser(readOnlyUserName, readOnlyEmail, readOnlyPassword, account);
-
+    addUser(rbac1UserName, rbac1Email, rbac1Password, account);
+    addUser(rbac2UserName, rbac2Email, rbac2Password, account);
     addUserToUserGroup(adminUser, accountId, Constants.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME);
     UserGroup readOnlyUserGroup = authHandler.buildReadOnlyUserGroup(accountId, readOnlyUser, "ReadOnlyUserGroup");
     readOnlyUserGroup = wingsPersistence.saveAndGet(UserGroup.class, readOnlyUserGroup);
