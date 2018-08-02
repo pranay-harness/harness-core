@@ -78,7 +78,7 @@ import java.util.UUID;
  */
 @Singleton
 public class WingsMongoPersistence implements WingsPersistence, Managed {
-  protected static final Logger logger = LoggerFactory.getLogger(WingsMongoPersistence.class);
+  protected static Logger logger = LoggerFactory.getLogger(WingsMongoPersistence.class);
 
   @Inject private SecretManager secretManager;
   private AdvancedDatastore primaryDatastore;
@@ -186,19 +186,6 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     if (object.getShardKeys() != null) {
       object.getShardKeys().keySet().forEach(key -> query.filter(key, object.getShardKeys().get(key)));
     }
-    return query.get();
-  }
-
-  @Override
-  public <T extends Base> T saveAndGet(Class<T> cls, T object, String requestId, long start) {
-    Object id = save(object);
-    logger.info("Checkpoint5a: for request {}, time taken: {}", requestId, System.currentTimeMillis() - start);
-    Query<T> query = createQuery(cls, ReadPref.CRITICAL).filter(ID_KEY, id);
-    logger.info("Checkpoint5b: for request {}, time taken: {}", requestId, System.currentTimeMillis() - start);
-    if (object.getShardKeys() != null) {
-      object.getShardKeys().keySet().forEach(key -> query.filter(key, object.getShardKeys().get(key)));
-    }
-    logger.info("Checkpoint5c: for request {}, time taken: {}", requestId, System.currentTimeMillis() - start);
     return query.get();
   }
 
