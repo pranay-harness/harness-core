@@ -3,6 +3,7 @@ package software.wings.service.impl.instance;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -26,7 +27,9 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.utils.Validator;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.validation.Valid;
 
@@ -118,11 +121,50 @@ public class InstanceServiceImpl implements InstanceService {
     }
   }
 
+  private void pruneByEntity(String fieldName, String value) {
+    Query<Instance> query = wingsPersistence.createAuthorizedQuery(Instance.class);
+    query.filter(fieldName, value);
+    wingsPersistence.delete(query);
+  }
+
+  private void pruneByEntity(Map<String, String> inputs) {
+    Query<Instance> query = wingsPersistence.createAuthorizedQuery(Instance.class);
+    inputs.forEach((key, value) -> query.filter(key, value));
+    wingsPersistence.delete(query);
+  }
+
   @Override
   public void pruneByApplication(String appId) {
-    Query<Instance> query = wingsPersistence.createAuthorizedQuery(Instance.class);
-    query.filter("appId", appId);
-    wingsPersistence.delete(query);
+    pruneByEntity("appId", appId);
+  }
+
+  @Override
+  public void deleteByAccountId(String accountId) {
+    pruneByEntity("accountId", accountId);
+  }
+
+  @Override
+  public void pruneByEnvironment(String appId, String envId) {
+    HashMap<String, String> map = Maps.newHashMap();
+    map.put("appId", appId);
+    map.put("envId", envId);
+    pruneByEntity(map);
+  }
+
+  @Override
+  public void pruneByInfrastructureMapping(String appId, String infraMappingId) {
+    HashMap<String, String> map = Maps.newHashMap();
+    map.put("appId", appId);
+    map.put("infraMappingId", infraMappingId);
+    pruneByEntity(map);
+  }
+
+  @Override
+  public void pruneByService(String appId, String serviceId) {
+    HashMap<String, String> map = Maps.newHashMap();
+    map.put("appId", appId);
+    map.put("serviceId", serviceId);
+    pruneByEntity(map);
   }
 
   @Override

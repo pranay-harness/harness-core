@@ -57,6 +57,7 @@ import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SystemCatalogService;
 import software.wings.service.intfc.UserGroupService;
+import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.service.intfc.template.TemplateGalleryService;
 
@@ -79,6 +80,8 @@ public class AccountServiceImpl implements AccountService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private RoleService roleService;
   @Inject private UserGroupService userGroupService;
+  // DO NOT DELETE THIS, PRUNE logic needs it
+  @SuppressWarnings("unused") @Inject private InstanceService instanceService;
   @Inject private AuthHandler authHandler;
   @Inject private LicenseManager licenseManager;
   @Inject private NotificationSetupService notificationSetupService;

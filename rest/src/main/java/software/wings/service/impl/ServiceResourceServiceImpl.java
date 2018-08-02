@@ -118,6 +118,7 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.ownership.OwnedByService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.sm.ContextElement;
@@ -158,6 +159,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private AppService appService;
   @Inject private ArtifactService artifactService;
   @Inject private ArtifactStreamService artifactStreamService;
+  // DO NOT DELETE THIS, PRUNE logic needs it
+  @SuppressWarnings("unused") @Inject private InstanceService instanceService;
   @Inject private CommandService commandService;
   @Inject private ConfigService configService;
   @Inject private EntityVersionService entityVersionService;
