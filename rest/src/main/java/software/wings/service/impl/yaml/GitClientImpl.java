@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.OK;
 import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.UP_TO_DATE;
+import static software.wings.beans.ErrorCode.GENERAL_YAML_ERROR;
 import static software.wings.beans.ErrorCode.UNREACHABLE_HOST;
 import static software.wings.beans.yaml.Change.ChangeType.ADD;
 import static software.wings.beans.yaml.Change.ChangeType.DELETE;
@@ -12,6 +13,7 @@ import static software.wings.beans.yaml.Change.ChangeType.MODIFY;
 import static software.wings.beans.yaml.Change.ChangeType.RENAME;
 import static software.wings.beans.yaml.YamlConstants.GIT_TERRAFORM_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
+import static software.wings.exception.WingsException.SRE;
 import static software.wings.exception.WingsException.USER_ADMIN;
 
 import com.jcraft.jsch.JSch;
@@ -21,6 +23,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import groovy.lang.Singleton;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.filesystem.FileIo;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
@@ -506,6 +509,7 @@ public class GitClientImpl implements GitClient {
   @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   public synchronized void ensureRepoLocallyClonedAndUpdated(GitConfig gitConfig) {
     File repoDir = new File(getRepoDirectory(gitConfig));
+    boolean executionFailed = false;
     if (repoDir.exists()) {
       try (Git git = Git.open(repoDir)) {
         // Check URL change (ssh, https) and update in .git/config
@@ -520,19 +524,53 @@ public class GitClientImpl implements GitClient {
             getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Hard reset done for branch " + gitConfig.getBranch());
         // TODO:: log failed commits queued and being ignored.
         return;
-      } catch (IOException ex) {
-        logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Repo doesn't exist locally [repo: {}], {} ",
-            gitConfig.getRepoUrl(), ex);
-      } catch (GitAPIException ex) {
-        logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Hard reset failed for branch [{}]",
-            gitConfig.getBranch());
-        logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
-        checkIfTransportException(ex);
+      } catch (Exception ex) {
+        executionFailed = true;
+        if (ex instanceof IOException) {
+          logger.error(
+              getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Repo doesn't exist locally [repo: {}], {} ",
+              gitConfig.getRepoUrl(), ex);
+        } else {
+          if (ex instanceof GitAPIException) {
+            logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Hard reset failed for branch [{}]",
+                gitConfig.getBranch());
+            logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
+            checkIfTransportException(ex);
+          }
+        }
+      } finally {
+        if (executionFailed) {
+          // ensureRepoLocallyClonedAndUpdated is called before any git op (commitAndPush, diff)
+          // This is synchronized on this singleton class object. So if we are inside in this method, there is
+          // no other method inside this one at the same time. Also all callers are synchronized as well.
+          // Means if we fail due to existing index.lock it has to be orphan lock file
+          // and needs to be deleted.
+          releaseLock(gitConfig);
+        }
       }
-    }
 
-    logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Do a fresh clone");
-    clone(gitConfig);
+      logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Do a fresh clone");
+      clone(gitConfig);
+    }
+  }
+
+  private synchronized void releaseLock(GitConfig gitConfig) {
+    try {
+      File repoDir = new File(getRepoDirectory(gitConfig));
+      File file = new File(repoDir.getAbsolutePath() + "/.git/index.lock");
+      FileIo.deleteFileIfExists(file.getAbsolutePath());
+    } catch (Exception e) {
+      logger.error(new StringBuilder(64)
+                       .append("Failed to delete index.lock file for account: ")
+                       .append(gitConfig.getAccountId())
+                       .append(", Repo URL: ")
+                       .append(gitConfig.getRepoUrl())
+                       .append(", Branch: ")
+                       .append(gitConfig.getBranch())
+                       .toString());
+
+      throw new WingsException(GENERAL_YAML_ERROR, "GIT_SYNC_ISSUE: Failed to delete index.lock file", SRE, e);
+    }
   }
 
   private void checkIfTransportException(Exception ex) {
