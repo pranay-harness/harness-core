@@ -93,7 +93,8 @@ public class PhaseElement implements ContextElement {
     map.put(SERVICE, serviceElement);
     InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
     if (infrastructureMapping != null
-        && DeploymentType.KUBERNETES.name().equals(infrastructureMapping.getDeploymentType())) {
+        && ((DeploymentType.KUBERNETES.name().equals(infrastructureMapping.getDeploymentType()))
+               || (DeploymentType.HELM.name().equals(infrastructureMapping.getDeploymentType())))) {
       String namespace = null;
       if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
         namespace = ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getNamespace();
