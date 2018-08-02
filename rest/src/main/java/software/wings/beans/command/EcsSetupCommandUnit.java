@@ -31,7 +31,6 @@ import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -359,7 +358,6 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
    * @param executionLogCallback
    * @return
    */
-  @SuppressFBWarnings("WMI_WRONG_MAP_ITERATOR")
   private TaskDefinition createTaskDefinition(EcsContainerTask ecsContainerTask, String containerName,
       String dockerImageName, EcsSetupParams ecsSetupParams, SettingAttribute settingAttribute,
       Map<String, String> serviceVariables, Map<String, String> safeDisplayServiceVariables,
@@ -380,8 +378,8 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
     if (isNotEmpty(serviceVariables)) {
       if (isNotEmpty(safeDisplayServiceVariables)) {
         executionLogCallback.saveExecutionLog("Setting environment variables in container definition", LogLevel.INFO);
-        for (String key : safeDisplayServiceVariables.keySet()) {
-          executionLogCallback.saveExecutionLog(key + "=" + safeDisplayServiceVariables.get(key), LogLevel.INFO);
+        for (Map.Entry<String, String> entry : safeDisplayServiceVariables.entrySet()) {
+          executionLogCallback.saveExecutionLog(entry.getKey() + "=" + entry.getValue(), LogLevel.INFO);
         }
       }
       Map<String, KeyValuePair> serviceValuePairs = serviceVariables.entrySet().stream().collect(Collectors.toMap(
