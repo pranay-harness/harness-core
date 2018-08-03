@@ -36,6 +36,7 @@ import software.wings.beans.ServiceVariable.Type;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
@@ -72,6 +73,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Inject private EnvironmentService environmentService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private HostService hostService;
+  @Inject private AppService appService;
   @Transient @Inject private transient SecretManager secretManager;
 
   @Transient @Inject private transient ManagerDecryptionService managerDecryptionService;
@@ -486,9 +488,13 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       }
     }
     logger.debug("Service variables after overrides [{}]", mergedServiceSettings.toString());
+    String accountId = appService.get(appId).getAccountId();
     if (!maskEncryptedFields) {
       mergedServiceSettings.forEach(serviceVariable -> {
         if (serviceVariable.getType() == Type.ENCRYPTED_TEXT) {
+          if (isEmpty(serviceVariable.getAccountId())) {
+            serviceVariable.setAccountId(accountId);
+          }
           managerDecryptionService.decrypt(
               serviceVariable, secretManager.getEncryptionDetails(serviceVariable, appId, workflowExecutionId));
         }
