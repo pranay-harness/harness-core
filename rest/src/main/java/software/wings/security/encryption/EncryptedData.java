@@ -45,6 +45,8 @@ import java.util.concurrent.atomic.AtomicInteger;
   @Index(fields = { @Field("name"), @Field("accountId") }, options = @IndexOptions(unique = true, name = "uniqueIdx"))
 })
 public class EncryptedData extends Base {
+  public static final String NAME_KEY = "name";
+
   @NotEmpty @Indexed private String name;
 
   @NotEmpty private String encryptionKey;

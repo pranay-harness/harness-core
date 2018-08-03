@@ -18,12 +18,12 @@ import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.InfrastructureProvisionerType;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.TerraformInfrastructureProvisioner.TerraformInfrastructureProvisionerBuilder;
 import software.wings.dl.WingsPersistence;
 import software.wings.generator.OwnerManager.Owners;
-import software.wings.generator.SecretGenerator.SecretName;
 import software.wings.generator.SettingGenerator.Settings;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -75,16 +75,8 @@ public class InfrastructureProvisionerGenerator {
         TerraformInfrastructureProvisioner.builder()
             .name("Harness Terraform Test")
             .sourceRepoSettingId(gitSourceSettingAttribute.getUuid())
-            .variables(asList(NameValuePair.builder()
-                                  .name("access_key")
-                                  .value(secretGenerator.decryptToString(new SecretName("aws_playground_access_key")))
-                                  .valueType("TEXT")
-                                  .build(),
-                NameValuePair.builder()
-                    .name("secret_key")
-                    .value(secretGenerator.decryptToString(new SecretName("aws_playground_secret_key")))
-                    .valueType("TEXT")
-                    .build()))
+            .variables(asList(NameValuePair.builder().name("access_key").valueType(Type.TEXT.name()).build(),
+                NameValuePair.builder().name("secret_key").valueType(Type.ENCRYPTED_TEXT.name()).build()))
             .mappingBlueprints(asList(
                 InfrastructureMappingBlueprint.builder()
                     .serviceId(archive.getUuid())

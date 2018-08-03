@@ -66,6 +66,8 @@ public interface SecretManager {
 
   void checkAndAlertForInvalidManagers();
 
+  EncryptedData getEncryptedDataByName(String accountId, String name);
+
   String saveSecret(String accountId, String name, String value, UsageRestrictions usageRestrictions);
 
   boolean updateSecret(String accountId, String uuId, String name, String value, UsageRestrictions usageRestrictions);

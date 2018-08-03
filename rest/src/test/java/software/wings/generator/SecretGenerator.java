@@ -1,12 +1,17 @@
 package software.wings.generator;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Value;
 import org.apache.commons.codec.binary.Hex;
+import software.wings.beans.Account;
 import software.wings.exception.WingsException;
+import software.wings.generator.OwnerManager.Owners;
+import software.wings.security.encryption.EncryptedData;
+import software.wings.service.intfc.security.SecretManager;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,6 +25,10 @@ import javax.crypto.spec.SecretKeySpec;
 public class SecretGenerator {
   protected static final String passphrase = System.getenv("HARNESS_GENERATION_PASSPHRASE");
 
+  @Inject SecretManager secretManager;
+
+  private final Properties secrets;
+
   @Value
   @Builder
   @AllArgsConstructor
@@ -27,7 +36,6 @@ public class SecretGenerator {
     String value;
   }
 
-  private final Properties secrets;
   SecretGenerator() {
     secrets = new Properties();
     try (InputStream in = getClass().getResourceAsStream("/secrets.properties")) {
@@ -89,5 +97,19 @@ public class SecretGenerator {
     } catch (Exception e) {
       throw new WingsException(e);
     }
+  }
+
+  String ensureStored(String accountId, SecretName name) {
+    final EncryptedData encryptedData = secretManager.getEncryptedDataByName(accountId, name.getValue());
+    if (encryptedData != null) {
+      return encryptedData.getUuid();
+    }
+
+    return secretManager.saveSecret(accountId, name.getValue(), decryptToString(name), null);
+  }
+
+  public String ensureStored(Owners owners, SecretName name) {
+    final Account account = owners.obtainAccount();
+    return ensureStored(account.getUuid(), name);
   }
 }

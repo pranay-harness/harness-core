@@ -597,6 +597,14 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
+  public EncryptedData getEncryptedDataByName(String accountId, String name) {
+    return wingsPersistence.createQuery(EncryptedData.class)
+        .filter(EncryptedData.ACCOUNT_ID_KEY, accountId)
+        .filter(EncryptedData.NAME_KEY, name)
+        .get();
+  }
+
+  @Override
   public String saveSecret(String accountId, String name, String value, UsageRestrictions usageRestrictions) {
     EncryptionType encryptionType = getEncryptionType(accountId);
     return processEncryption(accountId, name, value, encryptionType, usageRestrictions);
