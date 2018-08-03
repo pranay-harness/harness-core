@@ -9,6 +9,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
+import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType.AWS_INSTANCE_FILTER;
 import static software.wings.common.Constants.UUID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -75,6 +76,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
                             .value("${cloudformation.mysecuritygroups}")
                             .build(),
                         NameValuePair.builder().name("tags").value("${cloudformation.mytags}").build()))
+                    .nodeFilteringType(AWS_INSTANCE_FILTER)
                     .build()))
             .build();
     doReturn(infrastructureProvisioner)

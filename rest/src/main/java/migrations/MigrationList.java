@@ -29,6 +29,7 @@ import migrations.all.FixInstanceData;
 import migrations.all.FixInstanceDataForAwsSSH;
 import migrations.all.GitSyncToAllAccounts;
 import migrations.all.HelmReleaseNamePrefixMigration;
+import migrations.all.InfraProvisionerFilteringTypeMigration;
 import migrations.all.LearningEngineTaskGroupNameMigration;
 import migrations.all.LogAnalysisExperimentalRecordsMigration;
 import migrations.all.MetricAnalysisRecordGroupNameMigration;
@@ -110,6 +111,7 @@ public class MigrationList {
         .add(Pair.of(180, BaseMigration.class))
         .add(Pair.of(181, HelmReleaseNamePrefixMigration.class))
         .add(Pair.of(182, CleanupOrphanInstances.class))
+        .add(Pair.of(183, InfraProvisionerFilteringTypeMigration.class))
         .build();
   }
 }

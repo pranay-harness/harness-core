@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.stencils.EnumData;
 import software.wings.utils.Util;
 
@@ -31,7 +32,7 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
   }
 
   @Override
-  public void applyProvisionerVariables(Map<String, Object> map) {}
+  public void applyProvisionerVariables(Map<String, Object> map, NodeFilteringType nodeFilteringType) {}
 
   @Attributes(title = "Region", required = true)
   @NotEmpty

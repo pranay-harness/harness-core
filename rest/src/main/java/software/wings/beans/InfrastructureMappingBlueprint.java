@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 
-@Value
+@Data
 @Builder
 public class InfrastructureMappingBlueprint {
   public static final String CLOUD_PROVIDER_TYPE_KEY = "cloudProviderType";
@@ -29,9 +29,13 @@ public class InfrastructureMappingBlueprint {
   // List of supported from provisioners clouds
   public enum CloudProviderType { AWS }
 
+  // List of possible node filtering done by the blue print
+  public enum NodeFilteringType { AWS_INSTANCE_FILTER, AWS_AUTOSCALING_GROUP }
+
   @NotBlank private String serviceId;
   @NotNull private DeploymentType deploymentType;
   @NotNull private CloudProviderType cloudProviderType;
+  @NotNull private NodeFilteringType nodeFilteringType;
   @NotNull @NotEmpty private List<NameValuePair> properties;
 
   private static Map<Pair<DeploymentType, CloudProviderType>, InfrastructureMappingType> infrastructureMappingTypeMap =
