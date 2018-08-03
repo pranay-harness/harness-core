@@ -197,7 +197,6 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public ConfigFile get(String appId, String entityId, EntityType entityType, String relativeFilePath) {
     PageRequestBuilder builder = aPageRequest();
     String columnName;
@@ -449,7 +448,6 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public void delete(String appId, String entityId, EntityType entityType, String configFileName) {
     PageRequest<ConfigFile> pageRequest = aPageRequest()
                                               .addFilter("appId", Operator.EQ, appId)
@@ -472,7 +470,6 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public List<ConfigFile> getConfigFilesForEntity(String appId, String templateId, String entityId) {
     return list(aPageRequest()
                     .addFilter("appId", Operator.EQ, appId)
@@ -486,7 +483,6 @@ public class ConfigServiceImpl implements ConfigService {
    * @see software.wings.service.intfc.ConfigService#getConfigFilesForEntity(java.lang.String, java.lang.String)
    */
   @Override
-  @SuppressWarnings("unchecked")
   public List<ConfigFile> getConfigFilesForEntity(String appId, String templateId, String entityId, String envId) {
     return list(aPageRequest()
                     .addFilter("appId", Operator.EQ, appId)
@@ -498,7 +494,6 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public List<ConfigFile> getConfigFileOverridesForEnv(String appId, String envId) {
     // All service overrides
     List allServiceOverrideList = list(aPageRequest()
