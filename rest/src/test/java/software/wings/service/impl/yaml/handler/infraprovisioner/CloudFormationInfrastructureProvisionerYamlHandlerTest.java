@@ -7,6 +7,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static software.wings.api.DeploymentType.SSH;
+import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType.AWS_INSTANCE_FILTER;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -48,6 +49,7 @@ public class CloudFormationInfrastructureProvisionerYamlHandlerTest extends Base
       + "mappingBlueprints:\n"
       + "- cloudProviderType: AWS\n"
       + "  deploymentType: SSH\n"
+      + "  nodeFilteringType: AWS_INSTANCE_FILTER\n"
       + "  properties:\n"
       + "  - name: k1\n"
       + "    value: v1\n"
@@ -98,6 +100,7 @@ public class CloudFormationInfrastructureProvisionerYamlHandlerTest extends Base
                 InfrastructureMappingBlueprint.builder()
                     .cloudProviderType(CloudProviderType.AWS)
                     .deploymentType(SSH)
+                    .nodeFilteringType(AWS_INSTANCE_FILTER)
                     .serviceId(SERVICE_ID)
                     .properties(asList(NameValuePair.builder().name("k2").value("v2").build()))
                     .build()))
@@ -115,6 +118,7 @@ public class CloudFormationInfrastructureProvisionerYamlHandlerTest extends Base
     assertEquals(yaml1.getMappingBlueprints().get(0).getServiceName(), "ServiceName");
     assertEquals(yaml1.getMappingBlueprints().get(0).getDeploymentType(), SSH);
     assertEquals(yaml1.getMappingBlueprints().get(0).getCloudProviderType(), CloudProviderType.AWS);
+    assertEquals(yaml1.getMappingBlueprints().get(0).getNodeFilteringType(), AWS_INSTANCE_FILTER);
     assertEquals(yaml1.getMappingBlueprints().get(0).getProperties().size(), 1);
     assertEquals(yaml1.getMappingBlueprints().get(0).getProperties().get(0).getName(), "k2");
     assertEquals(yaml1.getMappingBlueprints().get(0).getProperties().get(0).getValue(), "v2");

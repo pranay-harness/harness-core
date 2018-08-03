@@ -51,6 +51,7 @@ public abstract class InfrastructureProvisionerYamlHandler<Y extends Yaml, B ext
     return InfrastructureMappingBlueprint.Yaml.builder()
         .cloudProviderType(blueprint.getCloudProviderType())
         .deploymentType(blueprint.getDeploymentType())
+        .nodeFilteringType(blueprint.getNodeFilteringType())
         .serviceName(getServiceName(appId, blueprint.getServiceId()))
         .properties(Util.getSortedNameValuePairYamlList(nameValueYamls))
         .build();
@@ -112,6 +113,7 @@ public abstract class InfrastructureProvisionerYamlHandler<Y extends Yaml, B ext
     return InfrastructureMappingBlueprint.builder()
         .cloudProviderType(yaml.getCloudProviderType())
         .deploymentType(yaml.getDeploymentType())
+        .nodeFilteringType(yaml.getNodeFilteringType())
         .serviceId(serviceId)
         .properties(nameValuePairList)
         .build();
