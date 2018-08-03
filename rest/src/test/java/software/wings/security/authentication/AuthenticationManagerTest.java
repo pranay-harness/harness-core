@@ -22,7 +22,6 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.exception.WingsException.ReportTarget;
 import software.wings.security.saml.SamlClientService;
 import software.wings.security.saml.SamlRequest;
 import software.wings.service.intfc.AccountService;
@@ -31,6 +30,7 @@ import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserService;
 
 import java.util.Arrays;
+import java.util.EnumSet;
 
 public class AuthenticationManagerTest extends WingsBaseTest {
   @Mock private PasswordBasedAuthHandler PASSWORD_BASED_AUTH_HANDLER;
@@ -74,7 +74,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
     Account account2 = mock(Account.class);
 
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1, account2));
-    when(AUTHENTICATION_UTL.getUser(Matchers.anyString(), Matchers.any(ReportTarget[].class))).thenReturn(mockUser);
+    when(AUTHENTICATION_UTL.getUser(Matchers.anyString(), Matchers.any(EnumSet.class))).thenReturn(mockUser);
     LoginTypeResponse loginTypeResponse = authenticationManager.getLoginTypeResponse("testUser");
     assertThat(loginTypeResponse.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.USER_PASSWORD);
     assertThat(loginTypeResponse.getSamlRequest()).isNull();

@@ -9,6 +9,7 @@ import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.exception.WingsException.ReportTarget;
 
+import java.util.EnumSet;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 
@@ -34,7 +35,7 @@ public class Validator {
    * @param name  name of parameter.
    * @param value input value of parameter.
    */
-  public static void notNullCheck(String name, Object value, ReportTarget[] reportTargets) {
+  public static void notNullCheck(String name, Object value, EnumSet<ReportTarget> reportTargets) {
     if (value == null) {
       throw new WingsException(GENERAL_ERROR, reportTargets).addParam("message", name);
     }

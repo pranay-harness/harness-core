@@ -824,7 +824,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     return true;
   }
 
-  private void prepareAndThrowException(String message, ReportTarget[] reportTargets, Exception e) {
+  private void prepareAndThrowException(String message, EnumSet<ReportTarget> reportTargets, Exception e) {
     throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, reportTargets, e).addParam("message", message);
   }
 
@@ -911,7 +911,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     return "/" + path.replace(".", "/") + "/";
   }
 
-  private void prepareException(Exception e, ReportTarget[] reportTargets) throws WingsException {
+  private void prepareException(Exception e, EnumSet<ReportTarget> reportTargets) throws WingsException {
     if (e instanceof HttpResponseException) {
       HttpResponseException httpResponseException = (HttpResponseException) e;
       if (httpResponseException.getStatusCode() == 401) {

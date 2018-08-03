@@ -17,6 +17,7 @@ import software.wings.service.intfc.UserService;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.EnumSet;
 import java.util.Map;
 
 @Singleton
@@ -29,7 +30,7 @@ public class AuthenticationUtil {
     return getUser(userName, null);
   }
 
-  public User getUser(String userName, ReportTarget[] reportTargets) {
+  public User getUser(String userName, EnumSet<ReportTarget> reportTargets) {
     User user = isNotEmpty(userName) ? getUserByEmail(userName) : null;
     if (user == null) {
       if (reportTargets == null) {

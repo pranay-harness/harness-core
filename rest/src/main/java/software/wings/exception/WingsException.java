@@ -11,10 +11,8 @@ import static software.wings.exception.WingsException.ReportTarget.RED_BELL_ALER
 import static software.wings.exception.WingsException.ReportTarget.REST_API;
 import static software.wings.exception.WingsException.ReportTarget.UNIVERSAL;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.data.structure.EmptyPredicate;
 import lombok.Getter;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import software.wings.beans.ErrorCode;
@@ -22,6 +20,7 @@ import software.wings.beans.ResponseMessage;
 import software.wings.common.cache.ResponseCodeCache;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,16 +54,19 @@ public class WingsException extends RuntimeException {
     RED_BELL_ALERT,
   }
 
-  public static final ReportTarget[] EVERYBODY = {LOG_SYSTEM, DELEGATE_LOG_SYSTEM, REST_API, RED_BELL_ALERT};
-  public static final ReportTarget[] ADMIN_SRE = {LOG_SYSTEM, DELEGATE_LOG_SYSTEM, RED_BELL_ALERT};
-  public static final ReportTarget[] USER_SRE = {LOG_SYSTEM, DELEGATE_LOG_SYSTEM, REST_API};
-  public static final ReportTarget[] USER_ADMIN = {DELEGATE_LOG_SYSTEM, RED_BELL_ALERT, REST_API};
-  public static final ReportTarget[] ADMIN = {DELEGATE_LOG_SYSTEM, RED_BELL_ALERT};
-  public static final ReportTarget[] SRE = {LOG_SYSTEM, DELEGATE_LOG_SYSTEM};
-  public static final ReportTarget[] USER = {REST_API};
-  public static final ReportTarget[] NOBODY = {};
-
-  private ReportTarget[] reportTargets = USER_SRE;
+  public static final EnumSet<ReportTarget> EVERYBODY =
+      EnumSet.<ReportTarget>of(LOG_SYSTEM, DELEGATE_LOG_SYSTEM, REST_API, RED_BELL_ALERT);
+  public static final EnumSet<ReportTarget> ADMIN_SRE =
+      EnumSet.<ReportTarget>of(LOG_SYSTEM, DELEGATE_LOG_SYSTEM, RED_BELL_ALERT);
+  public static final EnumSet<ReportTarget> USER_SRE =
+      EnumSet.<ReportTarget>of(LOG_SYSTEM, DELEGATE_LOG_SYSTEM, REST_API);
+  public static final EnumSet<ReportTarget> USER_ADMIN =
+      EnumSet.<ReportTarget>of(DELEGATE_LOG_SYSTEM, RED_BELL_ALERT, REST_API);
+  public static final EnumSet<ReportTarget> ADMIN = EnumSet.<ReportTarget>of(DELEGATE_LOG_SYSTEM, RED_BELL_ALERT);
+  public static final EnumSet<ReportTarget> SRE = EnumSet.<ReportTarget>of(LOG_SYSTEM, DELEGATE_LOG_SYSTEM);
+  public static final EnumSet<ReportTarget> USER = EnumSet.<ReportTarget>of(REST_API);
+  public static final EnumSet<ReportTarget> NOBODY = EnumSet.noneOf(ReportTarget.class);
+  private EnumSet<ReportTarget> reportTargets = USER_SRE;
 
   public enum ExecutionContext { MANAGER, DELEGATE }
 
@@ -81,10 +83,9 @@ public class WingsException extends RuntimeException {
     this(ErrorCode.UNKNOWN_ERROR, message);
   }
 
-  @SuppressFBWarnings("EI_EXPOSE_REP2")
-  public WingsException(String message, ReportTarget[] reportTargets) {
+  public WingsException(String message, EnumSet<ReportTarget> reportTargets) {
     this(ErrorCode.UNKNOWN_ERROR, message);
-    this.reportTargets = reportTargets;
+    this.reportTargets = reportTargets.clone();
   }
 
   public WingsException(String message, Throwable cause) {
@@ -99,28 +100,26 @@ public class WingsException extends RuntimeException {
     this(errorCode, message, (Throwable) null);
   }
 
-  public WingsException(ErrorCode errorCode, String message, ReportTarget[] reportTargets) {
+  public WingsException(ErrorCode errorCode, String message, EnumSet<ReportTarget> reportTargets) {
     this(errorCode, message, reportTargets, (Throwable) null);
   }
 
-  public WingsException(ErrorCode errorCode, ReportTarget[] reportTargets, Throwable cause) {
+  public WingsException(ErrorCode errorCode, EnumSet<ReportTarget> reportTargets, Throwable cause) {
     this(errorCode, null, reportTargets, cause);
   }
 
-  @SuppressFBWarnings("EI_EXPOSE_REP2")
-  public WingsException(ErrorCode errorCode, String message, ReportTarget[] reportTargets, Throwable cause) {
+  public WingsException(ErrorCode errorCode, String message, EnumSet<ReportTarget> reportTargets, Throwable cause) {
     this(errorCode, message, cause);
-    this.reportTargets = reportTargets;
+    this.reportTargets = reportTargets.clone();
   }
 
   public WingsException(ErrorCode errorCode) {
     this(errorCode, (Throwable) null);
   }
 
-  @SuppressFBWarnings("EI_EXPOSE_REP2")
-  public WingsException(ErrorCode errorCode, ReportTarget[] reportTargets) {
+  public WingsException(ErrorCode errorCode, EnumSet<ReportTarget> reportTargets) {
     this(errorCode, (Throwable) null);
-    this.reportTargets = reportTargets;
+    this.reportTargets = reportTargets.clone();
   }
 
   public WingsException(ErrorCode errorCode, Throwable cause) {
@@ -165,7 +164,7 @@ public class WingsException extends RuntimeException {
         continue;
       }
       final WingsException exception = (WingsException) ex;
-      if (reportTarget != UNIVERSAL && !ArrayUtils.contains(exception.getReportTargets(), reportTarget)) {
+      if (reportTarget != UNIVERSAL && !exception.getReportTargets().contains(reportTarget)) {
         continue;
       }
 
@@ -186,7 +185,7 @@ public class WingsException extends RuntimeException {
 
   public void excludeReportTarget(ErrorCode code, ReportTarget target) {
     if (responseMessage.getCode() == code) {
-      reportTargets = ArrayUtils.removeElement(reportTargets, target);
+      reportTargets.remove(target);
     }
 
     Throwable cause = getCause();
