@@ -27,8 +27,6 @@ import static software.wings.beans.Base.CREATED_AT_KEY;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.EntityType.DEPLOYMENT;
-import static software.wings.beans.EntityType.ORCHESTRATED_DEPLOYMENT;
-import static software.wings.beans.EntityType.SIMPLE_DEPLOYMENT;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.PipelineStageExecution.Builder.aPipelineStageExecution;
@@ -1343,8 +1341,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .set(WorkflowExecution.STATUS_KEY, status)
             .set(WorkflowExecution.START_TS_KEY, System.currentTimeMillis());
     wingsPersistence.update(query, updateOps);
-
-    notifyWorkflowExecution(workflowExecution);
   }
 
   /**
@@ -1642,14 +1638,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       return false;
     }
     return true;
-  }
-
-  @SuppressFBWarnings({"DLS_DEAD_LOCAL_STORE", "UC_USELESS_VOID_METHOD"})
-  private void notifyWorkflowExecution(WorkflowExecution workflowExecution) {
-    EntityType entityType = ORCHESTRATED_DEPLOYMENT;
-    if (workflowExecution.getWorkflowType() == WorkflowType.SIMPLE) {
-      entityType = SIMPLE_DEPLOYMENT;
-    }
   }
 
   @Override

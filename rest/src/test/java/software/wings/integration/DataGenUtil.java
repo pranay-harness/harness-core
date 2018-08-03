@@ -95,6 +95,7 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.SplunkConfig;
@@ -699,8 +700,17 @@ public class DataGenUtil extends BaseIntegrationTest {
     final InfrastructureProvisioner infrastructureProvisioner = infrastructureProvisionerGenerator.ensurePredefined(
         seed, terraformOwners, InfrastructureProvisioners.TERRAFORM_TEST);
 
-    final InfrastructureMapping terraformInfrastructureProvisioner = infrastructureMappingGenerator.ensurePredefined(
+    final InfrastructureMapping terraformInfrastructureMapping = infrastructureMappingGenerator.ensurePredefined(
         seed, terraformOwners, InfrastructureMappings.TERRAFORM_AWS_SSH_TEST);
+
+    final SecretName awsPlaygroundAccessKeyName = SecretName.builder().value("aws_playground_access_key").build();
+    final String awsPlaygroundAccessKey = secretGenerator.decryptToString(awsPlaygroundAccessKeyName);
+    final SecretName awsPlaygroundSecretKeyName = SecretName.builder().value("aws_playground_secret_key").build();
+    final String awsPlaygroundSecretKeyId = secretGenerator.ensureStored(terraformOwners, awsPlaygroundSecretKeyName);
+
+    // TODO: this is temporary adding second key, to workaround bug in the UI
+    final SecretName terraformPasswordName = SecretName.builder().value("terraform_password").build();
+    final String terraformPasswordId = secretGenerator.ensureStored(terraformOwners, terraformPasswordName);
 
     Workflow workflow5 = workflowGenerator.ensureWorkflow(seed, terraformOwners,
         aWorkflow()
@@ -711,11 +721,17 @@ public class DataGenUtil extends BaseIntegrationTest {
                 aCanaryOrchestrationWorkflow()
                     .withPreDeploymentSteps(
                         aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT)
-                            .addStep(aGraphNode()
-                                         .withType(TERRAFORM_PROVISION.name())
-                                         .withName("Provision infra")
-                                         .addProperty("provisionerId", infrastructureProvisioner.getUuid())
-                                         .build())
+                            .addStep(
+                                aGraphNode()
+                                    .withType(TERRAFORM_PROVISION.name())
+                                    .withName("Provision infra")
+                                    .addProperty("provisionerId", infrastructureProvisioner.getUuid())
+                                    .addProperty("variables",
+                                        asList(ImmutableMap.of("name", "access_key", "value", awsPlaygroundAccessKey,
+                                                   "valueType", Type.TEXT.name()),
+                                            ImmutableMap.of("name", "secret_key", "value", awsPlaygroundSecretKeyId,
+                                                "valueType", Type.ENCRYPTED_TEXT.name())))
+                                    .build())
                             .build())
                     .withPostDeploymentSteps(
                         aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT)
