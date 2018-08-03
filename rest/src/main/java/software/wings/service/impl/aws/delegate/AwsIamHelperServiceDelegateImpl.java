@@ -10,6 +10,7 @@ import com.google.inject.Singleton;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClient;
 import com.amazonaws.services.identitymanagement.model.InstanceProfile;
 import com.amazonaws.services.identitymanagement.model.ListInstanceProfilesRequest;
@@ -32,6 +33,7 @@ public class AwsIamHelperServiceDelegateImpl
   AmazonIdentityManagementClient getAmazonIdentityManagementClient(String accessKey, char[] secretKey) {
     return (AmazonIdentityManagementClient) AmazonIdentityManagementClient.builder()
         .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, new String(secretKey))))
+        .withRegion(Regions.US_EAST_1)
         .build();
   }
 
