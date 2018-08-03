@@ -3,6 +3,7 @@ package software.wings.beans.template;
 import static java.util.Arrays.asList;
 
 import io.harness.data.validator.EntityName;
+import io.harness.validation.Create;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -15,7 +16,6 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
-import software.wings.utils.validation.Create;
 
 import java.util.ArrayList;
 import java.util.List;

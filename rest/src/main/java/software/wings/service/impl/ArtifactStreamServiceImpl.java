@@ -28,6 +28,8 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import io.harness.data.validator.EntityNameValidator;
+import io.harness.validation.Create;
+import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,8 +63,6 @@ import software.wings.settings.SettingValue;
 import software.wings.stencils.DataProvider;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.Util;
-import software.wings.utils.validation.Create;
-import software.wings.utils.validation.Update;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;

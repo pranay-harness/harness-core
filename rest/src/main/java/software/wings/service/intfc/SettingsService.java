@@ -1,5 +1,7 @@
 package software.wings.service.intfc;
 
+import io.harness.validation.Create;
+import io.harness.validation.Update;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.ValidationResult;
@@ -7,8 +9,6 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.settings.SettingValue;
-import software.wings.utils.validation.Create;
-import software.wings.utils.validation.Update;
 
 import java.util.List;
 import javax.validation.Valid;

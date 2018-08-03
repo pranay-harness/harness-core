@@ -4,12 +4,12 @@ import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.security.UserGroup;
-import software.wings.utils.validation.Update;
 
 import java.util.ArrayList;
 import java.util.List;

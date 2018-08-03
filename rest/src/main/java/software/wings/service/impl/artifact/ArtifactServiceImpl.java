@@ -43,6 +43,8 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import com.mongodb.BasicDBObject;
+import io.harness.validation.Create;
+import io.harness.validation.Update;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
@@ -73,8 +75,6 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.ArtifactType;
-import software.wings.utils.validation.Create;
-import software.wings.utils.validation.Update;
 
 import java.io.File;
 import java.util.ArrayList;

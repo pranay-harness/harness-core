@@ -6,6 +6,7 @@ import static io.harness.data.validator.EntityNameValidator.ALLOWED_CHARS_SERVIC
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.data.validator.EntityName;
+import io.harness.validation.Create;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,7 +24,6 @@ import software.wings.annotation.Encrypted;
 import software.wings.security.EncryptionType;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.WingsReflectionUtils;
-import software.wings.utils.validation.Create;
 
 import java.util.Collections;
 import java.util.List;

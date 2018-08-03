@@ -1,5 +1,6 @@
 package software.wings.service.intfc.analysis;
 
+import io.harness.validation.Create;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
@@ -14,7 +15,6 @@ import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.sm.StateType;
-import software.wings.utils.validation.Create;
 
 import java.io.IOException;
 import java.util.List;

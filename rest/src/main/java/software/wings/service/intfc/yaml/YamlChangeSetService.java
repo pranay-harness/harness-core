@@ -1,10 +1,10 @@
 package software.wings.service.intfc.yaml;
 
+import io.harness.validation.Create;
+import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.yaml.GitFileChange;
-import software.wings.utils.validation.Create;
-import software.wings.utils.validation.Update;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
 import software.wings.yaml.gitSync.YamlGitConfig;
