@@ -152,7 +152,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   private static final String PROXY_SETUP = "#!/bin/bash -e\n"
       + "\n"
-      + "if [ -e proxy.config ]; then"
+      + "if [ -e proxy.config ]; then\n"
       + "  source proxy.config\n"
       + "  PROXY_CURL=\"\"\n"
       + "  if [[ $PROXY_HOST != \"\" ]]\n"
