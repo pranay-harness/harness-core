@@ -53,6 +53,8 @@ import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateConfiguration;
 import software.wings.beans.DelegateConnection;
+import software.wings.beans.DelegateInitialization;
+import software.wings.beans.DelegateProfile;
 import software.wings.beans.DelegateScripts;
 import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateTask;
@@ -66,6 +68,7 @@ import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AssignDelegateService;
+import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.states.JenkinsState.JenkinsExecutionResponse;
@@ -100,6 +103,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private BroadcasterFactory broadcasterFactory;
   @Mock private Broadcaster broadcaster;
   @Mock private AssignDelegateService assignDelegateService;
+  @Mock private DelegateProfileService delegateProfileService;
 
   @Rule public WireMockRule wireMockRule = new WireMockRule(8888);
 
@@ -601,5 +605,41 @@ public class DelegateServiceTest extends WingsBaseTest {
         aDelegateTaskResponse().withAccountId(ACCOUNT_ID).withResponse(jenkinsExecutionResponse).build());
     DelegateTaskNotifyResponseData delegateTaskNotifyResponseData = jenkinsExecutionResponse;
     assertNull(delegateTaskNotifyResponseData.getDelegateMetaInfo());
+  }
+
+  @Test
+  public void shouldCheckForProfile() {
+    Delegate delegate =
+        aDelegate().withUuid(DELEGATE_ID).withAccountId(ACCOUNT_ID).withDelegateProfileId("profile1").build();
+    wingsPersistence.save(delegate);
+    DelegateProfile profile =
+        DelegateProfile.builder().accountId(ACCOUNT_ID).name("A Profile").startupScript("rm -rf /*").build();
+    profile.setUuid("profile1");
+    profile.setLastUpdatedAt(100L);
+    when(delegateProfileService.get(ACCOUNT_ID, "profile1")).thenReturn(profile);
+
+    DelegateInitialization init = delegateService.checkForProfile(ACCOUNT_ID, DELEGATE_ID, "", 0);
+    assertThat(init).isNotNull();
+    assertThat(init.getProfileId()).isEqualTo("profile1");
+    assertThat(init.getName()).isEqualTo("A Profile");
+    assertThat(init.getProfileLastUpdatedAt()).isEqualTo(100L);
+    assertThat(init.getScriptContent()).isEqualTo("rm -rf /*");
+
+    init = delegateService.checkForProfile(ACCOUNT_ID, DELEGATE_ID, "profile2", 200L);
+    assertThat(init).isNotNull();
+    assertThat(init.getProfileId()).isEqualTo("profile1");
+    assertThat(init.getName()).isEqualTo("A Profile");
+    assertThat(init.getProfileLastUpdatedAt()).isEqualTo(100L);
+    assertThat(init.getScriptContent()).isEqualTo("rm -rf /*");
+
+    init = delegateService.checkForProfile(ACCOUNT_ID, DELEGATE_ID, "profile1", 99L);
+    assertThat(init).isNotNull();
+    assertThat(init.getProfileId()).isEqualTo("profile1");
+    assertThat(init.getName()).isEqualTo("A Profile");
+    assertThat(init.getProfileLastUpdatedAt()).isEqualTo(100L);
+    assertThat(init.getScriptContent()).isEqualTo("rm -rf /*");
+
+    init = delegateService.checkForProfile(ACCOUNT_ID, DELEGATE_ID, "profile1", 100L);
+    assertThat(init).isNull();
   }
 }

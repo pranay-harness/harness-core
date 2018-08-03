@@ -14,7 +14,6 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Enumeration;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 public class Localhost {
   private static final Logger logger = LoggerFactory.getLogger(Localhost.class);
@@ -144,7 +143,6 @@ public class Localhost {
   @VisibleForTesting
   static String executeHostname() throws IOException, InterruptedException, ExecutionException {
     return new ProcessExecutor()
-        .timeout(2, TimeUnit.SECONDS)
         .command("hostname", "-f")
         .readOutput(true)
         .start()
@@ -158,7 +156,6 @@ public class Localhost {
   @VisibleForTesting
   static String executeHostnameShort() throws IOException, InterruptedException, ExecutionException {
     return new ProcessExecutor()
-        .timeout(2, TimeUnit.SECONDS)
         .command("hostname", "-s")
         .readOutput(true)
         .start()

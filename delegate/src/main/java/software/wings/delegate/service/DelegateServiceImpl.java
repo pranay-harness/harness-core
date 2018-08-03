@@ -81,12 +81,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.StartedProcess;
+import org.zeroturnaround.exec.stream.LogOutputStream;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 import retrofit2.Response;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Builder;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateConnectionHeartbeat;
+import software.wings.beans.DelegateInitialization;
 import software.wings.beans.DelegateScripts;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskAbortEvent;
@@ -127,6 +129,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -147,6 +150,34 @@ public class DelegateServiceImpl implements DelegateService {
   private static final long WATCHER_HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(10);
   private static final long WATCHER_VERSION_MATCH_TIMEOUT = TimeUnit.MINUTES.toMillis(2);
 
+  private static final String PROXY_SETUP = "#!/bin/bash -e\n"
+      + "\n"
+      + "if [ -e proxy.config ]; then"
+      + "  source proxy.config\n"
+      + "  PROXY_CURL=\"\"\n"
+      + "  if [[ $PROXY_HOST != \"\" ]]\n"
+      + "  then\n"
+      + "    echo \"Using $PROXY_SCHEME proxy $PROXY_HOST:$PROXY_PORT\"\n"
+      + "    if [[ $PROXY_USER != \"\" ]]\n"
+      + "    then\n"
+      + "      echo \"using proxy auth config\"\n"
+      + "      PROXY_CURL=\"-x \"$PROXY_SCHEME\"://\"$PROXY_USER:$PROXY_PASSWORD@$PROXY_HOST:$PROXY_PORT\n"
+      + "    else\n"
+      + "      echo \"no proxy auth mentioned\"\n"
+      + "      PROXY_CURL=\"-x \"$PROXY_SCHEME\"://\"$PROXY_HOST:$PROXY_PORT\n"
+      + "      export http_proxy=$PROXY_HOST:$PROXY_PORT\n"
+      + "      export https_proxy=$PROXY_HOST:$PROXY_PORT\n"
+      + "    fi\n"
+      + "  fi\n"
+      + "\n"
+      + "  if [[ $NO_PROXY != \"\" ]]\n"
+      + "  then\n"
+      + "    echo \"No proxy for domain suffixes $NO_PROXY\"\n"
+      + "    export no_proxy=$NO_PROXY\n"
+      + "  fi\n"
+      + "fi\n"
+      + "\n";
+
   private static String hostName;
 
   @Inject private DelegateConfiguration delegateConfiguration;
@@ -156,6 +187,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject @Named("upgradeExecutor") private ScheduledExecutorService upgradeExecutor;
   @Inject @Named("inputExecutor") private ScheduledExecutorService inputExecutor;
   @Inject @Named("taskPollExecutor") private ScheduledExecutorService taskPollExecutor;
+  @Inject @Named("installCheckExecutor") private ScheduledExecutorService installCheckExecutor;
   @Inject @Named("systemExecutor") private ExecutorService systemExecutorService;
   @Inject @Named("asyncExecutor") private ExecutorService asyncExecutorService;
   @Inject @Named("artifactExecutor") private ExecutorService artifactExecutorService;
@@ -184,6 +216,7 @@ public class DelegateServiceImpl implements DelegateService {
   private final AtomicBoolean upgradeNeeded = new AtomicBoolean(false);
   private final AtomicBoolean restartNeeded = new AtomicBoolean(false);
   private final AtomicBoolean acquireTasks = new AtomicBoolean(true);
+  private final AtomicBoolean initializing = new AtomicBoolean(false);
 
   private Socket socket;
   private RequestBuilder request;
@@ -361,6 +394,7 @@ public class DelegateServiceImpl implements DelegateService {
       logger.info("Delegate started");
 
       updateConfigs();
+      startInstallCheck();
 
       synchronized (waiter) {
         waiter.wait();
@@ -552,6 +586,95 @@ public class DelegateServiceImpl implements DelegateService {
       logger.info(
           "Delegate registered with id {} and status {}", delegateId, delegateResponse.getResource().getStatus());
       return delegateId;
+    }
+  }
+
+  private void startInstallCheck() {
+    installCheckExecutor.scheduleWithFixedDelay(() -> {
+      boolean forCodeFormattingOnly; // This line is here for clang-format
+      synchronized (this) {
+        checkForInitialization();
+      }
+    }, 0, 3, TimeUnit.MINUTES);
+  }
+
+  private void checkForInitialization() {
+    if (!initializing.get()) {
+      logger.info("Checking for initialization...");
+      try {
+        DelegateInitialization profile = getProfile();
+        String profileId = profile == null ? "" : profile.getProfileId();
+        long updated = profile == null ? 0L : profile.getProfileLastUpdatedAt();
+        RestResponse<DelegateInitialization> response = timeLimiter.callWithTimeout(
+            ()
+                -> execute(managerClient.checkForProfile(delegateId, accountId, profileId, updated)),
+            15L, TimeUnit.SECONDS, true);
+        if (response != null) {
+          applyProfile(response.getResource());
+        }
+      } catch (UncheckedTimeoutException ex) {
+        logger.warn("Timed out checking for initialization");
+      } catch (Exception e) {
+        logger.error("Error checking for initialization", e);
+      }
+    }
+  }
+
+  private DelegateInitialization getProfile() {
+    File file = new File("profile");
+    if (file.exists()) {
+      try {
+        return JsonUtils.asObject(FileUtils.readFileToString(file, UTF_8), DelegateInitialization.class);
+      } catch (Exception e) {
+        logger.error("Error reading profile", e);
+      }
+    }
+    return null;
+  }
+
+  private void saveProfile(DelegateInitialization profile) {
+    try {
+      File file = new File("profile");
+      if (file.exists()) {
+        FileUtils.forceDelete(file);
+      }
+      FileUtils.touch(file);
+      FileUtils.write(file, JsonUtils.asPrettyJson(profile), UTF_8);
+    } catch (IOException e) {
+      logger.error("Error writing profile [{}]", profile.getName(), e);
+    }
+  }
+
+  private void applyProfile(DelegateInitialization profile) {
+    if (profile != null && initializing.compareAndSet(false, true)) {
+      try {
+        logger.info("Updating delegate profile to [{}], last update {} ...", profile.getName(),
+            profile.getProfileLastUpdatedAt());
+        String script = PROXY_SETUP + profile.getScriptContent();
+
+        logger.info("Executing script:\n{}", script);
+
+        ProcessExecutor processExecutor = new ProcessExecutor()
+                                              .timeout(5, TimeUnit.MINUTES)
+                                              .command("/bin/sh", "-c", script)
+                                              .readOutput(true)
+                                              .redirectOutput(new LogOutputStream() {
+                                                @Override
+                                                protected void processLine(String line) {
+                                                  logger.info(line);
+                                                }
+                                              });
+        processExecutor.execute();
+        saveProfile(profile);
+      } catch (IOException e) {
+        logger.error("Error applying profile [{}]", profile.getName(), e);
+      } catch (InterruptedException e) {
+        logger.info("Interrupted", e);
+      } catch (TimeoutException e) {
+        logger.info("Timed out", e);
+      } finally {
+        initializing.set(false);
+      }
     }
   }
 
@@ -758,7 +881,7 @@ public class DelegateServiceImpl implements DelegateService {
 
       systemExecutorService.submit(() -> {
         try {
-          new ProcessExecutor().timeout(5, TimeUnit.SECONDS).command("kill", "-9", watcherProcess).start();
+          new ProcessExecutor().command("kill", "-9", watcherProcess).start();
           messageService.closeChannel(WATCHER, watcherProcess);
           sleep(ofSeconds(2));
           // Prevent a second restart attempt right away at next heartbeat by writing the watcher heartbeat and
@@ -766,7 +889,6 @@ public class DelegateServiceImpl implements DelegateService {
           messageService.putData(WATCHER_DATA, WATCHER_HEARTBEAT, clock.millis());
           watcherVersionMatchedAt = clock.millis();
           StartedProcess newWatcher = new ProcessExecutor()
-                                          .timeout(1, TimeUnit.MINUTES)
                                           .command("nohup", "./start.sh")
                                           .redirectError(Slf4jStream.of("RestartWatcherScript").asError())
                                           .redirectOutput(Slf4jStream.of("RestartWatcherScript").asInfo())

@@ -201,6 +201,11 @@ public class DelegateModule extends AbstractModule {
         .toInstance(new ScheduledThreadPoolExecutor(1,
             new ThreadFactoryBuilder().setNameFormat("InputCheck-Thread").setPriority(Thread.NORM_PRIORITY).build()));
     bind(ScheduledExecutorService.class)
+        .annotatedWith(Names.named("installCheckExecutor"))
+        .toInstance(new ScheduledThreadPoolExecutor(1,
+            new ThreadFactoryBuilder().setNameFormat("InstallCheck-Thread").setPriority(Thread.NORM_PRIORITY).build()));
+
+    bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("verificationExecutor"))
         .toInstance(new ScheduledThreadPoolExecutor(2,
             new ThreadFactoryBuilder()

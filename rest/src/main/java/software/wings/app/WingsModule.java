@@ -90,6 +90,7 @@ import software.wings.service.impl.CatalogServiceImpl;
 import software.wings.service.impl.CloudWatchServiceImpl;
 import software.wings.service.impl.CommandServiceImpl;
 import software.wings.service.impl.ConfigServiceImpl;
+import software.wings.service.impl.DelegateProfileServiceImpl;
 import software.wings.service.impl.DelegateScopeServiceImpl;
 import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.impl.DirectInfrastructureProvider;
@@ -210,6 +211,7 @@ import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.CloudWatchService;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.DelegateScopeService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.DockerBuildService;
@@ -455,6 +457,7 @@ public class WingsModule extends AbstractModule {
     bind(AwsAsgHelperServiceManager.class).to(AwsAsgHelperServiceManagerImpl.class);
     bind(AwsCodeDeployHelperServiceManager.class).to(AwsCodeDeployHelperServiceManagerImpl.class);
     bind(AwsLambdaHelperServiceManager.class).to(AwsLambdaHelperServiceManagerImpl.class);
+    bind(DelegateProfileService.class).to(DelegateProfileServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);

@@ -4,6 +4,7 @@ import freemarker.template.TemplateException;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConnectionHeartbeat;
+import software.wings.beans.DelegateInitialization;
 import software.wings.beans.DelegateScripts;
 import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateTask;
@@ -54,6 +55,8 @@ public interface DelegateService {
   void delete(String accountId, String delegateId);
 
   Delegate register(@Valid Delegate delegate);
+
+  DelegateInitialization checkForProfile(String accountId, String delegateId, String profileId, long lastUpdatedAt);
 
   void removeDelegateConnection(String accountId, String delegateConnectionId);
 

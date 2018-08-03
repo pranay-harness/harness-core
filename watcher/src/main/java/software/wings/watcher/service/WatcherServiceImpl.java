@@ -569,7 +569,6 @@ public class WatcherServiceImpl implements WatcherService {
       StartedProcess newDelegate = null;
       try {
         newDelegate = new ProcessExecutor()
-                          .timeout(5, TimeUnit.MINUTES)
                           .command("nohup", versionFolder + "/delegate.sh", watcherProcess, versionFolder)
                           .redirectError(Slf4jStream.of(scriptName).asError())
                           .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
@@ -656,9 +655,9 @@ public class WatcherServiceImpl implements WatcherService {
       messageService.writeMessageToChannel(DELEGATE, delegateProcess, DELEGATE_STOP_ACQUIRING);
       try {
         sleep(ofSeconds(5));
-        new ProcessExecutor().timeout(5, TimeUnit.SECONDS).command("kill", "-3", delegateProcess).start();
+        new ProcessExecutor().command("kill", "-3", delegateProcess).start();
         sleep(ofSeconds(15));
-        new ProcessExecutor().timeout(5, TimeUnit.SECONDS).command("kill", "-9", delegateProcess).start();
+        new ProcessExecutor().command("kill", "-9", delegateProcess).start();
       } catch (Exception e) {
         logger.error("Error killing delegate {}", delegateProcess, e);
       }
@@ -676,7 +675,7 @@ public class WatcherServiceImpl implements WatcherService {
       logger.warn("Shutting down extra watcher {}", watcherProcess);
       executorService.submit(() -> {
         try {
-          new ProcessExecutor().timeout(5, TimeUnit.SECONDS).command("kill", "-9", watcherProcess).start();
+          new ProcessExecutor().command("kill", "-9", watcherProcess).start();
         } catch (Exception e) {
           logger.error("Error killing watcher {}", watcherProcess, e);
         }
@@ -770,7 +769,6 @@ public class WatcherServiceImpl implements WatcherService {
     try {
       logger.info("[Old] Starting new watcher");
       process = new ProcessExecutor()
-                    .timeout(5, TimeUnit.MINUTES)
                     .command("nohup", "./start.sh", "upgrade", WatcherApplication.getProcessId())
                     .redirectError(Slf4jStream.of("UpgradeScript").asError())
                     .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
