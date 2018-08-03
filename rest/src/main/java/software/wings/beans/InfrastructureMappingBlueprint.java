@@ -69,6 +69,7 @@ public class InfrastructureMappingBlueprint {
     private String serviceName;
     private DeploymentType deploymentType;
     private CloudProviderType cloudProviderType;
+    private NodeFilteringType nodeFilteringType;
     private List<NameValuePair.Yaml> properties;
   }
 }
