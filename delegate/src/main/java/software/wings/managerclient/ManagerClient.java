@@ -16,6 +16,7 @@ import retrofit2.http.Query;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConnectionHeartbeat;
+import software.wings.beans.DelegateInitialization;
 import software.wings.beans.DelegateScripts;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskEvent;
@@ -56,6 +57,11 @@ public interface ManagerClient {
   @POST("delegateFiles/{delegateId}/tasks/{taskId}")
   Call<RestResponse<String>> uploadFile(@Path("delegateId") String delegateId, @Path("taskId") String taskId,
       @Query("accountId") String accountId, @Query("fileBucket") FileBucket bucket, @Part MultipartBody.Part file);
+
+  @GET("delegates/{delegateId}/profile")
+  Call<RestResponse<DelegateInitialization>> checkForProfile(@Path("delegateId") String delegateId,
+      @Query("accountId") String accountId, @Query("profileId") String profileId,
+      @Query("lastUpdatedAt") Long lastUpdatedAt);
 
   @GET("delegates/{delegateId}/upgrade")
   Call<RestResponse<DelegateScripts>> checkForUpgrade(

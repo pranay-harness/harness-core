@@ -28,6 +28,7 @@ public class Delegate extends Base {
   private String ip;
   private String hostName;
   private String delegateName;
+  private String delegateProfileId;
   private long lastHeartBeat;
   private String version;
   @Deprecated private List<String> supportedTaskTypes;
@@ -47,6 +48,7 @@ public class Delegate extends Base {
     private String description;
     private String hostName;
     private String delegateName;
+    private String delegateProfileId;
     private long lastHeartBeat;
     private String version;
     private List<DelegateScope> includeScopes;
@@ -97,6 +99,11 @@ public class Delegate extends Base {
 
     public Builder withDelegateName(String delegateName) {
       this.delegateName = delegateName;
+      return this;
+    }
+
+    public Builder withDelegateProfileId(String delegateProfileId) {
+      this.delegateProfileId = delegateProfileId;
       return this;
     }
 
@@ -164,6 +171,7 @@ public class Delegate extends Base {
           .withIp(ip)
           .withHostName(hostName)
           .withDelegateName(delegateName)
+          .withDelegateProfileId(delegateProfileId)
           .withLastHeartBeat(lastHeartBeat)
           .withVersion(version)
           .withIncludeScopes(includeScopes)
@@ -186,6 +194,7 @@ public class Delegate extends Base {
       delegate.setIp(ip);
       delegate.setHostName(hostName);
       delegate.setDelegateName(delegateName);
+      delegate.setDelegateProfileId(delegateProfileId);
       delegate.setLastHeartBeat(lastHeartBeat);
       delegate.setVersion(version);
       delegate.setIncludeScopes(includeScopes);

@@ -31,7 +31,6 @@ class SerializationClasses {
             if (map.containsKey(className)) {
               throw new IllegalStateException("Duplicate key: " + className);
             }
-            logger.info("Registering class {} with id {}", className, id);
             map.put(className, id);
           }
         }

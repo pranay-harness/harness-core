@@ -84,6 +84,8 @@ import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateConfiguration;
 import software.wings.beans.DelegateConnection;
 import software.wings.beans.DelegateConnectionHeartbeat;
+import software.wings.beans.DelegateInitialization;
+import software.wings.beans.DelegateProfile;
 import software.wings.beans.DelegateScripts;
 import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateTask;
@@ -110,6 +112,7 @@ import software.wings.service.impl.infra.InfraDownloadService;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AssignDelegateService;
+import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.NotificationService;
@@ -174,6 +177,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private Injector injector;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private InfraDownloadService infraDownloadService;
+  @Inject private DelegateProfileService delegateProfileService;
 
   private LoadingCache<String, String> delegateVersionCache =
       CacheBuilder.newBuilder()
@@ -287,6 +291,7 @@ public class DelegateServiceImpl implements DelegateService {
     setUnset(updateOperations, "connected", delegate.isConnected());
     setUnset(updateOperations, "version", delegate.getVersion());
     setUnset(updateOperations, "description", delegate.getDescription());
+    setUnset(updateOperations, "delegateProfileId", delegate.getDelegateProfileId());
 
     logger.info("Updating delegate : {}", delegate.getUuid());
     return updateDelegate(delegate, updateOperations);
@@ -758,7 +763,7 @@ public class DelegateServiceImpl implements DelegateService {
       delegateQuery.filter("ip", delegate.getIp());
     }
 
-    Delegate existingDelegate = delegateQuery.project("status", true).get();
+    Delegate existingDelegate = delegateQuery.project("status", true).project("delegateProfileId", true).get();
     Delegate registeredDelegate;
     if (existingDelegate == null) {
       logger.info("No existing delegate, adding for account {}: Hostname: {} IP: {}", delegate.getAccountId(),
@@ -768,12 +773,33 @@ public class DelegateServiceImpl implements DelegateService {
       logger.info("Delegate exists, updating: {}", delegate.getUuid());
       delegate.setUuid(existingDelegate.getUuid());
       delegate.setStatus(existingDelegate.getStatus());
+      delegate.setDelegateProfileId(existingDelegate.getDelegateProfileId());
       registeredDelegate = update(delegate);
       broadcasterFactory.lookup("/stream/delegate/" + delegate.getAccountId(), true)
           .broadcast("[X]" + delegate.getUuid());
     }
     alertService.activeDelegateUpdated(registeredDelegate.getAccountId(), registeredDelegate.getUuid());
     return registeredDelegate;
+  }
+
+  @Override
+  public DelegateInitialization checkForProfile(
+      String accountId, String delegateId, String profileId, long lastUpdatedAt) {
+    logger.info("Checking delegate profile for account {}, delegate [{}]. Previous profile [{}] updated at {}",
+        accountId, delegateId, profileId, lastUpdatedAt);
+    Delegate delegate = get(accountId, delegateId);
+    if (isNotBlank(delegate.getDelegateProfileId())) {
+      DelegateProfile profile = delegateProfileService.get(accountId, delegate.getDelegateProfileId());
+      if (profile != null && (!profile.getUuid().equals(profileId) || profile.getLastUpdatedAt() > lastUpdatedAt)) {
+        return DelegateInitialization.builder()
+            .profileId(profile.getUuid())
+            .name(profile.getName())
+            .profileLastUpdatedAt(profile.getLastUpdatedAt())
+            .scriptContent(profile.getStartupScript())
+            .build();
+      }
+    }
+    return null;
   }
 
   @Override
