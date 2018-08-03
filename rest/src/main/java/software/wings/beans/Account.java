@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.harness.validation.Create;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -11,7 +12,6 @@ import software.wings.annotation.Encrypted;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.encryption.EncryptionInterface;
 import software.wings.security.encryption.SimpleEncryption;
-import software.wings.utils.validation.Create;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.util.ArrayList;

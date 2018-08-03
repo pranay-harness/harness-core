@@ -1,5 +1,7 @@
 package software.wings.service.intfc;
 
+import io.harness.validation.Create;
+import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.InstanceElement;
@@ -24,8 +26,6 @@ import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
 import software.wings.stencils.Stencil;
-import software.wings.utils.validation.Create;
-import software.wings.utils.validation.Update;
 
 import java.util.List;
 import java.util.Map;

@@ -1,5 +1,7 @@
 package software.wings.service.intfc;
 
+import io.harness.validation.Create;
+import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.DeploymentType;
@@ -16,8 +18,6 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.ownership.OwnedByEnvironment;
 import software.wings.service.intfc.ownership.OwnedByInfrastructureProvisioner;
 import software.wings.settings.SettingValue.SettingVariableTypes;
-import software.wings.utils.validation.Create;
-import software.wings.utils.validation.Update;
 
 import java.util.List;
 import java.util.Map;

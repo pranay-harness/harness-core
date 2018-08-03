@@ -6,6 +6,7 @@ import com.google.common.collect.Maps;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.validation.Create;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -24,7 +25,6 @@ import software.wings.annotation.Encryptable;
 import software.wings.beans.yaml.YamlType;
 import software.wings.security.EncryptionType;
 import software.wings.settings.SettingValue.SettingVariableTypes;
-import software.wings.utils.validation.Create;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.util.ArrayList;

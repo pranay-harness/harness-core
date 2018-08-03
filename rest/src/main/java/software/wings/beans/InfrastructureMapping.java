@@ -17,6 +17,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.data.validator.EntityName;
+import io.harness.validation.Update;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -34,7 +35,6 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.stencils.DataProvider;
-import software.wings.utils.validation.Update;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.util.Collection;
