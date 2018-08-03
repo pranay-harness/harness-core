@@ -502,3 +502,4 @@ software.wings.service.impl.aws.model.AwsAmiServiceDeployResponse, 5462
 software.wings.service.impl.aws.model.AwsAsgListDesiredCapacitiesRequest, 5463
 software.wings.service.impl.aws.model.AwsAsgListDesiredCapacitiesResponse, 5464
 software.wings.api.HelmDeployStateExecutionData, 5465
+software.wings.beans.container.IstioConfig, 5466

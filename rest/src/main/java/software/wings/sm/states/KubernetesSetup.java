@@ -37,6 +37,7 @@ import software.wings.beans.command.ContainerSetupParams;
 import software.wings.beans.command.KubernetesSetupParams;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ImageDetails;
+import software.wings.beans.container.IstioConfig;
 import software.wings.beans.container.KubernetesBlueGreenConfig;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.KubernetesPortProtocol;
@@ -85,6 +86,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
   private String ingressYaml;
   private String customMetricYamlConfig;
   private boolean useIstioRouteRule;
+  private IstioConfig istioConfig;
 
   private boolean blueGreen;
   private KubernetesBlueGreenConfig blueGreenConfig;
@@ -217,6 +219,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
         .withUseIngress(useIngress)
         .withIngressYaml(ingressYamlEvaluated)
         .withUseIstioRouteRule(useIstioRouteRule)
+        .withIstioConfig(istioConfig)
         .withBlueGreen(blueGreen)
         .withBlueGreenConfig(blueGreenConfig)
         .withPlainConfigFiles(plainConfigFiles)
@@ -505,6 +508,14 @@ public class KubernetesSetup extends ContainerServiceSetup {
 
   public void setUseIstioRouteRule(boolean useIstioRouteRule) {
     this.useIstioRouteRule = useIstioRouteRule;
+  }
+
+  public IstioConfig getIstioConfig() {
+    return istioConfig;
+  }
+
+  public void setIstioConfig(IstioConfig istioConfig) {
+    this.istioConfig = istioConfig;
   }
 
   public boolean isBlueGreen() {
