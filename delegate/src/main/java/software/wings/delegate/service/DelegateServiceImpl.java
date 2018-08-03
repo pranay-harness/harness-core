@@ -150,10 +150,8 @@ public class DelegateServiceImpl implements DelegateService {
   private static final long WATCHER_HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(10);
   private static final long WATCHER_VERSION_MATCH_TIMEOUT = TimeUnit.MINUTES.toMillis(2);
 
-  private static final String PROXY_SETUP = "#!/bin/bash -e\n"
-      + "\n"
-      + "if [ -e proxy.config ]; then\n"
-      + "  source proxy.config\n"
+  private static final String PROXY_SETUP = "if [ -e proxy.config ]; then\n"
+      + "  source ./proxy.config\n"
       + "  PROXY_CURL=\"\"\n"
       + "  if [[ $PROXY_HOST != \"\" ]]\n"
       + "  then\n"
@@ -656,7 +654,7 @@ public class DelegateServiceImpl implements DelegateService {
 
         ProcessExecutor processExecutor = new ProcessExecutor()
                                               .timeout(5, TimeUnit.MINUTES)
-                                              .command("/bin/sh", "-c", script)
+                                              .command("/bin/bash", "-c", script)
                                               .readOutput(true)
                                               .redirectOutput(new LogOutputStream() {
                                                 @Override
