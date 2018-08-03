@@ -17,6 +17,7 @@ import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
+import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.beans.KubernetesConfig.KubernetesConfigBuilder;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Util;
@@ -69,7 +70,7 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
   }
 
   @Override
-  public void applyProvisionerVariables(Map<String, Object> map) {}
+  public void applyProvisionerVariables(Map<String, Object> map, NodeFilteringType nodeFilteringType) {}
 
   @SchemaIgnore
   @Override

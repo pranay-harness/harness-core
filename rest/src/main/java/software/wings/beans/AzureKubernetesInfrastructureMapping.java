@@ -8,6 +8,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.utils.Util;
 
 import java.util.Map;
@@ -26,7 +27,7 @@ public class AzureKubernetesInfrastructureMapping extends ContainerInfrastructur
   }
 
   @Override
-  public void applyProvisionerVariables(Map<String, Object> map) {}
+  public void applyProvisionerVariables(Map<String, Object> map, NodeFilteringType nodeFilteringType) {}
 
   @SchemaIgnore
   @Override

@@ -24,6 +24,7 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType;
+import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.InfrastructureProvisionerDetails;
 import software.wings.beans.InfrastructureProvisionerDetails.InfrastructureProvisionerDetailsBuilder;
@@ -236,13 +237,13 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   // present for terraform
   private void applyProperties(Map<String, Object> contextMap, InfrastructureMapping infrastructureMapping,
       List<NameValuePair> properties, Optional<ManagerExecutionLogCallback> executionLogCallbackOptional,
-      Optional<String> region) {
+      Optional<String> region, NodeFilteringType nodeFilteringType) {
     final Map<String, Object> stringMap = new HashMap<>();
 
     generateMapToUpdateInfraMapping(contextMap, properties, executionLogCallbackOptional, stringMap, region);
 
     try {
-      infrastructureMapping.applyProvisionerVariables(stringMap);
+      infrastructureMapping.applyProvisionerVariables(stringMap, nodeFilteringType);
       infrastructureMappingService.update(infrastructureMapping);
     } catch (Exception e) {
       addToExecutionLog(executionLogCallbackOptional, Misc.getMessage(e));
@@ -319,8 +320,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
               addToExecutionLog(executionLogCallbackOptional,
                   "Provisioner " + infrastructureProvisioner.getUuid() + " updates infrastructureMapping "
                       + infrastructureMapping.getUuid());
-              applyProperties(
-                  contextMap, infrastructureMapping, blueprint.getProperties(), executionLogCallbackOptional, region);
+              applyProperties(contextMap, infrastructureMapping, blueprint.getProperties(),
+                  executionLogCallbackOptional, region, blueprint.getNodeFilteringType());
             });
       }
     }

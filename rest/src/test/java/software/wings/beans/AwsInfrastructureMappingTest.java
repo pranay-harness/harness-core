@@ -4,6 +4,8 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
+import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType.AWS_AUTOSCALING_GROUP;
+import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType.AWS_INSTANCE_FILTER;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -21,25 +23,52 @@ public class AwsInfrastructureMappingTest extends WingsBaseTest {
 
     AwsInfrastructureMapping awsInfrastructureMapping = anAwsInfrastructureMapping().build();
 
-    assertThatThrownBy(() -> awsInfrastructureMapping.applyProvisionerVariables(map))
+    assertThatThrownBy(() -> awsInfrastructureMapping.applyProvisionerVariables(map, AWS_INSTANCE_FILTER))
         .isInstanceOf(InvalidRequestException.class);
 
     map.put("region", "dummy-region");
-    awsInfrastructureMapping.applyProvisionerVariables(map);
+    awsInfrastructureMapping.applyProvisionerVariables(map, AWS_INSTANCE_FILTER);
     assertThat(awsInfrastructureMapping.getRegion()).isEqualTo("dummy-region");
-    assertThat(awsInfrastructureMapping.getAwsInstanceFilter()).isNull();
 
     map.put("vpcs", asList("dummy-vpc"));
     map.put("subnets", asList("dummy-subnets"));
     map.put("securityGroups", asList("dummy-securityGroups"));
     map.put("tags", ImmutableMap.<String, Object>of("key", "value"));
 
-    awsInfrastructureMapping.applyProvisionerVariables(map);
+    awsInfrastructureMapping.applyProvisionerVariables(map, AWS_INSTANCE_FILTER);
     assertThat(awsInfrastructureMapping.getRegion()).isEqualTo("dummy-region");
     assertThat(awsInfrastructureMapping.getAwsInstanceFilter().getVpcIds()).containsExactly("dummy-vpc");
     assertThat(awsInfrastructureMapping.getAwsInstanceFilter().getSubnetIds()).containsExactly("dummy-subnets");
     assertThat(awsInfrastructureMapping.getAwsInstanceFilter().getSecurityGroupIds())
         .containsExactly("dummy-securityGroups");
     assertThat(awsInfrastructureMapping.getAwsInstanceFilter().getTags().size()).isEqualTo(1);
+  }
+
+  @Test
+  public void testASGNameAndLBName() {
+    Map<String, Object> map = new HashMap<>();
+    map.put("region", "dummy-region");
+    map.put("autoScalingGroup", "my-group");
+    AwsInfrastructureMapping awsInfrastructureMapping = anAwsInfrastructureMapping().build();
+    awsInfrastructureMapping.applyProvisionerVariables(map, AWS_AUTOSCALING_GROUP);
+    assertThat(awsInfrastructureMapping.getRegion()).isEqualTo("dummy-region");
+    assertThat(awsInfrastructureMapping.getAutoScalingGroupName()).isEqualTo("my-group");
+
+    final Map<String, Object> map2 = new HashMap<>();
+    final AwsInfrastructureMapping awsInfrastructureMapping2 = anAwsInfrastructureMapping().build();
+    assertThatThrownBy(() -> awsInfrastructureMapping2.applyProvisionerVariables(map2, AWS_AUTOSCALING_GROUP))
+        .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  public void testChangeOfFilterType() {
+    AwsInfrastructureMapping awsInfrastructureMapping = anAwsInfrastructureMapping().build();
+    Map<String, Object> map = new HashMap<>();
+    map.put("region", "dummy-region");
+    awsInfrastructureMapping.applyProvisionerVariables(map, AWS_INSTANCE_FILTER);
+    assertThat(awsInfrastructureMapping.getAutoScalingGroupName()).isNull();
+    map.put("autoScalingGroup", "my-group");
+    awsInfrastructureMapping.applyProvisionerVariables(map, AWS_AUTOSCALING_GROUP);
+    assertThat(awsInfrastructureMapping.getAwsInstanceFilter()).isNull();
   }
 }

@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.service.impl.WinRmConnectionAttributesDataProvider;
 import software.wings.stencils.EnumData;
 import software.wings.utils.Util;
@@ -29,7 +30,7 @@ public class PhysicalInfrastructureMappingWinRm extends PhysicalInfrastructureMa
   }
 
   @Override
-  public void applyProvisionerVariables(Map<String, Object> map) {}
+  public void applyProvisionerVariables(Map<String, Object> map, NodeFilteringType nodeFilteringType) {}
 
   @SchemaIgnore
   @Override

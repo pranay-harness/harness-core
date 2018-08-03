@@ -24,6 +24,7 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.AwsInstanceFilter.AwsInstanceFilterBuilder;
 import software.wings.beans.AwsInstanceFilter.Tag;
 import software.wings.beans.AwsInstanceFilter.Tag.TagBuilder;
+import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.stencils.DataProvider;
@@ -80,43 +81,48 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     super(InfrastructureMappingType.AWS_SSH.name());
   }
 
-  @Override
-  public void applyProvisionerVariables(Map<String, Object> map) {
+  private void applyAwsInstanceFilters(Map<String, Object> map) {
+    setAutoScalingGroupName(null);
     AwsInstanceFilterBuilder builder = null;
-
     try {
       for (Entry<String, Object> entry : map.entrySet()) {
         switch (entry.getKey()) {
-          case "region":
+          case "region": {
             setRegion((String) entry.getValue());
             break;
-          case "vpcs":
+          }
+          case "vpcs": {
             if (builder == null) {
               builder = AwsInstanceFilter.builder();
             }
             builder.vpcIds(getList(entry.getValue()));
             break;
-          case "subnets":
+          }
+          case "subnets": {
             if (builder == null) {
               builder = AwsInstanceFilter.builder();
             }
             builder.subnetIds(getList(entry.getValue()));
             break;
-          case "securityGroups":
+          }
+          case "securityGroups": {
             if (builder == null) {
               builder = AwsInstanceFilter.builder();
             }
             builder.securityGroupIds(getList(entry.getValue()));
             break;
-          case "tags":
+          }
+          case "tags": {
             if (builder == null) {
               builder = AwsInstanceFilter.builder();
             }
             getTags(entry.getValue(), builder);
             break;
-          default:
+          }
+          default: {
             throw new InvalidRequestException(
                 format("Unsupported infrastructure mapping provisioner variable %s", entry.getKey()));
+          }
         }
       }
     } catch (WingsException exception) {
@@ -130,6 +136,59 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     }
     if (builder != null) {
       setAwsInstanceFilter(builder.build());
+    } else {
+      setAwsInstanceFilter(null);
+    }
+  }
+
+  private void applyAutoScalingGroups(Map<String, Object> map) {
+    setAwsInstanceFilter(null);
+    try {
+      for (Entry<String, Object> entry : map.entrySet()) {
+        switch (entry.getKey()) {
+          case "region": {
+            setRegion((String) entry.getValue());
+            break;
+          }
+          case "autoScalingGroup": {
+            setAutoScalingGroupName((String) entry.getValue());
+            break;
+          }
+          default: {
+            throw new InvalidRequestException(
+                format("Unsupported infrastructure mapping provisioner variable %s", entry.getKey()));
+          }
+        }
+      }
+    } catch (WingsException exception) {
+      throw exception;
+    } catch (RuntimeException exception) {
+      throw new InvalidRequestException("Unable to set the provisioner variables to the mapping", exception);
+    }
+
+    if (getRegion() == null) {
+      throw new InvalidRequestException("Region is required.");
+    }
+    if (getAutoScalingGroupName() == null) {
+      throw new InvalidRequestException("Auto scaling group name is required.");
+    }
+  }
+
+  @Override
+  public void applyProvisionerVariables(Map<String, Object> map, NodeFilteringType nodeFilteringType) {
+    switch (nodeFilteringType) {
+      case AWS_INSTANCE_FILTER: {
+        applyAwsInstanceFilters(map);
+        break;
+      }
+      case AWS_AUTOSCALING_GROUP: {
+        applyAutoScalingGroups(map);
+        break;
+      }
+      default: {
+        // Should never happen
+        throw new InvalidRequestException(format("Unidentified: [%s] node filtering type", nodeFilteringType.name()));
+      }
     }
   }
 

@@ -4,6 +4,7 @@ import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType.AWS;
+import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType.AWS_INSTANCE_FILTER;
 import static software.wings.beans.Service.builder;
 
 import com.google.inject.Inject;
@@ -92,6 +93,7 @@ public class InfrastructureProvisionerGenerator {
                     .properties(asList(NameValuePair.builder().name("region").value("${terraform.region}").build(),
                         NameValuePair.builder().name("securityGroups").value("${terraform.security_group}").build(),
                         NameValuePair.builder().name("tags").value("${terraform.archive_tags}").build()))
+                    .nodeFilteringType(AWS_INSTANCE_FILTER)
                     .build(),
                 InfrastructureMappingBlueprint.builder()
                     .serviceId(factory.getUuid())
@@ -100,6 +102,7 @@ public class InfrastructureProvisionerGenerator {
                     .properties(asList(NameValuePair.builder().name("region").value("${terraform.region}").build(),
                         NameValuePair.builder().name("securityGroups").value("${terraform.security_group}").build(),
                         NameValuePair.builder().name("tags").value("${terraform.factory_tags}").build()))
+                    .nodeFilteringType(AWS_INSTANCE_FILTER)
                     .build(),
                 InfrastructureMappingBlueprint.builder()
                     .serviceId(warehouse.getUuid())
@@ -108,6 +111,7 @@ public class InfrastructureProvisionerGenerator {
                     .properties(asList(NameValuePair.builder().name("region").value("${terraform.region}").build(),
                         NameValuePair.builder().name("securityGroups").value("${terraform.security_group}").build(),
                         NameValuePair.builder().name("tags").value("${terraform.warehouse_tags}").build()))
+                    .nodeFilteringType(AWS_INSTANCE_FILTER)
                     .build()))
             .build();
 

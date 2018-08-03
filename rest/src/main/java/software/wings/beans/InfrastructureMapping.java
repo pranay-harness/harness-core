@@ -29,6 +29,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.annotation.Encryptable;
 import software.wings.beans.HostConnectionAttributes.AccessType;
+import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -112,7 +113,7 @@ public abstract class InfrastructureMapping extends Base implements Encryptable 
     this.accountId = accountId;
   }
 
-  public abstract void applyProvisionerVariables(Map<String, Object> map);
+  public abstract void applyProvisionerVariables(Map<String, Object> map, NodeFilteringType nodeFilteringType);
 
   @SchemaIgnore
   public String getAccountId() {
