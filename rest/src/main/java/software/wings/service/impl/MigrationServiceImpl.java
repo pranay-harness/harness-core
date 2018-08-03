@@ -137,22 +137,24 @@ public class MigrationServiceImpl implements MigrationService {
 
         logger.info("[Migration] - Migration complete");
 
-        logger.info("Running Git full sync on all the accounts");
+        executorService.submit(() -> {
+          logger.info("Running Git full sync on all the accounts");
 
-        try (HIterator<Account> accounts = new HIterator<>(
-                 wingsPersistence.createQuery(Account.class, excludeAuthority).project("accountName", true).fetch())) {
-          while (accounts.hasNext()) {
-            Account account = accounts.next();
-            try {
-              yamlGitService.fullSync(account.getUuid(), false);
-            } catch (Exception ex) {
-              logger.error(
-                  "Git full sync failed for account: {}. Reason is: {}", account.getAccountName(), Misc.getMessage(ex));
+          try (
+              HIterator<Account> accounts = new HIterator<>(
+                  wingsPersistence.createQuery(Account.class, excludeAuthority).project("accountName", true).fetch())) {
+            while (accounts.hasNext()) {
+              Account account = accounts.next();
+              try {
+                yamlGitService.fullSync(account.getUuid(), false);
+              } catch (Exception ex) {
+                logger.error("Git full sync failed for account: {}. Reason is: {}", account.getAccountName(),
+                    Misc.getMessage(ex));
+              }
             }
           }
-        }
-
-        logger.info("Git full sync on all the accounts completed");
+          logger.info("Git full sync on all the accounts completed");
+        });
 
       } else {
         logger.info("[Migration] - Schema is up to date");
