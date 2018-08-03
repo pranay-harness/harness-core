@@ -11,6 +11,7 @@ import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkRes
 import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
+import static software.wings.sm.ExecutionStatus.SUCCESS;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -19,6 +20,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
@@ -26,6 +28,7 @@ import software.wings.api.PhaseElement;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
+import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.SearchFilter.Operator;
@@ -64,6 +67,7 @@ import software.wings.service.intfc.splunk.SplunkDelegateService;
 import software.wings.service.intfc.sumo.SumoDelegateService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.utils.Misc;
@@ -1327,6 +1331,38 @@ public class AnalysisServiceImpl implements AnalysisService {
   public boolean isProcessingComplete(
       String query, String appId, String stateExecutionId, StateType type, int timeDurationMins) {
     return getLastProcessedMinute(query, appId, stateExecutionId, type) >= timeDurationMins - 1;
+  }
+
+  @Override
+  public Set<String> getLastExecutionNodes(String appId, String workflowId) {
+    WorkflowExecution workflowExecution = wingsPersistence.createQuery(WorkflowExecution.class)
+                                              .filter("appId", appId)
+                                              .filter("workflowId", workflowId)
+                                              .filter("status", SUCCESS)
+                                              .order(Sort.descending("createdAt"))
+                                              .get();
+
+    if (workflowExecution == null) {
+      throw new WingsException(ErrorCode.APM_CONFIGURATION_ERROR)
+          .addParam("reason", "No successful execution exists for the workflow.");
+    }
+
+    Set<String> hosts = new HashSet<>();
+    for (ElementExecutionSummary executionSummary : workflowExecution.getServiceExecutionSummaries()) {
+      if (isEmpty(executionSummary.getInstanceStatusSummaries())) {
+        return emptySet();
+      }
+      for (InstanceStatusSummary instanceStatusSummary : executionSummary.getInstanceStatusSummaries()) {
+        hosts.add(instanceStatusSummary.getInstanceElement().getHostName());
+      }
+    }
+    if (isEmpty(hosts)) {
+      logger.info("No nodes found for successful execution for workflow {} with executionId {}", workflowId,
+          workflowExecution.getUuid());
+      throw new WingsException(ErrorCode.APM_CONFIGURATION_ERROR)
+          .addParam("reason", "No node information was captured in the last successful workflow execution");
+    }
+    return hosts;
   }
 
   private boolean deleteIfStale(String query, String appId, String stateExecutionId, StateType type, Set<String> hosts,

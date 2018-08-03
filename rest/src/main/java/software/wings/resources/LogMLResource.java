@@ -31,6 +31,7 @@ import software.wings.sm.StateType;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -157,5 +158,16 @@ public class LogMLResource {
       @QueryParam("appId") String appId, @QueryParam("serviceId") String serviceId,
       @QueryParam("workflowId") String workflowId, @QueryParam("workflowExecutionId") String workflowExecutionId) {
     return new RestResponse<>(analysisService.getMLFeedback(appId, serviceId, workflowId, workflowExecutionId));
+  }
+
+  @GET
+  @Produces({"application/json", "application/v1+json"})
+  @Path(LogAnalysisResource.LAST_EXECUTION_NODES)
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  public RestResponse<Set<String>> getLastExecutionNodes(@QueryParam("accountId") String accountId,
+      @QueryParam("appId") String appId, @QueryParam("workflowId") String workflowId) {
+    return new RestResponse<>(analysisService.getLastExecutionNodes(appId, workflowId));
   }
 }
