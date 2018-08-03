@@ -726,7 +726,6 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public void delete(String accountId, String delegateId) {
     logger.info("Deleting delegate: {}", delegateId);
     Delegate existingDelegate = wingsPersistence.createQuery(Delegate.class)

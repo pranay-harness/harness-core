@@ -63,4 +63,6 @@ public interface LogAnalysisResource {
    * Validate query
    */
   String ELK_VALIDATE_QUERY = "/validate-query";
+
+  String LAST_EXECUTION_NODES = "/last-execution-nodes";
 }

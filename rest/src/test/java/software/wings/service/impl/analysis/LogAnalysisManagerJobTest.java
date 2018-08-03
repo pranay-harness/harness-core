@@ -2,12 +2,19 @@ package software.wings.service.impl.analysis;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
+import static software.wings.api.InstanceElement.Builder.anInstanceElement;
+import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
+import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
+import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import org.junit.Before;
@@ -17,8 +24,13 @@ import org.mockito.MockitoAnnotations;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import software.wings.WingsBaseTest;
+import software.wings.beans.ErrorCode;
+import software.wings.beans.RestResponse;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
+import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
+import software.wings.resources.LogMLResource;
 import software.wings.scheduler.LogAnalysisManagerJob;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.intfc.LearningEngineService;
@@ -29,6 +41,7 @@ import software.wings.sm.StateType;
 import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -52,6 +65,7 @@ public class LogAnalysisManagerJobTest extends WingsBaseTest {
   @Inject private LogAnalysisManagerJob logAnalysisManagerJob;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private LearningEngineService learningEngineService;
+  @Inject private LogMLResource logMLResource;
   @Mock private AnalysisService analysisService;
   @Mock JobExecutionContext jobExecutionContext;
 
@@ -136,5 +150,51 @@ public class LogAnalysisManagerJobTest extends WingsBaseTest {
     assertEquals(MLAnalysisType.LOG_ML, learningEngineAnalysisTask.getMl_analysis_type());
     assertEquals(ExecutionStatus.RUNNING, learningEngineAnalysisTask.getExecutionStatus());
     assertEquals(appId, learningEngineAnalysisTask.getAppId());
+  }
+
+  @Test
+  public void testGetLastExecutionNodesNoSuccessfulWorkflow() {
+    wingsPersistence.save(
+        aWorkflowExecution().withAppId(appId).withWorkflowId(workflowId).withStatus(ExecutionStatus.FAILED).build());
+    try {
+      logMLResource.getLastExecutionNodes(accountId, appId, workflowId);
+      fail("Did not throw exception for non existent successful workflow");
+    } catch (WingsException e) {
+      assertEquals(ErrorCode.APM_CONFIGURATION_ERROR, e.getResponseMessage().getCode());
+      assertEquals(1, e.getParams().size());
+      assertEquals("No successful execution exists for the workflow.", e.getParams().get("reason"));
+    }
+  }
+
+  @Test
+  public void testGetLastExecutionNodeWithSuccessfulWorkflow() {
+    WorkflowExecution workflowExecution =
+        aWorkflowExecution()
+            .withAppId(appId)
+            .withWorkflowId(workflowId)
+            .withStatus(ExecutionStatus.SUCCESS)
+            .withServiceExecutionSummaries(Lists.newArrayList(
+                anElementExecutionSummary()
+                    .withInstanceStatusSummaries(
+                        Lists.newArrayList(anInstanceStatusSummary()
+                                               .withInstanceElement(anInstanceElement().withHostName("host1").build())
+                                               .build(),
+                            anInstanceStatusSummary()
+                                .withInstanceElement(anInstanceElement().withHostName("host2").build())
+                                .build()))
+                    .build(),
+                anElementExecutionSummary()
+                    .withInstanceStatusSummaries(
+                        Lists.newArrayList(anInstanceStatusSummary()
+                                               .withInstanceElement(anInstanceElement().withHostName("host3").build())
+                                               .build(),
+                            anInstanceStatusSummary()
+                                .withInstanceElement(anInstanceElement().withHostName("host4").build())
+                                .build()))
+                    .build()))
+            .build();
+    wingsPersistence.save(workflowExecution);
+    RestResponse<Set<String>> lastExecutionNodes = logMLResource.getLastExecutionNodes(accountId, appId, workflowId);
+    assertEquals(Sets.newHashSet("host1", "host2", "host3", "host4"), lastExecutionNodes.getResource());
   }
 }

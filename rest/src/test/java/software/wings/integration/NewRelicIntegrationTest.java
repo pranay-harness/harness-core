@@ -205,7 +205,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
 
     for (NewRelicApplicationInstance node : nodes) {
       target = client.target(API_BASE + "/newrelic/node-data?settingId=" + newRelicConfigId + "&accountId=" + accountId
-          + "&applicationId=" + 107019083 + "&instanceId=" + node.getId());
+          + "&applicationId=" + 107019083 + "&instanceName=" + node.getHost());
       RestResponse<VerificationNodeDataSetupResponse> metricResponse = getRequestBuilderWithAuthHeader(target).get(
           new GenericType<RestResponse<VerificationNodeDataSetupResponse>>() {});
       assertEquals(0, metricResponse.getResponseMessages().size());
