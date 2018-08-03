@@ -9,4 +9,5 @@ import java.util.List;
 @NoArgsConstructor
 public class IstioConfig {
   private List<String> gateways;
+  private List<String> hosts;
 }
