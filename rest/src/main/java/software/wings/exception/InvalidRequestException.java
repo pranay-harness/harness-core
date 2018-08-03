@@ -2,6 +2,8 @@ package software.wings.exception;
 
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 
+import java.util.EnumSet;
+
 public class InvalidRequestException extends WingsException {
   public InvalidRequestException(String message) {
     super(INVALID_REQUEST);
@@ -13,12 +15,12 @@ public class InvalidRequestException extends WingsException {
     super.addParam("message", message);
   }
 
-  public InvalidRequestException(String message, ReportTarget[] reportTargets) {
+  public InvalidRequestException(String message, EnumSet<ReportTarget> reportTargets) {
     super(INVALID_REQUEST, reportTargets);
     super.addParam("message", message);
   }
 
-  public InvalidRequestException(String message, Throwable cause, ReportTarget[] reportTargets) {
+  public InvalidRequestException(String message, Throwable cause, EnumSet<ReportTarget> reportTargets) {
     super(INVALID_REQUEST, reportTargets, cause);
     super.addParam("message", message);
   }
