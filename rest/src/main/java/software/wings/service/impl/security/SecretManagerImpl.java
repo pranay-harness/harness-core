@@ -58,6 +58,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.security.EncryptionType;
+import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -972,7 +973,8 @@ public class SecretManagerImpl implements SecretManager {
 
     List<EncryptedData> filteredEncryptedDataList = Lists.newArrayList();
 
-    RestrictionsAndAppEnvMap restrictionsAndAppEnvMap = usageRestrictionsService.getRestrictionsAndAppEnvMap(accountId);
+    RestrictionsAndAppEnvMap restrictionsAndAppEnvMap =
+        usageRestrictionsService.getRestrictionsAndAppEnvMapFromCache(accountId, Action.READ);
     Map<String, Set<String>> appEnvMapFromPermissions = restrictionsAndAppEnvMap.getAppEnvMap();
     UsageRestrictions restrictionsFromUserPermissions = restrictionsAndAppEnvMap.getUsageRestrictions();
 

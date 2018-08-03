@@ -173,7 +173,8 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   }
 
   @Override
-  public Map<String, Set<String>> getAppEnvMapFromPermissions(String accountId, UserPermissionInfo userPermissionInfo) {
+  public Map<String, Set<String>> getAppEnvMapFromUserPermissions(
+      String accountId, UserPermissionInfo userPermissionInfo, Action action) {
     Map<String, Set<String>> appEnvMap = Maps.newHashMap();
 
     Map<String, AppPermissionSummary> appPermissionMap = userPermissionInfo.getAppPermissionMapInternal();
@@ -210,7 +211,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
         return;
       }
 
-      Set<EnvInfo> envInfoSet = envPermissions.get(Action.UPDATE);
+      Set<EnvInfo> envInfoSet = envPermissions.get(action);
 
       if (isEmpty(envInfoSet)) {
         return;
@@ -354,7 +355,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
 
   @Override
   public UsageRestrictions getUsageRestrictionsFromUserPermissions(
-      String accountId, UserPermissionInfo userPermissionInfo, User user) {
+      String accountId, UserPermissionInfo userPermissionInfo, User user, Action action) {
     Set<AppEnvRestriction> appEnvRestrictions = Sets.newHashSet();
 
     List<UserGroup> userGroupsByAccountId =
@@ -369,7 +370,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
         PermissionType permissionType = appPermission.getPermissionType();
 
         Set<Action> actions = appPermission.getActions();
-        if (!actions.contains(Action.UPDATE)) {
+        if (!actions.contains(action)) {
           return;
         }
 
@@ -479,7 +480,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
 
   @Override
   public RestrictionsSummary listAppsWithEnvUpdatePermissions(String accountId) {
-    RestrictionsAndAppEnvMap restrictionsAndAppEnvMap = getRestrictionsAndAppEnvMap(accountId);
+    RestrictionsAndAppEnvMap restrictionsAndAppEnvMap = getRestrictionsAndAppEnvMapFromCache(accountId, Action.UPDATE);
     UsageRestrictions usageRestrictionsFromUserPermissions = restrictionsAndAppEnvMap.getUsageRestrictions();
 
     Set<AppRestrictionsSummary> appRestrictionsSummarySet = Sets.newHashSet();
@@ -646,7 +647,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
         return null;
       }
 
-      return getRestrictionsAndAppEnvMap(accountId).getUsageRestrictions();
+      return getRestrictionsAndAppEnvMapFromCache(accountId, Action.UPDATE).getUsageRestrictions();
     }
   }
 
@@ -669,7 +670,8 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       return true;
     }
 
-    Map<String, Set<String>> appEnvMapFromUserPermissions = getRestrictionsAndAppEnvMap(accountId).getAppEnvMap();
+    Map<String, Set<String>> appEnvMapFromUserPermissions =
+        getRestrictionsAndAppEnvMapFromCache(accountId, Action.UPDATE).getAppEnvMap();
 
     Map<String, Set<String>> appEnvMapFromEntityRestrictions = entityUsageRestrictions != null
         ? getAppEnvMap(accountId, entityUsageRestrictions.getAppEnvRestrictions())
@@ -681,8 +683,8 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
 
   @Override
   public boolean userHasPermissionsToChangeEntity(String accountId, UsageRestrictions entityUsageRestrictions) {
-    return this.userHasPermissionsToChangeEntity(
-        accountId, entityUsageRestrictions, getRestrictionsAndAppEnvMap(accountId).getUsageRestrictions());
+    return this.userHasPermissionsToChangeEntity(accountId, entityUsageRestrictions,
+        getRestrictionsAndAppEnvMapFromCache(accountId, Action.UPDATE).getUsageRestrictions());
   }
 
   private boolean userHasPermissions(String accountId, UsageRestrictions entityUsageRestrictions,
@@ -797,7 +799,8 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       return;
     }
 
-    UsageRestrictions restrictionsFromUserPermissions = getRestrictionsAndAppEnvMap(accountId).getUsageRestrictions();
+    UsageRestrictions restrictionsFromUserPermissions =
+        getRestrictionsAndAppEnvMapFromCache(accountId, Action.UPDATE).getUsageRestrictions();
     boolean allowed =
         checkIfUserCanSetWithNoUsageRestrictions(accountId, usageRestrictions, restrictionsFromUserPermissions);
 
@@ -822,7 +825,8 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       return;
     }
 
-    UsageRestrictions restrictionsFromUserPermissions = getRestrictionsAndAppEnvMap(accountId).getUsageRestrictions();
+    UsageRestrictions restrictionsFromUserPermissions =
+        getRestrictionsAndAppEnvMapFromCache(accountId, Action.UPDATE).getUsageRestrictions();
     boolean allowed =
         checkIfUserCanSetWithNoUsageRestrictions(accountId, newUsageRestrictions, restrictionsFromUserPermissions);
 
@@ -839,8 +843,13 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   }
 
   @Override
-  public RestrictionsAndAppEnvMap getRestrictionsAndAppEnvMap(String accountId) {
+  public RestrictionsAndAppEnvMap getRestrictionsAndAppEnvMapFromCache(String accountId, Action action) {
     RestrictionsAndAppEnvMapBuilder builder = RestrictionsAndAppEnvMap.builder();
+
+    if (action == null) {
+      return builder.build();
+    }
+
     User user = UserThreadLocal.get();
 
     if (user == null) {
@@ -859,8 +868,20 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       return builder.build();
     }
 
-    builder.appEnvMap(userPermissionInfo.getAppEnvMap());
-    builder.usageRestrictions(userPermissionInfo.getUsageRestrictions());
+    switch (action) {
+      case READ:
+        builder.appEnvMap(userPermissionInfo.getAppEnvMapForReadAction());
+        builder.usageRestrictions(userPermissionInfo.getUsageRestrictionsForReadAction());
+        break;
+      case UPDATE:
+        builder.appEnvMap(userPermissionInfo.getAppEnvMapForUpdateAction());
+        builder.usageRestrictions(userPermissionInfo.getUsageRestrictionsForUpdateAction());
+        break;
+      default:
+        logger.error("Invalid action {} for restrictions", action);
+        break;
+    }
+
     return builder.build();
   }
 

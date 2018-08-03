@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import software.wings.beans.User;
 import software.wings.beans.security.restrictions.RestrictionsSummary;
+import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserPermissionInfo;
 import software.wings.settings.RestrictionsAndAppEnvMap;
 import software.wings.settings.UsageRestrictions;
@@ -28,10 +29,11 @@ public interface UsageRestrictionsService {
   /**
    * Derive the user restrictions from user permissions.
    * @param accountId account Id
+   * @param action
    * @return Usage restrictions
    */
   UsageRestrictions getUsageRestrictionsFromUserPermissions(
-      String accountId, UserPermissionInfo userPermissionInfo, User user);
+      String accountId, UserPermissionInfo userPermissionInfo, User user, Action action);
 
   /**
    * Check if the user has access to an entity from the given context.
@@ -115,7 +117,21 @@ public interface UsageRestrictionsService {
    */
   void validateUsageRestrictionsOnEntitySave(String accountId, UsageRestrictions newUsageRestrictions);
 
-  Map<String, Set<String>> getAppEnvMapFromPermissions(String accountId, UserPermissionInfo userPermissionInfo);
+  /**
+   * Constructs the app env map from user permissions
+   * @param accountId account id
+   * @param userPermissionInfo user permission info
+   * @param action action
+   * @return App env map
+   */
+  Map<String, Set<String>> getAppEnvMapFromUserPermissions(
+      String accountId, UserPermissionInfo userPermissionInfo, Action action);
 
-  RestrictionsAndAppEnvMap getRestrictionsAndAppEnvMap(String accountId);
+  /**
+   * Gets the usage restrictions and app env map from the user permission cache
+   * @param accountId account id
+   * @param action action
+   * @return
+   */
+  RestrictionsAndAppEnvMap getRestrictionsAndAppEnvMapFromCache(String accountId, Action action);
 }

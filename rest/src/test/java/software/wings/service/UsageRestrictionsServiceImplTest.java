@@ -320,10 +320,9 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       when(authHandler.getEnvIdsByFilter(anyString(), any(EnvFilter.class)))
           .thenReturn(newHashSet(ENV_ID, ENV_ID_1, ENV_ID_2, ENV_ID_3));
       UsageRestrictions restrictionsFromUserPermissions =
-
-          usageRestrictionsService.getUsageRestrictionsFromUserPermissions(ACCOUNT_ID, null, null);
+          usageRestrictionsService.getUsageRestrictionsFromUserPermissions(ACCOUNT_ID, null, null, Action.READ);
       Map<String, Set<String>> appEnvMapFromPermissions =
-          usageRestrictionsService.getAppEnvMapFromPermissions(ACCOUNT_ID, null);
+          usageRestrictionsService.getAppEnvMapFromUserPermissions(ACCOUNT_ID, null, Action.READ);
       Map<String, Set<String>> appEnvMapFromEntityRestrictions =
           usageRestrictionsService.getAppEnvMap(ACCOUNT_ID, usageRestrictions.getAppEnvRestrictions());
 
@@ -705,7 +704,7 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       UsageRestrictions usageRestrictions1 = UsageRestrictions.builder().appEnvRestrictions(newHashSet()).build();
       doReturn(usageRestrictions1)
           .when(usageRestrictionsService)
-          .getUsageRestrictionsFromUserPermissions(any(), any(), any());
+          .getUsageRestrictionsFromUserPermissions(any(), any(), any(), Action.UPDATE);
 
       UsageRestrictions restrictionsFromUserPermissions = null;
       Map<String, Set<String>> appEnvMap = null;
@@ -729,7 +728,7 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       usageRestrictions1 = UsageRestrictions.builder().appEnvRestrictions(newHashSet(appEnvRestriction1)).build();
       doReturn(usageRestrictions1)
           .when(usageRestrictionsService)
-          .getUsageRestrictionsFromUserPermissions(any(), any(), any());
+          .getUsageRestrictionsFromUserPermissions(any(), any(), any(), Action.UPDATE);
 
       canUserUpdateOrDeleteEntity =
           usageRestrictionsService.userHasPermissionsToChangeEntity(ACCOUNT_ID, null, restrictionsFromUserPermissions);
@@ -749,7 +748,7 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       usageRestrictions1 = UsageRestrictions.builder().appEnvRestrictions(newHashSet(appEnvRestriction1)).build();
       doReturn(usageRestrictions1)
           .when(usageRestrictionsService)
-          .getUsageRestrictionsFromUserPermissions(any(), any(), any());
+          .getUsageRestrictionsFromUserPermissions(any(), any(), any(), Action.UPDATE);
 
       GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
       HashSet<String> envFilters = newHashSet(PROD, NON_PROD);
@@ -783,7 +782,7 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       usageRestrictions1 = UsageRestrictions.builder().appEnvRestrictions(newHashSet(appEnvRestriction1)).build();
       doReturn(usageRestrictions1)
           .when(usageRestrictionsService)
-          .getUsageRestrictionsFromUserPermissions(any(), any(), any());
+          .getUsageRestrictionsFromUserPermissions(any(), any(), any(), Action.UPDATE);
 
       when(authHandler.getAppIdsByFilter(ACCOUNT_ID, appFilter))
           .thenReturn(newHashSet(APP_ID, APP_ID_1, APP_ID_2, APP_ID_3));
@@ -817,7 +816,7 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       usageRestrictions1 = UsageRestrictions.builder().appEnvRestrictions(newHashSet(appEnvRestriction1)).build();
       doReturn(usageRestrictions1)
           .when(usageRestrictionsService)
-          .getUsageRestrictionsFromUserPermissions(any(), any(), any());
+          .getUsageRestrictionsFromUserPermissions(any(), any(), any(), Action.UPDATE);
 
       when(authHandler.getAppIdsByFilter(ACCOUNT_ID, appFilter))
           .thenReturn(newHashSet(APP_ID, APP_ID_1, APP_ID_2, APP_ID_3));
@@ -859,8 +858,10 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
                                                 .accountId(ACCOUNT_ID)
                                                 .isRbacEnabled(true)
                                                 .appPermissionMap(appPermissionsMap)
-                                                .usageRestrictions(usageRestrictions)
-                                                .appEnvMap(appEnvMap)
+                                                .usageRestrictionsForUpdateAction(usageRestrictions)
+                                                .appEnvMapForUpdateAction(appEnvMap)
+                                                .usageRestrictionsForReadAction(usageRestrictions)
+                                                .appEnvMapForReadAction(appEnvMap)
                                                 .build();
     if (isAccountAdmin) {
       AccountPermissionSummary accountPermissionSummary =
