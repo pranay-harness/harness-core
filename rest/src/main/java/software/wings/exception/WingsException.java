@@ -35,7 +35,7 @@ import javax.validation.constraints.NotNull;
  * @author Rishi
  */
 @Getter
-public class WingsException extends WingsApiException {
+public class WingsException extends RuntimeException {
   private static final long serialVersionUID = -3266129015976960503L;
 
   public enum ReportTarget {
