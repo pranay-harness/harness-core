@@ -270,7 +270,7 @@ public class ShellScriptState extends State {
                                               .accountId(executionContext.getApp().getAccountId())
                                               .appId(executionContext.getAppId())
                                               .activityId(activityId)
-                                              .host(host)
+                                              .host(context.renderExpression(host))
                                               .connectionType(connectionType)
                                               .winrmConnectionAttributes(winRmConnectionAttributes)
                                               .winrmConnectionEncryptedDataDetails(winrmEdd)
