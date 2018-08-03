@@ -627,10 +627,20 @@ public class AuthServiceImpl implements AuthService {
       }
     }
     UserPermissionInfo userPermissionInfo = authHandler.getUserPermissionInfo(accountId, userGroups);
-    userPermissionInfo.setAppEnvMap(
-        usageRestrictionsService.getAppEnvMapFromPermissions(accountId, userPermissionInfo));
-    userPermissionInfo.setUsageRestrictions(
-        usageRestrictionsService.getUsageRestrictionsFromUserPermissions(accountId, userPermissionInfo, user));
+
+    // Restrictions for update permissions
+    userPermissionInfo.setAppEnvMapForUpdateAction(
+        usageRestrictionsService.getAppEnvMapFromUserPermissions(accountId, userPermissionInfo, Action.UPDATE));
+    userPermissionInfo.setUsageRestrictionsForUpdateAction(
+        usageRestrictionsService.getUsageRestrictionsFromUserPermissions(
+            accountId, userPermissionInfo, user, Action.UPDATE));
+
+    // Restrictions for read permissions
+    userPermissionInfo.setAppEnvMapForReadAction(
+        usageRestrictionsService.getAppEnvMapFromUserPermissions(accountId, userPermissionInfo, Action.READ));
+    userPermissionInfo.setUsageRestrictionsForReadAction(
+        usageRestrictionsService.getUsageRestrictionsFromUserPermissions(
+            accountId, userPermissionInfo, user, Action.READ));
     return userPermissionInfo;
   }
 

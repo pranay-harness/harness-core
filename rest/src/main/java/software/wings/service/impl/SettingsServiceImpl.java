@@ -62,6 +62,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
+import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AppService;
@@ -141,7 +142,8 @@ public class SettingsServiceImpl implements SettingsService {
     String accountId = inputSettingAttributes.get(0).getAccountId();
     List<SettingAttribute> filteredSettingAttributes = Lists.newArrayList();
 
-    RestrictionsAndAppEnvMap restrictionsAndAppEnvMap = usageRestrictionsService.getRestrictionsAndAppEnvMap(accountId);
+    RestrictionsAndAppEnvMap restrictionsAndAppEnvMap =
+        usageRestrictionsService.getRestrictionsAndAppEnvMapFromCache(accountId, Action.READ);
     Map<String, Set<String>> appEnvMapFromUserPermissions = restrictionsAndAppEnvMap.getAppEnvMap();
     UsageRestrictions restrictionsFromUserPermissions = restrictionsAndAppEnvMap.getUsageRestrictions();
 
