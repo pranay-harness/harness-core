@@ -548,10 +548,12 @@ public class GitClientImpl implements GitClient {
           releaseLock(gitConfig);
         }
       }
-
-      logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Do a fresh clone");
-      clone(gitConfig);
     }
+
+    // We are here, so either repo doesnt exist or we encounter some error while
+    // opening/updating repo
+    logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Do a fresh clone");
+    clone(gitConfig);
   }
 
   private synchronized void releaseLock(GitConfig gitConfig) {
