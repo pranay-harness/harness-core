@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -28,7 +29,7 @@ import static software.wings.common.Constants.HARNESS_REVISION;
 import static software.wings.common.Constants.HARNESS_SERVICE;
 import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.exception.WingsException.USER;
-import static software.wings.service.impl.KubernetesHelperService.printRouteRuleWeights;
+import static software.wings.service.impl.KubernetesHelperService.printVirtualServiceRouteWeights;
 import static software.wings.service.impl.KubernetesHelperService.toDisplayYaml;
 import static software.wings.service.impl.KubernetesHelperService.toYaml;
 import static software.wings.utils.KubernetesConvention.getBlueGreenIngressName;
@@ -95,8 +96,11 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import me.snowdrop.istio.api.model.IstioResource;
 import me.snowdrop.istio.api.model.IstioResourceBuilder;
-import me.snowdrop.istio.api.model.IstioResourceFluent.RouteRuleSpecNested;
-import me.snowdrop.istio.api.model.v1.routing.RouteRule;
+import me.snowdrop.istio.api.model.IstioResourceFluent.DestinationRuleSpecNested;
+import me.snowdrop.istio.api.model.IstioResourceFluent.VirtualServiceSpecNested;
+import me.snowdrop.istio.api.model.v1.networking.Destination;
+import me.snowdrop.istio.api.model.v1.networking.DestinationWeight;
+import me.snowdrop.istio.api.model.v1.networking.VirtualServiceFluent.HttpNested;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -525,7 +529,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     prepareIngress(kubernetesConfig, encryptedDataDetails, setupParams.isUseIngress(), ingressYaml,
         kubernetesServiceName, labels, executionLogCallback, summaryOutput);
 
-    prepareRouteRule(encryptedDataDetails, kubernetesConfig, setupParams, kubernetesServiceName, service,
+    prepareVirtualService(encryptedDataDetails, kubernetesConfig, setupParams, kubernetesServiceName, service,
         activeServiceCounts, containerServiceName, executionLogCallback, summaryOutput);
   }
 
@@ -781,47 +785,43 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     return null;
   }
 
-  private IstioResource prepareRouteRule(List<EncryptedDataDetail> encryptedDataDetails,
-      KubernetesConfig kubernetesConfig, KubernetesSetupParams setupParams, String routeRuleName, Service service,
+  private void prepareVirtualService(List<EncryptedDataDetail> encryptedDataDetails, KubernetesConfig kubernetesConfig,
+      KubernetesSetupParams setupParams, String virtualServiceName, Service service,
       Map<String, Integer> activeControllers, String containerServiceName, ExecutionLogCallback executionLogCallback,
       StringBuffer summaryOutput) {
-    IstioResource routeRule = null;
-    try {
-      routeRule = kubernetesContainerService.getRouteRule(kubernetesConfig, encryptedDataDetails, routeRuleName);
-    } catch (Exception e) {
-      Misc.logAllMessages(e, executionLogCallback);
-    }
-
     if (setupParams.isUseIstioRouteRule() && service != null) {
-      if (routeRule == null || routeRule.getSpec() == null || isEmpty(((RouteRule) routeRule.getSpec()).getRoute())
-          || !((RouteRule) routeRule.getSpec()).getRoute().get(0).getLabels().containsKey(HARNESS_REVISION)) {
-        IstioResource routeRuleDefinition = createRouteRuleDefinition(
-            setupParams, routeRuleName, service.getSpec().getSelector(), activeControllers, executionLogCallback);
-        routeRule = kubernetesContainerService.createOrReplaceRouteRule(
-            kubernetesConfig, encryptedDataDetails, routeRuleDefinition);
-      } else {
-        executionLogCallback.saveExecutionLog("Istio route rule exists:\n\n" + toDisplayYaml(routeRule));
+      List<IstioResource> istioResourcesDefinition = createVirtualServiceAndDestinationRuleDefinition(
+          setupParams, virtualServiceName, service.getMetadata().getLabels(), activeControllers, executionLogCallback);
+      for (IstioResource r : istioResourcesDefinition) {
+        kubernetesContainerService.createOrReplaceRouteRule(kubernetesConfig, encryptedDataDetails, r);
+        summaryOutput.append(format("%nIstio %s: %s", r.getKind(), r.getMetadata().getName()));
+        if (StringUtils.equals(r.getKind(), "VirtualService")) {
+          printVirtualServiceRouteWeights(r,
+              getPrefixFromControllerName(containerServiceName, setupParams.isUseDashInHostname()),
+              setupParams.isUseDashInHostname(), executionLogCallback);
+        }
       }
-    } else if (routeRule != null) {
+    } else {
       try {
-        if (routeRule.getMetadata().getLabels().containsKey(HARNESS_APP)) {
-          executionLogCallback.saveExecutionLog("Deleting Istio route rule " + routeRuleName);
-          kubernetesContainerService.deleteRouteRule(kubernetesConfig, encryptedDataDetails, routeRuleName);
+        IstioResource virtualService = kubernetesContainerService.getIstioResource(
+            kubernetesConfig, encryptedDataDetails, "VirtualService", virtualServiceName);
+        if (virtualService.getMetadata().getLabels().containsKey(HARNESS_KUBERNETES_MANAGED_LABEL_KEY)) {
+          executionLogCallback.saveExecutionLog("Deleting Istio VirtualService" + virtualServiceName);
+          kubernetesContainerService.deleteIstioResource(
+              kubernetesConfig, encryptedDataDetails, "VirtualService", virtualServiceName);
+        }
+
+        IstioResource destinationRule = kubernetesContainerService.getIstioResource(
+            kubernetesConfig, encryptedDataDetails, "DestinationRule", virtualServiceName);
+        if (destinationRule.getMetadata().getLabels().containsKey(HARNESS_KUBERNETES_MANAGED_LABEL_KEY)) {
+          executionLogCallback.saveExecutionLog("Deleting Istio DestinationRule" + virtualServiceName);
+          kubernetesContainerService.deleteIstioResource(
+              kubernetesConfig, encryptedDataDetails, "DestinationRule", virtualServiceName);
         }
       } catch (Exception e) {
         Misc.logAllMessages(e, executionLogCallback);
       }
-      routeRule = null;
     }
-
-    if (routeRule != null) {
-      summaryOutput.append(format("%nIstio route rule: %s", routeRule.getMetadata().getName()));
-      printRouteRuleWeights(routeRule,
-          getPrefixFromControllerName(containerServiceName, setupParams.isUseDashInHostname()),
-          setupParams.isUseDashInHostname(), executionLogCallback);
-    }
-
-    return routeRule;
   }
 
   private Ingress prepareIngress(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
@@ -1112,37 +1112,86 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         .build();
   }
 
-  private IstioResource createRouteRuleDefinition(KubernetesSetupParams setupParams, String kubernetesServiceName,
-      Map<String, String> serviceLabels, Map<String, Integer> activeControllers,
+  private List<IstioResource> createVirtualServiceAndDestinationRuleDefinition(KubernetesSetupParams setupParams,
+      String kubernetesServiceName, Map<String, String> labels, Map<String, Integer> activeControllers,
       ExecutionLogCallback executionLogCallback) {
-    RouteRuleSpecNested<IstioResourceBuilder> routeRuleSpecNested = new IstioResourceBuilder()
-                                                                        .withNewMetadata()
-                                                                        .withAnnotations(harnessAnnotations)
-                                                                        .withName(kubernetesServiceName)
-                                                                        .withNamespace(setupParams.getNamespace())
-                                                                        .withLabels(serviceLabels)
-                                                                        .endMetadata()
-                                                                        .withNewRouteRuleSpec()
-                                                                        .withNewDestination()
-                                                                        .withName(kubernetesServiceName)
-                                                                        .withNamespace(setupParams.getNamespace())
-                                                                        .endDestination();
-    int totalInstances = activeControllers.values().stream().mapToInt(Integer::intValue).sum();
-    for (Entry<String, Integer> entry : activeControllers.entrySet()) {
-      Optional<Integer> revision = getRevisionFromControllerName(entry.getKey(), setupParams.isUseDashInHostname());
-      if (revision.isPresent()) {
-        int weight = (int) Math.round((entry.getValue() * 100.0) / totalInstances);
-        if (weight > 0) {
-          routeRuleSpecNested.addNewRoute()
-              .addToLabels(HARNESS_REVISION, revision.get().toString())
-              .withWeight(weight)
-              .endRoute();
+    VirtualServiceSpecNested<IstioResourceBuilder> virtualServiceSpecNested =
+        new IstioResourceBuilder()
+            .withApiVersion("v1alpha3")
+            .withNewMetadata()
+            .withAnnotations(harnessAnnotations)
+            .withName(kubernetesServiceName)
+            .withNamespace(setupParams.getNamespace())
+            .withLabels(labels)
+            .endMetadata()
+            .withNewVirtualServiceSpec()
+            .withHosts(setupParams.getIstioConfig() != null && !isEmpty(setupParams.getIstioConfig().getHosts())
+                    ? setupParams.getIstioConfig().getHosts()
+                    : asList(kubernetesServiceName));
+
+    if (setupParams.getIstioConfig() != null && !isEmpty(setupParams.getIstioConfig().getGateways())) {
+      virtualServiceSpecNested.addAllToGateways(setupParams.getIstioConfig().getGateways());
+    }
+
+    DestinationRuleSpecNested<IstioResourceBuilder> destinationRuleSpecNested =
+        new IstioResourceBuilder()
+            .withApiVersion("v1alpha3")
+            .withNewMetadata()
+            .withAnnotations(harnessAnnotations)
+            .withName(kubernetesServiceName)
+            .withNamespace(setupParams.getNamespace())
+            .withLabels(labels)
+            .endMetadata()
+            .withNewDestinationRuleSpec()
+            .withHost(kubernetesServiceName);
+
+    HttpNested virtualServiceHttpNested = virtualServiceSpecNested.addNewHttp();
+
+    if (activeControllers.isEmpty()) {
+      Destination destination = new Destination();
+      destination.setHost(kubernetesServiceName);
+      destination.setSubset(String.valueOf(currentRevision));
+      DestinationWeight destinationWeight = new DestinationWeight();
+      destinationWeight.setWeight(100);
+      destinationWeight.setDestination(destination);
+
+      virtualServiceHttpNested.addToRoute(destinationWeight);
+
+      destinationRuleSpecNested.addNewSubset()
+          .withName(String.valueOf(currentRevision))
+          .addToLabels(HARNESS_KUBERNETES_REVISION_LABEL_KEY, String.valueOf(currentRevision))
+          .endSubset();
+    } else {
+      int totalInstances = activeControllers.values().stream().mapToInt(Integer::intValue).sum();
+      for (Entry<String, Integer> entry : activeControllers.entrySet()) {
+        Optional<Integer> revision = getRevisionFromControllerName(entry.getKey(), setupParams.isUseDashInHostname());
+        if (revision.isPresent()) {
+          int weight = (int) Math.round((entry.getValue() * 100.0) / totalInstances);
+          if (weight > 0) {
+            Destination destination = new Destination();
+            destination.setHost(kubernetesServiceName);
+            destination.setSubset(revision.get().toString());
+            DestinationWeight destinationWeight = new DestinationWeight();
+            destinationWeight.setWeight(weight);
+            destinationWeight.setDestination(destination);
+            virtualServiceHttpNested.addToRoute(destinationWeight);
+
+            destinationRuleSpecNested.addNewSubset()
+                .withName(revision.get().toString())
+                .addToLabels(HARNESS_KUBERNETES_REVISION_LABEL_KEY, revision.get().toString())
+                .endSubset();
+          }
         }
       }
     }
-    IstioResource routeRule = routeRuleSpecNested.endRouteRuleSpec().build();
-    executionLogCallback.saveExecutionLog("Creating istio route rule:\n\n" + toDisplayYaml(routeRule));
-    return routeRule;
+
+    virtualServiceHttpNested.endHttp();
+
+    IstioResource virtualService = virtualServiceSpecNested.endVirtualServiceSpec().build();
+    IstioResource destinationRule = destinationRuleSpecNested.endDestinationRuleSpec().build();
+    executionLogCallback.saveExecutionLog("Creating istio VirtualService:\n\n" + toDisplayYaml(virtualService));
+    executionLogCallback.saveExecutionLog("Creating istio DestinationRule:\n\n" + toDisplayYaml(destinationRule));
+    return asList(virtualService, destinationRule);
   }
 
   private void listContainerInfosWhenReady(List<EncryptedDataDetail> encryptedDataDetails,
