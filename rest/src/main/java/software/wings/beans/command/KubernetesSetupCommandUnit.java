@@ -1157,10 +1157,6 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
       virtualServiceHttpNested.addToRoute(destinationWeight);
 
-      destinationRuleSpecNested.addNewSubset()
-          .withName(String.valueOf(currentRevision))
-          .addToLabels(HARNESS_KUBERNETES_REVISION_LABEL_KEY, String.valueOf(currentRevision))
-          .endSubset();
     } else {
       int totalInstances = activeControllers.values().stream().mapToInt(Integer::intValue).sum();
       for (Entry<String, Integer> entry : activeControllers.entrySet()) {
@@ -1184,6 +1180,11 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         }
       }
     }
+
+    destinationRuleSpecNested.addNewSubset()
+        .withName(String.valueOf(currentRevision))
+        .addToLabels(HARNESS_KUBERNETES_REVISION_LABEL_KEY, String.valueOf(currentRevision))
+        .endSubset();
 
     virtualServiceHttpNested.endHttp();
 
