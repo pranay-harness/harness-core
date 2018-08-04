@@ -1117,7 +1117,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       ExecutionLogCallback executionLogCallback) {
     VirtualServiceSpecNested<IstioResourceBuilder> virtualServiceSpecNested =
         new IstioResourceBuilder()
-            .withApiVersion("v1alpha3")
+            .withApiVersion("networking.istio.io/v1alpha3")
+            .withKind("VirtualService")
             .withNewMetadata()
             .withAnnotations(harnessAnnotations)
             .withName(kubernetesServiceName)
@@ -1135,7 +1136,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
     DestinationRuleSpecNested<IstioResourceBuilder> destinationRuleSpecNested =
         new IstioResourceBuilder()
-            .withApiVersion("v1alpha3")
+            .withApiVersion("networking.istio.io/v1alpha3")
+            .withKind("DestinationRule")
             .withNewMetadata()
             .withAnnotations(harnessAnnotations)
             .withName(kubernetesServiceName)
