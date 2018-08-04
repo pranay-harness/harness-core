@@ -9,7 +9,6 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static okhttp3.ConnectionSpec.CLEARTEXT;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.common.Constants.HARNESS_REVISION;
 import static software.wings.utils.KubernetesConvention.DASH;
 import static software.wings.utils.KubernetesConvention.DOT;
 
@@ -36,8 +35,8 @@ import io.fabric8.kubernetes.client.dsl.internal.HorizontalPodAutoscalerOperatio
 import io.fabric8.kubernetes.client.internal.SSLUtils;
 import io.harness.network.Http;
 import me.snowdrop.istio.api.model.IstioResource;
-import me.snowdrop.istio.api.model.v1.routing.DestinationWeight;
-import me.snowdrop.istio.api.model.v1.routing.RouteRule;
+import me.snowdrop.istio.api.model.v1.networking.DestinationWeight;
+import me.snowdrop.istio.api.model.v1.networking.VirtualService;
 import me.snowdrop.istio.client.IstioClient;
 import me.snowdrop.istio.client.KubernetesAdapter;
 import okhttp3.Authenticator;
@@ -66,7 +65,6 @@ import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
 import java.security.GeneralSecurityException;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Comparator;
 import java.util.List;
@@ -151,15 +149,15 @@ public class KubernetesHelperService {
     return new IstioClient(new KubernetesAdapter(getKubernetesClient(kubernetesConfig, encryptedDataDetails)));
   }
 
-  public static void printRouteRuleWeights(IstioResource routeRule, String controllerPrefix, boolean useDashInHostName,
-      ExecutionLogCallback executionLogCallback) {
-    RouteRule routeRuleSpec = (RouteRule) routeRule.getSpec();
-    if (isNotEmpty(routeRuleSpec.getRoute())) {
-      List<DestinationWeight> sorted = new ArrayList<>(routeRuleSpec.getRoute());
-      sorted.sort(Comparator.comparing(a -> Integer.valueOf(a.getLabels().get(HARNESS_REVISION))));
+  public static void printVirtualServiceRouteWeights(IstioResource virtualService, String controllerPrefix,
+      boolean useDashInHostName, ExecutionLogCallback executionLogCallback) {
+    VirtualService virtualServiceSpec = (VirtualService) virtualService.getSpec();
+    if (isNotEmpty(virtualServiceSpec.getHttp().get(0).getRoute())) {
+      List<DestinationWeight> sorted = virtualServiceSpec.getHttp().get(0).getRoute();
+      sorted.sort(Comparator.comparing(a -> Integer.valueOf(a.getDestination().getSubset())));
       for (DestinationWeight destinationWeight : sorted) {
         int weight = destinationWeight.getWeight();
-        String rev = destinationWeight.getLabels().get(HARNESS_REVISION);
+        String rev = destinationWeight.getDestination().getSubset();
         executionLogCallback.saveExecutionLog(
             format("   %s%s%s: %d%%", controllerPrefix, useDashInHostName ? DASH : DOT, rev, weight));
       }

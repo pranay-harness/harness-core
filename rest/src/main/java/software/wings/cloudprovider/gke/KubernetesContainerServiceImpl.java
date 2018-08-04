@@ -788,10 +788,43 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     }
   }
 
+  @Override
+  public IstioResource createOrReplaceIstioResource(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, IstioResource definition) {
+    String name = definition.getMetadata().getName();
+    String kind = definition.getKind();
+    logger.info("Registering {} [{}]", kind, name);
+    IstioClient istioClient = kubernetesHelperService.getIstioClient(kubernetesConfig, encryptedDataDetails);
+    try {
+      return istioClient.registerOrUpdateCustomResource(definition);
+    } catch (Exception e) {
+      // Do nothing
+      return null;
+    }
+  }
+
+  @Override
+  public IstioResource getIstioResource(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String kind, String name) {
+    KubernetesClient kubernetesClient =
+        kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails);
+    try {
+      return kubernetesClient
+          .customResources(
+              getCustomResourceDefinition(kubernetesClient, new IstioResourceBuilder().withKind(kind).build()),
+              IstioResource.class, KubernetesResourceList.class, DoneableIstioResource.class)
+          .inNamespace(kubernetesConfig.getNamespace())
+          .withName(name)
+          .get();
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
   private CustomResourceDefinition getCustomResourceDefinition(KubernetesClient client, IstioResource resource) {
-    final String crdName = IstioSpecRegistry.getCRDNameFor(resource.getKind());
+    final Optional<String> crdName = IstioSpecRegistry.getCRDNameFor(resource.getKind());
     final CustomResourceDefinition customResourceDefinition =
-        client.customResourceDefinitions().withName(crdName).get();
+        client.customResourceDefinitions().withName(crdName.get()).get();
     if (customResourceDefinition == null) {
       throw new IllegalArgumentException(
           format("Custom Resource Definition %s is not found in cluster %s", crdName, client.getMasterUrl()));
@@ -801,11 +834,30 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @SuppressFBWarnings("DE_MIGHT_IGNORE")
   @Override
+  public void deleteIstioResource(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String kind, String name) {
+    IstioClient istioClient = kubernetesHelperService.getIstioClient(kubernetesConfig, encryptedDataDetails);
+    try {
+      istioClient.unregisterCustomResource(new IstioResourceBuilder()
+                                               .withKind(kind)
+                                               .withNewMetadata()
+                                               .withName(name)
+                                               .withNamespace(kubernetesConfig.getNamespace())
+                                               .endMetadata()
+                                               .build());
+    } catch (Exception e) {
+      // Do nothing
+    }
+  }
+
+  @SuppressFBWarnings("DE_MIGHT_IGNORE")
+  @Override
   public void deleteRouteRule(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
     IstioClient istioClient = kubernetesHelperService.getIstioClient(kubernetesConfig, encryptedDataDetails);
     try {
       istioClient.unregisterCustomResource(new IstioResourceBuilder()
+                                               .withKind("RoutingRule")
                                                .withNewMetadata()
                                                .withName(name)
                                                .withNamespace(kubernetesConfig.getNamespace())

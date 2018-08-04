@@ -7,8 +7,7 @@ import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.atteo.evo.inflector.English.plural;
 import static software.wings.beans.ErrorCode.GENERAL_ERROR;
 import static software.wings.cloudprovider.ContainerInfo.Status.SUCCESS;
-import static software.wings.common.Constants.HARNESS_REVISION;
-import static software.wings.service.impl.KubernetesHelperService.printRouteRuleWeights;
+import static software.wings.service.impl.KubernetesHelperService.printVirtualServiceRouteWeights;
 import static software.wings.utils.KubernetesConvention.getPrefixFromControllerName;
 import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
 import static software.wings.utils.KubernetesConvention.getServiceNameFromControllerName;
@@ -23,9 +22,12 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import me.snowdrop.istio.api.model.IstioResource;
 import me.snowdrop.istio.api.model.IstioResourceBuilder;
-import me.snowdrop.istio.api.model.IstioResourceFluent.RouteRuleSpecNested;
-import me.snowdrop.istio.api.model.v1.routing.DestinationWeight;
-import me.snowdrop.istio.api.model.v1.routing.RouteRule;
+import me.snowdrop.istio.api.model.IstioResourceFluent.VirtualServiceSpecNested;
+import me.snowdrop.istio.api.model.v1.networking.Destination;
+import me.snowdrop.istio.api.model.v1.networking.DestinationWeight;
+import me.snowdrop.istio.api.model.v1.networking.HTTPRoute;
+import me.snowdrop.istio.api.model.v1.networking.VirtualService;
+import me.snowdrop.istio.api.model.v1.networking.VirtualServiceFluent.HttpNested;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ContainerServiceData;
 import software.wings.api.DeploymentType;
@@ -144,19 +146,22 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
       String kubernetesServiceName =
           getServiceNameFromControllerName(controllerName, resizeParams.isUseDashInHostName());
       String controllerPrefix = getPrefixFromControllerName(controllerName, resizeParams.isUseDashInHostName());
-      IstioResource routeRuleDefinition = createRouteRuleDefinition(contextData, allData, kubernetesServiceName);
-      IstioResource existingRouteRule =
-          kubernetesContainerService.getRouteRule(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
-      if (!routeRuleMatchesExisting(existingRouteRule, routeRuleDefinition)) {
-        executionLogCallback.saveExecutionLog("Setting Istio route rule weights:");
-        printRouteRuleWeights(
-            routeRuleDefinition, controllerPrefix, resizeParams.isUseDashInHostName(), executionLogCallback);
-        kubernetesContainerService.createOrReplaceRouteRule(
-            kubernetesConfig, encryptedDataDetails, routeRuleDefinition);
+      IstioResource existingVirtualService = kubernetesContainerService.getIstioResource(
+          kubernetesConfig, encryptedDataDetails, "VirtualService", kubernetesServiceName);
+
+      IstioResource virtualServiceDefinition =
+          createVirtualServiceDefinition(contextData, allData, existingVirtualService, kubernetesServiceName);
+
+      if (!virtualServiceHttpRouteMatchesExisting(existingVirtualService, virtualServiceDefinition)) {
+        executionLogCallback.saveExecutionLog("Setting Istio VirtualService Route destination weights:");
+        printVirtualServiceRouteWeights(
+            virtualServiceDefinition, controllerPrefix, resizeParams.isUseDashInHostName(), executionLogCallback);
+        kubernetesContainerService.createOrReplaceIstioResource(
+            kubernetesConfig, encryptedDataDetails, virtualServiceDefinition);
       } else {
-        executionLogCallback.saveExecutionLog("No change to Istio route rule:");
-        printRouteRuleWeights(
-            existingRouteRule, controllerPrefix, resizeParams.isUseDashInHostName(), executionLogCallback);
+        executionLogCallback.saveExecutionLog("No change to Istio VirtualService Route rules :");
+        printVirtualServiceRouteWeights(
+            existingVirtualService, controllerPrefix, resizeParams.isUseDashInHostName(), executionLogCallback);
       }
       executionLogCallback.saveExecutionLog("");
       executedSomething = true;
@@ -166,29 +171,31 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     }
   }
 
-  private boolean routeRuleMatchesExisting(IstioResource existingRouteRule, IstioResource routeRule) {
-    if (existingRouteRule == null) {
+  private boolean virtualServiceHttpRouteMatchesExisting(
+      IstioResource existingVirtualService, IstioResource virtualService) {
+    if (existingVirtualService == null) {
       return false;
     }
 
-    RouteRule routeRuleSpec = (RouteRule) routeRule.getSpec();
-    RouteRule existingRouteRuleSpec = (RouteRule) existingRouteRule.getSpec();
+    HTTPRoute virtualServiceHttpRoute = ((VirtualService) virtualService.getSpec()).getHttp().get(0);
+    HTTPRoute existingVirtualServiceHttpRoute = ((VirtualService) existingVirtualService.getSpec()).getHttp().get(0);
 
-    if (routeRuleSpec.getRoute().size() != existingRouteRuleSpec.getRoute().size()) {
+    if ((virtualServiceHttpRoute == null || existingVirtualServiceHttpRoute == null)
+        && virtualServiceHttpRoute != existingVirtualServiceHttpRoute) {
       return false;
     }
 
-    List<DestinationWeight> sorted = new ArrayList<>(routeRuleSpec.getRoute());
-    List<DestinationWeight> existingSorted = new ArrayList<>(existingRouteRuleSpec.getRoute());
+    List<DestinationWeight> sorted = new ArrayList<>(virtualServiceHttpRoute.getRoute());
+    List<DestinationWeight> existingSorted = new ArrayList<>(existingVirtualServiceHttpRoute.getRoute());
     Comparator<DestinationWeight> comparator =
-        Comparator.comparing(a -> Integer.valueOf(a.getLabels().get(HARNESS_REVISION)));
+        Comparator.comparing(a -> Integer.valueOf(a.getDestination().getSubset()));
     sorted.sort(comparator);
     existingSorted.sort(comparator);
 
     for (int i = 0; i < sorted.size(); i++) {
       DestinationWeight dw1 = sorted.get(i);
       DestinationWeight dw2 = existingSorted.get(i);
-      if (!dw1.getLabels().get(HARNESS_REVISION).equals(dw2.getLabels().get(HARNESS_REVISION))
+      if (!dw1.getDestination().getSubset().equals(dw2.getDestination().getSubset())
           || !dw1.getWeight().equals(dw2.getWeight())) {
         return false;
       }
@@ -287,33 +294,43 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     return ((KubernetesResizeParams) contextData.resizeParams).getTrafficPercent();
   }
 
-  private IstioResource createRouteRuleDefinition(
-      ContextData contextData, List<ContainerServiceData> allData, String kubernetesServiceName) {
+  private IstioResource createVirtualServiceDefinition(ContextData contextData, List<ContainerServiceData> allData,
+      IstioResource existingVirtualService, String kubernetesServiceName) {
     KubernetesResizeParams resizeParams = (KubernetesResizeParams) contextData.resizeParams;
 
-    RouteRuleSpecNested<IstioResourceBuilder> routeRuleSpecNested = new IstioResourceBuilder()
-                                                                        .withNewMetadata()
-                                                                        .withName(kubernetesServiceName)
-                                                                        .endMetadata()
-                                                                        .withNewRouteRuleSpec()
-                                                                        .withNewDestination()
-                                                                        .withName(kubernetesServiceName)
-                                                                        .withNamespace(resizeParams.getNamespace())
-                                                                        .endDestination();
+    VirtualService existingVirtualServiceSpec = (VirtualService) existingVirtualService.getSpec();
+
+    VirtualServiceSpecNested<IstioResourceBuilder> virtualServiceSpecNested =
+        new IstioResourceBuilder()
+            .withApiVersion(existingVirtualService.getApiVersion())
+            .withNewMetadata()
+            .withName(existingVirtualService.getMetadata().getName())
+            .withNamespace(existingVirtualService.getMetadata().getNamespace())
+            .withAnnotations(existingVirtualService.getMetadata().getAnnotations())
+            .withLabels(existingVirtualService.getMetadata().getLabels())
+            .endMetadata()
+            .withNewVirtualServiceSpec()
+            .withHosts(existingVirtualServiceSpec.getHosts())
+            .withGateways(existingVirtualServiceSpec.getGateways());
+
+    HttpNested virtualServiceHttpNested = virtualServiceSpecNested.addNewHttp();
 
     for (ContainerServiceData containerServiceData : allData) {
       String controllerName = containerServiceData.getName();
-      int revision = getRevisionFromControllerName(controllerName, resizeParams.isUseDashInHostName()).orElse(-1);
+      Optional<Integer> revision = getRevisionFromControllerName(controllerName, resizeParams.isUseDashInHostName());
       int weight = containerServiceData.getDesiredTraffic();
       if (weight > 0) {
-        routeRuleSpecNested.addNewRoute()
-            .addToLabels(HARNESS_REVISION, Integer.toString(revision))
-            .withWeight(weight)
-            .endRoute();
+        Destination destination = new Destination();
+        destination.setHost(kubernetesServiceName);
+        destination.setSubset(Integer.toString(revision.get()));
+        DestinationWeight destinationWeight = new DestinationWeight();
+        destinationWeight.setWeight(weight);
+        destinationWeight.setDestination(destination);
+        virtualServiceHttpNested.addToRoute(destinationWeight);
       }
     }
-
-    return routeRuleSpecNested.endRouteRuleSpec().build();
+    virtualServiceHttpNested.endHttp();
+    return virtualServiceSpecNested.endVirtualServiceSpec().build();
   }
 
   @Data
