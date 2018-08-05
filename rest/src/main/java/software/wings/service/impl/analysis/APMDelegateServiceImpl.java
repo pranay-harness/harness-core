@@ -67,7 +67,6 @@ public class APMDelegateServiceImpl implements APMDelegateService {
   @Override
   public String fetch(APMValidateCollectorConfig config) {
     config.getHeaders().put("Accept", "application/json");
-
     if (config.getEncryptedDataDetails() != null) {
       char[] decryptedValue;
       for (EncryptedDataDetail encryptedDataDetail : config.getEncryptedDataDetails()) {
