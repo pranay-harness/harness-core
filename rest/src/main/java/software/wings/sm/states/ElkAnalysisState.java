@@ -157,6 +157,11 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
     return ElkQueryType.valueOf(queryType);
   }
 
+  @Attributes(required = true, title = "Include nodes from previous phases")
+  public boolean getIncludePreviousPhaseNodes() {
+    return includePreviousPhaseNodes;
+  }
+
   public void setQueryType(String queryType) {
     this.queryType = queryType;
   }

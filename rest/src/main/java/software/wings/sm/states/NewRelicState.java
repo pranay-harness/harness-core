@@ -80,6 +80,11 @@ public class NewRelicState extends AbstractMetricAnalysisState {
     return AnalysisTolerance.valueOf(tolerance);
   }
 
+  @Attributes(required = true, title = "Include nodes from previous phases")
+  public boolean getIncludePreviousPhaseNodes() {
+    return includePreviousPhaseNodes;
+  }
+
   @Override
   public Logger getLogger() {
     return logger;

@@ -151,6 +151,8 @@ public abstract class AbstractAnalysisState extends State {
 
   protected AnalysisContext analysisContext;
 
+  protected boolean includePreviousPhaseNodes;
+
   @Attributes(title = "Analysis Time duration (in minutes)")
   @DefaultValue("15")
   public String getTimeDuration() {
@@ -158,6 +160,11 @@ public abstract class AbstractAnalysisState extends State {
       return String.valueOf(15);
     }
     return timeDuration;
+  }
+
+  @Attributes(required = true, title = "Include nodes from previous phases")
+  public boolean getIncludePreviousPhaseNodes() {
+    return includePreviousPhaseNodes;
   }
 
   public void setTimeDuration(String timeDuration) {
@@ -218,9 +225,7 @@ public abstract class AbstractAnalysisState extends State {
   }
 
   protected Map<String, String> getLastExecutionNodes(ExecutionContext context) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-    String serviceId = phaseElement.getServiceElement().getUuid();
-
+    String serviceId = getPhaseServiceId(context);
     InfrastructureMapping infrastructureMapping = getInfrastructureMapping(context);
     String infraMappingId = infrastructureMapping.getUuid();
     DeploymentType deploymentType = DeploymentType.valueOf(infrastructureMapping.getDeploymentType());
@@ -435,6 +440,11 @@ public abstract class AbstractAnalysisState extends State {
       return getPcfHostNames(context, false);
     }
 
+    if (includePreviousPhaseNodes) {
+      getLogger().info("returning all phases nodes for state {}", context.getStateExecutionInstanceId());
+      return getHostsDeployedSoFar(context, getPhaseServiceId(context), getDeploymentType(context));
+    }
+
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Map<String, String> rv = new HashMap<>();
     if (isEmpty(workflowStandardParams.getInstances())) {
@@ -486,6 +496,11 @@ public abstract class AbstractAnalysisState extends State {
   protected String getPhaseServiceId(ExecutionContext context) {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     return phaseElement.getServiceElement().getUuid();
+  }
+
+  protected DeploymentType getDeploymentType(ExecutionContext context) {
+    InfrastructureMapping infrastructureMapping = getInfrastructureMapping(context);
+    return DeploymentType.valueOf(infrastructureMapping.getDeploymentType());
   }
 
   protected String getPhaseServiceName(ExecutionContext context) {
