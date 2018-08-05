@@ -4,7 +4,7 @@
         "analysisServerConfigId", "query", "queryType", "indices",
         "hostnameField", "messageField", "hostnameTemplate", "timestampFormat",
         "timeDuration", "comparisonStrategy", "analysisTolerance",
-        "executeWithPreviousSteps", "*"
+        "executeWithPreviousSteps", "includePreviousPhaseNodes", "*"
       ],
       "query" : {
     "ui:widget" : "textarea"

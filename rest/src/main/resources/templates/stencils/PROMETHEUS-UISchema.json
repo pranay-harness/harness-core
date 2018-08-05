@@ -3,7 +3,7 @@
   "ui:order" :
       [
         "analysisServerConfigId", "timeDuration", "comparisonStrategy",
-        "analysisTolerance", "*"
+        "analysisTolerance", "includePreviousPhaseNodes", "*"
       ],
       "metaData" : {
     "ui:widget" : "textarea"

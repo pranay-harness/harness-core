@@ -89,6 +89,11 @@ public class PrometheusState extends AbstractMetricAnalysisState {
     return AnalysisTolerance.valueOf(tolerance);
   }
 
+  @Attributes(required = true, title = "Include nodes from previous phases")
+  public boolean getIncludePreviousPhaseNodes() {
+    return includePreviousPhaseNodes;
+  }
+
   @Override
   protected String triggerAnalysisDataCollection(
       ExecutionContext context, String correlationId, Map<String, String> hosts) {
