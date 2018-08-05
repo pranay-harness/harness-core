@@ -83,6 +83,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
   @Override
   public ExecutionResponse execute(ExecutionContext executionContext) {
     String corelationId = UUID.randomUUID().toString();
+    String delegateTaskId = null;
     try {
       getLogger().info("Executing {} state, id: {} ", getStateType(), executionContext.getStateExecutionInstanceId());
       cleanUpForRetry(executionContext);
@@ -174,7 +175,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       hostsToBeCollected.remove(null);
       getLogger().info("triggering data collection for {} state, id: {} ", getStateType(),
           executionContext.getStateExecutionInstanceId());
-      String delegateTaskId =
+      delegateTaskId =
           triggerAnalysisDataCollection(executionContext, analysisContext.getCorrelationId(), hostsToBeCollected);
       getLogger().info("triggered data collection for {} state, id: {}, delgateTaskId: {}", getStateType(),
           executionContext.getStateExecutionInstanceId(), delegateTaskId);
@@ -188,6 +189,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           .withExecutionStatus(ExecutionStatus.RUNNING)
           .withErrorMessage(responseMessage)
           .withStateExecutionData(executionData)
+          .withDelegateTaskId(delegateTaskId)
           .build();
     } catch (Exception ex) {
       getLogger().error("log analysis state failed ", ex);
@@ -201,6 +203,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
                                       .serverConfigId(getAnalysisServerConfigId())
                                       .query(query)
                                       .timeDuration(Integer.parseInt(timeDuration))
+                                      .delegateTaskId(delegateTaskId)
                                       .build())
           .build();
     }

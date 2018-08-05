@@ -10,6 +10,7 @@ import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.sm.ExecutionStatus;
+import software.wings.waitnotify.ErrorNotifyResponseData;
 import software.wings.waitnotify.NotifyCallback;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -41,30 +42,37 @@ public class DataCollectionCallback implements NotifyCallback {
     final DataCollectionTaskResult result = (DataCollectionTaskResult) response.values().iterator().next();
     logger.info("data collection result for app " + appId + " is: " + result);
     if (result.getStatus() == DataCollectionTaskStatus.FAILURE) {
-      if (isLogCollection) {
-        final LogAnalysisExecutionData executionData = LogAnalysisExecutionData.builder().build();
-        executionData.setStatus(ExecutionStatus.ERROR);
-        executionData.setErrorMsg(result.getErrorMessage());
-        waitNotifyEngine.notify(correlationId,
-            aLogAnalysisResponse()
-                .withLogAnalysisExecutionData(executionData)
-                .withExecutionStatus(ExecutionStatus.ERROR)
-                .build());
-      } else {
-        MetricAnalysisExecutionData analysisExecutionData = MetricAnalysisExecutionData.builder().build();
-        analysisExecutionData.setStatus(ExecutionStatus.ERROR);
-        analysisExecutionData.setErrorMsg(result.getErrorMessage());
-        MetricDataAnalysisResponse metricDataAnalysisResponse =
-            MetricDataAnalysisResponse.builder().stateExecutionData(analysisExecutionData).build();
-        metricDataAnalysisResponse.setExecutionStatus(ExecutionStatus.ERROR);
-        waitNotifyEngine.notify(correlationId, metricDataAnalysisResponse);
-      }
+      sendErrorNotification(result.getErrorMessage());
     }
   }
 
   // TODO what is this used for
   @Override
   public void notifyError(Map<String, NotifyResponseData> response) {
-    logger.info("error in data collection for app " + appId);
+    logger.info("notify error for {} ", response.values().iterator().next());
+    if (response.values().iterator().next() instanceof ErrorNotifyResponseData) {
+      final ErrorNotifyResponseData result = (ErrorNotifyResponseData) response.values().iterator().next();
+      sendErrorNotification(result.getErrorMessage());
+    }
+  }
+  private void sendErrorNotification(String errorMsg) {
+    if (isLogCollection) {
+      final LogAnalysisExecutionData executionData = LogAnalysisExecutionData.builder().build();
+      executionData.setStatus(ExecutionStatus.ERROR);
+      executionData.setErrorMsg(errorMsg);
+      waitNotifyEngine.notify(correlationId,
+          aLogAnalysisResponse()
+              .withLogAnalysisExecutionData(executionData)
+              .withExecutionStatus(ExecutionStatus.ERROR)
+              .build());
+    } else {
+      MetricAnalysisExecutionData analysisExecutionData = MetricAnalysisExecutionData.builder().build();
+      analysisExecutionData.setStatus(ExecutionStatus.ERROR);
+      analysisExecutionData.setErrorMsg(errorMsg);
+      MetricDataAnalysisResponse metricDataAnalysisResponse =
+          MetricDataAnalysisResponse.builder().stateExecutionData(analysisExecutionData).build();
+      metricDataAnalysisResponse.setExecutionStatus(ExecutionStatus.ERROR);
+      waitNotifyEngine.notify(correlationId, metricDataAnalysisResponse);
+    }
   }
 }
