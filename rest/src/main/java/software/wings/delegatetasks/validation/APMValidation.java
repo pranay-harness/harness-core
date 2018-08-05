@@ -19,6 +19,7 @@ import software.wings.service.impl.apm.APMDataCollectionInfo;
 import software.wings.service.intfc.security.EncryptionConfig;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -113,6 +114,12 @@ public class APMValidation extends AbstractSecretManagerValidation {
   }
   public boolean validateCollector(APMValidateCollectorConfig config) {
     try {
+      if (config.getHeaders() == null) {
+        config.setHeaders(new HashMap<>());
+      }
+      if (config.getOptions() == null) {
+        config.setOptions(new HashMap<>());
+      }
       config.getHeaders().put("Accept", "application/json");
       final Call<Object> request =
           getAPMRestClient(config).validate(config.getUrl(), config.getHeaders(), config.getOptions());

@@ -262,6 +262,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
           logger.error(dataCollectionInfo.getStateType() + ": Request not successful. Reason: {}, {}", response.code(),
               response.message());
           apiCallLog.addFieldToResponse(response.code(), response.errorBody(), FieldType.TEXT);
+          delegateLogService.save(getAccountId(), apiCallLog);
           throw new WingsException(response.errorBody().string());
         }
       } catch (Exception e) {

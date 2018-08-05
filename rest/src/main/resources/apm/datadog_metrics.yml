@@ -77,7 +77,7 @@ Docker:
       mlMetricType: INFRA
       datadogMetricType: Docker
       displayName: Docker RSS Memory (%)
-      transformation: /docker.mem.limit{$harness_batch{pod_name:${host}, '|'}}.rollup(avg,60)*100
+      transformation: /docker.mem.limit{pod_name:${host}}.rollup(avg,60)*100
 
   -
       metricName: docker.cpu.throttled
