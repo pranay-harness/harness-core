@@ -174,4 +174,11 @@ public class APMVerificationConfigTest extends WingsBaseTest {
     assertEquals("123", collectionParams.get("api_key_plain"));
     assertEquals(2, collectionParams.size());
   }
+
+  @Test
+  public void testGetValidationUrlEncoded() {
+    APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
+    apmVerificationConfig.setValidationUrl("`requestwithbacktick`");
+    assertEquals("Back tick should be encoded", "%60requestwithbacktick%60", apmVerificationConfig.getValidationUrl());
+  }
 }

@@ -505,6 +505,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     APMVerificationConfig config = new APMVerificationConfig();
     config.setAccountId(accountId);
     config.setUrl("https://app.datadoghq.com/api/v1/");
+    config.setValidationUrl("metrics?from=12345");
     List<APMVerificationConfig.KeyValues> optionsList = new ArrayList<>();
     optionsList.add(APMVerificationConfig.KeyValues.builder()
                         .key("api_key")

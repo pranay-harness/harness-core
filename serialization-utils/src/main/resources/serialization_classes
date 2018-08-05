@@ -503,3 +503,6 @@ software.wings.service.impl.aws.model.AwsAsgListDesiredCapacitiesRequest, 5463
 software.wings.service.impl.aws.model.AwsAsgListDesiredCapacitiesResponse, 5464
 software.wings.api.HelmDeployStateExecutionData, 5465
 software.wings.beans.container.IstioConfig, 5466
+software.wings.beans.DatadogConfig, 5467
+software.wings.beans.DatadogConfig$DatadogYaml, 5468
+

@@ -48,6 +48,8 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -253,7 +255,8 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
   public Map<String, List<APMMetricInfo>> apmMetricInfos(final ExecutionContext context) {
     Map<String, List<APMMetricInfo>> metricInfoMap = new HashMap<>();
     for (MetricCollectionInfo metricCollectionInfo : metricCollectionInfos) {
-      final String evaluatedUrl = context.renderExpression(metricCollectionInfo.getCollectionUrl());
+      String evaluatedUrl = context.renderExpression(metricCollectionInfo.getCollectionUrl());
+
       if (!metricInfoMap.containsKey(evaluatedUrl)) {
         metricInfoMap.put(evaluatedUrl, new ArrayList<>());
       }
@@ -315,6 +318,14 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     private ResponseType responseType;
     private ResponseMapping responseMapping;
     private Method method;
+
+    public String getCollectionUrl() {
+      try {
+        return collectionUrl.replaceAll("`", URLEncoder.encode("`", "UTF-8"));
+      } catch (UnsupportedEncodingException e) {
+        throw new WingsException("Unsupported encoding exception while encoding backticks in " + collectionUrl);
+      }
+    }
   }
 
   @Data

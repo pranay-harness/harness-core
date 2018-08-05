@@ -20,6 +20,8 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -52,6 +54,17 @@ public class APMVerificationConfig extends SettingValue implements Encryptable {
 
   public APMVerificationConfig(SettingVariableTypes type) {
     super(type.name());
+  }
+
+  public String getValidationUrl() {
+    if (isEmpty(validationUrl)) {
+      return validationUrl;
+    }
+    try {
+      return validationUrl.replaceAll("`", URLEncoder.encode("`", "UTF-8"));
+    } catch (UnsupportedEncodingException e) {
+      throw new WingsException("Unsupported encoding exception while encoding backticks in " + validationUrl);
+    }
   }
 
   public Map<String, String> collectionHeaders() {
