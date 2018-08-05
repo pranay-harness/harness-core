@@ -79,6 +79,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     String corelationId = UUID.randomUUID().toString();
+    String delegateTaskId = null;
     MetricAnalysisExecutionData executionData;
     try {
       getLogger().info("Executing {} state, id: {} ", getStateType(), context.getStateExecutionInstanceId());
@@ -179,10 +180,11 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           "triggering data collection for {} state, id: {} ", getStateType(), context.getStateExecutionInstanceId());
       hostsToCollect.remove(null);
       createAndSaveMetricGroups(context, hostsToCollect);
-      String delegateTaskId = triggerAnalysisDataCollection(context, executionData.getCorrelationId(), hostsToCollect);
+      delegateTaskId = triggerAnalysisDataCollection(context, executionData.getCorrelationId(), hostsToCollect);
       getLogger().info("triggered data collection for {} state, id: {}, delgateTaskId: {}", getStateType(),
           context.getStateExecutionInstanceId(), delegateTaskId);
 
+      executionData.setDelegateTaskId(delegateTaskId);
       final MetricDataAnalysisResponse response =
           MetricDataAnalysisResponse.builder().stateExecutionData(executionData).build();
       response.setExecutionStatus(ExecutionStatus.RUNNING);
@@ -205,6 +207,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
                                       .appId(context.getAppId())
                                       .workflowExecutionId(context.getWorkflowExecutionId())
                                       .stateExecutionInstanceId(context.getStateExecutionInstanceId())
+                                      .delegateTaskId(delegateTaskId)
                                       .serverConfigId(getAnalysisServerConfigId())
                                       .build())
           .build();

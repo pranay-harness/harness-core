@@ -38,6 +38,7 @@ public class MetricAnalysisExecutionData extends StateExecutionData {
   private Set<String> canaryNewHostNames;
   private Set<String> lastExecutionNodes;
   private int analysisMinute;
+  private String delegateTaskId;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
