@@ -13,7 +13,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.network.Http;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -63,12 +62,13 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * Created by rsingh on 8/28/17.
  */
-@SuppressFBWarnings("STCAL_STATIC_SIMPLE_DATE_FORMAT_INSTANCE")
+
 public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   private static final int METRIC_DATA_QUERY_BATCH_SIZE = 50;
   private static final int MIN_RPM = 1;
   private static final String NEW_RELIC_DATE_FORMAT = "YYYY-MM-dd'T'HH:mm:ssZ";
-  public static final SimpleDateFormat dateFormatter = new SimpleDateFormat(NEW_RELIC_DATE_FORMAT);
+  private static final String NAMES_PARAM = "names[]=";
+  private static final String AMPERSAND = "&";
 
   private static final Logger logger = LoggerFactory.getLogger(NewRelicDelgateServiceImpl.class);
   @Inject private EncryptionService encryptionService;
@@ -278,7 +278,6 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     return new HashSet<>(webTransactionMetrics.values());
   }
 
-  @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
   private Set<String> getMetricsWithNoData(Collection<String> metricNames, NewRelicConfig newRelicConfig,
       List<EncryptedDataDetail> encryptedDataDetails, long applicationId, ThirdPartyApiCallLog apiCallLog)
       throws IOException {
@@ -296,9 +295,6 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     NewRelicMetricData errorMetricData = getMetricDataApplication(newRelicConfig, encryptedDataDetails, applicationId,
         getErrorMetricNames(metricNames), currentTime - TimeUnit.HOURS.toMillis(1), currentTime, true, apiCallLog);
 
-    if (metricData == null) {
-      throw new WingsException("Unable to get NewRelic metric data for metric name collection " + newRelicConfig);
-    }
     metricsWithNoData.removeAll(metricData.getMetrics_found());
 
     for (NewRelicMetricData.NewRelicMetricSlice metric : metricData.getMetrics()) {
@@ -343,7 +339,6 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     return getMetricData(newRelicConfig, encryptedDataDetails, baseUrl, metricNames, fromTime, toTime, apiCallLog);
   }
 
-  @SuppressFBWarnings({"STCAL_INVOKE_ON_STATIC_DATE_FORMAT_INSTANCE", "SBSC_USE_STRINGBUFFER_CONCATENATION"})
   private NewRelicMetricData getMetricData(NewRelicConfig newRelicConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String baseUrl, Collection<String> metricNames, long fromTime,
       long toTime, ThirdPartyApiCallLog apiCallLog) throws IOException {
@@ -351,9 +346,14 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       apiCallLog = apiCallLogWithDummyStateExecution(newRelicConfig.getAccountId());
     }
     String metricsToCollectString = "";
+
+    StringBuffer sBuf = new StringBuffer();
     for (String metricName : metricNames) {
-      metricsToCollectString += "names[]=" + metricName + "&";
+      sBuf.append(NAMES_PARAM);
+      sBuf.append(metricName);
+      sBuf.append(AMPERSAND);
     }
+    metricsToCollectString = sBuf.toString();
 
     metricsToCollectString = StringUtils.removeEnd(metricsToCollectString, "&");
 
@@ -363,6 +363,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     apiCallLog.addFieldToRequest(
         ThirdPartyApiCallField.builder().name(URL_STRING).value(url).type(FieldType.URL).build());
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+    final SimpleDateFormat dateFormatter = new SimpleDateFormat(NEW_RELIC_DATE_FORMAT);
     final Call<NewRelicMetricDataResponse> request =
         getNewRelicRestClient(newRelicConfig, encryptedDataDetails)
             .getRawMetricData(url, dateFormatter.format(new Date(fromTime)), dateFormatter.format(new Date(toTime)));

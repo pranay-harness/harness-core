@@ -18,11 +18,11 @@ import software.wings.generator.SecretGenerator;
 import software.wings.generator.SecretGenerator.SecretName;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicApplicationInstance;
-import software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl;
 import software.wings.service.impl.newrelic.NewRelicMetric;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -37,7 +37,7 @@ public class NewRelicTest extends WingsBaseTest {
   @Inject SecretGenerator secretGenerator;
   private NewRelicConfig newRelicConfig;
   private String accountId;
-
+  static final String NEW_RELIC_DATE_FORMAT = "YYYY-MM-dd'T'HH:mm:ssZ";
   @Before
   public void setup() {
     accountId = UUID.randomUUID().toString();
@@ -97,7 +97,7 @@ public class NewRelicTest extends WingsBaseTest {
 
   @Test
   public void testTimeStampCreations() {
-    NewRelicDelgateServiceImpl.dateFormatter.format(new Date(Timestamp.minuteBoundary(1513463100000L)))
-        .equals("2017-12-16T14:25:00-0800");
+    final SimpleDateFormat dateFormatter = new SimpleDateFormat(NEW_RELIC_DATE_FORMAT);
+    dateFormatter.format(new Date(Timestamp.minuteBoundary(1513463100000L))).equals("2017-12-16T14:25:00-0800");
   }
 }
