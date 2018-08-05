@@ -167,6 +167,10 @@ public abstract class AbstractAnalysisState extends State {
     return includePreviousPhaseNodes;
   }
 
+  public void setIncludePreviousPhaseNodes(boolean includePreviousPhaseNodes) {
+    this.includePreviousPhaseNodes = includePreviousPhaseNodes;
+  }
+
   public void setTimeDuration(String timeDuration) {
     this.timeDuration = timeDuration;
   }
