@@ -65,7 +65,7 @@ import java.util.stream.Collectors;
 public class GraphRenderer {
   private static final Logger logger = LoggerFactory.getLogger(GraphRenderer.class);
   // TODO: this feature is disabled in the name of the cache
-  private static final int AGGREGATION_LIMIT = 1000000;
+  private static final int AGGREGATION_LIMIT = 10;
 
   public static final long algorithmId = 0;
 
