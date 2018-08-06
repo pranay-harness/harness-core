@@ -23,6 +23,7 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -102,6 +103,7 @@ public class EnvStateTest extends WingsBaseTest {
     assertThat(executionResponse.getErrorMessage()).isNotEmpty();
   }
 
+  @Ignore
   @Test
   public void shouldExecuteOnError() {
     when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);

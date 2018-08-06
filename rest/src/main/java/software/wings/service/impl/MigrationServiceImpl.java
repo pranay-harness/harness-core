@@ -15,6 +15,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import migrations.Migration;
 import migrations.MigrationBackgroundList;
 import migrations.MigrationList;
+import migrations.SeedDataMigration;
+import migrations.SeedDataMigrationList;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -58,6 +60,10 @@ public class MigrationServiceImpl implements MigrationService {
         MigrationBackgroundList.getMigrations().stream().collect(Collectors.toMap(Pair::getKey, Pair::getValue));
     int maxBackgroundVersion = backgroundMigrations.keySet().stream().mapToInt(Integer::intValue).max().orElse(0);
 
+    Map<Integer, Class<? extends SeedDataMigration>> seedDataMigrations =
+        SeedDataMigrationList.getMigrations().stream().collect(Collectors.toMap(Pair::getKey, Pair::getValue));
+    int maxSeedDataVersion = seedDataMigrations.keySet().stream().mapToInt(Integer::intValue).max().orElse(0);
+
     try (
         AcquiredLock lock = persistentLocker.waitToAcquireLock(Schema.class, SCHEMA_ID, ofMinutes(25), ofMinutes(27))) {
       if (lock == null) {
@@ -72,7 +78,11 @@ public class MigrationServiceImpl implements MigrationService {
       Schema schema = wingsPersistence.createQuery(Schema.class).get();
 
       if (schema == null) {
-        schema = aSchema().withVersion(maxVersion).withBackgroundVersion(maxBackgroundVersion).build();
+        schema = aSchema()
+                     .withVersion(maxVersion)
+                     .withBackgroundVersion(maxBackgroundVersion)
+                     .withSeedDataVersion(0)
+                     .build();
         wingsPersistence.save(schema);
       }
 
@@ -127,14 +137,6 @@ public class MigrationServiceImpl implements MigrationService {
           }
         }
 
-        // If the current version is bigger from the code version, we probably downgrading.
-        // Restore the max version to the previous
-        if (schema.getVersion() > maxVersion) {
-          final UpdateOperations<Schema> updateOperations = wingsPersistence.createUpdateOperations(Schema.class);
-          updateOperations.set(Schema.VERSION_KEY, maxVersion);
-          wingsPersistence.update(wingsPersistence.createQuery(Schema.class), updateOperations);
-        }
-
         logger.info("[Migration] - Migration complete");
 
         executorService.submit(() -> {
@@ -155,10 +157,41 @@ public class MigrationServiceImpl implements MigrationService {
           }
           logger.info("Git full sync on all the accounts completed");
         });
-
+        // If the current version is bigger from the code version, we probably downgrading.
+        // Restore the max version to the previous
+      } else if (schema.getVersion() > maxVersion) {
+        logger.info(
+            "[Migration] - Rolling back schema version from {} to {}", schema.getSeedDataVersion(), maxSeedDataVersion);
+        final UpdateOperations<Schema> updateOperations = wingsPersistence.createUpdateOperations(Schema.class);
+        updateOperations.set(Schema.VERSION_KEY, maxVersion);
+        wingsPersistence.update(wingsPersistence.createQuery(Schema.class), updateOperations);
       } else {
         logger.info("[Migration] - Schema is up to date");
       }
+
+      /**
+       * We run the seed data migration only once, so even in case of a rollback, we do not reset the seedDataVersion to
+       * the previous version This has been done on purpose to simplify the migrations, where the migrations do not have
+       * any special logic to check if they have already been run or not.
+       */
+      if (schema.getSeedDataVersion() < maxSeedDataVersion) {
+        logger.info("[SeedDataMigration] - Updating schema version from {} to {}", schema.getSeedDataVersion(),
+            maxSeedDataVersion);
+        for (int i = schema.getSeedDataVersion() + 1; i <= maxSeedDataVersion; i++) {
+          if (seedDataMigrations.containsKey(i)) {
+            Class<? extends SeedDataMigration> seedDataMigration = seedDataMigrations.get(i);
+            logger.info("[SeedDataMigration] - Migrating to version {}: {} ...", i, seedDataMigration.getSimpleName());
+            injector.getInstance(seedDataMigration).migrate();
+
+            final UpdateOperations<Schema> updateOperations = wingsPersistence.createUpdateOperations(Schema.class);
+            updateOperations.set(Schema.SEED_DATA_VERSION_KEY, i);
+            wingsPersistence.update(wingsPersistence.createQuery(Schema.class), updateOperations);
+          }
+        }
+      } else {
+        logger.info("[SeedDataMigration] - Schema is up to date");
+      }
+
     } catch (Exception e) {
       logger.error("[Migration] - Migration failed.", e);
     }
