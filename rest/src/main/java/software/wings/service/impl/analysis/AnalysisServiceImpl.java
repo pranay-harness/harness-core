@@ -24,6 +24,7 @@ import org.mongodb.morphia.query.Sort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
+import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Base;
@@ -1334,7 +1335,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   }
 
   @Override
-  public Set<String> getLastExecutionNodes(String appId, String workflowId) {
+  public Map<String, InstanceElement> getLastExecutionNodes(String appId, String workflowId) {
     WorkflowExecution workflowExecution = wingsPersistence.createQuery(WorkflowExecution.class)
                                               .filter("appId", appId)
                                               .filter("workflowId", workflowId)
@@ -1347,13 +1348,13 @@ public class AnalysisServiceImpl implements AnalysisService {
           .addParam("reason", "No successful execution exists for the workflow.");
     }
 
-    Set<String> hosts = new HashSet<>();
+    Map<String, InstanceElement> hosts = new HashMap<>();
     for (ElementExecutionSummary executionSummary : workflowExecution.getServiceExecutionSummaries()) {
       if (isEmpty(executionSummary.getInstanceStatusSummaries())) {
-        return emptySet();
+        continue;
       }
       for (InstanceStatusSummary instanceStatusSummary : executionSummary.getInstanceStatusSummaries()) {
-        hosts.add(instanceStatusSummary.getInstanceElement().getHostName());
+        hosts.put(instanceStatusSummary.getInstanceElement().getHostName(), instanceStatusSummary.getInstanceElement());
       }
     }
     if (isEmpty(hosts)) {

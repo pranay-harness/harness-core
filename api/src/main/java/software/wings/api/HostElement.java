@@ -9,6 +9,7 @@ import static software.wings.api.HostElement.Builder.aHostElement;
 import com.google.common.base.MoreObjects;
 
 import com.amazonaws.services.ec2.model.Instance;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -21,6 +22,7 @@ import java.util.Map;
  *
  * @author Rishi
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class HostElement implements ContextElement {
   private String uuid;
   private String hostName;

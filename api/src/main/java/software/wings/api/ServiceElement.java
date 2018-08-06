@@ -6,6 +6,7 @@ package software.wings.api;
 
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -18,6 +19,7 @@ import java.util.Map;
  *
  * @author Rishi
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ServiceElement implements ContextElement {
   private String uuid;
   private String name;

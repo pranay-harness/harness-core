@@ -7,10 +7,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
-import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.RestResponse;
-import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.Scope;
@@ -19,6 +16,7 @@ import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicApplicationInstance;
 import software.wings.service.impl.newrelic.NewRelicMetric;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+import software.wings.service.impl.newrelic.NewRelicSetupTestNodeData;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.newrelic.NewRelicService;
@@ -29,7 +27,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import javax.validation.Valid;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -138,35 +136,13 @@ public class NewRelicResource {
     return new RestResponse<>(newRelicService.getTxnsWithData(settingId, applicationId, instanceId));
   }
 
-  @GET
+  @POST
   @Path("/node-data")
   @Timed
   @DelegateAuth
   @ExceptionMetered
   public RestResponse<VerificationNodeDataSetupResponse> getMetricsWithDataForNode(
-      @QueryParam("accountId") final String accountId, @QueryParam("settingId") final String settingId,
-      @QueryParam("applicationId") final long applicationId, @NotEmpty @QueryParam("instanceName") String instanceName,
-      @QueryParam("from") long fromTime, @QueryParam("to") long toTime) {
-    if (toTime <= 0 || fromTime <= 0) {
-      toTime = System.currentTimeMillis();
-      fromTime = toTime - TimeUnit.MINUTES.toMillis(15);
-    }
-
-    List<NewRelicApplicationInstance> applicationInstances =
-        newRelicService.getApplicationInstances(settingId, applicationId, StateType.NEW_RELIC);
-    long instanceId = -1;
-    for (NewRelicApplicationInstance applicationInstance : applicationInstances) {
-      if (applicationInstance.getHost().equals(instanceName)) {
-        instanceId = applicationInstance.getId();
-        break;
-      }
-    }
-
-    if (instanceId == -1) {
-      throw new WingsException(ErrorCode.NEWRELIC_CONFIGURATION_ERROR)
-          .addParam("reason", "No node with name " + instanceName + " found reporting to new relic");
-    }
-    return new RestResponse<>(
-        newRelicService.getMetricsWithDataForNode(settingId, applicationId, instanceId, fromTime, toTime));
+      @QueryParam("accountId") final String accountId, @Valid NewRelicSetupTestNodeData newRelicSetupTestNodeData) {
+    return newRelicService.getMetricsWithDataForNode(newRelicSetupTestNodeData);
   }
 }

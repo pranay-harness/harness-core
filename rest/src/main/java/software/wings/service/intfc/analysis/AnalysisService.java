@@ -2,6 +2,7 @@ package software.wings.service.intfc.analysis;
 
 import io.harness.validation.Create;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.api.InstanceElement;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
@@ -18,6 +19,7 @@ import software.wings.sm.StateType;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import javax.validation.Valid;
@@ -102,5 +104,5 @@ public interface AnalysisService {
       String query, String timeStampField, String timeStampFieldFormat, String messageField, String hostNameField,
       String hostName, StateType stateType);
 
-  Set<String> getLastExecutionNodes(String appId, String workflowId);
+  Map<String, InstanceElement> getLastExecutionNodes(String appId, String workflowId);
 }
