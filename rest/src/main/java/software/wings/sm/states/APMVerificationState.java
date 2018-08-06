@@ -93,6 +93,15 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     this.hostnameTemplate = hostnameTemplate;
   }
 
+  @Attributes(required = true, title = "Include nodes from previous phases")
+  public boolean getIncludePreviousPhaseNodes() {
+    return includePreviousPhaseNodes;
+  }
+
+  public void setIncludePreviousPhaseNodes(boolean includePreviousPhaseNodes) {
+    this.includePreviousPhaseNodes = includePreviousPhaseNodes;
+  }
+
   @EnumData(enumDataProvider = AnalysisComparisonStrategyProvider.class)
   @Attributes(required = true, title = "Baseline for Risk Analysis")
   @DefaultValue("COMPARE_WITH_PREVIOUS")
