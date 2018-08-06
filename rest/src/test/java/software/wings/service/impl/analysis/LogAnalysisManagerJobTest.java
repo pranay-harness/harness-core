@@ -24,6 +24,7 @@ import org.mockito.MockitoAnnotations;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import software.wings.WingsBaseTest;
+import software.wings.api.InstanceElement;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.RestResponse;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
@@ -41,7 +42,7 @@ import software.wings.sm.StateType;
 import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
-import java.util.Set;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -194,7 +195,8 @@ public class LogAnalysisManagerJobTest extends WingsBaseTest {
                     .build()))
             .build();
     wingsPersistence.save(workflowExecution);
-    RestResponse<Set<String>> lastExecutionNodes = logMLResource.getLastExecutionNodes(accountId, appId, workflowId);
-    assertEquals(Sets.newHashSet("host1", "host2", "host3", "host4"), lastExecutionNodes.getResource());
+    RestResponse<Map<String, InstanceElement>> lastExecutionNodes =
+        logMLResource.getLastExecutionNodes(accountId, appId, workflowId);
+    assertEquals(Sets.newHashSet("host1", "host2", "host3", "host4"), lastExecutionNodes.getResource().keySet());
   }
 }

@@ -1,6 +1,7 @@
 package software.wings.integration;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -12,7 +13,10 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static software.wings.api.InstanceElement.Builder.anInstanceElement;
+import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
@@ -21,6 +25,7 @@ import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.ERROR;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.REQUSET_PER_MINUTE;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.THROUGHPUT;
+import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
@@ -35,6 +40,7 @@ import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.Scheduler;
 import software.wings.APMFetchConfig;
+import software.wings.api.HostElement;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.FeatureFlag;
@@ -60,6 +66,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
 import software.wings.service.impl.newrelic.NewRelicMetricData;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+import software.wings.service.impl.newrelic.NewRelicSetupTestNodeData;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.LearningEngineService;
@@ -196,6 +203,16 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
 
   @Test
   public void getNewRelicDataForNode() throws Exception {
+    String appId = wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUuid()).build());
+    String workflowId = wingsPersistence.save(aWorkflow().withAppId(appId).withName(generateUuid()).build());
+    String workflowExecutionId = wingsPersistence.save(
+        aWorkflowExecution().withAppId(appId).withWorkflowId(workflowId).withStatus(ExecutionStatus.SUCCESS).build());
+    wingsPersistence.save(aStateExecutionInstance()
+                              .withExecutionUuid(workflowExecutionId)
+                              .withStateType(StateType.PHASE.name())
+                              .withAppId(appId)
+                              .withDisplayName(generateUuid())
+                              .build());
     WebTarget target = client.target(API_BASE + "/newrelic/nodes?settingId=" + newRelicConfigId
         + "&accountId=" + accountId + "&applicationId=" + 107019083);
     RestResponse<List<NewRelicApplicationInstance>> nodesResponse = getRequestBuilderWithAuthHeader(target).get(
@@ -204,10 +221,23 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     assertFalse(nodes.isEmpty());
 
     for (NewRelicApplicationInstance node : nodes) {
-      target = client.target(API_BASE + "/newrelic/node-data?settingId=" + newRelicConfigId + "&accountId=" + accountId
-          + "&applicationId=" + 107019083 + "&instanceName=" + node.getHost());
-      RestResponse<VerificationNodeDataSetupResponse> metricResponse = getRequestBuilderWithAuthHeader(target).get(
-          new GenericType<RestResponse<VerificationNodeDataSetupResponse>>() {});
+      NewRelicSetupTestNodeData testNodeData =
+          NewRelicSetupTestNodeData.builder()
+              .newRelicAppId(107019083)
+              .appId(appId)
+              .settingId(newRelicConfigId)
+              .instanceName(generateUuid())
+              .hostExpression("${host.hostName}")
+              .workflowId(workflowId)
+              .instanceElement(anInstanceElement()
+                                   .withHost(HostElement.Builder.aHostElement().withHostName(node.getHost()).build())
+                                   .build())
+              .build();
+      target =
+          client.target(API_BASE + "/newrelic/node-data?settingId=" + newRelicConfigId + "&accountId=" + accountId);
+      RestResponse<VerificationNodeDataSetupResponse> metricResponse =
+          getRequestBuilderWithAuthHeader(target).post(entity(testNodeData, APPLICATION_JSON),
+              new GenericType<RestResponse<VerificationNodeDataSetupResponse>>() {});
       assertEquals(0, metricResponse.getResponseMessages().size());
       assertTrue(metricResponse.getResource().isProviderReachable());
       assertTrue(metricResponse.getResource().getLoadResponse().isLoadPresent());
@@ -1121,6 +1151,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
         APMVerificationStateTest.class.getResource("/apm/NewRelicMetricTemplate.json"), Charsets.UTF_8);
     assertEquals(expectedTemplate, JsonUtils.asJson(restResponse.getResource()));
   }
+
   @Test
   public void txnDatadog() throws IOException, InterruptedException {
     final String workflowId = UUID.randomUUID().toString();

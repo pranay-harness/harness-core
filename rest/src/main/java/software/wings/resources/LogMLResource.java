@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import software.wings.api.InstanceElement;
 import software.wings.beans.FeatureName;
 import software.wings.beans.RestResponse;
 import software.wings.exception.WingsException;
@@ -30,8 +31,8 @@ import software.wings.sm.StateType;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -166,7 +167,7 @@ public class LogMLResource {
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
-  public RestResponse<Set<String>> getLastExecutionNodes(@QueryParam("accountId") String accountId,
+  public RestResponse<Map<String, InstanceElement>> getLastExecutionNodes(@QueryParam("accountId") String accountId,
       @QueryParam("appId") String appId, @QueryParam("workflowId") String workflowId) {
     return new RestResponse<>(analysisService.getLastExecutionNodes(appId, workflowId));
   }

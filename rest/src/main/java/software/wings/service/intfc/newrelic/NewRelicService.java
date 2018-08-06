@@ -2,11 +2,13 @@ package software.wings.service.intfc.newrelic;
 
 import software.wings.APMFetchConfig;
 import software.wings.beans.APMValidateCollectorConfig;
+import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicApplicationInstance;
 import software.wings.service.impl.newrelic.NewRelicMetric;
+import software.wings.service.impl.newrelic.NewRelicSetupTestNodeData;
 import software.wings.sm.StateType;
 
 import java.util.List;
@@ -25,4 +27,7 @@ public interface NewRelicService {
   List<NewRelicMetric> getTxnsWithData(String settingId, long applicationId, long instanceId);
   VerificationNodeDataSetupResponse getMetricsWithDataForNode(
       @NotNull String settingId, long newRelicApplicationId, long instanceId, long fromTime, long toTime);
+
+  RestResponse<VerificationNodeDataSetupResponse> getMetricsWithDataForNode(
+      NewRelicSetupTestNodeData newRelicSetupTestNodeData);
 }

@@ -8,6 +8,7 @@ import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 
 import com.google.common.base.Objects;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -20,6 +21,7 @@ import java.util.Map;
  *
  * @author Rishi
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class InstanceElement implements ContextElement {
   private String uuid;
   private String displayName;
