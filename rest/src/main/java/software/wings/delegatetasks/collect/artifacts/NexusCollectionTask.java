@@ -2,7 +2,6 @@ package software.wings.delegatetasks.collect.artifacts;
 
 import com.google.inject.Inject;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +50,6 @@ public class NexusCollectionTask extends AbstractDelegateRunnableTask {
 
   public ListNotifyResponseData run(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
       String repoType, String groupId, List<String> artifactPaths, String version) {
-    InputStream in = null;
     ListNotifyResponseData res = new ListNotifyResponseData();
     try {
       for (String artifactPath : artifactPaths) {
@@ -69,15 +67,13 @@ public class NexusCollectionTask extends AbstractDelegateRunnableTask {
       //        WingsException ex = (WingsException) e;
       //        errorMessage = Joiner.on(",").join(ex.getResponseMessageList().stream()
       //            .map(responseMessage ->
-      //            ResponseCodeCache.getInstance().getResponseMessage(responseMessage.getCode(),
+      //            MessageManager.getInstance().getResponseMessage(responseMessage.getCode(),
       //            ex.getParams()).getMessage()) .collect(toList()));
       //      } else {
       //        errorMessage = e.getMessage();
       //      }
       //      executionStatus = executionStatus.FAILED;
       //      jenkinsExecutionResponse.setErrorMessage(errorMessage);
-    } finally {
-      IOUtils.closeQuietly(in);
     }
     return res;
   }

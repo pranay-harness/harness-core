@@ -12,15 +12,16 @@ import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SOURCE;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.exception.WingsException.USER;
 
-import io.harness.CategoryTest;
+import io.harness.MockableTest;
+import io.harness.eraro.MessageManager;
 import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.internal.util.reflection.Whitebox;
 import org.slf4j.Logger;
+import software.wings.WingsBaseTest;
 import software.wings.beans.ResponseMessage;
-import software.wings.common.cache.ResponseCodeCache;
 
-public class WingsExceptionMapperTest extends CategoryTest {
+public class WingsExceptionMapperTest extends WingsBaseTest {
   @Test
   public void sanity() {
     final WingsException exception = new WingsException(DEFAULT_ERROR_CODE);
@@ -39,12 +40,12 @@ public class WingsExceptionMapperTest extends CategoryTest {
   }
 
   @Test
-  public void missingParameter() {
+  public void missingParameter() throws IllegalAccessException {
     final WingsException exception = new WingsException(INVALID_ARTIFACT_SOURCE, USER);
     final WingsExceptionMapper mapper = new WingsExceptionMapper();
 
     Logger mockLogger = mock(Logger.class);
-    Whitebox.setInternalState(ResponseCodeCache.getInstance(), "logger", mockLogger);
+    MockableTest.setStaticFieldValue(MessageManager.class, "logger", mockLogger);
 
     mapper.toResponse(exception);
     verify(mockLogger, times(2))
@@ -52,7 +53,7 @@ public class WingsExceptionMapperTest extends CategoryTest {
   }
 
   @Test
-  public void overrideMessage() {
+  public void overrideMessage() throws IllegalAccessException {
     final ResponseMessage message = aResponseMessage().code(DEFAULT_ERROR_CODE).message("Override message").build();
 
     final WingsException exception = new WingsException(message);
@@ -60,7 +61,7 @@ public class WingsExceptionMapperTest extends CategoryTest {
 
     Logger mockLogger = mock(Logger.class);
     Whitebox.setInternalState(mapper, "logger", mockLogger);
-    Whitebox.setInternalState(ResponseCodeCache.getInstance(), "logger", mockLogger);
+    MockableTest.setStaticFieldValue(MessageManager.class, "logger", mockLogger);
 
     mapper.toResponse(exception);
 

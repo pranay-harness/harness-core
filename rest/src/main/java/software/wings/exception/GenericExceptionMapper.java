@@ -3,11 +3,12 @@ package software.wings.exception;
 import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
 
+import io.harness.eraro.ErrorCodeName;
 import io.harness.eraro.Level;
+import io.harness.eraro.MessageManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.RestResponse;
-import software.wings.common.cache.ResponseCodeCache;
 import software.wings.utils.Misc;
 
 import javax.ws.rs.core.MediaType;
@@ -36,7 +37,8 @@ public class GenericExceptionMapper<T> implements ExceptionMapper<Throwable> {
           aResponseMessage()
               .code(DEFAULT_ERROR_CODE)
               .level(Level.ERROR)
-              .message(ResponseCodeCache.getInstance().prepareMessage(DEFAULT_ERROR_CODE, null))
+              .message(MessageManager.getInstance().prepareMessage(
+                  ErrorCodeName.builder().value(DEFAULT_ERROR_CODE.name()).build(), null))
               .build());
     }
 

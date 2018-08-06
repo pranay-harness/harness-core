@@ -67,7 +67,7 @@ public class JenkinsCollectionTask extends AbstractDelegateRunnableTask {
       //        WingsException ex = (WingsException) e;
       //        errorMessage = Joiner.on(",").join(ex.getResponseMessageList().stream()
       //            .map(responseMessage ->
-      //            ResponseCodeCache.getInstance().getResponseMessage(responseMessage.getCode(),
+      //            MessageManager.getInstance().getResponseMessage(responseMessage.getCode(),
       //            ex.getParams()).getMessage()) .collect(toList()));
       //      } else {
       //        errorMessage = e.getMessage();

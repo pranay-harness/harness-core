@@ -18,18 +18,22 @@ import com.google.inject.name.Names;
 
 import com.ning.http.client.AsyncHttpClient;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.eraro.MessageManager;
 import io.harness.serializer.YamlUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.LogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
+import software.wings.app.WingsModule;
 import software.wings.delegate.service.DelegateService;
+import software.wings.exception.WingsException;
 import software.wings.managerclient.ManagerClientModule;
 import software.wings.utils.message.MessageService;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.management.ManagementFactory;
 import java.util.HashMap;
 import java.util.Map;
@@ -62,6 +66,12 @@ public class DelegateApplication {
 
     // Set logging level
     java.util.logging.LogManager.getLogManager().getLogger("").setLevel(Level.INFO);
+
+    try (InputStream in = WingsModule.class.getResourceAsStream(WingsModule.RESPONSE_MESSAGE_FILE)) {
+      MessageManager.getInstance().addMessages(in);
+    } catch (IOException exception) {
+      throw new WingsException(exception);
+    }
 
     String configFile = args[0];
 

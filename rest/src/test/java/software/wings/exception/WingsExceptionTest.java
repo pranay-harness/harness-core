@@ -6,14 +6,14 @@ import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.exception.WingsException.ReportTarget.LOG_SYSTEM;
 import static software.wings.exception.WingsException.ReportTarget.REST_API;
 
-import io.harness.CategoryTest;
 import org.junit.Test;
+import software.wings.WingsBaseTest;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage;
 
 import java.util.List;
 
-public class WingsExceptionTest extends CategoryTest {
+public class WingsExceptionTest extends WingsBaseTest {
   @Test
   public void constructionShouldCreateAtLeastOneResponseMessageTest() {
     assertThat(new WingsException("message").getResponseMessage()).isNotNull();
