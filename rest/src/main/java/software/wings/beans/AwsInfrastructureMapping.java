@@ -83,6 +83,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
 
   private void applyAwsInstanceFilters(Map<String, Object> map) {
     setAutoScalingGroupName(null);
+    setProvisionInstances(false);
     AwsInstanceFilterBuilder builder = null;
     try {
       for (Entry<String, Object> entry : map.entrySet()) {
@@ -143,6 +144,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
 
   private void applyAutoScalingGroups(Map<String, Object> map) {
     setAwsInstanceFilter(null);
+    setProvisionInstances(true);
     try {
       for (Entry<String, Object> entry : map.entrySet()) {
         switch (entry.getKey()) {

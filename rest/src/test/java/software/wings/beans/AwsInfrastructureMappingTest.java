@@ -29,6 +29,7 @@ public class AwsInfrastructureMappingTest extends WingsBaseTest {
     map.put("region", "dummy-region");
     awsInfrastructureMapping.applyProvisionerVariables(map, AWS_INSTANCE_FILTER);
     assertThat(awsInfrastructureMapping.getRegion()).isEqualTo("dummy-region");
+    assertThat(awsInfrastructureMapping.isProvisionInstances()).isFalse();
 
     map.put("vpcs", asList("dummy-vpc"));
     map.put("subnets", asList("dummy-subnets"));
@@ -36,6 +37,7 @@ public class AwsInfrastructureMappingTest extends WingsBaseTest {
     map.put("tags", ImmutableMap.<String, Object>of("key", "value"));
 
     awsInfrastructureMapping.applyProvisionerVariables(map, AWS_INSTANCE_FILTER);
+    assertThat(awsInfrastructureMapping.isProvisionInstances()).isFalse();
     assertThat(awsInfrastructureMapping.getRegion()).isEqualTo("dummy-region");
     assertThat(awsInfrastructureMapping.getAwsInstanceFilter().getVpcIds()).containsExactly("dummy-vpc");
     assertThat(awsInfrastructureMapping.getAwsInstanceFilter().getSubnetIds()).containsExactly("dummy-subnets");
@@ -51,6 +53,7 @@ public class AwsInfrastructureMappingTest extends WingsBaseTest {
     map.put("autoScalingGroup", "my-group");
     AwsInfrastructureMapping awsInfrastructureMapping = anAwsInfrastructureMapping().build();
     awsInfrastructureMapping.applyProvisionerVariables(map, AWS_AUTOSCALING_GROUP);
+    assertThat(awsInfrastructureMapping.isProvisionInstances()).isTrue();
     assertThat(awsInfrastructureMapping.getRegion()).isEqualTo("dummy-region");
     assertThat(awsInfrastructureMapping.getAutoScalingGroupName()).isEqualTo("my-group");
 
@@ -67,8 +70,10 @@ public class AwsInfrastructureMappingTest extends WingsBaseTest {
     map.put("region", "dummy-region");
     awsInfrastructureMapping.applyProvisionerVariables(map, AWS_INSTANCE_FILTER);
     assertThat(awsInfrastructureMapping.getAutoScalingGroupName()).isNull();
+    assertThat(awsInfrastructureMapping.isProvisionInstances()).isFalse();
     map.put("autoScalingGroup", "my-group");
     awsInfrastructureMapping.applyProvisionerVariables(map, AWS_AUTOSCALING_GROUP);
     assertThat(awsInfrastructureMapping.getAwsInstanceFilter()).isNull();
+    assertThat(awsInfrastructureMapping.isProvisionInstances()).isTrue();
   }
 }
