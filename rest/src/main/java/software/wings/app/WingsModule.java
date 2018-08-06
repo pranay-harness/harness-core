@@ -313,6 +313,8 @@ import java.time.Clock;
  * @author Rishi
  */
 public class WingsModule extends AbstractModule {
+  public static final String RESPONSE_MESSAGE_FILE = "/response_messages.properties";
+
   private MainConfiguration configuration;
 
   /**

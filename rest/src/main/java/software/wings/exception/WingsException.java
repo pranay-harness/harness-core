@@ -12,12 +12,13 @@ import static software.wings.exception.WingsException.ReportTarget.REST_API;
 import static software.wings.exception.WingsException.ReportTarget.UNIVERSAL;
 
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.eraro.ErrorCodeName;
+import io.harness.eraro.MessageManager;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage;
-import software.wings.common.cache.ResponseCodeCache;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -167,10 +168,19 @@ public class WingsException extends RuntimeException {
       if (reportTarget != UNIVERSAL && !exception.getReportTargets().contains(reportTarget)) {
         continue;
       }
+      ResponseMessage responseMessage = exception.getResponseMessage();
+      if (isEmpty(responseMessage.getMessage())) {
+        final String message = MessageManager.getInstance().prepareMessage(
+            ErrorCodeName.builder().value(responseMessage.getCode().name()).build(), params);
+        responseMessage = aResponseMessage()
+                              .code(responseMessage.getCode())
+                              .message(message)
+                              .level(responseMessage.getLevel())
+                              .build();
+      }
 
-      ResponseMessage responseMessage =
-          ResponseCodeCache.getInstance().rebuildMessage(exception.getResponseMessage(), exception.getParams());
-      if (list.stream().noneMatch(msg -> StringUtils.equals(responseMessage.getMessage(), msg.getMessage()))) {
+      ResponseMessage finalResponseMessage = responseMessage;
+      if (list.stream().noneMatch(msg -> StringUtils.equals(finalResponseMessage.getMessage(), msg.getMessage()))) {
         list.add(responseMessage);
       }
     }

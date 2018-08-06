@@ -14,6 +14,8 @@ import com.google.common.base.Splitter;
 import com.google.inject.Inject;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.eraro.ErrorCodeName;
+import io.harness.eraro.MessageManager;
 import org.atmosphere.cache.UUIDBroadcasterCache;
 import org.atmosphere.config.service.AtmosphereHandlerService;
 import org.atmosphere.cpr.AtmosphereRequest;
@@ -27,7 +29,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.AuthToken;
 import software.wings.beans.Base;
 import software.wings.beans.ErrorCode;
-import software.wings.common.cache.ResponseCodeCache;
 import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute;
 import software.wings.service.impl.EventEmitter.Channel;
@@ -158,7 +159,8 @@ public class UiStreamHandler extends AtmosphereHandlerAdapter {
     resource.write(JsonUtils.asJson(aResponseMessage()
                                         .code(errorCode)
                                         .level(ERROR)
-                                        .message(ResponseCodeCache.getInstance().prepareMessage(errorCode, params))
+                                        .message(MessageManager.getInstance().prepareMessage(
+                                            ErrorCodeName.builder().value(errorCode.name()).build(), params))
                                         .build()));
     resource.close();
   }
