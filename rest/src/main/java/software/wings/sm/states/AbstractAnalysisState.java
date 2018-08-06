@@ -444,13 +444,13 @@ public abstract class AbstractAnalysisState extends State {
       return getPcfHostNames(context, false);
     }
 
+    Map<String, String> rv = new HashMap<>();
     if (includePreviousPhaseNodes) {
       getLogger().info("returning all phases nodes for state {}", context.getStateExecutionInstanceId());
-      return getHostsDeployedSoFar(context, getPhaseServiceId(context), getDeploymentType(context));
+      rv.putAll(getHostsDeployedSoFar(context, getPhaseServiceId(context), getDeploymentType(context)));
     }
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    Map<String, String> rv = new HashMap<>();
     if (isEmpty(workflowStandardParams.getInstances())) {
       getLogger().warn(
           "No test nodes found for state: {}, id: {} ", getStateType(), context.getStateExecutionInstanceId());
