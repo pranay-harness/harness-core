@@ -721,7 +721,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     executorService.submit(() -> {
       if (proactiveGraphRenderings.get() < MAX_PROACTIVE_GRAPH_RENDERINGS) {
-        final Tree ignore = calculateTree(appId, workflowExecution, ExecutionStatus.RUNNING, emptySet());
+        final Tree ignore = calculateTree(null, appId, workflowExecution, ExecutionStatus.RUNNING, emptySet());
       }
     });
   }
@@ -759,13 +759,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
   }
 
-  private Tree calculateTree(String appId, String workflowExecutionId, ExecutionStatus workflowExecutionStatus,
-      Set<String> excludeFromAggregation) {
+  private Tree calculateTree(Tree tree, String appId, String workflowExecutionId,
+      ExecutionStatus workflowExecutionStatus, Set<String> excludeFromAggregation) {
     proactiveGraphRenderings.incrementAndGet();
 
     try {
-      Tree tree = null;
-      if (excludeFromAggregation.isEmpty()) {
+      if (tree == null || excludeFromAggregation.isEmpty()) {
         tree = mongoStore.get(GraphRenderer.algorithmId, Tree.structureHash, workflowExecutionId);
       }
 
@@ -843,8 +842,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     if (tree == null || !tree.isFinalState()) {
-      tree = calculateTree(workflowExecution.getAppId(), workflowExecution.getUuid(), workflowExecution.getStatus(),
-          excludeFromAggregation);
+      tree = calculateTree(tree, workflowExecution.getAppId(), workflowExecution.getUuid(),
+          workflowExecution.getStatus(), excludeFromAggregation);
     }
 
     if (includeStatus && tree.getOverrideStatus() != null) {
