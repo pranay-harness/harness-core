@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.TriggerService;
@@ -87,7 +88,7 @@ public class ArtifactCollectionJob implements Job {
     } catch (WingsException exception) {
       logger.warn("Failed to collect artifacts for appId {}, artifact stream {}. Reason {}", appId, artifactStreamId,
           exception.getMessage());
-      exception.logProcessedMessages(MANAGER, logger);
+      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception e) {
       log(appId, artifactStreamId, new WingsException(e));
     }

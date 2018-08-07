@@ -20,6 +20,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsExceptionMapper;
 import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
 import software.wings.service.intfc.AccountService;
@@ -102,7 +103,7 @@ public class FixInstanceDataForAwsSSH implements Migration {
 
           logger.info("Instance sync done for appId:" + appId);
         } catch (WingsException exception) {
-          exception.logProcessedMessages(MANAGER, logger);
+          WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
         } catch (Exception ex) {
           logger.warn("Error while syncing instances for app: {}", appId, ex);
         }

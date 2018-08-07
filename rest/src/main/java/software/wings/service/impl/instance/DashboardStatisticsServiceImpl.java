@@ -66,6 +66,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsExceptionMapper;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserRequestInfo;
 import software.wings.security.UserThreadLocal;
@@ -290,7 +291,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       }
 
     } else if (exception instanceof WingsException) {
-      ((WingsException) exception).logProcessedMessages(MANAGER, logger);
+      WingsExceptionMapper.logProcessedMessages((WingsException) exception, MANAGER, logger);
     } else {
       logger.error("Unable to get instance stats", exception);
     }

@@ -11,6 +11,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.exception.WingsException.ReportTarget.REST_API;
 import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -49,7 +50,7 @@ import software.wings.beans.yaml.YamlType;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
-import software.wings.exception.WingsException.ReportTarget;
+import software.wings.exception.WingsExceptionMapper;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.EcsInfraMappingYamlHandler;
@@ -164,7 +165,7 @@ public class EcsInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
       WingsException wingsException = (WingsException) ((InvocationTargetException) e).getTargetException();
       assertEquals("Invalid argument(s): Failed to parse yaml for EcsInfraMapping: name, App: " + APP_ID
               + ", For Fargate Launch type, VpcId  -  SubnetIds  - SecurityGroupIds are required, can not be blank",
-          wingsException.getResponseMessageList(ReportTarget.REST_API).get(0).getMessage());
+          WingsExceptionMapper.getResponseMessageList(wingsException, REST_API).get(0).getMessage());
     }
   }
 

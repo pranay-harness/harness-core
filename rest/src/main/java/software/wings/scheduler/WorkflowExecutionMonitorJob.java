@@ -28,6 +28,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.dl.HIterator;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsExceptionMapper;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterruptManager;
 import software.wings.sm.StateExecutionInstance;
@@ -107,7 +108,7 @@ public class WorkflowExecutionMonitorJob implements Job {
             executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
           }
         } catch (WingsException exception) {
-          exception.logProcessedMessages(MANAGER, logger);
+          WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
         } catch (Exception e) {
           logger.error("Error in cleaning up the workflow execution {}", workflowExecution.getUuid(), e);
         }
@@ -132,7 +133,7 @@ public class WorkflowExecutionMonitorJob implements Job {
         }
       }
     } catch (WingsException exception) {
-      exception.logProcessedMessages(MANAGER, logger);
+      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception e) {
       logger.error("Error in monitoring the workflow executions ", e);
     }

@@ -84,6 +84,7 @@ import software.wings.dl.WingsDeque;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsExceptionMapper;
 import software.wings.scheduler.NotifyJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.ExecutionLogContext;
@@ -743,7 +744,7 @@ public class StateMachineExecutor {
     State currentState =
         sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
     addContext(context, exception);
-    exception.logProcessedMessages(MANAGER, logger);
+    WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
     updateStateExecutionData(stateExecutionInstance, null, FAILED, Misc.getMessage(exception), null, null);
 
     try {
@@ -1547,7 +1548,7 @@ public class StateMachineExecutor {
         stateMachineExecutor.startExecution(context);
       } catch (WingsException exception) {
         addContext(context, exception);
-        exception.logProcessedMessages(MANAGER, logger);
+        WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
       } catch (Exception exception) {
         logger.error("Unhandled exception", exception);
       }

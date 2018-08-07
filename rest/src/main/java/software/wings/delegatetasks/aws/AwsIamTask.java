@@ -11,6 +11,7 @@ import software.wings.beans.DelegateTask;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.impl.aws.model.AwsIamListInstanceRolesResponse;
 import software.wings.service.impl.aws.model.AwsIamListRolesResponse;
 import software.wings.service.impl.aws.model.AwsIamRequest;
@@ -56,9 +57,9 @@ public class AwsIamTask extends AbstractDelegateRunnableTask {
           throw new InvalidRequestException("Invalid request type [" + requestType + "]", WingsException.USER);
         }
       }
-    } catch (WingsException ex) {
-      ex.logProcessedMessages(DELEGATE, logger);
-      throw ex;
+    } catch (WingsException exception) {
+      WingsExceptionMapper.logProcessedMessages(exception, DELEGATE, logger);
+      throw exception;
     } catch (Exception ex) {
       throw new InvalidRequestException(ex.getMessage(), WingsException.USER);
     }

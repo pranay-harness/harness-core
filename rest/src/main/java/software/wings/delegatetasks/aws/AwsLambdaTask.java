@@ -1,7 +1,5 @@
 package software.wings.delegatetasks.aws;
 
-import static software.wings.exception.WingsException.ExecutionContext.DELEGATE;
-
 import com.google.inject.Inject;
 
 import org.slf4j.Logger;
@@ -43,10 +41,9 @@ public class AwsLambdaTask extends AbstractDelegateRunnableTask {
         }
       }
     } catch (WingsException ex) {
-      ex.logProcessedMessages(DELEGATE, logger);
       throw ex;
     } catch (Exception ex) {
-      throw new InvalidRequestException(ex.getMessage(), WingsException.USER);
+      throw new InvalidRequestException(ex.getMessage(), ex, WingsException.USER);
     }
   }
 }

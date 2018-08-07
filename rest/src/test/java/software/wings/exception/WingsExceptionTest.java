@@ -28,7 +28,7 @@ public class WingsExceptionTest extends WingsBaseTest {
   public void testCollectResponseMessages() {
     final WingsException exception =
         new WingsException(DEFAULT_ERROR_CODE, new Exception(new WingsException(INVALID_ARGUMENT)));
-    assertThat(exception.getResponseMessageList(REST_API).size()).isEqualTo(2);
+    assertThat(WingsExceptionMapper.getResponseMessageList(exception, REST_API).size()).isEqualTo(2);
   }
 
   @Test
@@ -52,8 +52,8 @@ public class WingsExceptionTest extends WingsBaseTest {
     exception.addContext(String.class, "test");
     exception.addContext(Integer.class, 0);
 
-    final List<ResponseMessage> responseMessages = exception.getResponseMessageList(LOG_SYSTEM);
-    assertThat(exception.calculateErrorMessage(responseMessages))
+    final List<ResponseMessage> responseMessages = WingsExceptionMapper.getResponseMessageList(exception, LOG_SYSTEM);
+    assertThat(WingsExceptionMapper.calculateErrorMessage(exception, responseMessages))
         .isEqualTo("Response message: An error has occurred. Please contact the Harness support team.\n"
             + "Context objects: java.lang.Integer: 0\n"
             + "                 java.lang.String: test\n"
@@ -68,8 +68,9 @@ public class WingsExceptionTest extends WingsBaseTest {
     WingsException outerException = new WingsException(DEFAULT_ERROR_CODE, innerException);
     outerException.addContext(Integer.class, 0);
 
-    final List<ResponseMessage> responseMessages = outerException.getResponseMessageList(LOG_SYSTEM);
-    assertThat(outerException.calculateErrorMessage(responseMessages))
+    final List<ResponseMessage> responseMessages =
+        WingsExceptionMapper.getResponseMessageList(outerException, LOG_SYSTEM);
+    assertThat(WingsExceptionMapper.calculateErrorMessage(outerException, responseMessages))
         .isEqualTo("Response message: An error has occurred. Please contact the Harness support team.\n"
             + "Context objects: java.lang.Integer: 0\n"
             + "                 java.lang.String: test\n"

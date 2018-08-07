@@ -26,6 +26,7 @@ import org.mockito.Mock;
 import org.mockito.internal.util.reflection.Whitebox;
 import org.slf4j.Logger;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsExceptionMapper;
 
 import java.time.Duration;
 
@@ -132,7 +133,7 @@ public class PersistentLockerTest extends MockableTest {
 
     try (AcquiredLock lock = persistentLocker.acquireLock(AcquiredLock.class, "cba", Duration.ofMinutes(1))) {
     } catch (WingsException exception) {
-      exception.logProcessedMessages(MANAGER, mockLogger);
+      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, mockLogger);
     }
 
     verify(mockLogger, times(0)).error(any());
@@ -157,7 +158,7 @@ public class PersistentLockerTest extends MockableTest {
     try (AcquiredLock lock = persistentLocker.acquireLock(AcquiredLock.class, "cba", timeout)) {
       Thread.sleep(10);
     } catch (WingsException exception) {
-      exception.logProcessedMessages(MANAGER, logger);
+      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
     }
 
     verify(logger).error(matches(

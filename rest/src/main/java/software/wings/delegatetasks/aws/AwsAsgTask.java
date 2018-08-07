@@ -1,6 +1,5 @@
 package software.wings.delegatetasks.aws;
 
-import static software.wings.exception.WingsException.ExecutionContext.DELEGATE;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 
 import com.google.inject.Inject;
@@ -64,9 +63,8 @@ public class AwsAsgTask extends AbstractDelegateRunnableTask {
           throw new InvalidRequestException("Invalid request type [" + requestType + "]", WingsException.USER);
         }
       }
-    } catch (WingsException ex) {
-      ex.logProcessedMessages(DELEGATE, logger);
-      throw ex;
+    } catch (WingsException exception) {
+      throw exception;
     } catch (Exception ex) {
       throw new InvalidRequestException(ex.getMessage(), WingsException.USER);
     }

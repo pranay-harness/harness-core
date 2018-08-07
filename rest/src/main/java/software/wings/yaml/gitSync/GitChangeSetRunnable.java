@@ -15,6 +15,7 @@ import software.wings.beans.FeatureName;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlGitService;
@@ -107,7 +108,7 @@ public class GitChangeSetRunnable implements Runnable {
         }
       });
     } catch (WingsException exception) {
-      exception.logProcessedMessages(MANAGER, logger);
+      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception exception) {
       logger.error(GIT_YAML_LOG_PREFIX + "Unexpected error", exception);
     }

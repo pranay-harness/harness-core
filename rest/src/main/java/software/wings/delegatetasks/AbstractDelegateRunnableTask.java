@@ -1,12 +1,16 @@
 
 package software.wings.delegatetasks;
 
+import static software.wings.exception.WingsException.ExecutionContext.DELEGATE;
+
 import com.google.inject.Inject;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.exception.WingsException;
+import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.ErrorNotifyResponseData;
@@ -60,6 +64,11 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
           logger.info("Started executing task {}", taskId);
           result = run(parameters);
           logger.info("Completed executing task {}", taskId);
+
+        } catch (WingsException exception) {
+          exception.addContext(DelegateTask.class, taskId);
+          WingsExceptionMapper.logProcessedMessages(exception, DELEGATE, logger);
+          result = ErrorNotifyResponseData.builder().errorMessage(Misc.getMessage(exception)).build();
         } catch (Throwable exception) {
           logger.error("Unexpected error executing delegate task {}", taskId, exception);
           result = ErrorNotifyResponseData.builder().errorMessage(Misc.getMessage(exception)).build();
