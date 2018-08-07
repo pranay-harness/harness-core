@@ -58,7 +58,6 @@ public class AwsHelperResource {
   @Path("/aws-regions")
   @Timed
   @ExceptionMetered
-  @Deprecated
   public RestResponse<List<NameValuePair>> listAwsRegions(@QueryParam("accountId") String accountId) {
     return new RestResponse(awsHelperResourceService.getAwsRegions());
   }

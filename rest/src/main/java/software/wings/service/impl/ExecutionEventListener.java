@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.dl.PageRequest.PageRequestBuilder;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.NEW;
@@ -22,7 +23,6 @@ import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.core.queue.AbstractQueueListener;
-import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.lock.AcquiredLock;
@@ -36,10 +36,8 @@ public class ExecutionEventListener extends AbstractQueueListener<ExecutionEvent
   private static final Logger logger = LoggerFactory.getLogger(ExecutionEventListener.class);
 
   @Inject private WingsPersistence wingsPersistence;
-
   @Inject private PersistentLocker persistentLocker;
   @Inject private StateMachineExecutor stateMachineExecutor;
-
   public ExecutionEventListener() {
     super(false);
   }
@@ -52,28 +50,39 @@ public class ExecutionEventListener extends AbstractQueueListener<ExecutionEvent
         return;
       }
 
-      PageRequest<WorkflowExecution> pageRequest = aPageRequest()
-                                                       .addFilter("appId", EQ, message.getAppId())
-                                                       .addFilter("workflowId", EQ, message.getWorkflowId())
-                                                       .addFilter("status", Operator.IN, RUNNING, PAUSED)
-                                                       .addFieldsIncluded("uuid")
-                                                       .withLimit("1")
-                                                       .build();
+      PageRequestBuilder pageRequestBuilder = aPageRequest()
+                                                  .addFilter(WorkflowExecution.APP_ID_KEY, EQ, message.getAppId())
+                                                  .addFilter(WorkflowExecution.STATUS_KEY, Operator.IN, RUNNING, PAUSED)
+                                                  .addFieldsIncluded("uuid")
+                                                  .withLimit("1");
+
+      if (isNotEmpty(message.getInfraMappingIds())) {
+        pageRequestBuilder.addFilter(
+            WorkflowExecution.INFRAMAPPING_IDS_KEY, Operator.IN, message.getInfraMappingIds().toArray());
+      } else {
+        pageRequestBuilder.addFilter(WorkflowExecution.WORKFLOW_ID_KEY, EQ, message.getWorkflowId());
+      }
 
       PageResponse<WorkflowExecution> runningWorkflowExecutions =
-          wingsPersistence.query(WorkflowExecution.class, pageRequest);
+          wingsPersistence.query(WorkflowExecution.class, pageRequestBuilder.build());
+
       if (isNotEmpty(runningWorkflowExecutions)) {
         return;
       }
 
-      pageRequest = aPageRequest()
-                        .addFilter("appId", EQ, message.getAppId())
-                        .addFilter("workflowId", EQ, message.getWorkflowId())
-                        .addFilter("status", EQ, QUEUED)
-                        .addOrder("createdAt", OrderType.ASC)
-                        .build();
+      pageRequestBuilder = aPageRequest()
+                               .addFilter(WorkflowExecution.APP_ID_KEY, EQ, message.getAppId())
+                               .addFilter(WorkflowExecution.STATUS_KEY, EQ, QUEUED)
+                               .addOrder(WorkflowExecution.CREATED_AT_KEY, OrderType.ASC);
 
-      WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, pageRequest);
+      if (isNotEmpty(message.getInfraMappingIds())) {
+        pageRequestBuilder.addFilter(
+            WorkflowExecution.INFRAMAPPING_IDS_KEY, Operator.IN, message.getInfraMappingIds().toArray());
+      } else {
+        pageRequestBuilder.addFilter(WorkflowExecution.WORKFLOW_ID_KEY, EQ, message.getWorkflowId());
+      }
+
+      WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, pageRequestBuilder.build());
       if (workflowExecution == null) {
         return;
       }

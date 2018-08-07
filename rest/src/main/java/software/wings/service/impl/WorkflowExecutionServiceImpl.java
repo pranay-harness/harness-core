@@ -46,11 +46,9 @@ import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE;
-import static software.wings.service.impl.ExecutionEvent.ExecutionEventBuilder.anExecutionEvent;
 import static software.wings.sm.ExecutionInterruptType.ABORT_ALL;
 import static software.wings.sm.ExecutionInterruptType.PAUSE_ALL;
 import static software.wings.sm.ExecutionInterruptType.RESUME_ALL;
-import static software.wings.sm.ExecutionStatus.ERROR;
 import static software.wings.sm.ExecutionStatus.NEW;
 import static software.wings.sm.ExecutionStatus.PAUSED;
 import static software.wings.sm.ExecutionStatus.PAUSING;
@@ -153,7 +151,6 @@ import software.wings.dl.WingsDeque;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
-import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.PermissionType;
@@ -207,7 +204,6 @@ import software.wings.utils.Validator;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.ObjectStreamClass;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
@@ -1045,6 +1041,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       workflowExecution.setServiceIds(services.stream().map(Service::getUuid).collect(toList()));
     }
 
+    workflowExecution.setInfraMappingIds(workflowService.getResolvedInfraMappingIds(workflow, workflowVariables));
+
     WorkflowStandardParams stdParams;
     if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.CANARY
         || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.BASIC
@@ -1298,18 +1296,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     stateExecutionInstance.setContextElements(elements);
     stateExecutionInstance = stateMachineExecutor.queue(stateMachine, stateExecutionInstance);
-    boolean templatized = false;
-    if (stateMachine.getOrchestrationWorkflow() != null && stateMachine.getOrchestrationWorkflow().isTemplatized()) {
-      templatized = true;
-    }
-    if (templatized || workflowExecution.getWorkflowType() != ORCHESTRATION) {
+    if (workflowExecution.getWorkflowType() != ORCHESTRATION) {
       stateMachineExecutor.startExecution(stateMachine, stateExecutionInstance);
       updateStartStatus(workflowExecution, RUNNING);
     } else {
       // create queue event
-      executionEventQueue.send(anExecutionEvent()
-                                   .withAppId(workflowExecution.getAppId())
-                                   .withWorkflowId(workflowExecution.getWorkflowId())
+      executionEventQueue.send(ExecutionEvent.builder()
+                                   .appId(workflowExecution.getAppId())
+                                   .workflowId(workflowExecution.getWorkflowId())
+                                   .infraMappingIds(workflowExecution.getInfraMappingIds())
                                    .build());
     }
     return wingsPersistence.get(WorkflowExecution.class, workflowExecution.getAppId(), workflowExecution.getUuid());
@@ -1322,41 +1317,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       workflowElement.setLastGoodDeploymentDisplayName(workflowExecutionLast.getDisplayName());
       workflowElement.setLastGoodDeploymentUuid(workflowExecutionLast.getUuid());
       workflowElement.setLastGoodReleaseNo(workflowExecutionLast.getReleaseNo());
-    }
-  }
-
-  @Override
-  public void startQueuedExecution(String appId, String workflowId) {
-    PageRequest pageRequest = aPageRequest()
-                                  .addFilter("appId", EQ, appId)
-                                  .addFilter("workflowId", EQ, workflowId)
-                                  .addFilter("status", EQ, QUEUED)
-                                  .addOrder("createdAt", OrderType.DESC)
-                                  .build();
-
-    WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, pageRequest);
-    if (workflowExecution == null) {
-      return;
-    }
-    try (AcquiredLock lock = persistentLocker.tryToAcquireLock(
-             Workflow.class, workflowExecution.getWorkflowId(), Duration.ofMinutes(1))) {
-      if (lock == null) {
-        return;
-      }
-
-      List<WorkflowExecution> runningWorkflowExecutions =
-          getRunningWorkflowExecutions(ORCHESTRATION, workflowExecution.getAppId(), workflowExecution.getWorkflowId());
-      if (isNotEmpty(runningWorkflowExecutions)) {
-        return;
-      }
-      boolean started = stateMachineExecutor.startQueuedExecution(appId, workflowExecution.getUuid());
-      ExecutionStatus status = RUNNING;
-      if (!started) {
-        status = ERROR;
-      }
-      logger.error("WorkflowExecution could not be started from QUEUED state- appId:{}, WorkflowExecution:{}", appId,
-          workflowExecution.getUuid());
-      updateStartStatus(workflowExecution, status);
     }
   }
 

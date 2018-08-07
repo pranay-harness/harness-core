@@ -65,8 +65,6 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
 
   WorkflowExecution getExecutionDetailsWithoutGraph(String appId, String workflowExecutionId);
 
-  void startQueuedExecution(String appId, String workflowId);
-
   WorkflowExecution triggerEnvExecution(String appId, String envId, ExecutionArgs executionArgs);
 
   ExecutionInterrupt triggerExecutionInterrupt(@Valid ExecutionInterrupt executionInterrupt);

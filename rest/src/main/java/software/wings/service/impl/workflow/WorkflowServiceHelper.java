@@ -1327,8 +1327,22 @@ public class WorkflowServiceHelper {
     }
   }
 
+  public List<String> getResolvedInfraMappingIds(Workflow workflow, Map<String, String> workflowVariables) {
+    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+    if (orchestrationWorkflow.isInfraMappingTemplatized()) {
+      return resolveInfraMappingIds(workflow, workflowVariables);
+    } else {
+      return orchestrationWorkflow.getInfraMappingIds();
+    }
+  }
+
   private List<InfrastructureMapping> resolvedTemplateInfraMappings(
       Workflow workflow, Map<String, String> workflowVariables) {
+    List<String> infraMappingIds = resolveInfraMappingIds(workflow, workflowVariables);
+    return infrastructureMappingService.getInfraStructureMappingsByUuids(workflow.getAppId(), infraMappingIds);
+  }
+
+  private List<String> resolveInfraMappingIds(Workflow workflow, Map<String, String> workflowVariables) {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     List<Variable> userVariables = orchestrationWorkflow.getUserVariables();
     List<String> infraMappingNames = new ArrayList<>();
@@ -1343,7 +1357,7 @@ public class WorkflowServiceHelper {
           .filter(infraMappingId -> !templatizedInfraMappingIds.contains(infraMappingId))
           .forEach(infraMappingIds::add);
     }
-    return infrastructureMappingService.getInfraStructureMappingsByUuids(workflow.getAppId(), infraMappingIds);
+    return infraMappingIds;
   }
 
   private List<String> getEntityNames(List<Variable> userVariables, EntityType entityType) {

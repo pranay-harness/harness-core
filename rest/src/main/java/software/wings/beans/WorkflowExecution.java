@@ -47,6 +47,7 @@ public class WorkflowExecution extends Base {
   public static final String STATUS_KEY = "status";
   public static final String WORKFLOW_ID_KEY = "workflowId";
   public static final String WORKFLOW_TYPE_ID_KEY = "workflowType";
+  public static final String INFRAMAPPING_IDS_KEY = "infraMappingIds";
 
   // TODO: Determine the right expiry duration for workflow exceptions
   public static final Duration EXPIRY = Duration.ofDays(7);
@@ -57,6 +58,7 @@ public class WorkflowExecution extends Base {
   @Indexed private String envId;
   @Indexed private List<String> envIds;
   @Indexed private List<String> serviceIds;
+  @Indexed private List<String> infraMappingIds;
   private String appName;
   private String envName;
   private EnvironmentType envType;
@@ -542,6 +544,14 @@ public class WorkflowExecution extends Base {
     isBaseline = baseline;
   }
 
+  public List<String> getInfraMappingIds() {
+    return infraMappingIds;
+  }
+
+  public void setInfraMappingIds(List<String> infraMappingIds) {
+    this.infraMappingIds = infraMappingIds;
+  }
+
   public String prepareDisplayName() {
     String dateSuffix = "";
     if (getCreatedAt() != 0) {
@@ -589,6 +599,7 @@ public class WorkflowExecution extends Base {
     private PipelineSummary pipelineSummary;
     private List<String> serviceIds;
     private List<String> envIds;
+    private List<String> infraMappingIds;
     private List<BuildExecutionSummary> buildExecutionSummaries;
     private OrchestrationWorkflowType orchestrationWorkflowType;
     private String pipelineExecutionId;
@@ -749,6 +760,11 @@ public class WorkflowExecution extends Base {
       return this;
     }
 
+    public WorkflowExecutionBuilder withInfraMappingIds(List<String> infraMappingIds) {
+      this.infraMappingIds = infraMappingIds;
+      return this;
+    }
+
     public WorkflowExecutionBuilder withBuildExecutionSummaries(List<BuildExecutionSummary> buildExecutionSummaries) {
       this.buildExecutionSummaries = buildExecutionSummaries;
       return this;
@@ -814,6 +830,7 @@ public class WorkflowExecution extends Base {
           .withInfraMappingSummary(infraMappingSummary)
           .withServiceIds(serviceIds)
           .withEnvIds(envIds)
+          .withInfraMappingIds(infraMappingIds)
           .withBuildExecutionSummaries(buildExecutionSummaries)
           .withOrchestratonWorkflowType(orchestrationWorkflowType)
           .withPipelineExecutionId(pipelineExecutionId);
@@ -854,6 +871,7 @@ public class WorkflowExecution extends Base {
       workflowExecution.setOrchestrationType(orchestrationWorkflowType);
       workflowExecution.setPipelineExecutionId(pipelineExecutionId);
       workflowExecution.setPipelineExecution(pipelineExecution);
+      workflowExecution.setInfraMappingIds(infraMappingIds);
       return workflowExecution;
     }
   }

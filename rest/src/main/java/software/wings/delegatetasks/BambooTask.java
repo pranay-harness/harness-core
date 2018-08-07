@@ -8,7 +8,6 @@ import static software.wings.sm.states.BambooState.BambooExecutionResponse;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.BambooConfig;
@@ -56,7 +55,6 @@ public class BambooTask extends AbstractDelegateRunnableTask {
     return bambooExecutionResponse;
   }
 
-  @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
   public BambooExecutionResponse run(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails,
       String planKey, List<ParameterEntry> parameterEntries, List<FilePathAssertionEntry> filePathAssertionEntries) {
     BambooExecutionResponse bambooExecutionResponse = new BambooExecutionResponse();
@@ -76,12 +74,10 @@ public class BambooTask extends AbstractDelegateRunnableTask {
         executionStatus = ExecutionStatus.FAILED;
         logger.info("Bamboo execution failed for plan {}", planKey);
       } else {
-        if (buildState != null) {
-          if (!buildState.equalsIgnoreCase("Successful")) {
-            executionStatus = ExecutionStatus.FAILED;
-            logger.info("Build result for Bamboo url {}, plan key {}, build key {} is Failed. Result {}",
-                bambooConfig.getBambooUrl(), planKey, buildResultKey, result);
-          }
+        if (!"Successful".equalsIgnoreCase(buildState)) {
+          executionStatus = ExecutionStatus.FAILED;
+          logger.info("Build result for Bamboo url {}, plan key {}, build key {} is Failed. Result {}",
+              bambooConfig.getBambooUrl(), planKey, buildResultKey, result);
         }
         bambooExecutionResponse.setProjectName(result.getProjectName());
         bambooExecutionResponse.setPlanName(result.getPlanName());

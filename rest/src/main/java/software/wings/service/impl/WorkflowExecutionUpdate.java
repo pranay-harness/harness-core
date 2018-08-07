@@ -8,7 +8,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
-import static software.wings.service.impl.ExecutionEvent.ExecutionEventBuilder.anExecutionEvent;
 import static software.wings.sm.ExecutionStatus.NEW;
 import static software.wings.sm.ExecutionStatus.QUEUED;
 import static software.wings.sm.ExecutionStatus.RUNNING;
@@ -168,9 +167,13 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
     try {
       WorkflowExecution workflowExecution =
           workflowExecutionService.getExecutionDetails(appId, workflowExecutionId, true, emptySet());
+
       if (context.getWorkflowType() == WorkflowType.ORCHESTRATION) {
-        executionEventQueue.send(
-            anExecutionEvent().withAppId(context.getAppId()).withWorkflowId(workflowExecution.getWorkflowId()).build());
+        executionEventQueue.send(ExecutionEvent.builder()
+                                     .appId(appId)
+                                     .workflowId(workflowExecution.getWorkflowId())
+                                     .infraMappingIds(workflowExecution.getInfraMappingIds())
+                                     .build());
       }
     } catch (Exception e) {
       logger.error("Error in breakdown refresh", e);
