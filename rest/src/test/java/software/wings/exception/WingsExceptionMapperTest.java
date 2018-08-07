@@ -60,7 +60,7 @@ public class WingsExceptionMapperTest extends WingsBaseTest {
     final WingsExceptionMapper mapper = new WingsExceptionMapper();
 
     Logger mockLogger = mock(Logger.class);
-    Whitebox.setInternalState(mapper, "logger", mockLogger);
+    MockableTest.setStaticFieldValue(WingsExceptionMapper.class, "logger", mockLogger);
     MockableTest.setStaticFieldValue(MessageManager.class, "logger", mockLogger);
 
     mapper.toResponse(exception);

@@ -86,8 +86,7 @@ import java.util.Random;
 import java.util.concurrent.ExecutorService;
 
 public class ZombieHunterJob implements Job {
-  @SuppressFBWarnings("MS_SHOULD_BE_FINAL")
-  protected static Logger logger = LoggerFactory.getLogger(ZombieHunterJob.class);
+  private static final Logger logger = LoggerFactory.getLogger(ZombieHunterJob.class);
 
   public static final String GROUP = "ZOMBIE_HUNTER_GROUP";
   public static final String INDEX_KEY = "index";

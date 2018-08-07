@@ -50,8 +50,9 @@ import javax.crypto.spec.SecretKeySpec;
  * Created by rsingh on 10/2/17.
  */
 public class SecretManagementDelegateServiceImpl implements SecretManagementDelegateService {
-  @SuppressFBWarnings("MS_SHOULD_BE_FINAL") public static int NUM_OF_RETRIES = 3;
   private static final Logger logger = LoggerFactory.getLogger(SecretManagementDelegateServiceImpl.class);
+
+  public static final int NUM_OF_RETRIES = 3;
 
   @Override
   public EncryptedData encrypt(String accountId, char[] value, KmsConfig kmsConfig) throws IOException {

@@ -7,7 +7,6 @@ import com.google.common.util.concurrent.RateLimiter;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.CauseCollection;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
@@ -52,8 +51,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
 public class PruneEntityJob implements Job {
-  @SuppressFBWarnings("MS_SHOULD_BE_FINAL")
-  protected static Logger logger = LoggerFactory.getLogger(PruneEntityJob.class);
+  private static final Logger logger = LoggerFactory.getLogger(PruneEntityJob.class);
 
   public static final String GROUP = "PRUNE_ENTITY_GROUP";
 
