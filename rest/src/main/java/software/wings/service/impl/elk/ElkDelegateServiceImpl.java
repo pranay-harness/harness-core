@@ -36,6 +36,7 @@ import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.ElkValidationType;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 
 import java.io.IOException;
@@ -89,17 +90,23 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
 
     apiCallLog.setTitle("Fetching logs from " + elkConfig.getElkUrl());
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-    apiCallLog.setRequest(Lists.newArrayList(ThirdPartyApiCallField.builder()
-                                                 .name("connector")
-                                                 .value(elkConfig.getElkConnector().getName())
-                                                 .type(FieldType.TEXT)
-                                                 .build(),
-        ThirdPartyApiCallField.builder()
-            .name("indices")
-            .value(logFetchRequest.getIndices())
-            .type(FieldType.TEXT)
-            .build(),
-        ThirdPartyApiCallField.builder().name("url").value(elkConfig.getElkUrl()).type(FieldType.URL).build()));
+    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                     .name("connector")
+                                     .value(elkConfig.getElkConnector().getName())
+                                     .type(FieldType.TEXT)
+                                     .build());
+    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                     .name("indices")
+                                     .value(logFetchRequest.getIndices())
+                                     .type(FieldType.TEXT)
+                                     .build());
+    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                     .name("body")
+                                     .value(JsonUtils.asJson(logFetchRequest.toElasticSearchJsonObject()))
+                                     .type(FieldType.JSON)
+                                     .build());
+    apiCallLog.addFieldToRequest(
+        ThirdPartyApiCallField.builder().name("url").value(elkConfig.getElkUrl()).type(FieldType.URL).build());
     final Call<Object> request = elkConfig.getElkConnector() == ElkConnector.KIBANA_SERVER
         ? getKibanaRestClient(elkConfig, encryptedDataDetails)
               .getLogSample(format(KibanaRestClient.searchPathPattern, logFetchRequest.getIndices(), 10000),
