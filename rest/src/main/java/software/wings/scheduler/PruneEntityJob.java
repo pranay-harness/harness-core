@@ -32,6 +32,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -121,7 +122,7 @@ public class PruneEntityJob implements Job {
         lambda.accept(descending);
       } catch (WingsException exception) {
         succeeded = false;
-        exception.logProcessedMessages(MANAGER, logger);
+        WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
       } catch (RuntimeException e) {
         succeeded = false;
         causeCollection.addCause(e);
@@ -166,7 +167,7 @@ public class PruneEntityJob implements Job {
         logger.error("Unsupported class [{}] was scheduled for pruning.", className);
       }
     } catch (WingsException exception) {
-      exception.logProcessedMessages(MANAGER, logger);
+      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
       return false;
     } catch (RuntimeException e) {
       logger.error("", e);

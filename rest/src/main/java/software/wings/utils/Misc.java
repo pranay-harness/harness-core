@@ -18,6 +18,7 @@ import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.common.Constants;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsExceptionMapper;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 
 import java.security.NoSuchAlgorithmException;
@@ -162,7 +163,10 @@ public class Misc {
   public static String getMessage(Throwable t) {
     if (t instanceof WingsException) {
       WingsException we = (WingsException) t;
-      return we.getResponseMessageList(REST_API).stream().map(ResponseMessage::getMessage).collect(joining(". "));
+      return WingsExceptionMapper.getResponseMessageList(we, REST_API)
+          .stream()
+          .map(ResponseMessage::getMessage)
+          .collect(joining(". "));
     } else if (t instanceof ConstraintViolationException) {
       ConstraintViolationException constraintViolationException = (ConstraintViolationException) t;
       return constraintViolationException.getConstraintViolations()
@@ -174,7 +178,10 @@ public class Misc {
       Throwable cause = he.getCause();
       if (cause instanceof WingsException) {
         WingsException we = (WingsException) cause;
-        return we.getResponseMessageList(REST_API).stream().map(ResponseMessage::getMessage).collect(joining(". "));
+        return WingsExceptionMapper.getResponseMessageList(we, REST_API)
+            .stream()
+            .map(ResponseMessage::getMessage)
+            .collect(joining(". "));
       } else {
         return t.getClass().getSimpleName() + (t.getMessage() == null ? "" : ": " + t.getMessage());
       }

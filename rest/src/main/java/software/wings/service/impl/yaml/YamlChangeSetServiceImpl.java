@@ -26,6 +26,7 @@ import software.wings.dl.PageRequest.PageRequestBuilder;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsExceptionMapper;
 import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
 import software.wings.service.intfc.FeatureFlagService;
@@ -98,7 +99,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
 
       return Arrays.asList(modifiedChangeSet);
     } catch (WingsException exception) {
-      exception.logProcessedMessages(MANAGER, logger);
+      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception exception) {
       logger.error("Error seen in fetching changeSet", exception);
     }
@@ -159,7 +160,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
       }
       yamlChangeSets = listYamlChangeSets(pageRequestBuilder.build()).getResponse();
     } catch (WingsException exception) {
-      exception.logProcessedMessages(MANAGER, logger);
+      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception exception) {
       logger.error("Error seen in fetching changeSet", exception);
     }
@@ -238,7 +239,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
 
       return status.getUpdatedCount() != 0;
     } catch (WingsException exception) {
-      exception.logProcessedMessages(MANAGER, logger);
+      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception exception) {
       logger.error("Error seen in fetching changeSet", exception);
     }

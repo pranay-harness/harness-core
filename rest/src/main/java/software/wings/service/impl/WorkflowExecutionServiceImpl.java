@@ -151,6 +151,7 @@ import software.wings.dl.WingsDeque;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsExceptionMapper;
 import software.wings.lock.PersistentLocker;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.PermissionType;
@@ -1520,7 +1521,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     try {
       executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
     } catch (WingsException exception) {
-      exception.logProcessedMessages(MANAGER, logger);
+      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
     } catch (RuntimeException exception) {
       logger.error(format("Error in interrupting workflowExecution - uuid: %s, executionInterruptType: %s",
                        workflowExecution.getUuid(), executionInterrupt.getExecutionInterruptType()),
@@ -1549,7 +1550,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         executionInterruptClone.setExecutionUuid(workflowExecution2.getUuid());
         executionInterruptManager.registerExecutionInterrupt(executionInterruptClone);
       } catch (WingsException exception) {
-        exception.logProcessedMessages(MANAGER, logger);
+        WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
       } catch (RuntimeException exception) {
         logger.error(format("Error in interrupting workflowExecution - uuid: %s, executionInterruptType: %s",
                          workflowExecution.getUuid(), executionInterrupt.getExecutionInterruptType()),

@@ -31,6 +31,7 @@ import software.wings.core.winrm.executors.WinRmExecutorFactory;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.utils.Misc;
 
@@ -125,8 +126,8 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
 
         throw new WingsException(ErrorCode.UNKNOWN_ERROR, "", e);
       }
-    } catch (WingsException e) {
-      final List<ResponseMessage> messageList = e.getResponseMessageList(REST_API);
+    } catch (WingsException exception) {
+      final List<ResponseMessage> messageList = WingsExceptionMapper.getResponseMessageList(exception, REST_API);
       if (!messageList.isEmpty()) {
         if (messageList.get(0).getCode() == ErrorCode.INVALID_KEY
             || messageList.get(0).getCode() == ErrorCode.INVALID_CREDENTIAL) {
@@ -140,10 +141,10 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
                   .withCommandUnitName(commandUnit.getName())
                   .withExecutionResult(commandExecutionStatus)
                   .build());
-          throw e;
+          throw exception;
         }
       } else {
-        logger.error("Error while executing command", e);
+        logger.error("Error while executing command", exception);
         logService.save(context.getAccountId(),
             aLog()
                 .withAppId(context.getAppId())
@@ -154,7 +155,7 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
                 .withCommandUnitName(commandUnit.getName())
                 .withExecutionResult(commandExecutionStatus)
                 .build());
-        throw new WingsException(ErrorCode.UNKNOWN_ERROR, e);
+        throw new WingsException(ErrorCode.UNKNOWN_ERROR, exception);
       }
     } catch (Exception e) {
       logService.save(context.getAccountId(),

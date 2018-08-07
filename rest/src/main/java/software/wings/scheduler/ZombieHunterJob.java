@@ -69,6 +69,7 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsExceptionMapper;
 import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
 import software.wings.service.intfc.AppService;
@@ -200,7 +201,7 @@ public class ZombieHunterJob implements Job {
       huntingExpedition(zombieType);
 
     } catch (WingsException exception) {
-      exception.logProcessedMessages(MANAGER, logger);
+      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
     } catch (RuntimeException exception) {
       logger.error("Error seen in the ZombieHunterJob  execute call", exception);
     }

@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsExceptionMapper;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.function.Consumer;
@@ -61,7 +62,7 @@ public class ServiceImplDelegateTask extends AbstractDelegateRunnableTask {
         }
       }
       if (exception instanceof WingsException) {
-        ((WingsException) exception).logProcessedMessages(DELEGATE, logger);
+        WingsExceptionMapper.logProcessedMessages((WingsException) exception, DELEGATE, logger);
       } else {
         logger.error("Task error", exception);
       }

@@ -5,7 +5,6 @@ import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 import static software.wings.common.TemplateConstants.LATEST_TAG;
-import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
 
 import com.google.inject.Inject;
 
@@ -55,14 +54,13 @@ public abstract class AbstractTemplateProcessor {
       try {
         logger.info("Loading url file {} for the account {} ", templatePath, accountId);
         loadAndSaveTemplate(templatePath, accountId, accountName);
-      } catch (WingsException e) {
+      } catch (WingsException exception) {
         String msg = "Failed to save template from file [" + templatePath + "] for the account [" + accountId
-            + "] . Reason:" + e.getMessage();
-        e.logProcessedMessages(MANAGER, logger);
-        throw new WingsException(msg, WingsException.USER);
-      } catch (IOException e) {
-        String msg = "Failed to save template from file [" + templatePath + "]. Reason:" + e.getMessage();
-        throw new WingsException(msg, WingsException.USER);
+            + "] . Reason:" + exception.getMessage();
+        throw new WingsException(msg, exception, WingsException.USER);
+      } catch (IOException exception) {
+        String msg = "Failed to save template from file [" + templatePath + "]. Reason:" + exception.getMessage();
+        throw new WingsException(msg, exception, WingsException.USER);
       }
     });
   }

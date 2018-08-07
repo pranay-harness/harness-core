@@ -28,6 +28,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsExceptionMapper;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.UserPermissionInfo;
@@ -536,10 +537,11 @@ public class UserResource {
   public RestResponse<Boolean> verifyEmail(@QueryParam("email") String email) throws URISyntaxException {
     try {
       userService.verifyRegisteredOrAllowed(email);
-    } catch (WingsException e) {
+    } catch (WingsException exception) {
+      // TODO: this seems wrong, just letting the exception to be thrown should do the same
       return RestResponse.Builder.aRestResponse()
           .withResource(false)
-          .withResponseMessages(e.getResponseMessageList(REST_API))
+          .withResponseMessages(WingsExceptionMapper.getResponseMessageList(exception, REST_API))
           .build();
     }
     return new RestResponse<>(true);

@@ -15,6 +15,7 @@ import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.BarrierService;
 
 public class BarrierBackupJob implements Job {
@@ -46,7 +47,7 @@ public class BarrierBackupJob implements Job {
     try {
       barrierService.updateAllActiveBarriers();
     } catch (WingsException exception) {
-      exception.logProcessedMessages(MANAGER, logger);
+      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
     } catch (RuntimeException e) {
       logger.error("", e);
     }

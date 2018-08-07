@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsExceptionMapper;
 import software.wings.utils.ThreadContext;
 
 import java.time.Duration;
@@ -96,7 +97,7 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
       onMessage(message);
       queue.ack(message);
     } catch (WingsException exception) {
-      exception.logProcessedMessages(MANAGER, logger);
+      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception exception) {
       onException(exception, message);
     } finally {

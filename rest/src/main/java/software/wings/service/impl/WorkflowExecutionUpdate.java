@@ -25,6 +25,7 @@ import software.wings.beans.WorkflowType;
 import software.wings.core.queue.Queue;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.BarrierService;
@@ -150,7 +151,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
         try {
           waitNotifyEngine.notify(workflowExecutionId, new EnvExecutionResponseData(workflowExecutionId, status));
         } catch (WingsException exception) {
-          exception.logProcessedMessages(MANAGER, logger);
+          WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
         }
       }
     } else {

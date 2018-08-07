@@ -55,6 +55,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -257,7 +258,7 @@ public class ExecutionInterruptManager {
 
       workflowNotificationHelper.sendWorkflowStatusChangeNotification(context, status);
     } catch (WingsException exception) {
-      exception.logProcessedMessages(MANAGER, logger);
+      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
     } catch (RuntimeException exception) {
       logger.error("Unknown runtime exception: ", exception);
     }
