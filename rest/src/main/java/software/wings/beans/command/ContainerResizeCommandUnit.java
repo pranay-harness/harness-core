@@ -97,9 +97,6 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
       List<ContainerServiceData> firstDataList = resizeNewFirst ? newInstanceDataList : oldInstanceDataList;
       List<ContainerServiceData> secondDataList = resizeNewFirst ? oldInstanceDataList : newInstanceDataList;
 
-      resizeInstances(contextData, firstDataList, executionDataBuilder, executionLogCallback, resizeNewFirst);
-      resizeInstances(contextData, secondDataList, executionDataBuilder, executionLogCallback, !resizeNewFirst);
-
       List<ContainerServiceData> allData = new ArrayList<>();
       if (isNotEmpty(firstDataList)) {
         allData.addAll(firstDataList);
@@ -107,7 +104,18 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
       if (isNotEmpty(secondDataList)) {
         allData.addAll(secondDataList);
       }
-      postExecution(contextData, allData, executionLogCallback);
+
+      if (contextData.resizeParams.isRollback()) {
+        postExecution(contextData, allData, executionLogCallback);
+      }
+
+      resizeInstances(contextData, firstDataList, executionDataBuilder, executionLogCallback, resizeNewFirst);
+      resizeInstances(contextData, secondDataList, executionDataBuilder, executionLogCallback, !resizeNewFirst);
+
+      if (!contextData.resizeParams.isRollback()) {
+        postExecution(contextData, allData, executionLogCallback);
+      }
+
       status = CommandExecutionStatus.SUCCESS;
     } catch (Exception ex) {
       logger.error(Misc.getMessage(ex), ex);
