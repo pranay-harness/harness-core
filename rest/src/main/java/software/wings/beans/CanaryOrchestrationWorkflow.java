@@ -206,7 +206,12 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     if (workflowPhaseIdMap == null) {
       return null;
     }
-    return workflowPhaseIdMap.values().stream().map(WorkflowPhase::getInfraMappingId).distinct().collect(toList());
+    return workflowPhaseIdMap.values()
+        .stream()
+        .filter(workflowPhase -> workflowPhase.getInfraMappingId() != null)
+        .map(WorkflowPhase::getInfraMappingId)
+        .distinct()
+        .collect(toList());
   }
 
   @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
