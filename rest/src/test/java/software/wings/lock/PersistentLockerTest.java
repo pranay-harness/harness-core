@@ -1,5 +1,6 @@
 package software.wings.lock;
 
+import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.matches;
@@ -38,7 +39,7 @@ public class PersistentLockerTest extends MockableTest {
 
   @Test
   public void testAcquireLockDoLock() {
-    Duration timeout = Duration.ofMillis(1000);
+    Duration timeout = ofMillis(1000);
 
     DistributedLockOptions options = new DistributedLockOptions();
     options.setInactiveLockTimeout((int) timeout.toMillis());
@@ -99,7 +100,7 @@ public class PersistentLockerTest extends MockableTest {
 
   @Test
   public void testAcquireLockNonLockedAtRelease() {
-    Duration timeout = Duration.ofMillis(1000);
+    Duration timeout = ofMillis(1000);
 
     DistributedLockOptions options = new DistributedLockOptions();
     options.setInactiveLockTimeout((int) timeout.toMillis());
@@ -140,7 +141,7 @@ public class PersistentLockerTest extends MockableTest {
   @Test
   @Ignore // TODO: enable when we can have timeout logic
   public void testAcquireTimeout() throws InterruptedException {
-    Duration timeout = Duration.ofMillis(1);
+    Duration timeout = ofMillis(1);
 
     DistributedLockOptions options = new DistributedLockOptions();
     options.setInactiveLockTimeout((int) timeout.toMillis());

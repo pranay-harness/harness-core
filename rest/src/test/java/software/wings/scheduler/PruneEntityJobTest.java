@@ -15,10 +15,10 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.MockableTest;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.internal.util.reflection.Whitebox;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -113,14 +113,14 @@ public class PruneEntityJobTest extends WingsBaseTest {
   }
 
   @Test
-  public void UnhandledClass() throws Exception {
+  public void unhandledClass() throws Exception {
     when(wingsPersistence.get(Base.class, ENTITY_ID)).thenReturn(null);
 
     JobExecutionContext context = mock(JobExecutionContext.class);
     when(context.getJobDetail()).thenReturn(details(Base.class, APP_ID, ENTITY_ID));
 
     Logger mockLogger = mock(Logger.class);
-    Whitebox.setInternalState(job, "logger", mockLogger);
+    MockableTest.setStaticFieldValue(PruneEntityJob.class, "logger", mockLogger);
 
     job.execute(context);
 
@@ -130,7 +130,7 @@ public class PruneEntityJobTest extends WingsBaseTest {
   }
 
   @Test
-  public void WrongClass() throws Exception {
+  public void wrongClass() throws Exception {
     JobExecutionContext context = mock(JobExecutionContext.class);
     when(context.getJobDetail()).thenReturn(details("foo", APP_ID, ENTITY_ID));
 
@@ -165,7 +165,7 @@ public class PruneEntityJobTest extends WingsBaseTest {
     when(context.getJobDetail()).thenReturn(details(Activity.class, APP_ID, ENTITY_ID));
 
     Logger mockLogger = mock(Logger.class);
-    Whitebox.setInternalState(job, "logger", mockLogger);
+    MockableTest.setStaticFieldValue(PruneEntityJob.class, "logger", mockLogger);
 
     job.execute(context);
 
