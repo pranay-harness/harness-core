@@ -1236,7 +1236,7 @@ public class SecretManagerImpl implements SecretManager {
         kmsService.encrypt(UUID.randomUUID().toString().toCharArray(), accountId, kmsConfig);
         alertService.closeAlert(accountId, Base.GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
       } catch (Exception e) {
-        logger.error("Could not validate kms for account {} and kmsId {}", accountId, kmsConfig.getUuid(), e);
+        logger.info("Could not validate kms for account {} and kmsId {}", accountId, kmsConfig.getUuid(), e);
         alertService.openAlert(accountId, Base.GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
       }
     }
@@ -1256,7 +1256,7 @@ public class SecretManagerImpl implements SecretManager {
             VAULT_VAILDATION_URL, VAULT_VAILDATION_URL, accountId, SettingVariableTypes.VAULT, vaultConfig, null);
         alertService.closeAlert(accountId, Base.GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
       } catch (Exception e) {
-        logger.error("Could not validate vault for account {} and kmsId {}", accountId, vaultConfig.getUuid(), e);
+        logger.info("Could not validate vault for account {} and kmsId {}", accountId, vaultConfig.getUuid(), e);
         alertService.openAlert(accountId, Base.GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
       }
     }

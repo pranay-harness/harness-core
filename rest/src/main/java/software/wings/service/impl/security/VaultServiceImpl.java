@@ -148,7 +148,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
           vaultConfig.setRenewedAt(System.currentTimeMillis());
           wingsPersistence.save(vaultConfig);
         } catch (Exception e) {
-          logger.error("Error while renewing token for : " + vaultConfig, e);
+          logger.info("Error while renewing token for : " + vaultConfig, e);
           alertService.openAlert(accountId, Base.GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
         }
       }
