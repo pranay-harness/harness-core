@@ -10,7 +10,6 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
-import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
@@ -60,7 +59,6 @@ import org.assertj.core.util.Lists;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -161,6 +159,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.ws.rs.client.WebTarget;
@@ -228,6 +227,7 @@ public class DataGenUtil extends BaseIntegrationTest {
 
   @Inject private AppContainerService appContainerService;
   @Inject private TemplateGalleryService templateGalleryService;
+  @Inject private ExecutorService executorService;
 
   /**
    * Generated Data for across the API use.
@@ -280,6 +280,7 @@ public class DataGenUtil extends BaseIntegrationTest {
 
     createTestApplication(account);
     // createSeedEntries();
+    //    executorService.submit(() -> loadAppStackCatalogs());
   }
 
   private void createSeedEntries() {
@@ -903,15 +904,27 @@ public class DataGenUtil extends BaseIntegrationTest {
   private static final String AWS_S3_CATALOG_TOMCAT8_HARDENED =
       "https://s3.amazonaws.com/harness-catalogs/appstack/apache-tomcat-8.5.15-hardened.tar.gz";
 
-  @Test
-  @Ignore
+  /**
+   * Loads default application containers
+   */
+  public void loadAppStackCatalogs() {
+    try {
+      createOrUpdateSystemAppStackCatalogs();
+      createOrUpdateSystemAppContainers();
+    } catch (Exception e) {
+      logger.error("Failed to load app stack catalogs", e);
+    }
+  }
+
   public void createOrUpdateSystemAppStackCatalogs() {
     long fileSize = configuration.getFileUploadLimits().getAppContainerLimit();
+
     List<SystemCatalog> systemCatalogs = systemCatalogService.list(aPageRequest()
                                                                        .addFilter("catalogType", EQ, APPSTACK)
                                                                        .addFilter("family", EQ, TOMCAT)
                                                                        .addFilter("appId", EQ, Base.GLOBAL_APP_ID)
                                                                        .build());
+
     Map<String, SystemCatalog> fileToSystemCatalog =
         systemCatalogs.stream().collect(Collectors.toMap(SystemCatalog::getFileName, Function.identity()));
     logger.info("Creating System App Stack Catalogs");
@@ -990,8 +1003,6 @@ public class DataGenUtil extends BaseIntegrationTest {
     }
   }
 
-  @Test
-  @Ignore
   public void createOrUpdateSystemAppContainers() {
     logger.info("Creating System App Containers");
     List<Account> accounts =
@@ -999,11 +1010,11 @@ public class DataGenUtil extends BaseIntegrationTest {
     if (isEmpty(accounts)) {
       return;
     }
-    List<SystemCatalog> systemCatalogs =
-        systemCatalogService.list(aPageRequest()
-                                      .addFilter(ACCOUNT_ID_KEY, EQ, GLOBAL_ACCOUNT_ID)
-                                      .addFilter("catalogType", EQ, SystemCatalog.CatalogType.APPSTACK)
-                                      .build());
+    List<SystemCatalog> systemCatalogs = systemCatalogService.list(aPageRequest()
+                                                                       .addFilter("catalogType", EQ, APPSTACK)
+                                                                       .addFilter("family", EQ, TOMCAT)
+                                                                       .addFilter("appId", EQ, Base.GLOBAL_APP_ID)
+                                                                       .build());
     accounts.forEach(account -> {
       for (SystemCatalog systemCatalog : systemCatalogs) {
         AppContainer appContainer = anAppContainer()

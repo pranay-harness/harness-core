@@ -135,6 +135,14 @@ public interface WorkflowService extends OwnedByApplication, OwnedByEnvironment,
 
   List<InfrastructureMapping> getResolvedInfraMappings(Workflow workflow, Map<String, String> workflowVariables);
 
+  /**
+   * Resolves the inframappingIds from workflow variables
+   * @param workflow
+   * @param workflowVariables
+   * @return
+   */
+  List<String> getResolvedInfraMappingIds(Workflow workflow, Map<String, String> workflowVariables);
+
   List<InstanceElement> getDeployedNodes(String appId, String workflowId);
 
   String resolveEnvironmentId(Workflow workflow, Map<String, String> workflowVariables);

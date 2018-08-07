@@ -1095,6 +1095,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   @Override
+  public List<String> getResolvedInfraMappingIds(Workflow workflow, Map<String, String> workflowVariables) {
+    return workflowServiceHelper.getResolvedInfraMappingIds(workflow, workflowVariables);
+  }
+
+  @Override
   public void pruneDescendingEntities(String appId, String workflowId) {
     List<OwnedByWorkflow> services =
         ServiceClassLocator.descendingServices(this, WorkflowServiceImpl.class, OwnedByWorkflow.class);
