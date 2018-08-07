@@ -131,7 +131,7 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     boolean executedSomething = false;
 
     // Enable HPA
-    if (contextData.deployingToHundredPercent && resizeParams.isUseAutoscaler()) {
+    if (!resizeParams.isRollback() && contextData.deployingToHundredPercent && resizeParams.isUseAutoscaler()) {
       HorizontalPodAutoscaler hpa = kubernetesContainerService.createOrReplaceAutoscaler(
           kubernetesConfig, encryptedDataDetails, resizeParams.getAutoscalerYaml());
       if (hpa != null) {
