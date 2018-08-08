@@ -505,4 +505,5 @@ software.wings.api.HelmDeployStateExecutionData, 5465
 software.wings.beans.container.IstioConfig, 5466
 software.wings.beans.DatadogConfig, 5467
 software.wings.beans.DatadogConfig$DatadogYaml, 5468
+software.wings.beans.DelegateConfiguration, 5469
 
