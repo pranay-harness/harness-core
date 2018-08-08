@@ -102,12 +102,6 @@ public interface KubernetesContainerService {
 
   void deleteConfigMap(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
 
-  IstioResource createOrReplaceRouteRule(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, IstioResource definition);
-
-  IstioResource getRouteRule(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
-
   IstioResource getIstioResource(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String kind, String name);
 
@@ -116,8 +110,6 @@ public interface KubernetesContainerService {
 
   void deleteIstioResource(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String kind, String name);
-
-  void deleteRouteRule(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
 
   int getTrafficPercent(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
       String controllerName, boolean useDashInHostname);

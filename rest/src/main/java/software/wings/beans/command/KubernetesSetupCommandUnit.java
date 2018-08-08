@@ -793,7 +793,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       List<IstioResource> istioResourcesDefinition = createVirtualServiceAndDestinationRuleDefinition(
           setupParams, virtualServiceName, service.getMetadata().getLabels(), activeControllers, executionLogCallback);
       for (IstioResource r : istioResourcesDefinition) {
-        kubernetesContainerService.createOrReplaceRouteRule(kubernetesConfig, encryptedDataDetails, r);
+        kubernetesContainerService.createOrReplaceIstioResource(kubernetesConfig, encryptedDataDetails, r);
         summaryOutput.append(format("%nIstio %s: %s", r.getKind(), r.getMetadata().getName()));
         if (StringUtils.equals(r.getKind(), "VirtualService")) {
           printVirtualServiceRouteWeights(r,
