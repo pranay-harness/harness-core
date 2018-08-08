@@ -29,9 +29,11 @@ import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowType;
 import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
+import software.wings.exception.InvalidRequestException;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AlertService;
@@ -42,12 +44,14 @@ import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
+import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -99,6 +103,7 @@ public class ApprovalState extends State {
                                                   .approvalId(approvalId)
                                                   .name(context.getWorkflowExecutionName())
                                                   .build();
+    populateApprovalAlert(approvalNeededAlert, context);
     alertService.openAlert(app.getAccountId(), app.getUuid(), ApprovalNeeded, approvalNeededAlert);
 
     Map<String, String> placeholderValues = getPlaceholderValues(context, "", PAUSED);
@@ -136,11 +141,12 @@ public class ApprovalState extends State {
 
     // Close the alert
     Application app = ((ExecutionContextImpl) context).getApp();
-    alertService.closeAlert(app.getAccountId(), app.getUuid(), ApprovalNeeded,
-        ApprovalNeededAlert.builder()
-            .executionId(context.getWorkflowExecutionId())
-            .approvalId(approvalNotifyResponse.getApprovalId())
-            .build());
+    ApprovalNeededAlert approvalNeededAlert = ApprovalNeededAlert.builder()
+                                                  .executionId(context.getWorkflowExecutionId())
+                                                  .approvalId(approvalNotifyResponse.getApprovalId())
+                                                  .build();
+    populateApprovalAlert(approvalNeededAlert, context);
+    alertService.closeAlert(app.getAccountId(), app.getUuid(), ApprovalNeeded, approvalNeededAlert);
 
     Map<String, String> placeholderValues = getPlaceholderValues(
         context, approvalNotifyResponse.getApprovedBy().getName(), approvalNotifyResponse.getStatus());
@@ -309,5 +315,41 @@ public class ApprovalState extends State {
     }
 
     return userService.fetchUserEmailAddressesFromUserIds(userGroupMembers);
+  }
+
+  private void populateApprovalAlert(ApprovalNeededAlert approvalNeededAlert, ExecutionContext context) {
+    if (((ExecutionContextImpl) context).getStateExecutionInstance() != null
+        && ((ExecutionContextImpl) context).getStateExecutionInstance().getExecutionType() != null) {
+      approvalNeededAlert.setWorkflowType(
+          ((ExecutionContextImpl) context).getStateExecutionInstance().getExecutionType());
+    }
+
+    if (((ExecutionContextImpl) context).getEnv() != null) {
+      approvalNeededAlert.setEnvId(((ExecutionContextImpl) context).getEnv().getUuid());
+    }
+
+    if (approvalNeededAlert.getWorkflowType() == null) {
+      throw new InvalidRequestException("Workflow type cannot be null");
+    }
+
+    WorkflowType workflowType = approvalNeededAlert.getWorkflowType();
+    switch (workflowType) {
+      case PIPELINE: {
+        approvalNeededAlert.setPipelineExecutionId(context.getWorkflowExecutionId());
+        break;
+      }
+      case ORCHESTRATION: {
+        approvalNeededAlert.setWorkflowExecutionId(context.getWorkflowExecutionId());
+        WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+
+        if (workflowStandardParams != null && workflowStandardParams.getWorkflowElement() != null) {
+          approvalNeededAlert.setPipelineExecutionId(
+              workflowStandardParams.getWorkflowElement().getPipelineDeploymentUuid());
+        }
+        break;
+      }
+      default:
+        unhandled(workflowType);
+    }
   }
 }
