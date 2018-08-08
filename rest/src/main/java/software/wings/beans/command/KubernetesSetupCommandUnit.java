@@ -1713,13 +1713,12 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     String latestHealthyController = null;
     if (activeCounts.size() > 1) {
       executionLogCallback.saveExecutionLog("\nActive pods:");
-      for (Entry<String, Integer> entry : activeCounts.entrySet()) {
-        String activeControllerName = entry.getKey();
+      for (String activeControllerName : activeCounts.keySet()) {
         List<Pod> pods =
             kubernetesContainerService.getRunningPods(kubernetesConfig, encryptedDataDetails, activeControllerName);
-        List<ContainerInfo> containerInfos =
-            kubernetesContainerService.getContainerInfosWhenReady(kubernetesConfig, encryptedDataDetails,
-                activeControllerName, entry.getValue(), 1, pods, false, executionLogCallback, false, clock.millis());
+        // Pass previous count of zero so that steady state check is performed
+        List<ContainerInfo> containerInfos = kubernetesContainerService.getContainerInfosWhenReady(kubernetesConfig,
+            encryptedDataDetails, activeControllerName, 0, 1, pods, false, executionLogCallback, false, clock.millis());
         boolean allContainersSuccess =
             containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);
         if (allContainersSuccess) {
