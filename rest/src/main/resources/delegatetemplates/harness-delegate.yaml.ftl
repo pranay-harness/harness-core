@@ -73,6 +73,8 @@ spec:
           value: "${multiVersion}"
         - name: DELEGATE_NAME
           value: ${delegateName}
+        - name: DELEGATE_PROFILE
+          value: "${delegateProfile}"
         - name: PROXY_HOST
           value: ""
         - name: PROXY_PORT

@@ -336,9 +336,11 @@ public class DelegateResource {
   @ExceptionMetered
   public Response downloadKubernetes(@Context HttpServletRequest request,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("delegateName") @NotEmpty String delegateName,
-      @QueryParam("token") @NotEmpty String token) throws IOException, TemplateException {
+      @QueryParam("delegateProfileId") String delegateProfileId, @QueryParam("token") @NotEmpty String token)
+      throws IOException, TemplateException {
     downloadTokenService.validateDownloadToken("delegate." + accountId, token);
-    File delegateFile = delegateService.downloadKubernetes(getManagerUrl(request), accountId, delegateName);
+    File delegateFile =
+        delegateService.downloadKubernetes(getManagerUrl(request), accountId, delegateName, delegateProfileId);
     return Response.ok(delegateFile)
         .header("Content-Transfer-Encoding", "binary")
         .type("application/zip; charset=binary")

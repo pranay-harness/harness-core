@@ -300,11 +300,19 @@ public class DelegateServiceImpl implements DelegateService {
         delegateName = "";
       }
 
+      String delegateProfile = System.getenv().get("DELEGATE_PROFILE");
+      if (isNotBlank(delegateProfile)) {
+        logger.info("Registering delegate with delegate profile: {}", delegateProfile);
+      } else {
+        delegateProfile = "";
+      }
+
       Delegate.Builder builder = aDelegate()
                                      .withIp(getLocalHostAddress())
                                      .withAccountId(accountId)
                                      .withHostName(hostName)
                                      .withDelegateName(delegateName)
+                                     .withDelegateProfileId(delegateProfile)
                                      .withDescription(description)
                                      .withVersion(getVersion());
 

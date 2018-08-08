@@ -73,6 +73,8 @@ spec:
           value: "false"
         - name: DELEGATE_NAME
           value: harness-delegate
+        - name: DELEGATE_PROFILE
+          value: ""
         - name: PROXY_HOST
           value: ""
         - name: PROXY_PORT
