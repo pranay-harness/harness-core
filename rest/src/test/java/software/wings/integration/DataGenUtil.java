@@ -12,7 +12,6 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
-import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityType.SERVICE;
@@ -121,6 +120,7 @@ import software.wings.generator.LicenseGenerator.Licenses;
 import software.wings.generator.OwnerManager;
 import software.wings.generator.OwnerManager.Owners;
 import software.wings.generator.PipelineGenerator;
+import software.wings.generator.PipelineGenerator.Pipelines;
 import software.wings.generator.Randomizer.Seed;
 import software.wings.generator.SecretGenerator;
 import software.wings.generator.SecretGenerator.SecretName;
@@ -129,7 +129,7 @@ import software.wings.generator.ServiceGenerator.Services;
 import software.wings.generator.ServiceTemplateGenerator;
 import software.wings.generator.SettingGenerator;
 import software.wings.generator.WorkflowGenerator;
-import software.wings.generator.WorkflowGenerator.PostProcessInfo;
+import software.wings.generator.WorkflowGenerator.Workflows;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.integration.setup.rest.AppResourceRestClient;
 import software.wings.integration.setup.rest.EnvResourceRestClient;
@@ -565,113 +565,19 @@ public class DataGenUtil extends BaseIntegrationTest {
     Service service = serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST);
     owners.add(service);
 
+    Workflow workflow1 = workflowGenerator.ensurePredefined(seed, owners, Workflows.BASIC_SIMPLE);
+
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingGenerator.ensurePredefined(seed, owners, AWS_SSH_TEST);
 
     ArtifactStream artifactStream =
         artifactStreamGenerator.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_ECHO_WAR);
 
-    Workflow workflow1 = workflowGenerator.ensureWorkflow(seed, owners,
-        aWorkflow()
-            .withName("Basic - simple")
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withInfraMappingId(infrastructureMapping.getUuid())
-            .withOrchestrationWorkflow(
-                aBasicOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-            .build());
+    Workflow workflow2 = workflowGenerator.ensurePredefined(seed, owners, Workflows.BASIC_10_NODES);
 
-    Workflow workflow2 = workflowGenerator.ensureWorkflow(seed, owners,
-        aWorkflow()
-            .withName("Basic - 10 nodes")
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withInfraMappingId(infrastructureMapping.getUuid())
-            .withOrchestrationWorkflow(
-                aBasicOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-            .build());
+    Pipeline pipeline1 = pipelineGenerator.ensurePredefined(seed, owners, Pipelines.BARRIER);
 
-    workflow2 = workflowGenerator.postProcess(workflow2, PostProcessInfo.builder().selectNodeCount(10).build());
-
-    Workflow workflow3 = workflowGenerator.ensureWorkflow(seed, owners,
-        aWorkflow()
-            .withName("Barrier Parallel Section 2-1")
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withInfraMappingId(infrastructureMapping.getUuid())
-            .withOrchestrationWorkflow(
-                aBasicOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-            .build());
-
-    workflow3 = workflowGenerator.postProcess(workflow3, PostProcessInfo.builder().selectNodeCount(2).build());
-
-    Workflow workflow4 = workflowGenerator.ensureWorkflow(seed, owners,
-        aWorkflow()
-            .withName("Barrier Parallel Section 2-2")
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withInfraMappingId(infrastructureMapping.getUuid())
-            .withOrchestrationWorkflow(
-                aBasicOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-            .build());
-
-    workflow4 = workflowGenerator.postProcess(workflow4, PostProcessInfo.builder().selectNodeCount(2).build());
-
-    Pipeline pipeline1 = pipelineGenerator.createPipeline(seed,
-        Pipeline.builder()
-            .appId(workflow1.getAppId())
-            .name("Barrier Pipeline")
-            .pipelineStages(
-                asList(PipelineStage.builder()
-                           .pipelineStageElements(asList(PipelineStageElement.builder()
-                                                             .name("Parallel section 1-1")
-                                                             .type(ENV_STATE.name())
-                                                             .properties(ImmutableMap.of("envId", workflow1.getEnvId(),
-                                                                 "workflowId", workflow1.getUuid()))
-                                                             .build()))
-                           .build(),
-                    PipelineStage.builder()
-                        .parallel(true)
-                        .pipelineStageElements(
-                            asList(PipelineStageElement.builder()
-                                       .name("Parallel section 1-2")
-                                       .type(ENV_STATE.name())
-                                       .properties(ImmutableMap.of(
-                                           "envId", workflow2.getEnvId(), "workflowId", workflow2.getUuid()))
-                                       .build()))
-                        .build(),
-                    PipelineStage.builder()
-                        .pipelineStageElements(
-                            asList(PipelineStageElement.builder()
-                                       .name("Parallel section 2-1")
-                                       .type(ENV_STATE.name())
-                                       .properties(ImmutableMap.of(
-                                           "envId", workflow3.getEnvId(), "workflowId", workflow3.getUuid()))
-                                       .build()))
-                        .build(),
-                    PipelineStage.builder()
-                        .parallel(true)
-                        .pipelineStageElements(
-                            asList(PipelineStageElement.builder()
-                                       .name("Parallel section 2-2")
-                                       .type(ENV_STATE.name())
-                                       .properties(ImmutableMap.of(
-                                           "envId", workflow4.getEnvId(), "workflowId", workflow4.getUuid()))
-                                       .build()))
-                        .build()
-
-                        ))
-            .build());
-
-    Pipeline pipeline2 = pipelineGenerator.createPipeline(seed,
+    Pipeline pipeline2 = pipelineGenerator.ensurePipeline(seed, owners,
         Pipeline.builder()
             .appId(workflow1.getAppId())
             .name("Pipeline")
