@@ -7,6 +7,7 @@ import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -410,8 +411,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         summaryOutput.append(format("%nHorizontal Pod Autoscaler: %s", hpa.getMetadata().getName()));
       }
 
-      setupServiceAndIngressAndIstioRouteRule(setupParams, kubernetesConfig, encryptedDataDetails, containerServiceName,
-          activeServiceCounts, executionLogCallback, summaryOutput);
+      Service service = setupServiceAndIngress(setupParams, kubernetesConfig, encryptedDataDetails,
+          containerServiceName, executionLogCallback, summaryOutput);
 
       setupServiceAndIngressForBlueGreen(setupParams, kubernetesConfig, encryptedDataDetails, containerServiceName,
           Integer.toString(currentRevision), executionLogCallback, summaryOutput);
@@ -449,6 +450,23 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         }
       }
 
+      Map<String, Integer> newActiveCounts = new HashMap<>();
+
+      if (!isNotVersioned) {
+        if (setupParams.isUseNewLabelMechanism()) {
+          newActiveCounts = kubernetesContainerService.getActiveServiceCountsWithLabels(
+              kubernetesConfig, encryptedDataDetails, lookupLabels);
+        } else {
+          newActiveCounts = kubernetesContainerService.getActiveServiceCounts(
+              kubernetesConfig, encryptedDataDetails, containerServiceName, useDashInHostname);
+        }
+      }
+
+      // Setup Istio routes
+      prepareVirtualService(encryptedDataDetails, kubernetesConfig, setupParams,
+          getKubernetesServiceName(setupParams.getControllerNamePrefix()), service, newActiveCounts,
+          containerServiceName, executionLogCallback, summaryOutput);
+
       executionLogCallback.saveExecutionLog("\n\nSummary:");
       executionLogCallback.saveExecutionLog(summaryOutput.toString());
 
@@ -482,9 +500,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
   }
 
-  private void setupServiceAndIngressAndIstioRouteRule(KubernetesSetupParams setupParams,
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName,
-      Map<String, Integer> activeServiceCounts, ExecutionLogCallback executionLogCallback, StringBuffer summaryOutput) {
+  private Service setupServiceAndIngress(KubernetesSetupParams setupParams, KubernetesConfig kubernetesConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName,
+      ExecutionLogCallback executionLogCallback, StringBuffer summaryOutput) {
     String kubernetesServiceName = getKubernetesServiceName(setupParams.getControllerNamePrefix());
     Map<String, String> labels = getLabels(setupParams);
 
@@ -529,8 +547,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     prepareIngress(kubernetesConfig, encryptedDataDetails, setupParams.isUseIngress(), ingressYaml,
         kubernetesServiceName, labels, executionLogCallback, summaryOutput);
 
-    prepareVirtualService(encryptedDataDetails, kubernetesConfig, setupParams, kubernetesServiceName, service,
-        activeServiceCounts, containerServiceName, executionLogCallback, summaryOutput);
+    return service;
   }
 
   private void setupServiceAndIngressForBlueGreen(KubernetesSetupParams setupParams, KubernetesConfig kubernetesConfig,
@@ -805,7 +822,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       try {
         IstioResource virtualService = kubernetesContainerService.getIstioResource(
             kubernetesConfig, encryptedDataDetails, "VirtualService", virtualServiceName);
-        if (virtualService.getMetadata().getLabels().containsKey(HARNESS_KUBERNETES_MANAGED_LABEL_KEY)) {
+        if (virtualService != null
+            && virtualService.getMetadata().getLabels().containsKey(HARNESS_KUBERNETES_MANAGED_LABEL_KEY)) {
           executionLogCallback.saveExecutionLog("Deleting Istio VirtualService" + virtualServiceName);
           kubernetesContainerService.deleteIstioResource(
               kubernetesConfig, encryptedDataDetails, "VirtualService", virtualServiceName);
@@ -813,7 +831,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
         IstioResource destinationRule = kubernetesContainerService.getIstioResource(
             kubernetesConfig, encryptedDataDetails, "DestinationRule", virtualServiceName);
-        if (destinationRule.getMetadata().getLabels().containsKey(HARNESS_KUBERNETES_MANAGED_LABEL_KEY)) {
+        if (destinationRule != null
+            && destinationRule.getMetadata().getLabels().containsKey(HARNESS_KUBERNETES_MANAGED_LABEL_KEY)) {
           executionLogCallback.saveExecutionLog("Deleting Istio DestinationRule" + virtualServiceName);
           kubernetesContainerService.deleteIstioResource(
               kubernetesConfig, encryptedDataDetails, "DestinationRule", virtualServiceName);
@@ -1128,7 +1147,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             .withNewVirtualServiceSpec()
             .withHosts(setupParams.getIstioConfig() != null && !isEmpty(setupParams.getIstioConfig().getHosts())
                     ? setupParams.getIstioConfig().getHosts()
-                    : asList(kubernetesServiceName));
+                    : singletonList(kubernetesServiceName));
 
     if (setupParams.getIstioConfig() != null && !isEmpty(setupParams.getIstioConfig().getGateways())) {
       virtualServiceSpecNested.addAllToGateways(setupParams.getIstioConfig().getGateways());
