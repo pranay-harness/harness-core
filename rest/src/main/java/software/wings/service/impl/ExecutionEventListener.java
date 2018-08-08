@@ -56,12 +56,12 @@ public class ExecutionEventListener extends AbstractQueueListener<ExecutionEvent
                                                   .addFieldsIncluded("uuid")
                                                   .withLimit("1");
 
-      if (isNotEmpty(message.getInfraMappingIds())) {
-        pageRequestBuilder.addFilter(
-            WorkflowExecution.INFRAMAPPING_IDS_KEY, Operator.IN, message.getInfraMappingIds().toArray());
-      } else {
-        pageRequestBuilder.addFilter(WorkflowExecution.WORKFLOW_ID_KEY, EQ, message.getWorkflowId());
-      }
+      //      if (isNotEmpty(message.getInfraMappingIds())) {
+      //        pageRequestBuilder.addFilter(
+      //            WorkflowExecution.INFRAMAPPING_IDS_KEY, Operator.IN, message.getInfraMappingIds().toArray());
+      //      } else {
+      pageRequestBuilder.addFilter(WorkflowExecution.WORKFLOW_ID_KEY, EQ, message.getWorkflowId());
+      //      }
 
       PageResponse<WorkflowExecution> runningWorkflowExecutions =
           wingsPersistence.query(WorkflowExecution.class, pageRequestBuilder.build());
@@ -75,12 +75,12 @@ public class ExecutionEventListener extends AbstractQueueListener<ExecutionEvent
                                .addFilter(WorkflowExecution.STATUS_KEY, EQ, QUEUED)
                                .addOrder(WorkflowExecution.CREATED_AT_KEY, OrderType.ASC);
 
-      if (isNotEmpty(message.getInfraMappingIds())) {
-        pageRequestBuilder.addFilter(
-            WorkflowExecution.INFRAMAPPING_IDS_KEY, Operator.IN, message.getInfraMappingIds().toArray());
-      } else {
-        pageRequestBuilder.addFilter(WorkflowExecution.WORKFLOW_ID_KEY, EQ, message.getWorkflowId());
-      }
+      //      if (isNotEmpty(message.getInfraMappingIds())) {
+      //        pageRequestBuilder.addFilter(
+      //            WorkflowExecution.INFRAMAPPING_IDS_KEY, Operator.IN, message.getInfraMappingIds().toArray());
+      //      } else {
+      pageRequestBuilder.addFilter(WorkflowExecution.WORKFLOW_ID_KEY, EQ, message.getWorkflowId());
+      //      }
 
       WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, pageRequestBuilder.build());
       if (workflowExecution == null) {
