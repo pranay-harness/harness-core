@@ -256,6 +256,7 @@ public class DelegateServiceImpl implements DelegateService {
                                   .ip(delegate.getIp())
                                   .status(delegate.getStatus())
                                   .lastHeartBeat(delegate.getLastHeartBeat())
+                                  .delegateProfileId(delegate.getDelegateProfileId())
                                   .excludeScopes(delegate.getExcludeScopes())
                                   .includeScopes(delegate.getIncludeScopes())
                                   .connections(delegateConnections.stream()
