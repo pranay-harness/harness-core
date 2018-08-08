@@ -14,7 +14,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.command.ContainerApiVersions.KUBERNETES_V1;
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.common.Constants.HARNESS_KUBERNETES_REVISION_LABEL_KEY;
-import static software.wings.common.Constants.HARNESS_REVISION;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.KubernetesConvention.DASH;
 import static software.wings.utils.KubernetesConvention.DOT;
@@ -75,8 +74,8 @@ import me.snowdrop.istio.api.internal.IstioSpecRegistry;
 import me.snowdrop.istio.api.model.DoneableIstioResource;
 import me.snowdrop.istio.api.model.IstioResource;
 import me.snowdrop.istio.api.model.IstioResourceBuilder;
-import me.snowdrop.istio.api.model.v1.routing.DestinationWeight;
-import me.snowdrop.istio.api.model.v1.routing.RouteRule;
+import me.snowdrop.istio.api.model.v1.networking.DestinationWeight;
+import me.snowdrop.istio.api.model.v1.networking.VirtualService;
 import me.snowdrop.istio.client.IstioClient;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
@@ -757,38 +756,6 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public IstioResource createOrReplaceRouteRule(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, IstioResource definition) {
-    String name = definition.getMetadata().getName();
-    logger.info("Registering route rule [{}]", name);
-    IstioClient istioClient = kubernetesHelperService.getIstioClient(kubernetesConfig, encryptedDataDetails);
-    try {
-      istioClient.unregisterCustomResource(definition);
-    } catch (Exception e) {
-      // Do nothing
-    }
-    return istioClient.registerCustomResource(definition);
-  }
-
-  @Override
-  public IstioResource getRouteRule(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
-    KubernetesClient kubernetesClient =
-        kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails);
-    try {
-      return kubernetesClient
-          .customResources(
-              getCustomResourceDefinition(kubernetesClient, new IstioResourceBuilder().withKind("RouteRule").build()),
-              IstioResource.class, KubernetesResourceList.class, DoneableIstioResource.class)
-          .inNamespace(kubernetesConfig.getNamespace())
-          .withName(name)
-          .get();
-    } catch (Exception e) {
-      return null;
-    }
-  }
-
-  @Override
   public IstioResource createOrReplaceIstioResource(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, IstioResource definition) {
     String name = definition.getMetadata().getName();
@@ -850,37 +817,25 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     }
   }
 
-  @SuppressFBWarnings("DE_MIGHT_IGNORE")
-  @Override
-  public void deleteRouteRule(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
-    IstioClient istioClient = kubernetesHelperService.getIstioClient(kubernetesConfig, encryptedDataDetails);
-    try {
-      istioClient.unregisterCustomResource(new IstioResourceBuilder()
-                                               .withKind("RoutingRule")
-                                               .withNewMetadata()
-                                               .withName(name)
-                                               .withNamespace(kubernetesConfig.getNamespace())
-                                               .endMetadata()
-                                               .build());
-    } catch (Exception e) {
-      // Do nothing
-    }
-  }
-
   @Override
   public int getTrafficPercent(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
       String controllerName, boolean useDashInHostname) {
     String serviceName = getServiceNameFromControllerName(controllerName, useDashInHostname);
-    IstioResource routeRule = getRouteRule(kubernetesConfig, encryptedDataDetails, serviceName);
+    IstioResource virtualService =
+        getIstioResource(kubernetesConfig, encryptedDataDetails, "VirtualService", serviceName);
     Optional<Integer> revision = getRevisionFromControllerName(controllerName, useDashInHostname);
-    if (routeRule == null || !revision.isPresent()) {
+    if (virtualService == null || !revision.isPresent()) {
       return 0;
     }
-    RouteRule routeRuleSpec = (RouteRule) routeRule.getSpec();
-    return routeRuleSpec.getRoute()
+    VirtualService virtualServiceSpec = (VirtualService) virtualService.getSpec();
+    if (isEmpty(virtualServiceSpec.getHttp()) || isEmpty(virtualServiceSpec.getHttp().get(0).getRoute())) {
+      return 0;
+    }
+    return virtualServiceSpec.getHttp()
+        .get(0)
+        .getRoute()
         .stream()
-        .filter(dw -> Integer.toString(revision.get()).equals(dw.getLabels().get(HARNESS_REVISION)))
+        .filter(dw -> Integer.toString(revision.get()).equals(dw.getDestination().getSubset()))
         .map(DestinationWeight::getWeight)
         .findFirst()
         .orElse(0);
@@ -891,13 +846,18 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       List<EncryptedDataDetail> encryptedDataDetails, String controllerName, boolean useDashInHostName) {
     String serviceName = getServiceNameFromControllerName(controllerName, useDashInHostName);
     String controllerNamePrefix = getPrefixFromControllerName(controllerName, useDashInHostName);
-    IstioResource routeRule = getRouteRule(kubernetesConfig, encryptedDataDetails, serviceName);
-    if (routeRule == null) {
+    IstioResource virtualService =
+        getIstioResource(kubernetesConfig, encryptedDataDetails, "VirtualService", serviceName);
+    if (virtualService == null) {
       return new HashMap<>();
     }
-    RouteRule routeRuleSpec = (RouteRule) routeRule.getSpec();
-    return routeRuleSpec.getRoute().stream().collect(toMap(dw
-        -> controllerNamePrefix + (useDashInHostName ? DASH : DOT) + dw.getLabels().get(HARNESS_REVISION),
+    VirtualService virtualServiceSpec = (VirtualService) virtualService.getSpec();
+    if (isEmpty(virtualServiceSpec.getHttp()) || isEmpty(virtualServiceSpec.getHttp().get(0).getRoute())) {
+      return new HashMap<>();
+    }
+    List<DestinationWeight> destinationWeights = virtualServiceSpec.getHttp().get(0).getRoute();
+    return destinationWeights.stream().collect(toMap(dw
+        -> controllerNamePrefix + (useDashInHostName ? DASH : DOT) + dw.getDestination().getSubset(),
         DestinationWeight::getWeight));
   }
 
