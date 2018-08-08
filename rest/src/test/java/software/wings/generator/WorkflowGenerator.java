@@ -1,8 +1,14 @@
 package software.wings.generator;
 
+import static io.harness.govern.Switch.unhandled;
+import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
+import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
+import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
+import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.common.Constants.INFRASTRUCTURE_NODE_NAME;
 import static software.wings.common.Constants.SELECT_NODE_NAME;
+import static software.wings.generator.InfrastructureMappingGenerator.InfrastructureMappings.AWS_SSH_TEST;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -14,17 +20,74 @@ import software.wings.beans.Application;
 import software.wings.beans.BasicOrchestrationWorkflow;
 import software.wings.beans.Environment;
 import software.wings.beans.GraphNode;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
+import software.wings.beans.WorkflowType;
+import software.wings.common.Constants;
+import software.wings.generator.OwnerManager.Owners;
 import software.wings.service.intfc.WorkflowService;
 
 @Singleton
 public class WorkflowGenerator {
-  @Inject WorkflowService workflowService;
+  @Inject private WorkflowService workflowService;
 
-  @Inject ApplicationGenerator applicationGenerator;
-  @Inject OrchestrationWorkflowGenerator orchestrationWorkflowGenerator;
+  @Inject private ApplicationGenerator applicationGenerator;
+  @Inject private OrchestrationWorkflowGenerator orchestrationWorkflowGenerator;
+  @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
+
+  public enum Workflows { BASIC_SIMPLE, BASIC_10_NODES }
+
+  public Workflow ensurePredefined(Randomizer.Seed seed, Owners owners, Workflows predefined) {
+    switch (predefined) {
+      case BASIC_SIMPLE:
+        return ensureBasicSimple(seed, owners);
+      case BASIC_10_NODES:
+        return ensureBasic10Nodes(seed, owners);
+      default:
+        unhandled(predefined);
+    }
+
+    return null;
+  }
+
+  private Workflow ensureBasicSimple(Randomizer.Seed seed, Owners owners) {
+    InfrastructureMapping infrastructureMapping =
+        infrastructureMappingGenerator.ensurePredefined(seed, owners, AWS_SSH_TEST);
+
+    return ensureWorkflow(seed, owners,
+        aWorkflow()
+            .withName("Basic - simple")
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .withInfraMappingId(infrastructureMapping.getUuid())
+            .withOrchestrationWorkflow(
+                aBasicOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .build())
+            .build());
+  }
+
+  private Workflow ensureBasic10Nodes(Randomizer.Seed seed, Owners owners) {
+    InfrastructureMapping infrastructureMapping =
+        infrastructureMappingGenerator.ensurePredefined(seed, owners, AWS_SSH_TEST);
+
+    Workflow workflow = ensureWorkflow(seed, owners,
+        aWorkflow()
+            .withName("Basic - 10 nodes")
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .withInfraMappingId(infrastructureMapping.getUuid())
+            .withOrchestrationWorkflow(
+                aBasicOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .build())
+            .build());
+
+    workflow = postProcess(workflow, PostProcessInfo.builder().selectNodeCount(10).build());
+    return workflow;
+  }
 
   public Workflow ensureWorkflow(Randomizer.Seed seed, OwnerManager.Owners owners, Workflow workflow) {
     EnhancedRandom random = Randomizer.instance(seed);
