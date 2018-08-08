@@ -50,7 +50,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 
 /**
@@ -317,28 +316,10 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
 
     HttpNested virtualServiceHttpNested = virtualServiceSpecNested.addNewHttp();
 
-    if (resizeParams.isRollback()) {
-      Map<String, Integer> activeControllers = getActiveServiceCounts(contextData);
-      int totalInstances = activeControllers.values().stream().mapToInt(Integer::intValue).sum();
-      for (Entry<String, Integer> entry : activeControllers.entrySet()) {
-        Optional<Integer> revision = getRevisionFromControllerName(entry.getKey(), resizeParams.isUseDashInHostName());
-        if (revision.isPresent()) {
-          int weight = (int) Math.round((entry.getValue() * 100.0) / totalInstances);
-          if (weight > 0) {
-            Destination destination = new Destination();
-            destination.setHost(kubernetesServiceName);
-            destination.setSubset(revision.get().toString());
-            DestinationWeight destinationWeight = new DestinationWeight();
-            destinationWeight.setWeight(weight);
-            destinationWeight.setDestination(destination);
-            virtualServiceHttpNested.addToRoute(destinationWeight);
-          }
-        }
-      }
-    } else {
-      for (ContainerServiceData containerServiceData : allData) {
-        String controllerName = containerServiceData.getName();
-        Optional<Integer> revision = getRevisionFromControllerName(controllerName, resizeParams.isUseDashInHostName());
+    for (ContainerServiceData containerServiceData : allData) {
+      String controllerName = containerServiceData.getName();
+      Optional<Integer> revision = getRevisionFromControllerName(controllerName, resizeParams.isUseDashInHostName());
+      if (revision.isPresent()) {
         int weight = containerServiceData.getDesiredTraffic();
         if (weight > 0) {
           Destination destination = new Destination();
