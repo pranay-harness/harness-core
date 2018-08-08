@@ -10,6 +10,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.common.Constants.DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_EXPIRED_NOTIFICATION;
@@ -25,7 +26,9 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.BUILD_JOB_NAME;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.NOTIFICATION_GROUP_ID;
+import static software.wings.utils.WingsTestConstants.PIPELINE_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
@@ -37,6 +40,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.ApprovalStateExecutionData;
+import software.wings.api.WorkflowElement;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationRule;
@@ -83,6 +87,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   @Before
   public void setUp() throws Exception {
     when(context.getApp()).thenReturn(anApplication().withAccountId(ACCOUNT_ID).withUuid(APP_ID).build());
+    when(context.getAppId()).thenReturn(APP_ID);
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(WORKFLOW_STANDARD_PARAMS);
     when(context.getWorkflowExecutionId()).thenReturn(PIPELINE_WORKFLOW_EXECUTION_ID);
     when(context.getWorkflowExecutionName()).thenReturn(BUILD_JOB_NAME);
@@ -111,6 +116,8 @@ public class ApprovalStateTest extends WingsBaseTest {
   public void shouldExecute() {
     PageResponse pageResponse = new PageResponse();
     pageResponse.setResponse(asList(User.Builder.anUser().build()));
+    when(context.getStateExecutionInstance())
+        .thenReturn(aStateExecutionInstance().withExecutionType(WorkflowType.PIPELINE).build());
 
     ExecutionResponse executionResponse = approvalState.execute(context);
     verify(alertService)
@@ -253,6 +260,61 @@ public class ApprovalStateTest extends WingsBaseTest {
     verify(notificationMessageResolver)
         .getPlaceholderValues(any(), eq(USER_NAME_1_KEY), any(Long.class), any(Long.class), eq(""), eq("approved"),
             any(), eq(SUCCESS), eq(AlertType.ApprovalNeeded));
+  }
+
+  @Test
+  public void testApprovalNeededAlertParamsForWorkflow() {
+    when(context.getStateExecutionInstance())
+        .thenReturn(aStateExecutionInstance().withExecutionType(WorkflowType.ORCHESTRATION).build());
+    when(context.getEnv()).thenReturn(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build());
+
+    approvalState.execute(context);
+    ArgumentCaptor<ApprovalNeededAlert> argumentCaptor = ArgumentCaptor.forClass(ApprovalNeededAlert.class);
+    verify(alertService).openAlert(eq(ACCOUNT_ID), eq(APP_ID), eq(AlertType.ApprovalNeeded), argumentCaptor.capture());
+
+    ApprovalNeededAlert approvalNeededAlert = argumentCaptor.getValue();
+    assertThat(approvalNeededAlert.getEnvId()).isEqualTo(ENV_ID);
+    assertThat(approvalNeededAlert.getWorkflowType()).isEqualTo(WorkflowType.ORCHESTRATION);
+    assertThat(approvalNeededAlert.getWorkflowExecutionId()).isEqualTo(PIPELINE_WORKFLOW_EXECUTION_ID);
+    assertThat(approvalNeededAlert.getPipelineExecutionId()).isEqualTo(null);
+  }
+
+  @Test
+  public void testApprovalNeededAlertParamsForPipelineWithApproval() {
+    when(context.getStateExecutionInstance())
+        .thenReturn(aStateExecutionInstance().withExecutionType(WorkflowType.PIPELINE).build());
+
+    approvalState.execute(context);
+    ArgumentCaptor<ApprovalNeededAlert> argumentCaptor = ArgumentCaptor.forClass(ApprovalNeededAlert.class);
+    verify(alertService).openAlert(eq(ACCOUNT_ID), eq(APP_ID), eq(AlertType.ApprovalNeeded), argumentCaptor.capture());
+
+    ApprovalNeededAlert approvalNeededAlert = argumentCaptor.getValue();
+    assertThat(approvalNeededAlert.getEnvId()).isEqualTo(null);
+    assertThat(approvalNeededAlert.getWorkflowType()).isEqualTo(WorkflowType.PIPELINE);
+    assertThat(approvalNeededAlert.getWorkflowExecutionId()).isEqualTo(null);
+    assertThat(approvalNeededAlert.getPipelineExecutionId()).isEqualTo(PIPELINE_WORKFLOW_EXECUTION_ID);
+  }
+
+  @Test
+  public void testApprovalNeededAlertParamsForPipelineWithWorkflowApproval() {
+    when(context.getStateExecutionInstance())
+        .thenReturn(aStateExecutionInstance().withExecutionType(WorkflowType.ORCHESTRATION).build());
+    when(context.getEnv()).thenReturn(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build());
+    when(context.getContextElement(ContextElementType.STANDARD))
+        .thenReturn(
+            aWorkflowStandardParams()
+                .withWorkflowElement(WorkflowElement.builder().pipelineDeploymentUuid(PIPELINE_EXECUTION_ID).build())
+                .build());
+
+    approvalState.execute(context);
+    ArgumentCaptor<ApprovalNeededAlert> argumentCaptor = ArgumentCaptor.forClass(ApprovalNeededAlert.class);
+    verify(alertService).openAlert(eq(ACCOUNT_ID), eq(APP_ID), eq(AlertType.ApprovalNeeded), argumentCaptor.capture());
+
+    ApprovalNeededAlert approvalNeededAlert = argumentCaptor.getValue();
+    assertThat(approvalNeededAlert.getEnvId()).isEqualTo(ENV_ID);
+    assertThat(approvalNeededAlert.getWorkflowType()).isEqualTo(WorkflowType.ORCHESTRATION);
+    assertThat(approvalNeededAlert.getWorkflowExecutionId()).isEqualTo(PIPELINE_WORKFLOW_EXECUTION_ID);
+    assertThat(approvalNeededAlert.getPipelineExecutionId()).isEqualTo(PIPELINE_EXECUTION_ID);
   }
 
   private void verifyNotificationArguments(NotificationMessageType notificationMessageType) {
