@@ -47,7 +47,7 @@ public interface DelegateService {
 
   File downloadScripts(String managerHost, String accountId) throws IOException, TemplateException;
   File downloadDocker(String managerHost, String accountId) throws IOException, TemplateException;
-  File downloadKubernetes(String managerHost, String accountId, String delegateName)
+  File downloadKubernetes(String managerHost, String accountId, String delegateName, String delegateProfile)
       throws IOException, TemplateException;
 
   Delegate add(Delegate delegate);

@@ -395,7 +395,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldDownloadKubernetes() throws IOException, TemplateException {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
-    File gzipFile = delegateService.downloadKubernetes("https://localhost:9090", ACCOUNT_ID, "harness-delegate");
+    File gzipFile = delegateService.downloadKubernetes("https://localhost:9090", ACCOUNT_ID, "harness-delegate", "");
     File tarFile = File.createTempFile(DELEGATE_DIR, ".tar");
     uncompressGzipFile(gzipFile, tarFile);
     try (TarArchiveInputStream tarArchiveInputStream = new TarArchiveInputStream(new FileInputStream(tarFile))) {

@@ -427,11 +427,11 @@ public class DelegateServiceImpl implements DelegateService {
 
   private ImmutableMap<String, String> getJarAndScriptRunTimeParamMap(
       String accountId, String version, String managerHost) {
-    return getJarAndScriptRunTimeParamMap(accountId, version, managerHost, null);
+    return getJarAndScriptRunTimeParamMap(accountId, version, managerHost, null, null);
   }
 
   private ImmutableMap<String, String> getJarAndScriptRunTimeParamMap(
-      String accountId, String version, String managerHost, String delegateName) {
+      String accountId, String version, String managerHost, String delegateName, String delegateProfile) {
     String latestVersion = null;
     String jarRelativePath;
     String delegateJarDownloadUrl = null;
@@ -501,6 +501,9 @@ public class DelegateServiceImpl implements DelegateService {
                                                         .put("multiVersion", Boolean.toString(multiVersion));
       if (isNotBlank(delegateName)) {
         params.put("delegateName", delegateName);
+      }
+      if (delegateProfile != null) {
+        params.put("delegateProfile", delegateProfile);
       }
       return params.build();
     }
@@ -670,7 +673,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  public File downloadKubernetes(String managerHost, String accountId, String delegateName)
+  public File downloadKubernetes(String managerHost, String accountId, String delegateName, String delegateProfile)
       throws IOException, TemplateException {
     File kubernetesDelegateFile = File.createTempFile(KUBERNETES_DELEGATE, ".tar");
 
@@ -678,8 +681,8 @@ public class DelegateServiceImpl implements DelegateService {
       out.putArchiveEntry(new TarArchiveEntry(KUBERNETES_DELEGATE + "/"));
       out.closeArchiveEntry();
 
-      ImmutableMap<String, String> scriptParams =
-          getJarAndScriptRunTimeParamMap(accountId, "0.0.0", managerHost, delegateName); // first version is 0.0.0
+      ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(accountId, "0.0.0", managerHost,
+          delegateName, delegateProfile == null ? "" : delegateProfile); // first version is 0.0.0
 
       File yaml = File.createTempFile("harness-delegate", ".yaml");
       try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(yaml), UTF_8)) {
