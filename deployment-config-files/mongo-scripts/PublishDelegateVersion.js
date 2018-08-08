@@ -4,10 +4,12 @@ const primaryVersion = managerConfig.next().primaryVersion;
 print("Manager primary version is");
 printjson(primaryVersion);
 
+const delegateVersions = primaryVersion === '*' ?  [_version_] : [primaryVersion, _version_];
+
 const accountQuery = { _id: _accountId_ };
 const newValues = {
     $set: {
-        "delegateConfiguration.delegateVersions": [primaryVersion, _version_]
+        "delegateConfiguration.delegateVersions": delegateVersions
     }
 };
 print("Publishing new delegate version: " + _version_ + " for Account: " + _accountId_);
