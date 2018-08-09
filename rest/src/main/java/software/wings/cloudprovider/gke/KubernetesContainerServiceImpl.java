@@ -988,71 +988,80 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         Set<String> seenEvents = new HashSet<>();
 
         while (true) {
-          int desiredCount =
-              getControllerPodCount(getController(kubernetesConfig, encryptedDataDetails, controllerName));
-          List<Pod> pods = kubernetesClient.pods().inNamespace(namespace).withLabels(labels).list().getItems();
+          try {
+            int desiredCount =
+                getControllerPodCount(getController(kubernetesConfig, encryptedDataDetails, controllerName));
+            List<Pod> pods = kubernetesClient.pods().inNamespace(namespace).withLabels(labels).list().getItems();
 
-          // Delete failed pods
-          pods.stream()
-              .filter(pod -> "Failed".equals(pod.getStatus().getPhase()))
-              .forEach(
-                  pod -> kubernetesClient.pods().inNamespace(namespace).withName(pod.getMetadata().getName()).delete());
+            // Delete failed pods
+            pods.stream()
+                .filter(pod -> "Failed".equals(pod.getStatus().getPhase()))
+                .forEach(pod
+                    -> kubernetesClient.pods().inNamespace(namespace).withName(pod.getMetadata().getName()).delete());
 
-          // Show events
-          showEvents(kubernetesClient, namespace, pods, originalPodNames, seenEvents, startTime, executionLogCallback);
+            // Show events
+            showEvents(
+                kubernetesClient, namespace, pods, originalPodNames, seenEvents, startTime, executionLogCallback);
 
-          // Check current state
-          if (pods.size() != desiredCount) {
-            executionLogCallback.saveExecutionLog(
-                format("Waiting for desired number of pods [%d/%d]", pods.size(), desiredCount));
-            sleep(ofSeconds(5));
-            continue;
-          }
-          if (!countReached.getAndSet(true)) {
-            executionLogCallback.saveExecutionLog(
-                format("Desired number of pods reached [%d/%d]", pods.size(), desiredCount));
-          }
-
-          if (desiredCount > 0) {
-            int haveImages = (int) pods.stream().filter(pod -> podHasImages(pod, images)).count();
-            if (haveImages != desiredCount) {
+            // Check current state
+            if (pods.size() != desiredCount) {
               executionLogCallback.saveExecutionLog(
-                  format("Waiting for pods to be updated with image %s [%d/%d]", images, haveImages, desiredCount),
-                  LogLevel.INFO);
+                  format("Waiting for desired number of pods [%d/%d]", pods.size(), desiredCount));
               sleep(ofSeconds(5));
               continue;
             }
-            if (!haveImagesCountReached.getAndSet(true)) {
+            if (!countReached.getAndSet(true)) {
               executionLogCallback.saveExecutionLog(
-                  format("Pods are updated with image %s [%d/%d]", images, haveImages, desiredCount), LogLevel.INFO);
-            }
-          }
-
-          if (isNotVersioned || desiredCount > previousCount) {
-            int running = (int) pods.stream().filter(this ::isRunning).count();
-            if (running != desiredCount) {
-              executionLogCallback.saveExecutionLog(
-                  format("Waiting for pods to be running [%d/%d]", running, desiredCount));
-              sleep(ofSeconds(10));
-              continue;
-            }
-            if (!runningCountReached.getAndSet(true)) {
-              executionLogCallback.saveExecutionLog(format("Pods are running [%d/%d]", running, desiredCount));
+                  format("Desired number of pods reached [%d/%d]", pods.size(), desiredCount));
             }
 
-            int steadyState = (int) pods.stream().filter(this ::inSteadyState).count();
-            if (steadyState != desiredCount) {
-              executionLogCallback.saveExecutionLog(
-                  format("Waiting for pods to reach steady state [%d/%d]", steadyState, desiredCount), LogLevel.INFO);
-              sleep(ofSeconds(15));
-              continue;
+            if (desiredCount > 0) {
+              int haveImages = (int) pods.stream().filter(pod -> podHasImages(pod, images)).count();
+              if (haveImages != desiredCount) {
+                executionLogCallback.saveExecutionLog(
+                    format("Waiting for pods to be updated with image %s [%d/%d]", images, haveImages, desiredCount),
+                    LogLevel.INFO);
+                sleep(ofSeconds(5));
+                continue;
+              }
+              if (!haveImagesCountReached.getAndSet(true)) {
+                executionLogCallback.saveExecutionLog(
+                    format("Pods are updated with image %s [%d/%d]", images, haveImages, desiredCount));
+              }
             }
-            if (!steadyStateCountReached.getAndSet(true)) {
-              executionLogCallback.saveExecutionLog(
-                  format("Pods have reached steady state [%d/%d]", steadyState, desiredCount));
+
+            if (isNotVersioned || desiredCount > previousCount) {
+              int running = (int) pods.stream().filter(this ::isRunning).count();
+              if (running != desiredCount) {
+                executionLogCallback.saveExecutionLog(
+                    format("Waiting for pods to be running [%d/%d]", running, desiredCount));
+                sleep(ofSeconds(10));
+                continue;
+              }
+              if (!runningCountReached.getAndSet(true)) {
+                executionLogCallback.saveExecutionLog(format("Pods are running [%d/%d]", running, desiredCount));
+              }
+
+              int steadyState = (int) pods.stream().filter(this ::inSteadyState).count();
+              if (steadyState != desiredCount) {
+                executionLogCallback.saveExecutionLog(
+                    format("Waiting for pods to reach steady state [%d/%d]", steadyState, desiredCount));
+                sleep(ofSeconds(15));
+                continue;
+              }
+              if (!steadyStateCountReached.getAndSet(true)) {
+                executionLogCallback.saveExecutionLog(
+                    format("Pods have reached steady state [%d/%d]", steadyState, desiredCount));
+              }
             }
+            return pods;
+          } catch (Exception e) {
+            logger.error("Exception in pod state wait loop.", e);
+            executionLogCallback.saveExecutionLog("Error while waiting for pods to be ready", LogLevel.ERROR);
+            Misc.logAllMessages(e, executionLogCallback);
+            executionLogCallback.saveExecutionLog("Continuing to wait...", LogLevel.ERROR);
+            sleep(ofSeconds(15));
           }
-          return pods;
         }
       }, waitMinutes, TimeUnit.MINUTES, true);
     } catch (UncheckedTimeoutException e) {
