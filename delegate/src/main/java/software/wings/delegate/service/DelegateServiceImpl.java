@@ -564,6 +564,7 @@ public class DelegateServiceImpl implements DelegateService {
     }
   }
 
+  @SuppressFBWarnings({"DM_EXIT"})
   private String registerDelegate(Builder builder) {
     AtomicInteger attempts = new AtomicInteger(0);
     while (acquireTasks.get()) {
