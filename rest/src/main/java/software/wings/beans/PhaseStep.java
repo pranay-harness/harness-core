@@ -11,6 +11,7 @@ import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
 import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
+import static software.wings.beans.PhaseStepType.PCF_SETUP;
 import static software.wings.sm.StateType.FORK;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -28,9 +29,12 @@ import software.wings.yaml.BaseYamlWithType;
 import software.wings.yaml.workflow.StepYaml;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by rishi on 12/21/16.
@@ -53,7 +57,7 @@ public class PhaseStep {
   private String validationMessage;
 
   private Integer waitInterval;
-
+  private static final Set<PhaseStepType> setupTypes = new HashSet<>(Arrays.asList(CONTAINER_SETUP, PCF_SETUP));
   public PhaseStep() {}
 
   public PhaseStep(PhaseStepType phaseStepType, String name) {
@@ -292,7 +296,9 @@ public class PhaseStep {
 
   public PhaseStep cloneIntenal() {
     PhaseStepType phaseStepType = getPhaseStepType();
-    if (phaseStepType != null && phaseStepType.equals(CONTAINER_SETUP)) {
+    // Do not clone if phaseStepType is containerSetup or pcfSetup
+    // as only 1st phase has setup step.
+    if (phaseStepType != null && setupTypes.contains(phaseStepType)) {
       return null;
     }
     PhaseStep clonedPhaseStep = aPhaseStep(phaseStepType, getName())
