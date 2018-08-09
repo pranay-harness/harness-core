@@ -409,8 +409,11 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
 
     if (timeSeriesMLHostSummaryMap != null) {
       for (Entry<String, TimeSeriesMLHostSummary> mlHostSummaryEntry : timeSeriesMLHostSummaryMap.entrySet()) {
-        final boolean isPredictiveAnalysis =
-            mlHostSummaryEntry.getValue().getTimeSeriesMlAnalysisType().equals(TimeSeriesMlAnalysisType.PREDICTIVE);
+        boolean isPredictiveAnalysis = false;
+        if (mlHostSummaryEntry.getValue().getTimeSeriesMlAnalysisType() != null) {
+          isPredictiveAnalysis =
+              mlHostSummaryEntry.getValue().getTimeSeriesMlAnalysisType().equals(TimeSeriesMlAnalysisType.PREDICTIVE);
+        }
         hostAnalysisValues.add(
             NewRelicMetricHostAnalysisValue.builder()
                 .testHostName(mlHostSummaryEntry.getKey())
