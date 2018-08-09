@@ -110,6 +110,7 @@ import java.util.stream.Stream;
 public class WatcherServiceImpl implements WatcherService {
   private static final Logger logger = LoggerFactory.getLogger(WatcherServiceImpl.class);
 
+  private static final long WATCHER_STARTUP_GRACE = TimeUnit.SECONDS.toMillis(30);
   private static final long DELEGATE_HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(3);
   private static final long DELEGATE_STARTUP_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
   private static final long DELEGATE_UPGRADE_TIMEOUT = TimeUnit.MINUTES.toMillis(10);
@@ -136,6 +137,7 @@ public class WatcherServiceImpl implements WatcherService {
   private final Set<Integer> illegalVersions = new HashSet<>();
   private final Map<String, Long> delegateVersionMatchedAt = new HashMap<>();
   private HttpHost httpProxyHost;
+  private long startTime;
 
   private final boolean multiVersion = TRUE.toString().equals(System.getenv().get("MULTI_VERSION"));
   private static final Pattern VERSION_PATTERN = Pattern.compile("^[1-9]\\.[0-9]\\.[0-9]*$");
@@ -144,6 +146,7 @@ public class WatcherServiceImpl implements WatcherService {
   @Override
   public void run(boolean upgrade) {
     try {
+      startTime = clock.millis();
       logger.info(upgrade ? "[New] Upgraded watcher process started. Sending confirmation" : "Watcher process started");
       messageService.writeMessage(WATCHER_STARTED);
       startInputCheck();
@@ -311,7 +314,11 @@ public class WatcherServiceImpl implements WatcherService {
 
           for (String delegateProcess : runningDelegates) {
             Map<String, Object> delegateData = messageService.getAllData(DELEGATE_DASH + delegateProcess);
-            if (isNotEmpty(delegateData)) {
+            if (isEmpty(delegateData)) {
+              if (clock.millis() - startTime > WATCHER_STARTUP_GRACE) {
+                obsolete.add(delegateProcess);
+              }
+            } else {
               String delegateVersion = (String) delegateData.get(DELEGATE_VERSION);
               runningVersions.put(delegateVersion, delegateProcess);
               Integer delegateMinorVersion = getMinorVersion(delegateVersion);
@@ -377,8 +384,6 @@ public class WatcherServiceImpl implements WatcherService {
               if (upgradePending) {
                 upgradePendingDelegate = delegateProcess;
               }
-            } else {
-              obsolete.add(delegateProcess);
             }
           }
 
