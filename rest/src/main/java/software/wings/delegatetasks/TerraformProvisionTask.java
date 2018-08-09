@@ -1,6 +1,6 @@
 package software.wings.delegatetasks;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
@@ -98,8 +98,10 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
           .build();
     }
 
+    String scriptDirectory = resolveScriptDirectory(gitConfig, parameters.getScriptPath());
+    File tfVariablesFile = Paths.get(scriptDirectory, TERRAFORM_VARIABLES_FILE_NAME).toFile();
+
     try {
-      String scriptDirectory = resolveScriptDirectory(gitConfig, parameters.getScriptPath());
       File tfStateFile = Paths.get(scriptDirectory, TERRAFORM_STATE_FILE_NAME).toFile();
 
       if (parameters.getCurrentStateFileId() != null) {
@@ -111,16 +113,19 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
         FileUtils.deleteQuietly(tfStateFile);
       }
 
-      File tfVariablesFile = Paths.get(scriptDirectory, TERRAFORM_VARIABLES_FILE_NAME).toFile();
-      if (!isEmpty(parameters.getVariables())) {
+      if (isNotEmpty(parameters.getVariables()) || isNotEmpty(parameters.getEncryptedVariables())) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(tfVariablesFile))) {
-          for (Entry<String, String> entry : parameters.getVariables().entrySet()) {
-            saveVariable(writer, entry.getKey(), entry.getValue());
+          if (isNotEmpty(parameters.getVariables())) {
+            for (Entry<String, String> entry : parameters.getVariables().entrySet()) {
+              saveVariable(writer, entry.getKey(), entry.getValue());
+            }
           }
 
-          for (Entry<String, EncryptedDataDetail> entry : parameters.getEncryptedVariables().entrySet()) {
-            String value = new String(encryptionService.getDecryptedValue(entry.getValue()));
-            saveVariable(writer, entry.getKey(), value);
+          if (isNotEmpty(parameters.getEncryptedVariables())) {
+            for (Entry<String, EncryptedDataDetail> entry : parameters.getEncryptedVariables().entrySet()) {
+              String value = new String(encryptionService.getDecryptedValue(entry.getValue()));
+              saveVariable(writer, entry.getKey(), value);
+            }
           }
         }
       } else {
@@ -210,6 +215,8 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
           .executionStatus(ExecutionStatus.FAILED)
           .errorMessage(Misc.getMessage(ex))
           .build();
+    } finally {
+      FileUtils.deleteQuietly(tfVariablesFile);
     }
   }
 
