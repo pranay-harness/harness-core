@@ -17,7 +17,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import com.newrelic.agent.deps.com.google.common.collect.ImmutableList;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -79,7 +78,7 @@ public class NexusBuildServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetArtifactPaths() {
-    when(nexusService.getArtifactPaths(nexusConfig, null, "releases")).thenReturn(ImmutableList.of("/fakepath"));
+    when(nexusService.getArtifactPaths(nexusConfig, null, "releases")).thenReturn(Lists.newArrayList("/fakepath"));
     List<String> jobs = nexusBuildService.getArtifactPaths("releases", null, nexusConfig, null);
     assertThat(jobs).hasSize(1).containsExactlyInAnyOrder("/fakepath");
   }
