@@ -838,6 +838,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
               kubernetesConfig, encryptedDataDetails, "DestinationRule", virtualServiceName);
         }
       } catch (Exception e) {
+        logger.error("Error checking for previous istio route", e);
         Misc.logAllMessages(e, executionLogCallback);
       }
     }
