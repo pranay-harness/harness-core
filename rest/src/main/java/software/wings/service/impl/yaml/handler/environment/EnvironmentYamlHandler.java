@@ -355,6 +355,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
 
     ServiceVariable serviceVariable = variableBuilder.build();
     serviceVariable.setAppId(appId);
+    serviceVariable.setEnvId(envId);
 
     return serviceVariable;
   }
