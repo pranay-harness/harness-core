@@ -1319,12 +1319,14 @@ public class WorkflowServiceHelper {
   public List<InfrastructureMapping> getResolvedInfraMappings(
       Workflow workflow, Map<String, String> workflowVariables) {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+    if (orchestrationWorkflow == null) {
+      return new ArrayList<>();
+    }
     if (orchestrationWorkflow.isInfraMappingTemplatized()) {
       return resolvedTemplateInfraMappings(workflow, workflowVariables);
-    } else {
-      return infrastructureMappingService.getInfraStructureMappingsByUuids(
-          workflow.getAppId(), orchestrationWorkflow.getInfraMappingIds());
     }
+    return infrastructureMappingService.getInfraStructureMappingsByUuids(
+        workflow.getAppId(), orchestrationWorkflow.getInfraMappingIds());
   }
 
   public List<String> getResolvedInfraMappingIds(Workflow workflow, Map<String, String> workflowVariables) {

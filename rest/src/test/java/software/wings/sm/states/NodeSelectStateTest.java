@@ -36,6 +36,7 @@ import software.wings.api.ServiceInstanceArtifactParam;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.InstanceUnitType;
+import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
@@ -156,6 +157,32 @@ public class NodeSelectStateTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldTestDonotExcludeHostsWithSameArtifactForRolling() {
+    nodeSelectState.setInstanceCount(3);
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(awsInfrastructureMapping);
+    when(context.getAppId()).thenReturn(APP_ID);
+    when(context.getOrchestrationWorkflowType()).thenReturn(OrchestrationWorkflowType.ROLLING);
+    when(contextElement.getUuid()).thenReturn(instance1.getUuid());
+    when(serviceInstanceArtifactParam.getInstanceArtifactMap())
+        .thenReturn(ImmutableMap.of(instance1.getUuid(), ARTIFACT_ID));
+    when(artifactService.get(APP_ID, ARTIFACT_ID)).thenReturn(artifact);
+    when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(true);
+
+    PageResponse<Instance> pageResponse = aPageResponse().withResponse(asList(instance)).build();
+
+    when(instanceService.list(any(PageRequest.class))).thenReturn(pageResponse);
+
+    ExecutionResponse executionResponse = nodeSelectState.execute(context);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(executionResponse.getStateExecutionData()).isNotNull();
+
+    SelectedNodeExecutionData selectedNodeExecutionData =
+        (SelectedNodeExecutionData) executionResponse.getStateExecutionData();
+    assertThat(selectedNodeExecutionData).isNotNull();
+    assertThat(selectedNodeExecutionData.getServiceInstanceList()).size().isEqualTo(3);
+  }
+
+  @Test
   public void shouldTestExcludeHostsForPhysicalSshInfra() {
     nodeSelectState.setInstanceCount(3);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(physicalInfrastructureMapping);
@@ -172,6 +199,10 @@ public class NodeSelectStateTest extends WingsBaseTest {
 
     ExecutionResponse executionResponse = nodeSelectState.execute(context);
 
+    assertResponse(executionResponse);
+  }
+
+  private void assertResponse(ExecutionResponse executionResponse) {
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(executionResponse.getStateExecutionData()).isNotNull();
     SelectedNodeExecutionData selectedNodeExecutionData =
@@ -197,12 +228,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
 
     ExecutionResponse executionResponse = nodeSelectState.execute(context);
 
-    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
-    assertThat(executionResponse.getStateExecutionData()).isNotNull();
-    SelectedNodeExecutionData selectedNodeExecutionData =
-        (SelectedNodeExecutionData) executionResponse.getStateExecutionData();
-    assertThat(selectedNodeExecutionData).isNotNull();
-    assertThat(selectedNodeExecutionData.getServiceInstanceList()).size().isEqualTo(2);
+    assertResponse(executionResponse);
   }
 
   @Test

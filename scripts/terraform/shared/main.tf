@@ -1,4 +1,5 @@
 variable "user" {}
+variable "zone" {}
 variable "access_key" {}
 variable "secret_key" {}
 variable "region" {}
@@ -32,6 +33,7 @@ resource "aws_instance" "test" {
         Purpose     = "test"
         Name        = "workflow"
         User        = "${var.user}"
+        Zone        = "${var.zone}"
     }
 
     count = "${var.generic-instances}"
