@@ -121,7 +121,7 @@ public class LogMLResource {
   public RestResponse<LogMLAnalysisSummary> getLogAnalysisSummary(@QueryParam("accountId") String accountId,
       @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
       @QueryParam("stateType") StateType stateType) throws IOException {
-    if (featureFlagService.isEnabledRelaodCache(FeatureName.CV_DEMO, accountId)) {
+    if (featureFlagService.isEnabledReloadCache(FeatureName.CV_DEMO, accountId)) {
       return new RestResponse<>(analysisService.getAnalysisSummaryForDemo(stateExecutionId, applicationId, stateType));
     } else {
       return new RestResponse<>(analysisService.getAnalysisSummary(stateExecutionId, applicationId, stateType));
