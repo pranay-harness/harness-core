@@ -4,8 +4,8 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ErrorCode.ARTIFACT_SERVER_ERROR;
+import static software.wings.beans.ErrorCode.GENERAL_ERROR;
 import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
-import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
 import static software.wings.exception.WingsException.SRE;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
@@ -187,7 +187,7 @@ public class BambooServiceImpl implements BambooService {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new WingsException(UNKNOWN_ERROR, Misc.getMessage(e), e);
+      throw new WingsException(GENERAL_ERROR, e).addParam("message", Misc.getMessage(e));
     }
   }
 
@@ -250,7 +250,7 @@ public class BambooServiceImpl implements BambooService {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new WingsException(UNKNOWN_ERROR, Misc.getMessage(e), e);
+      throw new WingsException(GENERAL_ERROR, e).addParam("message", Misc.getMessage(e));
     }
   }
 
@@ -277,7 +277,7 @@ public class BambooServiceImpl implements BambooService {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new WingsException(UNKNOWN_ERROR, Misc.getMessage(e), e);
+      throw new WingsException(GENERAL_ERROR, e).addParam("message", Misc.getMessage(e));
     }
   }
 

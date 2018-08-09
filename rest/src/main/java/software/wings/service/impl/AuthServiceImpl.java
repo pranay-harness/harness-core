@@ -10,10 +10,10 @@ import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.ErrorCode.ACCESS_DENIED;
 import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
 import static software.wings.beans.ErrorCode.EXPIRED_TOKEN;
+import static software.wings.beans.ErrorCode.GENERAL_ERROR;
 import static software.wings.beans.ErrorCode.INVALID_CREDENTIAL;
 import static software.wings.beans.ErrorCode.INVALID_TOKEN;
 import static software.wings.beans.ErrorCode.TOKEN_ALREADY_REFRESHED_ONCE;
-import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
 import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
 import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.exception.WingsException.USER;
@@ -748,7 +748,7 @@ public class AuthServiceImpl implements AuthService {
       String authToken = JWT.decode(token).getClaim("authToken").asString();
       return dbCache.get(AuthToken.class, authToken);
     } catch (UnsupportedEncodingException | JWTCreationException exception) {
-      throw new WingsException(UNKNOWN_ERROR, exception).addParam("message", "JWTToken validation failed");
+      throw new WingsException(GENERAL_ERROR, exception).addParam("message", "JWTToken validation failed");
     } catch (JWTDecodeException | SignatureVerificationException | InvalidClaimException e) {
       throw new WingsException(INVALID_CREDENTIAL, e)
           .addParam("message", "Invalid JWTToken received, failed to decode the token");
@@ -818,7 +818,7 @@ public class AuthServiceImpl implements AuthService {
           .withClaim("authToken", authToken)
           .sign(algorithm);
     } catch (UnsupportedEncodingException | JWTCreationException exception) {
-      throw new WingsException(UNKNOWN_ERROR, exception).addParam("message", "JWTToken could not be generated");
+      throw new WingsException(GENERAL_ERROR, exception).addParam("message", "JWTToken could not be generated");
     }
   }
 }

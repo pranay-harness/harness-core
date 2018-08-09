@@ -124,7 +124,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
                 .withExecutionResult(commandExecutionStatus)
                 .build());
 
-        throw new WingsException(ErrorCode.UNKNOWN_ERROR, "", e);
+        throw new WingsException(ErrorCode.UNKNOWN_ERROR, e);
       }
     } catch (WingsException e) {
       final List<ResponseMessage> messageList = WingsExceptionMapper.getResponseMessageList(e, REST_API);

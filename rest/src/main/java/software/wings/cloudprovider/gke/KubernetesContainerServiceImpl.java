@@ -171,7 +171,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       logger.error("Timed out getting controller {}", name, e);
     } catch (Exception e) {
       logger.error("Error while getting controller {}", name, e);
-      throw new WingsException(ErrorCode.UNKNOWN_ERROR, e).addParam("message", "Error while getting controller");
+      throw new WingsException(ErrorCode.GENERAL_ERROR, e).addParam("message", "Error while getting controller");
     }
     return null;
   }
@@ -954,7 +954,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.UNKNOWN_ERROR, e).addParam("message", "Error while waiting for pods to stop");
+      throw new WingsException(ErrorCode.GENERAL_ERROR, e).addParam("message", "Error while waiting for pods to stop");
     }
   }
 
@@ -1062,7 +1062,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.UNKNOWN_ERROR, e)
+      throw new WingsException(ErrorCode.GENERAL_ERROR, e)
           .addParam("message", "Error while waiting for pods to be ready");
     }
 

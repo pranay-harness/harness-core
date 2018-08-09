@@ -14,7 +14,7 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
+import static software.wings.beans.ErrorCode.GENERAL_ERROR;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
@@ -311,7 +311,7 @@ public abstract class BaseIntegrationTest extends WingsBaseTest implements Wings
           .withExpiresAt(new Date(System.currentTimeMillis() + 4 * 60 * 60 * 1000)) // 4 hrs
           .sign(algorithm);
     } catch (UnsupportedEncodingException | JWTCreationException exception) {
-      throw new WingsException(UNKNOWN_ERROR).addParam("message", "reset password link could not be generated");
+      throw new WingsException(GENERAL_ERROR).addParam("message", "reset password link could not be generated");
     }
   }
 }

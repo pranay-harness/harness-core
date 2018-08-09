@@ -124,7 +124,7 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
                 .withExecutionResult(commandExecutionStatus)
                 .build());
 
-        throw new WingsException(ErrorCode.UNKNOWN_ERROR, "", e);
+        throw new WingsException(ErrorCode.UNKNOWN_ERROR, e);
       }
     } catch (WingsException exception) {
       final List<ResponseMessage> messageList = WingsExceptionMapper.getResponseMessageList(exception, REST_API);
