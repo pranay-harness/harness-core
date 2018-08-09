@@ -400,6 +400,6 @@ public class AzureHelperService {
       }
     }
 
-    throw new WingsException(ErrorCode.UNKNOWN_ERROR).addParam("message", Misc.getMessage(e));
+    throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("message", Misc.getMessage(e));
   }
 }

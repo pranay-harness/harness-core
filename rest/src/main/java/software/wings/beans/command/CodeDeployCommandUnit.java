@@ -122,7 +122,7 @@ public class CodeDeployCommandUnit extends AbstractCommandUnit {
       if (ex instanceof WingsException) {
         throw ex;
       }
-      throw new WingsException(ErrorCode.UNKNOWN_ERROR, ex).addParam("message", Misc.getMessage(ex));
+      throw new WingsException(ErrorCode.GENERAL_ERROR, ex).addParam("message", Misc.getMessage(ex));
     }
     executionLogCallback.saveExecutionLog(
         format("Deployment finished with status [%s]", commandExecutionStatus), LogLevel.INFO);

@@ -1,6 +1,6 @@
 package software.wings.security.authentication;
 
-import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
+import static software.wings.beans.ErrorCode.GENERAL_ERROR;
 import static software.wings.exception.WingsException.USER;
 
 import com.google.inject.Inject;
@@ -107,7 +107,7 @@ public class TwoFactorAuthenticationManager {
         }
       }
     } catch (Exception ex) {
-      throw new WingsException(UNKNOWN_ERROR, USER)
+      throw new WingsException(GENERAL_ERROR, USER)
           .addParam("message", "Exception occurred while enforcing Two factor authentication for users");
     }
 

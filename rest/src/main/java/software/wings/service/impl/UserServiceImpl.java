@@ -16,11 +16,11 @@ import static software.wings.beans.ErrorCode.ACCOUNT_DOES_NOT_EXIT;
 import static software.wings.beans.ErrorCode.DOMAIN_NOT_ALLOWED_TO_REGISTER;
 import static software.wings.beans.ErrorCode.EMAIL_VERIFICATION_TOKEN_NOT_FOUND;
 import static software.wings.beans.ErrorCode.EXPIRED_TOKEN;
+import static software.wings.beans.ErrorCode.GENERAL_ERROR;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_CREDENTIAL;
 import static software.wings.beans.ErrorCode.INVALID_EMAIL;
 import static software.wings.beans.ErrorCode.ROLE_DOES_NOT_EXIST;
-import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
 import static software.wings.beans.ErrorCode.USER_ALREADY_REGISTERED;
 import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
 import static software.wings.beans.ErrorCode.USER_DOMAIN_NOT_ALLOWED;
@@ -623,7 +623,7 @@ public class UserServiceImpl implements UserService {
                          .sign(algorithm);
       sendResetPasswordEmail(user, token);
     } catch (UnsupportedEncodingException | JWTCreationException exception) {
-      throw new WingsException(UNKNOWN_ERROR).addParam("message", "reset password link could not be generated");
+      throw new WingsException(GENERAL_ERROR).addParam("message", "reset password link could not be generated");
     }
     return true;
   }
@@ -644,7 +644,7 @@ public class UserServiceImpl implements UserService {
       String email = decode.getClaim("email").asString();
       resetUserPassword(email, password, decode.getIssuedAt().getTime());
     } catch (UnsupportedEncodingException exception) {
-      throw new WingsException(UNKNOWN_ERROR, USER).addParam("message", "Invalid reset password link");
+      throw new WingsException(GENERAL_ERROR, USER).addParam("message", "Invalid reset password link");
     } catch (JWTVerificationException exception) {
       throw new WingsException(EXPIRED_TOKEN, USER);
     }
@@ -702,7 +702,7 @@ public class UserServiceImpl implements UserService {
         }
       }
     } catch (Exception ex) {
-      throw new WingsException(UNKNOWN_ERROR, USER)
+      throw new WingsException(GENERAL_ERROR, USER)
           .addParam("message", "Exception occurred while enforcing Two factor authentication for users");
     }
     return true;
@@ -1167,7 +1167,7 @@ public class UserServiceImpl implements UserService {
           .withClaim("email", userId)
           .sign(algorithm);
     } catch (UnsupportedEncodingException | JWTCreationException exception) {
-      throw new WingsException(UNKNOWN_ERROR, exception).addParam("message", "JWTToken could not be generated");
+      throw new WingsException(GENERAL_ERROR, exception).addParam("message", "JWTToken could not be generated");
     }
   }
 
@@ -1184,7 +1184,7 @@ public class UserServiceImpl implements UserService {
       verifier.verify(jwtToken);
       return getUserByEmail(JWT.decode(jwtToken).getClaim("email").asString());
     } catch (UnsupportedEncodingException | JWTCreationException exception) {
-      throw new WingsException(UNKNOWN_ERROR, exception).addParam("message", "JWTToken validation failed");
+      throw new WingsException(GENERAL_ERROR, exception).addParam("message", "JWTToken validation failed");
     } catch (JWTDecodeException | SignatureVerificationException e) {
       throw new WingsException(INVALID_CREDENTIAL)
           .addParam("message", "Invalid JWTToken received, failed to decode the token");

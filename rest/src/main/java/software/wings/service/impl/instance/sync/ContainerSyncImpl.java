@@ -126,7 +126,7 @@ public class ContainerSyncImpl implements ContainerSync {
       } catch (Exception ex) {
         logger.warn(
             "Error while getting instances for container {}", containerDeploymentInfo.getContainerSvcName(), ex);
-        throw new WingsException(ErrorCode.UNKNOWN_ERROR, ex)
+        throw new WingsException(ErrorCode.GENERAL_ERROR, ex)
             .addParam("message",
                 "Error while getting instances for container " + containerDeploymentInfo.getContainerSvcName());
       }
@@ -164,7 +164,7 @@ public class ContainerSyncImpl implements ContainerSync {
         logger.warn(
             "Error while getting instances for container for appId {} and infraMappingId {} and containerSvcName {}",
             containerInfraMapping.getAppId(), containerInfraMapping.getUuid(), containerSvcName, ex);
-        throw new WingsException(ErrorCode.UNKNOWN_ERROR, ex)
+        throw new WingsException(ErrorCode.GENERAL_ERROR, ex)
             .addParam("message",
                 "Error while getting instances for container for appId " + containerInfraMapping.getAppId()
                     + " and infraMappingId " + containerInfraMapping.getUuid() + " and containerSvcName "

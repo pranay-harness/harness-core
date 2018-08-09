@@ -109,11 +109,8 @@ public class PcfHelperService {
             || pcfCommandExecutionResponse.getErrorMessage().contains(space + " does not exist")) {
           throw new PcfAppNotFoundException(pcfCommandExecutionResponse.getErrorMessage());
         } else {
-          throw new WingsException(ErrorCode.UNKNOWN_ERROR)
-              .addParam("args",
-                  new StringBuilder()
-                      .append("Failed to fetch app details for PCF")
-                      .append(pcfInstanceSyncResponse.getOutput()));
+          throw new WingsException(ErrorCode.GENERAL_ERROR)
+              .addParam("message", "Failed to fetch app details for PCF" + pcfInstanceSyncResponse.getOutput());
         }
       }
 
@@ -133,7 +130,7 @@ public class PcfHelperService {
       }
 
     } catch (InterruptedException e) {
-      throw new WingsException(ErrorCode.UNKNOWN_ERROR).addParam("args", "Failed to fetch app details for PCF");
+      throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("message", "Failed to fetch app details for PCF");
     }
 
     return Collections.EMPTY_LIST;
