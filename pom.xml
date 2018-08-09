@@ -41,7 +41,6 @@
         <atmosphere-version>2.4.9</atmosphere-version>
         <extensions-version>2.4.3</extensions-version>
         <alpnboot.version>8.1.11.v20170118</alpnboot.version>
-        <newrelic.version>3.32.0</newrelic.version>
         <aws.sdk.version>1.11.294</aws.sdk.version>
         <nexus.version>2.14.3-02</nexus.version>
         <artifactory.javaclient.version>2.5.0</artifactory.javaclient.version>
@@ -142,12 +141,6 @@
                 <groupId>org.mortbay.jetty.alpn</groupId>
                 <artifactId>alpn-boot</artifactId>
                 <version>${alpnboot.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.newrelic.agent.java</groupId>
-                <artifactId>newrelic-agent</artifactId>
-                <version>${newrelic.version}</version>
             </dependency>
 
             <dependency>
