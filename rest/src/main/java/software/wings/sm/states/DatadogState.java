@@ -33,6 +33,7 @@ import software.wings.metrics.MetricType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
+import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
@@ -113,7 +114,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
 
   @Override
   protected String triggerAnalysisDataCollection(
-      ExecutionContext context, String correlationId, Map<String, String> hosts) {
+      ExecutionContext context, AnalysisContext analysisContext, String correlationId, Map<String, String> hosts) {
     List<String> metricNames = Arrays.asList(metrics.split(","));
     metricAnalysisService.saveMetricTemplates(context.getAppId(), StateType.DATA_DOG,
         context.getStateExecutionInstanceId(), metricDefinitions(metrics(metricNames).values()));

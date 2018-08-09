@@ -57,7 +57,6 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
-import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData.ContinuousVerificationExecutionMetaDataBuilder;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
@@ -148,8 +147,6 @@ public abstract class AbstractAnalysisState extends State {
   protected String hostnameField;
 
   protected String hostnameTemplate;
-
-  protected AnalysisContext analysisContext;
 
   protected boolean includePreviousPhaseNodes;
 

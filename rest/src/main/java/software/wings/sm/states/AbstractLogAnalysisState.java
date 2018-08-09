@@ -87,7 +87,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     try {
       getLogger().info("Executing {} state, id: {} ", getStateType(), executionContext.getStateExecutionInstanceId());
       cleanUpForRetry(executionContext);
-      analysisContext = getLogAnalysisContext(executionContext, corelationId);
+      AnalysisContext analysisContext = getLogAnalysisContext(executionContext, corelationId);
       getLogger().info("id: {} context: {}", executionContext.getStateExecutionInstanceId(), analysisContext);
       saveMetaDataForDashboard(analysisContext.getAccountId(), executionContext);
 
