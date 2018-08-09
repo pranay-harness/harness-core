@@ -74,7 +74,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
   }
 
   protected abstract String triggerAnalysisDataCollection(
-      ExecutionContext context, String correlationId, Map<String, String> hosts);
+      ExecutionContext context, AnalysisContext analysisContext, String correlationId, Map<String, String> hosts);
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
@@ -84,7 +84,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     try {
       getLogger().info("Executing {} state, id: {} ", getStateType(), context.getStateExecutionInstanceId());
       cleanUpForRetry(context);
-      this.analysisContext = getAnalysisContext(context, corelationId);
+      AnalysisContext analysisContext = getAnalysisContext(context, corelationId);
       getLogger().info("id: {} context: {}", context.getStateExecutionInstanceId(), analysisContext);
       saveMetaDataForDashboard(analysisContext.getAccountId(), context);
 
@@ -180,7 +180,8 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           "triggering data collection for {} state, id: {} ", getStateType(), context.getStateExecutionInstanceId());
       hostsToCollect.remove(null);
       createAndSaveMetricGroups(context, hostsToCollect);
-      delegateTaskId = triggerAnalysisDataCollection(context, executionData.getCorrelationId(), hostsToCollect);
+      delegateTaskId =
+          triggerAnalysisDataCollection(context, analysisContext, executionData.getCorrelationId(), hostsToCollect);
       getLogger().info("triggered data collection for {} state, id: {}, delgateTaskId: {}", getStateType(),
           context.getStateExecutionInstanceId(), delegateTaskId);
 
