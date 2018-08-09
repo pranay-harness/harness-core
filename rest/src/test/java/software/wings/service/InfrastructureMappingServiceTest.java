@@ -100,6 +100,8 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.generator.InfrastructureMappingGenerator;
+import software.wings.generator.OwnerManager;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.impl.ContainerServiceParams;
@@ -155,6 +157,9 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   @Mock private YamlChangeSetHelper yamlChangeSetHelper;
 
   @Inject @InjectMocks private InfrastructureMappingService infrastructureMappingService;
+
+  @Inject InfrastructureMappingGenerator infrastructureMappingGenerator;
+  @Inject private OwnerManager ownerManager;
 
   @Mock private SecretManager secretManager;
   @Mock private HQuery<InfrastructureMapping> query;
@@ -282,7 +287,6 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
                                                    .withName("Name1")
                                                    .withHostConnectionAttrs(HOST_CONN_ATTR_ID)
                                                    .withComputeProviderSettingId(SETTING_ID)
-                                                   .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
                                                    .withComputeProviderType(PHYSICAL_DATA_CENTER.name())
                                                    .withDeploymentType(DeploymentType.SSH.name())
                                                    .withAppId(APP_ID)
@@ -298,7 +302,6 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
                                                      .withName("Name2")
                                                      .withHostConnectionAttrs("HOST_CONN_ATTR_ID_1")
                                                      .withComputeProviderSettingId(SETTING_ID)
-                                                     .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
                                                      .withComputeProviderType(PHYSICAL_DATA_CENTER.name())
                                                      .withAccountId(ACCOUNT_ID)
                                                      .withDeploymentType(DeploymentType.SSH.name())

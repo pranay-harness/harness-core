@@ -83,8 +83,9 @@ public class InfrastructureMappingGenerator {
     final List<Tag> tags = asList(Tag.builder().key("Purpose").value("test").build(),
         Tag.builder().key("User").value(System.getProperty("user.name")).build());
 
-    final SettingAttribute awsTestSettingAttribute = settingGenerator.ensurePredefined(seed, AWS_TEST_CLOUD_PROVIDER);
-    final SettingAttribute devKeySettingAttribute = settingGenerator.ensurePredefined(seed, DEV_TEST_CONNECTOR);
+    final SettingAttribute awsTestSettingAttribute =
+        settingGenerator.ensurePredefined(seed, owners, AWS_TEST_CLOUD_PROVIDER);
+    final SettingAttribute devKeySettingAttribute = settingGenerator.ensurePredefined(seed, owners, DEV_TEST_CONNECTOR);
 
     return ensureInfrastructureMapping(seed, owners,
         anAwsInfrastructureMapping()
@@ -121,8 +122,9 @@ public class InfrastructureMappingGenerator {
       owners.add(service);
     }
 
-    final SettingAttribute awsTestSettingAttribute = settingGenerator.ensurePredefined(seed, AWS_TEST_CLOUD_PROVIDER);
-    final SettingAttribute devKeySettingAttribute = settingGenerator.ensurePredefined(seed, DEV_TEST_CONNECTOR);
+    final SettingAttribute awsTestSettingAttribute =
+        settingGenerator.ensurePredefined(seed, owners, AWS_TEST_CLOUD_PROVIDER);
+    final SettingAttribute devKeySettingAttribute = settingGenerator.ensurePredefined(seed, owners, DEV_TEST_CONNECTOR);
 
     return ensureInfrastructureMapping(seed, owners,
         anAwsInfrastructureMapping()
@@ -139,12 +141,14 @@ public class InfrastructureMappingGenerator {
             .build());
   }
 
-  public InfrastructureMapping ensureRandom(Randomizer.Seed seed) {
+  public InfrastructureMapping ensureRandom(Randomizer.Seed seed, Owners owners) {
+    if (owners == null) {
+      owners = ownerManager.create();
+    }
+
     EnhancedRandom random = Randomizer.instance(seed);
-
     InfrastructureMappings predefined = random.nextObject(InfrastructureMappings.class);
-
-    return ensurePredefined(seed, null, predefined);
+    return ensurePredefined(seed, owners, predefined);
   }
 
   void fillOwners(InfrastructureMapping infrastructureMapping, Owners owners) {
@@ -290,14 +294,16 @@ public class InfrastructureMappingGenerator {
         if (infrastructureMapping != null && infrastructureMapping.getComputeProviderSettingId() != null) {
           builder.withComputeProviderSettingId(infrastructureMapping.getComputeProviderSettingId());
         } else {
-          final SettingAttribute settingAttribute = settingGenerator.ensurePredefined(seed, AWS_TEST_CLOUD_PROVIDER);
+          final SettingAttribute settingAttribute =
+              settingGenerator.ensurePredefined(seed, owners, AWS_TEST_CLOUD_PROVIDER);
           builder.withComputeProviderSettingId(settingAttribute.getUuid());
         }
 
         if (infrastructureMapping != null && infrastructureMapping.getHostConnectionAttrs() != null) {
           builder.withHostConnectionAttrs(infrastructureMapping.getHostConnectionAttrs());
         } else {
-          final SettingAttribute devKeySettingAttribute = settingGenerator.ensurePredefined(seed, DEV_TEST_CONNECTOR);
+          final SettingAttribute devKeySettingAttribute =
+              settingGenerator.ensurePredefined(seed, owners, DEV_TEST_CONNECTOR);
           builder.withHostConnectionAttrs(devKeySettingAttribute.getUuid());
         }
 

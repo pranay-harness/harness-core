@@ -10,6 +10,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.generator.OwnerManager.Owners;
 import software.wings.generator.Randomizer;
 import software.wings.generator.Randomizer.Seed;
 import software.wings.generator.SecretGenerator;
@@ -31,7 +32,8 @@ public class JenkinsIntegrationTest extends BaseIntegrationTest {
 
   private JenkinsConfig obtainJenkinsConfig() {
     final Seed seed = Randomizer.seed();
-    SettingAttribute jenkinsSettingAttribute = settingGenerator.ensurePredefined(seed, HARNESS_JENKINS_CONNECTOR);
+    SettingAttribute jenkinsSettingAttribute =
+        settingGenerator.ensurePredefined(seed, new Owners(), HARNESS_JENKINS_CONNECTOR);
 
     return (JenkinsConfig) wingsPersistence.createQuery(SettingAttribute.class)
         .filter("name", "Harness Jenkins")

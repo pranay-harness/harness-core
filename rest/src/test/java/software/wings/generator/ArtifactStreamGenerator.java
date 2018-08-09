@@ -46,7 +46,7 @@ public class ArtifactStreamGenerator {
     Service service = owners.obtainService();
 
     final SettingAttribute settingAttribute =
-        settingGenerator.ensurePredefined(seed, Settings.HARNESS_JENKINS_CONNECTOR);
+        settingGenerator.ensurePredefined(seed, owners, Settings.HARNESS_JENKINS_CONNECTOR);
 
     return ensureArtifactStream(seed,
         JenkinsArtifactStream.builder()

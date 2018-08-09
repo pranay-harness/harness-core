@@ -152,6 +152,10 @@ public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceList
    */
   @Override
   public Date scheduleJob(JobDetail jobDetail, Trigger trigger) {
+    if (scheduler == null) {
+      return new Date();
+    }
+
     try {
       return scheduler.scheduleJob(jobDetail, trigger);
     } catch (org.quartz.ObjectAlreadyExistsException ex) {
@@ -173,6 +177,10 @@ public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceList
    */
   @Override
   public boolean deleteJob(String jobName, String groupName) {
+    if (scheduler == null) {
+      return true;
+    }
+
     if (groupName != null && jobName != null) {
       try {
         return scheduler.deleteJob(new JobKey(jobName, groupName));

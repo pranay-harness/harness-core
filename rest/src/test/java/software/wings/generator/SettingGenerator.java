@@ -39,6 +39,7 @@ import software.wings.beans.config.NexusConfig;
 import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.generator.AccountGenerator.Accounts;
+import software.wings.generator.OwnerManager.Owners;
 import software.wings.generator.SecretGenerator.SecretName;
 import software.wings.service.intfc.SettingsService;
 import software.wings.utils.WingsTestConstants;
@@ -65,30 +66,30 @@ public class SettingGenerator {
     HARNESS_GCP_EXPLORATION
   }
 
-  public SettingAttribute ensurePredefined(Randomizer.Seed seed, Settings predefined) {
+  public SettingAttribute ensurePredefined(Randomizer.Seed seed, Owners owners, Settings predefined) {
     switch (predefined) {
       case AWS_TEST_CLOUD_PROVIDER:
-        return ensureAwsTest(seed);
+        return ensureAwsTest(seed, owners);
       case DEV_TEST_CONNECTOR:
         return ensureDevTest(seed);
       case HARNESS_JENKINS_CONNECTOR:
-        return ensureHarnessJenkins(seed);
+        return ensureHarnessJenkins(seed, owners);
       case GITHUB_TEST_CONNECTOR:
-        return ensureGithubTest(seed);
+        return ensureGithubTest(seed, owners);
       case TERRAFORM_TEST_GIT_REPO:
-        return ensureTerraformTestGitRepo(seed);
+        return ensureTerraformTestGitRepo(seed, owners);
       case HARNESS_BAMBOO_CONNECTOR:
-        return ensureHarnessBamboo(seed);
+        return ensureHarnessBamboo(seed, owners);
       case HARNESS_NEXUS_CONNECTOR:
-        return ensureHarnessNexus(seed);
+        return ensureHarnessNexus(seed, owners);
       case HARNESS_NEXU3_CONNECTOR:
-        return ensureHarnessNexus3(seed);
+        return ensureHarnessNexus3(seed, owners);
       case HARNESS_ARTIFACTORY_CONNECTOR:
-        return ensureHarnessArtifactory(seed);
+        return ensureHarnessArtifactory(seed, owners);
       case HARNESS_DOCKER_REGISTRY:
-        return ensureHarnessDocker(seed);
+        return ensureHarnessDocker(seed, owners);
       case HARNESS_GCP_EXPLORATION:
-        return ensureHarnessGcpExploration(seed);
+        return ensureHarnessGcpExploration(seed, owners);
       default:
         unhandled(predefined);
     }
@@ -96,8 +97,8 @@ public class SettingGenerator {
     return null;
   }
 
-  private SettingAttribute ensureAwsTest(Randomizer.Seed seed) {
-    final Account account = accountGenerator.ensurePredefined(seed, Accounts.GENERIC_TEST);
+  private SettingAttribute ensureAwsTest(Randomizer.Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
     SettingAttribute settingAttribute =
         aSettingAttribute()
             .withCategory(CLOUD_PROVIDER)
@@ -135,8 +136,8 @@ public class SettingGenerator {
     return ensureSettingAttribute(seed, settingAttribute);
   }
 
-  private SettingAttribute ensureGithubTest(Randomizer.Seed seed) {
-    final Account account = accountGenerator.ensurePredefined(seed, Accounts.GENERIC_TEST);
+  private SettingAttribute ensureGithubTest(Randomizer.Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
 
     final SettingAttribute settingAttribute =
         aSettingAttribute()
@@ -156,8 +157,8 @@ public class SettingGenerator {
     return ensureSettingAttribute(seed, settingAttribute);
   }
 
-  private SettingAttribute ensureTerraformTestGitRepo(Randomizer.Seed seed) {
-    SettingAttribute githubKey = ensurePredefined(seed, GITHUB_TEST_CONNECTOR);
+  private SettingAttribute ensureTerraformTestGitRepo(Randomizer.Seed seed, Owners owners) {
+    SettingAttribute githubKey = ensurePredefined(seed, owners, GITHUB_TEST_CONNECTOR);
 
     SettingAttribute settingAttribute =
         aSettingAttribute()
@@ -177,8 +178,8 @@ public class SettingGenerator {
     return ensureSettingAttribute(seed, settingAttribute);
   }
 
-  private SettingAttribute ensureHarnessJenkins(Randomizer.Seed seed) {
-    final Account account = accountGenerator.ensurePredefined(seed, Accounts.GENERIC_TEST);
+  private SettingAttribute ensureHarnessJenkins(Randomizer.Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
 
     SettingAttribute settingAttribute =
         aSettingAttribute()
@@ -196,8 +197,8 @@ public class SettingGenerator {
     return ensureSettingAttribute(seed, settingAttribute);
   }
 
-  private SettingAttribute ensureHarnessBamboo(Randomizer.Seed seed) {
-    final Account account = accountGenerator.ensurePredefined(seed, Accounts.GENERIC_TEST);
+  private SettingAttribute ensureHarnessBamboo(Randomizer.Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
     SettingAttribute bambooSettingAttribute =
         aSettingAttribute()
             .withName(WingsTestConstants.HARNESS_BAMBOO)
@@ -213,8 +214,8 @@ public class SettingGenerator {
     return ensureSettingAttribute(seed, bambooSettingAttribute);
   }
 
-  private SettingAttribute ensureHarnessNexus(Randomizer.Seed seed) {
-    final Account account = accountGenerator.ensurePredefined(seed, Accounts.GENERIC_TEST);
+  private SettingAttribute ensureHarnessNexus(Randomizer.Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
     SettingAttribute nexusSettingAttribute =
         aSettingAttribute()
             .withName(HARNESS_NEXUS)
@@ -230,8 +231,8 @@ public class SettingGenerator {
     return ensureSettingAttribute(seed, nexusSettingAttribute);
   }
 
-  private SettingAttribute ensureHarnessNexus3(Randomizer.Seed seed) {
-    final Account account = accountGenerator.ensurePredefined(seed, Accounts.GENERIC_TEST);
+  private SettingAttribute ensureHarnessNexus3(Randomizer.Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
     SettingAttribute nexus3SettingAttribute =
         aSettingAttribute()
             .withName(HARNESS_NEXUS_THREE)
@@ -247,8 +248,8 @@ public class SettingGenerator {
     return ensureSettingAttribute(seed, nexus3SettingAttribute);
   }
 
-  private SettingAttribute ensureHarnessArtifactory(Randomizer.Seed seed) {
-    final Account account = accountGenerator.ensurePredefined(seed, Accounts.GENERIC_TEST);
+  private SettingAttribute ensureHarnessArtifactory(Randomizer.Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
     SettingAttribute artifactorySettingAttribute =
         aSettingAttribute()
             .withName(HARNESS_ARTIFACTORY)
@@ -264,8 +265,8 @@ public class SettingGenerator {
     return ensureSettingAttribute(seed, artifactorySettingAttribute);
   }
 
-  private SettingAttribute ensureHarnessDocker(Randomizer.Seed seed) {
-    final Account account = accountGenerator.ensurePredefined(seed, Accounts.GENERIC_TEST);
+  private SettingAttribute ensureHarnessDocker(Randomizer.Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
     SettingAttribute dockerSettingAttribute =
         aSettingAttribute()
             .withName(HARNESS_DOCKER_REGISTRY)
@@ -281,8 +282,8 @@ public class SettingGenerator {
     return ensureSettingAttribute(seed, dockerSettingAttribute);
   }
 
-  private SettingAttribute ensureHarnessGcpExploration(Randomizer.Seed seed) {
-    final Account account = accountGenerator.ensurePredefined(seed, Accounts.GENERIC_TEST);
+  private SettingAttribute ensureHarnessGcpExploration(Randomizer.Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
     SettingAttribute gcpSettingAttribute =
         aSettingAttribute()
             .withName(HARNESS_GCP_EXPLORATION)
