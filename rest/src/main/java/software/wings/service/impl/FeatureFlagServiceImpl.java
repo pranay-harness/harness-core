@@ -39,11 +39,11 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
   @Inject private Clock clock;
   @Inject private MainConfiguration mainConfiguration;
 
-  long lastEpoch;
-  Map<FeatureName, FeatureFlag> cache = new HashMap<>();
+  private long lastEpoch;
+  private final Map<FeatureName, FeatureFlag> cache = new HashMap<>();
 
   @Override
-  public boolean isEnabledRelaodCache(FeatureName featureName, String accountId) {
+  public boolean isEnabledReloadCache(FeatureName featureName, String accountId) {
     cache.clear();
     return isEnabled(featureName, accountId);
   }
@@ -55,14 +55,14 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
     synchronized (cache) {
       // if the last access to cache was in different epoch reset it. This will allow for potentially outdated
       // objects to be replaced, and the potential change will be in a relatively same time on all managers.
-      long epoch = System.currentTimeMillis() / Duration.ofMinutes(5).toMillis();
+      long epoch = clock.millis() / Duration.ofMinutes(5).toMillis();
       if (lastEpoch != epoch) {
         lastEpoch = epoch;
         cache.clear();
       }
 
       featureFlag = cache.computeIfAbsent(featureName,
-          key -> wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", key).get());
+          key -> wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", key.name()).get());
     }
 
     if (featureFlag == null) {

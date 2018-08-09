@@ -7,5 +7,5 @@ public interface FeatureFlagService {
 
   void initializeFeatureFlags();
 
-  boolean isEnabledRelaodCache(FeatureName featureName, String accountId);
+  boolean isEnabledReloadCache(FeatureName featureName, String accountId);
 }
