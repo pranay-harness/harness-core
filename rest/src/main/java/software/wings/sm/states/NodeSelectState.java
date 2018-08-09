@@ -7,6 +7,7 @@ import static org.atteo.evo.inflector.English.plural;
 import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
 import static software.wings.beans.InstanceUnitType.COUNT;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
+import static software.wings.beans.OrchestrationWorkflowType.ROLLING;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServiceInstanceSelectionParams;
@@ -136,7 +137,8 @@ public abstract class NodeSelectState extends State {
       WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
       boolean excludeHostsWithSameArtifact = false;
       if (workflowStandardParams != null) {
-        excludeHostsWithSameArtifact = workflowStandardParams.isExcludeHostsWithSameArtifact();
+        excludeHostsWithSameArtifact = workflowStandardParams.isExcludeHostsWithSameArtifact()
+            && !ROLLING.equals(context.getOrchestrationWorkflowType());
         if (InfrastructureMappingType.AWS_SSH.name().equals(infrastructureMapping.getInfraMappingType())
             || InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name().equals(
                    infrastructureMapping.getInfraMappingType())
