@@ -11,7 +11,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.github.benas.randombeans.api.EnhancedRandom;
-import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.InfrastructureProvisioner;
@@ -67,9 +66,7 @@ public class InfrastructureProvisionerGenerator {
         seed, owners, builder().name("Warehouse").artifactType(ArtifactType.WAR).build());
 
     final SettingAttribute gitSourceSettingAttribute =
-        settingGenerator.ensurePredefined(seed, Settings.TERRAFORM_TEST_GIT_REPO);
-
-    final Account account = owners.obtainAccount();
+        settingGenerator.ensurePredefined(seed, owners, Settings.TERRAFORM_TEST_GIT_REPO);
 
     final TerraformInfrastructureProvisioner terraformInfrastructureProvisioner =
         TerraformInfrastructureProvisioner.builder()
@@ -179,7 +176,7 @@ public class InfrastructureProvisionerGenerator {
           builder.sourceRepoSettingId(terraformInfrastructureProvisioner.getSourceRepoSettingId());
         } else {
           final SettingAttribute settingAttribute =
-              settingGenerator.ensurePredefined(seed, Settings.TERRAFORM_TEST_GIT_REPO);
+              settingGenerator.ensurePredefined(seed, owners, Settings.TERRAFORM_TEST_GIT_REPO);
           builder.sourceRepoSettingId(settingAttribute.getUuid());
         }
 

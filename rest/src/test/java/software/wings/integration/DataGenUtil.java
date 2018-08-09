@@ -260,8 +260,7 @@ public class DataGenUtil extends BaseIntegrationTest {
 
     Account account = createLicenseAndDefaultUsers();
     accountGenerator.setAccount(account);
-
-    createGlobalSettings();
+    createGlobalSettings(account);
 
     List<Application> apps = createApplications();
     Map<String, List<AppContainer>> containers = new HashMap<>();
@@ -452,15 +451,18 @@ public class DataGenUtil extends BaseIntegrationTest {
     wingsPersistence.save(featureFlag);
   }
 
-  private void createGlobalSettings() {
+  private void createGlobalSettings(Account account) {
     final Seed seed = new Seed(0);
 
-    settingGenerator.ensurePredefined(seed, HARNESS_BAMBOO_CONNECTOR);
-    settingGenerator.ensurePredefined(seed, HARNESS_NEXUS_CONNECTOR);
-    settingGenerator.ensurePredefined(seed, HARNESS_NEXU3_CONNECTOR);
-    settingGenerator.ensurePredefined(seed, HARNESS_ARTIFACTORY_CONNECTOR);
-    settingGenerator.ensurePredefined(seed, HARNESS_DOCKER_REGISTRY);
-    settingGenerator.ensurePredefined(seed, HARNESS_GCP_EXPLORATION);
+    Owners owners = new Owners();
+    owners.add(account);
+
+    settingGenerator.ensurePredefined(seed, owners, HARNESS_BAMBOO_CONNECTOR);
+    settingGenerator.ensurePredefined(seed, owners, HARNESS_NEXUS_CONNECTOR);
+    settingGenerator.ensurePredefined(seed, owners, HARNESS_NEXU3_CONNECTOR);
+    settingGenerator.ensurePredefined(seed, owners, HARNESS_ARTIFACTORY_CONNECTOR);
+    settingGenerator.ensurePredefined(seed, owners, HARNESS_DOCKER_REGISTRY);
+    settingGenerator.ensurePredefined(seed, owners, HARNESS_GCP_EXPLORATION);
 
     SettingAttribute smtpSettingAttribute =
         aSettingAttribute()
