@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
+import static software.wings.delegatetasks.AppdynamicsDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
 import static software.wings.dl.HQuery.excludeCount;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
@@ -408,13 +409,18 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
 
     if (timeSeriesMLHostSummaryMap != null) {
       for (Entry<String, TimeSeriesMLHostSummary> mlHostSummaryEntry : timeSeriesMLHostSummaryMap.entrySet()) {
-        hostAnalysisValues.add(NewRelicMetricHostAnalysisValue.builder()
-                                   .testHostName(mlHostSummaryEntry.getKey())
-                                   .controlHostName(mlHostSummaryEntry.getValue().getNn())
-                                   .controlValues(mlHostSummaryEntry.getValue().getControl_data())
-                                   .testValues(mlHostSummaryEntry.getValue().getTest_data())
-                                   .riskLevel(getRiskLevel(mlHostSummaryEntry.getValue().getRisk()))
-                                   .build());
+        final boolean isPredictiveAnalysis =
+            mlHostSummaryEntry.getValue().getTimeSeriesMlAnalysisType().equals(TimeSeriesMlAnalysisType.PREDICTIVE);
+        hostAnalysisValues.add(
+            NewRelicMetricHostAnalysisValue.builder()
+                .testHostName(mlHostSummaryEntry.getKey())
+                .controlHostName(mlHostSummaryEntry.getValue().getNn())
+                .controlValues(mlHostSummaryEntry.getValue().getControl_data())
+                .testValues(mlHostSummaryEntry.getValue().getTest_data())
+                .riskLevel(getRiskLevel(mlHostSummaryEntry.getValue().getRisk()))
+                .testStartIndex(isPredictiveAnalysis ? PREDECTIVE_HISTORY_MINUTES : -1)
+                .anomalies(isPredictiveAnalysis ? mlHostSummaryEntry.getValue().getAnomalies() : null)
+                .build());
       }
     }
     return hostAnalysisValues;
