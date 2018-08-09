@@ -187,5 +187,7 @@ public class NewRelicMetricAnalysisRecord extends Base implements Comparable<New
     private String controlHostName;
     private List<Double> testValues;
     private List<Double> controlValues;
+    private List<Integer> anomalies;
+    int testStartIndex;
   }
 }
