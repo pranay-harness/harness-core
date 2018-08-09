@@ -48,6 +48,8 @@ import static software.wings.utils.message.MessengerType.DELEGATE;
 import static software.wings.utils.message.MessengerType.WATCHER;
 import static software.wings.watcher.app.WatcherApplication.getProcessId;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
@@ -280,7 +282,8 @@ public class WatcherServiceImpl implements WatcherService {
       }
 
       List<String> expectedVersions = findExpectedDelegateVersions();
-      List<String> runningVersions = new ArrayList<>();
+      Multimap<String, String> runningVersions = HashMultimap.create();
+      List<String> shutdownPendingList = new ArrayList<>();
 
       if (isEmpty(runningDelegates)) {
         if (!multiVersion) {
@@ -294,7 +297,6 @@ public class WatcherServiceImpl implements WatcherService {
         List<String> drainingRestartNeededList = new ArrayList<>();
         List<String> upgradeNeededList = new ArrayList<>();
         List<String> shutdownNeededList = new ArrayList<>();
-        List<String> shutdownPendingList = new ArrayList<>();
         List<String> drainingNeededList = new ArrayList<>();
         String upgradePendingDelegate = null;
         boolean newDelegateTimedOut = false;
@@ -311,7 +313,7 @@ public class WatcherServiceImpl implements WatcherService {
             Map<String, Object> delegateData = messageService.getAllData(DELEGATE_DASH + delegateProcess);
             if (isNotEmpty(delegateData)) {
               String delegateVersion = (String) delegateData.get(DELEGATE_VERSION);
-              runningVersions.add(delegateVersion);
+              runningVersions.put(delegateVersion, delegateProcess);
               Integer delegateMinorVersion = getMinorVersion(delegateVersion);
               boolean delegateMinorVersionMismatch = delegateMinorVersion != null
                   && (delegateMinorVersion < minMinorVersion.get() || illegalVersions.contains(delegateMinorVersion));
@@ -387,7 +389,7 @@ public class WatcherServiceImpl implements WatcherService {
             obsolete.forEach(this ::shutdownDelegate);
           }
 
-          if (shutdownPendingList.containsAll(runningDelegates)) {
+          if (!multiVersion && shutdownPendingList.containsAll(runningDelegates)) {
             logger.warn("No delegates acquiring tasks. Delegate processes {} pending shutdown. Forcing shutdown now",
                 shutdownPendingList);
             shutdownPendingList.forEach(this ::shutdownDelegate);
@@ -398,7 +400,7 @@ public class WatcherServiceImpl implements WatcherService {
           logger.info("Delegate processes {} to be drained.", drainingNeededList);
           drainingNeededList.forEach(this ::drainDelegateProcess);
           Set<String> allVersions = new HashSet<>(expectedVersions);
-          allVersions.addAll(runningVersions);
+          allVersions.addAll(runningVersions.keySet());
           removeDelegateVersionsFromCapsule(allVersions);
           cleanupOldDelegateVersions(allVersions);
         }
@@ -416,8 +418,9 @@ public class WatcherServiceImpl implements WatcherService {
         }
         if (isNotEmpty(drainingRestartNeededList)) {
           if (multiVersion) {
-            // TODO(brett) - Handle draining in multi-version case
-            drainingRestartNeededList.forEach(this ::shutdownDelegate);
+            logger.warn("Delegate processes {} need restart. Will be drained and new process with same version started",
+                drainingRestartNeededList);
+            drainingRestartNeededList.forEach(this ::drainDelegateProcess);
           } else if (working.compareAndSet(false, true)) {
             logger.warn(
                 "Delegate processes {} need restart. Starting new process and draining old", drainingRestartNeededList);
@@ -436,7 +439,7 @@ public class WatcherServiceImpl implements WatcherService {
 
       if (multiVersion) {
         for (String version : expectedVersions) {
-          if (!runningVersions.contains(version)) {
+          if (shutdownPendingList.containsAll(runningVersions.get(version))) {
             if (working.compareAndSet(false, true)) {
               downloadRunScripts(version);
               downloadDelegateJar(version);
@@ -554,7 +557,7 @@ public class WatcherServiceImpl implements WatcherService {
   }
 
   private void drainDelegateProcess(String delegateProcess) {
-    logger.info("Sending old delegate process {} stop-acquiring message", delegateProcess);
+    logger.info("Sending delegate process {} stop-acquiring message to drain", delegateProcess);
     messageService.writeMessageToChannel(DELEGATE, delegateProcess, DELEGATE_STOP_ACQUIRING);
   }
 
