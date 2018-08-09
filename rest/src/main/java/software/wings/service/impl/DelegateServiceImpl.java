@@ -447,6 +447,8 @@ public class DelegateServiceImpl implements DelegateService {
       String delegateMetadataUrl = mainConfiguration.getDelegateMetadataUrl().trim();
       String delegateMatadata;
       if (multiVersion) {
+        logger.info("MultiVersion is enabled");
+
         latestVersion = version;
         delegateStorageUrl = "";
         delegateCheckLocation = "";
@@ -472,7 +474,13 @@ public class DelegateServiceImpl implements DelegateService {
                             .connectTimeout(10000)
                             .socketTimeout(10000)
                             .execute()
-                            .handleResponse(response -> response.getStatusLine().getStatusCode() == 200);
+                            .handleResponse(response -> {
+                              int statusCode = response.getStatusLine().getStatusCode();
+                              logger.info("HEAD on downloadUrl got statusCode {}", statusCode);
+                              return statusCode == 200;
+                            });
+
+        logger.info("jarFileExists [{}]", jarFileExists);
       }
     } catch (IOException | ExecutionException e) {
       logger.warn("Unable to fetch delegate version information", e);
@@ -506,8 +514,11 @@ public class DelegateServiceImpl implements DelegateService {
       if (delegateProfile != null) {
         params.put("delegateProfile", delegateProfile);
       }
+
       return params.build();
     }
+
+    logger.info("returning null paramMap");
     return null;
   }
 
