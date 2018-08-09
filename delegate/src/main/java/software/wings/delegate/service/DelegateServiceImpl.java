@@ -566,7 +566,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   private String registerDelegate(Builder builder) {
     AtomicInteger attempts = new AtomicInteger(0);
-    while (true) {
+    while (acquireTasks.get()) {
       RestResponse<Delegate> delegateResponse;
       try {
         attempts.incrementAndGet();
@@ -593,6 +593,10 @@ public class DelegateServiceImpl implements DelegateService {
           "Delegate registered with id {} and status {}", delegateId, delegateResponse.getResource().getStatus());
       return delegateId;
     }
+
+    // Didn't register and not acquiring. Exiting.
+    System.exit(1);
+    return null;
   }
 
   private void startInstallCheck() {
