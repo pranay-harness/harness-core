@@ -418,7 +418,18 @@ public class DelegateResource {
   public RestResponse<DelegateScripts> checkForUpgrade(@Context HttpServletRequest request,
       @HeaderParam("Version") String version, @PathParam("delegateId") @NotEmpty String delegateId,
       @QueryParam("accountId") @NotEmpty String accountId) throws IOException, TemplateException {
-    return new RestResponse<>(delegateService.checkForUpgrade(accountId, delegateId, version, getManagerUrl(request)));
+    return new RestResponse<>(delegateService.getDelegateScripts(accountId, version, getManagerUrl(request)));
+  }
+
+  @DelegateAuth
+  @GET
+  @Path("delegateScripts")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<DelegateScripts> getDelegateScripts(@Context HttpServletRequest request,
+      @QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("delegateVersion") @NotEmpty String delegateVersion) throws IOException, TemplateException {
+    return new RestResponse<>(delegateService.getDelegateScripts(accountId, delegateVersion, getManagerUrl(request)));
   }
 
   @DelegateAuth

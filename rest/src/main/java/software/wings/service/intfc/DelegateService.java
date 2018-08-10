@@ -40,7 +40,7 @@ public interface DelegateService {
 
   Delegate updateScopes(@Valid Delegate delegate);
 
-  DelegateScripts checkForUpgrade(String accountId, String delegateId, String version, String managerHost)
+  DelegateScripts getDelegateScripts(String accountId, String version, String managerHost)
       throws IOException, TemplateException;
 
   String getLatestDelegateVersion(String accountId);

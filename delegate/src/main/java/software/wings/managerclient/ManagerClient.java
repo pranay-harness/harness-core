@@ -5,7 +5,6 @@ import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
-import retrofit2.http.Header;
 import retrofit2.http.Headers;
 import retrofit2.http.Multipart;
 import retrofit2.http.POST;
@@ -63,9 +62,9 @@ public interface ManagerClient {
       @Query("accountId") String accountId, @Query("profileId") String profileId,
       @Query("lastUpdatedAt") Long lastUpdatedAt);
 
-  @GET("delegates/{delegateId}/upgrade")
-  Call<RestResponse<DelegateScripts>> checkForUpgrade(
-      @Header("Version") String version, @Path("delegateId") String delegateId, @Query("accountId") String accountId);
+  @GET("delegates/delegateScripts")
+  Call<RestResponse<DelegateScripts>> getDelegateScripts(
+      @Query("accountId") String accountId, @Query("delegateVersion") String delegateVersion);
 
   @GET("service-templates/{templateId}/compute-files")
   Call<RestResponse<List<ConfigFile>>> getConfigFiles(@Path("templateId") String templateId,

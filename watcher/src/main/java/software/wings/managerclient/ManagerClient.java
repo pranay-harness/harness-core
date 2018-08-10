@@ -2,7 +2,6 @@ package software.wings.managerclient;
 
 import retrofit2.Call;
 import retrofit2.http.GET;
-import retrofit2.http.Header;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 import software.wings.beans.DelegateConfiguration;
@@ -10,9 +9,9 @@ import software.wings.beans.DelegateScripts;
 import software.wings.beans.RestResponse;
 
 public interface ManagerClient {
-  @GET("delegates/{delegateId}/upgrade")
-  Call<RestResponse<DelegateScripts>> downloadRunScripts(
-      @Header("Version") String version, @Path("delegateId") String delegateId, @Query("accountId") String accountId);
+  @GET("delegates/{delegateId}/delegateScripts")
+  Call<RestResponse<DelegateScripts>> getDelegateScripts(
+      @Query("accountId") String accountId, @Query("delegateVersion") String delegateVersion);
 
   @GET("delegates/configuration")
   Call<RestResponse<DelegateConfiguration>> getDelegateConfiguration(@Query("accountId") String accountId);

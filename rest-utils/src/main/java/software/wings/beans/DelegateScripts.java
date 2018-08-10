@@ -11,7 +11,6 @@ import lombok.Data;
 @Data
 @Builder
 public class DelegateScripts {
-  private String delegateId;
   private String version;
   private boolean doUpgrade;
   private String stopScript;

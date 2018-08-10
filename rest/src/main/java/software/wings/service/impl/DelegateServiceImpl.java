@@ -153,7 +153,6 @@ public class DelegateServiceImpl implements DelegateService {
   private static final Configuration cfg = new Configuration(VERSION_2_3_23);
   private static final int MAX_DELEGATE_META_INFO_ENTRIES = 10000;
   private static final int DELEGATE_METADATA_HTTP_CALL_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(10);
-  private static final String NEW_DELEGATE_VERSION = "new-delegate-version";
 
   static {
     cfg.setTemplateLoader(new ClassTemplateLoader(DelegateServiceImpl.class, "/delegatetemplates"));
@@ -362,18 +361,11 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  public DelegateScripts checkForUpgrade(String accountId, String delegateId, String version, String managerHost)
+  public DelegateScripts getDelegateScripts(String accountId, String version, String managerHost)
       throws IOException, TemplateException {
-    if (NEW_DELEGATE_VERSION.equals(delegateId)) {
-      logger.info("Returning scripts for new delegate version: {}", version);
-    } else {
-      logger.info("Checking delegate for upgrade: {}", delegateId);
-    }
-
     ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(accountId, version, managerHost);
 
-    DelegateScripts delegateScripts =
-        DelegateScripts.builder().delegateId(delegateId).version(version).doUpgrade(false).build();
+    DelegateScripts delegateScripts = DelegateScripts.builder().version(version).doUpgrade(false).build();
     if (isNotEmpty(scriptParams)) {
       logger.info("Upgrading delegate to version: {}", scriptParams.get("upgradeVersion"));
       delegateScripts.setDoUpgrade(true);
