@@ -652,17 +652,23 @@ public class SecretManagerImpl implements SecretManager {
     if (savedData == null) {
       return false;
     }
+
+    if (savedData.getName().equals(name) && value.equals(SECRET_MASK)) {
+      return true;
+    }
     usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
         accountId, savedData.getUsageRestrictions(), usageRestrictions);
 
-    String description = savedData.getName().equals(name) ? "Changed value" : "Changed name & value";
-    EncryptedData encryptedData = encrypt(getEncryptionType(accountId), accountId, SettingVariableTypes.SECRET_TEXT,
-        value.toCharArray(), savedData, name, usageRestrictions);
-    savedData.setEncryptionKey(encryptedData.getEncryptionKey());
-    savedData.setEncryptedValue(encryptedData.getEncryptedValue());
+    String description = value.equals(SECRET_MASK) ? "Changed name" : "Changed name & value";
     savedData.setName(name);
-    savedData.setEncryptionType(encryptedData.getEncryptionType());
-    savedData.setKmsId(encryptedData.getKmsId());
+    if (!value.equals(SECRET_MASK)) {
+      EncryptedData encryptedData = encrypt(getEncryptionType(accountId), accountId, SettingVariableTypes.SECRET_TEXT,
+          value.toCharArray(), savedData, name, usageRestrictions);
+      savedData.setEncryptionKey(encryptedData.getEncryptionKey());
+      savedData.setEncryptedValue(encryptedData.getEncryptedValue());
+      savedData.setEncryptionType(encryptedData.getEncryptionType());
+      savedData.setKmsId(encryptedData.getKmsId());
+    }
     savedData.setUsageRestrictions(usageRestrictions);
     wingsPersistence.save(savedData);
 

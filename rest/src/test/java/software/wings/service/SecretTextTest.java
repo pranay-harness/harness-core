@@ -56,6 +56,7 @@ import software.wings.beans.User;
 import software.wings.beans.UuidAware;
 import software.wings.beans.VaultConfig;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
+import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -225,6 +226,95 @@ public class SecretTextTest extends WingsBaseTest {
         secretManagementResource.saveSecret(accountId, SecretText.builder().name(secretName).value(secretValue).build())
             .getResource();
     testSaveSecret(secretName, secretValue, secretId);
+  }
+
+  @Test
+  public void saveAndUpdateSecret() throws IllegalAccessException {
+    String secretName = generateUuid();
+    String secretValue = generateUuid();
+    String secretId =
+        secretManagementResource.saveSecret(accountId, SecretText.builder().name(secretName).value(secretValue).build())
+            .getResource();
+    List<SecretChangeLog> changeLogs =
+        secretManagementResource.getChangeLogs(accountId, secretId, SECRET_TEXT).getResource();
+    assertEquals(1, changeLogs.size());
+    SecretChangeLog secretChangeLog = changeLogs.get(0);
+    assertEquals(accountId, secretChangeLog.getAccountId());
+    assertEquals("Created", secretChangeLog.getDescription());
+    assertEquals(secretId, secretChangeLog.getEncryptedDataId());
+    assertEquals(userName, secretChangeLog.getUser().getName());
+    assertEquals(userEmail, secretChangeLog.getUser().getEmail());
+
+    final ServiceVariable serviceVariable = ServiceVariable.builder()
+                                                .templateId(generateUuid())
+                                                .envId(generateUuid())
+                                                .entityType(EntityType.APPLICATION)
+                                                .entityId(generateUuid())
+                                                .parentServiceVariableId(generateUuid())
+                                                .overrideType(OverrideType.ALL)
+                                                .instances(Collections.singletonList(generateUuid()))
+                                                .expression(generateUuid())
+                                                .accountId(accountId)
+                                                .name(getRandomServiceVariableName())
+                                                .value(secretId.toCharArray())
+                                                .encryptedValue(secretId)
+                                                .type(Type.ENCRYPTED_TEXT)
+                                                .build();
+
+    String savedAttributeId = wingsPersistence.save(serviceVariable);
+    ServiceVariable savedVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
+    assertNull(savedVariable.getValue());
+    assertEquals(secretId, savedVariable.getEncryptedValue());
+
+    encryptionService.decrypt(
+        savedVariable, secretManager.getEncryptionDetails(savedVariable, appId, workflowExecutionId));
+    assertEquals(secretValue, String.valueOf(savedVariable.getValue()));
+
+    // check no change in values do not trigger a change log
+    secretManagementResource.updateSecret(
+        accountId, secretId, SecretText.builder().name(secretName).value(Constants.SECRET_MASK).build());
+    changeLogs = secretManagementResource.getChangeLogs(accountId, secretId, SECRET_TEXT).getResource();
+    assertEquals(1, changeLogs.size());
+    secretChangeLog = changeLogs.get(0);
+    assertEquals(accountId, secretChangeLog.getAccountId());
+    assertEquals("Created", secretChangeLog.getDescription());
+
+    // check just changing the name still gives old value
+    String newSecretName = generateUuid();
+    secretManagementResource.updateSecret(
+        accountId, secretId, SecretText.builder().name(newSecretName).value(Constants.SECRET_MASK).build());
+
+    savedVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
+    assertNull(savedVariable.getValue());
+    assertEquals(secretId, savedVariable.getEncryptedValue());
+
+    encryptionService.decrypt(
+        savedVariable, secretManager.getEncryptionDetails(savedVariable, appId, workflowExecutionId));
+    assertEquals(secretValue, String.valueOf(savedVariable.getValue()));
+
+    changeLogs = secretManagementResource.getChangeLogs(accountId, secretId, SECRET_TEXT).getResource();
+    assertEquals(2, changeLogs.size());
+    assertEquals("Changed name", changeLogs.get(0).getDescription());
+    assertEquals("Created", changeLogs.get(1).getDescription());
+
+    // change both name and value and test
+    newSecretName = generateUuid();
+    String newSecretValue = generateUuid();
+    secretManagementResource.updateSecret(
+        accountId, secretId, SecretText.builder().name(newSecretName).value(newSecretValue).build());
+    changeLogs = secretManagementResource.getChangeLogs(accountId, secretId, SECRET_TEXT).getResource();
+    assertEquals(3, changeLogs.size());
+    assertEquals("Changed name & value", changeLogs.get(0).getDescription());
+    assertEquals("Changed name", changeLogs.get(1).getDescription());
+    assertEquals("Created", changeLogs.get(2).getDescription());
+
+    savedVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
+    assertNull(savedVariable.getValue());
+    assertEquals(secretId, savedVariable.getEncryptedValue());
+
+    encryptionService.decrypt(
+        savedVariable, secretManager.getEncryptionDetails(savedVariable, appId, workflowExecutionId));
+    assertEquals(newSecretValue, String.valueOf(savedVariable.getValue()));
   }
 
   @Test
