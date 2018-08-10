@@ -3,6 +3,8 @@ package software.wings.service.impl.security;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
+import static software.wings.exception.WingsException.USER;
+import static software.wings.exception.WingsException.USER_SRE;
 import static software.wings.security.encryption.SimpleEncryption.CHARSET;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 
@@ -31,7 +33,6 @@ import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.BoundedInputStream;
-import software.wings.utils.Misc;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -56,13 +57,8 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       return encryptLocal(value);
     }
     SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
-    try {
-      return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
-          .encrypt(accountId, value, kmsConfig);
-    } catch (Exception e) {
-      logger.error("Error while encrypting: ", e);
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, e).addParam("reason", Misc.getMessage(e));
-    }
+    return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
+        .encrypt(accountId, value, kmsConfig);
   }
 
   @Override
@@ -71,11 +67,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       return decryptLocal(data);
     }
     SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
-    try {
-      return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext).decrypt(data, kmsConfig);
-    } catch (Exception e) {
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, e).addParam("reason", Misc.getMessage(e));
-    }
+    return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext).decrypt(data, kmsConfig);
   }
 
   @Override
@@ -109,13 +101,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
   @Override
   public String saveKmsConfig(String accountId, KmsConfig kmsConfig) {
-    try {
-      validateKms(accountId, kmsConfig);
-    } catch (Exception e) {
-      logger.error("Error while saving kms config: ", e);
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR)
-          .addParam("reason", "Validation failed. Please check your credentials");
-    }
+    validateKms(accountId, kmsConfig);
     return saveKmsConfigInternal(accountId, kmsConfig);
   }
 
@@ -217,7 +203,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     if (count > 0) {
       String message = "Can not delete the kms configuration since there are secrets encrypted with this. "
           + "Please transition your secrets to a new kms and then try again";
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR).addParam("reason", message);
+      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, message, USER_SRE).addParam("reason", message);
     }
 
     wingsPersistence.delete(KmsConfig.class, kmsConfigId);
@@ -332,7 +318,12 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   }
 
   private void validateKms(String accountId, KmsConfig kmsConfig) {
-    encrypt(UUID.randomUUID().toString().toCharArray(), accountId, kmsConfig);
+    try {
+      encrypt(UUID.randomUUID().toString().toCharArray(), accountId, kmsConfig);
+    } catch (WingsException e) {
+      String message = "Was not able to encrypt using given credentials. Please check your credentials and try again";
+      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, message, USER, e).addParam("reason", message);
+    }
   }
 
   @Override

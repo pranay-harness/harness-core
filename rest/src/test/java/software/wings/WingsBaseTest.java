@@ -33,7 +33,7 @@ public abstract class WingsBaseTest extends CategoryTest {
 
   protected EncryptedData encrypt(String accountId, char[] value, KmsConfig kmsConfig) throws Exception {
     if (kmsConfig.getAccessKey().equals("invalidKey")) {
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR);
+      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR).addParam("reason", "Invalid credentials");
     }
     char[] encryptedValue = value == null ? null
                                           : SecretManagementDelegateServiceImpl.encrypt(

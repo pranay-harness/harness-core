@@ -5,6 +5,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
 import static software.wings.common.Constants.SECRET_MASK;
+import static software.wings.exception.WingsException.USER;
+import static software.wings.exception.WingsException.USER_SRE;
 import static software.wings.security.encryption.SimpleEncryption.CHARSET;
 
 import com.google.common.base.Preconditions;
@@ -33,7 +35,6 @@ import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.BoundedInputStream;
-import software.wings.utils.Misc;
 
 import java.io.File;
 import java.io.IOException;
@@ -58,24 +59,14 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   public EncryptedData encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
       VaultConfig vaultConfig, EncryptedData encryptedData) {
     SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
-    try {
-      return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
-          .encrypt(name, value, accountId, settingType, vaultConfig, encryptedData);
-    } catch (Exception e) {
-      logger.error("Error while encrypting: ", e);
-      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, e).addParam("reason", Misc.getMessage(e));
-    }
+    return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
+        .encrypt(name, value, accountId, settingType, vaultConfig, encryptedData);
   }
 
   @Override
   public char[] decrypt(EncryptedData data, String accountId, VaultConfig vaultConfig) {
     SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
-    try {
-      return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
-          .decrypt(data, vaultConfig);
-    } catch (Exception e) {
-      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, e).addParam("reason", Misc.getMessage(e));
-    }
+    return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext).decrypt(data, vaultConfig);
   }
 
   @Override
@@ -164,12 +155,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
           || !Constants.SECRET_MASK.equals(vaultConfig.getAuthToken());
     }
     if (shouldVerify) {
-      try {
-        validateVaultConfig(accountId, vaultConfig);
-      } catch (WingsException exception) {
-        throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, exception)
-            .addParam("reason", "Validation failed. Please check your token");
-      }
+      validateVaultConfig(accountId, vaultConfig);
     }
 
     // update without token or url changes
@@ -207,7 +193,8 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     try {
       vaultConfigId = wingsPersistence.save(vaultConfig);
     } catch (DuplicateKeyException e) {
-      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR)
+      throw new WingsException(
+          ErrorCode.VAULT_OPERATION_ERROR, "Another configuration with the same name exists", USER_SRE)
           .addParam("reason", "Another configuration with the same name exists");
     }
 
@@ -341,15 +328,17 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   @Override
   public void deleteSecret(String accountId, String path, VaultConfig vaultConfig) {
     SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
-    try {
-      delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
-          .deleteVaultSecret(path, vaultConfig);
-    } catch (Exception e) {
-      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR).addParam("reason", Misc.getMessage(e));
-    }
+    delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
+        .deleteVaultSecret(path, vaultConfig);
   }
 
   void validateVaultConfig(String accountId, VaultConfig vaultConfig) {
-    encrypt(VAULT_VAILDATION_URL, VAULT_VAILDATION_URL, accountId, SettingVariableTypes.VAULT, vaultConfig, null);
+    try {
+      encrypt(VAULT_VAILDATION_URL, VAULT_VAILDATION_URL, accountId, SettingVariableTypes.VAULT, vaultConfig, null);
+    } catch (WingsException e) {
+      String message =
+          "Was not able to reach vault using given credentials. Please check your credentials and try again";
+      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, message, USER, e).addParam("reason", message);
+    }
   }
 }
