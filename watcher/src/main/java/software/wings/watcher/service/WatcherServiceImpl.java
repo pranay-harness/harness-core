@@ -49,7 +49,7 @@ import static software.wings.utils.message.MessengerType.WATCHER;
 import static software.wings.watcher.app.WatcherApplication.getProcessId;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.HashMultimap;
+import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
@@ -288,7 +288,7 @@ public class WatcherServiceImpl implements WatcherService {
       }
 
       List<String> expectedVersions = findExpectedDelegateVersions();
-      Multimap<String, String> runningVersions = HashMultimap.create();
+      Multimap<String, String> runningVersions = LinkedHashMultimap.create();
       List<String> shutdownPendingList = new ArrayList<>();
 
       if (isEmpty(runningDelegates)) {
@@ -449,7 +449,7 @@ public class WatcherServiceImpl implements WatcherService {
         logger.info("Watching delegate processes: {}",
             runningVersions.keySet()
                 .stream()
-                .map(version -> version + ": (" + Joiner.on(", ").join(runningVersions.get(version)) + ")")
+                .map(version -> version + " (" + Joiner.on(", ").join(runningVersions.get(version)) + ")")
                 .collect(toList()));
 
         for (String version : expectedVersions) {
