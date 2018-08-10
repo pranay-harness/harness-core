@@ -36,7 +36,7 @@ import java.util.concurrent.TimeUnit;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 public class LearningEngineAnalysisTask extends Base {
-  public static long TIME_SERIES_ANALYSIS_TASK_TIME_OUT = TimeUnit.MINUTES.toMillis(2);
+  public static long TIME_SERIES_ANALYSIS_TASK_TIME_OUT = TimeUnit.MINUTES.toMillis(12);
   public static final int RETRIES = 3;
 
   private String workflow_id;
