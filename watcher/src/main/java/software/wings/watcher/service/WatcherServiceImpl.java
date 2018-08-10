@@ -447,8 +447,10 @@ public class WatcherServiceImpl implements WatcherService {
 
       if (multiVersion) {
         logger.info("Watching delegate processes: {}",
-            runningVersions.keySet().stream().map(
-                version -> version + ": (" + Joiner.on(", ").join(runningVersions.get(version)) + ")"));
+            runningVersions.keySet()
+                .stream()
+                .map(version -> version + ": (" + Joiner.on(", ").join(runningVersions.get(version)) + ")")
+                .collect(toList()));
 
         for (String version : expectedVersions) {
           if (shutdownPendingList.containsAll(runningVersions.get(version))) {
