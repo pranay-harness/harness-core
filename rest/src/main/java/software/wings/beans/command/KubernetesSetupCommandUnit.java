@@ -1656,6 +1656,11 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
               .addParam("args", "Couldn't parse Service YAML: " + serviceSpecification.getServiceYaml());
         }
+
+        if (service.getMetadata() == null) {
+          service.setMetadata(new ObjectMeta());
+        }
+
         service.getMetadata().setAnnotations(mergeMaps(service.getMetadata().getAnnotations(), harnessAnnotations));
         service.getMetadata().setLabels(mergeMaps(service.getMetadata().getLabels(), labels));
         service.getMetadata().setName(serviceName);
