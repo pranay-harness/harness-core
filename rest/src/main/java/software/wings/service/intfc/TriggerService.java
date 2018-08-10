@@ -9,7 +9,9 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.trigger.Trigger;
+import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookParameters;
+import software.wings.beans.trigger.WebhookSource;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ownership.OwnedByApplication;
@@ -174,9 +176,13 @@ public interface TriggerService extends OwnedByApplication, OwnedByPipeline, Own
    *
    * @param appId
    * @param workflowId
-   * @return
+   * @param workflowType
+   * @param webhookSource
+   * @param eventType
+   * @return List of webhook parameters
    */
-  WebhookParameters listWebhookParameters(String appId, String workflowId, WorkflowType workflowType);
+  WebhookParameters listWebhookParameters(String appId, String workflowId, WorkflowType workflowType,
+      WebhookSource webhookSource, WebhookEventType eventType);
 
   /**
    * Trigger execution by service infra

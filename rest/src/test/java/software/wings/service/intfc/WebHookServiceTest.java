@@ -9,6 +9,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
+import static software.wings.service.impl.WebHookServiceImpl.X_GIT_HUB_EVENT;
 import static software.wings.sm.ExecutionStatus.RUNNING;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -37,8 +38,11 @@ import software.wings.beans.WebHookRequest;
 import software.wings.beans.WebHookResponse;
 import software.wings.beans.WebHookToken;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.trigger.PrAction;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.WebHookTriggerCondition;
+import software.wings.beans.trigger.WebhookEventType;
+import software.wings.beans.trigger.WebhookSource;
 import software.wings.dl.WingsPersistence;
 import software.wings.utils.CryptoUtil;
 
@@ -48,14 +52,18 @@ import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import javax.ws.rs.core.HttpHeaders;
 
 public class WebHookServiceTest extends WingsBaseTest {
   @Mock private TriggerService triggerService;
   @Mock private AppService appService;
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private MainConfiguration configuration;
+  @Mock HttpHeaders httpHeaders;
+
   @Inject @InjectMocks private WebHookService webHookService;
-  final String token = CryptoUtil.secureRandAlphaNumString(40);
   @Inject WingsPersistence wingsPersistence;
+
+  final String token = CryptoUtil.secureRandAlphaNumString(40);
 
   WorkflowExecution execution = aWorkflowExecution()
                                     .withAppId(APP_ID)
@@ -71,7 +79,7 @@ public class WebHookServiceTest extends WingsBaseTest {
                         .name(TRIGGER_NAME)
                         .webHookToken(token)
                         .condition(WebHookTriggerCondition.builder()
-                                       .parameters(of("PullReuestId", "${pullrequest.id}"))
+                                       .parameters(of("PullRequestId", "${pullrequest.id}"))
                                        .webHookToken(WebHookToken.builder().webHookToken(token).build())
                                        .build())
                         .build();
@@ -109,7 +117,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   @Test
   public void shouldExecuteByEventNoTrigger() {
     String payLoad = "Some payload";
-    WebHookResponse response = webHookService.executeByEvent(token, payLoad);
+    WebHookResponse response = webHookService.executeByEvent(token, payLoad, null);
     assertThat(response).isNotNull();
     assertThat(response.getError()).isNotEmpty();
   }
@@ -118,7 +126,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   public void shouldExecuteByEventTriggerInvalidJson() {
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
     String payLoad = "Some payload";
-    WebHookResponse response = webHookService.executeByEvent(token, payLoad);
+    WebHookResponse response = webHookService.executeByEvent(token, payLoad, null);
     assertThat(response).isNotNull();
     assertThat(response.getError()).isNotEmpty();
   }
@@ -133,9 +141,127 @@ public class WebHookServiceTest extends WingsBaseTest {
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
     doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(Trigger.class), anyMap());
-    WebHookResponse response = webHookService.executeByEvent(token, payLoad);
+    WebHookResponse response = webHookService.executeByEvent(token, payLoad, null);
     assertThat(response).isNotNull();
     assertThat(response.getStatus()).isEqualTo(RUNNING.name());
+  }
+
+  @Test
+  public void shouldTriggerGitHubPRWithoutActions() throws IOException {
+    Trigger webhookTrigger = Trigger.builder()
+                                 .workflowId(PIPELINE_ID)
+                                 .uuid(TRIGGER_ID)
+                                 .appId(APP_ID)
+                                 .name(TRIGGER_NAME)
+                                 .webHookToken(token)
+                                 .condition(WebHookTriggerCondition.builder()
+                                                .webhookSource(WebhookSource.GITHUB)
+                                                .webHookToken(WebHookToken.builder().webHookToken(token).build())
+                                                .build())
+                                 .build();
+    when(triggerService.getTriggerByWebhookToken(token)).thenReturn(webhookTrigger);
+
+    ClassLoader classLoader = getClass().getClassLoader();
+    File file =
+        new File(classLoader.getResource("software/wings/service/impl/webhook/github_pull_request.json").getFile());
+    String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
+
+    doReturn("pull_request").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
+    doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(Trigger.class), anyMap());
+
+    WebHookResponse response = webHookService.executeByEvent(token, payLoad, httpHeaders);
+    assertThat(response).isNotNull();
+    assertThat(response.getStatus()).isEqualTo(RUNNING.name());
+  }
+
+  @Test
+  public void shouldTriggerGitHubPRWithClosedAction() throws IOException {
+    Trigger webhookTrigger = Trigger.builder()
+                                 .workflowId(PIPELINE_ID)
+                                 .uuid(TRIGGER_ID)
+                                 .appId(APP_ID)
+                                 .name(TRIGGER_NAME)
+                                 .webHookToken(token)
+                                 .condition(WebHookTriggerCondition.builder()
+                                                .webhookSource(WebhookSource.GITHUB)
+                                                .eventTypes(Collections.singletonList(WebhookEventType.PULL_REQUEST))
+                                                .actions(Collections.singletonList(PrAction.CLOSED))
+                                                .webHookToken(WebHookToken.builder().webHookToken(token).build())
+                                                .build())
+                                 .build();
+    when(triggerService.getTriggerByWebhookToken(token)).thenReturn(webhookTrigger);
+
+    ClassLoader classLoader = getClass().getClassLoader();
+    File file =
+        new File(classLoader.getResource("software/wings/service/impl/webhook/github_pull_request.json").getFile());
+    String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
+
+    doReturn("pull_request").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
+    doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(Trigger.class), anyMap());
+
+    WebHookResponse response = webHookService.executeByEvent(token, payLoad, httpHeaders);
+    assertThat(response).isNotNull();
+    assertThat(response.getStatus()).isEqualTo(RUNNING.name());
+  }
+
+  @Test
+  public void shouldTriggerGitHubPRWithDifferentEvent() throws IOException {
+    Trigger webhookTrigger = Trigger.builder()
+                                 .workflowId(PIPELINE_ID)
+                                 .uuid(TRIGGER_ID)
+                                 .appId(APP_ID)
+                                 .name(TRIGGER_NAME)
+                                 .webHookToken(token)
+                                 .condition(WebHookTriggerCondition.builder()
+                                                .webhookSource(WebhookSource.GITHUB)
+                                                .eventTypes(Collections.singletonList(WebhookEventType.PUSH))
+                                                .actions(Collections.singletonList(PrAction.OPENED))
+                                                .webHookToken(WebHookToken.builder().webHookToken(token).build())
+                                                .build())
+                                 .build();
+    when(triggerService.getTriggerByWebhookToken(token)).thenReturn(webhookTrigger);
+
+    ClassLoader classLoader = getClass().getClassLoader();
+    File file =
+        new File(classLoader.getResource("software/wings/service/impl/webhook/github_pull_request.json").getFile());
+    String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
+
+    doReturn("pull_request").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
+    doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(Trigger.class), anyMap());
+
+    WebHookResponse response = webHookService.executeByEvent(token, payLoad, httpHeaders);
+    assertThat(response).isNotNull();
+    assertThat(response.getError()).isNotEmpty();
+  }
+
+  @Test
+  public void shouldTriggerGitHubPRWithDifferentAction() throws IOException {
+    Trigger webhookTrigger = Trigger.builder()
+                                 .workflowId(PIPELINE_ID)
+                                 .uuid(TRIGGER_ID)
+                                 .appId(APP_ID)
+                                 .name(TRIGGER_NAME)
+                                 .webHookToken(token)
+                                 .condition(WebHookTriggerCondition.builder()
+                                                .webhookSource(WebhookSource.GITHUB)
+                                                .eventTypes(Collections.singletonList(WebhookEventType.PULL_REQUEST))
+                                                .actions(Collections.singletonList(PrAction.OPENED))
+                                                .webHookToken(WebHookToken.builder().webHookToken(token).build())
+                                                .build())
+                                 .build();
+    when(triggerService.getTriggerByWebhookToken(token)).thenReturn(webhookTrigger);
+
+    ClassLoader classLoader = getClass().getClassLoader();
+    File file =
+        new File(classLoader.getResource("software/wings/service/impl/webhook/github_pull_request.json").getFile());
+    String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
+
+    doReturn("pull_request").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
+    doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(Trigger.class), anyMap());
+
+    WebHookResponse response = webHookService.executeByEvent(token, payLoad, httpHeaders);
+    assertThat(response).isNotNull();
+    assertThat(response.getError()).isNotEmpty();
   }
 
   @Test

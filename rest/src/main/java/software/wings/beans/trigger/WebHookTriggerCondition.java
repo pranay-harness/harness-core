@@ -26,18 +26,20 @@ public class WebHookTriggerCondition extends TriggerCondition {
   @Builder.Default private Map<String, String> parameters = new HashMap<>();
   private WebhookSource webhookSource;
   private List<WebhookEventType> eventTypes;
+  private List<PrAction> actions;
 
   public WebHookTriggerCondition() {
     super(WEBHOOK);
   }
 
   public WebHookTriggerCondition(WebHookToken webHookToken, String artifactStreamId, Map<String, String> parameters,
-      WebhookSource webhookSource, List<WebhookEventType> eventTypes) {
+      WebhookSource webhookSource, List<WebhookEventType> eventTypes, List<PrAction> actions) {
     this();
     this.webHookToken = webHookToken;
     this.artifactStreamId = artifactStreamId;
     this.parameters = parameters;
     this.webhookSource = webhookSource;
     this.eventTypes = eventTypes;
+    this.actions = actions;
   }
 }

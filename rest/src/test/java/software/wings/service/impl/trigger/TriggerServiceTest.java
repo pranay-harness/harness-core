@@ -23,6 +23,9 @@ import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_COLLECTED
 import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_DEPLOYED;
 import static software.wings.beans.trigger.ArtifactSelection.Type.PIPELINE_SOURCE;
 import static software.wings.beans.trigger.ArtifactSelection.Type.WEBHOOK_VARIABLE;
+import static software.wings.beans.trigger.WebhookEventType.PULL_REQUEST;
+import static software.wings.beans.trigger.WebhookSource.BITBUCKET;
+import static software.wings.beans.trigger.WebhookSource.GITHUB;
 import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.artifact;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.assertWebhookToken;
@@ -1242,7 +1245,8 @@ public class TriggerServiceTest extends WingsBaseTest {
     setPipelineStages(pipeline);
     when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
 
-    WebhookParameters webhookParameters = triggerService.listWebhookParameters(APP_ID, PIPELINE_ID, PIPELINE);
+    WebhookParameters webhookParameters =
+        triggerService.listWebhookParameters(APP_ID, PIPELINE_ID, PIPELINE, BITBUCKET, PULL_REQUEST);
     assertThat(webhookParameters.getParams()).isNotNull().contains("MyVar");
     assertThat(webhookParameters.getExpressions()).isNotNull().contains(WebhookParameters.PULL_REQUEST_ID);
     verify(pipelineService).readPipeline(anyString(), anyString(), anyBoolean());
@@ -1251,9 +1255,19 @@ public class TriggerServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldListWorkflowWebhookParameters() {
-    WebhookParameters webhookParameters = triggerService.listWebhookParameters(APP_ID, WORKFLOW_ID, ORCHESTRATION);
+    WebhookParameters webhookParameters =
+        triggerService.listWebhookParameters(APP_ID, WORKFLOW_ID, ORCHESTRATION, BITBUCKET, PULL_REQUEST);
     assertThat(webhookParameters.getParams()).isNotNull().contains("MyVar");
     assertThat(webhookParameters.getExpressions()).isNotNull().contains(WebhookParameters.PULL_REQUEST_ID);
+    verify(workflowService).readWorkflow(APP_ID, WORKFLOW_ID);
+  }
+
+  @Test
+  public void shouldListWorkflowGitWebhookParameters() {
+    WebhookParameters webhookParameters =
+        triggerService.listWebhookParameters(APP_ID, WORKFLOW_ID, ORCHESTRATION, GITHUB, PULL_REQUEST);
+    assertThat(webhookParameters.getParams()).isNotNull().contains("MyVar");
+    assertThat(webhookParameters.getExpressions()).isNotNull().contains(WebhookParameters.GH_PR_ID);
     verify(workflowService).readWorkflow(APP_ID, WORKFLOW_ID);
   }
 
