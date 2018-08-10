@@ -48,6 +48,7 @@ import static software.wings.utils.message.MessengerType.DELEGATE;
 import static software.wings.utils.message.MessengerType.WATCHER;
 import static software.wings.watcher.app.WatcherApplication.getProcessId;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.util.concurrent.TimeLimiter;
@@ -245,7 +246,9 @@ public class WatcherServiceImpl implements WatcherService {
 
   private void watchDelegate() {
     try {
-      logger.info("Watching delegate processes: {}", runningDelegates);
+      if (!multiVersion) {
+        logger.info("Watching delegate processes: {}", runningDelegates);
+      }
       // Cleanup obsolete
       messageService.listDataNames(DELEGATE_DASH)
           .stream()
@@ -443,8 +446,13 @@ public class WatcherServiceImpl implements WatcherService {
       }
 
       if (multiVersion) {
+        logger.info("Watching delegate processes: {}",
+            runningVersions.keySet().stream().map(
+                version -> version + ": (" + Joiner.on(", ").join(runningVersions.get(version)) + ")"));
+
         for (String version : expectedVersions) {
           if (shutdownPendingList.containsAll(runningVersions.get(version))) {
+            logger.info("New delegate process for version {} will be started", version);
             if (working.compareAndSet(false, true)) {
               downloadRunScripts(version);
               downloadDelegateJar(version);
