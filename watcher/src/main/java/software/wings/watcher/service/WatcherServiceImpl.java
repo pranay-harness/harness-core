@@ -117,7 +117,6 @@ public class WatcherServiceImpl implements WatcherService {
   private static final long DELEGATE_UPGRADE_TIMEOUT = TimeUnit.MINUTES.toMillis(10);
   private static final long DELEGATE_SHUTDOWN_TIMEOUT = TimeUnit.HOURS.toMillis(2);
   private static final long DELEGATE_VERSION_MATCH_TIMEOUT = TimeUnit.HOURS.toMillis(2);
-  private static final String NEW_DELEGATE_VERSION = "new-delegate-version";
 
   @Inject @Named("inputExecutor") private ScheduledExecutorService inputExecutor;
   @Inject @Named("watchExecutor") private ScheduledExecutorService watchExecutor;
@@ -511,8 +510,7 @@ public class WatcherServiceImpl implements WatcherService {
     try {
       RestResponse<DelegateScripts> restResponse = timeLimiter.callWithTimeout(
           ()
-              -> execute(
-                  managerClient.downloadRunScripts(version, NEW_DELEGATE_VERSION, watcherConfiguration.getAccountId())),
+              -> execute(managerClient.getDelegateScripts(watcherConfiguration.getAccountId(), version)),
           1L, TimeUnit.MINUTES, true);
       DelegateScripts delegateScripts = restResponse.getResource();
 

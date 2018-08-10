@@ -745,7 +745,7 @@ public class DelegateServiceImpl implements DelegateService {
         logger.info("Checking for upgrade");
         try {
           RestResponse<DelegateScripts> restResponse = timeLimiter.callWithTimeout(
-              () -> execute(managerClient.checkForUpgrade(version, delegateId, accountId)), 1L, TimeUnit.MINUTES, true);
+              () -> execute(managerClient.getDelegateScripts(accountId, version)), 1L, TimeUnit.MINUTES, true);
           DelegateScripts delegateScripts = restResponse.getResource();
           if (delegateScripts.isDoUpgrade()) {
             upgradePending.set(true);
