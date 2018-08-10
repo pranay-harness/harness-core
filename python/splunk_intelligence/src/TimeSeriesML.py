@@ -844,7 +844,7 @@ def parallelize_processing(options, metric_template, control_metrics, test_metri
     processed = 0
     while processed < len(jobs):
         try:
-            val = queue.get(timeout=120)
+            val = queue.get(timeout=600)
         except Empty:
             raise Exception("Timeout occured in worker process. Check logs")
         for txn_data in val['transactions'].values():
