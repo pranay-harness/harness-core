@@ -11,6 +11,7 @@ import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_NAMESPACE_PLACEHOLDER_REGEX;
+import static software.wings.sm.StateType.HELM_DEPLOY;
 
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
@@ -122,7 +123,7 @@ public class HelmDeployState extends State {
    * @param name the name
    */
   public HelmDeployState(String name) {
-    super(name, StateType.HELM_DEPLOY.name());
+    super(name, HELM_DEPLOY.name());
   }
 
   public HelmDeployState(String name, String stateType) {
@@ -163,9 +164,11 @@ public class HelmDeployState extends State {
     HelmChartSpecification helmChartSpecification =
         serviceResourceService.getHelmChartSpecification(context.getAppId(), serviceElement.getUuid());
 
-    if (gitFileConfig == null || gitFileConfig.getConnectorId() == null) {
-      validateChartSpecification(helmChartSpecification);
-      evaluateHelmChartSpecificationExpression(context, helmChartSpecification);
+    if (StateType.HELM_DEPLOY.name().equals(getStateType())) {
+      if (gitFileConfig == null || gitFileConfig.getConnectorId() == null) {
+        validateChartSpecification(helmChartSpecification);
+        evaluateHelmChartSpecificationExpression(context, helmChartSpecification);
+      }
     }
 
     HelmDeployStateExecutionData stateExecutionData = HelmDeployStateExecutionData.builder()
@@ -451,7 +454,7 @@ public class HelmDeployState extends State {
 
   private String obtainHelmReleaseNamePrefix(
       ExecutionContext context, ContainerInfrastructureMapping containerInfraMapping) {
-    if (getStateType().equals(StateType.HELM_DEPLOY.name())) {
+    if (getStateType().equals(HELM_DEPLOY.name())) {
       if (isBlank(getHelmReleaseNamePrefix())) {
         throw new InvalidRequestException("Helm release name prefix cannot be empty");
       }
