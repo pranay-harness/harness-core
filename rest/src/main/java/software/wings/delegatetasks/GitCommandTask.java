@@ -19,6 +19,8 @@ import software.wings.beans.yaml.GitCommitAndPushResult;
 import software.wings.beans.yaml.GitCommitRequest;
 import software.wings.beans.yaml.GitDiffRequest;
 import software.wings.beans.yaml.GitDiffResult;
+import software.wings.beans.yaml.GitFetchFilesRequest;
+import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
@@ -85,6 +87,9 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
                 .errorMessage(errorMessage)
                 .build();
           }
+        case FETCH_FILES:
+          GitFetchFilesRequest gitFetchFilesRequest = (GitFetchFilesRequest) parameters[3];
+          return getFilesFromGitUsingPath(gitFetchFilesRequest, gitConfig);
         default:
           return GitCommandExecutionResponse.builder()
               .gitCommandStatus(GitCommandStatus.FAILURE)
@@ -102,6 +107,23 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
         builder.errorCode(ErrorCode.GIT_CONNECTION_ERROR);
       }
       return builder.build();
+    }
+  }
+
+  private GitCommandExecutionResponse getFilesFromGitUsingPath(GitFetchFilesRequest gitRequest, GitConfig gitConfig) {
+    try {
+      GitFetchFilesResult gitResult = gitClient.fetchFilesByPath(gitConfig, gitRequest);
+      return GitCommandExecutionResponse.builder()
+          .gitCommandRequest(gitRequest)
+          .gitCommandResult(gitResult)
+          .gitCommandStatus(GitCommandStatus.SUCCESS)
+          .build();
+    } catch (Exception e) {
+      return GitCommandExecutionResponse.builder()
+          .gitCommandRequest(gitRequest)
+          .errorMessage(e.getMessage())
+          .gitCommandStatus(GitCommandStatus.FAILURE)
+          .build();
     }
   }
 

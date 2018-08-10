@@ -8,17 +8,14 @@ import software.wings.beans.yaml.GitCommitAndPushResult;
 import software.wings.beans.yaml.GitCommitRequest;
 import software.wings.beans.yaml.GitCommitResult;
 import software.wings.beans.yaml.GitDiffResult;
+import software.wings.beans.yaml.GitFetchFilesRequest;
+import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.beans.yaml.GitPushResult;
 import software.wings.service.intfc.yaml.GitClient;
 
 public class GitClientUnsupported implements GitClient {
   @Override
-  public String getRepoDirectory(GitConfig gitConfig) {
-    throw new UnsupportedOperationException("Git operations not supported.");
-  }
-
-  @Override
-  public GitCloneResult clone(GitConfig gitConfig) {
+  public GitCloneResult clone(GitConfig gitConfig, String gitRepoDirectory, String branch, boolean noCheckout) {
     throw new UnsupportedOperationException("Git operations not supported.");
   }
 
@@ -59,6 +56,11 @@ public class GitClientUnsupported implements GitClient {
 
   @Override
   public String validate(GitConfig gitConfig, boolean logError) {
+    throw new UnsupportedOperationException("Git operations not supported.");
+  }
+
+  @Override
+  public GitFetchFilesResult fetchFilesByPath(GitConfig gitConfig, GitFetchFilesRequest gitRequest) {
     throw new UnsupportedOperationException("Git operations not supported.");
   }
 }

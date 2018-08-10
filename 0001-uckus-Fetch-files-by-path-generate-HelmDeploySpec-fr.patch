@@ -1,0 +1,1507 @@
+From 9ed301b7abb031b72ea4a36677200bdf7eb673a4 Mon Sep 17 00:00:00 2001
+From: Adwait Bhandare <adwait.bhandare@harness.io>
+Date: Tue, 7 Aug 2018 12:37:18 -0700
+Subject: [PATCH] uckus : Fetch files by path + generate HelmDeploySpec from
+ value.yaml harness specific fields
+
+---
+ .../main/java/software/wings/beans/TaskType.java   |   2 +-
+ .../java/software/wings/beans/yaml/GitCommand.java |   1 +
+ .../wings/beans/yaml/GitFetchFilesRequest.java     |  29 ++
+ .../wings/beans/yaml/GitFetchFilesResult.java      |  28 ++
+ .../java/software/wings/beans/yaml/GitFile.java    |  11 +
+ .../wings/delegatetasks/GitCommandTask.java        |  22 ++
+ .../delegatetasks/TerraformProvisionTask.java      |   4 +-
+ .../helm/HarnessHelmDeployConfig.java              |  22 ++
+ .../delegatetasks/helm/HelmCommandHelper.java      |  88 ++++++
+ .../delegatetasks/{ => helm}/HelmCommandTask.java  |  20 +-
+ .../delegatetasks/helm/HelmDeployChartSpec.java    |  25 ++
+ .../wings/service/impl/GitServiceImpl.java         |  35 +++
+ .../wings/service/impl/yaml/GitClientHelper.java   | 189 +++++++++++++
+ .../wings/service/impl/yaml/GitClientImpl.java     | 305 +++++++++++++++------
+ .../service/impl/yaml/GitClientUnsupported.java    |  14 +-
+ .../service/impl/yaml/service/YamlHelper.java      |   3 +
+ .../software/wings/service/intfc/GitService.java   |  11 +
+ .../wings/service/intfc/yaml/GitClient.java        |  14 +-
+ .../software/wings/sm/states/HelmDeployState.java  |   8 +
+ .../test/java/software/wings/WingsTestModule.java  |   4 +
+ .../delegatetasks/HelmCommandTaskHelperTest.java   |  83 ++++++
+ .../wings/service/impl/yaml/GitClientImplTest.java |  16 +-
+ .../src/main/resources/serialization_classes       |   3 +
+ 23 files changed, 814 insertions(+), 123 deletions(-)
+ create mode 100644 rest/src/main/java/software/wings/beans/yaml/GitFetchFilesRequest.java
+ create mode 100644 rest/src/main/java/software/wings/beans/yaml/GitFetchFilesResult.java
+ create mode 100644 rest/src/main/java/software/wings/beans/yaml/GitFile.java
+ create mode 100644 rest/src/main/java/software/wings/delegatetasks/helm/HarnessHelmDeployConfig.java
+ create mode 100644 rest/src/main/java/software/wings/delegatetasks/helm/HelmCommandHelper.java
+ rename rest/src/main/java/software/wings/delegatetasks/{ => helm}/HelmCommandTask.java (92%)
+ create mode 100644 rest/src/main/java/software/wings/delegatetasks/helm/HelmDeployChartSpec.java
+ create mode 100644 rest/src/main/java/software/wings/service/impl/GitServiceImpl.java
+ create mode 100644 rest/src/main/java/software/wings/service/impl/yaml/GitClientHelper.java
+ create mode 100644 rest/src/main/java/software/wings/service/intfc/GitService.java
+ create mode 100644 rest/src/test/java/software/wings/delegatetasks/HelmCommandTaskHelperTest.java
+
+diff --git a/rest/src/main/java/software/wings/beans/TaskType.java b/rest/src/main/java/software/wings/beans/TaskType.java
+index ff761208e..9e229e65b 100644
+--- a/rest/src/main/java/software/wings/beans/TaskType.java
++++ b/rest/src/main/java/software/wings/beans/TaskType.java
+@@ -15,7 +15,7 @@ import software.wings.delegatetasks.DynaTraceDataCollectionTask;
+ import software.wings.delegatetasks.EcsSteadyStateCheckTask;
+ import software.wings.delegatetasks.ElkLogzDataCollectionTask;
+ import software.wings.delegatetasks.GitCommandTask;
+-import software.wings.delegatetasks.HelmCommandTask;
++import software.wings.delegatetasks.helm.HelmCommandTask;
+ import software.wings.delegatetasks.HttpTask;
+ import software.wings.delegatetasks.JenkinsTask;
+ import software.wings.delegatetasks.KubernetesSteadyStateCheckTask;
+diff --git a/rest/src/main/java/software/wings/beans/yaml/GitCommand.java b/rest/src/main/java/software/wings/beans/yaml/GitCommand.java
+index 9928b638b..e95ad4e61 100644
+--- a/rest/src/main/java/software/wings/beans/yaml/GitCommand.java
++++ b/rest/src/main/java/software/wings/beans/yaml/GitCommand.java
+@@ -14,6 +14,7 @@ public interface GitCommand {
+     PUSH,
+     PULL,
+     COMMIT_AND_PUSH,
++    FETCH_FILES,
+     VALIDATE;
+   }
+ }
+diff --git a/rest/src/main/java/software/wings/beans/yaml/GitFetchFilesRequest.java b/rest/src/main/java/software/wings/beans/yaml/GitFetchFilesRequest.java
+new file mode 100644
+index 000000000..62d01988a
+--- /dev/null
++++ b/rest/src/main/java/software/wings/beans/yaml/GitFetchFilesRequest.java
+@@ -0,0 +1,29 @@
++package software.wings.beans.yaml;
++
++import lombok.Builder;
++import lombok.Data;
++import lombok.EqualsAndHashCode;
++
++import java.util.List;
++
++@Data
++@EqualsAndHashCode(callSuper = false)
++@Builder
++public class GitFetchFilesRequest extends GitCommandRequest {
++  private String commitId;
++  private List<String> filePaths;
++  private String branch;
++  private String gitConnectorId;
++
++  public GitFetchFilesRequest() {
++    super(GitCommandType.FETCH_FILES);
++  }
++
++  public GitFetchFilesRequest(String commitId, List<String> filePaths, String branch, String gitConnectorId) {
++    super(GitCommandType.FETCH_FILES);
++    this.commitId = commitId;
++    this.filePaths = filePaths;
++    this.branch = branch;
++    this.gitConnectorId = gitConnectorId;
++  }
++}
+diff --git a/rest/src/main/java/software/wings/beans/yaml/GitFetchFilesResult.java b/rest/src/main/java/software/wings/beans/yaml/GitFetchFilesResult.java
+new file mode 100644
+index 000000000..abb8a6a0b
+--- /dev/null
++++ b/rest/src/main/java/software/wings/beans/yaml/GitFetchFilesResult.java
+@@ -0,0 +1,28 @@
++package software.wings.beans.yaml;
++
++import static io.harness.data.structure.EmptyPredicate.isEmpty;
++
++import lombok.Builder;
++import lombok.Data;
++import lombok.EqualsAndHashCode;
++
++import java.util.Collections;
++import java.util.List;
++
++@Data
++@EqualsAndHashCode(callSuper = false)
++@Builder
++public class GitFetchFilesResult extends GitCommandResult {
++  private GitCommitResult gitCommitResult;
++  private List<GitFile> files;
++
++  public GitFetchFilesResult() {
++    super(GitCommandType.FETCH_FILES);
++  }
++
++  public GitFetchFilesResult(GitCommitResult gitCommitResult, List<GitFile> gitFiles) {
++    super(GitCommandType.FETCH_FILES);
++    this.gitCommitResult = gitCommitResult;
++    this.files = isEmpty(gitFiles) ? Collections.EMPTY_LIST : gitFiles;
++  }
++}
+diff --git a/rest/src/main/java/software/wings/beans/yaml/GitFile.java b/rest/src/main/java/software/wings/beans/yaml/GitFile.java
+new file mode 100644
+index 000000000..5644e8449
+--- /dev/null
++++ b/rest/src/main/java/software/wings/beans/yaml/GitFile.java
+@@ -0,0 +1,11 @@
++package software.wings.beans.yaml;
++
++import lombok.Builder;
++import lombok.Data;
++
++@Data
++@Builder
++public class GitFile {
++  private String filePath;
++  private String fileContent;
++}
+diff --git a/rest/src/main/java/software/wings/delegatetasks/GitCommandTask.java b/rest/src/main/java/software/wings/delegatetasks/GitCommandTask.java
+index 7b73f1436..ba978d767 100644
+--- a/rest/src/main/java/software/wings/delegatetasks/GitCommandTask.java
++++ b/rest/src/main/java/software/wings/delegatetasks/GitCommandTask.java
+@@ -19,6 +19,8 @@ import software.wings.beans.yaml.GitCommitAndPushResult;
+ import software.wings.beans.yaml.GitCommitRequest;
+ import software.wings.beans.yaml.GitDiffRequest;
+ import software.wings.beans.yaml.GitDiffResult;
++import software.wings.beans.yaml.GitFetchFilesRequest;
++import software.wings.beans.yaml.GitFetchFilesResult;
+ import software.wings.exception.WingsException;
+ import software.wings.security.encryption.EncryptedDataDetail;
+ import software.wings.service.intfc.security.EncryptionService;
+@@ -85,6 +87,9 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
+                 .errorMessage(errorMessage)
+                 .build();
+           }
++        case FETCH_FILES:
++          GitFetchFilesRequest gitFetchFilesRequest = (GitFetchFilesRequest) parameters[3];
++          return getFilesFromGitUsingPath(gitFetchFilesRequest, gitConfig);
+         default:
+           return GitCommandExecutionResponse.builder()
+               .gitCommandStatus(GitCommandStatus.FAILURE)
+@@ -105,6 +110,23 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
+     }
+   }
+ 
++  private GitCommandExecutionResponse getFilesFromGitUsingPath(GitFetchFilesRequest gitRequest, GitConfig gitConfig) {
++    try {
++      GitFetchFilesResult gitResult = gitClient.fetchFilesByPath(gitConfig, gitRequest);
++      return GitCommandExecutionResponse.builder()
++          .gitCommandRequest(gitRequest)
++          .gitCommandResult(gitResult)
++          .gitCommandStatus(GitCommandStatus.SUCCESS)
++          .build();
++    } catch (Exception e) {
++      return GitCommandExecutionResponse.builder()
++          .gitCommandRequest(gitRequest)
++          .errorMessage(e.getMessage())
++          .gitCommandStatus(GitCommandStatus.FAILURE)
++          .build();
++    }
++  }
++
+   private void decryptGitConfig(GitConfig gitConfig, List<EncryptedDataDetail> encryptionDetails) {
+     try {
+       encryptionService.decrypt(gitConfig, encryptionDetails);
+diff --git a/rest/src/main/java/software/wings/delegatetasks/TerraformProvisionTask.java b/rest/src/main/java/software/wings/delegatetasks/TerraformProvisionTask.java
+index 2e9a9f211..aa97b8e5c 100644
+--- a/rest/src/main/java/software/wings/delegatetasks/TerraformProvisionTask.java
++++ b/rest/src/main/java/software/wings/delegatetasks/TerraformProvisionTask.java
+@@ -26,6 +26,7 @@ import software.wings.beans.GitConfig.GitRepositoryType;
+ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
+ import software.wings.beans.delegation.TerraformProvisionParameters;
+ import software.wings.security.encryption.EncryptedDataDetail;
++import software.wings.service.impl.yaml.GitClientHelper;
+ import software.wings.service.intfc.FileService.FileBucket;
+ import software.wings.service.intfc.security.EncryptionService;
+ import software.wings.service.intfc.yaml.GitClient;
+@@ -56,6 +57,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
+   private static final String TERRAFORM_OUTPUTS_FILE_NAME = "terraform.tfouts";
+ 
+   @Inject private GitClient gitClient;
++  @Inject private GitClientHelper gitClientHelper;
+   @Inject private EncryptionService encryptionService;
+   @Inject private DelegateLogService logService;
+   @Inject private DelegateFileManager delegateFileManager;
+@@ -215,7 +217,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
+ 
+   private String resolveScriptDirectory(GitConfig gitConfig, String scriptPath) {
+     return Paths
+-        .get(Paths.get(System.getProperty("user.dir")).toString(), gitClient.getRepoDirectory(gitConfig),
++        .get(Paths.get(System.getProperty("user.dir")).toString(), gitClientHelper.getRepoDirectory(gitConfig),
+             scriptPath == null ? "" : scriptPath)
+         .toString();
+   }
+diff --git a/rest/src/main/java/software/wings/delegatetasks/helm/HarnessHelmDeployConfig.java b/rest/src/main/java/software/wings/delegatetasks/helm/HarnessHelmDeployConfig.java
+new file mode 100644
+index 000000000..e491034a3
+--- /dev/null
++++ b/rest/src/main/java/software/wings/delegatetasks/helm/HarnessHelmDeployConfig.java
+@@ -0,0 +1,22 @@
++package software.wings.delegatetasks.helm;
++
++import lombok.AllArgsConstructor;
++import lombok.Builder;
++import lombok.Data;
++
++/**
++ * This is generated from harness specific section of
++ * value.yaml read from git repo cpnfigured by client
++ *
++ * harness:
++ *    helm:
++ *        chart:
++ *             url: google.com
++ *        timeout:10  // this is a pseudo field
++ */
++@Builder
++@AllArgsConstructor
++@Data
++public class HarnessHelmDeployConfig {
++  private HelmDeployChartSpec helmDeployChartSpec;
++}
+diff --git a/rest/src/main/java/software/wings/delegatetasks/helm/HelmCommandHelper.java b/rest/src/main/java/software/wings/delegatetasks/helm/HelmCommandHelper.java
+new file mode 100644
+index 000000000..e76a64d8e
+--- /dev/null
++++ b/rest/src/main/java/software/wings/delegatetasks/helm/HelmCommandHelper.java
+@@ -0,0 +1,88 @@
++package software.wings.delegatetasks.helm;
++
++import com.google.inject.Singleton;
++
++import com.esotericsoftware.yamlbeans.YamlReader;
++import io.harness.data.structure.EmptyPredicate;
++import org.slf4j.Logger;
++import org.slf4j.LoggerFactory;
++import software.wings.beans.ErrorCode;
++import software.wings.exception.WingsException;
++import software.wings.helpers.ext.helm.request.HelmCommandRequest;
++import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
++import java.util.Map;
++import java.util.Optional;
++
++@Singleton
++public class HelmCommandHelper {
++  private static final Logger logger = LoggerFactory.getLogger(HelmCommandHelper.class);
++  public static final String URL = "url";
++  public static final String NAME = "name";
++  public static final String VERSION = "version";
++  public static final String HARNESS = "harness";
++  public static final String HELM = "helm";
++  public static final String CHART = "chart";
++
++  public String getDeploymentMessage(HelmCommandRequest helmCommandRequest) {
++    switch (helmCommandRequest.getHelmCommandType()) {
++      case INSTALL:
++        return "Installing";
++      case ROLLBACK:
++        return "Rolling back";
++      case RELEASE_HISTORY:
++        return "Getting release history";
++      default:
++        return "Unsupported operation";
++    }
++  }
++
++  public Optional<HarnessHelmDeployConfig> generateHelmDeployChartSpecFromYaml(String yamlString) {
++    YamlReader reader = new YamlReader(yamlString);
++    try {
++      // A YAML can contain more than one YAML document.
++      // Call to YamlReader.read() deserializes the next document into an object.
++      // YAML documents are delimited by "---"
++      while (true) {
++        Map map = (Map) reader.read();
++        if (map == null) {
++          break;
++        }
++
++        /*
++         * harness:
++         *   helm:
++         *      chart:
++         *         url: google.com
++         *         name: abc
++         *         version:1.0
++         *      timeout:10  // this is a pseudo field
++         *      releasePrefixName: aaaa // this is a pseudo field
++         * */
++        if (map.containsKey(HARNESS)) {
++          Map harnessDataMap = (Map) map.get(HARNESS);
++
++          if (isNotEmpty(harnessDataMap) && harnessDataMap.containsKey(HELM)) {
++            Map harnessHelmDataMap = (Map) harnessDataMap.get(HELM);
++            if (isNotEmpty(harnessHelmDataMap) && harnessHelmDataMap.containsKey(CHART)) {
++              Map harnessHelmChartDataMap = (Map) harnessHelmDataMap.get(CHART);
++              HelmDeployChartSpec helmDeployChartSpec = HelmDeployChartSpec.builder()
++                                                            .url((String) harnessHelmChartDataMap.get(URL))
++                                                            .name((String) harnessHelmChartDataMap.get(NAME))
++                                                            .version((String) harnessHelmChartDataMap.get(VERSION))
++                                                            .build();
++
++              // Add any other fields under helm if added later
++              return Optional.of(HarnessHelmDeployConfig.builder().helmDeployChartSpec(helmDeployChartSpec).build());
++            }
++          }
++        }
++      }
++    } catch (Exception e) {
++      logger.error("Failed while parsing yamlString:" + yamlString);
++      throw new WingsException(
++          ErrorCode.GENERAL_ERROR, "Invalid Yaml, Failed while parsing yamlString", WingsException.SRE);
++    }
++
++    return Optional.empty();
++  }
++}
+diff --git a/rest/src/main/java/software/wings/delegatetasks/HelmCommandTask.java b/rest/src/main/java/software/wings/delegatetasks/helm/HelmCommandTask.java
+similarity index 92%
+rename from rest/src/main/java/software/wings/delegatetasks/HelmCommandTask.java
+rename to rest/src/main/java/software/wings/delegatetasks/helm/HelmCommandTask.java
+index dc8bc585b..143be67ca 100644
+--- a/rest/src/main/java/software/wings/delegatetasks/HelmCommandTask.java
++++ b/rest/src/main/java/software/wings/delegatetasks/helm/HelmCommandTask.java
+@@ -1,4 +1,4 @@
+-package software.wings.delegatetasks;
++package software.wings.delegatetasks.helm;
+ 
+ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+ 
+@@ -12,6 +12,8 @@ import software.wings.beans.Log.LogLevel;
+ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
+ import software.wings.beans.command.ExecutionLogCallback;
+ import software.wings.beans.command.LogCallback;
++import software.wings.delegatetasks.AbstractDelegateRunnableTask;
++import software.wings.delegatetasks.DelegateLogService;
+ import software.wings.exception.HarnessException;
+ import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
+ import software.wings.helpers.ext.helm.HelmCommandExecutionResponse;
+@@ -37,6 +39,7 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
+   @Inject private DelegateLogService delegateLogService;
+   @Inject private HelmDeployService helmDeployService;
+   @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
++  @Inject private HelmCommandHelper helmCommandHelper;
+ 
+   private static final Logger logger = LoggerFactory.getLogger(HelmCommandTask.class);
+ 
+@@ -61,7 +64,7 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
+       addPublicRepo(helmCommandRequest);
+ 
+       executionLogCallback.saveExecutionLog(
+-          getDeploymentMessage(helmCommandRequest), LogLevel.INFO, CommandExecutionStatus.RUNNING);
++          helmCommandHelper.getDeploymentMessage(helmCommandRequest), LogLevel.INFO, CommandExecutionStatus.RUNNING);
+ 
+       switch (helmCommandRequest.getHelmCommandType()) {
+         case INSTALL:
+@@ -143,17 +146,4 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
+       executionLogCallback.saveExecutionLog(helmCommandResponse.getOutput());
+     }
+   }
+-
+-  private String getDeploymentMessage(HelmCommandRequest helmCommandRequest) {
+-    switch (helmCommandRequest.getHelmCommandType()) {
+-      case INSTALL:
+-        return "Installing";
+-      case ROLLBACK:
+-        return "Rolling back";
+-      case RELEASE_HISTORY:
+-        return "Getting release history";
+-      default:
+-        return "Unsupported operation";
+-    }
+-  }
+ }
+diff --git a/rest/src/main/java/software/wings/delegatetasks/helm/HelmDeployChartSpec.java b/rest/src/main/java/software/wings/delegatetasks/helm/HelmDeployChartSpec.java
+new file mode 100644
+index 000000000..cb1916cfd
+--- /dev/null
++++ b/rest/src/main/java/software/wings/delegatetasks/helm/HelmDeployChartSpec.java
+@@ -0,0 +1,25 @@
++package software.wings.delegatetasks.helm;
++
++import lombok.AllArgsConstructor;
++import lombok.Builder;
++import lombok.Data;
++
++/**
++ * This is generated from harness specific section of
++ * value.yaml read from git repo cpnfigured by client
++ * Harness
++ *   helm:
++ *      chart:
++ *         url: www.google.com
++ *         name: name
++ *         version: 1.0.1
++ *
++ */
++@Builder
++@AllArgsConstructor
++@Data
++public class HelmDeployChartSpec {
++  private String url;
++  private String name;
++  private String version;
++}
+diff --git a/rest/src/main/java/software/wings/service/impl/GitServiceImpl.java b/rest/src/main/java/software/wings/service/impl/GitServiceImpl.java
+new file mode 100644
+index 000000000..a02f67713
+--- /dev/null
++++ b/rest/src/main/java/software/wings/service/impl/GitServiceImpl.java
+@@ -0,0 +1,35 @@
++package software.wings.service.impl;
++
++import com.google.inject.Inject;
++import com.google.inject.Singleton;
++
++import org.slf4j.Logger;
++import org.slf4j.LoggerFactory;
++import software.wings.beans.GitConfig;
++import software.wings.beans.yaml.GitFetchFilesRequest;
++import software.wings.beans.yaml.GitFetchFilesResult;
++import software.wings.service.intfc.GitService;
++import software.wings.service.intfc.yaml.GitClient;
++
++import java.util.List;
++import javax.validation.executable.ValidateOnExecution;
++
++@Singleton
++@ValidateOnExecution
++public class GitServiceImpl implements GitService {
++  private static final Logger logger = LoggerFactory.getLogger(GitServiceImpl.class);
++
++  @Inject private GitClient gitClient;
++
++  @Override
++  public GitFetchFilesResult fetchFilesByPath(
++      GitConfig gitConfig, String connectorId, String commitId, String branch, List<String> filePaths) {
++    return gitClient.fetchFilesByPath(gitConfig,
++        GitFetchFilesRequest.builder()
++            .commitId(commitId)
++            .branch(branch)
++            .filePaths(filePaths)
++            .gitConnectorId(connectorId)
++            .build());
++  }
++}
+diff --git a/rest/src/main/java/software/wings/service/impl/yaml/GitClientHelper.java b/rest/src/main/java/software/wings/service/impl/yaml/GitClientHelper.java
+new file mode 100644
+index 000000000..c18505f74
+--- /dev/null
++++ b/rest/src/main/java/software/wings/service/impl/yaml/GitClientHelper.java
+@@ -0,0 +1,189 @@
++package software.wings.service.impl.yaml;
++
++import static io.harness.govern.Switch.unhandled;
++import static software.wings.beans.ErrorCode.GENERAL_ERROR;
++import static software.wings.beans.ErrorCode.GENERAL_YAML_ERROR;
++import static software.wings.beans.yaml.Change.ChangeType.ADD;
++import static software.wings.beans.yaml.Change.ChangeType.DELETE;
++import static software.wings.beans.yaml.Change.ChangeType.MODIFY;
++import static software.wings.beans.yaml.Change.ChangeType.RENAME;
++import static software.wings.exception.WingsException.SRE;
++import static software.wings.exception.WingsException.USER_ADMIN;
++
++import com.google.common.cache.CacheBuilder;
++import com.google.common.cache.CacheLoader;
++import com.google.common.cache.LoadingCache;
++
++import groovy.lang.Singleton;
++import io.harness.data.structure.EmptyPredicate;
++import io.harness.filesystem.FileIo;
++import org.eclipse.jgit.api.errors.GitAPIException;
++import org.eclipse.jgit.diff.DiffEntry;
++import org.eclipse.jgit.errors.TransportException;
++import org.slf4j.Logger;
++import org.slf4j.LoggerFactory;
++import software.wings.beans.ErrorCode;
++import software.wings.beans.GitConfig;
++import software.wings.beans.GitConfig.GitRepositoryType;
++import software.wings.beans.yaml.Change.ChangeType;
++import software.wings.beans.yaml.GitFile;
++import software.wings.exception.WingsException;
++import software.wings.utils.Misc;
++
++import java.io.File;
++import java.io.IOException;
++import java.nio.charset.StandardCharsets;
++import java.nio.file.Files;
++import java.nio.file.Path;
++import java.util.ArrayList;
++import java.util.List;
++import java.util.concurrent.TimeUnit;
++import java.util.stream.Stream;
++
++@Singleton
++public class GitClientHelper {
++  private static final Logger logger = LoggerFactory.getLogger(GitClientHelper.class);
++  public static final String REPOSITORY = "./repository";
++  private static final String GIT_REPO_BASE_DIR = "./repository/${REPO_TYPE}/${ACCOUNT_ID}/${REPO_NAME}";
++  public static final String REPOSITORY_GIT_FILE_DOWNLOADS = "./repository/gitFileDownloads";
++  public static final String REPOSITORY_GIT_FILE_DOWNLOADS_ACCOUNT = "./repository/gitFileDownloads/{ACCOUNT_ID}";
++  public static final String REPOSITORY_GIT_FILE_DOWNLOADS_BASE =
++      "./repository/gitFileDownloads/{ACCOUNT_ID}/{CONNECTOR_ID}";
++  public static final String REPOSITORY_GIT_FILE_DOWNLOADS_REPO_DIR =
++      REPOSITORY_GIT_FILE_DOWNLOADS_BASE + "/{REPO_NAME}";
++
++  private LoadingCache<String, Object> cache = CacheBuilder.newBuilder()
++                                                   .maximumSize(2000)
++                                                   .expireAfterAccess(1, TimeUnit.HOURS)
++                                                   .build(new CacheLoader<String, Object>() {
++                                                     @Override
++                                                     public Object load(String key) throws Exception {
++                                                       return new Object();
++                                                     }
++                                                   });
++
++  public Object getLockObject(String gitConnectorId) {
++    try {
++      String uniqueGitConfigString = gitConnectorId;
++      return cache.get(uniqueGitConfigString);
++    } catch (Exception e) {
++      throw new WingsException(ErrorCode.GENERAL_ERROR, WingsException.USER);
++    }
++  }
++
++  public String getFileDownloadRepoDirectory(GitConfig gitConfig, String connectorId) {
++    String repoName = gitConfig.getRepoUrl()
++                          .substring(gitConfig.getRepoUrl().lastIndexOf('/') + 1)
++                          .split("\\.")[0]; // TODO:: support more url types and validation
++    if (gitConfig.getGitRepoType() == null) {
++      logger.error("gitRepoType can not be null. defaulting it to YAML");
++      gitConfig.setGitRepoType(GitRepositoryType.YAML);
++    }
++    return REPOSITORY_GIT_FILE_DOWNLOADS_REPO_DIR.replace("{ACCOUNT_ID}", gitConfig.getAccountId())
++        .replace("{CONNECTOR_ID}", connectorId)
++        .replace("{REPO_NAME}", repoName);
++  }
++
++  public void createDirStructureForFileDownload(GitConfig gitConfig, String connectorId) {
++    try {
++      FileIo.createDirectoryIfDoesNotExist(REPOSITORY);
++      FileIo.createDirectoryIfDoesNotExist(REPOSITORY_GIT_FILE_DOWNLOADS);
++
++      FileIo.createDirectoryIfDoesNotExist(
++          REPOSITORY_GIT_FILE_DOWNLOADS_ACCOUNT.replace("{ACCOUNT_ID}", gitConfig.getAccountId()));
++
++      FileIo.createDirectoryIfDoesNotExist(
++          REPOSITORY_GIT_FILE_DOWNLOADS_BASE.replace("{ACCOUNT_ID}", gitConfig.getAccountId())
++              .replace("{CONNECTOR_ID}", connectorId));
++    } catch (IOException e) {
++      logger.error("Failed to created required dir structure for gitFileDownloads", e);
++      throw new WingsException(
++          ErrorCode.GENERAL_ERROR, "Failed to created required dir structure for gitFileDownloads", SRE);
++    }
++  }
++
++  public void addFiles(List<GitFile> gitFiles, Path path) {
++    // just check for null, not for empty
++    if (gitFiles == null) {
++      gitFiles = new ArrayList<>();
++    }
++
++    StringBuilder contentBuilder = new StringBuilder();
++    try (Stream<String> stream = Files.lines(path, StandardCharsets.UTF_8)) {
++      stream.forEach(s -> contentBuilder.append(s).append("\n"));
++    } catch (IOException e) {
++      logger.error("Failed to read file Content {}", path.toString());
++      throw new WingsException(GENERAL_ERROR, "Failed to read file Content {}", e);
++    }
++
++    gitFiles.add(
++        GitFile.builder().filePath(path.getFileName().toString()).fileContent(contentBuilder.toString()).build());
++  }
++
++  public String getRepoPathForFileDownload(GitConfig gitConfig, String gitConnectorId) {
++    String repoName = gitConfig.getRepoUrl()
++                          .substring(gitConfig.getRepoUrl().lastIndexOf('/') + 1)
++                          .split("\\.")[0]; // TODO:: support more url types and validation);
++
++    return REPOSITORY_GIT_FILE_DOWNLOADS_REPO_DIR.replace("{ACCOUNT_ID}", gitConfig.getAccountId())
++        .replace("{CONNECTOR_ID}", gitConnectorId)
++        .replace("{REPO_NAME}", repoName);
++  }
++
++  public synchronized void releaseLock(GitConfig gitConfig, String repoPath) {
++    try {
++      File repoDir = new File(repoPath);
++      File file = new File(repoDir.getAbsolutePath() + "/.git/index.lock");
++      FileIo.deleteFileIfExists(file.getAbsolutePath());
++    } catch (Exception e) {
++      logger.error(new StringBuilder(64)
++                       .append("Failed to delete index.lock file for account: ")
++                       .append(gitConfig.getAccountId())
++                       .append(", Repo URL: ")
++                       .append(gitConfig.getRepoUrl())
++                       .append(", Branch: ")
++                       .append(gitConfig.getBranch())
++                       .toString());
++
++      throw new WingsException(GENERAL_YAML_ERROR, "GIT_SYNC_ISSUE: Failed to delete index.lock file", SRE, e);
++    }
++  }
++
++  public void checkIfTransportException(Exception ex) {
++    // TransportException is subclass of GitAPIException. This is thrown when there is any issue in connecting to git
++    // repo, like invalid authorization and invalid repo
++    if (ex instanceof GitAPIException && ex.getCause() instanceof TransportException) {
++      throw new WingsException(ErrorCode.GIT_CONNECTION_ERROR + ":" + Misc.getMessage(ex), USER_ADMIN)
++          .addParam(ErrorCode.GIT_CONNECTION_ERROR.name(), ErrorCode.GIT_CONNECTION_ERROR);
++    }
++  }
++
++  public ChangeType getChangeType(DiffEntry.ChangeType gitDiffChangeType) {
++    switch (gitDiffChangeType) {
++      case ADD:
++        return ADD;
++      case MODIFY:
++        return MODIFY;
++      case DELETE:
++        return DELETE;
++      case RENAME:
++        return RENAME;
++      default:
++        unhandled(gitDiffChangeType);
++    }
++    return null;
++  }
++
++  public String getRepoDirectory(GitConfig gitConfig) {
++    String repoName = gitConfig.getRepoUrl()
++                          .substring(gitConfig.getRepoUrl().lastIndexOf('/') + 1)
++                          .split("\\.")[0]; // TODO:: support more url types and validation
++    if (gitConfig.getGitRepoType() == null) {
++      logger.error("gitRepoType can not be null. defaulting it to YAML");
++      gitConfig.setGitRepoType(GitRepositoryType.YAML);
++    }
++    return GIT_REPO_BASE_DIR.replace("${REPO_TYPE}", gitConfig.getGitRepoType().name().toLowerCase())
++        .replace("${ACCOUNT_ID}", gitConfig.getAccountId())
++        .replace("${REPO_NAME}", repoName);
++  }
++}
+diff --git a/rest/src/main/java/software/wings/service/impl/yaml/GitClientImpl.java b/rest/src/main/java/software/wings/service/impl/yaml/GitClientImpl.java
+index 4e9bce6cb..518f354c1 100644
+--- a/rest/src/main/java/software/wings/service/impl/yaml/GitClientImpl.java
++++ b/rest/src/main/java/software/wings/service/impl/yaml/GitClientImpl.java
+@@ -1,20 +1,19 @@
+ package software.wings.service.impl.yaml;
+ 
++import static io.harness.data.structure.EmptyPredicate.isEmpty;
++import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+ import static io.harness.govern.Switch.unhandled;
+ import static java.lang.String.format;
+ import static org.apache.commons.lang3.StringUtils.isNotBlank;
+ import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.OK;
+ import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.UP_TO_DATE;
+-import static software.wings.beans.ErrorCode.GENERAL_YAML_ERROR;
++import static software.wings.beans.ErrorCode.GENERAL_ERROR;
+ import static software.wings.beans.ErrorCode.UNREACHABLE_HOST;
+-import static software.wings.beans.yaml.Change.ChangeType.ADD;
+-import static software.wings.beans.yaml.Change.ChangeType.DELETE;
+-import static software.wings.beans.yaml.Change.ChangeType.MODIFY;
+-import static software.wings.beans.yaml.Change.ChangeType.RENAME;
+ import static software.wings.beans.yaml.YamlConstants.GIT_TERRAFORM_LOG_PREFIX;
+ import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
+-import static software.wings.exception.WingsException.SRE;
+-import static software.wings.exception.WingsException.USER_ADMIN;
++import static software.wings.exception.WingsException.USER;
++
++import com.google.inject.Inject;
+ 
+ import com.jcraft.jsch.JSch;
+ import com.jcraft.jsch.JSchException;
+@@ -23,8 +22,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+ import groovy.lang.Singleton;
+ import io.harness.data.structure.EmptyPredicate;
+ import io.harness.data.structure.UUIDGenerator;
+-import io.harness.filesystem.FileIo;
+ import org.apache.commons.io.FileUtils;
++import org.eclipse.jgit.api.CheckoutCommand;
+ import org.eclipse.jgit.api.CloneCommand;
+ import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
+ import org.eclipse.jgit.api.FetchCommand;
+@@ -33,6 +32,7 @@ import org.eclipse.jgit.api.LsRemoteCommand;
+ import org.eclipse.jgit.api.PullCommand;
+ import org.eclipse.jgit.api.PullResult;
+ import org.eclipse.jgit.api.PushCommand;
++import org.eclipse.jgit.api.ResetCommand;
+ import org.eclipse.jgit.api.ResetCommand.ResetType;
+ import org.eclipse.jgit.api.Status;
+ import org.eclipse.jgit.api.TransportCommand;
+@@ -75,6 +75,9 @@ import software.wings.beans.yaml.GitCommitAndPushResult;
+ import software.wings.beans.yaml.GitCommitRequest;
+ import software.wings.beans.yaml.GitCommitResult;
+ import software.wings.beans.yaml.GitDiffResult;
++import software.wings.beans.yaml.GitFetchFilesRequest;
++import software.wings.beans.yaml.GitFetchFilesResult;
++import software.wings.beans.yaml.GitFile;
+ import software.wings.beans.yaml.GitFileChange;
+ import software.wings.beans.yaml.GitPushResult;
+ import software.wings.beans.yaml.GitPushResult.RefUpdate;
+@@ -90,11 +93,13 @@ import java.net.UnknownHostException;
+ import java.nio.charset.Charset;
+ import java.nio.file.Files;
+ import java.nio.file.Path;
++import java.nio.file.Paths;
+ import java.nio.file.StandardCopyOption;
+ import java.text.SimpleDateFormat;
+ import java.util.ArrayList;
+ import java.util.Collection;
+ import java.util.List;
++import java.util.stream.Stream;
+ 
+ /**
+  * Created by anubhaw on 10/16/17.
+@@ -102,15 +107,15 @@ import java.util.List;
+ 
+ @Singleton
+ public class GitClientImpl implements GitClient {
+-  private static final String GIT_REPO_BASE_DIR = "./repository/${REPO_TYPE}/${ACCOUNT_ID}/${REPO_NAME}";
+   private static final String TEMP_SSH_KEY_DIR = "./repository/.ssh";
+   private static final String COMMIT_TIMESTAMP_FORMAT = "yyyy.MM.dd.HH.mm.ss";
+ 
+   private static final Logger logger = LoggerFactory.getLogger(GitClientImpl.class);
++  @Inject GitClientHelper gitClientHelper;
+ 
+   @Override
+-  public synchronized GitCloneResult clone(GitConfig gitConfig) {
+-    String gitRepoDirectory = getRepoDirectory(gitConfig);
++  public synchronized GitCloneResult clone(
++      GitConfig gitConfig, String gitRepoDirectory, String branch, boolean noCheckout) {
+     try {
+       if (new File(gitRepoDirectory).exists()) {
+         FileUtils.deleteDirectory(new File(gitRepoDirectory));
+@@ -125,18 +130,22 @@ public class GitClientImpl implements GitClient {
+     cloneCommand = (CloneCommand) getAuthConfiguredCommand(cloneCommand, gitConfig);
+     try (Git git = cloneCommand.setURI(gitConfig.getRepoUrl())
+                        .setDirectory(new File(gitRepoDirectory))
+-                       .setBranch(gitConfig.getBranch())
++                       .setBranch(isEmpty(branch) ? null : branch)
++                       // if set to <code>true</code> no branch will be checked out, after the clone.
++                       // This enhances performance of the clone command when there is no need for a checked out branch.
++                       .setNoCheckout(noCheckout)
+                        .call()) {
+       return GitCloneResult.builder().build();
+     } catch (GitAPIException ex) {
+-      logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
+-      checkIfTransportException(ex);
+-      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in cloning repo");
++      logger.error(GIT_YAML_LOG_PREFIX + "Error in cloning repo: ", ex);
++      gitClientHelper.checkIfTransportException(ex);
++      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, "Error in cloning repo")
++          .addParam("message", "Error in cloning repo");
+     }
+   }
+ 
+   private void updateRemoteOriginInConfig(GitConfig gitConfig) {
+-    String gitRepoDirectory = getRepoDirectory(gitConfig);
++    String gitRepoDirectory = gitClientHelper.getRepoDirectory(gitConfig);
+ 
+     try (Git git = Git.open(new File(gitRepoDirectory))) {
+       StoredConfig config = git.getRepository().getConfig();
+@@ -151,36 +160,6 @@ public class GitClientImpl implements GitClient {
+     }
+   }
+ 
+-  @Override
+-  public String getRepoDirectory(GitConfig gitConfig) {
+-    String repoName = gitConfig.getRepoUrl()
+-                          .substring(gitConfig.getRepoUrl().lastIndexOf('/') + 1)
+-                          .split("\\.")[0]; // TODO:: support more url types and validation
+-    if (gitConfig.getGitRepoType() == null) {
+-      logger.error("gitRepoType can not be null. defaulting it to YAML");
+-      gitConfig.setGitRepoType(GitRepositoryType.YAML);
+-    }
+-    return GIT_REPO_BASE_DIR.replace("${REPO_TYPE}", gitConfig.getGitRepoType().name().toLowerCase())
+-        .replace("${ACCOUNT_ID}", gitConfig.getAccountId())
+-        .replace("${REPO_NAME}", repoName);
+-  }
+-
+-  private ChangeType getChangeType(DiffEntry.ChangeType gitDiffChangeType) {
+-    switch (gitDiffChangeType) {
+-      case ADD:
+-        return ADD;
+-      case MODIFY:
+-        return MODIFY;
+-      case DELETE:
+-        return DELETE;
+-      case RENAME:
+-        return RENAME;
+-      default:
+-        unhandled(gitDiffChangeType);
+-    }
+-    return null;
+-  }
+-
+   @Override
+   public synchronized GitDiffResult diff(GitConfig gitConfig, String startCommitId) {
+     ensureRepoLocallyClonedAndUpdated(gitConfig);
+@@ -190,7 +169,7 @@ public class GitClientImpl implements GitClient {
+                                    .repoName(gitConfig.getRepoUrl())
+                                    .gitFileChanges(new ArrayList<>())
+                                    .build();
+-    try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
++    try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(gitConfig)))) {
+       git.checkout().setName(gitConfig.getBranch()).call();
+       ((PullCommand) (getAuthConfiguredCommand(git.pull(), gitConfig))).call();
+       Repository repository = git.getRepository();
+@@ -247,7 +226,7 @@ public class GitClientImpl implements GitClient {
+       content = new String(loader.getBytes(), Charset.forName("utf-8"));
+       GitFileChange gitFileChange = GitFileChange.Builder.aGitFileChange()
+                                         .withCommitId(headCommitId.getName())
+-                                        .withChangeType(getChangeType(entry.getChangeType()))
++                                        .withChangeType(gitClientHelper.getChangeType(entry.getChangeType()))
+                                         .withFilePath(filePath)
+                                         .withFileContent(content)
+                                         .withObjectId(objectId.name())
+@@ -259,7 +238,7 @@ public class GitClientImpl implements GitClient {
+ 
+   @Override
+   public synchronized GitCheckoutResult checkout(GitConfig gitConfig) {
+-    try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
++    try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(gitConfig)))) {
+       Ref ref = git.checkout()
+                     .setCreateBranch(true)
+                     .setName(gitConfig.getBranch())
+@@ -282,11 +261,11 @@ public class GitClientImpl implements GitClient {
+     ensureRepoLocallyClonedAndUpdated(gitConfig);
+ 
+     // TODO:: pull latest remote branch??
+-    try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
++    try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(gitConfig)))) {
+       String timestamp = new SimpleDateFormat(COMMIT_TIMESTAMP_FORMAT).format(new java.util.Date());
+       StringBuilder commitMessage = new StringBuilder("Harness IO Git Sync. \n");
+ 
+-      String repoDirectory = getRepoDirectory(gitConfig);
++      String repoDirectory = gitClientHelper.getRepoDirectory(gitConfig);
+       gitCommitRequest.getGitFileChanges().forEach(gitFileChange -> {
+         String filePath = repoDirectory + "/" + gitFileChange.getFilePath();
+         File file = new File(filePath);
+@@ -397,7 +376,7 @@ public class GitClientImpl implements GitClient {
+   @Override
+   public synchronized GitPushResult push(GitConfig gitConfig, boolean forcePush) {
+     logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Performing git PUSH, forcePush is: " + forcePush);
+-    try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
++    try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(gitConfig)))) {
+       Iterable<PushResult> pushResults = ((PushCommand) (getAuthConfiguredCommand(git.push(), gitConfig)))
+                                              .setRemote("origin")
+                                              .setForce(forcePush)
+@@ -432,7 +411,7 @@ public class GitClientImpl implements GitClient {
+         errorMsg = "Invalid git repo or user doesn't have write access to repository. repo:" + gitConfig.getRepoUrl();
+       }
+ 
+-      checkIfTransportException(ex);
++      gitClientHelper.checkIfTransportException(ex);
+       throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", errorMsg);
+     }
+   }
+@@ -452,10 +431,138 @@ public class GitClientImpl implements GitClient {
+     return gitCommitAndPushResult;
+   }
+ 
++  @Override
++  public GitFetchFilesResult fetchFilesByPath(GitConfig gitConfig, GitFetchFilesRequest gitRequest) {
++    // Default it to yaml
++    if (gitConfig.getGitRepoType() == null) {
++      gitConfig.setGitRepoType(GitRepositoryType.YAML);
++    }
++
++    String commitId = gitRequest.getCommitId();
++    String gitConnectorId = gitRequest.getGitConnectorId();
++
++    // FilePath cant empty as well as (Branch and commitId both cant be empty)
++    if (isEmpty(gitRequest.getFilePaths()) || (isEmpty(commitId) && isEmpty(gitRequest.getBranch()))) {
++      throw new WingsException("FilePaths or {commitId & Branch} can not be empty", USER);
++    }
++
++    /*
++     * ConnectorId is per gitConfig and will result in diff local path for repo
++     * */
++    synchronized (gitClientHelper.getLockObject(gitConnectorId)) {
++      try {
++        logger.info(new StringBuilder(128)
++                        .append(" Processing Git command: FETCH_FILES ")
++                        .append("Account: ")
++                        .append(gitConfig.getAccountId())
++                        .append(", repo: ")
++                        .append(gitConfig.getRepoUrl())
++                        .append(", Branch: ")
++                        .append(gitRequest.getBranch())
++                        .append(", CommitId: ")
++                        .append(gitRequest.getCommitId())
++                        .append(", filePaths: ")
++                        .append(gitRequest.getFilePaths())
++                        .toString());
++
++        // create repository/gitFilesDownload/<AccId>/<GitConnectorId> path
++        gitClientHelper.createDirStructureForFileDownload(gitConfig, gitConnectorId);
++
++        // clone repo locally without checkout
++        cloneRepoForFilePathCheckout(gitConfig, gitRequest.getBranch(), gitConnectorId);
++
++        // if commitId is given, use it to checkout, else checkout latest commit from branch
++        if (isNotEmpty(commitId)) {
++          checkoutGivenCommitForPath(commitId, gitRequest.getFilePaths(), gitConfig, gitConnectorId);
++        } else {
++          checkoutBranchForPath(gitRequest.getBranch(), gitRequest.getFilePaths(), gitConfig, gitConnectorId);
++        }
++
++        List<GitFile> gitFiles = new ArrayList<>();
++        String repoPath = gitClientHelper.getRepoPathForFileDownload(gitConfig, gitConnectorId);
++
++        gitRequest.getFilePaths().forEach(filePath -> {
++          try (Stream<Path> paths = Files.walk(Paths.get(repoPath + "/" + filePath))) {
++            paths.filter(Files::isRegularFile).forEach(path -> gitClientHelper.addFiles(gitFiles, path));
++          } catch (Exception e) {
++            throw new WingsException(GENERAL_ERROR,
++                new StringBuilder("Unable to checkout files for filePath")
++                    .append(filePath)
++                    .append(" for commitId: ")
++                    .append(commitId)
++                    .toString(),
++                USER, e);
++          }
++        });
++
++        resetWorkingDir(gitRequest.getFilePaths(), gitConfig, gitRequest.getGitConnectorId());
++        return GitFetchFilesResult.builder()
++            .files(gitFiles)
++            .gitCommitResult(GitCommitResult.builder().commitId(commitId).build())
++            .build();
++
++      } catch (Exception e) {
++        throw new WingsException(GENERAL_ERROR,
++            new StringBuilder()
++                .append("Failed while fetching files for CommitId: ")
++                .append(commitId)
++                .append(", FilePaths: ")
++                .append(gitRequest.getFilePaths())
++                .toString(),
++            e);
++      }
++    }
++  }
++
++  private void checkoutGivenCommitForPath(
++      String commitId, List<String> filePaths, GitConfig gitConfig, String gitConnectorId) {
++    try (Git git = Git.open(new File(gitClientHelper.getFileDownloadRepoDirectory(gitConfig, gitConnectorId)))) {
++      CheckoutCommand checkoutCommand = git.checkout().setStartPoint(commitId).setCreateBranch(false);
++
++      filePaths.forEach(filePath -> checkoutCommand.addPath(filePath));
++      checkoutCommand.call();
++    } catch (Exception ex) {
++      logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
++      gitClientHelper.checkIfTransportException(ex);
++      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR)
++          .addParam("message", "Error in checking out commit id " + commitId);
++    }
++  }
++
++  private void checkoutBranchForPath(
++      String branch, List<String> filePaths, GitConfig gitConfig, String gitConnectorId) {
++    try (Git git = Git.open(new File(gitClientHelper.getFileDownloadRepoDirectory(gitConfig, gitConnectorId)))) {
++      CheckoutCommand checkoutCommand = git.checkout()
++                                            .setCreateBranch(true)
++                                            .setStartPoint("origin/" + branch)
++                                            .setForce(true)
++                                            .setUpstreamMode(SetupUpstreamMode.TRACK)
++                                            .setName(branch);
++      filePaths.forEach(filePath -> checkoutCommand.addPath(filePath));
++      checkoutCommand.call();
++    } catch (Exception ex) {
++      logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
++      gitClientHelper.checkIfTransportException(ex);
++      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR)
++          .addParam("message", "Error in checking out Branch " + branch);
++    }
++  }
++
++  private void resetWorkingDir(List<String> filePaths, GitConfig gitConfig, String gitConnectorId) {
++    try (Git git = Git.open(new File(gitClientHelper.getFileDownloadRepoDirectory(gitConfig, gitConnectorId)))) {
++      ResetCommand resetCommand = new ResetCommand(git.getRepository()).setMode(ResetType.HARD);
++      resetCommand.call();
++    } catch (Exception ex) {
++      logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
++      gitClientHelper.checkIfTransportException(ex);
++      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in resetting repo");
++    }
++  }
++
+   @Override
+   public synchronized PullResult pull(GitConfig gitConfig) {
+     ensureRepoLocallyClonedAndUpdated(gitConfig);
+-    try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
++    try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(gitConfig)))) {
+       git.branchCreate()
+           .setForce(true)
+           .setName(gitConfig.getBranch())
+@@ -501,6 +608,60 @@ public class GitClientImpl implements GitClient {
+     return null; // no error
+   }
+ 
++  /**
++   * Ensure repo locally cloned. This is called before performing any git operation with remote
++   *
++   * @param gitConfig the git config
++   */
++  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
++  public synchronized void cloneRepoForFilePathCheckout(GitConfig gitConfig, String branch, String connectorId) {
++    logger.info(new StringBuilder(64)
++                    .append(getGitLogMessagePrefix(gitConfig.getGitRepoType()))
++                    .append("Cloning repo without checkout for file fetch op, for GitConfig: ")
++                    .append(gitConfig.toString())
++                    .toString());
++
++    boolean exceptionOccured = false;
++    File repoDir = new File(gitClientHelper.getFileDownloadRepoDirectory(gitConfig, connectorId));
++    // If repo already exists, update references
++    if (repoDir.exists()) {
++      try (Git git = Git.open(repoDir)) {
++        // Check URL change (ssh, https) and update in .git/config
++        updateRemoteOriginInConfig(gitConfig);
++
++        // update ref with latest commits on remote
++        FetchResult fetchResult =
++            ((FetchCommand) (getAuthConfiguredCommand(git.fetch(), gitConfig))).call(); // fetch all remote references
++
++        logger.info(new StringBuilder()
++                        .append(getGitLogMessagePrefix(gitConfig.getGitRepoType()))
++                        .append("result fetched: ")
++                        .append(fetchResult.toString())
++                        .toString());
++
++        return;
++      } catch (Exception ex) {
++        exceptionOccured = true;
++        if (ex instanceof IOException) {
++          logger.warn(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Repo doesn't exist locally [repo: {}], {} ",
++              gitConfig.getRepoUrl(), ex);
++          logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Do a fresh clone");
++        } else {
++          logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Hard reset failed for branch [{}]",
++              gitConfig.getBranch());
++          logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
++          gitClientHelper.checkIfTransportException(ex);
++        }
++      } finally {
++        if (exceptionOccured) {
++          gitClientHelper.releaseLock(gitConfig, gitClientHelper.getRepoPathForFileDownload(gitConfig, connectorId));
++        }
++      }
++    }
++
++    clone(gitConfig, gitClientHelper.getFileDownloadRepoDirectory(gitConfig, connectorId), branch, true);
++  }
++
+   /**
+    * Ensure repo locally cloned. This is called before performing any git operation with remote
+    *
+@@ -508,7 +669,7 @@ public class GitClientImpl implements GitClient {
+    */
+   @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
+   public synchronized void ensureRepoLocallyClonedAndUpdated(GitConfig gitConfig) {
+-    File repoDir = new File(getRepoDirectory(gitConfig));
++    File repoDir = new File(gitClientHelper.getRepoDirectory(gitConfig));
+     boolean executionFailed = false;
+     if (repoDir.exists()) {
+       try (Git git = Git.open(repoDir)) {
+@@ -535,7 +696,7 @@ public class GitClientImpl implements GitClient {
+             logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Hard reset failed for branch [{}]",
+                 gitConfig.getBranch());
+             logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
+-            checkIfTransportException(ex);
++            gitClientHelper.checkIfTransportException(ex);
+           }
+         }
+       } finally {
+@@ -545,7 +706,7 @@ public class GitClientImpl implements GitClient {
+           // no other method inside this one at the same time. Also all callers are synchronized as well.
+           // Means if we fail due to existing index.lock it has to be orphan lock file
+           // and needs to be deleted.
+-          releaseLock(gitConfig);
++          gitClientHelper.releaseLock(gitConfig, gitClientHelper.getRepoDirectory(gitConfig));
+         }
+       }
+     }
+@@ -553,35 +714,7 @@ public class GitClientImpl implements GitClient {
+     // We are here, so either repo doesnt exist or we encounter some error while
+     // opening/updating repo
+     logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Do a fresh clone");
+-    clone(gitConfig);
+-  }
+-
+-  private synchronized void releaseLock(GitConfig gitConfig) {
+-    try {
+-      File repoDir = new File(getRepoDirectory(gitConfig));
+-      File file = new File(repoDir.getAbsolutePath() + "/.git/index.lock");
+-      FileIo.deleteFileIfExists(file.getAbsolutePath());
+-    } catch (Exception e) {
+-      logger.error(new StringBuilder(64)
+-                       .append("Failed to delete index.lock file for account: ")
+-                       .append(gitConfig.getAccountId())
+-                       .append(", Repo URL: ")
+-                       .append(gitConfig.getRepoUrl())
+-                       .append(", Branch: ")
+-                       .append(gitConfig.getBranch())
+-                       .toString());
+-
+-      throw new WingsException(GENERAL_YAML_ERROR, "GIT_SYNC_ISSUE: Failed to delete index.lock file", SRE, e);
+-    }
+-  }
+-
+-  private void checkIfTransportException(Exception ex) {
+-    // TransportException is subclass of GitAPIException. This is thrown when there is any issue in connecting to git
+-    // repo, like invalid authorization and invalid repo
+-    if (ex instanceof GitAPIException && ex.getCause() instanceof TransportException) {
+-      throw new WingsException(ErrorCode.GIT_CONNECTION_ERROR + ":" + Misc.getMessage(ex), USER_ADMIN)
+-          .addParam(ErrorCode.GIT_CONNECTION_ERROR.name(), ErrorCode.GIT_CONNECTION_ERROR);
+-    }
++    clone(gitConfig, gitClientHelper.getRepoDirectory(gitConfig), gitConfig.getBranch(), false);
+   }
+ 
+   protected String getGitLogMessagePrefix(GitRepositoryType repositoryType) {
+diff --git a/rest/src/main/java/software/wings/service/impl/yaml/GitClientUnsupported.java b/rest/src/main/java/software/wings/service/impl/yaml/GitClientUnsupported.java
+index a5ce9b36f..0e844d257 100644
+--- a/rest/src/main/java/software/wings/service/impl/yaml/GitClientUnsupported.java
++++ b/rest/src/main/java/software/wings/service/impl/yaml/GitClientUnsupported.java
+@@ -8,17 +8,14 @@ import software.wings.beans.yaml.GitCommitAndPushResult;
+ import software.wings.beans.yaml.GitCommitRequest;
+ import software.wings.beans.yaml.GitCommitResult;
+ import software.wings.beans.yaml.GitDiffResult;
++import software.wings.beans.yaml.GitFetchFilesRequest;
++import software.wings.beans.yaml.GitFetchFilesResult;
+ import software.wings.beans.yaml.GitPushResult;
+ import software.wings.service.intfc.yaml.GitClient;
+ 
+ public class GitClientUnsupported implements GitClient {
+   @Override
+-  public String getRepoDirectory(GitConfig gitConfig) {
+-    throw new UnsupportedOperationException("Git operations not supported.");
+-  }
+-
+-  @Override
+-  public GitCloneResult clone(GitConfig gitConfig) {
++  public GitCloneResult clone(GitConfig gitConfig, String gitRepoDirectory, String branch, boolean noCheckout) {
+     throw new UnsupportedOperationException("Git operations not supported.");
+   }
+ 
+@@ -61,4 +58,9 @@ public class GitClientUnsupported implements GitClient {
+   public String validate(GitConfig gitConfig, boolean logError) {
+     throw new UnsupportedOperationException("Git operations not supported.");
+   }
++
++  @Override
++  public GitFetchFilesResult fetchFilesByPath(GitConfig gitConfig, GitFetchFilesRequest gitRequest) {
++    throw new UnsupportedOperationException("Git operations not supported.");
++  }
+ }
+diff --git a/rest/src/main/java/software/wings/service/impl/yaml/service/YamlHelper.java b/rest/src/main/java/software/wings/service/impl/yaml/service/YamlHelper.java
+index 1a158b465..c4642e0eb 100644
+--- a/rest/src/main/java/software/wings/service/impl/yaml/service/YamlHelper.java
++++ b/rest/src/main/java/software/wings/service/impl/yaml/service/YamlHelper.java
+@@ -5,6 +5,7 @@ import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
+ import com.google.inject.Inject;
+ import com.google.inject.Singleton;
+ 
++import com.esotericsoftware.yamlbeans.YamlReader;
+ import software.wings.beans.Application;
+ import software.wings.beans.Environment;
+ import software.wings.beans.InfrastructureMapping;
+@@ -27,6 +28,8 @@ import software.wings.service.intfc.SettingsService;
+ import software.wings.service.intfc.WorkflowService;
+ import software.wings.utils.Validator;
+ 
++import java.io.IOException;
++import java.util.Map;
+ import java.util.Optional;
+ import java.util.regex.Matcher;
+ import java.util.regex.Pattern;
+diff --git a/rest/src/main/java/software/wings/service/intfc/GitService.java b/rest/src/main/java/software/wings/service/intfc/GitService.java
+new file mode 100644
+index 000000000..ab0797b84
+--- /dev/null
++++ b/rest/src/main/java/software/wings/service/intfc/GitService.java
+@@ -0,0 +1,11 @@
++package software.wings.service.intfc;
++
++import software.wings.beans.GitConfig;
++import software.wings.beans.yaml.GitFetchFilesResult;
++
++import java.util.List;
++
++public interface GitService {
++  GitFetchFilesResult fetchFilesByPath(
++      GitConfig gitConfig, String connectorId, String commitId, String branch, List<String> filePaths);
++}
+diff --git a/rest/src/main/java/software/wings/service/intfc/yaml/GitClient.java b/rest/src/main/java/software/wings/service/intfc/yaml/GitClient.java
+index 9fdcfc188..948867a4b 100644
+--- a/rest/src/main/java/software/wings/service/intfc/yaml/GitClient.java
++++ b/rest/src/main/java/software/wings/service/intfc/yaml/GitClient.java
+@@ -8,6 +8,8 @@ import software.wings.beans.yaml.GitCommitAndPushResult;
+ import software.wings.beans.yaml.GitCommitRequest;
+ import software.wings.beans.yaml.GitCommitResult;
+ import software.wings.beans.yaml.GitDiffResult;
++import software.wings.beans.yaml.GitFetchFilesRequest;
++import software.wings.beans.yaml.GitFetchFilesResult;
+ import software.wings.beans.yaml.GitPushResult;
+ 
+ /**
+@@ -18,21 +20,13 @@ import software.wings.beans.yaml.GitPushResult;
+  * The interface Git client.
+  */
+ public interface GitClient {
+-  /**
+-   * Gets repo directory.
+-   *
+-   * @param gitConfig the git config
+-   * @return the repo directory
+-   */
+-  String getRepoDirectory(GitConfig gitConfig);
+-
+   /**
+    * Clone git clone result.
+    *
+    * @param gitConfig the git config
+    * @return the git clone result
+    */
+-  GitCloneResult clone(GitConfig gitConfig);
++  GitCloneResult clone(GitConfig gitConfig, String gitRepoDirectory, String branch, boolean noCheckout);
+ 
+   /**
+    * Ensure repo locally cloned and updated.
+@@ -101,4 +95,6 @@ public interface GitClient {
+    * @return the string
+    */
+   String validate(GitConfig gitConfig, boolean logError);
++
++  GitFetchFilesResult fetchFilesByPath(GitConfig gitConfig, GitFetchFilesRequest gitRequest);
+ }
+diff --git a/rest/src/main/java/software/wings/sm/states/HelmDeployState.java b/rest/src/main/java/software/wings/sm/states/HelmDeployState.java
+index 850990a8b..5ed584f21 100644
+--- a/rest/src/main/java/software/wings/sm/states/HelmDeployState.java
++++ b/rest/src/main/java/software/wings/sm/states/HelmDeployState.java
+@@ -15,6 +15,7 @@ import static software.wings.helpers.ext.helm.HelmConstants.HELM_NAMESPACE_PLACE
+ import com.google.common.collect.Maps;
+ import com.google.inject.Inject;
+ 
++import com.esotericsoftware.yamlbeans.YamlReader;
+ import com.github.reinert.jjschema.Attributes;
+ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+ import lombok.Getter;
+@@ -74,6 +75,7 @@ import software.wings.utils.KubernetesConvention;
+ import software.wings.utils.Misc;
+ import software.wings.waitnotify.NotifyResponseData;
+ 
++import java.io.IOException;
+ import java.util.Arrays;
+ import java.util.Collections;
+ import java.util.HashMap;
+@@ -436,4 +438,10 @@ public class HelmDeployState extends State {
+     }
+     return invalidFields;
+   }
++
++  private Map getMapFromYamlContent(String yamlString) throws IOException {
++    YamlReader reader = new YamlReader(yamlString);
++    Object object = reader.read();
++    return (Map) object;
++  }
+ }
+\ No newline at end of file
+diff --git a/rest/src/test/java/software/wings/WingsTestModule.java b/rest/src/test/java/software/wings/WingsTestModule.java
+index 9de207094..7c09d5d71 100644
+--- a/rest/src/test/java/software/wings/WingsTestModule.java
++++ b/rest/src/test/java/software/wings/WingsTestModule.java
+@@ -28,6 +28,8 @@ import software.wings.service.impl.security.EncryptionServiceImpl;
+ import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
+ import software.wings.service.impl.splunk.SplunkDelegateServiceImpl;
+ import software.wings.service.impl.sumo.SumoDelegateServiceImpl;
++import software.wings.service.impl.yaml.GitClientHelper;
++import software.wings.service.impl.yaml.GitClientImpl;
+ import software.wings.service.intfc.AmazonS3BuildService;
+ import software.wings.service.intfc.ArtifactoryBuildService;
+ import software.wings.service.intfc.ContainerService;
+@@ -66,6 +68,8 @@ public class WingsTestModule extends AbstractModule {
+     bind(PcfClient.class).to(PcfClientImpl.class);
+     DelegateLogService mockDelegateLogService = mock(DelegateLogService.class);
+     bind(DelegateLogService.class).toInstance(mockDelegateLogService);
++    GitClientHelper gitClientHelper = mock(GitClientHelper.class);
++    bind(GitClientImpl.class);
+ 
+     bind(ExecutorService.class)
+         .annotatedWith(Names.named("verificationDataCollector"))
+diff --git a/rest/src/test/java/software/wings/delegatetasks/HelmCommandTaskHelperTest.java b/rest/src/test/java/software/wings/delegatetasks/HelmCommandTaskHelperTest.java
+new file mode 100644
+index 000000000..5a0b78351
+--- /dev/null
++++ b/rest/src/test/java/software/wings/delegatetasks/HelmCommandTaskHelperTest.java
+@@ -0,0 +1,83 @@
++package software.wings.delegatetasks;
++
++import static org.junit.Assert.assertEquals;
++import static org.junit.Assert.assertFalse;
++import static org.junit.Assert.assertTrue;
++import static org.junit.Assert.assertNull;
++
++import com.google.inject.Inject;
++
++import org.junit.Test;
++import software.wings.WingsBaseTest;
++import software.wings.delegatetasks.helm.HarnessHelmDeployConfig;
++import software.wings.delegatetasks.helm.HelmCommandHelper;
++import software.wings.delegatetasks.helm.HelmDeployChartSpec;
++import software.wings.exception.WingsException;
++
++import java.util.Optional;
++
++public class HelmCommandTaskHelperTest extends WingsBaseTest {
++  @Inject private HelmCommandHelper helmCommandHelper;
++
++  @Test
++  public void testGenerateHelmDeployChartSpecFromYaml() throws Exception {
++    Optional<HarnessHelmDeployConfig> optional = helmCommandHelper.generateHelmDeployChartSpecFromYaml("harness:\n"
++        + "    helm:\n"
++        + "      chart:\n"
++        + "          url: http://storage.googleapis.com/kubernetes-charts\n"
++        + "          name: ABC\n"
++        + "          version: 0.1.0");
++
++    assertTrue(optional.isPresent());
++    HelmDeployChartSpec helmDeployChartSpec = optional.get().getHelmDeployChartSpec();
++    assertEquals("http://storage.googleapis.com/kubernetes-charts", helmDeployChartSpec.getUrl());
++    assertEquals("ABC", helmDeployChartSpec.getName());
++    assertEquals("0.1.0", helmDeployChartSpec.getVersion());
++  }
++
++  @Test
++  public void testGenerateHelmDeployChartSpecFromYamlNull() throws Exception {
++    Optional<HarnessHelmDeployConfig> optional = helmCommandHelper.generateHelmDeployChartSpecFromYaml("harness:\n"
++        + "    helm:\n"
++        + "       chart:\n"
++        + "          url: http://storage.googleapis.com/kubernetes-charts\n");
++    assertTrue(optional.isPresent());
++    HelmDeployChartSpec helmDeployChartSpec = optional.get().getHelmDeployChartSpec();
++    assertEquals("http://storage.googleapis.com/kubernetes-charts", helmDeployChartSpec.getUrl());
++    assertNull(helmDeployChartSpec.getName());
++    assertNull(helmDeployChartSpec.getVersion());
++  }
++
++  @Test
++  public void testGenerateHelmDeployChartSpecFromYamlInvalid() throws Exception {
++    try {
++      Optional<HarnessHelmDeployConfig> optional = helmCommandHelper.generateHelmDeployChartSpecFromYaml("harness:\n"
++          + "    helm:\n"
++          + "       chart:\n");
++      assertFalse(true);
++    } catch (Exception e) {
++      assertTrue(e instanceof WingsException);
++      assertEquals("Invalid Yaml, Failed while parsing yamlString", e.getMessage());
++      assertTrue(true);
++    }
++  }
++
++  @Test
++  public void testGenerateHelmDeployChartSpecFromYamlMultiple() throws Exception {
++    Optional<HarnessHelmDeployConfig> optional = helmCommandHelper.generateHelmDeployChartSpecFromYaml("name: ABC\n"
++        + "url: http://url.com\n"
++        + "---\n"
++        + "harness:\n"
++        + "    helm:\n"
++        + "      chart:\n"
++        + "         url: http://storage.googleapis.com/kubernetes-charts\n"
++        + "         name: ABC\n"
++        + "         version: 0.1.0");
++
++    assertTrue(optional.isPresent());
++    HelmDeployChartSpec helmDeployChartSpec = optional.get().getHelmDeployChartSpec();
++    assertEquals("http://storage.googleapis.com/kubernetes-charts", helmDeployChartSpec.getUrl());
++    assertEquals("ABC", helmDeployChartSpec.getName());
++    assertEquals("0.1.0", helmDeployChartSpec.getVersion());
++  }
++}
+diff --git a/rest/src/test/java/software/wings/service/impl/yaml/GitClientImplTest.java b/rest/src/test/java/software/wings/service/impl/yaml/GitClientImplTest.java
+index 40344cc28..305ca9465 100644
+--- a/rest/src/test/java/software/wings/service/impl/yaml/GitClientImplTest.java
++++ b/rest/src/test/java/software/wings/service/impl/yaml/GitClientImplTest.java
+@@ -3,11 +3,12 @@ package software.wings.service.impl.yaml;
+ import static org.junit.Assert.assertEquals;
+ import static org.mockito.Matchers.any;
+ import static org.mockito.Mockito.mock;
+-import static org.mockito.Mockito.spy;
+ import static org.mockito.Mockito.when;
+ import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
+ import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
+ 
++import com.google.inject.Inject;
++
+ import com.jcraft.jsch.JSch;
+ import com.jcraft.jsch.JSchException;
+ import com.jcraft.jsch.Session;
+@@ -16,7 +17,6 @@ import org.apache.commons.lang3.reflect.MethodUtils;
+ import org.eclipse.jgit.api.Git;
+ import org.eclipse.jgit.api.errors.GitAPIException;
+ import org.eclipse.jgit.diff.DiffEntry;
+-import org.eclipse.jgit.diff.DiffEntry.ChangeType;
+ import org.eclipse.jgit.lib.AbbreviatedObjectId;
+ import org.eclipse.jgit.lib.ObjectId;
+ import org.eclipse.jgit.lib.ObjectLoader;
+@@ -27,9 +27,13 @@ import org.eclipse.jgit.transport.SshSessionFactory;
+ import org.eclipse.jgit.transport.SshTransport;
+ import org.eclipse.jgit.util.FS;
+ import org.junit.Test;
++import org.mockito.InjectMocks;
++import org.mockito.Mock;
+ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
++import software.wings.WingsBaseTest;
+ import software.wings.beans.GitConfig;
++import software.wings.beans.yaml.Change.ChangeType;
+ import software.wings.beans.yaml.GitDiffResult;
+ import software.wings.beans.yaml.GitFileChange;
+ import software.wings.core.ssh.executors.SshSessionConfig;
+@@ -41,7 +45,7 @@ import java.nio.charset.Charset;
+ import java.util.ArrayList;
+ import java.util.Collections;
+ 
+-public class GitClientImplTest {
++public class GitClientImplTest extends WingsBaseTest {
+   public static final String oldObjectIdString = "0000000000000000000000000000000000000000";
+   public static final String newObjectIdString = "1111111111111111111111111111111111111111";
+   public static final String content = "this is mock yaml content";
+@@ -55,6 +59,8 @@ public class GitClientImplTest {
+ 
+   private static final Logger logger = LoggerFactory.getLogger(GitClientImplTest.class);
+ 
++  @Mock private GitClientHelper gitClientHelper;
++  @Inject @InjectMocks private GitClientImpl gitClient;
+   private static final String localSSHKey_Rathna = "-----BEGIN RSA PRIVATE KEY-----\n"
+       + "MIIJKgIBAAKCAgEAr5ie92WRMDDjZvRsJ+18Izj3jU+NO8xdpFrDYpzcXmb6UTCY\n"
+       + "+l8g62kuNtZiH15omD/VyD6O1oNRHlexJz+aWadOsxkXGV2+s8eQMgOP6QtMmZEq\n"
+@@ -162,7 +168,6 @@ public class GitClientImplTest {
+   @Test
+   public void testAddToGitDiffResult() throws Exception {
+     DiffEntry entry = mock(DiffEntry.class);
+-    GitClientImpl gitClient = spy(GitClientImpl.class);
+     Repository repository = mock(Repository.class);
+ 
+     AbbreviatedObjectId oldAbbreviatedObjectId = AbbreviatedObjectId.fromString(oldObjectIdString);
+@@ -172,7 +177,8 @@ public class GitClientImplTest {
+     when(entry.getNewPath()).thenReturn(newPath);
+     when(entry.getOldId()).thenReturn(oldAbbreviatedObjectId);
+     when(entry.getNewId()).thenReturn(newAbbreviatedObjectId);
+-    when(entry.getChangeType()).thenReturn(DiffEntry.ChangeType.DELETE).thenReturn(ChangeType.ADD);
++    when(entry.getChangeType()).thenReturn(DiffEntry.ChangeType.DELETE).thenReturn(DiffEntry.ChangeType.ADD);
++    when(gitClientHelper.getChangeType(any())).thenReturn(ChangeType.DELETE).thenReturn(ChangeType.ADD);
+ 
+     byte[] bytes = content.getBytes(Charset.forName("UTF-8"));
+     ObjectLoader loader = new ObjectLoader.SmallObject(0, bytes);
+diff --git a/serialization-utils/src/main/resources/serialization_classes b/serialization-utils/src/main/resources/serialization_classes
+index 9c1427ccb..94face8db 100644
+--- a/serialization-utils/src/main/resources/serialization_classes
++++ b/serialization-utils/src/main/resources/serialization_classes
+@@ -506,4 +506,7 @@ software.wings.beans.container.IstioConfig, 5466
+ software.wings.beans.DatadogConfig, 5467
+ software.wings.beans.DatadogConfig$DatadogYaml, 5468
+ software.wings.beans.DelegateConfiguration, 5469
++software.wings.beans.yaml.GitFetchFilesRequest, 5470
++software.wings.beans.yaml.GitFetchFilesResult, 5471
++
+ 
+-- 
+2.14.3 (Apple Git-98)
+

@@ -8,6 +8,8 @@ import software.wings.beans.yaml.GitCommitAndPushResult;
 import software.wings.beans.yaml.GitCommitRequest;
 import software.wings.beans.yaml.GitCommitResult;
 import software.wings.beans.yaml.GitDiffResult;
+import software.wings.beans.yaml.GitFetchFilesRequest;
+import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.beans.yaml.GitPushResult;
 
 /**
@@ -19,20 +21,12 @@ import software.wings.beans.yaml.GitPushResult;
  */
 public interface GitClient {
   /**
-   * Gets repo directory.
-   *
-   * @param gitConfig the git config
-   * @return the repo directory
-   */
-  String getRepoDirectory(GitConfig gitConfig);
-
-  /**
    * Clone git clone result.
    *
    * @param gitConfig the git config
    * @return the git clone result
    */
-  GitCloneResult clone(GitConfig gitConfig);
+  GitCloneResult clone(GitConfig gitConfig, String gitRepoDirectory, String branch, boolean noCheckout);
 
   /**
    * Ensure repo locally cloned and updated.
@@ -101,4 +95,6 @@ public interface GitClient {
    * @return the string
    */
   String validate(GitConfig gitConfig, boolean logError);
+
+  GitFetchFilesResult fetchFilesByPath(GitConfig gitConfig, GitFetchFilesRequest gitRequest);
 }

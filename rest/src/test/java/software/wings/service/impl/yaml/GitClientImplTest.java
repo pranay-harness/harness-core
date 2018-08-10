@@ -3,10 +3,11 @@ package software.wings.service.impl.yaml;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
+
+import com.google.inject.Inject;
 
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
@@ -16,7 +17,6 @@ import org.apache.commons.lang3.reflect.MethodUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
-import org.eclipse.jgit.diff.DiffEntry.ChangeType;
 import org.eclipse.jgit.lib.AbbreviatedObjectId;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
@@ -27,9 +27,13 @@ import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.SshTransport;
 import org.eclipse.jgit.util.FS;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.WingsBaseTest;
 import software.wings.beans.GitConfig;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.core.ssh.executors.SshSessionConfig;
@@ -41,7 +45,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 
-public class GitClientImplTest {
+public class GitClientImplTest extends WingsBaseTest {
   public static final String oldObjectIdString = "0000000000000000000000000000000000000000";
   public static final String newObjectIdString = "1111111111111111111111111111111111111111";
   public static final String content = "this is mock yaml content";
@@ -55,6 +59,8 @@ public class GitClientImplTest {
 
   private static final Logger logger = LoggerFactory.getLogger(GitClientImplTest.class);
 
+  @Mock private GitClientHelper gitClientHelper;
+  @Inject @InjectMocks private GitClientImpl gitClient;
   private static final String localSSHKey_Rathna = "-----BEGIN RSA PRIVATE KEY-----\n"
       + "MIIJKgIBAAKCAgEAr5ie92WRMDDjZvRsJ+18Izj3jU+NO8xdpFrDYpzcXmb6UTCY\n"
       + "+l8g62kuNtZiH15omD/VyD6O1oNRHlexJz+aWadOsxkXGV2+s8eQMgOP6QtMmZEq\n"
@@ -162,7 +168,6 @@ public class GitClientImplTest {
   @Test
   public void testAddToGitDiffResult() throws Exception {
     DiffEntry entry = mock(DiffEntry.class);
-    GitClientImpl gitClient = spy(GitClientImpl.class);
     Repository repository = mock(Repository.class);
 
     AbbreviatedObjectId oldAbbreviatedObjectId = AbbreviatedObjectId.fromString(oldObjectIdString);
@@ -172,7 +177,8 @@ public class GitClientImplTest {
     when(entry.getNewPath()).thenReturn(newPath);
     when(entry.getOldId()).thenReturn(oldAbbreviatedObjectId);
     when(entry.getNewId()).thenReturn(newAbbreviatedObjectId);
-    when(entry.getChangeType()).thenReturn(DiffEntry.ChangeType.DELETE).thenReturn(ChangeType.ADD);
+    when(entry.getChangeType()).thenReturn(DiffEntry.ChangeType.DELETE).thenReturn(DiffEntry.ChangeType.ADD);
+    when(gitClientHelper.getChangeType(any())).thenReturn(ChangeType.DELETE).thenReturn(ChangeType.ADD);
 
     byte[] bytes = content.getBytes(Charset.forName("UTF-8"));
     ObjectLoader loader = new ObjectLoader.SmallObject(0, bytes);

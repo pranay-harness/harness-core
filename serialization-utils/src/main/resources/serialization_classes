@@ -506,4 +506,7 @@ software.wings.beans.container.IstioConfig, 5466
 software.wings.beans.DatadogConfig, 5467
 software.wings.beans.DatadogConfig$DatadogYaml, 5468
 software.wings.beans.DelegateConfiguration, 5469
+software.wings.beans.yaml.GitFetchFilesRequest, 5470
+software.wings.beans.yaml.GitFetchFilesResult, 5471
+
 
