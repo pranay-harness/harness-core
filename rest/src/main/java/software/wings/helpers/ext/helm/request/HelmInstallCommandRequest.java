@@ -3,7 +3,10 @@ package software.wings.helpers.ext.helm.request;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import software.wings.beans.GitConfig;
+import software.wings.beans.GitFileConfig;
 import software.wings.beans.container.HelmChartSpecification;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ContainerServiceParams;
 
 import java.util.List;
@@ -21,6 +24,9 @@ public class HelmInstallCommandRequest extends HelmCommandRequest {
   private long timeoutInMillis;
   private Map<String, String> valueOverrides;
   private List<String> variableOverridesYamlFiles;
+  private GitConfig gitConfig;
+  private GitFileConfig gitFileConfig;
+  private List<EncryptedDataDetail> encryptedDataDetails;
 
   public HelmInstallCommandRequest() {
     super(HelmCommandType.INSTALL);
@@ -31,7 +37,8 @@ public class HelmInstallCommandRequest extends HelmCommandRequest {
       String activityId, ContainerServiceParams containerServiceParams, String releaseName,
       HelmChartSpecification chartSpecification, int newReleaseVersion, int prevReleaseVersion, String namespace,
       long timeoutInMillis, Map<String, String> valueOverrides, List<String> variableOverridesYamlFiles,
-      String repoName) {
+      String repoName, GitConfig gitConfig, GitFileConfig gitFileConfig,
+      List<EncryptedDataDetail> encryptedDataDetails) {
     super(HelmCommandType.INSTALL, accountId, appId, kubeConfigLocation, commandName, activityId,
         containerServiceParams, releaseName, chartSpecification, repoName);
     this.newReleaseVersion = newReleaseVersion;
@@ -40,5 +47,8 @@ public class HelmInstallCommandRequest extends HelmCommandRequest {
     this.timeoutInMillis = timeoutInMillis;
     this.valueOverrides = valueOverrides;
     this.variableOverridesYamlFiles = variableOverridesYamlFiles;
+    this.gitConfig = gitConfig;
+    this.gitFileConfig = gitFileConfig;
+    this.encryptedDataDetails = encryptedDataDetails;
   }
 }

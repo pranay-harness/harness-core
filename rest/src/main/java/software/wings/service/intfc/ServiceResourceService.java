@@ -428,4 +428,6 @@ public interface ServiceResourceService extends OwnedByApplication {
    */
   List<CommandCategory> getCommandCategories(
       @NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName);
+
+  boolean checkArtifactNeededForHelm(String appId, String serviceTemplateId);
 }

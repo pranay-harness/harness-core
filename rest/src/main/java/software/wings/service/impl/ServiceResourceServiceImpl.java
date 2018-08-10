@@ -112,6 +112,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EntityVersionService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -179,6 +180,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private TemplateService templateService;
   @Inject private TemplateHelper templateHelper;
   @Inject private HelmHelper helmHelper;
+  @Inject private InfrastructureMappingService infrastructureMappingService;
 
   /**
    * {@inheritDoc}
@@ -1578,5 +1580,21 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
 
     return service;
+  }
+
+  @Override
+  public boolean checkArtifactNeededForHelm(String appId, String serviceTemplateId) {
+    List<String> valueOverridesYamlFiles = serviceTemplateService.helmValueOverridesYamlFiles(appId, serviceTemplateId);
+    if (isEmpty(valueOverridesYamlFiles)) {
+      return false;
+    }
+
+    for (String valueYamlFile : valueOverridesYamlFiles) {
+      if (HelmHelper.checkDockerImageNamePresentInValuesYaml(valueYamlFile)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }

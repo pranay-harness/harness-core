@@ -328,8 +328,10 @@ public class PipelineServiceImpl implements PipelineService {
             if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(OrchestrationWorkflowType.BUILD)) {
               return new ArrayList<>();
             }
-            if (orchestrationWorkflow.getRequiredEntityTypes() != null) {
-              entityTypes.addAll(orchestrationWorkflow.getRequiredEntityTypes());
+            Set<EntityType> requiredEntityTypes =
+                workflowService.fetchRequiredEntityTypes(appId, orchestrationWorkflow);
+            if (requiredEntityTypes != null) {
+              entityTypes.addAll(requiredEntityTypes);
             }
           }
         }

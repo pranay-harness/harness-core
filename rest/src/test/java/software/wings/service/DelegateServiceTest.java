@@ -568,9 +568,9 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegateService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
         aDelegateTaskResponse().withAccountId(ACCOUNT_ID).withResponse(jenkinsExecutionResponse).build());
     DelegateTaskNotifyResponseData delegateTaskNotifyResponseData = jenkinsExecutionResponse;
-    assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getHostName().equals(USER_NAME));
-    assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getId().equals(DELEGATE_ID));
-    assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getVersion().equals(USER_ID));
+    assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getHostName()).isEqualTo(USER_NAME);
+    assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getId()).isEqualTo(DELEGATE_ID);
+    assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getVersion()).isEqualTo(USER_ID);
 
     // Delete the delegate from the persistence store. If the cached entry is not there in
     // delegateMetaInfoCache then the test would fail.
@@ -580,9 +580,9 @@ public class DelegateServiceTest extends WingsBaseTest {
     wingsPersistence.delete(delegate);
     delegateService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
         aDelegateTaskResponse().withAccountId(ACCOUNT_ID).withResponse(jenkinsExecutionResponse).build());
-    assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getHostName().equals(USER_NAME));
-    assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getId().equals(DELEGATE_ID));
-    assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getVersion().equals(USER_ID));
+    assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getHostName()).isEqualTo(USER_NAME);
+    assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getId()).isEqualTo(DELEGATE_ID);
+    assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getVersion()).isEqualTo(USER_ID);
   }
 
   @Test

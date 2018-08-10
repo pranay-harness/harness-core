@@ -1,6 +1,8 @@
 package software.wings.helpers.ext.helm;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT;
 
 import com.google.common.util.concurrent.TimeLimiter;
@@ -13,11 +15,18 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.GitFileConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.LogCallback;
+import software.wings.beans.container.HelmChartSpecification;
+import software.wings.beans.yaml.GitFetchFilesResult;
+import software.wings.beans.yaml.GitFile;
 import software.wings.cloudprovider.ContainerInfo;
+import software.wings.delegatetasks.helm.HarnessHelmDeployConfig;
+import software.wings.delegatetasks.helm.HelmCommandHelper;
+import software.wings.delegatetasks.helm.HelmDeployChartSpec;
 import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
@@ -34,11 +43,15 @@ import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandRespons
 import software.wings.helpers.ext.helm.response.ReleaseInfo;
 import software.wings.helpers.ext.helm.response.RepoListInfo;
 import software.wings.service.impl.ContainerServiceParams;
+import software.wings.service.intfc.GitService;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -51,6 +64,9 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   @Inject private HelmClient helmClient;
   @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private TimeLimiter timeLimiter;
+  @Inject private GitService gitService;
+  @Inject private EncryptionService encryptionService;
+  @Inject private HelmCommandHelper helmCommandHelper;
 
   private static final Logger logger = LoggerFactory.getLogger(HelmDeployService.class);
 
@@ -64,6 +80,18 @@ public class HelmDeployServiceImpl implements HelmDeployService {
           helmClient.releaseHistory(commandRequest.getKubeConfigLocation(), commandRequest.getReleaseName());
       executionLogCallback.saveExecutionLog(
           preProcessReleaseHistoryCommandOutput(helmCliResponse, commandRequest.getReleaseName()));
+
+      fetchValuesYamlFromGitRepo(commandRequest, executionLogCallback);
+      if (!helmCommandHelper.checkValidChartSpecification(commandRequest.getChartSpecification())) {
+        String msg = "Invalid chart specification "
+            + (commandRequest.getChartSpecification() == null ? "NULL"
+                                                              : commandRequest.getChartSpecification().toString());
+        executionLogCallback.saveExecutionLog(msg);
+        return HelmInstallCommandResponse.builder()
+            .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+            .output(msg)
+            .build();
+      }
 
       if (checkNewHelmInstall(commandRequest)) {
         executionLogCallback.saveExecutionLog("No previous deployment found for release. Installing chart");
@@ -316,5 +344,97 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     }
 
     return false;
+  }
+  private void fetchValuesYamlFromGitRepo(HelmInstallCommandRequest commandRequest, LogCallback executionLogCallback) {
+    if (commandRequest.getGitConfig() == null) {
+      return;
+    }
+
+    try {
+      encryptionService.decrypt(commandRequest.getGitConfig(), commandRequest.getEncryptedDataDetails());
+
+      GitFileConfig gitFileConfig = commandRequest.getGitFileConfig();
+
+      String msg = "Fetching values yaml files from git:\n"
+          + "Git repo: " + commandRequest.getGitConfig().getRepoUrl() + "\n"
+          + (isNotBlank(gitFileConfig.getBranch()) ? ("Branch: " + gitFileConfig.getBranch() + "\n") : "")
+          + (isNotBlank(gitFileConfig.getCommitId()) ? ("Commit Id: " + gitFileConfig.getCommitId() + "\n") : "")
+          + "File path: " + gitFileConfig.getFilePath() + "\n";
+      executionLogCallback.saveExecutionLog(msg);
+      logger.info(msg);
+
+      GitFetchFilesResult gitFetchFilesResult = gitService.fetchFilesByPath(commandRequest.getGitConfig(),
+          gitFileConfig.getConnectorId(), gitFileConfig.getCommitId(), gitFileConfig.getBranch(),
+          Collections.singletonList(gitFileConfig.getFilePath()));
+
+      if (isNotEmpty(gitFetchFilesResult.getFiles())) {
+        executionLogCallback.saveExecutionLog(
+            "Found " + gitFetchFilesResult.getFiles().size() + " value yaml files from git\n");
+
+        List<String> valuesYamlFilesFromGit = new ArrayList<>();
+
+        for (GitFile gitFile : gitFetchFilesResult.getFiles()) {
+          if (isNotBlank(gitFile.getFileContent())) {
+            valuesYamlFilesFromGit.add(gitFile.getFileContent());
+            boolean valueOverrriden = false;
+
+            Optional<HarnessHelmDeployConfig> optionalHarnessHelmDeployConfig =
+                helmCommandHelper.generateHelmDeployChartSpecFromYaml(gitFile.getFileContent());
+            if (optionalHarnessHelmDeployConfig.isPresent()) {
+              HelmDeployChartSpec helmDeployChartSpec = optionalHarnessHelmDeployConfig.get().getHelmDeployChartSpec();
+
+              HelmChartSpecification helmChartSpecification;
+              if (commandRequest.getChartSpecification() == null) {
+                helmChartSpecification = HelmChartSpecification.builder().build();
+              } else {
+                helmChartSpecification = commandRequest.getChartSpecification();
+              }
+
+              if (isNotBlank(helmDeployChartSpec.getName())) {
+                executionLogCallback.saveExecutionLog("Overriding chart name from "
+                    + helmChartSpecification.getChartName() + " to " + helmDeployChartSpec.getName());
+                helmChartSpecification.setChartName(helmDeployChartSpec.getName());
+                valueOverrriden = true;
+              }
+              if (isNotBlank(helmDeployChartSpec.getUrl())) {
+                executionLogCallback.saveExecutionLog("Overriding chart url from "
+                    + helmChartSpecification.getChartUrl() + " to " + helmDeployChartSpec.getUrl());
+                helmChartSpecification.setChartUrl(helmDeployChartSpec.getUrl());
+                valueOverrriden = true;
+              }
+              if (isNotBlank(helmDeployChartSpec.getVersion())) {
+                executionLogCallback.saveExecutionLog("Overriding chart version from "
+                    + helmChartSpecification.getChartVersion() + " to " + helmDeployChartSpec.getVersion());
+                helmChartSpecification.setChartVersion(helmDeployChartSpec.getVersion());
+                valueOverrriden = true;
+              }
+
+              if (valueOverrriden) {
+                commandRequest.setChartSpecification(helmChartSpecification);
+                executionLogCallback.saveExecutionLog("");
+              }
+            }
+          }
+        }
+
+        if (isNotEmpty(valuesYamlFilesFromGit)) {
+          if (isEmpty(commandRequest.getVariableOverridesYamlFiles())) {
+            commandRequest.setVariableOverridesYamlFiles(valuesYamlFilesFromGit);
+          } else {
+            List<String> variableOverridesYamlFiles = new ArrayList<>();
+            variableOverridesYamlFiles.addAll(commandRequest.getVariableOverridesYamlFiles());
+            variableOverridesYamlFiles.addAll(valuesYamlFilesFromGit);
+            commandRequest.setVariableOverridesYamlFiles(variableOverridesYamlFiles);
+          }
+        }
+      } else {
+        executionLogCallback.saveExecutionLog("No values yaml file found on git");
+      }
+    } catch (Exception ex) {
+      String msg = "Exception in adding values yaml from git. " + Misc.getMessage(ex);
+      logger.error(msg);
+      executionLogCallback.saveExecutionLog(msg);
+      throw ex;
+    }
   }
 }
