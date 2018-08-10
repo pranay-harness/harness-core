@@ -28,6 +28,8 @@ import software.wings.service.impl.security.EncryptionServiceImpl;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.impl.splunk.SplunkDelegateServiceImpl;
 import software.wings.service.impl.sumo.SumoDelegateServiceImpl;
+import software.wings.service.impl.yaml.GitClientHelper;
+import software.wings.service.impl.yaml.GitClientImpl;
 import software.wings.service.intfc.AmazonS3BuildService;
 import software.wings.service.intfc.ArtifactoryBuildService;
 import software.wings.service.intfc.ContainerService;
@@ -66,6 +68,8 @@ public class WingsTestModule extends AbstractModule {
     bind(PcfClient.class).to(PcfClientImpl.class);
     DelegateLogService mockDelegateLogService = mock(DelegateLogService.class);
     bind(DelegateLogService.class).toInstance(mockDelegateLogService);
+    GitClientHelper gitClientHelper = mock(GitClientHelper.class);
+    bind(GitClientImpl.class);
 
     bind(ExecutorService.class)
         .annotatedWith(Names.named("verificationDataCollector"))

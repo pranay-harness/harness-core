@@ -1,20 +1,19 @@
 package software.wings.service.impl.yaml;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.OK;
 import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.UP_TO_DATE;
-import static software.wings.beans.ErrorCode.GENERAL_YAML_ERROR;
+import static software.wings.beans.ErrorCode.GENERAL_ERROR;
 import static software.wings.beans.ErrorCode.UNREACHABLE_HOST;
-import static software.wings.beans.yaml.Change.ChangeType.ADD;
-import static software.wings.beans.yaml.Change.ChangeType.DELETE;
-import static software.wings.beans.yaml.Change.ChangeType.MODIFY;
-import static software.wings.beans.yaml.Change.ChangeType.RENAME;
 import static software.wings.beans.yaml.YamlConstants.GIT_TERRAFORM_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
-import static software.wings.exception.WingsException.SRE;
-import static software.wings.exception.WingsException.USER_ADMIN;
+import static software.wings.exception.WingsException.USER;
+
+import com.google.inject.Inject;
 
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
@@ -23,8 +22,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import groovy.lang.Singleton;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
-import io.harness.filesystem.FileIo;
 import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
 import org.eclipse.jgit.api.FetchCommand;
@@ -33,6 +32,7 @@ import org.eclipse.jgit.api.LsRemoteCommand;
 import org.eclipse.jgit.api.PullCommand;
 import org.eclipse.jgit.api.PullResult;
 import org.eclipse.jgit.api.PushCommand;
+import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.TransportCommand;
@@ -75,6 +75,9 @@ import software.wings.beans.yaml.GitCommitAndPushResult;
 import software.wings.beans.yaml.GitCommitRequest;
 import software.wings.beans.yaml.GitCommitResult;
 import software.wings.beans.yaml.GitDiffResult;
+import software.wings.beans.yaml.GitFetchFilesRequest;
+import software.wings.beans.yaml.GitFetchFilesResult;
+import software.wings.beans.yaml.GitFile;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.GitPushResult;
 import software.wings.beans.yaml.GitPushResult.RefUpdate;
@@ -90,11 +93,13 @@ import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Created by anubhaw on 10/16/17.
@@ -102,15 +107,15 @@ import java.util.List;
 
 @Singleton
 public class GitClientImpl implements GitClient {
-  private static final String GIT_REPO_BASE_DIR = "./repository/${REPO_TYPE}/${ACCOUNT_ID}/${REPO_NAME}";
   private static final String TEMP_SSH_KEY_DIR = "./repository/.ssh";
   private static final String COMMIT_TIMESTAMP_FORMAT = "yyyy.MM.dd.HH.mm.ss";
 
   private static final Logger logger = LoggerFactory.getLogger(GitClientImpl.class);
+  @Inject GitClientHelper gitClientHelper;
 
   @Override
-  public synchronized GitCloneResult clone(GitConfig gitConfig) {
-    String gitRepoDirectory = getRepoDirectory(gitConfig);
+  public synchronized GitCloneResult clone(
+      GitConfig gitConfig, String gitRepoDirectory, String branch, boolean noCheckout) {
     try {
       if (new File(gitRepoDirectory).exists()) {
         FileUtils.deleteDirectory(new File(gitRepoDirectory));
@@ -125,18 +130,22 @@ public class GitClientImpl implements GitClient {
     cloneCommand = (CloneCommand) getAuthConfiguredCommand(cloneCommand, gitConfig);
     try (Git git = cloneCommand.setURI(gitConfig.getRepoUrl())
                        .setDirectory(new File(gitRepoDirectory))
-                       .setBranch(gitConfig.getBranch())
+                       .setBranch(isEmpty(branch) ? null : branch)
+                       // if set to <code>true</code> no branch will be checked out, after the clone.
+                       // This enhances performance of the clone command when there is no need for a checked out branch.
+                       .setNoCheckout(noCheckout)
                        .call()) {
       return GitCloneResult.builder().build();
     } catch (GitAPIException ex) {
-      logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
-      checkIfTransportException(ex);
-      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in cloning repo");
+      logger.error(GIT_YAML_LOG_PREFIX + "Error in cloning repo: ", ex);
+      gitClientHelper.checkIfTransportException(ex);
+      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, "Error in cloning repo")
+          .addParam("message", "Error in cloning repo");
     }
   }
 
   private void updateRemoteOriginInConfig(GitConfig gitConfig) {
-    String gitRepoDirectory = getRepoDirectory(gitConfig);
+    String gitRepoDirectory = gitClientHelper.getRepoDirectory(gitConfig);
 
     try (Git git = Git.open(new File(gitRepoDirectory))) {
       StoredConfig config = git.getRepository().getConfig();
@@ -152,36 +161,6 @@ public class GitClientImpl implements GitClient {
   }
 
   @Override
-  public String getRepoDirectory(GitConfig gitConfig) {
-    String repoName = gitConfig.getRepoUrl()
-                          .substring(gitConfig.getRepoUrl().lastIndexOf('/') + 1)
-                          .split("\\.")[0]; // TODO:: support more url types and validation
-    if (gitConfig.getGitRepoType() == null) {
-      logger.error("gitRepoType can not be null. defaulting it to YAML");
-      gitConfig.setGitRepoType(GitRepositoryType.YAML);
-    }
-    return GIT_REPO_BASE_DIR.replace("${REPO_TYPE}", gitConfig.getGitRepoType().name().toLowerCase())
-        .replace("${ACCOUNT_ID}", gitConfig.getAccountId())
-        .replace("${REPO_NAME}", repoName);
-  }
-
-  private ChangeType getChangeType(DiffEntry.ChangeType gitDiffChangeType) {
-    switch (gitDiffChangeType) {
-      case ADD:
-        return ADD;
-      case MODIFY:
-        return MODIFY;
-      case DELETE:
-        return DELETE;
-      case RENAME:
-        return RENAME;
-      default:
-        unhandled(gitDiffChangeType);
-    }
-    return null;
-  }
-
-  @Override
   public synchronized GitDiffResult diff(GitConfig gitConfig, String startCommitId) {
     ensureRepoLocallyClonedAndUpdated(gitConfig);
 
@@ -190,7 +169,7 @@ public class GitClientImpl implements GitClient {
                                    .repoName(gitConfig.getRepoUrl())
                                    .gitFileChanges(new ArrayList<>())
                                    .build();
-    try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
+    try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(gitConfig)))) {
       git.checkout().setName(gitConfig.getBranch()).call();
       ((PullCommand) (getAuthConfiguredCommand(git.pull(), gitConfig))).call();
       Repository repository = git.getRepository();
@@ -247,7 +226,7 @@ public class GitClientImpl implements GitClient {
       content = new String(loader.getBytes(), Charset.forName("utf-8"));
       GitFileChange gitFileChange = GitFileChange.Builder.aGitFileChange()
                                         .withCommitId(headCommitId.getName())
-                                        .withChangeType(getChangeType(entry.getChangeType()))
+                                        .withChangeType(gitClientHelper.getChangeType(entry.getChangeType()))
                                         .withFilePath(filePath)
                                         .withFileContent(content)
                                         .withObjectId(objectId.name())
@@ -259,7 +238,7 @@ public class GitClientImpl implements GitClient {
 
   @Override
   public synchronized GitCheckoutResult checkout(GitConfig gitConfig) {
-    try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
+    try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(gitConfig)))) {
       Ref ref = git.checkout()
                     .setCreateBranch(true)
                     .setName(gitConfig.getBranch())
@@ -282,11 +261,11 @@ public class GitClientImpl implements GitClient {
     ensureRepoLocallyClonedAndUpdated(gitConfig);
 
     // TODO:: pull latest remote branch??
-    try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
+    try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(gitConfig)))) {
       String timestamp = new SimpleDateFormat(COMMIT_TIMESTAMP_FORMAT).format(new java.util.Date());
       StringBuilder commitMessage = new StringBuilder("Harness IO Git Sync. \n");
 
-      String repoDirectory = getRepoDirectory(gitConfig);
+      String repoDirectory = gitClientHelper.getRepoDirectory(gitConfig);
       gitCommitRequest.getGitFileChanges().forEach(gitFileChange -> {
         String filePath = repoDirectory + "/" + gitFileChange.getFilePath();
         File file = new File(filePath);
@@ -397,7 +376,7 @@ public class GitClientImpl implements GitClient {
   @Override
   public synchronized GitPushResult push(GitConfig gitConfig, boolean forcePush) {
     logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Performing git PUSH, forcePush is: " + forcePush);
-    try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
+    try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(gitConfig)))) {
       Iterable<PushResult> pushResults = ((PushCommand) (getAuthConfiguredCommand(git.push(), gitConfig)))
                                              .setRemote("origin")
                                              .setForce(forcePush)
@@ -432,7 +411,7 @@ public class GitClientImpl implements GitClient {
         errorMsg = "Invalid git repo or user doesn't have write access to repository. repo:" + gitConfig.getRepoUrl();
       }
 
-      checkIfTransportException(ex);
+      gitClientHelper.checkIfTransportException(ex);
       throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", errorMsg);
     }
   }
@@ -453,9 +432,137 @@ public class GitClientImpl implements GitClient {
   }
 
   @Override
+  public GitFetchFilesResult fetchFilesByPath(GitConfig gitConfig, GitFetchFilesRequest gitRequest) {
+    // Default it to yaml
+    if (gitConfig.getGitRepoType() == null) {
+      gitConfig.setGitRepoType(GitRepositoryType.YAML);
+    }
+
+    String commitId = gitRequest.getCommitId();
+    String gitConnectorId = gitRequest.getGitConnectorId();
+
+    // FilePath cant empty as well as (Branch and commitId both cant be empty)
+    if (isEmpty(gitRequest.getFilePaths()) || (isEmpty(commitId) && isEmpty(gitRequest.getBranch()))) {
+      throw new WingsException("FilePaths or {commitId & Branch} can not be empty", USER);
+    }
+
+    /*
+     * ConnectorId is per gitConfig and will result in diff local path for repo
+     * */
+    synchronized (gitClientHelper.getLockObject(gitConnectorId)) {
+      try {
+        logger.info(new StringBuilder(128)
+                        .append(" Processing Git command: FETCH_FILES ")
+                        .append("Account: ")
+                        .append(gitConfig.getAccountId())
+                        .append(", repo: ")
+                        .append(gitConfig.getRepoUrl())
+                        .append(", Branch: ")
+                        .append(gitRequest.getBranch())
+                        .append(", CommitId: ")
+                        .append(gitRequest.getCommitId())
+                        .append(", filePaths: ")
+                        .append(gitRequest.getFilePaths())
+                        .toString());
+
+        // create repository/gitFilesDownload/<AccId>/<GitConnectorId> path
+        gitClientHelper.createDirStructureForFileDownload(gitConfig, gitConnectorId);
+
+        // clone repo locally without checkout
+        cloneRepoForFilePathCheckout(gitConfig, gitRequest.getBranch(), gitConnectorId);
+
+        // if commitId is given, use it to checkout, else checkout latest commit from branch
+        if (isNotEmpty(commitId)) {
+          checkoutGivenCommitForPath(commitId, gitRequest.getFilePaths(), gitConfig, gitConnectorId);
+        } else {
+          checkoutBranchForPath(gitRequest.getBranch(), gitRequest.getFilePaths(), gitConfig, gitConnectorId);
+        }
+
+        List<GitFile> gitFiles = new ArrayList<>();
+        String repoPath = gitClientHelper.getRepoPathForFileDownload(gitConfig, gitConnectorId);
+
+        gitRequest.getFilePaths().forEach(filePath -> {
+          try (Stream<Path> paths = Files.walk(Paths.get(repoPath + "/" + filePath))) {
+            paths.filter(Files::isRegularFile).forEach(path -> gitClientHelper.addFiles(gitFiles, path));
+          } catch (Exception e) {
+            throw new WingsException(GENERAL_ERROR,
+                new StringBuilder("Unable to checkout files for filePath")
+                    .append(filePath)
+                    .append(" for commitId: ")
+                    .append(commitId)
+                    .toString(),
+                USER, e);
+          }
+        });
+
+        resetWorkingDir(gitRequest.getFilePaths(), gitConfig, gitRequest.getGitConnectorId());
+        return GitFetchFilesResult.builder()
+            .files(gitFiles)
+            .gitCommitResult(GitCommitResult.builder().commitId(commitId).build())
+            .build();
+
+      } catch (Exception e) {
+        throw new WingsException(GENERAL_ERROR,
+            new StringBuilder()
+                .append("Failed while fetching files for CommitId: ")
+                .append(commitId)
+                .append(", FilePaths: ")
+                .append(gitRequest.getFilePaths())
+                .toString(),
+            e);
+      }
+    }
+  }
+
+  private void checkoutGivenCommitForPath(
+      String commitId, List<String> filePaths, GitConfig gitConfig, String gitConnectorId) {
+    try (Git git = Git.open(new File(gitClientHelper.getFileDownloadRepoDirectory(gitConfig, gitConnectorId)))) {
+      CheckoutCommand checkoutCommand = git.checkout().setStartPoint(commitId).setCreateBranch(false);
+
+      filePaths.forEach(filePath -> checkoutCommand.addPath(filePath));
+      checkoutCommand.call();
+    } catch (Exception ex) {
+      logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
+      gitClientHelper.checkIfTransportException(ex);
+      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR)
+          .addParam("message", "Error in checking out commit id " + commitId);
+    }
+  }
+
+  private void checkoutBranchForPath(
+      String branch, List<String> filePaths, GitConfig gitConfig, String gitConnectorId) {
+    try (Git git = Git.open(new File(gitClientHelper.getFileDownloadRepoDirectory(gitConfig, gitConnectorId)))) {
+      CheckoutCommand checkoutCommand = git.checkout()
+                                            .setCreateBranch(true)
+                                            .setStartPoint("origin/" + branch)
+                                            .setForce(true)
+                                            .setUpstreamMode(SetupUpstreamMode.TRACK)
+                                            .setName(branch);
+      filePaths.forEach(filePath -> checkoutCommand.addPath(filePath));
+      checkoutCommand.call();
+    } catch (Exception ex) {
+      logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
+      gitClientHelper.checkIfTransportException(ex);
+      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR)
+          .addParam("message", "Error in checking out Branch " + branch);
+    }
+  }
+
+  private void resetWorkingDir(List<String> filePaths, GitConfig gitConfig, String gitConnectorId) {
+    try (Git git = Git.open(new File(gitClientHelper.getFileDownloadRepoDirectory(gitConfig, gitConnectorId)))) {
+      ResetCommand resetCommand = new ResetCommand(git.getRepository()).setMode(ResetType.HARD);
+      resetCommand.call();
+    } catch (Exception ex) {
+      logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
+      gitClientHelper.checkIfTransportException(ex);
+      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in resetting repo");
+    }
+  }
+
+  @Override
   public synchronized PullResult pull(GitConfig gitConfig) {
     ensureRepoLocallyClonedAndUpdated(gitConfig);
-    try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
+    try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(gitConfig)))) {
       git.branchCreate()
           .setForce(true)
           .setName(gitConfig.getBranch())
@@ -507,8 +614,62 @@ public class GitClientImpl implements GitClient {
    * @param gitConfig the git config
    */
   @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
+  public synchronized void cloneRepoForFilePathCheckout(GitConfig gitConfig, String branch, String connectorId) {
+    logger.info(new StringBuilder(64)
+                    .append(getGitLogMessagePrefix(gitConfig.getGitRepoType()))
+                    .append("Cloning repo without checkout for file fetch op, for GitConfig: ")
+                    .append(gitConfig.toString())
+                    .toString());
+
+    boolean exceptionOccured = false;
+    File repoDir = new File(gitClientHelper.getFileDownloadRepoDirectory(gitConfig, connectorId));
+    // If repo already exists, update references
+    if (repoDir.exists()) {
+      try (Git git = Git.open(repoDir)) {
+        // Check URL change (ssh, https) and update in .git/config
+        updateRemoteOriginInConfig(gitConfig);
+
+        // update ref with latest commits on remote
+        FetchResult fetchResult =
+            ((FetchCommand) (getAuthConfiguredCommand(git.fetch(), gitConfig))).call(); // fetch all remote references
+
+        logger.info(new StringBuilder()
+                        .append(getGitLogMessagePrefix(gitConfig.getGitRepoType()))
+                        .append("result fetched: ")
+                        .append(fetchResult.toString())
+                        .toString());
+
+        return;
+      } catch (Exception ex) {
+        exceptionOccured = true;
+        if (ex instanceof IOException) {
+          logger.warn(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Repo doesn't exist locally [repo: {}], {} ",
+              gitConfig.getRepoUrl(), ex);
+          logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Do a fresh clone");
+        } else {
+          logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Hard reset failed for branch [{}]",
+              gitConfig.getBranch());
+          logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
+          gitClientHelper.checkIfTransportException(ex);
+        }
+      } finally {
+        if (exceptionOccured) {
+          gitClientHelper.releaseLock(gitConfig, gitClientHelper.getRepoPathForFileDownload(gitConfig, connectorId));
+        }
+      }
+    }
+
+    clone(gitConfig, gitClientHelper.getFileDownloadRepoDirectory(gitConfig, connectorId), branch, true);
+  }
+
+  /**
+   * Ensure repo locally cloned. This is called before performing any git operation with remote
+   *
+   * @param gitConfig the git config
+   */
+  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   public synchronized void ensureRepoLocallyClonedAndUpdated(GitConfig gitConfig) {
-    File repoDir = new File(getRepoDirectory(gitConfig));
+    File repoDir = new File(gitClientHelper.getRepoDirectory(gitConfig));
     boolean executionFailed = false;
     if (repoDir.exists()) {
       try (Git git = Git.open(repoDir)) {
@@ -535,7 +696,7 @@ public class GitClientImpl implements GitClient {
             logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Hard reset failed for branch [{}]",
                 gitConfig.getBranch());
             logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
-            checkIfTransportException(ex);
+            gitClientHelper.checkIfTransportException(ex);
           }
         }
       } finally {
@@ -545,7 +706,7 @@ public class GitClientImpl implements GitClient {
           // no other method inside this one at the same time. Also all callers are synchronized as well.
           // Means if we fail due to existing index.lock it has to be orphan lock file
           // and needs to be deleted.
-          releaseLock(gitConfig);
+          gitClientHelper.releaseLock(gitConfig, gitClientHelper.getRepoDirectory(gitConfig));
         }
       }
     }
@@ -553,35 +714,7 @@ public class GitClientImpl implements GitClient {
     // We are here, so either repo doesnt exist or we encounter some error while
     // opening/updating repo
     logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Do a fresh clone");
-    clone(gitConfig);
-  }
-
-  private synchronized void releaseLock(GitConfig gitConfig) {
-    try {
-      File repoDir = new File(getRepoDirectory(gitConfig));
-      File file = new File(repoDir.getAbsolutePath() + "/.git/index.lock");
-      FileIo.deleteFileIfExists(file.getAbsolutePath());
-    } catch (Exception e) {
-      logger.error(new StringBuilder(64)
-                       .append("Failed to delete index.lock file for account: ")
-                       .append(gitConfig.getAccountId())
-                       .append(", Repo URL: ")
-                       .append(gitConfig.getRepoUrl())
-                       .append(", Branch: ")
-                       .append(gitConfig.getBranch())
-                       .toString());
-
-      throw new WingsException(GENERAL_YAML_ERROR, "GIT_SYNC_ISSUE: Failed to delete index.lock file", SRE, e);
-    }
-  }
-
-  private void checkIfTransportException(Exception ex) {
-    // TransportException is subclass of GitAPIException. This is thrown when there is any issue in connecting to git
-    // repo, like invalid authorization and invalid repo
-    if (ex instanceof GitAPIException && ex.getCause() instanceof TransportException) {
-      throw new WingsException(ErrorCode.GIT_CONNECTION_ERROR + ":" + Misc.getMessage(ex), USER_ADMIN)
-          .addParam(ErrorCode.GIT_CONNECTION_ERROR.name(), ErrorCode.GIT_CONNECTION_ERROR);
-    }
+    clone(gitConfig, gitClientHelper.getRepoDirectory(gitConfig), gitConfig.getBranch(), false);
   }
 
   protected String getGitLogMessagePrefix(GitRepositoryType repositoryType) {

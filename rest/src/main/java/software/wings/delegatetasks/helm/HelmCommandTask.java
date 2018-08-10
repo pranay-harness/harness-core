@@ -1,4 +1,4 @@
-package software.wings.delegatetasks;
+package software.wings.delegatetasks.helm;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -12,6 +12,8 @@ import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.command.LogCallback;
+import software.wings.delegatetasks.AbstractDelegateRunnableTask;
+import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.HarnessException;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.helm.HelmCommandExecutionResponse;
@@ -37,6 +39,7 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
   @Inject private DelegateLogService delegateLogService;
   @Inject private HelmDeployService helmDeployService;
   @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
+  @Inject private HelmCommandHelper helmCommandHelper;
 
   private static final Logger logger = LoggerFactory.getLogger(HelmCommandTask.class);
 
@@ -61,7 +64,7 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
       addPublicRepo(helmCommandRequest);
 
       executionLogCallback.saveExecutionLog(
-          getDeploymentMessage(helmCommandRequest), LogLevel.INFO, CommandExecutionStatus.RUNNING);
+          helmCommandHelper.getDeploymentMessage(helmCommandRequest), LogLevel.INFO, CommandExecutionStatus.RUNNING);
 
       switch (helmCommandRequest.getHelmCommandType()) {
         case INSTALL:
@@ -141,19 +144,6 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
       HelmCommandResponse helmCommandResponse =
           helmDeployService.addPublicRepo(helmCommandRequest, executionLogCallback);
       executionLogCallback.saveExecutionLog(helmCommandResponse.getOutput());
-    }
-  }
-
-  private String getDeploymentMessage(HelmCommandRequest helmCommandRequest) {
-    switch (helmCommandRequest.getHelmCommandType()) {
-      case INSTALL:
-        return "Installing";
-      case ROLLBACK:
-        return "Rolling back";
-      case RELEASE_HISTORY:
-        return "Getting release history";
-      default:
-        return "Unsupported operation";
     }
   }
 }

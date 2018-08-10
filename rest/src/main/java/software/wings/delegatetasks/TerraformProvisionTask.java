@@ -26,6 +26,7 @@ import software.wings.beans.GitConfig.GitRepositoryType;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.delegation.TerraformProvisionParameters;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
@@ -56,6 +57,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   private static final String TERRAFORM_OUTPUTS_FILE_NAME = "terraform.tfouts";
 
   @Inject private GitClient gitClient;
+  @Inject private GitClientHelper gitClientHelper;
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateLogService logService;
   @Inject private DelegateFileManager delegateFileManager;
@@ -222,7 +224,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
 
   private String resolveScriptDirectory(GitConfig gitConfig, String scriptPath) {
     return Paths
-        .get(Paths.get(System.getProperty("user.dir")).toString(), gitClient.getRepoDirectory(gitConfig),
+        .get(Paths.get(System.getProperty("user.dir")).toString(), gitClientHelper.getRepoDirectory(gitConfig),
             scriptPath == null ? "" : scriptPath)
         .toString();
   }
