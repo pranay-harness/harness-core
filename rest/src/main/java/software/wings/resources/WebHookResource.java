@@ -15,6 +15,8 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 
 @Api("webhooks")
 @Path("/webhooks")
@@ -36,7 +38,8 @@ public class WebHookResource {
   @Timed
   @ExceptionMetered
   @Path("{webHookToken}/git")
-  public WebHookResponse executeGit(@PathParam("webHookToken") String webHookToken, String eventPayload) {
-    return webHookService.executeByEvent(webHookToken, eventPayload);
+  public WebHookResponse executeGit(
+      @PathParam("webHookToken") String webHookToken, String eventPayload, @Context HttpHeaders httpHeaders) {
+    return webHookService.executeByEvent(webHookToken, eventPayload, httpHeaders);
   }
 }

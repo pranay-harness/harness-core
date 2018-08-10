@@ -2,6 +2,8 @@ package software.wings.service.impl;
 
 import static java.lang.String.format;
 import static software.wings.beans.WorkflowType.PIPELINE;
+import static software.wings.beans.trigger.WebhookEventType.PULL_REQUEST;
+import static software.wings.beans.trigger.WebhookSource.GITHUB;
 
 import com.google.inject.Inject;
 
@@ -15,9 +17,13 @@ import software.wings.beans.Service;
 import software.wings.beans.WebHookRequest;
 import software.wings.beans.WebHookResponse;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.trigger.PrAction;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.WebHookTriggerCondition;
+import software.wings.beans.trigger.WebhookEventType;
+import software.wings.beans.trigger.WebhookSource;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.expression.ExpressionEvaluator;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.TriggerService;
@@ -30,9 +36,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import javax.validation.executable.ValidateOnExecution;
+import javax.ws.rs.core.HttpHeaders;
 
 @ValidateOnExecution
 public class WebHookServiceImpl implements WebHookService {
+  public static final String X_GIT_HUB_EVENT = "X-GitHub-Event";
   @Inject private TriggerService triggerService;
   @Inject private AppService appService;
   @Inject private MainConfiguration configuration;
@@ -73,6 +81,7 @@ public class WebHookServiceImpl implements WebHookService {
       if (app == null) {
         return WebHookResponse.builder().error("Application does not exist").build();
       }
+
       Map<String, String> serviceBuildNumbers = new HashMap<>();
       WebHookResponse webHookResponse = resolveServiceBuildNumbers(appId, webHookRequest, serviceBuildNumbers);
       if (webHookResponse != null) {
@@ -88,17 +97,17 @@ public class WebHookServiceImpl implements WebHookService {
   }
 
   @Override
-  public WebHookResponse executeByEvent(String token, String webhookEventPayload) {
+  public WebHookResponse executeByEvent(String token, String webhookEventPayload, HttpHeaders httpHeaders) {
     try {
-      logger.info("Received the webhook event payload {}", webhookEventPayload);
+      logger.debug("Received the webhook event payload {}", webhookEventPayload);
       Trigger trigger = triggerService.getTriggerByWebhookToken(token);
       if (trigger == null) {
         return WebHookResponse.builder().error("Trigger not associated to the given token").build();
       }
-      Map<String, String> resolvedParameters = resolveWebhookParameters(webhookEventPayload, trigger);
-      logger.info("Triggering pipeline execution");
+      Map<String, String> resolvedParameters = resolveWebhookParameters(webhookEventPayload, httpHeaders, trigger);
+      logger.info("Triggering  execution");
       WorkflowExecution workflowExecution = triggerService.triggerExecutionByWebHook(trigger, resolvedParameters);
-      logger.info("Pipeline execution trigger success");
+      logger.info("Execution trigger success");
       return WebHookResponse.builder()
           .requestId(workflowExecution.getUuid())
           .status(workflowExecution.getStatus().name())
@@ -131,11 +140,17 @@ public class WebHookServiceImpl implements WebHookService {
     }
     return null;
   }
-  private Map<String, String> resolveWebhookParameters(String webhookEventPayload, Trigger trigger) {
+
+  private Map<String, String> resolveWebhookParameters(
+      String webhookEventPayload, HttpHeaders httpHeaders, Trigger trigger) {
     WebHookTriggerCondition webhookTriggerCondition = (WebHookTriggerCondition) trigger.getCondition();
     Map<String, String> webhookParameters = webhookTriggerCondition.getParameters();
     Map<String, String> resolvedParameters = new HashMap<>();
+
     DocumentContext ctx = JsonUtils.parseJson(webhookEventPayload);
+
+    validateGitHubWebhook(trigger, webhookTriggerCondition, ctx, httpHeaders);
+
     if (webhookParameters != null) {
       for (Map.Entry<String, String> parameterEntry : webhookParameters.entrySet()) {
         String param = parameterEntry.getValue();
@@ -163,6 +178,36 @@ public class WebHookServiceImpl implements WebHookService {
     return resolvedParameters;
   }
 
+  private void validateGitHubWebhook(
+      Trigger trigger, WebHookTriggerCondition triggerCondition, DocumentContext ctx, HttpHeaders headers) {
+    WebhookSource webhookSource = triggerCondition.getWebhookSource();
+    if (GITHUB.equals(webhookSource)) {
+      logger.info("Trigger is set for GitHub. Checking the http headers for the request type");
+      String gitHubEvent = headers == null ? null : headers.getHeaderString(X_GIT_HUB_EVENT);
+      logger.info("X-GitHub-Event is {} ", gitHubEvent);
+      if (gitHubEvent == null) {
+        throw new WingsException("Header [X-GitHub-Event] is missing");
+      }
+      WebhookEventType webhookEventType = WebhookEventType.find(gitHubEvent);
+      if (triggerCondition.getEventTypes() != null && !triggerCondition.getEventTypes().contains(webhookEventType)) {
+        String msg = "Trigger [" + trigger.getName() + "] is not associated with the received GitHub event ["
+            + gitHubEvent + "]";
+        logger.warn(msg);
+        throw new WingsException(msg);
+      }
+      if (PULL_REQUEST.equals(webhookEventType)) {
+        String prAction = JsonUtils.jsonPath(ctx, "action");
+        if (prAction != null && triggerCondition.getActions() != null
+            && !triggerCondition.getActions().contains(PrAction.find(prAction))) {
+          String msg = "Trigger [" + trigger.getName() + "] is not associated with the received GitHub event ["
+              + gitHubEvent + "]";
+          logger.warn(msg);
+          throw new WingsException(msg);
+        }
+      }
+    }
+  }
+
   private WebHookResponse constructWebhookResponse(String appId, Application app, WorkflowExecution workflowExecution) {
     return WebHookResponse.builder()
         .requestId(workflowExecution.getUuid())
@@ -174,7 +219,7 @@ public class WebHookServiceImpl implements WebHookService {
   }
 
   private WebHookResponse constructWebhookResponse(String token, Exception ex) {
-    logger.warn("WebHook call failed [{}]", token, ex);
+    logger.warn("Webhook Request call failed [{}]", token, ex);
     return WebHookResponse.builder().error(Misc.getMessage(ex)).build();
   }
 }

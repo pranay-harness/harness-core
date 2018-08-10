@@ -27,18 +27,49 @@ public class WebhookParameters {
   public static final String SOURCE_COMMIT_HASH = "${pullrequest.fromRef.commit.hash}";
   public static final String DESTINATION_COMMIT_HASH = "${pullrequest.toRef.commit.hash}";
 
-  public List<String> pullRequestExpressions() {
-    expressions = new ArrayList<>();
-    expressions.add(PULL_REQUEST_ID);
-    expressions.add(PULL_REQUEST_TITLE);
-    expressions.add(SOURCE_BRANCH_NAME);
-    expressions.add(TARGET_BRANCH_NAME);
-    expressions.add(SOURCE_REPOSITORY_NAME);
-    expressions.add(DESTINATION_REPOSITORY_NAME);
-    expressions.add(SOURCE_REPOSITORY_OWNER);
-    expressions.add(DESTINATION_REPOSITORY_OWNER);
-    expressions.add(SOURCE_COMMIT_HASH);
-    expressions.add(DESTINATION_COMMIT_HASH);
-    return expressions;
+  // Git Hub Pull request suggestions
+  public static final String GH_PR_ID = "${pull_request.id}";
+  public static final String GH_PR_NUMBER = "${pull_request.number}";
+  public static final String GH_PR_STATE = "${pull_request.state}";
+  public static final String GH_PR_URL = "${pull_request.url}";
+
+  public List<String> bitBucketPullRequestExpressions() {
+    List<String> prSuggestions = new ArrayList<>();
+    prSuggestions.add(PULL_REQUEST_ID);
+    prSuggestions.add(PULL_REQUEST_TITLE);
+    prSuggestions.add(SOURCE_BRANCH_NAME);
+    prSuggestions.add(TARGET_BRANCH_NAME);
+    prSuggestions.add(SOURCE_REPOSITORY_NAME);
+    prSuggestions.add(DESTINATION_REPOSITORY_NAME);
+    prSuggestions.add(SOURCE_REPOSITORY_OWNER);
+    prSuggestions.add(DESTINATION_REPOSITORY_OWNER);
+    prSuggestions.add(SOURCE_COMMIT_HASH);
+    prSuggestions.add(DESTINATION_COMMIT_HASH);
+    return prSuggestions;
+  }
+
+  public List<String> gitHubPullRequestExpressions() {
+    List<String> prSuggestions = new ArrayList<>();
+    prSuggestions.add(GH_PR_ID);
+    prSuggestions.add(GH_PR_NUMBER);
+    prSuggestions.add(GH_PR_STATE);
+    prSuggestions.add(GH_PR_URL);
+    return prSuggestions;
+  }
+
+  public List<String> suggestExpressions(WebhookSource webhookSource, WebhookEventType eventType) {
+    if (webhookSource == null || eventType == null) {
+      return bitBucketPullRequestExpressions();
+    }
+    if (WebhookSource.BITBUCKET.equals(webhookSource)) {
+      if (WebhookEventType.PULL_REQUEST.equals(eventType)) {
+        return bitBucketPullRequestExpressions();
+      }
+    } else if (WebhookSource.GITHUB.equals(webhookSource)) {
+      if (WebhookEventType.PULL_REQUEST.equals(eventType)) {
+        return gitHubPullRequestExpressions();
+      }
+    }
+    return new ArrayList<>();
   }
 }

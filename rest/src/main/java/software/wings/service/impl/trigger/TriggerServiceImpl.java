@@ -19,6 +19,7 @@ import static software.wings.beans.trigger.ArtifactSelection.Type.PIPELINE_SOURC
 import static software.wings.beans.trigger.ArtifactSelection.Type.WEBHOOK_VARIABLE;
 import static software.wings.beans.trigger.TriggerConditionType.SCHEDULED;
 import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
+import static software.wings.beans.trigger.WebhookSource.BITBUCKET;
 import static software.wings.exception.WingsException.ADMIN_SRE;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.exception.WingsException.USER_ADMIN;
@@ -66,7 +67,9 @@ import software.wings.beans.trigger.ScheduledTriggerCondition;
 import software.wings.beans.trigger.ServiceInfraWorkflow;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.WebHookTriggerCondition;
+import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookParameters;
+import software.wings.beans.trigger.WebhookSource;
 import software.wings.common.MongoIdempotentRegistry;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -248,7 +251,8 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   @Override
-  public WebhookParameters listWebhookParameters(String appId, String workflowId, WorkflowType workflowType) {
+  public WebhookParameters listWebhookParameters(String appId, String workflowId, WorkflowType workflowType,
+      WebhookSource webhookSource, WebhookEventType eventType) {
     workflowType = workflowType == null ? WorkflowType.PIPELINE : workflowType;
 
     List<String> parameters = new ArrayList<>();
@@ -260,7 +264,7 @@ public class TriggerServiceImpl implements TriggerService {
       addParameter(parameters, workflow);
     }
     WebhookParameters webhookParameters = WebhookParameters.builder().params(parameters).build();
-    webhookParameters.setExpressions(webhookParameters.pullRequestExpressions());
+    webhookParameters.setExpressions(webhookParameters.suggestExpressions(webhookSource, eventType));
     return webhookParameters;
   }
   @Override
@@ -671,6 +675,11 @@ public class TriggerServiceImpl implements TriggerService {
         WebHookTriggerCondition webHookTriggerCondition = (WebHookTriggerCondition) trigger.getCondition();
         WebHookToken webHookToken = generateWebHookToken(trigger, getExistingWebhookToken(existingTrigger));
         webHookTriggerCondition.setWebHookToken(webHookToken);
+        if (BITBUCKET.equals(webHookTriggerCondition.getWebhookSource())) {
+          if (isNotEmpty(webHookTriggerCondition.getActions())) {
+            throw new InvalidRequestException("Actions not supported for Bit Bucket", USER);
+          }
+        }
         trigger.setWebHookToken(webHookTriggerCondition.getWebHookToken().getWebHookToken());
         break;
       case SCHEDULED:
@@ -726,8 +735,11 @@ public class TriggerServiceImpl implements TriggerService {
               trigger, artifactSelection, "Artifact Source cannot be empty for Last collected type");
           break;
         case WEBHOOK_VARIABLE:
-          validateAndSetLastCollectedArifactSelection(
-              trigger, artifactSelection, "Artifact Source cannot be empty for Webhook Variable type");
+          WebHookTriggerCondition webHookTriggerCondition = (WebHookTriggerCondition) trigger.getCondition();
+          if (webHookTriggerCondition.getWebhookSource() == null) {
+            validateAndSetLastCollectedArifactSelection(
+                trigger, artifactSelection, "Artifact Source cannot be empty for Webhook Variable type");
+          }
           break;
         case ARTIFACT_SOURCE:
         case PIPELINE_SOURCE:

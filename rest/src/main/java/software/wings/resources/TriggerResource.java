@@ -12,7 +12,9 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.WebHookToken;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.trigger.Trigger;
+import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookParameters;
+import software.wings.beans.trigger.WebhookSource;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.annotations.Scope;
@@ -167,8 +169,18 @@ public class TriggerResource {
   @Timed
   @ExceptionMetered
   public RestResponse<WebhookParameters> listWebhookParameters(@QueryParam("appId") String appId,
-      @QueryParam("workflowId") String workflowId, @QueryParam("workflowType") WorkflowType workflowType) {
-    return new RestResponse<>(triggerService.listWebhookParameters(appId, workflowId, workflowType));
+      @QueryParam("workflowId") String workflowId, @QueryParam("workflowType") WorkflowType workflowType,
+      @QueryParam("webhookSource") WebhookSource webhookSource, @QueryParam("eventType") WebhookEventType eventType) {
+    return new RestResponse<>(
+        triggerService.listWebhookParameters(appId, workflowId, workflowType, webhookSource, eventType));
+  }
+
+  @GET
+  @Path("webhook/eventTypes")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<WebhookEventType> listWebhookEventTypes(@QueryParam("appId") String appId) {
+    return new RestResponse<>();
   }
 
   @GET
