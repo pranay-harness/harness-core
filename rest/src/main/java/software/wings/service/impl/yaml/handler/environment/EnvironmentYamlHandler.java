@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml.handler.environment;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.EntityType.SERVICE_TEMPLATE;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.Validator.notNullCheck;
@@ -307,7 +308,8 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
     if (overrideYaml.getServiceName() == null) {
       variableBuilder.entityType(EntityType.ENVIRONMENT)
           .entityId(envId)
-          .templateId(ServiceVariable.DEFAULT_TEMPLATE_ID);
+          .templateId(ServiceVariable.DEFAULT_TEMPLATE_ID)
+          .envId(GLOBAL_ENV_ID);
     } else {
       String parentServiceName = overrideYaml.getServiceName();
       Service service = serviceResourceService.getServiceByName(appId, parentServiceName);
@@ -338,7 +340,8 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
       variableBuilder.entityType(EntityType.SERVICE_TEMPLATE)
           .entityId(serviceTemplateId)
           .templateId(serviceTemplateId)
-          .overrideType(OverrideType.ALL);
+          .overrideType(OverrideType.ALL)
+          .envId(envId);
     }
 
     if ("TEXT".equals(overrideYaml.getValueType())) {
@@ -355,7 +358,6 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
 
     ServiceVariable serviceVariable = variableBuilder.build();
     serviceVariable.setAppId(appId);
-    serviceVariable.setEnvId(envId);
 
     return serviceVariable;
   }

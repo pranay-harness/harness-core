@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AppContainer;
 import software.wings.beans.Application;
+import software.wings.beans.Base;
 import software.wings.beans.EntityType;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.Service;
@@ -261,6 +262,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
 
     ServiceVariable serviceVariable = serviceVariableBuilder.build();
     serviceVariable.setAppId(appId);
+    serviceVariable.setEnvId(Base.GLOBAL_ENV_ID);
 
     return serviceVariable;
   }
