@@ -785,19 +785,22 @@ public class PipelineServiceTest extends WingsBaseTest {
                                        .build()))
                         .build());
 
-    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID))
-        .thenReturn(
-            aWorkflow()
-                .withOrchestrationWorkflow(
-                    aCanaryOrchestrationWorkflow()
-                        .withUserVariables(asList(
-                            aVariable().withEntityType(SERVICE).withName("Service").withValue(SERVICE_ID).build()))
-                        .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                        .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                        .withRequiredEntityTypes(ImmutableSet.of(ARTIFACT, SSH_USER, SSH_PASSWORD))
-                        .build())
-                .withServices(asList(Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build()))
-                .build());
+    Workflow workflow =
+        aWorkflow()
+            .withOrchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .withUserVariables(
+                        asList(aVariable().withEntityType(SERVICE).withName("Service").withValue(SERVICE_ID).build()))
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .withRequiredEntityTypes(ImmutableSet.of(ARTIFACT, SSH_USER, SSH_PASSWORD))
+                    .build())
+            .withServices(asList(Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build()))
+            .build();
+
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
+    when(workflowService.fetchRequiredEntityTypes(APP_ID, workflow.getOrchestrationWorkflow()))
+        .thenReturn(ImmutableSet.of(ARTIFACT, SSH_USER, SSH_PASSWORD));
     List<EntityType> requiredEntities = pipelineService.getRequiredEntities(APP_ID, PIPELINE_ID);
     assertThat(requiredEntities).isNotEmpty().contains(ARTIFACT, SSH_USER, SSH_PASSWORD);
 

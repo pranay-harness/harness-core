@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.helm;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.inject.Singleton;
 
@@ -8,6 +9,7 @@ import com.esotericsoftware.yamlbeans.YamlReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.container.HelmChartSpecification;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 
@@ -85,5 +87,9 @@ public class HelmCommandHelper {
     }
 
     return Optional.empty();
+  }
+
+  public boolean checkValidChartSpecification(HelmChartSpecification chartSpec) {
+    return !(chartSpec == null || (isBlank(chartSpec.getChartName()) && isBlank(chartSpec.getChartUrl())));
   }
 }

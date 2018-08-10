@@ -34,6 +34,9 @@ import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
+import software.wings.beans.GitConfig;
+import software.wings.beans.GitFileConfig;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
@@ -48,10 +51,12 @@ import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.helm.HelmCommandExecutionResponse;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
+import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest.HelmInstallCommandRequestBuilder;
 import software.wings.helpers.ext.helm.request.HelmReleaseHistoryCommandRequest;
 import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
 import software.wings.helpers.ext.helm.response.ReleaseInfo;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -59,6 +64,8 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -95,12 +102,15 @@ public class HelmDeployState extends State {
   @Inject private transient ServiceTemplateService serviceTemplateService;
   @Inject private transient ActivityService activityService;
   @Inject private transient ContainerDeploymentManagerHelper containerDeploymentHelper;
+  @Inject private transient SettingsService settingsService;
+  @Inject private transient SecretManager secretManager;
 
   @Attributes(title = "Deployment steady state timeout (in minutes).")
   @DefaultValue("10")
   private int steadyStateTimeout; // Minutes
 
   @Attributes(title = "Helm release name prefix", required = true) @Getter @Setter private String helmReleaseNamePrefix;
+  @Getter @Setter private GitFileConfig gitFileConfig;
 
   public static final String HELM_COMMAND_NAME = "Helm Deploy";
   private static final String DOCKER_IMAGE_TAG_PLACEHOLDER_REGEX = "\\$\\{DOCKER_IMAGE_TAG}";
@@ -152,8 +162,11 @@ public class HelmDeployState extends State {
 
     HelmChartSpecification helmChartSpecification =
         serviceResourceService.getHelmChartSpecification(context.getAppId(), serviceElement.getUuid());
-    validateChartSpecification(helmChartSpecification);
-    evaluateHelmChartSpecificationExpression(context, helmChartSpecification);
+
+    if (gitFileConfig == null || gitFileConfig.getConnectorId() == null) {
+      validateChartSpecification(helmChartSpecification);
+      evaluateHelmChartSpecificationExpression(context, helmChartSpecification);
+    }
 
     HelmDeployStateExecutionData stateExecutionData = HelmDeployStateExecutionData.builder()
                                                           .activityId(activity.getUuid())
@@ -163,7 +176,11 @@ public class HelmDeployState extends State {
                                                           .releaseName(releaseName)
                                                           .build();
 
-    ImageDetails imageDetails = getImageDetails(context, app, artifact);
+    ImageDetails imageDetails = null;
+    if (artifact != null) {
+      imageDetails = getImageDetails(context, app, artifact);
+    }
+
     String repoName = getRepoName(app.getName(), serviceElement.getName());
     setNewAndPrevReleaseVersion(context, app, releaseName, containerServiceParams, stateExecutionData);
     HelmCommandRequest commandRequest =
@@ -220,29 +237,47 @@ public class HelmDeployState extends State {
     if (isNotEmpty(helmValueOverridesYamlFiles)) {
       helmValueOverridesYamlFilesEvaluated =
           helmValueOverridesYamlFiles.stream()
-              .map(yamlFileContent
-                  -> yamlFileContent.replaceAll(DOCKER_IMAGE_TAG_PLACEHOLDER_REGEX, imageDetails.getTag())
-                         .replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX,
-                             getImageName(yamlFileContent, imageDetails.getName(), imageDetails.getDomainName()))
-                         .replaceAll(HELM_NAMESPACE_PLACEHOLDER_REGEX, infrastructureMapping.getNamespace()))
+              .map(yamlFileContent -> {
+                if (imageDetails != null) {
+                  yamlFileContent =
+                      yamlFileContent.replaceAll(DOCKER_IMAGE_TAG_PLACEHOLDER_REGEX, imageDetails.getTag())
+                          .replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX,
+                              getImageName(yamlFileContent, imageDetails.getName(), imageDetails.getDomainName()));
+                }
+                yamlFileContent =
+                    yamlFileContent.replaceAll(HELM_NAMESPACE_PLACEHOLDER_REGEX, infrastructureMapping.getNamespace());
+                return yamlFileContent;
+              })
               .map(context::renderExpression)
               .collect(Collectors.toList());
     }
 
     steadyStateTimeout = steadyStateTimeout > 0 ? 10 : DEFAULT_STEADY_STATE_TIMEOUT;
-    return HelmInstallCommandRequest.builder()
-        .appId(appId)
-        .accountId(accountId)
-        .activityId(activityId)
-        .commandName(HELM_COMMAND_NAME)
-        .chartSpecification(helmChartSpecification)
-        .releaseName(releaseName)
-        .namespace(infrastructureMapping.getNamespace())
-        .containerServiceParams(containerServiceParams)
-        .variableOverridesYamlFiles(helmValueOverridesYamlFilesEvaluated)
-        .timeoutInMillis(TimeUnit.MINUTES.toMillis(steadyStateTimeout))
-        .repoName(repoName)
-        .build();
+
+    HelmInstallCommandRequestBuilder helmInstallCommandRequestBuilder =
+        HelmInstallCommandRequest.builder()
+            .appId(appId)
+            .accountId(accountId)
+            .activityId(activityId)
+            .commandName(HELM_COMMAND_NAME)
+            .chartSpecification(helmChartSpecification)
+            .releaseName(releaseName)
+            .namespace(infrastructureMapping.getNamespace())
+            .containerServiceParams(containerServiceParams)
+            .variableOverridesYamlFiles(helmValueOverridesYamlFilesEvaluated)
+            .timeoutInMillis(TimeUnit.MINUTES.toMillis(steadyStateTimeout))
+            .repoName(repoName);
+
+    if (gitFileConfig != null) {
+      evaluateGitFileConfig(context);
+
+      GitConfig gitConfig = fetchGitConfig(gitFileConfig.getConnectorId());
+      helmInstallCommandRequestBuilder.gitConfig(gitConfig);
+      helmInstallCommandRequestBuilder.gitFileConfig(gitFileConfig);
+      helmInstallCommandRequestBuilder.encryptedDataDetails(fetchEncryptedDataDetail(context, gitConfig));
+    }
+
+    return helmInstallCommandRequestBuilder.build();
   }
 
   private String getImageName(String yamlFileContent, String imageNameTag, String domainName) {
@@ -397,6 +432,10 @@ public class HelmDeployState extends State {
 
   private void evaluateHelmChartSpecificationExpression(
       ExecutionContext context, HelmChartSpecification helmChartSpec) {
+    if (helmChartSpec == null) {
+      return;
+    }
+
     if (isNotBlank(helmChartSpec.getChartUrl())) {
       helmChartSpec.setChartUrl(context.renderExpression(helmChartSpec.getChartUrl()));
     }
@@ -432,8 +471,52 @@ public class HelmDeployState extends State {
   public Map<String, String> validateFields() {
     Map<String, String> invalidFields = new HashMap<>();
     if (isBlank(getHelmReleaseNamePrefix())) {
-      invalidFields.put("helmReleaseNamePrefix", "Helm release name prefix must not be blank");
+      invalidFields.put("Helm release name prefix", "Helm release name prefix must not be blank");
     }
+    if (gitFileConfig != null && isNotBlank(gitFileConfig.getConnectorId())) {
+      if (isBlank(gitFileConfig.getFilePath())) {
+        invalidFields.put("Git connector", "File path must not be blank if git connector is selected");
+      }
+
+      if (isBlank(gitFileConfig.getBranch()) && isBlank(gitFileConfig.getCommitId())) {
+        invalidFields.put("Branch or commit id", "Branch or commit id must not be blank if git connector is selected");
+      }
+    }
+
     return invalidFields;
+  }
+
+  private void evaluateGitFileConfig(ExecutionContext context) {
+    if (isNotBlank(gitFileConfig.getCommitId())) {
+      gitFileConfig.setCommitId(context.renderExpression(gitFileConfig.getCommitId()));
+    }
+
+    if (isNotBlank(gitFileConfig.getBranch())) {
+      gitFileConfig.setBranch(context.renderExpression(gitFileConfig.getBranch()));
+    }
+
+    if (isNotBlank(gitFileConfig.getFilePath())) {
+      gitFileConfig.setFilePath(context.renderExpression(gitFileConfig.getFilePath()));
+    }
+  }
+
+  private GitConfig fetchGitConfig(String gitConnectorId) {
+    if (isBlank(gitConnectorId)) {
+      return null;
+    }
+
+    SettingAttribute gitSettingAttribute = settingsService.get(gitConnectorId);
+    if (!(gitSettingAttribute.getValue() instanceof GitConfig)) {
+      throw new InvalidRequestException("Git connector not found");
+    }
+    return (GitConfig) gitSettingAttribute.getValue();
+  }
+
+  private List<EncryptedDataDetail> fetchEncryptedDataDetail(ExecutionContext context, GitConfig gitConfig) {
+    if (gitConfig == null) {
+      return null;
+    }
+
+    return secretManager.getEncryptionDetails(gitConfig, context.getAppId(), context.getWorkflowExecutionId());
   }
 }

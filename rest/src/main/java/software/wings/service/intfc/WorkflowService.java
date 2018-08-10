@@ -5,6 +5,7 @@ import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.InstanceElement;
+import software.wings.beans.EntityType;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
@@ -29,6 +30,7 @@ import software.wings.stencils.Stencil;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -148,4 +150,8 @@ public interface WorkflowService extends OwnedByApplication, OwnedByEnvironment,
   String resolveEnvironmentId(Workflow workflow, Map<String, String> workflowVariables);
 
   GraphNode readGraphNode(@NotEmpty String appId, @NotEmpty String workflowId, @NotEmpty String nodeId);
+
+  List<EntityType> getRequiredEntities(String appId, String workflowId);
+
+  Set<EntityType> fetchRequiredEntityTypes(String appId, OrchestrationWorkflow orchestrationWorkflow);
 }

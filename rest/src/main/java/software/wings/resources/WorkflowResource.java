@@ -20,6 +20,7 @@ import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.Api;
 import software.wings.api.InstanceElement;
+import software.wings.beans.EntityType;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.GraphNode;
 import software.wings.beans.NotificationRule;
@@ -525,5 +526,14 @@ public class WorkflowResource {
   public RestResponse<List<InstanceElement>> getDeployedNodes(
       @QueryParam("appId") String appId, @PathParam("workflowId") String workflowId) {
     return new RestResponse<>(workflowService.getDeployedNodes(appId, workflowId));
+  }
+
+  @GET
+  @Path("required-entities")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<EntityType>> requiredEntities(
+      @QueryParam("appId") String appId, @QueryParam("workflowId") String workflowId) {
+    return new RestResponse<>(workflowService.getRequiredEntities(appId, workflowId));
   }
 }

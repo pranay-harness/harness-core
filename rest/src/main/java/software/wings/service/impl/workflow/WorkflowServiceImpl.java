@@ -74,7 +74,6 @@ import software.wings.api.InstanceElement;
 import software.wings.app.StaticConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
-import software.wings.beans.BasicOrchestrationWorkflow;
 import software.wings.beans.BuildWorkflow;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CustomOrchestrationWorkflow;
@@ -1479,7 +1478,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return orchestrationWorkflow.getUserVariables();
   }
 
-  private Set<EntityType> updateRequiredEntityTypes(String appId, OrchestrationWorkflow orchestrationWorkflow) {
+  @Override
+  public Set<EntityType> fetchRequiredEntityTypes(String appId, OrchestrationWorkflow orchestrationWorkflow) {
     notNullCheck("orchestrationWorkflow", orchestrationWorkflow, USER);
     if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
       Set<EntityType> requiredEntityTypes = ((CanaryOrchestrationWorkflow) orchestrationWorkflow)
@@ -1497,27 +1497,20 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
               .collect(Collectors.toSet());
       requiredEntityTypes.addAll(rollbackRequiredEntityTypes);
 
-      orchestrationWorkflow.setRequiredEntityTypes(requiredEntityTypes);
       return requiredEntityTypes;
-    } else if (orchestrationWorkflow instanceof BasicOrchestrationWorkflow) {
-      Set<EntityType> requiredEntityTypes = ((BasicOrchestrationWorkflow) orchestrationWorkflow)
-                                                .getWorkflowPhases()
-                                                .stream()
-                                                .flatMap(phase -> updateRequiredEntityTypes(appId, phase).stream())
-                                                .collect(Collectors.toSet());
-
-      Set<EntityType> rollbackRequiredEntityTypes =
-          ((BasicOrchestrationWorkflow) orchestrationWorkflow)
-              .getRollbackWorkflowPhaseIdMap()
-              .values()
-              .stream()
-              .flatMap(phase -> updateRequiredEntityTypes(appId, phase).stream())
-              .collect(Collectors.toSet());
-      requiredEntityTypes.addAll(rollbackRequiredEntityTypes);
-
-      orchestrationWorkflow.setRequiredEntityTypes(requiredEntityTypes);
     }
+
     return null;
+  }
+
+  private Set<EntityType> updateRequiredEntityTypes(String appId, OrchestrationWorkflow orchestrationWorkflow) {
+    Set<EntityType> entityTypes = fetchRequiredEntityTypes(appId, orchestrationWorkflow);
+
+    if (isNotEmpty(entityTypes)) {
+      orchestrationWorkflow.setRequiredEntityTypes(entityTypes);
+    }
+
+    return entityTypes;
   }
 
   private Set<EntityType> updateRequiredEntityTypes(String appId, WorkflowPhase workflowPhase) {
@@ -1527,22 +1520,29 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       return requiredEntityTypes;
     }
 
-    if (asList(ECS, KUBERNETES, AWS_CODEDEPLOY, AWS_LAMBDA, AMI, HELM, PCF)
-            .contains(workflowPhase.getDeploymentType())) {
+    if (asList(ECS, KUBERNETES, AWS_CODEDEPLOY, AWS_LAMBDA, AMI, PCF).contains(workflowPhase.getDeploymentType())) {
       requiredEntityTypes.add(ARTIFACT);
       return requiredEntityTypes;
     }
 
+    InfrastructureMapping infrastructureMapping = null;
     if (workflowPhase.getInfraMappingId() != null) {
-      InfrastructureMapping infrastructureMapping =
-          infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
-      if (infrastructureMapping != null && infrastructureMapping.getHostConnectionAttrs() != null) {
-        SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getHostConnectionAttrs());
-        if (settingAttribute != null) {
-          if (settingAttribute.getValue() instanceof HostConnectionAttributes) {
-            HostConnectionAttributes connectionAttributes = (HostConnectionAttributes) settingAttribute.getValue();
-            populateRequiredEntityTypesByAccessType(requiredEntityTypes, connectionAttributes.getAccessType());
-          }
+      infrastructureMapping = infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
+    }
+
+    if (infrastructureMapping != null && HELM.equals(workflowPhase.getDeploymentType())) {
+      if (serviceResourceService.checkArtifactNeededForHelm(appId, infrastructureMapping.getServiceTemplateId())) {
+        requiredEntityTypes.add(ARTIFACT);
+      }
+      return requiredEntityTypes;
+    }
+
+    if (infrastructureMapping != null && infrastructureMapping.getHostConnectionAttrs() != null) {
+      SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getHostConnectionAttrs());
+      if (settingAttribute != null) {
+        if (settingAttribute.getValue() instanceof HostConnectionAttributes) {
+          HostConnectionAttributes connectionAttributes = (HostConnectionAttributes) settingAttribute.getValue();
+          populateRequiredEntityTypesByAccessType(requiredEntityTypes, connectionAttributes.getAccessType());
         }
       }
     }
@@ -1556,11 +1556,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       boolean artifactNeeded = false;
       for (GraphNode step : phaseStep.getSteps()) {
         if ("COMMAND".equals(step.getType())) {
-          ServiceCommand command = serviceResourceService.getCommandByName(
-              appId, serviceId, (String) step.getProperties().get("commandName"));
-          if (command != null && command.getCommand() != null && command.getCommand().isArtifactNeeded()) {
-            artifactNeeded = true;
-            break;
+          if (serviceId != null) {
+            ServiceCommand command = serviceResourceService.getCommandByName(
+                appId, serviceId, (String) step.getProperties().get("commandName"));
+            if (command != null && command.getCommand() != null && command.getCommand().isArtifactNeeded()) {
+              artifactNeeded = true;
+              break;
+            }
           }
         } else if (StateType.HTTP.name().equals(step.getType())
             && (isArtifactNeeded(step.getProperties().get("url"), step.getProperties().get("body"),
@@ -1949,6 +1951,22 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           .findFirst()
           .orElse(null);
     }
+    return null;
+  }
+
+  @Override
+  public List<EntityType> getRequiredEntities(String appId, String workflowId) {
+    notNullCheck("workflowId", workflowId, USER);
+
+    Workflow workflow = readWorkflow(appId, workflowId);
+    notNullCheck("workflow", workflow, USER);
+    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+
+    Set<EntityType> entityTypes = fetchRequiredEntityTypes(appId, orchestrationWorkflow);
+    if (isNotEmpty(entityTypes)) {
+      return new ArrayList<>(entityTypes);
+    }
+
     return null;
   }
 }

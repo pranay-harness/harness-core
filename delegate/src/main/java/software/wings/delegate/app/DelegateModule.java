@@ -93,6 +93,7 @@ import software.wings.service.impl.DockerBuildServiceImpl;
 import software.wings.service.impl.EcrBuildServiceImpl;
 import software.wings.service.impl.GcrBuildServiceImpl;
 import software.wings.service.impl.GcsBuildServiceImpl;
+import software.wings.service.impl.GitServiceImpl;
 import software.wings.service.impl.JenkinsBuildServiceImpl;
 import software.wings.service.impl.NexusBuildServiceImpl;
 import software.wings.service.impl.ServiceCommandExecutorServiceImpl;
@@ -132,6 +133,7 @@ import software.wings.service.intfc.EcrBuildService;
 import software.wings.service.intfc.EcrClassicBuildService;
 import software.wings.service.intfc.GcrBuildService;
 import software.wings.service.intfc.GcsBuildService;
+import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.NexusBuildService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
@@ -315,6 +317,7 @@ public class DelegateModule extends AbstractModule {
     bind(AwsCodeDeployHelperServiceDelegate.class).to(AwsCodeDeployHelperServiceDelegateImpl.class);
     bind(AwsLambdaHelperServiceDelegate.class).to(AwsLambdaHelperServiceDelegateImpl.class);
     bind(AwsAmiHelperServiceDelegate.class).to(AwsAmiHelperServiceDelegateImpl.class);
+    bind(GitService.class).to(GitServiceImpl.class);
 
     try {
       VersionInfoManager versionInfoManager = new VersionInfoManager(IOUtils.toString(
