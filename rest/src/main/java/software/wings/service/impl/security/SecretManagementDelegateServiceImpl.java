@@ -3,6 +3,7 @@ package software.wings.service.impl.security;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.exception.WingsException.USER;
 
 import com.google.common.base.Preconditions;
 
@@ -22,8 +23,10 @@ import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
+import software.wings.exception.WingsException;
 import software.wings.helpers.ext.vault.VaultRestClient;
 import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedData;
@@ -55,7 +58,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   public static final int NUM_OF_RETRIES = 3;
 
   @Override
-  public EncryptedData encrypt(String accountId, char[] value, KmsConfig kmsConfig) throws IOException {
+  public EncryptedData encrypt(String accountId, char[] value, KmsConfig kmsConfig) {
     Preconditions.checkNotNull(kmsConfig, "null for " + accountId);
     for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
       try {
@@ -90,7 +93,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
           sleep(ofMillis(100));
         } else {
           logger.error("Encryption failed after {} retries ", retry, e);
-          throw new IOException("Encryption failed after " + NUM_OF_RETRIES + " retries", e);
+          throw new WingsException(
+              ErrorCode.KMS_OPERATION_ERROR, "Encryption failed after " + NUM_OF_RETRIES + " retries", USER, e);
         }
       }
     }
@@ -100,7 +104,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
 
   @SuppressFBWarnings("DM_STRING_CTOR")
   @Override
-  public char[] decrypt(EncryptedData data, KmsConfig kmsConfig) throws IOException {
+  public char[] decrypt(EncryptedData data, KmsConfig kmsConfig) {
     if (data.getEncryptedValue() == null) {
       return null;
     }
@@ -126,7 +130,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
           sleep(ofMillis(100));
         } else {
           logger.error("Decryption failed after {} retries ", retry, e);
-          throw new IOException("Decryption failed after " + NUM_OF_RETRIES + " retries", e);
+          throw new WingsException(
+              ErrorCode.KMS_OPERATION_ERROR, "Decryption failed after " + NUM_OF_RETRIES + " retries", USER, e);
         }
       }
     }
@@ -135,7 +140,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
 
   @Override
   public EncryptedData encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
-      VaultConfig vaultConfig, EncryptedData savedEncryptedData) throws IOException {
+      VaultConfig vaultConfig, EncryptedData savedEncryptedData) {
     String keyUrl = settingType + "/" + name;
     if (value == null) {
       keyUrl = savedEncryptedData == null ? keyUrl : savedEncryptedData.getEncryptionKey();
@@ -178,7 +183,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
           String errorMsg =
               new StringBuilder().append("Request not successful. Reason: {").append(response).append("}").toString();
           logger.error(errorMsg);
-          throw new IOException(errorMsg);
+          throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, errorMsg, USER);
         }
       } catch (Exception e) {
         if (retry < NUM_OF_RETRIES) {
@@ -186,7 +191,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
           sleep(ofMillis(1000));
         } else {
           logger.error("encryption failed after {} retries ", retry, e);
-          throw new IOException("Decryption failed after " + NUM_OF_RETRIES + " retries", e);
+          throw new WingsException(
+              ErrorCode.VAULT_OPERATION_ERROR, "Decryption failed after " + NUM_OF_RETRIES + " retries", USER, e);
         }
       }
     }
@@ -194,7 +200,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   }
 
   @Override
-  public char[] decrypt(EncryptedData data, VaultConfig vaultConfig) throws IOException {
+  public char[] decrypt(EncryptedData data, VaultConfig vaultConfig) {
     if (data.getEncryptedValue() == null) {
       return null;
     }
@@ -213,7 +219,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
           String errorMsg =
               new StringBuilder().append("Request not successful. Reason: {").append(response).append("}").toString();
           logger.error(errorMsg);
-          throw new IOException(errorMsg);
+          throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, errorMsg, USER);
         }
       } catch (Exception e) {
         if (retry < NUM_OF_RETRIES) {
@@ -221,7 +227,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
           sleep(ofMillis(1000));
         } else {
           logger.error("decryption failed after {} retries for {}", retry, data, e);
-          throw new IOException("Decryption failed after " + NUM_OF_RETRIES + " retries", e);
+          throw new WingsException(
+              ErrorCode.VAULT_OPERATION_ERROR, "Decryption failed after " + NUM_OF_RETRIES + " retries", USER, e);
         }
       }
     }
@@ -229,12 +236,16 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   }
 
   @Override
-  public void deleteVaultSecret(String path, VaultConfig vaultConfig) throws IOException {
-    getVaultRestClient(vaultConfig).deleteSecret(String.valueOf(vaultConfig.getAuthToken()), path).execute();
+  public void deleteVaultSecret(String path, VaultConfig vaultConfig) {
+    try {
+      getVaultRestClient(vaultConfig).deleteSecret(String.valueOf(vaultConfig.getAuthToken()), path).execute();
+    } catch (IOException e) {
+      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, "Deletion of secret failed ", USER, e);
+    }
   }
 
   @Override
-  public boolean renewVaultToken(VaultConfig vaultConfig) throws IOException {
+  public boolean renewVaultToken(VaultConfig vaultConfig) {
     for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
       try {
         logger.info("renewing token for vault {}", vaultConfig);
@@ -254,7 +265,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
           sleep(ofMillis(1000));
         } else {
           logger.error("renewal failed after {} retries for {}", retry, vaultConfig, e);
-          throw new IOException("renewal failed after " + NUM_OF_RETRIES + " retries", e);
+          throw new WingsException(
+              ErrorCode.VAULT_OPERATION_ERROR, "renewal failed after " + NUM_OF_RETRIES + " retries", USER, e);
         }
       }
     }

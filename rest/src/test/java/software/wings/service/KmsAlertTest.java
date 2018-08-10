@@ -22,6 +22,7 @@ import software.wings.WingsBaseTest;
 import software.wings.alerts.AlertStatus;
 import software.wings.beans.Account;
 import software.wings.beans.DelegateTask.SyncTaskContext;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.VaultConfig;
@@ -32,6 +33,7 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
@@ -67,10 +69,12 @@ public class KmsAlertTest extends WingsBaseTest {
     when(mockDelegateServiceOK.encrypt(anyString(), anyObject(), anyObject())).thenReturn(null);
     when(mockDelegateServiceOK.renewVaultToken(any(VaultConfig.class))).thenReturn(true);
     when(mockDelegateServiceEx.encrypt(anyString(), anyString(), anyString(), anyObject(), anyObject(), anyObject()))
-        .thenThrow(new IOException());
-    when(mockDelegateServiceEx.encrypt(anyString(), anyObject(), anyObject())).thenThrow(new IOException());
+        .thenThrow(new WingsException(ErrorCode.KMS_OPERATION_ERROR));
+    when(mockDelegateServiceEx.encrypt(anyString(), anyObject(), anyObject()))
+        .thenThrow(new WingsException(ErrorCode.KMS_OPERATION_ERROR));
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceOK);
-    when(mockDelegateServiceEx.renewVaultToken(any(VaultConfig.class))).thenThrow(new IOException());
+    when(mockDelegateServiceEx.renewVaultToken(any(VaultConfig.class)))
+        .thenThrow(new WingsException(ErrorCode.KMS_OPERATION_ERROR));
     setInternalState(vaultService, "delegateProxyFactory", delegateProxyFactory);
     setInternalState(kmsService, "delegateProxyFactory", delegateProxyFactory);
     setInternalState(secretManager, "kmsService", kmsService);
@@ -190,7 +194,7 @@ public class KmsAlertTest extends WingsBaseTest {
     assertEquals(1, alertService.list(pageRequest).size());
   }
 
-  private VaultConfig getVaultConfig() throws IOException {
+  private VaultConfig getVaultConfig() {
     return VaultConfig.builder()
         .vaultUrl("http://127.0.0.1:8200")
         .authToken(generateUuid())

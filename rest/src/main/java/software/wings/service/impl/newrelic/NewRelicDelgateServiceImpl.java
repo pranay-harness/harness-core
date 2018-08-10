@@ -23,11 +23,13 @@ import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.NewRelicDeploymentMarkerPayload;
 import software.wings.delegatetasks.DataCollectionExecutorService;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsException.ReportTarget;
 import software.wings.helpers.ext.newrelic.NewRelicRestClient;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ThirdPartyApiCallLog;
@@ -48,6 +50,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -116,7 +119,8 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       } else {
         apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
         delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
-        throw new WingsException(response.errorBody().string());
+        throw new WingsException(
+            ErrorCode.NEWRELIC_ERROR, response.errorBody().string(), EnumSet.of(ReportTarget.UNIVERSAL));
       }
 
       pageCount++;
@@ -161,7 +165,8 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       } else {
         apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
         delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
-        throw new WingsException(response.errorBody().string());
+        throw new WingsException(
+            ErrorCode.NEWRELIC_ERROR, response.errorBody().string(), EnumSet.of(ReportTarget.UNIVERSAL));
       }
 
       pageCount++;
@@ -231,7 +236,8 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
           }
         } else if (response.code() != HttpServletResponse.SC_NOT_FOUND) {
           apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
-          throw new WingsException(response.errorBody().string());
+          throw new WingsException(
+              ErrorCode.NEWRELIC_ERROR, response.errorBody().string(), EnumSet.of(ReportTarget.UNIVERSAL));
         }
         return newRelicMetrics;
       } catch (Exception e) {
@@ -287,7 +293,9 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
         metricNames, currentTime - TimeUnit.HOURS.toMillis(1), currentTime, true, apiCallLog);
 
     if (metricData == null) {
-      throw new WingsException("Unable to get NewRelic metric data for metric name collection " + newRelicConfig);
+      throw new WingsException(ErrorCode.NEWRELIC_ERROR,
+          "Unable to get NewRelic metric data for metric name collection " + newRelicConfig,
+          EnumSet.of(ReportTarget.UNIVERSAL));
     }
 
     metricsWithNoData.removeAll(metricData.getMetrics_found());
@@ -377,7 +385,8 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
 
     apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
     delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
-    throw new WingsException(response.errorBody().string());
+    throw new WingsException(
+        ErrorCode.NEWRELIC_ERROR, response.errorBody().string(), EnumSet.of(ReportTarget.UNIVERSAL));
   }
 
   @Override
@@ -407,7 +416,8 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
 
     apiCallLog.addFieldToResponse(response.code(), response.errorBody(), FieldType.TEXT);
     delegateLogService.save(config.getAccountId(), apiCallLog);
-    throw new WingsException(response.errorBody().string());
+    throw new WingsException(
+        ErrorCode.NEWRELIC_ERROR, response.errorBody().string(), EnumSet.of(ReportTarget.UNIVERSAL));
   }
 
   @Override

@@ -23,6 +23,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.service.impl.security.SecretManagementDelegateServiceImpl.NUM_OF_RETRIES;
 import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_FILE;
 
 import com.google.inject.Inject;
@@ -2636,9 +2637,8 @@ public class KmsTest extends WingsBaseTest {
     try {
       delegateService.encrypt(accountId, toEncrypt.toCharArray(), kmsConfig);
       fail("should have been failed");
-    } catch (IOException e) {
-      assertEquals(
-          "Encryption failed after " + SecretManagementDelegateServiceImpl.NUM_OF_RETRIES + " retries", e.getMessage());
+    } catch (WingsException e) {
+      assertEquals("Encryption failed after " + NUM_OF_RETRIES + " retries", e.getMessage());
     }
 
     kmsConfig = getKmsConfig();
@@ -2649,9 +2649,8 @@ public class KmsTest extends WingsBaseTest {
                                   .build(),
           kmsConfig);
       fail("should have been failed");
-    } catch (IOException e) {
-      assertEquals(
-          "Decryption failed after " + SecretManagementDelegateServiceImpl.NUM_OF_RETRIES + " retries", e.getMessage());
+    } catch (WingsException e) {
+      assertEquals("Decryption failed after " + NUM_OF_RETRIES + " retries", e.getMessage());
     }
   }
 

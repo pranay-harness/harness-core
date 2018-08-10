@@ -10,6 +10,7 @@ import static software.wings.dl.HQuery.excludeCount;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.exception.WingsException.USER;
+import static software.wings.exception.WingsException.USER_SRE;
 import static software.wings.security.EncryptionType.LOCAL;
 import static software.wings.security.encryption.SimpleEncryption.CHARSET;
 import static software.wings.service.impl.security.VaultServiceImpl.VAULT_VAILDATION_URL;
@@ -726,7 +727,7 @@ public class SecretManagerImpl implements SecretManager {
                                                  .filter("encryptedValue", uuId)
                                                  .asList();
     if (!serviceVariables.isEmpty()) {
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR)
+      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, USER_SRE)
           .addParam("reason",
               "Being used by " + serviceVariables.stream().map(ServiceVariable::getName).collect(joining(", ")));
     }

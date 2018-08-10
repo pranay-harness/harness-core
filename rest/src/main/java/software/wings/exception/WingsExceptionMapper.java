@@ -134,9 +134,7 @@ public class WingsExceptionMapper implements ExceptionMapper<WingsException> {
     } else {
       responseMessages = getResponseMessageList(exception, UNIVERSAL);
       logger.info(calculateInfoMessage(responseMessages));
-      if (logger.isDebugEnabled()) {
-        logger.debug(calculateDebugMessage(exception), exception);
-      }
+      logger.info(calculateDebugMessage(exception), exception);
     }
   }
 
