@@ -112,6 +112,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Log.LogLevel;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ContainerSetupCommandUnitExecutionData.ContainerSetupCommandUnitExecutionDataBuilder;
@@ -124,6 +125,7 @@ import software.wings.beans.container.KubernetesServiceType;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
+import software.wings.exception.InvalidArgumentsException;
 import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.azure.AzureHelperService;
@@ -1078,14 +1080,14 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       String namespace, Map<String, String> serviceLabels, KubernetesSetupParams setupParams) {
     try {
       HorizontalPodAutoscaler horizontalPodAutoscaler =
-          KubernetesHelper.loadYaml(setupParams.getCustomMetricYamlConfig());
+          KubernetesHelper.loadYaml(setupParams.getCustomMetricYamlConfig(), HorizontalPodAutoscaler.class);
 
       if (horizontalPodAutoscaler == null) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
-            .addParam(
-                "args", "Couldn't parse Horizontal Pod Autoscaler YAML: " + setupParams.getCustomMetricYamlConfig());
+        throw new InvalidArgumentsException(NameValuePair.builder()
+                                                .name("Horizontal Pod Autoscaler YAML")
+                                                .value(setupParams.getCustomMetricYamlConfig())
+                                                .build());
       }
-      // set kind/name
       horizontalPodAutoscaler.getSpec().getScaleTargetRef().setName(name);
       horizontalPodAutoscaler.getSpec().getScaleTargetRef().setKind(kind);
       horizontalPodAutoscaler.getSpec().getScaleTargetRef().setApiVersion(apiVersion);
