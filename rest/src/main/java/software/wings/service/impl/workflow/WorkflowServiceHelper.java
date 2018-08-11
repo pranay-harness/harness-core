@@ -79,13 +79,14 @@ import com.google.inject.Singleton;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.GraphNode;
 import software.wings.beans.GraphNode.GraphNodeBuilder;
@@ -129,19 +130,21 @@ import java.util.Set;
 
 @Singleton
 public class WorkflowServiceHelper {
-  public static final String MIN_REPLICAS = "\\$\\{MIN_REPLICAS}";
-  public static final String MAX_REPLICAS = "\\$\\{MAX_REPLICAS}";
-  public static final String UTILIZATION = "\\$\\{UTILIZATION}";
-  // yaml template for custom metric HPA for cup utilisation threshold
-  public static final String yamlForHPAWithCustomMetric = "apiVersion: autoscaling/v2beta1\n"
-      + "type: HorizontalPodAutoscaler\n"
+  private static final Logger logger = LoggerFactory.getLogger(WorkflowServiceHelper.class);
+
+  private static final String MIN_REPLICAS = "\\$\\{MIN_REPLICAS}";
+  private static final String MAX_REPLICAS = "\\$\\{MAX_REPLICAS}";
+  private static final String UTILIZATION = "\\$\\{UTILIZATION}";
+  // yaml template for custom metric HPA for cpu utilization threshold
+  private static final String yamlForHPAWithCustomMetric = "apiVersion: autoscaling/v2beta1\n"
+      + "kind: HorizontalPodAutoscaler\n"
       + "metadata:\n"
-      + "  name: none\n"
-      + "  namespace: none\n"
+      + "  name: hpa-name\n"
       + "spec:\n"
       + "  scaleTargetRef:\n"
-      + "    type: none\n"
-      + "    name: none\n"
+      + "    apiVersion: extensions/v1beta1\n"
+      + "    kind: Deployment\n"
+      + "    name: target-name\n"
       + "  minReplicas: ${MIN_REPLICAS}\n"
       + "  maxReplicas: ${MAX_REPLICAS}\n"
       + "  metrics:\n"
@@ -162,12 +165,10 @@ public class WorkflowServiceHelper {
           yamlForHPAWithCustomMetric.replaceAll(MIN_REPLICAS, String.valueOf(minAutoscaleInstances.intValue()))
               .replaceAll(MAX_REPLICAS, String.valueOf(maxAutoscaleInstances.intValue()))
               .replaceAll(UTILIZATION, String.valueOf(targetCpuUtilizationPercentage.intValue()));
-      HorizontalPodAutoscaler horizontalPodAutoscaler = KubernetesHelper.loadYaml(hpaYaml);
-      if (horizontalPodAutoscaler == null) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
-            .addParam("args", "Couldn't parse Horizontal Pod Autoscaler YAML: " + hpaYaml);
+      if (KubernetesHelper.loadYaml(hpaYaml, HorizontalPodAutoscaler.class) == null) {
+        logger.error("HPA couldn't be parsed: {}", hpaYaml);
       }
-      return KubernetesHelper.toYaml(horizontalPodAutoscaler);
+      return hpaYaml;
     } catch (IOException e) {
       throw new WingsException("Unable to generate Yaml String for Horizontal pod autoscalar");
     }
@@ -247,8 +248,6 @@ public class WorkflowServiceHelper {
 
   /**
    * Validates whether service id and mapped service are of same type
-   *
-   * @param serviceMapping
    */
   public void validateServiceMapping(String appId, String targetAppId, Map<String, String> serviceMapping) {
     if (serviceMapping == null) {
