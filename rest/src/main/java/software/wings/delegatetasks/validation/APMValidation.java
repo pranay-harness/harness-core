@@ -61,7 +61,10 @@ public class APMValidation extends AbstractSecretManagerValidation {
   protected EncryptionConfig getEncryptionConfig() {
     for (Object parmeter : getParameters()) {
       if (parmeter instanceof APMDataCollectionInfo) {
-        return ((APMDataCollectionInfo) parmeter).getEncryptedDataDetails().get(0).getEncryptionConfig();
+        if (((APMDataCollectionInfo) parmeter).getEncryptedDataDetails() != null
+            && ((APMDataCollectionInfo) parmeter).getEncryptedDataDetails().size() > 0) {
+          return ((APMDataCollectionInfo) parmeter).getEncryptedDataDetails().get(0).getEncryptionConfig();
+        }
       }
     }
     return super.getEncryptionConfig();
