@@ -9,7 +9,7 @@ import software.wings.beans.DelegateScripts;
 import software.wings.beans.RestResponse;
 
 public interface ManagerClient {
-  @GET("delegates/{delegateId}/delegateScripts")
+  @GET("delegates/delegateScripts")
   Call<RestResponse<DelegateScripts>> getDelegateScripts(
       @Query("accountId") String accountId, @Query("delegateVersion") String delegateVersion);
 
