@@ -65,7 +65,7 @@ public class ContainerValidationHelper {
   }
 
   private static boolean isLocalDev() {
-    return !new File("delegate.sh").exists();
+    return !new File("start.sh").exists();
   }
 
   public String getCriteria(ContainerServiceParams containerServiceParams) {

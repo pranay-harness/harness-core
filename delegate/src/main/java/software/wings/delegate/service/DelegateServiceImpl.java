@@ -355,7 +355,7 @@ public class DelegateServiceImpl implements DelegateService {
             client.newOptionsBuilder()
                 .runtime(asyncHttpClient, true)
                 .reconnect(true)
-                .reconnectAttempts(new File("delegate.sh").exists() ? MAX_CONNECT_ATTEMPTS : Integer.MAX_VALUE)
+                .reconnectAttempts(new File("start.sh").exists() ? MAX_CONNECT_ATTEMPTS : Integer.MAX_VALUE)
                 .pauseBeforeReconnectInSeconds(RECONNECT_INTERVAL_SECONDS)
                 .build();
         socket = client.create(clientOptions);
@@ -936,7 +936,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   private boolean doRestartDelegate() {
     long now = clock.millis();
-    return new File("delegate.sh").exists()
+    return new File("start.sh").exists()
         && (restartNeeded.get() || now - lastHeartbeatSentAt.get() > HEARTBEAT_TIMEOUT
                || now - lastHeartbeatReceivedAt.get() > HEARTBEAT_TIMEOUT);
   }

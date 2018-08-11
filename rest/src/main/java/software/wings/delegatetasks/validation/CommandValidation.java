@@ -134,7 +134,7 @@ public class CommandValidation extends AbstractDelegateValidateTask {
   }
 
   private static boolean isLocalDev() {
-    return !new File("delegate.sh").exists();
+    return !new File("start.sh").exists();
   }
 
   private DelegateConnectionResult validateAwsCodeDelpoy(CommandExecutionContext context) {
