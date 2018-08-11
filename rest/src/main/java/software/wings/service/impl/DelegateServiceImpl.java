@@ -491,7 +491,6 @@ public class DelegateServiceImpl implements DelegateService {
                                                         .put("accountId", accountId)
                                                         .put("accountSecret", account.getAccountKey())
                                                         .put("upgradeVersion", latestVersion)
-                                                        .put("currentVersion", version)
                                                         .put("managerHostAndPort", managerHost)
                                                         .put("watcherStorageUrl", watcherStorageUrl)
                                                         .put("watcherCheckLocation", watcherCheckLocation)
@@ -534,8 +533,15 @@ public class DelegateServiceImpl implements DelegateService {
       out.putArchiveEntry(new TarArchiveEntry(DELEGATE_DIR + "/"));
       out.closeArchiveEntry();
 
-      ImmutableMap<String, String> scriptParams =
-          getJarAndScriptRunTimeParamMap(accountId, "0.0.0", managerHost); // first version is 0.0.0
+      String version;
+      if (featureFlagService.isEnabled(MULTI_VERSION_DELEGATE, accountId)) {
+        List<String> delegateVersions = accountService.getDelegateConfiguration(accountId).getDelegateVersions();
+        version = delegateVersions.get(delegateVersions.size() - 1);
+      } else {
+        version = "0.0.0";
+      }
+
+      ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(accountId, version, managerHost);
 
       File start = File.createTempFile("start", ".sh");
       try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(start), UTF_8)) {
@@ -637,8 +643,15 @@ public class DelegateServiceImpl implements DelegateService {
       out.putArchiveEntry(new TarArchiveEntry(DOCKER_DELEGATE + "/"));
       out.closeArchiveEntry();
 
-      ImmutableMap<String, String> scriptParams =
-          getJarAndScriptRunTimeParamMap(accountId, "0.0.0", managerHost); // first version is 0.0.0
+      String version;
+      if (featureFlagService.isEnabled(MULTI_VERSION_DELEGATE, accountId)) {
+        List<String> delegateVersions = accountService.getDelegateConfiguration(accountId).getDelegateVersions();
+        version = delegateVersions.get(delegateVersions.size() - 1);
+      } else {
+        version = "0.0.0";
+      }
+
+      ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(accountId, version, managerHost);
 
       File launch = File.createTempFile("launch-harness-delegate", ".sh");
       try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(launch), UTF_8)) {
@@ -685,8 +698,16 @@ public class DelegateServiceImpl implements DelegateService {
       out.putArchiveEntry(new TarArchiveEntry(KUBERNETES_DELEGATE + "/"));
       out.closeArchiveEntry();
 
-      ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(accountId, "0.0.0", managerHost,
-          delegateName, delegateProfile == null ? "" : delegateProfile); // first version is 0.0.0
+      String version;
+      if (featureFlagService.isEnabled(MULTI_VERSION_DELEGATE, accountId)) {
+        List<String> delegateVersions = accountService.getDelegateConfiguration(accountId).getDelegateVersions();
+        version = delegateVersions.get(delegateVersions.size() - 1);
+      } else {
+        version = "0.0.0";
+      }
+
+      ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
+          accountId, version, managerHost, delegateName, delegateProfile == null ? "" : delegateProfile);
 
       File yaml = File.createTempFile("harness-delegate", ".yaml");
       try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(yaml), UTF_8)) {
