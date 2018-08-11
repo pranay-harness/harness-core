@@ -452,13 +452,16 @@ public class WatcherServiceImpl implements WatcherService {
                 .collect(toList()));
 
         for (String version : expectedVersions) {
-          if (shutdownPendingList.containsAll(runningVersions.get(version))) {
+          if (shutdownPendingList.containsAll(runningVersions.get(version)) && working.compareAndSet(false, true)) {
             logger.info("New delegate process for version {} will be started", version);
-            if (working.compareAndSet(false, true)) {
+            try {
               downloadRunScripts(version);
               downloadDelegateJar(version);
               startDelegateProcess(version, emptyList(), "DelegateStartScriptVersioned", getProcessId());
               break;
+            } catch (Exception e) {
+              logger.error("Error downloading or starting delegate version {}", version, e);
+              working.set(false);
             }
           }
         }
@@ -502,71 +505,61 @@ public class WatcherServiceImpl implements WatcherService {
   }
 
   @SuppressFBWarnings("REC_CATCH_EXCEPTION")
-  private void downloadRunScripts(String version) {
+  private void downloadRunScripts(String version) throws Exception {
     if (new File(version + "/delegate.sh").exists()) {
       return;
     }
 
-    try {
-      RestResponse<DelegateScripts> restResponse = timeLimiter.callWithTimeout(
-          ()
-              -> execute(managerClient.getDelegateScripts(watcherConfiguration.getAccountId(), version)),
-          1L, TimeUnit.MINUTES, true);
-      DelegateScripts delegateScripts = restResponse.getResource();
+    RestResponse<DelegateScripts> restResponse = timeLimiter.callWithTimeout(
+        ()
+            -> execute(managerClient.getDelegateScripts(watcherConfiguration.getAccountId(), version)),
+        1L, TimeUnit.MINUTES, true);
+    DelegateScripts delegateScripts = restResponse.getResource();
 
-      Path versionDir = Paths.get(version);
-      if (!versionDir.toFile().exists()) {
-        Files.createDirectory(versionDir);
+    Path versionDir = Paths.get(version);
+    if (!versionDir.toFile().exists()) {
+      Files.createDirectory(versionDir);
+    }
+
+    for (String fileName : asList("start.sh", "stop.sh", "delegate.sh")) {
+      String filePath = fileName;
+      if ("delegate.sh".equals(fileName)) {
+        filePath = version + "/" + fileName;
       }
+      File scriptFile = new File(filePath);
+      String script = delegateScripts.getScriptByName(fileName);
 
-      for (String fileName : asList("start.sh", "stop.sh", "delegate.sh")) {
-        String filePath = fileName;
-        if ("delegate.sh".equals(fileName)) {
-          filePath = version + "/" + fileName;
+      if (isNotEmpty(script)) {
+        Files.deleteIfExists(Paths.get(filePath));
+        try (BufferedWriter writer = Files.newBufferedWriter(scriptFile.toPath())) {
+          writer.write(script, 0, script.length());
+          writer.flush();
         }
-        File scriptFile = new File(filePath);
-        String script = delegateScripts.getScriptByName(fileName);
-
-        if (isNotEmpty(script)) {
-          Files.deleteIfExists(Paths.get(filePath));
-          try (BufferedWriter writer = Files.newBufferedWriter(scriptFile.toPath())) {
-            writer.write(script, 0, script.length());
-            writer.flush();
-          }
-          logger.info("Done replacing file [{}]. Set User and Group permission", scriptFile);
-          Files.setPosixFilePermissions(scriptFile.toPath(),
-              newHashSet(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_EXECUTE,
-                  PosixFilePermission.OWNER_WRITE, PosixFilePermission.GROUP_READ, PosixFilePermission.OTHERS_READ));
-          logger.info("Done setting file permissions");
-        } else {
-          logger.error("Script for file [{}] was not replaced", scriptFile);
-        }
+        logger.info("Done replacing file [{}]. Set User and Group permission", scriptFile);
+        Files.setPosixFilePermissions(scriptFile.toPath(),
+            newHashSet(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_EXECUTE,
+                PosixFilePermission.OWNER_WRITE, PosixFilePermission.GROUP_READ, PosixFilePermission.OTHERS_READ));
+        logger.info("Done setting file permissions");
+      } else {
+        logger.error("Script for file [{}] was not replaced", scriptFile);
       }
-    } catch (Exception e) {
-      logger.error("Error downloading run scripts. ", e);
     }
   }
 
-  private void downloadDelegateJar(String version) {
-    try {
-      String minorVersion = getMinorVersion(version).toString();
-      RestResponse<String> restResponse = timeLimiter.callWithTimeout(
-          ()
-              -> execute(managerClient.getDelegateDownloadUrl(minorVersion, watcherConfiguration.getAccountId())),
-          30L, TimeUnit.SECONDS, true);
-      String downloadUrl = restResponse.getResource();
-      logger.info("Downloading delegate jar version {}", version);
-      File destination = new File(version + "/delegate.jar");
-      if (destination.exists()) {
-        FileUtils.forceDelete(destination);
-      }
-      InputStream stream = Http.getResponseStreamFromUrl(downloadUrl, httpProxyHost, 600000, 600000);
-      FileUtils.copyInputStreamToFile(stream, destination);
-    } catch (UncheckedTimeoutException e) {
-      logger.error("Timed out downloading delegate jar version {}", version);
-    } catch (Exception e) {
-      logger.error("Error downloading delegate jar version {}", version, e);
+  private void downloadDelegateJar(String version) throws Exception {
+    String minorVersion = getMinorVersion(version).toString();
+    RestResponse<String> restResponse = timeLimiter.callWithTimeout(
+        ()
+            -> execute(managerClient.getDelegateDownloadUrl(minorVersion, watcherConfiguration.getAccountId())),
+        30L, TimeUnit.SECONDS, true);
+    String downloadUrl = restResponse.getResource();
+    logger.info("Downloading delegate jar version {}", version);
+    File destination = new File(version + "/delegate.jar");
+    if (destination.exists()) {
+      FileUtils.forceDelete(destination);
     }
+    InputStream stream = Http.getResponseStreamFromUrl(downloadUrl, httpProxyHost, 600000, 600000);
+    FileUtils.copyInputStreamToFile(stream, destination);
   }
 
   private void drainDelegateProcess(String delegateProcess) {
