@@ -46,7 +46,7 @@ import java.util.concurrent.TimeUnit;
 public class DelegateQueueTask implements Runnable {
   private static final Logger logger = LoggerFactory.getLogger(DelegateQueueTask.class);
 
-  private static final long REBROADCAST_FACTOR = TimeUnit.SECONDS.toMillis(5);
+  private static final long REBROADCAST_FACTOR = TimeUnit.SECONDS.toMillis(2);
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private PersistentLocker persistentLocker;
@@ -155,7 +155,7 @@ public class DelegateQueueTask implements Runnable {
                 || now - delegateTask.getValidationStartedAt() > VALIDATION_TIMEOUT)
             && (delegateTask.getLastBroadcastAt() == null
                    || now - delegateTask.getLastBroadcastAt()
-                       > delegateTask.getBroadcastCount() * REBROADCAST_FACTOR)) {
+                       > Math.pow(2, delegateTask.getBroadcastCount()) * REBROADCAST_FACTOR)) {
           logger.info("Re-broadcast queued task [{}]", delegateTask.getUuid());
 
           broadcasterFactory.lookup("/stream/delegate/" + delegateTask.getAccountId(), true).broadcast(delegateTask);
