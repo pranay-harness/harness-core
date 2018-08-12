@@ -867,7 +867,14 @@ public class DelegateServiceImpl implements DelegateService {
     DelegateTask delegateTask = wingsPersistence.saveAndGet(DelegateTask.class, task);
     logger.info("Queueing async task uuid: {}, accountId: {}, type: {}", delegateTask.getUuid(),
         delegateTask.getAccountId(), delegateTask.getTaskType());
+
     broadcasterFactory.lookup("/stream/delegate/" + delegateTask.getAccountId(), true).broadcast(delegateTask);
+
+    wingsPersistence.update(delegateTask,
+        wingsPersistence.createUpdateOperations(DelegateTask.class)
+            .set("lastBroadcastAt", clock.millis())
+            .set("broadcastCount", 1));
+
     return delegateTask.getUuid();
   }
 
@@ -881,10 +888,15 @@ public class DelegateServiceImpl implements DelegateService {
     task.setAsync(false);
     task.setVersion(getVersion());
     DelegateTask delegateTask = wingsPersistence.saveAndGet(DelegateTask.class, task);
-
-    broadcasterFactory.lookup("/stream/delegate/" + delegateTask.getAccountId(), true).broadcast(delegateTask);
     logger.info("Executing sync task: uuid: {}, accountId: {}, type: {}", delegateTask.getUuid(),
         delegateTask.getAccountId(), delegateTask.getTaskType());
+
+    broadcasterFactory.lookup("/stream/delegate/" + delegateTask.getAccountId(), true).broadcast(delegateTask);
+
+    wingsPersistence.update(delegateTask,
+        wingsPersistence.createUpdateOperations(DelegateTask.class)
+            .set("lastBroadcastAt", clock.millis())
+            .set("broadcastCount", 1));
 
     // Wait for task to complete
     AtomicReference<DelegateTask> delegateTaskRef = new AtomicReference<>(delegateTask);

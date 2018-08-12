@@ -50,6 +50,8 @@ public class DelegateTask extends Base {
   private String envId;
   private String infrastructureMappingId;
   private Long validationStartedAt;
+  private Long lastBroadcastAt;
+  private int broadcastCount;
   private Set<String> validatingDelegateIds = new HashSet<>();
   private Set<String> validationCompleteDelegateIds = new HashSet<>();
   private byte[] serializedNotifyResponseData;
@@ -178,6 +180,22 @@ public class DelegateTask extends Base {
 
   public void setValidationStartedAt(Long validationStartedAt) {
     this.validationStartedAt = validationStartedAt;
+  }
+
+  public Long getLastBroadcastAt() {
+    return lastBroadcastAt;
+  }
+
+  public void setLastBroadcastAt(Long lastBroadcastAt) {
+    this.lastBroadcastAt = lastBroadcastAt;
+  }
+
+  public int getBroadcastCount() {
+    return broadcastCount;
+  }
+
+  public void setBroadcastCount(int broadcastCount) {
+    this.broadcastCount = broadcastCount;
   }
 
   public Set<String> getValidatingDelegateIds() {
