@@ -556,10 +556,13 @@ public class WatcherServiceImpl implements WatcherService {
     logger.info("Downloading delegate jar version {}", version);
     File destination = new File(version + "/delegate.jar");
     if (destination.exists()) {
+      logger.info("Replacing delegate jar version {}", version);
       FileUtils.forceDelete(destination);
     }
-    InputStream stream = Http.getResponseStreamFromUrl(downloadUrl, httpProxyHost, 600000, 600000);
-    FileUtils.copyInputStreamToFile(stream, destination);
+    try (InputStream stream = Http.getResponseStreamFromUrl(downloadUrl, httpProxyHost, 600000, 600000)) {
+      FileUtils.copyInputStreamToFile(stream, destination);
+    }
+    logger.info("Finished downloading delegate jar version {}", version);
   }
 
   private void drainDelegateProcess(String delegateProcess) {
