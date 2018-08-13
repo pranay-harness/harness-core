@@ -46,6 +46,7 @@ import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.ImageDetails;
 import software.wings.common.Constants;
+import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
@@ -305,7 +306,8 @@ public class HelmDeployState extends State {
             .releaseName(releaseName)
             .containerServiceParams(containerServiceParams)
             .build();
-    HelmCommandExecutionResponse helmCommandExecutionResponse =
+
+    NotifyResponseData notifyResponseData =
         delegateService.executeTask(aDelegateTask()
                                         .withTaskType(TaskType.HELM_COMMAND_TASK)
                                         .withParameters(new Object[] {helmReleaseHistoryCommandRequest})
@@ -313,6 +315,9 @@ public class HelmDeployState extends State {
                                         .withAppId(appId)
                                         .withAsync(false)
                                         .build());
+
+    HelmCommandExecutionResponse helmCommandExecutionResponse = fetchHelmCommandExecutionResponse(notifyResponseData);
+
     if (helmCommandExecutionResponse != null
         && helmCommandExecutionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS)) {
       List<ReleaseInfo> releaseInfoList =
@@ -340,7 +345,8 @@ public class HelmDeployState extends State {
 
   protected ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, NotifyResponseData> response) {
     String activityId = response.keySet().iterator().next();
-    HelmCommandExecutionResponse executionResponse = (HelmCommandExecutionResponse) response.values().iterator().next();
+    HelmCommandExecutionResponse executionResponse =
+        fetchHelmCommandExecutionResponse(response.values().iterator().next());
     ExecutionStatus executionStatus =
         executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
                                                                                              : ExecutionStatus.FAILED;
@@ -521,5 +527,18 @@ public class HelmDeployState extends State {
     }
 
     return secretManager.getEncryptionDetails(gitConfig, context.getAppId(), context.getWorkflowExecutionId());
+  }
+
+  private HelmCommandExecutionResponse fetchHelmCommandExecutionResponse(NotifyResponseData notifyResponseData) {
+    if (!(notifyResponseData instanceof HelmCommandExecutionResponse)) {
+      String msg = "Delegate returned error response. Could not convert delegate response to helm response. ";
+
+      if (notifyResponseData instanceof RemoteMethodReturnValueData) {
+        msg += notifyResponseData.toString();
+      }
+      throw new InvalidRequestException(msg);
+    }
+
+    return (HelmCommandExecutionResponse) notifyResponseData;
   }
 }

@@ -65,6 +65,7 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.ImageDetails;
 import software.wings.common.VariableProcessor;
+import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.exception.InvalidRequestException;
 import software.wings.expression.ExpressionEvaluator;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
@@ -248,6 +249,21 @@ public class HelmDeployStateTest extends WingsBaseTest {
   public void testExecuteWithNullReleaseName() {
     when(serviceResourceService.getHelmChartSpecification(APP_ID, SERVICE_ID)).thenReturn(null);
     helmDeployState.setHelmReleaseNamePrefix(null);
+
+    helmDeployState.execute(context);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  public void testErrorResponseFromDelegate() throws InterruptedException {
+    when(serviceResourceService.getHelmChartSpecification(APP_ID, SERVICE_ID))
+        .thenReturn(HelmChartSpecification.builder()
+                        .chartName(CHART_NAME)
+                        .chartUrl(CHART_URL)
+                        .chartVersion(CHART_VERSION)
+                        .build());
+
+    when(delegateService.executeTask(any()))
+        .thenReturn(RemoteMethodReturnValueData.Builder.aRemoteMethodReturnValueData().build());
 
     helmDeployState.execute(context);
   }
