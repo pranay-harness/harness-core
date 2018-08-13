@@ -4,7 +4,7 @@ USER root
 
 RUN echo "deb http://ftp.de.debian.org/debian sid main" >> /etc/apt/sources.list && \
     apt-get update && \
-    apt-get install -y clang-format-6.0 && \
-    cp /usr/bin/clang-format-6.0 /usr/bin/clang-format
+    apt-get install -y clang-format-7 && \
+    cp /usr/bin/clang-format-7 /usr/bin/clang-format
 
 USER jenkins
