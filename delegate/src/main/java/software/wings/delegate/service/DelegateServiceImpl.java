@@ -907,10 +907,10 @@ public class DelegateServiceImpl implements DelegateService {
                                           .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
                                           .start();
           if (multiVersionRestartNeeded && newWatcher.getProcess().isAlive()) {
-            sleep(ofSeconds(10L));
+            sleep(ofSeconds(20L));
             FileUtils.forceDelete(new File("delegate.sh"));
             FileUtils.forceDelete(new File("delegate.jar"));
-            handleStopAcquiringMessage("[self] - watcher restart");
+            restartNeeded.set(true);
           }
         } catch (Exception e) {
           logger.error("Error restarting watcher {}", watcherProcess, e);
