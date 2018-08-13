@@ -83,10 +83,9 @@ public class DelegateQueueTask implements Runnable {
   }
 
   private void markTimedOutTasksAsFailed() {
-    long currentTime = clock.millis();
     Query<DelegateTask> longRunningTimedOutTasksQuery =
         wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).filter("status", STARTED);
-    longRunningTimedOutTasksQuery.and(new WhereCriteria("this.lastUpdatedAt + this.timeout < " + currentTime));
+    longRunningTimedOutTasksQuery.and(new WhereCriteria("this.lastUpdatedAt + this.timeout < " + clock.millis()));
 
     List<Key<DelegateTask>> longRunningTimedOutTaskKeys = longRunningTimedOutTasksQuery.asKeyList();
 
@@ -99,10 +98,9 @@ public class DelegateQueueTask implements Runnable {
 
   private void markLongQueuedTasksAsFailed() {
     // Find tasks which have been queued for too long and update their status to ERROR.
-    Query<DelegateTask> longQueuedTasksQuery = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
-                                                   .filter("status", QUEUED)
-                                                   .field("createdAt")
-                                                   .lessThan(clock.millis() - TimeUnit.HOURS.toMillis(1));
+    Query<DelegateTask> longQueuedTasksQuery =
+        wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).filter("status", QUEUED);
+    longQueuedTasksQuery.and(new WhereCriteria("this.createdAt + this.timeout < " + clock.millis()));
 
     List<Key<DelegateTask>> longQueuedTaskKeys = longQueuedTasksQuery.asKeyList();
 
