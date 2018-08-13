@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.Value;
 import org.apache.commons.codec.binary.Hex;
 import software.wings.beans.Account;
@@ -27,7 +28,7 @@ public class SecretGenerator {
 
   @Inject SecretManager secretManager;
 
-  private final Properties secrets;
+  @Getter private final Properties secrets;
 
   @Value
   @Builder
@@ -88,7 +89,7 @@ public class SecretGenerator {
     return decryptToString(cipheredSecretHex).toCharArray();
   }
 
-  String encrypt(byte[] secret) {
+  public static String encrypt(byte[] secret, String passphrase) {
     try {
       Key aesKey = new SecretKeySpec(Hex.decodeHex(passphrase.toCharArray()), "AES");
       Cipher cipher = Cipher.getInstance("AES");
@@ -97,6 +98,10 @@ public class SecretGenerator {
     } catch (Exception e) {
       throw new WingsException(e);
     }
+  }
+
+  String encrypt(byte[] secret) {
+    return encrypt(secret, passphrase);
   }
 
   String ensureStored(String accountId, SecretName name) {
