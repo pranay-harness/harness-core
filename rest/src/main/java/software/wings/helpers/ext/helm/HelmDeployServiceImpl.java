@@ -101,12 +101,16 @@ public class HelmDeployServiceImpl implements HelmDeployService {
         commandResponse = helmClient.upgrade(commandRequest);
       }
       executionLogCallback.saveExecutionLog(commandResponse.getOutput());
-      List<ContainerInfo> containerInfos = new ArrayList<>();
-      timeLimiter.callWithTimeout(
-          ()
-              -> containerInfos.addAll(fetchContainerInfo(commandRequest, executionLogCallback)),
-          commandRequest.getTimeoutInMillis(), TimeUnit.MILLISECONDS, true);
-      commandResponse.setContainerInfoList(containerInfos);
+
+      if (commandResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS)) {
+        List<ContainerInfo> containerInfos = new ArrayList<>();
+        timeLimiter.callWithTimeout(
+            ()
+                -> containerInfos.addAll(fetchContainerInfo(commandRequest, executionLogCallback)),
+            commandRequest.getTimeoutInMillis(), TimeUnit.MILLISECONDS, true);
+        commandResponse.setContainerInfoList(containerInfos);
+      }
+
       return commandResponse;
     } catch (UncheckedTimeoutException e) {
       String msg = "Timed out waiting for controller to reach in steady state";
