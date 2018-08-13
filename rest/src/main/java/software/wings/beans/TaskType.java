@@ -60,6 +60,7 @@ import software.wings.delegatetasks.validation.DockerValidation;
 import software.wings.delegatetasks.validation.DynaTraceValidation;
 import software.wings.delegatetasks.validation.ElkValidation;
 import software.wings.delegatetasks.validation.GcrValidation;
+import software.wings.delegatetasks.validation.GcsValidation;
 import software.wings.delegatetasks.validation.GitValidation;
 import software.wings.delegatetasks.validation.HelmCommandValidation;
 import software.wings.delegatetasks.validation.HostValidationValidation;
@@ -116,7 +117,7 @@ public enum TaskType {
   ECR_VALIDATE_ARTIFACT_STREAM(TaskGroup.ECR, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   GCR_GET_BUILDS(TaskGroup.GCR, ServiceImplDelegateTask.class, GcrValidation.class),
   GCR_VALIDATE_ARTIFACT_STREAM(TaskGroup.GCR, ServiceImplDelegateTask.class, GcrValidation.class),
-  GCR_GET_PLANS(TaskGroup.GCR, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
+  GCR_GET_PLANS(TaskGroup.GCR, ServiceImplDelegateTask.class, GcrValidation.class),
   ACR_GET_BUILDS(TaskGroup.ACR, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   ACR_VALIDATE_ARTIFACT_STREAM(TaskGroup.ACR, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   ACR_GET_PLANS(TaskGroup.ACR, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
@@ -134,12 +135,9 @@ public enum TaskType {
   AMAZON_S3_LAST_SUCCESSFUL_BUILD(TaskGroup.S3, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   AMAZON_S3_GET_BUILDS(TaskGroup.S3, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   AMAZON_S3_GET_PLANS(TaskGroup.S3, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
-
-  GCS_COLLECTION(TaskGroup.GCS, AmazonS3CollectionTask.class, AlwaysTrueValidation.class),
-  GCS_GET_ARTIFACT_PATHS(TaskGroup.GCS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
-  GCS_GET_BUILDS(TaskGroup.GCS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
-  GCS_GET_PLANS(TaskGroup.GCS, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
-
+  GCS_GET_ARTIFACT_PATHS(TaskGroup.GCS, ServiceImplDelegateTask.class, GcsValidation.class),
+  GCS_GET_BUILDS(TaskGroup.GCS, ServiceImplDelegateTask.class, GcsValidation.class),
+  GCS_GET_PLANS(TaskGroup.GCS, ServiceImplDelegateTask.class, GcsValidation.class),
   APM_VALIDATE_CONNECTOR_TASK(TaskGroup.APM, ServiceImplDelegateTask.class, APMValidation.class),
   APM_GET_TASK(TaskGroup.APM, ServiceImplDelegateTask.class, APMValidation.class),
   APPDYNAMICS_CONFIGURATION_VALIDATE_TASK(
