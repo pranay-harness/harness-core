@@ -954,8 +954,6 @@ public class DelegateServiceImpl implements DelegateService {
 
     List<String> activeDelegates = wingsPersistence.createQuery(Delegate.class)
                                        .filter("accountId", task.getAccountId())
-                                       .filter("connected", true)
-                                       .filter("status", Status.ENABLED)
                                        .field("lastHeartBeat")
                                        .greaterThan(clock.millis() - MAX_DELEGATE_LAST_HEARTBEAT)
                                        .asKeyList()
