@@ -5,7 +5,8 @@ package software.wings.service.impl.analysis;
  */
 public enum AnalysisComparisonStrategy {
   COMPARE_WITH_PREVIOUS("Compare with previous run"),
-  COMPARE_WITH_CURRENT("Compare with current run");
+  COMPARE_WITH_CURRENT("Compare with current run"),
+  PREDICTIVE("Compare with Prediction based on history");
 
   private final String name;
 
