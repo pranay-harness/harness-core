@@ -6,6 +6,7 @@ import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static software.wings.common.Constants.PAYLOAD;
 import static software.wings.common.Constants.URL_STRING;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
 import static software.wings.service.impl.security.SecretManagementDelegateServiceImpl.NUM_OF_RETRIES;
 
@@ -42,7 +43,6 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
@@ -211,25 +211,9 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
         if (response.isSuccessful()) {
           apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
           List<NewRelicMetric> metrics = response.body().getMetrics();
-
           if (isNotEmpty(metrics)) {
             metrics.forEach(metric -> {
               if (metric.getName().startsWith("WebTransaction/") || metric.getName().equals("WebTransaction")) {
-                try {
-                  String[] splits = metric.getName().split("/");
-                  StringBuffer sb = new StringBuffer();
-                  String slash = "/";
-                  for (String part : splits) {
-                    sb.append(URLEncoder.encode(part, "UTF-8"));
-                    sb.append(slash);
-                  }
-                  if (!metric.getName().equals("WebTransaction")) {
-                    metric.setName(sb.substring(0, sb.length() - 1));
-                    logger.info("Encoded metric name is {}", metric.getName());
-                  }
-                } catch (UnsupportedEncodingException ex) {
-                  logger.error("Encoding was not supported when setting metric names.");
-                }
                 newRelicMetrics.add(metric);
               }
             });
@@ -358,7 +342,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     StringBuffer sBuf = new StringBuffer();
     for (String metricName : metricNames) {
       sBuf.append(NAMES_PARAM);
-      sBuf.append(metricName);
+      sBuf.append(URLEncoder.encode(metricName, "UTF-8"));
       sBuf.append(AMPERSAND);
     }
     metricsToCollectString = sBuf.toString();
@@ -369,7 +353,12 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     apiCallLog.setTitle(
         "Fetching metric data for " + metricNames.size() + " transactions from " + newRelicConfig.getNewRelicUrl());
     apiCallLog.addFieldToRequest(
-        ThirdPartyApiCallField.builder().name(URL_STRING).value(url).type(FieldType.URL).build());
+        ThirdPartyApiCallField.builder().name(URL_STRING).value(baseUrl).type(FieldType.URL).build());
+    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                     .name("Metric Names")
+                                     .value(metricsToCollectString)
+                                     .type(FieldType.URL)
+                                     .build());
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     final SimpleDateFormat dateFormatter = new SimpleDateFormat(NEW_RELIC_DATE_FORMAT);
     final Call<NewRelicMetricDataResponse> request =
@@ -385,8 +374,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
 
     apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
     delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
-    throw new WingsException(
-        ErrorCode.NEWRELIC_ERROR, response.errorBody().string(), EnumSet.of(ReportTarget.UNIVERSAL));
+    throw new WingsException(ErrorCode.NEWRELIC_ERROR, response.errorBody().string(), USER);
   }
 
   @Override
