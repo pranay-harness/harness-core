@@ -30,6 +30,5 @@ public interface Encryptable {
     return false;
   }
 
-  default void
-    setDecrypted(boolean decrypted) {}
+  default void setDecrypted(boolean decrypted) {}
 }

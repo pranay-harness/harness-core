@@ -66,24 +66,23 @@ public interface ExpressionProcessor {
    * @param expression the expression
    * @return the boolean
    */
-  default boolean
-    matches(String expression) {
-      if (getExpressionStartPatterns()
-              .stream()
-              .filter(pattern -> startsWith(expression, pattern) || startsWith(expression, EXPRESSION_PREFIX + pattern))
-              .findFirst()
-              .isPresent()
-          || getExpressionEqualPatterns()
-                 .stream()
-                 .filter(pattern
-                     -> StringUtils.equals(expression, pattern)
-                         || StringUtils.equals(expression, EXPRESSION_PREFIX + pattern + EXPRESSION_SUFFIX))
-                 .findFirst()
-                 .isPresent()) {
-        return true;
-      }
-      return false;
+  default boolean matches(String expression) {
+    if (getExpressionStartPatterns()
+            .stream()
+            .filter(pattern -> startsWith(expression, pattern) || startsWith(expression, EXPRESSION_PREFIX + pattern))
+            .findFirst()
+            .isPresent()
+        || getExpressionEqualPatterns()
+               .stream()
+               .filter(pattern
+                   -> StringUtils.equals(expression, pattern)
+                       || StringUtils.equals(expression, EXPRESSION_PREFIX + pattern + EXPRESSION_SUFFIX))
+               .findFirst()
+               .isPresent()) {
+      return true;
     }
+    return false;
+  }
 
   /**
    * Normalize expression string.
@@ -91,15 +90,14 @@ public interface ExpressionProcessor {
    * @param expression the expression
    * @return the string
    */
-  default String
-    normalizeExpression(String expression) {
-      if (!matches(expression)) {
-        return null;
-      }
-      expression = getPrefixObjectName() + "." + expression;
-      if (!expression.endsWith(Constants.EXPRESSION_LIST_SUFFIX)) {
-        expression = expression + Constants.EXPRESSION_LIST_SUFFIX;
-      }
-      return expression;
+  default String normalizeExpression(String expression) {
+    if (!matches(expression)) {
+      return null;
     }
+    expression = getPrefixObjectName() + "." + expression;
+    if (!expression.endsWith(Constants.EXPRESSION_LIST_SUFFIX)) {
+      expression = expression + Constants.EXPRESSION_LIST_SUFFIX;
+    }
+    return expression;
+  }
 }
