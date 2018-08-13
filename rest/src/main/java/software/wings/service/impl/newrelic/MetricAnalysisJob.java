@@ -399,14 +399,8 @@ public class MetricAnalysisJob implements Job {
           if (runTimeSeriesML) {
             switch (context.getComparisonStrategy()) {
               case COMPARE_WITH_PREVIOUS:
-                if (timeSeriesMlAnalysisType != TimeSeriesMlAnalysisType.PREDICTIVE
-                    && isEmpty(context.getPrevWorkflowExecutionId())) {
+                if (isEmpty(context.getPrevWorkflowExecutionId())) {
                   runTimeSeriesML = false;
-                  break;
-                }
-
-                if (timeSeriesMlAnalysisType.equals(TimeSeriesMlAnalysisType.PREDICTIVE)) {
-                  taskQueued = timeSeriesML(analysisMinute, groupName, timeSeriesMlAnalysisType);
                   break;
                 }
 
@@ -440,9 +434,10 @@ public class MetricAnalysisJob implements Job {
                 taskQueued = timeSeriesML(analysisMinute, groupName, timeSeriesMlAnalysisType);
                 break;
                 // Note that control flows through to COMPARE_WITH_CURRENT where the ml analysis is run.
+              case PREDICTIVE:
               case COMPARE_WITH_CURRENT:
-                logger.info("For {} running time series ml analysis for minute {}", context.getStateExecutionId(),
-                    analysisMinute);
+                logger.info("For {} running time series ml analysis for minute {} for type {}",
+                    context.getStateExecutionId(), analysisMinute, context.getComparisonStrategy());
                 taskQueued = timeSeriesML(analysisMinute, groupName, timeSeriesMlAnalysisType);
                 break;
               default:

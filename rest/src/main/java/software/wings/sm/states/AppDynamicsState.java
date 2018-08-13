@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.service.impl.analysis.TimeSeriesMlAnalysisType.PREDICTIVE;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -173,19 +174,20 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
     List<AppdynamicsTier> dependentTiers = new ArrayList<>();
     Map<String, TimeSeriesMlAnalysisGroupInfo> metricGroups = new HashMap<>();
     AppdynamicsTier analyzedTier = AppdynamicsTier.builder().build();
+    TimeSeriesMlAnalysisType analyzedTierAnalysisType = getComparisonStrategy() == AnalysisComparisonStrategy.PREDICTIVE
+        ? PREDICTIVE
+        : TimeSeriesMlAnalysisType.COMPARATIVE;
     try {
       Set<AppdynamicsTier> tiers = appdynamicsService.getTiers(finalServerConfigId, Long.parseLong(finalApplicationId));
       final long tierId = Long.parseLong(finalTierId);
-      tiers.forEach(tier -> {
-        if (tier.getId() == tierId) {
-          metricGroups.put(tier.getName(),
-              TimeSeriesMlAnalysisGroupInfo.builder()
-                  .groupName(tier.getName())
-                  .mlAnalysisType(TimeSeriesMlAnalysisType.COMPARATIVE)
-                  .build());
-          analyzedTier.setName(tier.getName());
-          analyzedTier.setId(tierId);
-        }
+      tiers.stream().filter(tier -> tier.getId() == tierId).forEach(tier -> {
+        metricGroups.put(tier.getName(),
+            TimeSeriesMlAnalysisGroupInfo.builder()
+                .groupName(tier.getName())
+                .mlAnalysisType(analyzedTierAnalysisType)
+                .build());
+        analyzedTier.setName(tier.getName());
+        analyzedTier.setId(tierId);
       });
       Preconditions.checkState(!isEmpty(analyzedTier.getName()), "failed for " + analyzedTier);
 
@@ -208,18 +210,18 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
     final long dataCollectionStartTimeStamp = Timestamp.currentMinuteBoundary();
     List<DelegateTask> delegateTasks = new ArrayList<>();
     String[] waitIds = new String[dependentTiers.size() + 1];
-    waitIds[0] = createDelegateTask(context, hosts, envId, finalApplicationId, Long.parseLong(finalTierId),
-        appDynamicsConfig, dataCollectionStartTimeStamp, TimeSeriesMlAnalysisType.COMPARATIVE, delegateTasks);
+    waitIds[0] = createDelegateTask(context, analyzedTierAnalysisType == PREDICTIVE ? Collections.emptyMap() : hosts,
+        envId, finalApplicationId, Long.parseLong(finalTierId), appDynamicsConfig, dataCollectionStartTimeStamp,
+        analyzedTierAnalysisType, delegateTasks);
 
     for (int i = 0; i < dependentTiers.size(); i++) {
-      waitIds[i + 1] =
-          createDelegateTask(context, Collections.emptyMap(), envId, finalApplicationId, dependentTiers.get(i).getId(),
-              appDynamicsConfig, dataCollectionStartTimeStamp, TimeSeriesMlAnalysisType.PREDICTIVE, delegateTasks);
+      waitIds[i + 1] = createDelegateTask(context, Collections.emptyMap(), envId, finalApplicationId,
+          dependentTiers.get(i).getId(), appDynamicsConfig, dataCollectionStartTimeStamp, PREDICTIVE, delegateTasks);
       metricGroups.put(dependentTiers.get(i).getName(),
           TimeSeriesMlAnalysisGroupInfo.builder()
               .groupName(dependentTiers.get(i).getName())
               .dependencyPath(dependentTiers.get(i).getDependencyPath())
-              .mlAnalysisType(TimeSeriesMlAnalysisType.PREDICTIVE)
+              .mlAnalysisType(PREDICTIVE)
               .build());
     }
     waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId, false), waitIds);
