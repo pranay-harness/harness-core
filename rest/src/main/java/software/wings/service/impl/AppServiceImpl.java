@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtils.trimList;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
@@ -14,6 +13,7 @@ import static software.wings.beans.RoleType.APPLICATION_ADMIN;
 import static software.wings.beans.RoleType.NON_PROD_SUPPORT;
 import static software.wings.beans.RoleType.PROD_SUPPORT;
 import static software.wings.dl.HQuery.excludeAuthority;
+import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.utils.Validator.duplicateCheck;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -255,14 +255,12 @@ public class AppServiceImpl implements AppService {
     validateAppName(app);
     Application savedApp = get(app.getUuid());
     Query<Application> query = wingsPersistence.createQuery(Application.class).filter(ID_KEY, app.getUuid());
-    UpdateOperations<Application> operations =
-        wingsPersistence.createUpdateOperations(Application.class).set("name", app.getName());
-
     List<String> keywords = trimList(app.generateKeywords());
 
-    if (isNotEmpty(app.getDescription())) {
-      operations.set("description", app.getDescription()).set("keywords", keywords);
-    }
+    UpdateOperations<Application> operations =
+        wingsPersistence.createUpdateOperations(Application.class).set("name", app.getName()).set("keywords", keywords);
+
+    setUnset(operations, "description", app.getDescription());
 
     wingsPersistence.update(query, operations);
     Application updatedApp = get(app.getUuid());
