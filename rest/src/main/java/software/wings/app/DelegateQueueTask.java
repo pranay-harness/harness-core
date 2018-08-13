@@ -101,7 +101,7 @@ public class DelegateQueueTask implements Runnable {
     // Find tasks which have been queued for too long and update their status to ERROR.
     Query<DelegateTask> longQueuedTasksQuery = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
                                                    .filter("status", QUEUED)
-                                                   .field("lastUpdatedAt")
+                                                   .field("createdAt")
                                                    .lessThan(clock.millis() - TimeUnit.HOURS.toMillis(1));
 
     List<Key<DelegateTask>> longQueuedTaskKeys = longQueuedTasksQuery.asKeyList();
