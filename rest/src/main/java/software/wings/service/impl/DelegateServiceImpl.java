@@ -438,7 +438,7 @@ public class DelegateServiceImpl implements DelegateService {
     try {
       String delegateMetadataUrl = mainConfiguration.getDelegateMetadataUrl().trim();
       delegateStorageUrl = delegateMetadataUrl.substring(0, delegateMetadataUrl.lastIndexOf('/'));
-      String delegateMatadata;
+
       if (multiVersion) {
         logger.info("MultiVersion is enabled");
 
@@ -450,9 +450,9 @@ public class DelegateServiceImpl implements DelegateService {
 
         versionChanged = true;
       } else {
-        logger.info("Delegate metaData URL is " + delegateMetadataUrl);
-        delegateMatadata = delegateVersionCache.get(accountId);
-        logger.info("Delegate meta data: [{}]", delegateMatadata);
+        logger.info("Delegate metadata URL is " + delegateMetadataUrl);
+        String delegateMatadata = delegateVersionCache.get(accountId);
+        logger.info("Delegate metadata: [{}]", delegateMatadata);
         latestVersion = substringBefore(delegateMatadata, " ").trim();
         versionChanged = !(Version.valueOf(version).equals(Version.valueOf(latestVersion)));
         jarRelativePath = substringAfter(delegateMatadata, " ").trim();
