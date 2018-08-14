@@ -187,10 +187,20 @@ public class HelmDeployState extends State {
     }
 
     String repoName = getRepoName(app.getName(), serviceElement.getName());
-    setNewAndPrevReleaseVersion(context, app, releaseName, containerServiceParams, stateExecutionData);
-    HelmCommandRequest commandRequest =
-        getHelmCommandRequest(context, helmChartSpecification, containerServiceParams, releaseName, app.getAccountId(),
-            app.getUuid(), activity.getUuid(), imageDetails, containerInfraMapping, repoName);
+
+    List<EncryptedDataDetail> encryptedDataDetails = null;
+    GitConfig gitConfig = null;
+    if (gitFileConfig != null) {
+      evaluateGitFileConfig(context);
+      gitConfig = fetchGitConfig(gitFileConfig.getConnectorId());
+      encryptedDataDetails = fetchEncryptedDataDetail(context, gitConfig);
+    }
+
+    setNewAndPrevReleaseVersion(
+        context, app, releaseName, containerServiceParams, stateExecutionData, gitConfig, encryptedDataDetails);
+    HelmCommandRequest commandRequest = getHelmCommandRequest(context, helmChartSpecification, containerServiceParams,
+        releaseName, app.getAccountId(), app.getUuid(), activity.getUuid(), imageDetails, containerInfraMapping,
+        repoName, gitConfig, encryptedDataDetails);
 
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(app.getAccountId())
@@ -216,9 +226,10 @@ public class HelmDeployState extends State {
   }
 
   protected void setNewAndPrevReleaseVersion(ExecutionContext context, Application app, String releaseName,
-      ContainerServiceParams containerServiceParams, HelmDeployStateExecutionData stateExecutionData)
-      throws InterruptedException {
-    int prevVersion = getPreviousReleaseVersion(app.getUuid(), app.getAccountId(), releaseName, containerServiceParams);
+      ContainerServiceParams containerServiceParams, HelmDeployStateExecutionData stateExecutionData,
+      GitConfig gitConfig, List<EncryptedDataDetail> encryptedDataDetails) throws InterruptedException {
+    int prevVersion = getPreviousReleaseVersion(
+        app.getUuid(), app.getAccountId(), releaseName, containerServiceParams, gitConfig, encryptedDataDetails);
 
     stateExecutionData.setReleaseOldVersion(prevVersion);
     stateExecutionData.setReleaseNewVersion(prevVersion + 1);
@@ -235,7 +246,8 @@ public class HelmDeployState extends State {
   protected HelmCommandRequest getHelmCommandRequest(ExecutionContext context,
       HelmChartSpecification helmChartSpecification, ContainerServiceParams containerServiceParams, String releaseName,
       String accountId, String appId, String activityId, ImageDetails imageDetails,
-      ContainerInfrastructureMapping infrastructureMapping, String repoName) {
+      ContainerInfrastructureMapping infrastructureMapping, String repoName, GitConfig gitConfig,
+      List<EncryptedDataDetail> encryptedDataDetails) {
     List<String> helmValueOverridesYamlFiles =
         serviceTemplateService.helmValueOverridesYamlFiles(appId, infrastructureMapping.getServiceTemplateId());
     List<String> helmValueOverridesYamlFilesEvaluated = null;
@@ -271,15 +283,14 @@ public class HelmDeployState extends State {
             .containerServiceParams(containerServiceParams)
             .variableOverridesYamlFiles(helmValueOverridesYamlFilesEvaluated)
             .timeoutInMillis(TimeUnit.MINUTES.toMillis(steadyStateTimeout))
-            .repoName(repoName);
+            .repoName(repoName)
+            .gitConfig(gitConfig)
+            .encryptedDataDetails(encryptedDataDetails);
 
     if (gitFileConfig != null) {
-      evaluateGitFileConfig(context);
-
-      GitConfig gitConfig = fetchGitConfig(gitFileConfig.getConnectorId());
-      helmInstallCommandRequestBuilder.gitConfig(gitConfig);
       helmInstallCommandRequestBuilder.gitFileConfig(gitFileConfig);
-      helmInstallCommandRequestBuilder.encryptedDataDetails(fetchEncryptedDataDetail(context, gitConfig));
+      helmInstallCommandRequestBuilder.gitConfig(gitConfig);
+      helmInstallCommandRequestBuilder.encryptedDataDetails(encryptedDataDetails);
     }
 
     return helmInstallCommandRequestBuilder.build();
@@ -300,12 +311,15 @@ public class HelmDeployState extends State {
 
   @SuppressFBWarnings("NP_NULL_ON_SOME_PATH") // TODO
   protected int getPreviousReleaseVersion(String appId, String accountId, String releaseName,
-      ContainerServiceParams containerServiceParams) throws InterruptedException {
+      ContainerServiceParams containerServiceParams, GitConfig gitConfig,
+      List<EncryptedDataDetail> encryptedDataDetails) throws InterruptedException {
     int prevVersion = 0;
     HelmReleaseHistoryCommandRequest helmReleaseHistoryCommandRequest =
         HelmReleaseHistoryCommandRequest.builder()
             .releaseName(releaseName)
             .containerServiceParams(containerServiceParams)
+            .gitConfig(gitConfig)
+            .encryptedDataDetails(encryptedDataDetails)
             .build();
 
     NotifyResponseData notifyResponseData =
@@ -485,7 +499,7 @@ public class HelmDeployState extends State {
     }
     if (gitFileConfig != null && isNotBlank(gitFileConfig.getConnectorId())) {
       if (isBlank(gitFileConfig.getFilePath())) {
-        invalidFields.put("Git connector", "File path must not be blank if git connector is selected");
+        invalidFields.put("File path", "File path must not be blank if git connector is selected");
       }
 
       if (isBlank(gitFileConfig.getBranch()) && isBlank(gitFileConfig.getCommitId())) {

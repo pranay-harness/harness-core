@@ -3,7 +3,11 @@ package software.wings.helpers.ext.helm.request;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import software.wings.beans.GitConfig;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ContainerServiceParams;
+
+import java.util.List;
 
 /**
  * Created by anubhaw on 4/2/18.
@@ -17,8 +21,9 @@ public class HelmReleaseHistoryCommandRequest extends HelmCommandRequest {
 
   @Builder
   public HelmReleaseHistoryCommandRequest(String accountId, String appId, String kubeConfigLocation, String commandName,
-      String activityId, ContainerServiceParams containerServiceParams, String releaseName) {
+      String activityId, ContainerServiceParams containerServiceParams, String releaseName, GitConfig gitConfig,
+      List<EncryptedDataDetail> encryptedDataDetails) {
     super(HelmCommandType.RELEASE_HISTORY, accountId, appId, kubeConfigLocation, commandName, activityId,
-        containerServiceParams, releaseName, null, null);
+        containerServiceParams, releaseName, null, null, gitConfig, encryptedDataDetails);
   }
 }
