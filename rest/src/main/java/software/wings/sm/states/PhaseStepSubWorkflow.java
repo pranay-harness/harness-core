@@ -387,6 +387,14 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       if (executionStatus != ExecutionStatus.SUCCESS) {
         executionResponse.setExecutionStatus(executionStatus);
       }
+      NotifyResponseData notifiedResponseData = response.values().iterator().next();
+      if (notifiedResponseData instanceof ElementNotifyResponseData) {
+        ElementNotifyResponseData elementNotifyResponseData = (ElementNotifyResponseData) notifiedResponseData;
+        List<ContextElement> elements = elementNotifyResponseData.getContextElements();
+        if (isNotEmpty(elements)) {
+          executionResponse.setContextElements(Lists.newArrayList(elements));
+        }
+      }
       return executionResponse;
     }
 

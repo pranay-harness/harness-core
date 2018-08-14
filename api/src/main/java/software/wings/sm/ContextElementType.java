@@ -89,5 +89,7 @@ public enum ContextElementType {
   ARTIFACT, /**
              * Helm deploy context element type.
              */
-  HELM_DEPLOY
+  HELM_DEPLOY,
+
+  CLOUD_FORMATION_PROVISION
 }

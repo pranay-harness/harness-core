@@ -1,9 +1,11 @@
 package software.wings.sm.states.provision;
 
+import static java.util.Collections.emptyList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.TaskType.CLOUD_FORMATION_TASK;
 
+import software.wings.api.cloudformation.CloudFormationElement;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
 import software.wings.beans.DelegateTask;
@@ -13,6 +15,8 @@ import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandR
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.StateType;
+
+import java.util.List;
 
 public class CloudFormationDeleteStackState extends CloudFormationState {
   private static final String COMMAND_UNIT = "Delete Stack";
@@ -46,7 +50,8 @@ public class CloudFormationDeleteStackState extends CloudFormationState {
         .build();
   }
 
-  protected void handleResponse(CloudFormationCommandResponse commandResponse, ExecutionContext context) {
-    // Nothing to do
+  protected List<CloudFormationElement> handleResponse(
+      CloudFormationCommandResponse commandResponse, ExecutionContext context) {
+    return emptyList();
   }
 }

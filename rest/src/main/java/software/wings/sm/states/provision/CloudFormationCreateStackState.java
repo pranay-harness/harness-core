@@ -1,5 +1,7 @@
 package software.wings.sm.states.provision;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Log.Builder.aLog;
@@ -9,6 +11,8 @@ import com.google.inject.Inject;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import software.wings.api.ScriptStateExecutionData;
+import software.wings.api.cloudformation.CloudFormationElement;
+import software.wings.api.cloudformation.CloudFormationOutputInfoElement;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
 import software.wings.beans.DelegateTask;
@@ -27,6 +31,7 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.StateType;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -74,7 +79,8 @@ public class CloudFormationCreateStackState extends CloudFormationState {
         .build();
   }
   @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
-  protected void handleResponse(CloudFormationCommandResponse commandResponse, ExecutionContext context) {
+  protected List<CloudFormationElement> handleResponse(
+      CloudFormationCommandResponse commandResponse, ExecutionContext context) {
     CloudFormationCreateStackResponse createStackResponse = (CloudFormationCreateStackResponse) commandResponse;
     ScriptStateExecutionData scriptStateExecutionData = (ScriptStateExecutionData) context.getStateExecutionData();
     Builder logBuilder = aLog()
@@ -91,6 +97,10 @@ public class CloudFormationCreateStackState extends CloudFormationState {
       Map<String, Object> outputs = ((CloudFormationCreateStackResponse) commandResponse).getCloudFormationOutputMap();
       infrastructureProvisionerService.regenerateInfrastructureMappings(
           provisionerId, context, outputs, Optional.of(executionLogCallback), Optional.of(region));
+      CloudFormationOutputInfoElement outputElement =
+          CloudFormationOutputInfoElement.builder().newStackOutputs(outputs).build();
+      return singletonList(outputElement);
     }
+    return emptyList();
   }
 }
