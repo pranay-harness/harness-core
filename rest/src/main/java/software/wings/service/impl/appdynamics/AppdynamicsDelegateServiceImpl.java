@@ -408,7 +408,8 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   AppdynamicsRestClient getAppdynamicsRestClient(final AppDynamicsConfig appDynamicsConfig) {
     final Retrofit retrofit =
         new Retrofit.Builder()
-            .baseUrl(appDynamicsConfig.getControllerUrl() + "/")
+            .baseUrl(appDynamicsConfig.getControllerUrl().endsWith("/") ? appDynamicsConfig.getControllerUrl()
+                                                                        : appDynamicsConfig.getControllerUrl() + "/")
             .addConverterFactory(JacksonConverterFactory.create())
             .client(Http.getOkHttpClientWithNoProxyValueSet(appDynamicsConfig.getControllerUrl()).build())
             .build();
