@@ -11,6 +11,7 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
@@ -58,9 +59,12 @@ import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
+import software.wings.beans.GitConfig;
+import software.wings.beans.GitFileConfig;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.ImageDetails;
@@ -82,6 +86,7 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
@@ -97,6 +102,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   private static final String CHART_NAME = "chart-name";
   private static final String CHART_VERSION = "0.1.0";
   private static final String CHART_URL = "http://google.com";
+  private static final String GIT_CONNECTOR_ID = "connectorId";
 
   @Mock private AppService appService;
   @Mock private ArtifactService artifactService;
@@ -113,6 +119,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private SecretManager secretManager;
   @Mock private ContainerDeploymentManagerHelper containerDeploymentHelper;
+  @Mock private SettingsService settingsService;
 
   @InjectMocks HelmDeployState helmDeployState = new HelmDeployState("helmDeployState");
 
@@ -266,5 +273,27 @@ public class HelmDeployStateTest extends WingsBaseTest {
         .thenReturn(RemoteMethodReturnValueData.Builder.aRemoteMethodReturnValueData().build());
 
     helmDeployState.execute(context);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  public void testEmptyHelmChartSpec() {
+    helmDeployState.execute(context);
+    verify(serviceResourceService).getHelmChartSpecification(APP_ID, SERVICE_ID);
+    verify(delegateService, never()).queueTask(any());
+  }
+
+  @Test
+  public void testEmptyHelmChartSpecWithGit() {
+    when(settingsService.get(GIT_CONNECTOR_ID))
+        .thenReturn(SettingAttribute.Builder.aSettingAttribute().withValue(GitConfig.builder().build()).build());
+
+    helmDeployState.setGitFileConfig(GitFileConfig.builder().connectorId(GIT_CONNECTOR_ID).build());
+    ExecutionResponse executionResponse = helmDeployState.execute(context);
+    assertThat(executionResponse.isAsync()).isEqualTo(true);
+    HelmDeployStateExecutionData helmDeployStateExecutionData =
+        (HelmDeployStateExecutionData) executionResponse.getStateExecutionData();
+    assertThat(helmDeployStateExecutionData.getChartName()).isEqualTo(null);
+    assertThat(helmDeployStateExecutionData.getChartRepositoryUrl()).isEqualTo(null);
+    verify(delegateService).queueTask(any());
   }
 }
