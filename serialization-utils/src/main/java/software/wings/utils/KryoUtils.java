@@ -61,6 +61,8 @@ import java.util.Optional;
 import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.zip.DeflaterOutputStream;
+import java.util.zip.InflaterInputStream;
 
 /**
  * Created by peeyushaggarwal on 1/23/17.
@@ -196,15 +198,31 @@ public class KryoUtils {
   }
 
   public static byte[] asBytes(Object obj) {
+    final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    toStream(obj, outputStream);
+    return outputStream.toByteArray();
+  }
+
+  public static byte[] asDeflatedBytes(Object obj) {
     try {
-      ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      Output output = new Output(baos);
+      final ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+      final DeflaterOutputStream outputStream = new DeflaterOutputStream(byteStream);
+      toStream(obj, outputStream);
+      outputStream.finish();
+      return byteStream.toByteArray();
+    } catch (Exception exception) {
+      throw new RuntimeException(exception);
+    }
+  }
+
+  private static void toStream(Object obj, OutputStream outputStream) {
+    try {
+      Output output = new Output(outputStream);
       pool.run(kryo -> {
         kryo.writeClassAndObject(output, obj);
         return null;
       });
       output.flush();
-      return baos.toByteArray();
     } catch (Exception exception) {
       throw new RuntimeException(exception);
     }
@@ -229,6 +247,13 @@ public class KryoUtils {
 
   public static Object asObject(byte[] bytes) {
     Input input = new Input(bytes);
+    Object obj = pool.run(kryo -> kryo.readClassAndObject(input));
+    input.close();
+    return obj;
+  }
+
+  public static Object asInflatedObject(byte[] bytes) {
+    Input input = new Input(new InflaterInputStream(new Input(bytes)));
     Object obj = pool.run(kryo -> kryo.readClassAndObject(input));
     input.close();
     return obj;
