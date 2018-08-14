@@ -9,11 +9,13 @@ import software.wings.api.HelmDeployContextElement;
 import software.wings.api.HelmDeployStateExecutionData;
 import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
+import software.wings.beans.GitConfig;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.ImageDetails;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
@@ -21,6 +23,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -42,7 +45,8 @@ public class HelmRollbackState extends HelmDeployState {
   protected HelmCommandRequest getHelmCommandRequest(ExecutionContext context,
       HelmChartSpecification helmChartSpecification, ContainerServiceParams containerServiceParams, String releaseName,
       String accountId, String appId, String activityId, ImageDetails imageTag,
-      ContainerInfrastructureMapping infrastructureMapping, String repoName) {
+      ContainerInfrastructureMapping infrastructureMapping, String repoName, GitConfig gitConfig,
+      List<EncryptedDataDetail> encryptedDataDetails) {
     Integer previousReleaseRevision = null;
 
     ContextElement contextElement = context.getContextElement(ContextElementType.HELM_DEPLOY);
@@ -63,6 +67,8 @@ public class HelmRollbackState extends HelmDeployState {
         .containerServiceParams(containerServiceParams)
         .chartSpecification(helmChartSpecification)
         .repoName(repoName)
+        .gitConfig(gitConfig)
+        .encryptedDataDetails(encryptedDataDetails)
         .build();
   }
 
@@ -73,7 +79,8 @@ public class HelmRollbackState extends HelmDeployState {
 
   @Override
   protected void setNewAndPrevReleaseVersion(ExecutionContext context, Application app, String releaseName,
-      ContainerServiceParams containerServiceParams, HelmDeployStateExecutionData stateExecutionData) {
+      ContainerServiceParams containerServiceParams, HelmDeployStateExecutionData stateExecutionData,
+      GitConfig gitConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     HelmDeployContextElement contextElement = context.getContextElement(ContextElementType.HELM_DEPLOY);
     if (contextElement != null) {
       stateExecutionData.setReleaseOldVersion(contextElement.getNewReleaseRevision());

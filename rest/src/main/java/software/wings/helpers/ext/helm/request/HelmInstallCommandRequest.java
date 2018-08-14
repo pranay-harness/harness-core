@@ -24,9 +24,7 @@ public class HelmInstallCommandRequest extends HelmCommandRequest {
   private long timeoutInMillis;
   private Map<String, String> valueOverrides;
   private List<String> variableOverridesYamlFiles;
-  private GitConfig gitConfig;
   private GitFileConfig gitFileConfig;
-  private List<EncryptedDataDetail> encryptedDataDetails;
 
   public HelmInstallCommandRequest() {
     super(HelmCommandType.INSTALL);
@@ -40,15 +38,13 @@ public class HelmInstallCommandRequest extends HelmCommandRequest {
       String repoName, GitConfig gitConfig, GitFileConfig gitFileConfig,
       List<EncryptedDataDetail> encryptedDataDetails) {
     super(HelmCommandType.INSTALL, accountId, appId, kubeConfigLocation, commandName, activityId,
-        containerServiceParams, releaseName, chartSpecification, repoName);
+        containerServiceParams, releaseName, chartSpecification, repoName, gitConfig, encryptedDataDetails);
     this.newReleaseVersion = newReleaseVersion;
     this.prevReleaseVersion = prevReleaseVersion;
     this.namespace = namespace;
     this.timeoutInMillis = timeoutInMillis;
     this.valueOverrides = valueOverrides;
     this.variableOverridesYamlFiles = variableOverridesYamlFiles;
-    this.gitConfig = gitConfig;
     this.gitFileConfig = gitFileConfig;
-    this.encryptedDataDetails = encryptedDataDetails;
   }
 }
