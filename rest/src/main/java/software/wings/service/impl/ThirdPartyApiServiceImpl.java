@@ -24,7 +24,7 @@ public class ThirdPartyApiServiceImpl implements ThirdPartyApiService {
     if (isEmpty(apiCallLogs)) {
       return false;
     }
-    wingsPersistence.saveIgnoringDuplicateKeys(apiCallLogs);
+    wingsPersistence.save(apiCallLogs);
     logger.info("Inserted {} data collection records", apiCallLogs.size());
     return true;
   }
