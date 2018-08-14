@@ -172,13 +172,14 @@ public class HelmDeployState extends State {
       }
     }
 
-    HelmDeployStateExecutionData stateExecutionData = HelmDeployStateExecutionData.builder()
-                                                          .activityId(activity.getUuid())
-                                                          .chartName(helmChartSpecification.getChartName())
-                                                          .chartRepositoryUrl(helmChartSpecification.getChartUrl())
-                                                          .chartVersion(helmChartSpecification.getChartVersion())
-                                                          .releaseName(releaseName)
-                                                          .build();
+    HelmDeployStateExecutionData stateExecutionData =
+        HelmDeployStateExecutionData.builder().activityId(activity.getUuid()).releaseName(releaseName).build();
+
+    if (helmChartSpecification != null) {
+      stateExecutionData.setChartName(helmChartSpecification.getChartName());
+      stateExecutionData.setChartRepositoryUrl(helmChartSpecification.getChartUrl());
+      stateExecutionData.setChartVersion(helmChartSpecification.getChartVersion());
+    }
 
     ImageDetails imageDetails = null;
     if (artifact != null) {
