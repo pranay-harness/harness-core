@@ -30,12 +30,14 @@ import java.util.Date;
 @Singleton
 public class MongoStore implements DistributedStore {
   private static final Logger logger = LoggerFactory.getLogger(MongoStore.class);
+  private static final int version = 1;
+
   private static final String collectionName = "cache";
 
   @Inject WingsPersistence wingsPersistence;
 
   String canonicalKey(long algorithmId, long structureHash, String key) {
-    return format("%s/%d/%d", key, algorithmId, structureHash);
+    return format("%s/%d/%d/%d", key, version, algorithmId, structureHash);
   }
 
   @Override
@@ -67,7 +69,7 @@ public class MongoStore implements DistributedStore {
         return null;
       }
 
-      return (T) KryoUtils.asObject(cacheEntity.getEntity());
+      return (T) KryoUtils.asInflatedObject(cacheEntity.getEntity());
     } catch (RuntimeException ex) {
       logger.error("Failed to obtain from cache", ex);
     }
@@ -88,7 +90,7 @@ public class MongoStore implements DistributedStore {
       final UpdateOperations<CacheEntity> updateOperations = datastore.createUpdateOperations(CacheEntity.class);
       updateOperations.set(CacheEntity.CONTEXT_VALUE_KEY, contextValue);
       updateOperations.set(CacheEntity.CANONICAL_KEY_KEY, canonicalKey);
-      updateOperations.set(CacheEntity.ENTITY_KEY, KryoUtils.asBytes(entity));
+      updateOperations.set(CacheEntity.ENTITY_KEY, KryoUtils.asDeflatedBytes(entity));
       updateOperations.set(CacheEntity.VALID_UNTIL_KEY, Date.from(OffsetDateTime.now().plus(ttl).toInstant()));
 
       final Query<CacheEntity> query =
