@@ -46,6 +46,8 @@ public class StateExecutionServiceImpl implements StateExecutionService {
                                  .fetch())) {
       while (stateExecutionInstances.hasNext()) {
         StateExecutionInstance stateExecutionInstance = stateExecutionInstances.next();
+        stateExecutionInstance.getStateExecutionMap().entrySet().removeIf(
+            entry -> !entry.getKey().equals(stateExecutionInstance.getDisplayName()));
         allInstancesIdMap.put(stateExecutionInstance.getUuid(), stateExecutionInstance);
       }
     }
