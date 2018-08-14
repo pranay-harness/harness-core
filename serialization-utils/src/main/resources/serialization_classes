@@ -509,3 +509,4 @@ software.wings.beans.DelegateConfiguration, 5469
 software.wings.beans.yaml.GitFetchFilesRequest, 5470
 software.wings.beans.yaml.GitFetchFilesResult, 5471
 software.wings.beans.GitFileConfig, 5472
+software.wings.api.cloudformation.CloudFormationOutputInfoElement, 5473

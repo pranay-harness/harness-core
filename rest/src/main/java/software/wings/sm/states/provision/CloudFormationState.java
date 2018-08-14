@@ -18,6 +18,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ScriptStateExecutionData;
+import software.wings.api.cloudformation.CloudFormationElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Application;
@@ -82,7 +83,8 @@ public abstract class CloudFormationState extends State {
   protected abstract String commandUnit();
   protected abstract DelegateTask getDelegateTask(ExecutionContextImpl executionContext,
       CloudFormationInfrastructureProvisioner provisioner, AwsConfig awsConfig, String activityId);
-  protected abstract void handleResponse(CloudFormationCommandResponse commandResponse, ExecutionContext context);
+  protected abstract List<CloudFormationElement> handleResponse(
+      CloudFormationCommandResponse commandResponse, ExecutionContext context);
 
   @Attributes(title = "Timeout (ms)")
   @DefaultValue("" + DEFAULT_ASYNC_CALL_TIMEOUT)
@@ -111,8 +113,15 @@ public abstract class CloudFormationState extends State {
         executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
                                                                                              : ExecutionStatus.FAILED;
     activityService.updateStatus(activityId, context.getAppId(), executionStatus);
-    handleResponse(executionResponse.getCommandResponse(), context);
-    return anExecutionResponse().withExecutionStatus(executionStatus).build();
+    List<CloudFormationElement> elements = handleResponse(executionResponse.getCommandResponse(), context);
+    ExecutionResponse.Builder builder = anExecutionResponse().withExecutionStatus(executionStatus);
+    if (isNotEmpty(elements)) {
+      elements.forEach(element -> {
+        builder.addContextElement(element);
+        builder.addNotifyElement(element);
+      });
+    }
+    return builder.build();
   }
 
   private CloudFormationInfrastructureProvisioner getProvisioner(ExecutionContext context) {
