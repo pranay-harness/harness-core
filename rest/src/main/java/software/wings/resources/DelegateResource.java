@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.common.Constants.DELEGATE_DIR;
 import static software.wings.common.Constants.DOCKER_DELEGATE;
 import static software.wings.common.Constants.KUBERNETES_DELEGATE;
@@ -22,7 +23,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
-import software.wings.beans.Base;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConfiguration;
 import software.wings.beans.DelegateConnectionHeartbeat;
@@ -157,6 +157,7 @@ public class DelegateResource {
       @QueryParam("accountId") @NotEmpty String accountId, Delegate delegate) {
     delegate.setAccountId(accountId);
     delegate.setUuid(delegateId);
+    delegate.setAppId(GLOBAL_APP_ID);
     return new RestResponse<>(delegateService.update(delegate));
   }
 
@@ -240,7 +241,7 @@ public class DelegateResource {
   public RestResponse<Delegate> register(@QueryParam("accountId") @NotEmpty String accountId, Delegate delegate) {
     delegate.setAccountId(accountId);
     if (delegate.getAppId() == null) {
-      delegate.setAppId(Base.GLOBAL_APP_ID);
+      delegate.setAppId(GLOBAL_APP_ID);
     }
     long startTime = System.currentTimeMillis();
     Delegate register = delegateService.register(delegate);
