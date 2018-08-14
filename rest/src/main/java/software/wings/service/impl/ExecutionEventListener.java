@@ -12,6 +12,8 @@ import static software.wings.sm.ExecutionStatus.PAUSED;
 import static software.wings.sm.ExecutionStatus.QUEUED;
 import static software.wings.sm.ExecutionStatus.RUNNING;
 
+import com.google.common.base.Joiner;
+import com.google.common.collect.Ordering;
 import com.google.inject.Inject;
 
 import org.mongodb.morphia.query.Query;
@@ -44,24 +46,28 @@ public class ExecutionEventListener extends AbstractQueueListener<ExecutionEvent
 
   @Override
   protected void onMessage(ExecutionEvent message) {
-    try (AcquiredLock lock =
-             persistentLocker.tryToAcquireLock(Workflow.class, message.getWorkflowId(), Duration.ofMinutes(1))) {
+    String lockId = message.getWorkflowId()
+        + (isNotEmpty(message.getInfraMappingIds())
+                  ? "|" + Joiner.on("|").join(Ordering.natural().sortedCopy(message.getInfraMappingIds()))
+                  : "");
+
+    try (AcquiredLock lock = persistentLocker.tryToAcquireLock(Workflow.class, lockId, Duration.ofMinutes(1))) {
       if (lock == null) {
         return;
       }
+      logger.info("Acquired the lock {}. Verifying to see if the execution can be started", lockId);
+      PageRequestBuilder pageRequestBuilder =
+          aPageRequest()
+              .addFilter(WorkflowExecution.APP_ID_KEY, EQ, message.getAppId())
+              .addFilter(WorkflowExecution.STATUS_KEY, Operator.IN, RUNNING, PAUSED)
+              .addFieldsIncluded("uuid")
+              .addFilter(WorkflowExecution.WORKFLOW_ID_KEY, EQ, message.getWorkflowId())
+              .withLimit("1");
 
-      PageRequestBuilder pageRequestBuilder = aPageRequest()
-                                                  .addFilter(WorkflowExecution.APP_ID_KEY, EQ, message.getAppId())
-                                                  .addFilter(WorkflowExecution.STATUS_KEY, Operator.IN, RUNNING, PAUSED)
-                                                  .addFieldsIncluded("uuid")
-                                                  .withLimit("1");
-
-      //      if (isNotEmpty(message.getInfraMappingIds())) {
-      //        pageRequestBuilder.addFilter(
-      //            WorkflowExecution.INFRAMAPPING_IDS_KEY, Operator.IN, message.getInfraMappingIds().toArray());
-      //      } else {
-      pageRequestBuilder.addFilter(WorkflowExecution.WORKFLOW_ID_KEY, EQ, message.getWorkflowId());
-      //      }
+      if (isNotEmpty(message.getInfraMappingIds())) {
+        pageRequestBuilder.addFilter(
+            WorkflowExecution.INFRAMAPPING_IDS_KEY, Operator.IN, message.getInfraMappingIds().toArray());
+      }
 
       PageResponse<WorkflowExecution> runningWorkflowExecutions =
           wingsPersistence.query(WorkflowExecution.class, pageRequestBuilder.build());
@@ -73,14 +79,13 @@ public class ExecutionEventListener extends AbstractQueueListener<ExecutionEvent
       pageRequestBuilder = aPageRequest()
                                .addFilter(WorkflowExecution.APP_ID_KEY, EQ, message.getAppId())
                                .addFilter(WorkflowExecution.STATUS_KEY, EQ, QUEUED)
-                               .addOrder(WorkflowExecution.CREATED_AT_KEY, OrderType.ASC);
+                               .addOrder(WorkflowExecution.CREATED_AT_KEY, OrderType.ASC)
+                               .addFilter(WorkflowExecution.WORKFLOW_ID_KEY, EQ, message.getWorkflowId());
 
-      //      if (isNotEmpty(message.getInfraMappingIds())) {
-      //        pageRequestBuilder.addFilter(
-      //            WorkflowExecution.INFRAMAPPING_IDS_KEY, Operator.IN, message.getInfraMappingIds().toArray());
-      //      } else {
-      pageRequestBuilder.addFilter(WorkflowExecution.WORKFLOW_ID_KEY, EQ, message.getWorkflowId());
-      //      }
+      if (isNotEmpty(message.getInfraMappingIds())) {
+        pageRequestBuilder.addFilter(
+            WorkflowExecution.INFRAMAPPING_IDS_KEY, Operator.IN, message.getInfraMappingIds().toArray());
+      }
 
       WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, pageRequestBuilder.build());
       if (workflowExecution == null) {

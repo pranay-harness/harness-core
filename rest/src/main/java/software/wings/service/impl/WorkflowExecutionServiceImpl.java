@@ -1271,11 +1271,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     stateExecutionInstance.setContextElements(elements);
     stateExecutionInstance = stateMachineExecutor.queue(stateMachine, stateExecutionInstance);
-    boolean templatized = false;
-    if (stateMachine.getOrchestrationWorkflow() != null && stateMachine.getOrchestrationWorkflow().isTemplatized()) {
-      templatized = true;
-    }
-    if (templatized || workflowExecution.getWorkflowType() != ORCHESTRATION) {
+
+    if (workflowExecution.getWorkflowType() != ORCHESTRATION) {
       stateMachineExecutor.startExecution(stateMachine, stateExecutionInstance);
       updateStartStatus(workflowExecution, RUNNING);
     } else {
