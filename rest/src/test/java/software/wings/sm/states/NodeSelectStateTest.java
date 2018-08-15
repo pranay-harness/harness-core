@@ -48,6 +48,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
@@ -68,6 +69,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
   @Mock private ArtifactService artifactService;
   @Mock private InstanceService instanceService;
   @Mock private WorkflowStandardParams workflowStandardParams;
+  @Mock private StateExecutionService stateExecutionService;
 
   @InjectMocks private NodeSelectState nodeSelectState = new DcNodeSelectState("DC_NODE_SELECT");
 
