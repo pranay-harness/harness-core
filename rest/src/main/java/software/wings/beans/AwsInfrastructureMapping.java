@@ -13,7 +13,6 @@ import com.google.inject.Inject;
 import com.amazonaws.regions.Regions;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Data;
@@ -28,8 +27,6 @@ import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.stencils.DataProvider;
-import software.wings.stencils.DefaultValue;
-import software.wings.stencils.EnumData;
 import software.wings.utils.Util;
 
 import java.util.ArrayList;
@@ -44,35 +41,20 @@ import java.util.Optional;
  */
 @JsonTypeName("AWS_SSH")
 public class AwsInfrastructureMapping extends InfrastructureMapping {
-  @Attributes(title = "Restrictions") @SchemaIgnore private String restrictionType;
-  @Attributes(title = "Expression") @SchemaIgnore private String restrictionExpression;
-
-  @Attributes(title = "Region")
-  @DefaultValue("us-east-1")
-  @EnumData(enumDataProvider = AwsRegionDataProvider.class)
+  private String restrictionType;
+  private String restrictionExpression;
   private String region;
-
-  @EnumData(enumDataProvider = HostConnectionAttributesDataProvider.class)
-  @Attributes(title = "Connection Type", required = true)
   private String hostConnectionAttrs;
-  @Attributes(title = "Load Balancer") private String loadBalancerId;
-  @Transient @SchemaIgnore private String loadBalancerName;
-
-  @Deprecated @SchemaIgnore private String customName;
-
-  @Attributes(title = "Use Public DNS for SSH connection") private boolean usePublicDns;
-
-  @Attributes(title = "Use Auto Scaling group") private boolean provisionInstances;
-
-  @Attributes(title = "Instance Filter") private AwsInstanceFilter awsInstanceFilter;
-
-  @Attributes(title = "Auto Scaling group") private String autoScalingGroupName;
-
-  @Attributes(title = "Set Auto Scaling group desired capacity") private boolean setDesiredCapacity;
-
-  @Attributes(title = "Desired Capacity") private int desiredCapacity;
-
-  @Attributes(title = "AWS Host Name Convention") private String hostNameConvention;
+  private String loadBalancerId;
+  @Transient private String loadBalancerName;
+  @Deprecated private String customName;
+  private boolean usePublicDns;
+  private boolean provisionInstances;
+  private AwsInstanceFilter awsInstanceFilter;
+  private String autoScalingGroupName;
+  private boolean setDesiredCapacity;
+  private int desiredCapacity;
+  private String hostNameConvention;
 
   /**
    * Instantiates a new Aws infrastructure mapping.

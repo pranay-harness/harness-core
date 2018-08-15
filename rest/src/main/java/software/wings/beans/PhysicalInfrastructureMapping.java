@@ -3,14 +3,11 @@ package software.wings.beans;
 import static java.lang.String.format;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
-import software.wings.stencils.EnumData;
 import software.wings.utils.Util;
 
 import java.util.List;
@@ -19,9 +16,6 @@ import java.util.Optional;
 
 @JsonTypeName("PHYSICAL_DATA_CENTER_SSH")
 public class PhysicalInfrastructureMapping extends PhysicalInfrastructureMappingBase {
-  @EnumData(enumDataProvider = HostConnectionAttributesDataProvider.class)
-  @Attributes(title = "Host Connection Attributes", required = true)
-  @NotEmpty
   private String hostConnectionAttrs;
 
   public PhysicalInfrastructureMapping() {

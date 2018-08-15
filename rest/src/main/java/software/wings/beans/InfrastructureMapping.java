@@ -1,12 +1,6 @@
 package software.wings.beans;
 
-import static java.util.stream.Collectors.groupingBy;
-import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
-import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
-
 import com.google.common.base.MoreObjects;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -14,7 +8,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
-import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.data.validator.EntityName;
 import io.harness.validation.Update;
@@ -29,21 +22,13 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.annotation.Encryptable;
-import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
-import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
-import software.wings.stencils.DataProvider;
 import software.wings.yaml.BaseEntityYaml;
 
-import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /**
@@ -61,18 +46,18 @@ public abstract class InfrastructureMapping extends Base implements Encryptable 
   public static final String PROVISIONER_ID_KEY = "provisionerId";
   public static final String SERVICE_ID_KEY = "serviceId";
 
-  @SchemaIgnore @NotEmpty private String computeProviderSettingId;
-  @SchemaIgnore @NotEmpty private String envId;
-  @SchemaIgnore @NotEmpty private String serviceTemplateId;
+  @NotEmpty private String computeProviderSettingId;
+  @NotEmpty private String envId;
+  @NotEmpty private String serviceTemplateId;
 
-  @NotEmpty(groups = {Update.class}) @SchemaIgnore private String serviceId;
+  @NotEmpty(groups = {Update.class}) private String serviceId;
 
   @NotEmpty private String computeProviderType;
   @NotEmpty private String infraMappingType;
-  @Attributes(title = "Deployment type", required = true) @NotEmpty private String deploymentType;
+  @NotEmpty private String deploymentType;
   @SchemaIgnore private String computeProviderName;
 
-  @EntityName @Attributes(title = "Name") private String name;
+  @EntityName private String name;
 
   // auto populate name
   @SchemaIgnore private boolean autoPopulate = true;
@@ -341,29 +326,6 @@ public abstract class InfrastructureMapping extends Base implements Encryptable 
         && Objects.equals(this.infraMappingType, other.infraMappingType)
         && Objects.equals(this.deploymentType, other.deploymentType)
         && Objects.equals(this.provisionerId, other.provisionerId);
-  }
-
-  @Singleton
-  public static class HostConnectionAttributesDataProvider implements DataProvider {
-    @Inject private SettingsService settingsService;
-    @Inject private AppService appService;
-
-    @Override
-    public Map<String, String> getData(String appId, Map<String, String> params) {
-      String accountId = appService.getAccountIdByAppId(appId);
-      List<SettingAttribute> settingAttributes = settingsService.getFilteredGlobalSettingAttributesByType(accountId,
-          SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES.name(), appId, params.get(EntityType.ENVIRONMENT.name()));
-
-      Map<AccessType, List<SettingAttribute>> settingAttributeByType = settingAttributes.stream().collect(
-          groupingBy(sa -> ((HostConnectionAttributes) sa.getValue()).getAccessType()));
-
-      return Stream.of(KEY, USER_PASSWORD)
-          .map(settingAttributeByType::get)
-          .filter(Objects::nonNull)
-          .flatMap(Collection::stream)
-          .collect(Collectors.toMap(
-              SettingAttribute::getUuid, SettingAttribute::getName, (v1, v2) -> v1, LinkedHashMap::new));
-    }
   }
 
   @Data
