@@ -49,6 +49,7 @@ import software.wings.common.Constants;
 import software.wings.dl.PageResponse;
 import software.wings.exception.InvalidRequestException;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
@@ -79,6 +80,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
   @Inject private ActivityService activityService;
 
   @Transient @Inject private transient WorkflowExecutionService workflowExecutionService;
+  @Transient @Inject private transient StateExecutionService stateExecutionService;
 
   private PhaseStepType phaseStepType;
   private boolean stepsInParallel;
@@ -131,8 +133,9 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       PhaseStepType phaseStepType, PhaseElement phaseElement, ExecutionContext contextIntf) {
     ExecutionContextImpl context = (ExecutionContextImpl) contextIntf;
 
-    PhaseExecutionData stateExecutionData =
-        (PhaseExecutionData) context.getStateExecutionData(phaseElement.getPhaseNameForRollback());
+    PhaseExecutionData stateExecutionData = (PhaseExecutionData) stateExecutionService.phaseStateExecutionData(
+        context.getAppId(), context.getWorkflowExecutionId(), phaseElement.getPhaseNameForRollback());
+
     if (stateExecutionData == null) {
       return null;
     }
