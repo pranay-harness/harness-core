@@ -172,11 +172,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
   @Override
   public StateExecutionData getStateExecutionData() {
-    return stateExecutionInstance.getStateExecutionMap().get(stateExecutionInstance.getDisplayName());
-  }
-
-  public StateExecutionData getStateExecutionData(String stateName) {
-    return stateExecutionInstance.getStateExecutionMap().get(stateName);
+    return stateExecutionInstance.getStateExecutionData();
   }
 
   @Override

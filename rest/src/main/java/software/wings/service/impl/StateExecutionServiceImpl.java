@@ -160,4 +160,16 @@ public class StateExecutionServiceImpl implements StateExecutionService {
     }
     return hostExclusionList;
   }
+
+  public StateExecutionData phaseStateExecutionData(String appId, String executionUuid, String phaseName) {
+    StateExecutionInstance stateExecutionInstance =
+        wingsPersistence.createQuery(StateExecutionInstance.class)
+            .filter(StateExecutionInstance.APP_ID_KEY, appId)
+            .filter(StateExecutionInstance.EXECUTION_UUID_KEY, executionUuid)
+            .filter(StateExecutionInstance.DISPLAY_NAME_KEY, phaseName)
+            .project(StateExecutionInstance.DISPLAY_NAME_KEY, true)
+            .project(StateExecutionInstance.STATE_EXECUTION_MAP_KEY, true)
+            .get();
+    return stateExecutionInstance.getStateExecutionData();
+  }
 }
