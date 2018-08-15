@@ -18,6 +18,7 @@ import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
+import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
@@ -235,6 +236,11 @@ public class DatabaseModule extends AbstractModule {
             } else {
               logger.error("Failed to create index {}", name, mex);
             }
+          } catch (DuplicateKeyException exception) {
+            logger.error(
+                "Because of deployment, a new index with uniqueness flag was introduced. Current data does not meet this expectation."
+                    + "Create a migration to align the data with expectation or delete the uniqueness criteria from index",
+                exception);
           }
         }
       });
