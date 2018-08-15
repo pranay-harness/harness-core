@@ -1,5 +1,6 @@
 package software.wings.common;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static software.wings.utils.Misc.getDurationString;
@@ -24,9 +25,11 @@ import software.wings.beans.WorkflowType;
 import software.wings.beans.alert.AlertType;
 import software.wings.common.NotificationMessageResolver.ChannelTemplate.EmailTemplate;
 import software.wings.exception.WingsException;
+import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.WorkflowStandardParams;
 
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -283,8 +286,29 @@ public class NotificationMessageResolver {
 
   private String generateUrl(Application app, ExecutionContext context, AlertType alertType) {
     if (alertType.equals(AlertType.ApprovalNeeded)) {
-      return buildAbsoluteUrl(format("/account/%s/app/%s/pipeline-execution/%s/workflow-execution/undefined/details",
-          app.getAccountId(), app.getUuid(), context.getWorkflowExecutionId()));
+      if (context.getWorkflowType().equals(WorkflowType.PIPELINE)) {
+        return buildAbsoluteUrl(format("/account/%s/app/%s/pipeline-execution/%s/workflow-execution/undefined/details",
+            app.getAccountId(), app.getUuid(), context.getWorkflowExecutionId()));
+      } else if (context.getWorkflowType().equals(WorkflowType.ORCHESTRATION)) {
+        WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+        String pipelineExecutionId = null;
+        if (workflowStandardParams != null && workflowStandardParams.getWorkflowElement() != null) {
+          pipelineExecutionId = workflowStandardParams.getWorkflowElement().getPipelineDeploymentUuid();
+        }
+
+        if (isEmpty(pipelineExecutionId)) {
+          // Direct WF execution
+          return buildAbsoluteUrl(format("/account/%s/app/%s/env/%s/executions/%s/details", app.getAccountId(),
+              app.getUuid(), ((ExecutionContextImpl) context).getEnv().getUuid(), context.getWorkflowExecutionId()));
+        } else {
+          // WF in a Pipeline execution
+          return buildAbsoluteUrl(format("/account/%s/app/%s/pipeline-execution/%s/workflow-execution/%s/details",
+              app.getAccountId(), app.getUuid(), pipelineExecutionId, context.getWorkflowExecutionId()));
+        }
+      } else {
+        logger.error("Unhandled Approval case. No URL can be generated for alertType ", alertType.name());
+        return "";
+      }
     } else if (alertType.equals(AlertType.ManualInterventionNeeded)) {
       return buildAbsoluteUrl(format("/account/%s/app/%s/env/%s/executions/%s/details", app.getAccountId(),
           app.getUuid(), ((ExecutionContextImpl) context).getEnv().getUuid(), context.getWorkflowExecutionId()));
