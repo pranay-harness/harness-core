@@ -30,6 +30,7 @@ import software.wings.common.Constants;
 import software.wings.service.impl.instance.InstanceHelper;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ContextElementType;
@@ -53,7 +54,6 @@ import software.wings.sm.states.PhaseSubWorkflow;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Created by rishi on 1/24/17.
@@ -72,6 +72,8 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
   @Inject @Transient private transient InstanceHelper instanceHelper;
 
   @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
+
+  @Inject @Transient private transient StateExecutionService stateExecutionService;
 
   @Override
   public ExecutionEventAdvice onExecutionEvent(ExecutionEvent executionEvent) {
@@ -360,12 +362,11 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
   public String computeDisplayName(StateExecutionInstance stateExecutionInstance) {
     if (stateExecutionInstance.getOrchestrationWorkflowType() == ROLLING
         && PHASE.name().equals(stateExecutionInstance.getStateType()) && !stateExecutionInstance.isRollback()) {
-      List<String> phaseNames = stateExecutionInstance.getStateExecutionMap()
-                                    .keySet()
-                                    .stream()
-                                    .filter(key -> key.startsWith(ROLLING_PHASE_PREFIX))
-                                    .collect(Collectors.toList());
-      return ROLLING_PHASE_PREFIX + (phaseNames.size() + 1);
+      List<String> phaseNamesAPI = stateExecutionService.phaseNames(
+          stateExecutionInstance.getAppId(), stateExecutionInstance.getExecutionUuid());
+
+      final long count = phaseNamesAPI.stream().filter(key -> key.startsWith(ROLLING_PHASE_PREFIX)).count();
+      return ROLLING_PHASE_PREFIX + (count + 1);
     }
     return null;
   }
