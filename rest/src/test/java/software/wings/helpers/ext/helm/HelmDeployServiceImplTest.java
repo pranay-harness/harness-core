@@ -3,6 +3,7 @@ package software.wings.helpers.ext.helm;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
@@ -75,7 +76,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     executionLogCallback = mock(ExecutionLogCallback.class);
     doNothing().when(executionLogCallback).saveExecutionLog(anyString());
     when(encryptionService.decrypt(any(), any())).thenReturn(null);
-    when(gitService.fetchFilesByPath(any(), any(), any(), any(), any()))
+    when(gitService.fetchFilesByPath(any(), any(), any(), any(), any(), anyBoolean()))
         .thenReturn(GitFetchFilesResult.builder()
                         .files(asList(GitFile.builder().fileContent(GIT_FILE_CONTENT_1_KEY).build(),
                             GitFile.builder().fileContent(GIT_FILE_CONTENT_2_KEY).build()))
@@ -176,7 +177,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     when(helmClient.releaseHistory(HELM_KUBE_CONFIG_LOCATION_KEY, HELM_RELEASE_NAME_KEY))
         .thenReturn(helmCliReleaseHistoryResponse);
     when(helmClient.install(any())).thenReturn(helmInstallCommandResponse);
-    when(gitService.fetchFilesByPath(any(), any(), any(), any(), any()))
+    when(gitService.fetchFilesByPath(any(), any(), any(), any(), any(), anyBoolean()))
         .thenThrow(new WingsException("WingsException"));
     when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
 
