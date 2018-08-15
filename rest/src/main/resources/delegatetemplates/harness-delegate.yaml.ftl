@@ -51,7 +51,7 @@ spec:
         resources:
           limits:
             cpu: "1"
-            memory: "6Gi"
+            memory: "8Gi"
         env:
         - name: ACCOUNT_ID
           value: ${accountId}
