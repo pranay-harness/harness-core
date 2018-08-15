@@ -15,4 +15,5 @@ public class GitFileConfig {
   @Trimmed private String commitId;
   @Trimmed private String branch;
   @Trimmed private String filePath;
+  private boolean useBranch;
 }

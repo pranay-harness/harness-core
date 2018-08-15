@@ -369,7 +369,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
       GitFetchFilesResult gitFetchFilesResult = gitService.fetchFilesByPath(commandRequest.getGitConfig(),
           gitFileConfig.getConnectorId(), gitFileConfig.getCommitId(), gitFileConfig.getBranch(),
-          Collections.singletonList(gitFileConfig.getFilePath()));
+          Collections.singletonList(gitFileConfig.getFilePath()), gitFileConfig.isUseBranch());
 
       if (isNotEmpty(gitFetchFilesResult.getFiles())) {
         executionLogCallback.saveExecutionLog(

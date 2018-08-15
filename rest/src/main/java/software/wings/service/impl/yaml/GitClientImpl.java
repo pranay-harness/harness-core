@@ -1,7 +1,6 @@
 package software.wings.service.impl.yaml;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -23,6 +22,7 @@ import groovy.lang.Singleton;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
@@ -438,14 +438,9 @@ public class GitClientImpl implements GitClient {
       gitConfig.setGitRepoType(GitRepositoryType.YAML);
     }
 
-    String commitId = gitRequest.getCommitId();
+    validateRequiredArgs(gitRequest);
+
     String gitConnectorId = gitRequest.getGitConnectorId();
-
-    // FilePath cant empty as well as (Branch and commitId both cant be empty)
-    if (isEmpty(gitRequest.getFilePaths()) || (isEmpty(commitId) && isEmpty(gitRequest.getBranch()))) {
-      throw new WingsException("FilePaths or {commitId & Branch} can not be empty", USER);
-    }
-
     /*
      * ConnectorId is per gitConfig and will result in diff local path for repo
      * */
@@ -457,25 +452,25 @@ public class GitClientImpl implements GitClient {
                         .append(gitConfig.getAccountId())
                         .append(", repo: ")
                         .append(gitConfig.getRepoUrl())
-                        .append(", Branch: ")
-                        .append(gitRequest.getBranch())
-                        .append(", CommitId: ")
-                        .append(gitRequest.getCommitId())
+                        .append(gitRequest.isUseBranch() ? ", Branch: " : ", CommitId: ")
+                        .append(gitRequest.isUseBranch() ? gitRequest.getBranch() : gitRequest.getCommitId())
                         .append(", filePaths: ")
                         .append(gitRequest.getFilePaths())
+
                         .toString());
 
         // create repository/gitFilesDownload/<AccId>/<GitConnectorId> path
         gitClientHelper.createDirStructureForFileDownload(gitConfig, gitConnectorId);
 
         // clone repo locally without checkout
-        cloneRepoForFilePathCheckout(gitConfig, gitRequest.getBranch(), gitConnectorId);
+        String branch = gitRequest.isUseBranch() ? gitRequest.getBranch() : StringUtils.EMPTY;
+        cloneRepoForFilePathCheckout(gitConfig, branch, gitConnectorId);
 
-        // if commitId is given, use it to checkout, else checkout latest commit from branch
-        if (isNotEmpty(commitId)) {
-          checkoutGivenCommitForPath(commitId, gitRequest.getFilePaths(), gitConfig, gitConnectorId);
-        } else {
+        // if useBranch is set, use it to checkout latest, else checkout given commitId
+        if (gitRequest.isUseBranch()) {
           checkoutBranchForPath(gitRequest.getBranch(), gitRequest.getFilePaths(), gitConfig, gitConnectorId);
+        } else {
+          checkoutGivenCommitForPath(gitRequest.getCommitId(), gitRequest.getFilePaths(), gitConfig, gitConnectorId);
         }
 
         List<GitFile> gitFiles = new ArrayList<>();
@@ -488,8 +483,8 @@ public class GitClientImpl implements GitClient {
             throw new WingsException(GENERAL_ERROR,
                 new StringBuilder("Unable to checkout files for filePath")
                     .append(filePath)
-                    .append(" for commitId: ")
-                    .append(commitId)
+                    .append(gitRequest.isUseBranch() ? " for Branch: " : " for CommitId: ")
+                    .append(gitRequest.isUseBranch() ? gitRequest.getBranch() : gitRequest.getCommitId())
                     .toString(),
                 USER, e);
           }
@@ -498,14 +493,17 @@ public class GitClientImpl implements GitClient {
         resetWorkingDir(gitRequest.getFilePaths(), gitConfig, gitRequest.getGitConnectorId());
         return GitFetchFilesResult.builder()
             .files(gitFiles)
-            .gitCommitResult(GitCommitResult.builder().commitId(commitId).build())
+            .gitCommitResult(GitCommitResult.builder()
+                                 .commitId(gitRequest.isUseBranch() ? "latest" : gitRequest.getCommitId())
+                                 .build())
             .build();
 
       } catch (Exception e) {
         throw new WingsException(GENERAL_ERROR,
             new StringBuilder()
-                .append("Failed while fetching files for CommitId: ")
-                .append(commitId)
+                .append("Failed while fetching files ")
+                .append(gitRequest.isUseBranch() ? " for Branch: " : " for CommitId: ")
+                .append(gitRequest.isUseBranch() ? gitRequest.getBranch() : gitRequest.getCommitId())
                 .append(", FilePaths: ")
                 .append(gitRequest.getFilePaths())
                 .toString(),
@@ -514,13 +512,33 @@ public class GitClientImpl implements GitClient {
     }
   }
 
+  private void validateRequiredArgs(GitFetchFilesRequest gitRequest) {
+    // FilePath cant empty as well as (Branch and commitId both cant be empty)
+    if (isEmpty(gitRequest.getFilePaths())) {
+      throw new WingsException(GENERAL_ERROR, "FilePaths  can not be empty", USER)
+          .addParam("message", "FilePaths  can not be empty");
+    }
+
+    if (gitRequest.isUseBranch() && isEmpty(gitRequest.getBranch())) {
+      throw new WingsException(GENERAL_ERROR, "useBrach was set but branch is not provided", USER)
+          .addParam("message", "useBranch was set but branch is not provided");
+    }
+
+    if (!gitRequest.isUseBranch() && isEmpty(gitRequest.getCommitId())) {
+      throw new WingsException("useBranch was false but CommitId was not provided", USER)
+          .addParam("message", "useBranch was false but CommitId was not provided");
+    }
+  }
+
   private void checkoutGivenCommitForPath(
       String commitId, List<String> filePaths, GitConfig gitConfig, String gitConnectorId) {
     try (Git git = Git.open(new File(gitClientHelper.getFileDownloadRepoDirectory(gitConfig, gitConnectorId)))) {
+      logger.info("Checking out commitId: " + commitId);
       CheckoutCommand checkoutCommand = git.checkout().setStartPoint(commitId).setCreateBranch(false);
 
       filePaths.forEach(filePath -> checkoutCommand.addPath(filePath));
       checkoutCommand.call();
+      logger.info("Successfully Checked out commitId: " + commitId);
     } catch (Exception ex) {
       logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
       gitClientHelper.checkIfTransportException(ex);
@@ -532,6 +550,7 @@ public class GitClientImpl implements GitClient {
   private void checkoutBranchForPath(
       String branch, List<String> filePaths, GitConfig gitConfig, String gitConnectorId) {
     try (Git git = Git.open(new File(gitClientHelper.getFileDownloadRepoDirectory(gitConfig, gitConnectorId)))) {
+      logger.info("Checking out Branch: " + branch);
       CheckoutCommand checkoutCommand = git.checkout()
                                             .setCreateBranch(true)
                                             .setStartPoint("origin/" + branch)
@@ -540,6 +559,7 @@ public class GitClientImpl implements GitClient {
                                             .setName(branch);
       filePaths.forEach(filePath -> checkoutCommand.addPath(filePath));
       checkoutCommand.call();
+      logger.info("Successfully Checked out Branch: " + branch);
     } catch (Exception ex) {
       logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
       gitClientHelper.checkIfTransportException(ex);
@@ -550,8 +570,10 @@ public class GitClientImpl implements GitClient {
 
   private void resetWorkingDir(List<String> filePaths, GitConfig gitConfig, String gitConnectorId) {
     try (Git git = Git.open(new File(gitClientHelper.getFileDownloadRepoDirectory(gitConfig, gitConnectorId)))) {
+      logger.info("Resetting repo");
       ResetCommand resetCommand = new ResetCommand(git.getRepository()).setMode(ResetType.HARD);
       resetCommand.call();
+      logger.info("Resetting repo completed successfully");
     } catch (Exception ex) {
       logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
       gitClientHelper.checkIfTransportException(ex);

@@ -14,16 +14,19 @@ public class GitFetchFilesRequest extends GitCommandRequest {
   private List<String> filePaths;
   private String branch;
   private String gitConnectorId;
+  private boolean useBranch;
 
   public GitFetchFilesRequest() {
     super(GitCommandType.FETCH_FILES);
   }
 
-  public GitFetchFilesRequest(String commitId, List<String> filePaths, String branch, String gitConnectorId) {
+  public GitFetchFilesRequest(
+      String commitId, List<String> filePaths, String branch, String gitConnectorId, boolean useBranch) {
     super(GitCommandType.FETCH_FILES);
     this.commitId = commitId;
     this.filePaths = filePaths;
     this.branch = branch;
     this.gitConnectorId = gitConnectorId;
+    this.useBranch = useBranch;
   }
 }

@@ -22,14 +22,15 @@ public class GitServiceImpl implements GitService {
   @Inject private GitClient gitClient;
 
   @Override
-  public GitFetchFilesResult fetchFilesByPath(
-      GitConfig gitConfig, String connectorId, String commitId, String branch, List<String> filePaths) {
+  public GitFetchFilesResult fetchFilesByPath(GitConfig gitConfig, String connectorId, String commitId, String branch,
+      List<String> filePaths, boolean useBranch) {
     return gitClient.fetchFilesByPath(gitConfig,
         GitFetchFilesRequest.builder()
             .commitId(commitId)
             .branch(branch)
             .filePaths(filePaths)
             .gitConnectorId(connectorId)
+            .useBranch(useBranch)
             .build());
   }
 }
