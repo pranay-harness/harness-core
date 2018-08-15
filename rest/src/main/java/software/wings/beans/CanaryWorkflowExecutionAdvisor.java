@@ -47,7 +47,6 @@ import software.wings.sm.State;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
-import software.wings.sm.states.CanaryUtils;
 import software.wings.sm.states.PhaseStepSubWorkflow;
 import software.wings.sm.states.PhaseSubWorkflow;
 
@@ -130,7 +129,8 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
             return null;
           }
 
-          List<ServiceInstance> hostExclusionList = CanaryUtils.getHostExclusionList(context, phaseElement);
+          List<ServiceInstance> hostExclusionList = stateExecutionService.getHostExclusionList(
+              ((ExecutionContextImpl) context).getStateExecutionInstance(), phaseElement);
 
           String infraMappingId;
           if (phaseElement == null || phaseElement.getInfraMappingId() == null) {

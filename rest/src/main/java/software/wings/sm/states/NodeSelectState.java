@@ -41,6 +41,7 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
@@ -76,6 +77,8 @@ public abstract class NodeSelectState extends State {
 
   @Inject @Transient private ArtifactService artifactService;
 
+  @Inject private transient StateExecutionService stateExecutionService;
+
   NodeSelectState(String name, String stateType) {
     super(name, stateType);
   }
@@ -89,7 +92,9 @@ public abstract class NodeSelectState extends State {
       String serviceId = phaseElement.getServiceElement().getUuid();
       String infraMappingId = phaseElement.getInfraMappingId();
 
-      List<ServiceInstance> hostExclusionList = CanaryUtils.getHostExclusionList(context, phaseElement);
+      List<ServiceInstance> hostExclusionList = stateExecutionService.getHostExclusionList(
+          ((ExecutionContextImpl) context).getStateExecutionInstance(), phaseElement);
+
       List<String> excludedServiceInstanceIds =
           hostExclusionList.stream().map(ServiceInstance::getUuid).distinct().collect(toList());
 
