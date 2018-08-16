@@ -26,6 +26,7 @@ import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
+import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -110,8 +111,8 @@ public class NewRelicState extends AbstractMetricAnalysisState {
   }
 
   @Override
-  protected String triggerAnalysisDataCollection(
-      ExecutionContext context, AnalysisContext analysisContext, String correlationId, Map<String, String> hosts) {
+  protected String triggerAnalysisDataCollection(ExecutionContext context, AnalysisContext analysisContext,
+      MetricAnalysisExecutionData executionData, Map<String, String> hosts) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
     SettingAttribute settingAttribute = null;
@@ -170,7 +171,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
                                     .withInfrastructureMappingId(infrastructureMappingId)
                                     .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))
                                     .build();
-    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId, false), waitId);
+    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), executionData, false), waitId);
     return delegateService.queueTask(delegateTask);
   }
 

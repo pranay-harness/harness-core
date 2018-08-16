@@ -2,6 +2,7 @@ package software.wings.service.impl.analysis;
 
 import static software.wings.service.impl.analysis.LogAnalysisResponse.Builder.aLogAnalysisResponse;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import org.slf4j.Logger;
@@ -10,6 +11,7 @@ import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.StateExecutionData;
 import software.wings.waitnotify.ErrorNotifyResponseData;
 import software.wings.waitnotify.NotifyCallback;
 import software.wings.waitnotify.NotifyResponseData;
@@ -26,14 +28,14 @@ public class DataCollectionCallback implements NotifyCallback {
   @Inject private WaitNotifyEngine waitNotifyEngine;
 
   private String appId;
-  private String correlationId;
   private boolean isLogCollection;
+  private StateExecutionData executionData;
 
   public DataCollectionCallback() {}
 
-  public DataCollectionCallback(String appId, String correlationId, boolean isLogCollection) {
+  public DataCollectionCallback(String appId, StateExecutionData executionData, boolean isLogCollection) {
     this.appId = appId;
-    this.correlationId = correlationId;
+    this.executionData = executionData;
     this.isLogCollection = isLogCollection;
   }
 
@@ -56,23 +58,24 @@ public class DataCollectionCallback implements NotifyCallback {
     }
   }
   private void sendErrorNotification(String errorMsg) {
+    Preconditions.checkNotNull(executionData, "execution data is null for appId" + appId);
     if (isLogCollection) {
-      final LogAnalysisExecutionData executionData = LogAnalysisExecutionData.builder().build();
-      executionData.setStatus(ExecutionStatus.ERROR);
-      executionData.setErrorMsg(errorMsg);
-      waitNotifyEngine.notify(correlationId,
+      final LogAnalysisExecutionData logAnalysisExecutionData = (LogAnalysisExecutionData) executionData;
+      logAnalysisExecutionData.setStatus(ExecutionStatus.ERROR);
+      logAnalysisExecutionData.setErrorMsg(errorMsg);
+      waitNotifyEngine.notify(logAnalysisExecutionData.getCorrelationId(),
           aLogAnalysisResponse()
-              .withLogAnalysisExecutionData(executionData)
+              .withLogAnalysisExecutionData(logAnalysisExecutionData)
               .withExecutionStatus(ExecutionStatus.ERROR)
               .build());
     } else {
-      MetricAnalysisExecutionData analysisExecutionData = MetricAnalysisExecutionData.builder().build();
+      MetricAnalysisExecutionData analysisExecutionData = (MetricAnalysisExecutionData) executionData;
       analysisExecutionData.setStatus(ExecutionStatus.ERROR);
       analysisExecutionData.setErrorMsg(errorMsg);
       MetricDataAnalysisResponse metricDataAnalysisResponse =
           MetricDataAnalysisResponse.builder().stateExecutionData(analysisExecutionData).build();
       metricDataAnalysisResponse.setExecutionStatus(ExecutionStatus.ERROR);
-      waitNotifyEngine.notify(correlationId, metricDataAnalysisResponse);
+      waitNotifyEngine.notify(analysisExecutionData.getCorrelationId(), metricDataAnalysisResponse);
     }
   }
 }

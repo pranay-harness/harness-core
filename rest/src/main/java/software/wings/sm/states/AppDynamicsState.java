@@ -36,6 +36,7 @@ import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAn
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
+import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -136,8 +137,8 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
   }
 
   @Override
-  protected String triggerAnalysisDataCollection(
-      ExecutionContext context, AnalysisContext analysisContext, String correlationId, Map<String, String> hosts) {
+  protected String triggerAnalysisDataCollection(ExecutionContext context, AnalysisContext analysisContext,
+      MetricAnalysisExecutionData executionData, Map<String, String> hosts) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
 
@@ -224,7 +225,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
               .mlAnalysisType(PREDICTIVE)
               .build());
     }
-    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId, false), waitIds);
+    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), executionData, false), waitIds);
     InfrastructureMapping infrastructureMapping = getInfrastructureMapping(context);
     if (DeploymentType.valueOf(infrastructureMapping.getDeploymentType()).equals(DeploymentType.HELM)) {
       super.createAndSaveMetricGroups(context, hosts);

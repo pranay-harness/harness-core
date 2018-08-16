@@ -25,6 +25,7 @@ import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
+import software.wings.service.impl.analysis.LogAnalysisExecutionData;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -99,7 +100,8 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
   }
 
   @Override
-  protected String triggerAnalysisDataCollection(ExecutionContext context, String correlationId, Set<String> hosts) {
+  protected String triggerAnalysisDataCollection(
+      ExecutionContext context, LogAnalysisExecutionData executionData, Set<String> hosts) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
 
@@ -160,7 +162,7 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
                             .build());
       waitIds[i++] = waitId;
     }
-    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId, true), waitIds);
+    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), executionData, true), waitIds);
     List<String> delegateTaskIds = new ArrayList<>();
     for (DelegateTask task : delegateTasks) {
       delegateTaskIds.add(delegateService.queueTask(task));

@@ -35,6 +35,7 @@ import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.cloudwatch.AwsNameSpace;
 import software.wings.service.impl.cloudwatch.CloudWatchDataCollectionInfo;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
+import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.intfc.CloudWatchService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
@@ -126,8 +127,8 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
   }
 
   @Override
-  protected String triggerAnalysisDataCollection(
-      ExecutionContext context, AnalysisContext analysisContext, String correlationId, Map<String, String> hosts) {
+  protected String triggerAnalysisDataCollection(ExecutionContext context, AnalysisContext analysisContext,
+      MetricAnalysisExecutionData executionData, Map<String, String> hosts) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
 
@@ -183,7 +184,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
                                     .withInfrastructureMappingId(infrastructureMappingId)
                                     .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))
                                     .build();
-    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId, false), waitId);
+    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), executionData, false), waitId);
     return delegateService.queueTask(delegateTask);
   }
 

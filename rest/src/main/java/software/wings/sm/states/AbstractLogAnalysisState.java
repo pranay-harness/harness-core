@@ -175,8 +175,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       hostsToBeCollected.remove(null);
       getLogger().info("triggering data collection for {} state, id: {} ", getStateType(),
           executionContext.getStateExecutionInstanceId());
-      delegateTaskId =
-          triggerAnalysisDataCollection(executionContext, analysisContext.getCorrelationId(), hostsToBeCollected);
+      delegateTaskId = triggerAnalysisDataCollection(executionContext, executionData, hostsToBeCollected);
       getLogger().info("triggered data collection for {} state, id: {}, delgateTaskId: {}", getStateType(),
           executionContext.getStateExecutionInstanceId(), delegateTaskId);
 
@@ -210,7 +209,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
   }
 
   protected abstract String triggerAnalysisDataCollection(
-      ExecutionContext context, String correlationId, Set<String> hosts);
+      ExecutionContext context, LogAnalysisExecutionData executionData, Set<String> hosts);
 
   @Override
   public ExecutionResponse handleAsyncResponse(

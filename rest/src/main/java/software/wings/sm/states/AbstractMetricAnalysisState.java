@@ -73,8 +73,8 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     metricAnalysisService.cleanUpForMetricRetry(executionContext.getStateExecutionInstanceId());
   }
 
-  protected abstract String triggerAnalysisDataCollection(
-      ExecutionContext context, AnalysisContext analysisContext, String correlationId, Map<String, String> hosts);
+  protected abstract String triggerAnalysisDataCollection(ExecutionContext context, AnalysisContext analysisContext,
+      MetricAnalysisExecutionData executionData, Map<String, String> hosts);
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
@@ -180,8 +180,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           "triggering data collection for {} state, id: {} ", getStateType(), context.getStateExecutionInstanceId());
       hostsToCollect.remove(null);
       createAndSaveMetricGroups(context, hostsToCollect);
-      delegateTaskId =
-          triggerAnalysisDataCollection(context, analysisContext, executionData.getCorrelationId(), hostsToCollect);
+      delegateTaskId = triggerAnalysisDataCollection(context, analysisContext, executionData, hostsToCollect);
       getLogger().info("triggered data collection for {} state, id: {}, delgateTaskId: {}", getStateType(),
           context.getStateExecutionInstanceId(), delegateTaskId);
 

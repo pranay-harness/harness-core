@@ -42,6 +42,7 @@ import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
 import software.wings.service.impl.apm.APMMetricInfo;
 import software.wings.service.impl.apm.APMMetricInfo.APMMetricInfoBuilder;
+import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
@@ -113,8 +114,8 @@ public class DatadogState extends AbstractMetricAnalysisState {
   }
 
   @Override
-  protected String triggerAnalysisDataCollection(
-      ExecutionContext context, AnalysisContext analysisContext, String correlationId, Map<String, String> hosts) {
+  protected String triggerAnalysisDataCollection(ExecutionContext context, AnalysisContext analysisContext,
+      MetricAnalysisExecutionData executionData, Map<String, String> hosts) {
     List<String> metricNames = Arrays.asList(metrics.split(","));
     metricAnalysisService.saveMetricTemplates(context.getAppId(), StateType.DATA_DOG,
         context.getStateExecutionInstanceId(), metricDefinitions(metrics(metricNames).values()));
@@ -182,7 +183,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
                                     .withInfrastructureMappingId(infrastructureMappingId)
                                     .withTimeout(TimeUnit.MINUTES.toMillis(timeDurationInInteger + 120))
                                     .build();
-    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId, false), waitId);
+    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), executionData, false), waitId);
 
     return delegateService.queueTask(delegateTask);
   }
