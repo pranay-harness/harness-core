@@ -215,6 +215,7 @@ public class DelegateServiceImpl implements DelegateService {
   private final AtomicBoolean restartNeeded = new AtomicBoolean(false);
   private final AtomicBoolean acquireTasks = new AtomicBoolean(true);
   private final AtomicBoolean initializing = new AtomicBoolean(false);
+  private final AtomicBoolean multiVersionWatcherStarted = new AtomicBoolean(false);
 
   private Socket socket;
   private RequestBuilder request;
@@ -886,10 +887,10 @@ public class DelegateServiceImpl implements DelegateService {
     boolean multiVersionRestartNeeded =
         multiVersion && clock.millis() - startTime > WATCHER_VERSION_MATCH_TIMEOUT && !new File(getVersion()).exists();
 
-    if (heartbeatTimedOut || versionMatchTimedOut || multiVersionRestartNeeded) {
+    if (heartbeatTimedOut || versionMatchTimedOut
+        || (multiVersionRestartNeeded && multiVersionWatcherStarted.compareAndSet(false, true))) {
       String watcherProcess = messageService.getData(WATCHER_DATA, WATCHER_PROCESS, String.class);
       logger.warn("Watcher process {} needs restart", watcherProcess);
-
       systemExecutorService.submit(() -> {
         try {
           new ProcessExecutor().command("kill", "-9", watcherProcess).start();
