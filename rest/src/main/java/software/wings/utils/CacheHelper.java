@@ -47,7 +47,7 @@ public class CacheHelper {
 
   public Cache<String, NewRelicApplications> getNewRelicApplicationCache() {
     return getCache(NEW_RELIC_APPLICATION_CACHE, String.class, NewRelicApplications.class,
-        AccessedExpiryPolicy.factoryOf(Duration.ONE_HOUR));
+        AccessedExpiryPolicy.factoryOf(Duration.TEN_MINUTES));
   }
 
   public Cache<String, UserPermissionInfo> getUserPermissionInfoCache() {
