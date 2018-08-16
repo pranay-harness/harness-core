@@ -13,6 +13,11 @@ public interface StateExecutionService {
 
   List<String> phaseNames(String appId, String executionUuid);
 
+  enum CurrentPhase { INCLUDE, EXCLUDE }
+
+  List<StateExecutionData> fetchPhaseExecutionData(
+      String appId, String executionUuid, String phaseName, CurrentPhase currentPhase);
+
   List<ServiceInstance> getHostExclusionList(StateExecutionInstance stateExecutionInstance, PhaseElement phaseElement);
 
   StateExecutionData phaseStateExecutionData(String appId, String executionUuid, String phaseName);

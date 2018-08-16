@@ -85,6 +85,9 @@ public class SubWorkflowState extends State {
     childStateExecutionInstance.setEndTs(null);
     childStateExecutionInstance.setCreatedAt(0);
     childStateExecutionInstance.setLastUpdatedAt(0);
+    if (childStateExecutionInstance.getStateExecutionMap() != null) {
+      childStateExecutionInstance.getStateExecutionMap().clear();
+    }
     return childStateExecutionInstance;
   }
 

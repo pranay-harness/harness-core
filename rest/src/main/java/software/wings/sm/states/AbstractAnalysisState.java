@@ -68,6 +68,8 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
+import software.wings.service.intfc.StateExecutionService.CurrentPhase;
 import software.wings.service.intfc.WorkflowExecutionBaselineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -143,6 +145,8 @@ public abstract class AbstractAnalysisState extends State {
   @Transient @Inject private FeatureFlagService featureFlagService;
 
   @Transient @Inject private HostService hostService;
+
+  @Transient @Inject protected StateExecutionService stateExecutionService;
 
   protected String hostnameField;
 
@@ -388,49 +392,50 @@ public abstract class AbstractAnalysisState extends State {
     Map<String, String> hosts = new HashMap<>();
     StateExecutionInstance stateExecutionInstance = ((ExecutionContextImpl) context).getStateExecutionInstance();
     Preconditions.checkNotNull(stateExecutionInstance);
-    Map<String, StateExecutionData> stateExecutionMap = stateExecutionInstance.getStateExecutionMap();
 
-    if (stateExecutionMap == null) {
+    List<StateExecutionData> stateExecutionDataList =
+        stateExecutionService.fetchPhaseExecutionData(stateExecutionInstance.getAppId(),
+            stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getDisplayName(), CurrentPhase.INCLUDE);
+
+    if (isEmpty(stateExecutionDataList)) {
       return hosts;
     }
-    stateExecutionMap.values()
-        .stream()
-        .filter(stateExecutionData -> stateExecutionData.getStateType().equals(StateType.PHASE.name()))
-        .forEach(stateExecutionData -> {
-          PhaseExecutionData phaseExecutionData = (PhaseExecutionData) stateExecutionData;
-          phaseExecutionData.getElementStatusSummary().forEach(elementExecutionSummary -> {
-            PhaseElement phaseElement = (PhaseElement) elementExecutionSummary.getContextElement();
-            if (phaseElement == null) {
-              getLogger().error("null phase element for " + elementExecutionSummary);
-              return;
-            }
 
-            ServiceElement serviceElement = phaseElement.getServiceElement();
-            if (serviceElement == null) {
-              getLogger().error("null service element for " + phaseElement);
-              return;
-            }
+    stateExecutionDataList.forEach(stateExecutionData -> {
+      PhaseExecutionData phaseExecutionData = (PhaseExecutionData) stateExecutionData;
+      phaseExecutionData.getElementStatusSummary().forEach(elementExecutionSummary -> {
+        PhaseElement phaseElement = (PhaseElement) elementExecutionSummary.getContextElement();
+        if (phaseElement == null) {
+          getLogger().error("null phase element for " + elementExecutionSummary);
+          return;
+        }
 
-            if (serviceElement.getUuid().equals(serviceId)) {
-              if (isNotEmpty(elementExecutionSummary.getInstanceStatusSummaries())) {
-                elementExecutionSummary.getInstanceStatusSummaries().forEach(instanceStatusSummary -> {
-                  if (isEmpty(getHostnameTemplate())) {
-                    hosts.put(instanceStatusSummary.getInstanceElement().getHostName(),
-                        getGroupName(instanceStatusSummary.getInstanceElement(), deploymentType));
-                  } else {
-                    hosts.put(context.renderExpression(getHostnameTemplate(),
-                                  Lists.newArrayList(instanceStatusSummary.getInstanceElement())),
-                        getGroupName(instanceStatusSummary.getInstanceElement(), deploymentType));
-                  }
-                });
+        ServiceElement serviceElement = phaseElement.getServiceElement();
+        if (serviceElement == null) {
+          getLogger().error("null service element for " + phaseElement);
+          return;
+        }
+
+        if (serviceElement.getUuid().equals(serviceId)) {
+          if (isNotEmpty(elementExecutionSummary.getInstanceStatusSummaries())) {
+            elementExecutionSummary.getInstanceStatusSummaries().forEach(instanceStatusSummary -> {
+              if (isEmpty(getHostnameTemplate())) {
+                hosts.put(instanceStatusSummary.getInstanceElement().getHostName(),
+                    getGroupName(instanceStatusSummary.getInstanceElement(), deploymentType));
               } else {
-                getLogger().warn(
-                    "elementExecutionSummary does not have instance summaries. This may lead to incorrect canary analysis. {}",
-                    elementExecutionSummary);
+                hosts.put(context.renderExpression(
+                              getHostnameTemplate(), Lists.newArrayList(instanceStatusSummary.getInstanceElement())),
+                    getGroupName(instanceStatusSummary.getInstanceElement(), deploymentType));
               }
-            }
-          });
-        });
+            });
+          } else {
+            getLogger().warn(
+                "elementExecutionSummary does not have instance summaries. This may lead to incorrect canary analysis. {}",
+                elementExecutionSummary);
+          }
+        }
+      });
+    });
     return hosts;
   }
 
