@@ -1866,13 +1866,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         aPageRequest()
             .withReadPref(CRITICAL)
             .withLimit(UNLIMITED)
-            .addFilter("appId", EQ, workflowExecution.getAppId())
-            .addFilter("executionUuid", EQ, workflowExecution.getUuid())
-            .addFilter("stateType", Operator.IN, StateType.REPEAT.name(), StateType.FORK.name(),
-                StateType.SUB_WORKFLOW.name(), StateType.PHASE.name(), PHASE_STEP.name())
-            .addFilter("parentInstanceId", Operator.NOT_EXISTS)
-            .addFilter("createdAt", GE, workflowExecution.getCreatedAt())
-            .addOrder("createdAt", OrderType.ASC)
+            .addFilter(StateExecutionInstance.APP_ID_KEY, EQ, workflowExecution.getAppId())
+            .addFilter(StateExecutionInstance.EXECUTION_UUID_KEY, EQ, workflowExecution.getUuid())
+            .addFilter(StateExecutionInstance.STATE_TYPE_KEY, Operator.IN, StateType.REPEAT.name(),
+                StateType.FORK.name(), StateType.SUB_WORKFLOW.name(), StateType.PHASE.name(), PHASE_STEP.name())
+            .addFilter(StateExecutionInstance.PARENT_INSTANCE_ID_KEY, Operator.NOT_EXISTS)
+            .addOrder(StateExecutionInstance.CREATED_AT_KEY, OrderType.ASC)
             .build();
 
     PageResponse<StateExecutionInstance> pageResponse =
