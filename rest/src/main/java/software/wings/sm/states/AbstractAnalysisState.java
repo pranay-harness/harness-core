@@ -393,9 +393,10 @@ public abstract class AbstractAnalysisState extends State {
     StateExecutionInstance stateExecutionInstance = ((ExecutionContextImpl) context).getStateExecutionInstance();
     Preconditions.checkNotNull(stateExecutionInstance);
 
-    List<StateExecutionData> stateExecutionDataList =
-        stateExecutionService.fetchPhaseExecutionData(stateExecutionInstance.getAppId(),
-            stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getDisplayName(), CurrentPhase.INCLUDE);
+    PhaseElement contextPhaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    List<StateExecutionData> stateExecutionDataList = stateExecutionService.fetchPhaseExecutionData(
+        stateExecutionInstance.getAppId(), stateExecutionInstance.getExecutionUuid(),
+        contextPhaseElement == null ? null : contextPhaseElement.getPhaseName(), CurrentPhase.INCLUDE);
 
     if (isEmpty(stateExecutionDataList)) {
       return hosts;
