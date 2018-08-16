@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -222,15 +223,20 @@ public class AwsAmiServiceDeployState extends State {
     }
     String newAutoScalingGroupName = serviceSetupElement.getNewAutoScalingGroupName();
     String oldAutoScalingGroupName = serviceSetupElement.getOldAutoScalingGroupName();
-
     List<String> gpNames = new ArrayList<>();
-    gpNames.add(oldAutoScalingGroupName);
-    gpNames.add(newAutoScalingGroupName);
+    if (isNotEmpty(oldAutoScalingGroupName)) {
+      gpNames.add(oldAutoScalingGroupName);
+    }
+    if (isNotEmpty(newAutoScalingGroupName)) {
+      gpNames.add(newAutoScalingGroupName);
+    }
 
     Map<String, Integer> desiredCapacities =
         awsAsgHelperServiceManager.getDesiredCapacitiesOfAsgs(awsConfig, encryptionDetails, region, gpNames);
-    Integer newAutoScalingGroupDesiredCapacity = desiredCapacities.get(newAutoScalingGroupName);
-    Integer oldAutoScalingGroupDesiredCapacity = desiredCapacities.get(oldAutoScalingGroupName);
+    Integer newAutoScalingGroupDesiredCapacity =
+        isNotEmpty(newAutoScalingGroupName) ? desiredCapacities.get(newAutoScalingGroupName) : 0;
+    Integer oldAutoScalingGroupDesiredCapacity =
+        isNotEmpty(oldAutoScalingGroupName) ? desiredCapacities.get(oldAutoScalingGroupName) : 0;
 
     Integer totalNewInstancesToBeAdded = Math.max(0, totalExpectedCount - newAutoScalingGroupDesiredCapacity);
     Integer newAsgFinalDesiredCount = newAutoScalingGroupDesiredCapacity + totalNewInstancesToBeAdded;

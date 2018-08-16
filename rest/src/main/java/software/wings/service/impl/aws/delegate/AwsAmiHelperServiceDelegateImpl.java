@@ -177,7 +177,8 @@ public class AwsAmiHelperServiceDelegateImpl
       logCallback.saveExecutionLog(format("Creating new AutoScalingGroup [%s]", newAutoScalingGroupName));
       awsAsgHelperServiceDelegate.createAutoScalingGroup(awsConfig, encryptionDetails, region,
           createNewAutoScalingGroupRequest(request.getInfraMappingId(), request.getInfraMappingClassisLbs(),
-              request.getInfraMappingTargetGroupArns(), newAutoScalingGroupName, baseAutoScalingGroup, harnessRevision),
+              request.getInfraMappingTargetGroupArns(), newAutoScalingGroupName, baseAutoScalingGroup, harnessRevision,
+              maxInstances),
           logCallback);
 
       logCallback.saveExecutionLog("Sending request to delete old auto scaling groups to executor");
@@ -227,7 +228,7 @@ public class AwsAmiHelperServiceDelegateImpl
 
   private CreateAutoScalingGroupRequest createNewAutoScalingGroupRequest(String infraMappingId,
       List<String> infraMappingClassisLbs, List<String> infraMappingTargetGroupArns, String newAutoScalingGroupName,
-      AutoScalingGroup baseAutoScalingGroup, Integer harnessRevision) {
+      AutoScalingGroup baseAutoScalingGroup, Integer harnessRevision, Integer maxInstances) {
     // /*
     List<Tag> tags =
         baseAutoScalingGroup.getTags()
@@ -257,7 +258,7 @@ public class AwsAmiHelperServiceDelegateImpl
             .withLaunchConfigurationName(newAutoScalingGroupName)
             .withDesiredCapacity(0)
             .withMinSize(0)
-            .withMaxSize(baseAutoScalingGroup.getMaxSize())
+            .withMaxSize(maxInstances)
             .withTags(tags)
             .withDefaultCooldown(baseAutoScalingGroup.getDefaultCooldown())
             .withAvailabilityZones(baseAutoScalingGroup.getAvailabilityZones())

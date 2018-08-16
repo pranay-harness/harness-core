@@ -88,7 +88,7 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
     try {
       request = (CreateAutoScalingGroupRequest) invokeMethod(awsAmiHelperServiceDelegate, true,
           "createNewAutoScalingGroupRequest",
-          new Object[] {"id", asList("lb1", "lb2"), asList("a1", "a2"), "newName", baseAutoScalingGroup, 2});
+          new Object[] {"id", asList("lb1", "lb2"), asList("a1", "a2"), "newName", baseAutoScalingGroup, 2, 10});
     } catch (Exception ex) {
       fail(format("Exception: [%s]", ex.getMessage()));
     }
