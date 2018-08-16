@@ -83,9 +83,14 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
       fetchValuesYamlFromGitRepo(commandRequest, executionLogCallback);
       if (!helmCommandHelper.checkValidChartSpecification(commandRequest.getChartSpecification())) {
-        String msg = "Invalid chart specification "
-            + (commandRequest.getChartSpecification() == null ? "NULL"
-                                                              : commandRequest.getChartSpecification().toString());
+        String msg =
+            new StringBuilder("Couldn't find valid helm chart specification from service or values.yaml from git\n")
+                .append((commandRequest.getChartSpecification() != null) ? commandRequest.getChartSpecification() + "\n"
+                                                                         : "")
+                .append("Please specify helm chart specification either in service or git repo\n")
+                .toString();
+
+        logger.info(msg);
         executionLogCallback.saveExecutionLog(msg);
         return HelmInstallCommandResponse.builder()
             .commandExecutionStatus(CommandExecutionStatus.FAILURE)
@@ -395,20 +400,32 @@ public class HelmDeployServiceImpl implements HelmDeployService {
               }
 
               if (isNotBlank(helmDeployChartSpec.getName())) {
-                executionLogCallback.saveExecutionLog("Overriding chart name from "
-                    + helmChartSpecification.getChartName() + " to " + helmDeployChartSpec.getName());
+                String chartNameMsg = isNotBlank(helmChartSpecification.getChartName())
+                    ? " from " + helmChartSpecification.getChartName()
+                    : "";
+
+                executionLogCallback.saveExecutionLog(
+                    "Overriding chart name" + chartNameMsg + " to " + helmDeployChartSpec.getName());
                 helmChartSpecification.setChartName(helmDeployChartSpec.getName());
                 valueOverrriden = true;
               }
               if (isNotBlank(helmDeployChartSpec.getUrl())) {
-                executionLogCallback.saveExecutionLog("Overriding chart url from "
-                    + helmChartSpecification.getChartUrl() + " to " + helmDeployChartSpec.getUrl());
+                String chartUrlMsg = isNotBlank(helmChartSpecification.getChartUrl())
+                    ? " from " + helmChartSpecification.getChartUrl()
+                    : "";
+
+                executionLogCallback.saveExecutionLog(
+                    "Overriding chart url" + chartUrlMsg + " to " + helmDeployChartSpec.getUrl());
                 helmChartSpecification.setChartUrl(helmDeployChartSpec.getUrl());
                 valueOverrriden = true;
               }
               if (isNotBlank(helmDeployChartSpec.getVersion())) {
-                executionLogCallback.saveExecutionLog("Overriding chart version from "
-                    + helmChartSpecification.getChartVersion() + " to " + helmDeployChartSpec.getVersion());
+                String chartVersionMsg = isNotBlank(helmChartSpecification.getChartVersion())
+                    ? " from " + helmChartSpecification.getChartVersion()
+                    : "";
+
+                executionLogCallback.saveExecutionLog(
+                    "Overriding chart version" + chartVersionMsg + " to " + helmDeployChartSpec.getVersion());
                 helmChartSpecification.setChartVersion(helmDeployChartSpec.getVersion());
                 valueOverrriden = true;
               }
