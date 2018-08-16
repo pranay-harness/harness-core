@@ -28,6 +28,7 @@ import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
+import software.wings.service.impl.analysis.LogAnalysisExecutionData;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
 import software.wings.service.impl.elk.ElkQueryType;
@@ -192,7 +193,8 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
   }
 
   @Override
-  protected String triggerAnalysisDataCollection(ExecutionContext context, String correlationId, Set<String> hosts) {
+  protected String triggerAnalysisDataCollection(
+      ExecutionContext context, LogAnalysisExecutionData executionData, Set<String> hosts) {
     final String timestampField = DEFAULT_TIME_FIELD;
     final String accountId = appService.get(context.getAppId()).getAccountId();
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
@@ -268,7 +270,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
       waitIds[i++] = waitId;
     }
 
-    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId, true), waitIds);
+    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), executionData, true), waitIds);
     List<String> delegateTaskIds = new ArrayList<>();
     for (DelegateTask task : delegateTasks) {
       delegateTaskIds.add(delegateService.queueTask(task));
