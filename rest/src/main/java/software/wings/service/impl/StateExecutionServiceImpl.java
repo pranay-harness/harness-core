@@ -7,8 +7,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.mongodb.morphia.query.Sort;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.SelectNodeStepExecutionSummary;
@@ -33,8 +31,6 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 @ValidateOnExecution
 public class StateExecutionServiceImpl implements StateExecutionService {
-  private static final Logger logger = LoggerFactory.getLogger(StateExecutionServiceImpl.class);
-
   @Inject private WingsPersistence wingsPersistence;
 
   public Map<String, StateExecutionInstance> executionStatesMap(String appId, String executionUuid) {
@@ -87,9 +83,10 @@ public class StateExecutionServiceImpl implements StateExecutionService {
     return names;
   }
 
-  private List<StateExecutionData> fetchPreviousPhaseExecutionData(
-      String appId, String executionUuid, String phaseName) {
-    List<StateExecutionData> previousExecutionDataList = new ArrayList<>();
+  @Override
+  public List<StateExecutionData> fetchPhaseExecutionData(
+      String appId, String executionUuid, String phaseName, CurrentPhase curentPhase) {
+    List<StateExecutionData> executionDataList = new ArrayList<>();
     try (HIterator<StateExecutionInstance> stateExecutionInstances =
              new HIterator<>(wingsPersistence.createQuery(StateExecutionInstance.class)
                                  .filter(StateExecutionInstance.APP_ID_KEY, appId)
@@ -103,16 +100,19 @@ public class StateExecutionServiceImpl implements StateExecutionService {
       while (stateExecutionInstances.hasNext()) {
         StateExecutionInstance stateExecutionInstance = stateExecutionInstances.next();
         StateExecutionData stateExecutionData = stateExecutionInstance.getStateExecutionData();
-        if (stateExecutionInstance.getDisplayName().equals(phaseName)) {
-          return previousExecutionDataList;
+        if (CurrentPhase.EXCLUDE.equals(curentPhase) && stateExecutionInstance.getDisplayName().equals(phaseName)) {
+          return executionDataList;
         }
-        previousExecutionDataList.add(stateExecutionData);
+        executionDataList.add(stateExecutionData);
+        if (CurrentPhase.INCLUDE.equals(curentPhase) && stateExecutionInstance.getDisplayName().equals(phaseName)) {
+          return executionDataList;
+        }
       }
     }
     if (phaseName != null) {
       throw new InvalidRequestException("Phase Name [" + phaseName + " is missing from workflow execution]");
     }
-    return previousExecutionDataList;
+    return executionDataList;
   }
 
   @Override
@@ -121,8 +121,8 @@ public class StateExecutionServiceImpl implements StateExecutionService {
     List<ServiceInstance> hostExclusionList = new ArrayList<>();
 
     List<StateExecutionData> previousPhaseExecutionsData =
-        fetchPreviousPhaseExecutionData(stateExecutionInstance.getAppId(), stateExecutionInstance.getExecutionUuid(),
-            phaseElement == null ? null : phaseElement.getPhaseName());
+        fetchPhaseExecutionData(stateExecutionInstance.getAppId(), stateExecutionInstance.getExecutionUuid(),
+            phaseElement == null ? null : phaseElement.getPhaseName(), CurrentPhase.EXCLUDE);
 
     if (isEmpty(previousPhaseExecutionsData)) {
       return hostExclusionList;

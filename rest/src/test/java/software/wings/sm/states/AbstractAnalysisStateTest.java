@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -43,6 +44,7 @@ import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.instance.ContainerInstanceHandler;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -56,6 +58,7 @@ import software.wings.sm.StateType;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,9 +70,11 @@ import java.util.UUID;
 public class AbstractAnalysisStateTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowExecutionService workflowExecutionService;
+  @Mock private StateExecutionService stateExecutionService;
   @Mock private ContainerInstanceHandler containerInstanceHandler;
   @Mock private InfrastructureMappingService infraMappingService;
   @Mock private InfrastructureMapping infrastructureMapping;
+
   private final String workflowId = UUID.randomUUID().toString();
   private final String appId = UUID.randomUUID().toString();
   private final String previousWorkflowExecutionId = UUID.randomUUID().toString();
@@ -125,6 +130,9 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     setInternalState(splunkV2State, "containerInstanceHandler", containerInstanceHandler);
     setInternalState(splunkV2State, "infraMappingService", infraMappingService);
     Reflect.on(splunkV2State).set("workflowExecutionService", workflowExecutionService);
+
+    Reflect.on(splunkV2State).set("stateExecutionService", stateExecutionService);
+
     Map<String, String> nodes = splunkV2State.getLastExecutionNodes(context);
     assertEquals(5, nodes.size());
     for (int i = 0; i < 5; ++i) {
@@ -209,6 +217,11 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     setInternalState(splunkV2State, "containerInstanceHandler", containerInstanceHandler);
     setInternalState(splunkV2State, "infraMappingService", infraMappingService);
     Reflect.on(splunkV2State).set("workflowExecutionService", workflowExecutionService);
+    Reflect.on(splunkV2State).set("stateExecutionService", stateExecutionService);
+
+    when(stateExecutionService.fetchPhaseExecutionData(anyString(), anyString(), anyString(), any()))
+        .thenReturn(Arrays.asList(stateExecutionData));
+
     Map<String, String> nodes = splunkV2State.getLastExecutionNodes(context);
     assertEquals(3, nodes.size());
     assertFalse(nodes.keySet().contains("serviceA-0.harness.com"));
