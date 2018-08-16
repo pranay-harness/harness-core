@@ -6,8 +6,11 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Indexes;
 import org.simpleframework.xml.Transient;
 import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
@@ -31,6 +34,9 @@ import java.util.Map;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Indexes(@Index(options = @IndexOptions(name = "stateTypes"),
+    fields = { @Field("appId")
+               , @Field("executionUuid"), @Field("stateType") }))
 public class StateExecutionInstance extends Base {
   public static final String CALLBACK = "callback";
   public static final String CONTEXT_ELEMENT_KEY = "contextElement";
@@ -87,7 +93,7 @@ public class StateExecutionInstance extends Base {
 
   @Indexed private String parentInstanceId;
 
-  @Indexed private String prevInstanceId;
+  private String prevInstanceId;
 
   private String nextInstanceId;
 
