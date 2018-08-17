@@ -118,6 +118,7 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.sm.DelegateMetaInfo;
+import software.wings.utils.KryoUtils;
 import software.wings.waitnotify.DelegateTaskNotifyResponseData;
 import software.wings.waitnotify.ErrorNotifyResponseData;
 import software.wings.waitnotify.NotifyResponseData;
@@ -1185,10 +1186,11 @@ public class DelegateServiceImpl implements DelegateService {
 
     logger.info("Delegate [{}], response received for taskId [{}]", delegateId, taskId);
 
-    DelegateTask delegateTask = wingsPersistence.createQuery(DelegateTask.class)
-                                    .filter("accountId", response.getAccountId())
-                                    .filter(ID_KEY, taskId)
-                                    .get();
+    Query<DelegateTask> taskQuery = wingsPersistence.createQuery(DelegateTask.class)
+                                        .filter("accountId", response.getAccountId())
+                                        .filter(ID_KEY, taskId);
+
+    DelegateTask delegateTask = taskQuery.get();
 
     if (delegateTask != null) {
       if (delegateTask.isAsync()) {
@@ -1199,13 +1201,12 @@ public class DelegateServiceImpl implements DelegateService {
         } else {
           logger.error("Async task {} has no wait ID", taskId);
         }
-        wingsPersistence.delete(wingsPersistence.createQuery(DelegateTask.class)
-                                    .filter("accountId", response.getAccountId())
-                                    .filter(ID_KEY, delegateTask.getUuid()));
+        wingsPersistence.delete(taskQuery);
       } else {
-        delegateTask.setNotifyResponse(response.getResponse());
-        delegateTask.setStatus(FINISHED);
-        wingsPersistence.save(delegateTask);
+        wingsPersistence.update(taskQuery,
+            wingsPersistence.createUpdateOperations(DelegateTask.class)
+                .set("serializedNotifyResponseData", KryoUtils.asBytes(response.getResponse()))
+                .set("status", FINISHED));
       }
       assignDelegateService.refreshWhitelist(delegateTask, delegateId);
     } else {
