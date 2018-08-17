@@ -11,10 +11,11 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 
 /**
- * Class representing entity for TimeSeries Analysis Record.
- * Created by sriram_parthasarathy on 9/22/17.
+ * ExperimentalMetricAnalysisRecord is the payload send after ML Analysis of Experimental Task.
+ *
+ * Created by Pranjal on 08/14/2018
  */
-@Entity(value = "timeSeriesAnalysisRecords", noClassnameStored = true)
+@Entity(value = "experimentalTimeSeriesAnalysisRecords", noClassnameStored = true)
 @Indexes(@Index(fields =
     { @Field("workflowExecutionId")
       , @Field("stateExecutionId"), @Field("analysisMinute"), @Field("groupName") },
@@ -23,4 +24,6 @@ import org.mongodb.morphia.annotations.Indexes;
 @EqualsAndHashCode(callSuper = false)
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class TimeSeriesMLAnalysisRecord extends MetricAnalysisRecord {}
+public class ExperimentalMetricAnalysisRecord extends MetricAnalysisRecord {
+  private String envId;
+}

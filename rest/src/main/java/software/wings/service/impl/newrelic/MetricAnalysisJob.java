@@ -36,6 +36,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.MetricDataAnalysisService;
+import software.wings.service.intfc.analysis.ExperimentalMetricAnalysisResource;
 import software.wings.sm.ExecutionStatus;
 import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
@@ -81,7 +82,7 @@ public class MetricAnalysisJob implements Job {
           .run();
 
     } catch (Exception ex) {
-      logger.warn("Log analysis cron failed with error", ex);
+      logger.warn("Metric analysis cron failed with error", ex);
       try {
         jobExecutionContext.getScheduler().deleteJob(jobExecutionContext.getJobDetail().getKey());
       } catch (SchedulerException e) {
@@ -93,7 +94,7 @@ public class MetricAnalysisJob implements Job {
   public static class MetricAnalysisGenerator implements Runnable {
     public static final int COMPARATIVE_ANALYSIS_DURATION = 30;
     private static final int APM_BUFFER_MINUTES = 2;
-    private final AnalysisContext context;
+    private AnalysisContext context;
     private final JobExecutionContext jobExecutionContext;
     private final String delegateTaskId;
     private final Map<String, String> testNodes;
@@ -240,7 +241,6 @@ public class MetricAnalysisJob implements Job {
             + context.getStateExecutionId() + ". Please contact the Harness support team. ");
       }
       int analysisStartMin = getAnalysisStartMinute(analysisMinute, mlAnalysisType);
-
       String testInputUrl = "/api/" + MetricDataAnalysisService.RESOURCE_URL
           + "/get-metrics?accountId=" + context.getAccountId() + "&appId=" + context.getAppId()
           + "&stateType=" + context.getStateType() + "&workflowExecutionId=" + context.getWorkflowExecutionId()
@@ -256,7 +256,7 @@ public class MetricAnalysisJob implements Job {
 
       String uuid = generateUuid();
 
-      String logAnalysisSaveUrl = "/api/" + MetricDataAnalysisService.RESOURCE_URL
+      String metricAnalysisSaveUrl = "/api/" + MetricDataAnalysisService.RESOURCE_URL
           + "/save-analysis?accountId=" + context.getAccountId() + "&stateType=" + context.getStateType()
           + "&applicationId=" + context.getAppId() + "&workflowExecutionId=" + context.getWorkflowExecutionId()
           + "&stateExecutionId=" + context.getStateExecutionId() + "&analysisMinute=" + analysisMinute
@@ -264,7 +264,7 @@ public class MetricAnalysisJob implements Job {
           + "&groupName=" + groupName;
 
       if (!isEmpty(context.getPrevWorkflowExecutionId())) {
-        logAnalysisSaveUrl += "&baseLineExecutionId=" + context.getPrevWorkflowExecutionId();
+        metricAnalysisSaveUrl += "&baseLineExecutionId=" + context.getPrevWorkflowExecutionId();
       }
 
       LearningEngineAnalysisTask learningEngineAnalysisTask =
@@ -283,7 +283,7 @@ public class MetricAnalysisJob implements Job {
               .parallel_processes(context.getParallelProcesses())
               .test_input_url(testInputUrl)
               .control_input_url(controlInputUrl)
-              .analysis_save_url(logAnalysisSaveUrl)
+              .analysis_save_url(metricAnalysisSaveUrl)
               .metric_template_url("/api/" + MetricDataAnalysisService.RESOURCE_URL
                   + "/get-metric-template?accountId=" + context.getAccountId() + "&appId=" + context.getAppId()
                   + "&stateType=" + context.getStateType() + "&stateExecutionId=" + context.getStateExecutionId()
@@ -353,9 +353,11 @@ public class MetricAnalysisJob implements Job {
                 ? heartBeatRecord.getDataCollectionMinute()
                     >= PREDECTIVE_HISTORY_MINUTES + DURATION_TO_ASK_MINUTES + analysisDuration
                 : heartBeatRecord.getDataCollectionMinute() >= analysisDuration;
+
             if (completeCron) {
               logger.info("time series analysis finished after running for {} minutes",
                   heartBeatRecord.getDataCollectionMinute());
+
               return;
             }
           }
@@ -455,6 +457,11 @@ public class MetricAnalysisJob implements Job {
           } else if (!taskQueued) {
             continue;
           }
+          try {
+            createExperimentalTask(analysisMinute, groupName, timeSeriesMlAnalysisType);
+          } catch (Exception ex) {
+            logger.info("[Learning Engine] : Failed to create Experimental Task with error {}", ex);
+          }
         }
       } catch (Exception ex) {
         completeCron = true;
@@ -481,6 +488,86 @@ public class MetricAnalysisJob implements Job {
         } catch (Exception ex) {
           logger.error("analysis failed", ex);
         }
+      }
+    }
+
+    /**
+     * Method to create Experimental Task and save it to DB
+     *
+     * @param analysisMinute
+     * @param groupName
+     * @param mlAnalysisType
+     */
+    private void createExperimentalTask(int analysisMinute, String groupName, TimeSeriesMlAnalysisType mlAnalysisType) {
+      String uuid = generateUuid();
+      String testInputUrl = "/api/" + MetricDataAnalysisService.RESOURCE_URL
+          + "/get-metrics?accountId=" + context.getAccountId() + "&appId=" + context.getAppId()
+          + "&stateType=" + context.getStateType() + "&workflowExecutionId=" + context.getWorkflowExecutionId()
+          + "&groupName=" + groupName + "&compareCurrent=true";
+      String controlInputUrl = "/api/" + MetricDataAnalysisService.RESOURCE_URL
+          + "/get-metrics?accountId=" + context.getAccountId() + "&appId=" + context.getAppId()
+          + "&stateType=" + context.getStateType() + "&groupName=" + groupName + "&compareCurrent=";
+      if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
+        controlInputUrl = controlInputUrl + true + "&workflowExecutionId=" + context.getWorkflowExecutionId();
+      } else {
+        controlInputUrl = controlInputUrl + false + "&workflowExecutionId=" + context.getPrevWorkflowExecutionId();
+      }
+
+      int analysisStartMin =
+          analysisMinute > COMPARATIVE_ANALYSIS_DURATION ? analysisMinute - COMPARATIVE_ANALYSIS_DURATION : 0;
+
+      String experimentalMetricAnalysisSaveUrl = "/api/" + ExperimentalMetricAnalysisResource.LEARNING_EXP_URL
+          + ExperimentalMetricAnalysisResource.ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL
+          + "?accountId=" + context.getAccountId() + "&stateType=" + context.getStateType()
+          + "&applicationId=" + context.getAppId() + "&workflowExecutionId=" + context.getWorkflowExecutionId()
+          + "&stateExecutionId=" + context.getStateExecutionId() + "&analysisMinute=" + analysisMinute
+          + "&taskId=" + uuid + "&serviceId=" + context.getServiceId() + "&workflowId=" + context.getWorkflowId()
+          + "&groupName=" + groupName;
+
+      if (!isEmpty(context.getPrevWorkflowExecutionId())) {
+        experimentalMetricAnalysisSaveUrl += "&baseLineExecutionId=" + context.getPrevWorkflowExecutionId();
+      }
+      List<MLExperiments> experiments = learningEngineService.getExperiments(MLAnalysisType.TIME_SERIES);
+
+      LearningEngineExperimentalAnalysisTask analysisTask =
+          LearningEngineExperimentalAnalysisTask.builder()
+              .workflow_id(context.getWorkflowId())
+              .workflow_execution_id(context.getWorkflowExecutionId())
+              .state_execution_id(context.getStateExecutionId())
+              .service_id(context.getServiceId())
+              .auth_token(context.getAuthToken())
+              .analysis_start_min(analysisStartMin)
+              .analysis_minute(analysisMinute)
+              .smooth_window(context.getSmooth_window())
+              .tolerance(context.getTolerance())
+              .min_rpm(context.getMinimumRequestsPerMinute())
+              .comparison_unit_window(context.getComparisonWindow())
+              .parallel_processes(context.getParallelProcesses())
+              .test_input_url(testInputUrl)
+              .control_input_url(controlInputUrl)
+              .analysis_save_url(experimentalMetricAnalysisSaveUrl)
+              .metric_template_url("/api/" + MetricDataAnalysisService.RESOURCE_URL
+                  + "/get-metric-template?accountId=" + context.getAccountId() + "&appId=" + context.getAppId()
+                  + "&stateType=" + context.getStateType() + "&stateExecutionId=" + context.getStateExecutionId()
+                  + "&serviceId=" + context.getServiceId() + "&groupName=" + groupName)
+              .control_nodes(getNodesForGroup(groupName, controlNodes))
+              .test_nodes(mlAnalysisType.equals(TimeSeriesMlAnalysisType.PREDICTIVE)
+                      ? Sets.newHashSet(groupName)
+                      : getNodesForGroup(groupName, testNodes))
+              .analysis_start_time(
+                  mlAnalysisType.equals(TimeSeriesMlAnalysisType.PREDICTIVE) ? PREDECTIVE_HISTORY_MINUTES : 0)
+              .stateType(context.getStateType())
+              .ml_analysis_type(MLAnalysisType.TIME_SERIES)
+              .group_name(groupName)
+              .time_series_ml_analysis_type(mlAnalysisType)
+              .build();
+
+      analysisTask.setAppId(context.getAppId());
+      analysisTask.setUuid(uuid);
+
+      for (MLExperiments experiment : experiments) {
+        analysisTask.setExperiment_name(experiment.getExperimentName());
+        learningEngineService.addLearningEngineExperimentalAnalysisTask(analysisTask);
       }
     }
 

@@ -3,7 +3,7 @@ package software.wings.service.intfc;
 import io.harness.validation.Create;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.metrics.TimeSeriesMetricDefinition;
-import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
+import software.wings.service.impl.analysis.MetricAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLScores;
 import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
@@ -24,6 +24,7 @@ import javax.validation.constraints.NotNull;
  */
 public interface MetricDataAnalysisService {
   String RESOURCE_URL = "timeseries";
+
   @ValidationGroups(Create.class)
   boolean saveMetricData(@NotNull String accountId, String appId, String stateExecutionId, String delegateTaskId,
       @Valid List<NewRelicMetricDataRecord> metricData) throws IOException;
@@ -34,7 +35,7 @@ public interface MetricDataAnalysisService {
   boolean saveAnalysisRecordsML(@NotNull StateType stateType, @NotNull String accountId, @NotNull String appId,
       @NotNull String stateExecutionId, @NotNull String workflowExecutionId, @NotNull String workflowId,
       @NotNull String serviceId, String groupName, @NotNull Integer analysisMinute, @NotNull String taskId,
-      String baseLineExecutionId, @Valid TimeSeriesMLAnalysisRecord mlAnalysisResponse);
+      String baseLineExecutionId, @Valid MetricAnalysisRecord mlAnalysisResponse);
 
   @ValidationGroups(Create.class) void saveTimeSeriesMLScores(TimeSeriesMLScores scores);
 
