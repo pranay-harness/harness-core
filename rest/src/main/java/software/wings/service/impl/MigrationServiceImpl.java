@@ -1,11 +1,13 @@
 package software.wings.service.impl;
 
 import static java.time.Duration.ofMinutes;
+import static java.util.Arrays.asList;
 import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.ID_KEY;
 import static software.wings.beans.Schema.SCHEMA_ID;
 import static software.wings.beans.Schema.SchemaBuilder.aSchema;
 import static software.wings.dl.HQuery.excludeAuthority;
+import static software.wings.dl.MongoHelper.setUnset;
 
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
@@ -18,10 +20,12 @@ import migrations.MigrationList;
 import migrations.SeedDataMigration;
 import migrations.SeedDataMigrationList;
 import org.apache.commons.lang3.tuple.Pair;
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
+import software.wings.beans.DelegateConfiguration;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Schema;
 import software.wings.dl.HIterator;
@@ -199,13 +203,23 @@ public class MigrationServiceImpl implements MigrationService {
 
   private void initializeGlobalDbEntriesIfNeeded() {
     try {
-      Account globalAccount = wingsPersistence.createQuery(Account.class).filter(ID_KEY, GLOBAL_ACCOUNT_ID).get();
+      Query<Account> globalAccountQuery = wingsPersistence.createQuery(Account.class).filter(ID_KEY, GLOBAL_ACCOUNT_ID);
+      Account globalAccount = globalAccountQuery.get();
       if (globalAccount == null) {
         wingsPersistence.save(Account.Builder.anAccount()
                                   .withUuid(GLOBAL_ACCOUNT_ID)
                                   .withCompanyName("Global")
                                   .withAccountName("Global")
+                                  .withDelegateConfiguration(DelegateConfiguration.builder()
+                                                                 .watcherVersion("1.0.0-dev")
+                                                                 .delegateVersions(asList("1.0.0-dev"))
+                                                                 .build())
                                   .build());
+      } else if (globalAccount.getDelegateConfiguration() == null) {
+        UpdateOperations<Account> ops = wingsPersistence.createUpdateOperations(Account.class);
+        setUnset(ops, "delegateConfiguration",
+            DelegateConfiguration.builder().watcherVersion("1.0.0-dev").delegateVersions(asList("1.0.0-dev")).build());
+        wingsPersistence.update(globalAccountQuery, ops);
       }
     } catch (Exception e) {
       logger.error("[Migration] - initializeGlobalDbEntriesIfNeeded failed.", e);
