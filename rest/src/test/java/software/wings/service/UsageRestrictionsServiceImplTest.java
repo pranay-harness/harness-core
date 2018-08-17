@@ -856,7 +856,6 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
 
     UserPermissionInfo userPermissionInfo = UserPermissionInfo.builder()
                                                 .accountId(ACCOUNT_ID)
-                                                .isRbacEnabled(true)
                                                 .appPermissionMap(appPermissionsMap)
                                                 .usageRestrictionsForUpdateAction(usageRestrictions)
                                                 .appEnvMapForUpdateAction(appEnvMap)

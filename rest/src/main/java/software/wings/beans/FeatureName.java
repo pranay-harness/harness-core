@@ -5,9 +5,7 @@ package software.wings.beans;
  * delete the feature name.
  */
 public enum FeatureName {
-  RBAC,
   HELM,
-  WHITELIST,
   AWS_CLOUD_FORMATION_TEMPLATE,
   CV_DEMO,
   USE_DASH_IN_HOSTNAME,

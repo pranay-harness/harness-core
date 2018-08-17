@@ -2,8 +2,11 @@ package software.wings.resources;
 
 import software.wings.beans.RestResponse;
 import software.wings.beans.User;
+import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.UserThreadLocal;
+import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.PublicApi;
 import software.wings.security.annotations.Scope;
@@ -40,6 +43,7 @@ public class SecureResource {
   @GET
   @Path("NonPublicApi")
   @Scope(ResourceType.APPLICATION)
+  @AuthRule(permissionType = PermissionType.LOGGED_IN)
   public RestResponse<User> NonPublicApi() {
     return new RestResponse<>(UserThreadLocal.get());
   }
@@ -52,6 +56,7 @@ public class SecureResource {
   @GET
   @Path("appResourceReadActionOnAppScope")
   @Scope(ResourceType.APPLICATION)
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.READ)
   public RestResponse<User> appResourceReadActionOnAppScope() {
     return new RestResponse<>(UserThreadLocal.get());
   }
@@ -62,9 +67,10 @@ public class SecureResource {
    * @return the rest response
    */
   @POST
-  @Path("appResourceWriteActionOnAppScope")
+  @Path("appResourceCreateActionOnAppScope")
   @Scope(ResourceType.APPLICATION)
-  public RestResponse<User> appResourceWriteActionOnAppScope() {
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.CREATE)
+  public RestResponse<User> appResourceCreateActionOnAppScope() {
     return new RestResponse<>(UserThreadLocal.get());
   }
 
@@ -75,7 +81,8 @@ public class SecureResource {
    */
   @GET
   @Path("envResourceReadActionOnEnvScope")
-  @Scope(ResourceType.ENVIRONMENT)
+  @Scope(ResourceType.APPLICATION)
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.READ)
   public RestResponse<User> envResourceReadActionOnEnvScope() {
     return new RestResponse<>(UserThreadLocal.get());
   }
@@ -87,7 +94,8 @@ public class SecureResource {
    */
   @POST
   @Path("envResourceWriteActionOnEnvScope")
-  @Scope(ResourceType.ENVIRONMENT)
+  @Scope(ResourceType.APPLICATION)
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.UPDATE)
   public RestResponse<User> envResourceWriteActionOnEnvScope() {
     return new RestResponse<>(UserThreadLocal.get());
   }
