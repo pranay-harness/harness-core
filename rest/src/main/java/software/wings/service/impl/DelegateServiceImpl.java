@@ -42,6 +42,7 @@ import static software.wings.common.NotificationMessageResolver.NotificationMess
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.DELEGATE_STATE_NOTIFICATION;
 import static software.wings.delegatetasks.RemoteMethodReturnValueData.Builder.aRemoteMethodReturnValueData;
 import static software.wings.dl.MongoHelper.setUnset;
+import static software.wings.exception.WingsException.NOBODY;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.exception.WingsException.USER_ADMIN;
 import static software.wings.utils.KubernetesConvention.getAccountIdentifier;
@@ -1181,7 +1182,7 @@ public class DelegateServiceImpl implements DelegateService {
   public void processDelegateResponse(
       String accountId, String delegateId, String taskId, DelegateTaskResponse response) {
     if (response == null) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "response cannot be null");
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, NOBODY).addParam("args", "response cannot be null");
     }
 
     logger.info("Delegate [{}], response received for taskId [{}]", delegateId, taskId);
