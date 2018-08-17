@@ -527,7 +527,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     wingsPersistence.updateFields(
         infrastructureMapping.getClass(), infrastructureMapping.getUuid(), keyValuePairs, fieldsToRemove);
     InfrastructureMapping updatedInfraMapping = get(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
-    yamlChangeSetHelper.updateYamlChangeAsync(updatedInfraMapping, savedInfraMapping, savedInfraMapping.getAccountId());
+    yamlChangeSetHelper.updateYamlChangeAsync(updatedInfraMapping, savedInfraMapping, savedInfraMapping.getAccountId(),
+        !(updatedInfraMapping.getName().equals(savedInfraMapping.getName())));
     return updatedInfraMapping;
   }
 

@@ -136,7 +136,8 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
     NotificationGroup updatedGroup =
         wingsPersistence.saveAndGet(NotificationGroup.class, notificationGroup); // TODO:: selective update
 
-    yamlChangeSetHelper.updateYamlChangeAsync(updatedGroup, existingGroup, updatedGroup.getAccountId());
+    yamlChangeSetHelper.updateYamlChangeAsync(updatedGroup, existingGroup, updatedGroup.getAccountId(),
+        !(updatedGroup.getName().equals(existingGroup.getName())));
     return updatedGroup;
   }
 

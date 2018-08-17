@@ -195,8 +195,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
 
     ArtifactStream finalArtifactStream = artifactStream;
-    yamlChangeSetHelper.updateYamlChangeAsync(
-        finalArtifactStream, savedArtifactStream, appService.getAccountIdByAppId(finalArtifactStream.getAppId()));
+    yamlChangeSetHelper.updateYamlChangeAsync(finalArtifactStream, savedArtifactStream,
+        appService.getAccountIdByAppId(finalArtifactStream.getAppId()),
+        !(finalArtifactStream.getName().equals(savedArtifactStream.getName())));
 
     return artifactStream;
   }
