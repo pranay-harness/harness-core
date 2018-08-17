@@ -2,6 +2,7 @@ package software.wings.app;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.logging.MorphiaLoggerFactory.registerLogger;
 
@@ -15,7 +16,9 @@ import com.google.inject.name.Names;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.deftlabs.lock.mongo.DistributedLockSvcFactory;
 import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
+import com.mongodb.AggregationOptions;
 import com.mongodb.BasicDBObject;
+import com.mongodb.Cursor;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.DuplicateKeyException;
@@ -23,8 +26,11 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 import com.mongodb.MongoCommandException;
+import com.mongodb.ReadPreference;
 import io.harness.exception.UnexpectedException;
 import io.harness.logging.MorphiaLoggerFactory;
+import lombok.AllArgsConstructor;
+import lombok.Value;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.annotations.Field;
@@ -39,7 +45,9 @@ import software.wings.dl.MongoConfig;
 import software.wings.lock.ManagedDistributedLockSvc;
 import software.wings.utils.NoDefaultConstructorMorphiaObjectFactory;
 
+import java.time.Duration;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -134,6 +142,80 @@ public class DatabaseModule extends AbstractModule {
 
   private interface IndexCreator { void create(); }
 
+  @Value
+  @AllArgsConstructor
+  class Accesses {
+    int operations;
+    Date since;
+  }
+
+  private Map<String, Accesses> extractAccesses(Cursor cursor) {
+    Map<String, Accesses> accessesMap = new HashMap<>();
+
+    while (cursor.hasNext()) {
+      BasicDBObject object = (BasicDBObject) cursor.next();
+
+      final String name = (String) object.get("name");
+      final BasicDBObject accessesObject = (BasicDBObject) object.get("accesses");
+
+      Accesses accesses =
+          new Accesses(((Long) accessesObject.get("ops")).intValue(), (Date) accessesObject.get("since"));
+
+      accessesMap.put(name, accesses);
+    }
+    return accessesMap;
+  }
+
+  private Map<String, Accesses> mergeAccesses(
+      Map<String, Accesses> accessesPrimary, Map<String, Accesses> accessesSecondary) {
+    Map<String, Accesses> accessesMap = new HashMap<>();
+
+    Set<String> indexes = new HashSet<>();
+    indexes.addAll(accessesPrimary.keySet());
+    indexes.addAll(accessesSecondary.keySet());
+
+    for (String index : indexes) {
+      if (!accessesPrimary.containsKey(index)) {
+        accessesMap.put(index, accessesSecondary.get(index));
+      } else if (!accessesSecondary.containsKey(index)) {
+        accessesMap.put(index, accessesPrimary.get(index));
+      } else {
+        Accesses primary = accessesPrimary.get(index);
+        Accesses secondary = accessesSecondary.get(index);
+
+        accessesMap.put(index,
+            new Accesses(primary.getOperations() + secondary.getOperations(),
+                primary.getSince().before(secondary.getSince()) ? primary.getSince() : secondary.getSince()));
+      }
+    }
+    return accessesMap;
+  }
+
+  // This for checks for unused indexes. It utilize the indexStat provided from mongo.
+  // A good article on the topic:
+  // https://www.objectrocket.com/blog/mongodb/considerations-for-using-indexstats-to-find-unused-indexes-in-mongodb/
+  // NOTE: This is work in progress. For the time being we are checking only for completely unused indexes.
+  private void checkForUnusedIndexes(DBCollection collection) {
+    final Map<String, Accesses> accessesPrimary = extractAccesses(
+        collection.aggregate(Arrays.<DBObject>asList(new BasicDBObject("$indexStats", new BasicDBObject())),
+            AggregationOptions.builder().build(), ReadPreference.primary()));
+    final Map<String, Accesses> accessesSecondary = extractAccesses(
+        collection.aggregate(Arrays.<DBObject>asList(new BasicDBObject("$indexStats", new BasicDBObject())),
+            AggregationOptions.builder().build(), ReadPreference.secondary()));
+
+    final Map<String, Accesses> accesses = mergeAccesses(accessesPrimary, accessesSecondary);
+
+    final Date tooNew = new Date(System.currentTimeMillis() - Duration.ofDays(7).toMillis());
+
+    accesses.entrySet()
+        .stream()
+        .filter(entry -> entry.getValue().getOperations() == 0)
+        .filter(entry -> entry.getValue().getSince().compareTo(tooNew) < 0)
+        .forEach(entry
+            -> logger.error(format("(work in progress alert): Index %s.%s is not used at all for more than 7 days",
+                collection.getName(), entry.getKey())));
+  }
+
   private void ensureIndex(Morphia morphia) {
     /*
     Morphia auto creates embedded/nested Entity indexes with the parent Entity indexes.
@@ -221,28 +303,32 @@ public class DatabaseModule extends AbstractModule {
       }
 
       creators.forEach((name, creator) -> {
-        for (int retry = 0; retry < 2; ++retry) {
-          try {
-            creator.create();
-            break;
-          } catch (MongoCommandException mex) {
-            if (mex.getErrorCode() == 85) {
-              try {
-                logger.warn("Drop index: {}.{}", collection.getName(), name);
-                collection.dropIndex(name);
-              } catch (RuntimeException ex) {
-                logger.error("Failed to drop index {}", name, mex);
+        try {
+          for (int retry = 0; retry < 2; ++retry) {
+            try {
+              creator.create();
+              break;
+            } catch (MongoCommandException mex) {
+              if (mex.getErrorCode() == 85) {
+                try {
+                  logger.warn("Drop index: {}.{}", collection.getName(), name);
+                  collection.dropIndex(name);
+                } catch (RuntimeException ex) {
+                  logger.error("Failed to drop index {}", name, mex);
+                }
+              } else {
+                logger.error("Failed to create index {}", name, mex);
               }
-            } else {
-              logger.error("Failed to create index {}", name, mex);
             }
-          } catch (DuplicateKeyException exception) {
-            logger.error(
-                "Because of deployment, a new index with uniqueness flag was introduced. Current data does not meet this expectation."
-                    + "Create a migration to align the data with expectation or delete the uniqueness criteria from index",
-                exception);
           }
+        } catch (DuplicateKeyException exception) {
+          logger.error(
+              "Because of deployment, a new index with uniqueness flag was introduced. Current data does not meet this expectation."
+                  + "Create a migration to align the data with expectation or delete the uniqueness criteria from index",
+              exception);
         }
+
+        checkForUnusedIndexes(collection);
       });
     });
 
