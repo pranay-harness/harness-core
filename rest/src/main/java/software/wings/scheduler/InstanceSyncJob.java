@@ -17,8 +17,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.SortOrder.OrderType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -26,10 +26,8 @@ import software.wings.exception.WingsException;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
-import software.wings.service.impl.instance.InstanceHandler;
-import software.wings.service.impl.instance.InstanceHandlerFactory;
+import software.wings.service.impl.instance.InstanceHelper;
 import software.wings.service.intfc.InfrastructureMappingService;
-import software.wings.utils.Util;
 
 import java.time.Duration;
 import java.util.List;
@@ -48,8 +46,8 @@ public class InstanceSyncJob implements Job {
   public static final String GROUP = "INSTANCE_SYNC_CRON_GROUP";
   private static final int POLL_INTERVAL = 600;
 
-  @Inject private InstanceHandlerFactory instanceHandlerFactory;
   @Inject private InfrastructureMappingService infraMappingService;
+  @Inject private InstanceHelper instanceHelper;
   @Inject private WingsPersistence wingsPersistence;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
@@ -100,43 +98,15 @@ public class InstanceSyncJob implements Job {
 
   private void executeInternal(String appId) {
     try {
-      final String appIdFinal = appId;
       logger.info("Executing instance sync job for appId:" + appId);
       PageRequest<InfrastructureMapping> pageRequest = new PageRequest<>();
       pageRequest.addFilter("appId", Operator.EQ, appId);
+      pageRequest.addOrder("envId", OrderType.ASC);
       PageResponse<InfrastructureMapping> response = infraMappingService.list(pageRequest);
       // Response only contains id
       List<InfrastructureMapping> infraMappingList = response.getResponse();
-
-      infraMappingList.forEach(infraMapping -> {
-        String infraMappingId = infraMapping.getUuid();
-        InfrastructureMappingType infraMappingType =
-            Util.getEnumFromString(InfrastructureMappingType.class, infraMapping.getInfraMappingType());
-        try (AcquiredLock lock = persistentLocker.waitToAcquireLock(
-                 InfrastructureMapping.class, infraMappingId, Duration.ofSeconds(200), Duration.ofSeconds(220))) {
-          if (lock == null) {
-            logger.warn("Couldn't acquire infra lock for infraMappingId [{}] of appId [{}]", infraMappingId, appId);
-            return;
-          }
-
-          try {
-            InstanceHandler instanceHandler = instanceHandlerFactory.getInstanceHandler(infraMappingType);
-            if (instanceHandler == null) {
-              logger.warn("Instance handler null for infraMappingId [{}] of appId [{}]", infraMappingId, appId);
-              return;
-            }
-            logger.info("Instance sync job started for infraMapping [{}]", infraMappingId);
-            instanceHandler.syncInstances(appIdFinal, infraMappingId);
-            logger.info("Instance sync job completed for infraMapping [{}]", infraMappingId);
-          } catch (Exception ex) {
-            logger.warn("Instance sync job failed for infraMappingId [{}]", infraMappingId, ex);
-          }
-        } catch (Exception e) {
-          logger.warn("Failed to acquire lock for infraMappingId [{}] of appId [{}]", infraMappingId, appId);
-        }
-      });
-
-      logger.info("Instance sync job done for appId:" + appId);
+      infraMappingList.forEach(infrastructureMapping -> { instanceHelper.syncNow(appId, infrastructureMapping); });
+      logger.info("Instance sync done for appId:" + appId);
     } catch (WingsException exception) {
       WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception ex) {

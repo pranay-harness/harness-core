@@ -4,7 +4,7 @@ package software.wings.beans.instance.dashboard;
  * Artifact information
  * @author rktummala on 08/13/17
  */
-public class ArtifactSummary extends EntitySummary {
+public class ArtifactSummary extends AbstractEntitySummary {
   private String artifactSourceName;
   private String buildNo;
 
@@ -24,7 +24,10 @@ public class ArtifactSummary extends EntitySummary {
     this.buildNo = buildNo;
   }
 
-  public static final class Builder extends EntitySummary.Builder {
+  public static final class Builder {
+    private String id;
+    private String name;
+    private String type;
     private String artifactSourceName;
     private String buildNo;
 
@@ -34,23 +37,29 @@ public class ArtifactSummary extends EntitySummary {
       return new Builder();
     }
 
-    public Builder withArtifactSourceName(String artifactSourceName) {
+    public Builder id(String id) {
+      this.id = id;
+      return this;
+    }
+
+    public Builder name(String name) {
+      this.name = name;
+      return this;
+    }
+
+    public Builder type(String type) {
+      this.type = type;
+      return this;
+    }
+
+    public Builder artifactSourceName(String artifactSourceName) {
       this.artifactSourceName = artifactSourceName;
       return this;
     }
 
-    public Builder withBuildNo(String buildNo) {
+    public Builder buildNo(String buildNo) {
       this.buildNo = buildNo;
       return this;
-    }
-
-    public Builder but() {
-      return (Builder) anArtifactSummary()
-          .withArtifactSourceName(artifactSourceName)
-          .withBuildNo(buildNo)
-          .withId(id)
-          .withName(name)
-          .withType(type);
     }
 
     public ArtifactSummary build() {

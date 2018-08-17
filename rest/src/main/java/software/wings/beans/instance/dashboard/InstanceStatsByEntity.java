@@ -4,7 +4,7 @@ package software.wings.beans.instance.dashboard;
  * @author rktummala on 08/13/17
  */
 public class InstanceStatsByEntity {
-  protected EntitySummary entitySummary;
+  protected AbstractEntitySummary entitySummary;
   protected InstanceStats instanceStats;
 
   public InstanceStats getInstanceStats() {
@@ -15,16 +15,16 @@ public class InstanceStatsByEntity {
     this.instanceStats = instanceStats;
   }
 
-  public EntitySummary getEntitySummary() {
+  public AbstractEntitySummary getEntitySummary() {
     return entitySummary;
   }
 
-  protected void setEntitySummary(EntitySummary entitySummary) {
+  protected void setEntitySummary(AbstractEntitySummary entitySummary) {
     this.entitySummary = entitySummary;
   }
 
   public static class Builder {
-    protected EntitySummary entitySummary;
+    protected AbstractEntitySummary entitySummary;
     protected InstanceStats instanceStats;
 
     protected Builder() {}
@@ -33,7 +33,7 @@ public class InstanceStatsByEntity {
       return new Builder();
     }
 
-    public Builder withEntitySummary(EntitySummary entitySummary) {
+    public Builder withEntitySummary(AbstractEntitySummary entitySummary) {
       this.entitySummary = entitySummary;
       return this;
     }

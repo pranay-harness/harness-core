@@ -17,6 +17,7 @@ import com.google.inject.Singleton;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.Reservation;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.data.structure.UUIDGenerator;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +42,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.Instance.InstanceBuilder;
+import software.wings.beans.infrastructure.instance.ManualSyncJob;
 import software.wings.beans.infrastructure.instance.info.Ec2InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.PhysicalHostInstanceInfo;
@@ -78,6 +80,8 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Both the normal instance and container instance are handled here.
@@ -104,6 +108,7 @@ public class InstanceHelper {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private DeploymentService deploymentService;
+  @Inject private ExecutorService executorService;
 
   /**
    * The phaseExecutionData is used to process the instance information that is used by the service and infra
@@ -531,5 +536,63 @@ public class InstanceHelper {
         logger.warn("Could not locate phase for phase step {}", phaseStepSubWorkflow.getId());
       }
     }
+  }
+
+  public String manualSync(String appId, String infraMappingId) {
+    String syncJobId = UUIDGenerator.generateUuid();
+    InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
+    instanceService.saveManualSyncJob(ManualSyncJob.builder().uuid(syncJobId).appId(appId).build());
+    executorService.submit(() -> {
+      try {
+        syncNow(appId, infrastructureMapping);
+      } finally {
+        instanceService.deleteManualSyncJob(appId, syncJobId);
+      }
+    });
+    return syncJobId;
+  }
+
+  public void syncNow(String appId, InfrastructureMapping infraMapping) {
+    if (infraMapping == null) {
+      return;
+    }
+
+    String infraMappingId = infraMapping.getUuid();
+    InfrastructureMappingType infraMappingType =
+        Util.getEnumFromString(InfrastructureMappingType.class, infraMapping.getInfraMappingType());
+    try (AcquiredLock lock =
+             persistentLocker.tryToAcquireLock(InfrastructureMapping.class, infraMappingId, Duration.ofSeconds(180))) {
+      if (lock == null) {
+        logger.warn("Couldn't acquire infra lock for infraMappingId [{}] of appId [{}]", infraMappingId, appId);
+        return;
+      }
+
+      try {
+        InstanceHandler instanceHandler = instanceHandlerFactory.getInstanceHandler(infraMappingType);
+        if (instanceHandler == null) {
+          logger.warn("Instance handler null for infraMappingId [{}] of appId [{}]", infraMappingId, appId);
+          return;
+        }
+        logger.info("Instance sync started for infraMapping [{}]", infraMappingId);
+        instanceHandler.syncInstances(appId, infraMappingId);
+        instanceService.updateSyncSuccess(appId, infraMapping.getServiceId(), infraMapping.getEnvId(), infraMappingId,
+            infraMapping.getName(), System.currentTimeMillis());
+        logger.info("Instance sync completed for infraMapping [{}]", infraMappingId);
+      } catch (Exception ex) {
+        logger.warn("Instance sync failed for infraMappingId [{}]", infraMappingId, ex);
+        String errorMsg;
+        if (ex instanceof WingsException) {
+          errorMsg = ((WingsException) ex).getResponseMessage().getMessage();
+        } else {
+          errorMsg = ex.getMessage() != null ? ex.getMessage() : "Unknown error";
+        }
+        instanceService.updateSyncFailure(appId, infraMapping.getServiceId(), infraMapping.getEnvId(), infraMappingId,
+            infraMapping.getName(), System.currentTimeMillis(), errorMsg);
+      }
+    }
+  }
+
+  public List<Boolean> getManualSyncJobsStatus(Set<String> manualSyncJobIdSet) {
+    return instanceService.getManualSyncJobsStatus(manualSyncJobIdSet);
   }
 }

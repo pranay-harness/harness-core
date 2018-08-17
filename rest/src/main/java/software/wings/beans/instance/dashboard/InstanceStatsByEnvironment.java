@@ -1,5 +1,7 @@
 package software.wings.beans.instance.dashboard;
 
+import software.wings.beans.infrastructure.instance.SyncStatus;
+
 import java.util.List;
 
 /**
@@ -8,12 +10,14 @@ import java.util.List;
 public class InstanceStatsByEnvironment {
   private EnvironmentSummary environmentSummary;
   private List<InstanceStatsByArtifact> instanceStatsByArtifactList;
+  private List<SyncStatus> infraMappingSyncStatusList;
+  private boolean hasSyncIssues;
 
   public EnvironmentSummary getEnvironmentSummary() {
     return environmentSummary;
   }
 
-  private void setEnvironmentSummary(EnvironmentSummary environmentSummary) {
+  public void setEnvironmentSummary(EnvironmentSummary environmentSummary) {
     this.environmentSummary = environmentSummary;
   }
 
@@ -21,13 +25,31 @@ public class InstanceStatsByEnvironment {
     return instanceStatsByArtifactList;
   }
 
-  private void setInstanceStatsByArtifactList(List<InstanceStatsByArtifact> instanceStatsByArtifactList) {
+  public void setInstanceStatsByArtifactList(List<InstanceStatsByArtifact> instanceStatsByArtifactList) {
     this.instanceStatsByArtifactList = instanceStatsByArtifactList;
+  }
+
+  public List<SyncStatus> getInfraMappingSyncStatusList() {
+    return infraMappingSyncStatusList;
+  }
+
+  public void setInfraMappingSyncStatusList(List<SyncStatus> infraMappingSyncStatusList) {
+    this.infraMappingSyncStatusList = infraMappingSyncStatusList;
+  }
+
+  public boolean isHasSyncIssues() {
+    return hasSyncIssues;
+  }
+
+  public void setHasSyncIssues(boolean hasSyncIssues) {
+    this.hasSyncIssues = hasSyncIssues;
   }
 
   public static final class Builder {
     private EnvironmentSummary environmentSummary;
     private List<InstanceStatsByArtifact> instanceStatsByArtifactList;
+    private List<SyncStatus> infraMappingSyncStatusList;
+    private boolean hasSyncIssues;
 
     private Builder() {}
 
@@ -35,21 +57,33 @@ public class InstanceStatsByEnvironment {
       return new Builder();
     }
 
-    public Builder withEnvironmentSummary(EnvironmentSummary environmentSummary) {
+    public Builder environmentSummary(EnvironmentSummary environmentSummary) {
       this.environmentSummary = environmentSummary;
       return this;
     }
 
-    public Builder withInstanceStatsByArtifactList(List<InstanceStatsByArtifact> instanceStatsByArtifactList) {
+    public Builder instanceStatsByArtifactList(List<InstanceStatsByArtifact> instanceStatsByArtifactList) {
       this.instanceStatsByArtifactList = instanceStatsByArtifactList;
       return this;
     }
 
+    public Builder infraMappingSyncStatusList(List<SyncStatus> infraMappingSyncStatusList) {
+      this.infraMappingSyncStatusList = infraMappingSyncStatusList;
+      return this;
+    }
+
+    public Builder hasSyncIssues(boolean hasSyncIssues) {
+      this.hasSyncIssues = hasSyncIssues;
+      return this;
+    }
+
     public InstanceStatsByEnvironment build() {
-      InstanceStatsByEnvironment instanceStatsByArtifact = new InstanceStatsByEnvironment();
-      instanceStatsByArtifact.setEnvironmentSummary(environmentSummary);
-      instanceStatsByArtifact.setInstanceStatsByArtifactList(instanceStatsByArtifactList);
-      return instanceStatsByArtifact;
+      InstanceStatsByEnvironment instanceStatsByEnvironment = new InstanceStatsByEnvironment();
+      instanceStatsByEnvironment.setEnvironmentSummary(environmentSummary);
+      instanceStatsByEnvironment.setInstanceStatsByArtifactList(instanceStatsByArtifactList);
+      instanceStatsByEnvironment.setInfraMappingSyncStatusList(infraMappingSyncStatusList);
+      instanceStatsByEnvironment.setHasSyncIssues(hasSyncIssues);
+      return instanceStatsByEnvironment;
     }
   }
 }

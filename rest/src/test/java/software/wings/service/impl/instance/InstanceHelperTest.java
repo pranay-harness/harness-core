@@ -7,11 +7,15 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
 
 import com.google.inject.Inject;
 
@@ -24,6 +28,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+import org.mockito.internal.util.reflection.Whitebox;
+import org.mockito.stubbing.Answer;
 import software.wings.WingsBaseTest;
 import software.wings.api.AwsAutoScalingGroupDeploymentInfo;
 import software.wings.api.AwsCodeDeployDeploymentInfo;
@@ -43,6 +49,7 @@ import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.WorkflowExecution;
@@ -56,8 +63,10 @@ import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.beans.infrastructure.instance.key.deployment.AwsAmiDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.AwsCodeDeployDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.ContainerDeploymentKey;
+import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
 import software.wings.common.Constants;
 import software.wings.core.queue.Queue;
+import software.wings.exception.HarnessException;
 import software.wings.service.impl.instance.sync.ContainerSync;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -75,6 +84,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class InstanceHelperTest extends WingsBaseTest {
   public static final String INFRA_MAP_ID = "infraMap_1";
@@ -100,7 +110,10 @@ public class InstanceHelperTest extends WingsBaseTest {
 
   @InjectMocks @Inject private AwsCodeDeployInstanceHandler awsCodeDeployInstanceHandler;
   @InjectMocks @Inject private AwsAmiInstanceHandler awsAmiInstanceHandler;
+  @InjectMocks @Inject private AwsInstanceHandler awsInstanceHandler;
   @InjectMocks @Inject private ContainerInstanceHandler containerInstanceHandler;
+  @InjectMocks @Inject private PcfInstanceHandler pcfInstanceHandler;
+
   @InjectMocks @Inject private InstanceHelper instanceHelper;
   private WorkflowExecution workflowExecution;
   private PhaseExecutionData phaseExecutionData;
@@ -713,5 +726,115 @@ public class InstanceHelperTest extends WingsBaseTest {
     assertEquals(INFRA_MAP_ID, deploymentSummary.getInfraMappingId());
     assertEquals(WORKFLOW_EXECUTION_ID, deploymentSummary.getWorkflowExecutionId());
     assertEquals(STATE_EXECUTION_INSTANCE_ID, deploymentSummary.getStateExecutionInstanceId());
+  }
+
+  @Test
+  public void testManualSyncSuccess() throws Exception {
+    InstanceHandlerFactory instanceHandlerFactory = spy(new InstanceHandlerFactory(containerInstanceHandler,
+        awsInstanceHandler, awsAmiInstanceHandler, awsCodeDeployInstanceHandler, pcfInstanceHandler));
+    Whitebox.setInternalState(instanceHelper, "instanceHandlerFactory", instanceHandlerFactory);
+
+    doReturn(new InstanceHandler() {
+      @Override
+      public void syncInstances(String appId, String infraMappingId) throws HarnessException {}
+
+      @Override
+      public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback)
+          throws HarnessException {}
+
+      @Override
+      public Optional<List<DeploymentInfo>> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
+          PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,
+          InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact)
+          throws HarnessException {
+        return null;
+      }
+
+      @Override
+      public DeploymentKey generateDeploymentKey(DeploymentInfo deploymentInfo) {
+        return null;
+      }
+
+      @Override
+      protected void setDeploymentKey(DeploymentSummary deploymentSummary, DeploymentKey deploymentKey) {}
+    })
+        .when(instanceHandlerFactory)
+        .getInstanceHandler(any(InfrastructureMappingType.class));
+
+    doReturn(PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping()
+                 .withUuid(INFRA_MAP_ID)
+                 .withInfraMappingType("PHYSICAL_DATA_CENTER_SSH")
+                 .withAppId(APP_ID)
+                 .withServiceId(SERVICE_ID)
+                 .withEnvId(ENV_ID)
+                 .withInfraMappingType(InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name())
+                 .build())
+        .when(infraMappingService)
+        .get(anyString(), anyString());
+    final AtomicInteger count = new AtomicInteger(0);
+    doAnswer((Answer<Void>) invocationOnMock -> {
+      count.incrementAndGet();
+      return null;
+    })
+        .when(instanceService)
+        .updateSyncSuccess(anyString(), anyString(), anyString(), anyString(), anyString(), anyLong());
+    instanceHelper.manualSync(APP_ID, INFRA_MAP_ID);
+    assertEquals(1, count.get());
+  }
+
+  @Test
+  public void testManualSyncFailure() throws Exception {
+    InstanceHandlerFactory instanceHandlerFactory = spy(new InstanceHandlerFactory(containerInstanceHandler,
+        awsInstanceHandler, awsAmiInstanceHandler, awsCodeDeployInstanceHandler, pcfInstanceHandler));
+    Whitebox.setInternalState(instanceHelper, "instanceHandlerFactory", instanceHandlerFactory);
+
+    doReturn(new InstanceHandler() {
+      @Override
+      public void syncInstances(String appId, String infraMappingId) throws HarnessException {
+        throw new HarnessException("cannot connect");
+      }
+
+      @Override
+      public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback)
+          throws HarnessException {}
+
+      @Override
+      public Optional<List<DeploymentInfo>> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
+          PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,
+          InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact)
+          throws HarnessException {
+        return null;
+      }
+
+      @Override
+      public DeploymentKey generateDeploymentKey(DeploymentInfo deploymentInfo) {
+        return null;
+      }
+
+      @Override
+      protected void setDeploymentKey(DeploymentSummary deploymentSummary, DeploymentKey deploymentKey) {}
+    })
+        .when(instanceHandlerFactory)
+        .getInstanceHandler(any(InfrastructureMappingType.class));
+
+    doReturn(PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping()
+                 .withUuid(INFRA_MAP_ID)
+                 .withInfraMappingType("PHYSICAL_DATA_CENTER_SSH")
+                 .withAppId(APP_ID)
+                 .withServiceId(SERVICE_ID)
+                 .withEnvId(ENV_ID)
+                 .withInfraMappingType(InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name())
+                 .build())
+        .when(infraMappingService)
+        .get(anyString(), anyString());
+    final AtomicInteger count = new AtomicInteger(0);
+    doAnswer((Answer<Void>) invocationOnMock -> {
+      count.incrementAndGet();
+      return null;
+    })
+        .when(instanceService)
+        .updateSyncFailure(anyString(), anyString(), anyString(), anyString(), anyString(), anyLong(), anyString());
+    instanceHelper.manualSync(APP_ID, INFRA_MAP_ID);
+    assertEquals(1, count.get());
   }
 }

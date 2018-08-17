@@ -1,5 +1,6 @@
 package software.wings.service.impl.instance;
 
+import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.common.collect.Lists;
@@ -7,14 +8,16 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.infrastructure.instance.ContainerDeploymentInfo;
 import software.wings.beans.infrastructure.instance.Instance;
+import software.wings.beans.infrastructure.instance.ManualSyncJob;
+import software.wings.beans.infrastructure.instance.SyncStatus;
 import software.wings.beans.infrastructure.instance.key.ContainerInstanceKey;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.beans.infrastructure.instance.key.InstanceKey;
@@ -31,6 +34,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.validation.Valid;
 
 /**
@@ -178,8 +182,8 @@ public class InstanceServiceImpl implements InstanceService {
   public List<ContainerDeploymentInfo> getContainerDeploymentInfoList(String containerSvcNameNoRevision, String appId) {
     PageRequest<ContainerDeploymentInfo> pageRequest =
         aPageRequest()
-            .addFilter("containerSvcNameNoRevision", Operator.EQ, containerSvcNameNoRevision)
-            .addFilter("appId", Operator.EQ, appId)
+            .addFilter("containerSvcNameNoRevision", EQ, containerSvcNameNoRevision)
+            .addFilter("appId", EQ, appId)
             .addOrder("containerSvcName", OrderType.ASC)
             .build();
     PageResponse<ContainerDeploymentInfo> response = wingsPersistence.query(ContainerDeploymentInfo.class, pageRequest);
@@ -189,5 +193,91 @@ public class InstanceServiceImpl implements InstanceService {
   @Override
   public PageResponse<Instance> list(PageRequest<Instance> pageRequest) {
     return wingsPersistence.query(Instance.class, pageRequest);
+  }
+
+  @Override
+  public void updateSyncSuccess(
+      String appId, String serviceId, String envId, String infraMappingId, String infraMappingName, long timestamp) {
+    SyncStatus syncStatus = getSyncStatus(appId, serviceId, envId, infraMappingId);
+    if (syncStatus == null) {
+      syncStatus = SyncStatus.builder()
+                       .appId(appId)
+                       .envId(envId)
+                       .serviceId(serviceId)
+                       .infraMappingId(infraMappingId)
+                       .infraMappingName(infraMappingName)
+                       .lastSyncedAt(timestamp)
+                       .lastSuccessfullySyncedAt(timestamp)
+                       .syncFailureReason(null)
+                       .build();
+    } else {
+      syncStatus.setSyncFailureReason(null);
+      syncStatus.setLastSuccessfullySyncedAt(timestamp);
+      syncStatus.setLastSyncedAt(timestamp);
+    }
+
+    wingsPersistence.save(syncStatus);
+  }
+
+  private SyncStatus getSyncStatus(String appId, String serviceId, String envId, String infraMappingId) {
+    PageRequest<SyncStatus> pageRequest = aPageRequest()
+                                              .addFilter("appId", EQ, appId)
+                                              .addFilter("serviceId", EQ, serviceId)
+                                              .addFilter("envId", EQ, envId)
+                                              .addFilter("infraMappingId", EQ, infraMappingId)
+                                              .build();
+    return wingsPersistence.get(SyncStatus.class, pageRequest);
+  }
+
+  @Override
+  public void updateSyncFailure(String appId, String serviceId, String envId, String infraMappingId,
+      String infraMappingName, long timestamp, String errorMsg) {
+    SyncStatus syncStatus = getSyncStatus(appId, serviceId, envId, infraMappingId);
+    if (syncStatus == null) {
+      syncStatus = SyncStatus.builder()
+                       .appId(appId)
+                       .envId(envId)
+                       .serviceId(serviceId)
+                       .infraMappingId(infraMappingId)
+                       .infraMappingName(infraMappingName)
+                       .lastSyncedAt(timestamp)
+                       .syncFailureReason(errorMsg)
+                       .build();
+    } else {
+      syncStatus.setSyncFailureReason(errorMsg);
+      syncStatus.setLastSyncedAt(timestamp);
+    }
+    wingsPersistence.save(syncStatus);
+  }
+
+  @Override
+  public void saveManualSyncJob(ManualSyncJob manualSyncJob) {
+    wingsPersistence.save(manualSyncJob);
+  }
+
+  @Override
+  public void deleteManualSyncJob(String appId, String manualSyncJobId) {
+    wingsPersistence.delete(ManualSyncJob.class, appId, manualSyncJobId);
+  }
+
+  @Override
+  public List<SyncStatus> getSyncStatus(String appId, String serviceId, String envId) {
+    PageRequest<SyncStatus> pageRequest = aPageRequest()
+                                              .addFilter("appId", EQ, appId)
+                                              .addFilter("serviceId", EQ, serviceId)
+                                              .addFilter("envId", EQ, envId)
+                                              .build();
+    PageResponse<SyncStatus> response = wingsPersistence.query(SyncStatus.class, pageRequest);
+    return response.getResponse();
+  }
+
+  @Override
+  public List<Boolean> getManualSyncJobsStatus(Set<String> manualJobIdSet) {
+    List<Key<ManualSyncJob>> keyList =
+        wingsPersistence.createQuery(ManualSyncJob.class).field("_id").in(manualJobIdSet).asKeyList();
+    Set<Object> jobIdSetInDB = keyList.stream().map(key -> key.getId()).collect(Collectors.toSet());
+    List<Boolean> result = Lists.newArrayList();
+    manualJobIdSet.forEach(jobId -> result.add(!jobIdSetInDB.contains(jobId)));
+    return result;
   }
 }

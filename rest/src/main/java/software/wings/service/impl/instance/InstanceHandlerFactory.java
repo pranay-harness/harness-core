@@ -11,11 +11,22 @@ import software.wings.exception.WingsException;
  */
 @Singleton
 public class InstanceHandlerFactory {
-  @Inject private ContainerInstanceHandler containerInstanceHandler;
-  @Inject private AwsInstanceHandler awsInstanceHandler;
-  @Inject private AwsAmiInstanceHandler awsAmiInstanceHandler;
-  @Inject private AwsCodeDeployInstanceHandler awsCodeDeployInstanceHandler;
-  @Inject private PcfInstanceHandler pcfInstanceHandler;
+  private ContainerInstanceHandler containerInstanceHandler;
+  private AwsInstanceHandler awsInstanceHandler;
+  private AwsAmiInstanceHandler awsAmiInstanceHandler;
+  private AwsCodeDeployInstanceHandler awsCodeDeployInstanceHandler;
+  private PcfInstanceHandler pcfInstanceHandler;
+
+  @Inject
+  public InstanceHandlerFactory(ContainerInstanceHandler containerInstanceHandler,
+      AwsInstanceHandler awsInstanceHandler, AwsAmiInstanceHandler awsAmiInstanceHandler,
+      AwsCodeDeployInstanceHandler awsCodeDeployInstanceHandler, PcfInstanceHandler pcfInstanceHandler) {
+    this.containerInstanceHandler = containerInstanceHandler;
+    this.awsInstanceHandler = awsInstanceHandler;
+    this.awsAmiInstanceHandler = awsAmiInstanceHandler;
+    this.awsCodeDeployInstanceHandler = awsCodeDeployInstanceHandler;
+    this.pcfInstanceHandler = pcfInstanceHandler;
+  }
 
   public InstanceHandler getInstanceHandler(InfrastructureMappingType infraMappingType) {
     switch (infraMappingType) {

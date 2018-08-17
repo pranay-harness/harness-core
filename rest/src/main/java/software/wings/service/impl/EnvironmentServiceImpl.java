@@ -104,7 +104,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ActivityService activityService;
   // DO NOT DELETE THIS, PRUNE logic needs it
-  @SuppressWarnings("unused") @Inject private InstanceService instanceService;
+  @Inject private InstanceService instanceService;
   @Inject private AppService appService;
   @Inject private ConfigService configService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
@@ -117,7 +117,6 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Inject private PersistentLocker persistentLocker;
   @Inject private WorkflowService workflowService;
   @Inject private TriggerService triggerService;
-
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
   /**

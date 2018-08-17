@@ -5,6 +5,8 @@ import io.harness.validation.Update;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.infrastructure.instance.ContainerDeploymentInfo;
 import software.wings.beans.infrastructure.instance.Instance;
+import software.wings.beans.infrastructure.instance.ManualSyncJob;
+import software.wings.beans.infrastructure.instance.SyncStatus;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ownership.OwnedByAccount;
@@ -80,4 +82,43 @@ public interface InstanceService
    * @return the page response
    */
   PageResponse<Instance> list(PageRequest<Instance> pageRequest);
+
+  /**
+   *
+   * @param appId the app id
+   * @param serviceId the service id
+   * @param envId the env id
+   * @param infraMappingId  the infra mapping id
+   * @param infraMappingName the infra mapping name
+   * @param timestamp sync timestamp
+   */
+  void updateSyncSuccess(
+      String appId, String serviceId, String envId, String infraMappingId, String infraMappingName, long timestamp);
+
+  /**
+   *
+   * @param appId the app id
+   * @param serviceId the service id
+   * @param envId the env id
+   * @param infraMappingId the infra mapping id
+   * @param infraMappingName the infra mapping name
+   * @param timestamp failure sync timestamp
+   * @param errorMsg  failure reason
+   */
+  void updateSyncFailure(String appId, String serviceId, String envId, String infraMappingId, String infraMappingName,
+      long timestamp, String errorMsg);
+
+  /**
+   *
+   * @param appId
+   * @param serviceId
+   * @param envId
+   * @return
+   */
+  List<SyncStatus> getSyncStatus(String appId, String serviceId, String envId);
+
+  void saveManualSyncJob(ManualSyncJob manualSyncJob);
+  void deleteManualSyncJob(String appId, String manualSyncJobId);
+
+  List<Boolean> getManualSyncJobsStatus(Set<String> manualJobIdSet);
 }
