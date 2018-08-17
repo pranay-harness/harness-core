@@ -109,11 +109,27 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     return true;
   }
 
+  /**
+   * Method to save ml analysed records to mongoDB
+   *
+   * @param stateType
+   * @param accountId
+   * @param appId
+   * @param stateExecutionId
+   * @param workflowExecutionId
+   * @param workflowId
+   * @param serviceId
+   * @param groupName
+   * @param analysisMinute
+   * @param taskId
+   * @param baseLineExecutionId
+   * @param mlAnalysisResponse
+   * @return
+   */
   @Override
   public boolean saveAnalysisRecordsML(StateType stateType, String accountId, String appId, String stateExecutionId,
-      final String workflowExecutionId, final String workflowId, String serviceId, String groupName,
-      Integer analysisMinute, String taskId, String baseLineExecutionId,
-      TimeSeriesMLAnalysisRecord mlAnalysisResponse) {
+      String workflowExecutionId, String workflowId, String serviceId, String groupName, Integer analysisMinute,
+      String taskId, String baseLineExecutionId, MetricAnalysisRecord mlAnalysisResponse) {
     logger.info("saveAnalysisRecordsML stateType  {} stateExecutionId {} analysisMinute {}", stateType,
         stateExecutionId, analysisMinute);
     mlAnalysisResponse.setStateType(stateType);

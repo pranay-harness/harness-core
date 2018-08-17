@@ -1,6 +1,7 @@
 package software.wings.service.impl.newrelic;
 
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
@@ -12,6 +13,7 @@ import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 import software.wings.service.impl.analysis.MLAnalysisType;
+import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 
@@ -52,9 +54,12 @@ public class LearningEngineExperimentalAnalysisTask extends Base {
   private int parallel_processes;
   private String test_input_url;
   private String control_input_url;
+  @Default private String group_name = NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
+  private TimeSeriesMlAnalysisType time_series_ml_analysis_type;
   private String analysis_save_url;
   private String metric_template_url;
   private String log_analysis_get_url;
+  private int analysis_start_time;
   private double sim_threshold;
   private Integer cluster_level;
   private List<String> query;
