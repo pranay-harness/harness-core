@@ -9,7 +9,6 @@ import com.google.inject.Inject;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import groovy.lang.Singleton;
-import org.apache.commons.lang3.reflect.MethodUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
@@ -361,16 +360,17 @@ public class YamlChangeSetHelper {
    * @param oldValue
    * @param accountId
    */
-  public <T> void updateYamlChangeAsync(T updatedValue, T oldValue, String accountId) {
+  public <T> void updateYamlChangeAsync(T updatedValue, T oldValue, String accountId, boolean isRename) {
     YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
     if (ygs != null) {
-      executorService.submit(() -> updateYamlChange(ygs, updatedValue, oldValue, accountId));
+      executorService.submit(() -> updateYamlChange(ygs, updatedValue, oldValue, accountId, isRename));
     }
   }
 
-  private <T> void updateYamlChange(YamlGitConfig ygs, T updatedValue, T oldValue, String accountId) {
+  private <T> void updateYamlChange(YamlGitConfig ygs, T updatedValue, T oldValue, String accountId, boolean isRename) {
     try {
-      if (!getName(updatedValue).equals(getName(oldValue))) { // Name was changed, so yaml file name will also change
+      if (isRename) {
+        // Name was changed, so yaml file name will also change
         yamlFileRenameChange(ygs, updatedValue, oldValue, accountId);
       } else {
         yamlFileUpdateChange(ygs, updatedValue, accountId);
@@ -378,10 +378,6 @@ public class YamlChangeSetHelper {
     } catch (Exception e) {
       logger.error("Error in git sync update for: " + updatedValue + ", can not execute getName method");
     }
-  }
-
-  private <T> String getName(T val) throws Exception {
-    return (String) MethodUtils.invokeMethod(val, "getName");
   }
 
   /**

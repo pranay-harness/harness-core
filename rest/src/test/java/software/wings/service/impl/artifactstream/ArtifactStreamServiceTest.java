@@ -2,6 +2,7 @@ package software.wings.service.impl.artifactstream;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.times;
@@ -164,7 +165,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
     verify(appService, times(2)).getAccountIdByAppId(APP_ID);
     verify(yamlChangeSetHelper)
-        .updateYamlChangeAsync(any(ArtifactStream.class), any(ArtifactStream.class), anyString());
+        .updateYamlChangeAsync(any(ArtifactStream.class), any(ArtifactStream.class), anyString(), anyBoolean());
   }
 
   @Test
@@ -208,7 +209,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
     verify(appService, times(2)).getAccountIdByAppId(APP_ID);
     verify(yamlChangeSetHelper)
-        .updateYamlChangeAsync(any(ArtifactStream.class), any(ArtifactStream.class), anyString());
+        .updateYamlChangeAsync(any(ArtifactStream.class), any(ArtifactStream.class), anyString(), anyBoolean());
   }
 
   private ArtifactStream createBambooArtifactStream() {
@@ -302,7 +303,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
     verify(appService, times(2)).getAccountIdByAppId(APP_ID);
     verify(yamlChangeSetHelper)
-        .updateYamlChangeAsync(any(ArtifactStream.class), any(ArtifactStream.class), anyString());
+        .updateYamlChangeAsync(any(ArtifactStream.class), any(ArtifactStream.class), anyString(), anyBoolean());
   }
 
   @Test
@@ -396,7 +397,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
     verify(appService, times(2)).getAccountIdByAppId(APP_ID);
     verify(yamlChangeSetHelper)
-        .updateYamlChangeAsync(any(ArtifactStream.class), any(ArtifactStream.class), anyString());
+        .updateYamlChangeAsync(any(ArtifactStream.class), any(ArtifactStream.class), anyString(), anyBoolean());
   }
 
   @Test
@@ -588,7 +589,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
     verify(appService, times(2)).getAccountIdByAppId(APP_ID);
     verify(yamlChangeSetHelper)
-        .updateYamlChangeAsync(any(ArtifactStream.class), any(ArtifactStream.class), anyString());
+        .updateYamlChangeAsync(any(ArtifactStream.class), any(ArtifactStream.class), anyString(), anyBoolean());
     verify(buildSourceService, times(2))
         .validateArtifactSource(anyString(), anyString(), any(ArtifactStreamAttributes.class));
   }
@@ -684,7 +685,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
     verify(appService, times(2)).getAccountIdByAppId(APP_ID);
     verify(yamlChangeSetHelper)
-        .updateYamlChangeAsync(any(ArtifactStream.class), any(ArtifactStream.class), anyString());
+        .updateYamlChangeAsync(any(ArtifactStream.class), any(ArtifactStream.class), anyString(), anyBoolean());
 
     verify(buildSourceService, times(2))
         .validateArtifactSource(anyString(), anyString(), any(ArtifactStreamAttributes.class));
@@ -774,7 +775,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
     verify(appService, times(2)).getAccountIdByAppId(APP_ID);
     verify(yamlChangeSetHelper)
-        .updateYamlChangeAsync(any(ArtifactStream.class), any(ArtifactStream.class), anyString());
+        .updateYamlChangeAsync(any(ArtifactStream.class), any(ArtifactStream.class), anyString(), anyBoolean());
   }
 
   @Test

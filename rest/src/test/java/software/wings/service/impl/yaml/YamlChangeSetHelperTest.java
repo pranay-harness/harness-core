@@ -75,8 +75,8 @@ public class YamlChangeSetHelperTest {
     InfrastructureMapping newValue =
         AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping().withName(NEW).build();
 
-    MethodUtils.invokeMethod(
-        yamlChangeSetHelper, true, "updateYamlChange", new Object[] {yamlGitConfig, oldValue, newValue, ACCOUNTID});
+    MethodUtils.invokeMethod(yamlChangeSetHelper, true, "updateYamlChange",
+        new Object[] {yamlGitConfig, oldValue, newValue, ACCOUNTID, true});
 
     ArgumentCaptor<List> gitFileChangesCaptor = ArgumentCaptor.forClass(List.class);
     ArgumentCaptor<YamlGitConfig> yamlGitConfigCaptor = ArgumentCaptor.forClass(YamlGitConfig.class);
@@ -109,8 +109,8 @@ public class YamlChangeSetHelperTest {
     InfrastructureMapping oldValue =
         AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping().withName(OLD).build();
 
-    MethodUtils.invokeMethod(
-        yamlChangeSetHelper, true, "updateYamlChange", new Object[] {yamlGitConfig, oldValue, oldValue, ACCOUNTID});
+    MethodUtils.invokeMethod(yamlChangeSetHelper, true, "updateYamlChange",
+        new Object[] {yamlGitConfig, oldValue, oldValue, ACCOUNTID, false});
 
     ArgumentCaptor<List> fileChangesCaptor = ArgumentCaptor.forClass(List.class);
     ArgumentCaptor<YamlGitConfig> gitConfigCaptor = ArgumentCaptor.forClass(YamlGitConfig.class);
@@ -146,8 +146,8 @@ public class YamlChangeSetHelperTest {
     ArtifactStream newValue = new DockerArtifactStream();
     oldValue.setName(NEW);
 
-    MethodUtils.invokeMethod(
-        yamlChangeSetHelper, true, "updateYamlChange", new Object[] {yamlGitConfig, oldValue, newValue, ACCOUNTID});
+    MethodUtils.invokeMethod(yamlChangeSetHelper, true, "updateYamlChange",
+        new Object[] {yamlGitConfig, oldValue, newValue, ACCOUNTID, true});
 
     ArgumentCaptor<List> gitFileChangesCaptorForAS = ArgumentCaptor.forClass(List.class);
     ArgumentCaptor<YamlGitConfig> yamlGitConfigCaptorForAS = ArgumentCaptor.forClass(YamlGitConfig.class);
@@ -180,8 +180,8 @@ public class YamlChangeSetHelperTest {
     doNothing().when(yamlChangeSetService).saveChangeSet(any(), any());
     ArtifactStream oldValue = new DockerArtifactStream();
     oldValue.setName(OLD);
-    MethodUtils.invokeMethod(
-        yamlChangeSetHelper, true, "updateYamlChange", new Object[] {yamlGitConfig, oldValue, oldValue, ACCOUNTID});
+    MethodUtils.invokeMethod(yamlChangeSetHelper, true, "updateYamlChange",
+        new Object[] {yamlGitConfig, oldValue, oldValue, ACCOUNTID, false});
 
     ArgumentCaptor<List> fileChangesCaptorForAS = ArgumentCaptor.forClass(List.class);
     ArgumentCaptor<YamlGitConfig> gitConfigCaptorForAS = ArgumentCaptor.forClass(YamlGitConfig.class);
