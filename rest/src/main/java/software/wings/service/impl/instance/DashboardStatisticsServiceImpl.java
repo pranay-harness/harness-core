@@ -8,14 +8,13 @@ import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Projection.projection;
 import static org.mongodb.morphia.query.Sort.ascending;
 import static org.mongodb.morphia.query.Sort.descending;
+import static software.wings.beans.EntityType.APPLICATION;
+import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.ErrorCode.NO_APPS_ASSIGNED;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.PIPELINE;
-import static software.wings.beans.instance.dashboard.EntitySummary.Builder.anEntitySummary;
-import static software.wings.beans.instance.dashboard.EntitySummaryStats.Builder.anEntitySummaryStats;
-import static software.wings.beans.instance.dashboard.InstanceSummaryStats.Builder.anInstanceSummaryStats;
 import static software.wings.beans.instance.dashboard.service.PipelineExecutionHistory.Builder.aPipelineExecutionHistory;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
@@ -46,6 +45,7 @@ import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.instance.Instance;
+import software.wings.beans.infrastructure.instance.SyncStatus;
 import software.wings.beans.instance.dashboard.ArtifactSummary;
 import software.wings.beans.instance.dashboard.EntitySummary;
 import software.wings.beans.instance.dashboard.EntitySummaryStats;
@@ -111,7 +111,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       instanceCount = getInstanceCount(getQuery(appIds));
     } catch (Exception exception) {
       handleException(exception);
-      return anInstanceSummaryStats().withCountMap(null).withTotalCount(instanceCount).build();
+      return InstanceSummaryStats.Builder.anInstanceSummaryStats().countMap(null).totalCount(instanceCount).build();
     }
 
     Map<String, List<EntitySummaryStats>> instanceSummaryMap = new HashMap<>();
@@ -137,7 +137,10 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       instanceSummaryMap.put(groupByEntityType, entitySummaryStatsList);
     }
 
-    return anInstanceSummaryStats().withCountMap(instanceSummaryMap).withTotalCount(instanceCount).build();
+    return InstanceSummaryStats.Builder.anInstanceSummaryStats()
+        .countMap(instanceSummaryMap)
+        .totalCount(instanceCount)
+        .build();
   }
 
   private List<EntitySummaryStats> getEntitySummaryStats(
@@ -222,11 +225,14 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         .aggregate(EnvironmentSummaryStats.class)
         .forEachRemaining(environmentSummaryStats -> {
           String envType = environmentSummaryStats.getEnvType();
-          EntitySummary entitySummary =
-              anEntitySummary().withName(envType).withType(EntityType.ENVIRONMENT.name()).withId(envType).build();
-          EntitySummaryStats entitySummaryStats = anEntitySummaryStats()
-                                                      .withEntitySummary(entitySummary)
-                                                      .withCount(environmentSummaryStats.getCount())
+          EntitySummary entitySummary = EntitySummary.Builder.anEntitySummary()
+                                            .name(envType)
+                                            .type(EntityType.ENVIRONMENT.name())
+                                            .id(envType)
+                                            .build();
+          EntitySummaryStats entitySummaryStats = EntitySummaryStats.Builder.anEntitySummaryStats()
+                                                      .entitySummary(entitySummary)
+                                                      .count(environmentSummaryStats.getCount())
                                                       .build();
           entitySummaryStatsList.add(entitySummaryStats);
         });
@@ -235,12 +241,15 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   }
 
   private EntitySummaryStats getEntitySummaryStats(FlatEntitySummaryStats flatEntitySummaryStats, String entityType) {
-    EntitySummary entitySummary = anEntitySummary()
-                                      .withId(flatEntitySummaryStats.entityId)
-                                      .withName(flatEntitySummaryStats.entityName)
-                                      .withType(entityType)
+    EntitySummary entitySummary = EntitySummary.Builder.anEntitySummary()
+                                      .id(flatEntitySummaryStats.entityId)
+                                      .name(flatEntitySummaryStats.entityName)
+                                      .type(entityType)
                                       .build();
-    return anEntitySummaryStats().withCount(flatEntitySummaryStats.count).withEntitySummary(entitySummary).build();
+    return EntitySummaryStats.Builder.anEntitySummaryStats()
+        .count(flatEntitySummaryStats.count)
+        .entitySummary(entitySummary)
+        .build();
   }
 
   @Override
@@ -250,7 +259,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       query = getQuery(null).filter("serviceId", serviceId);
     } catch (Exception exception) {
       handleException(exception);
-      return anInstanceSummaryStats().withCountMap(null).withTotalCount(0).build();
+      return InstanceSummaryStats.Builder.anInstanceSummaryStats().countMap(null).totalCount(0).build();
     }
 
     long instanceCount = getInstanceCount(query);
@@ -259,7 +268,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       String entityIdColumn;
       String entityNameColumn;
       List<EntitySummaryStats> entitySummaryStatsList;
-      if (EntityType.ARTIFACT.name().equals(groupByEntityType)) {
+      if (ARTIFACT.name().equals(groupByEntityType)) {
         entityIdColumn = "lastArtifactId";
         entityNameColumn = "lastArtifactBuildNum";
       } else if (EntityType.ENVIRONMENT.name().equals(groupByEntityType)) {
@@ -276,7 +285,10 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       instanceSummaryMap.put(groupByEntityType, entitySummaryStatsList);
     }
 
-    return anInstanceSummaryStats().withCountMap(instanceSummaryMap).withTotalCount(instanceCount).build();
+    return InstanceSummaryStats.Builder.anInstanceSummaryStats()
+        .countMap(instanceSummaryMap)
+        .totalCount(instanceCount)
+        .build();
   }
 
   private void handleException(Exception exception) {
@@ -339,7 +351,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     List<InstanceStatsByService> instanceStatsByServiceList = Lists.newArrayList();
     InstanceStatsByService currentService = null;
     InstanceStatsByEnvironment currentEnv = null;
-    InstanceStatsByArtifact currentArtifact = null;
+    InstanceStatsByArtifact currentArtifact;
 
     List<InstanceStatsByEnvironment> currentEnvList = Lists.newArrayList();
     List<InstanceStatsByArtifact> currentArtifactList = Lists.newArrayList();
@@ -349,10 +361,10 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       List<EntitySummary> instanceList = Lists.newArrayListWithExpectedSize(size);
       for (EntitySummary instanceSummary : aggregationInfo.getInstanceInfoList()) {
         // We have to clone the entity summary because type is not present in database.
-        EntitySummary newInstanceSummary = anEntitySummary()
-                                               .withName(instanceSummary.getName())
-                                               .withId(instanceSummary.getId())
-                                               .withType(EntityType.INSTANCE.name())
+        EntitySummary newInstanceSummary = EntitySummary.Builder.anEntitySummary()
+                                               .name(instanceSummary.getName())
+                                               .id(instanceSummary.getId())
+                                               .type(EntityType.INSTANCE.name())
                                                .build();
         instanceList.add(newInstanceSummary);
       }
@@ -378,7 +390,8 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
       if (currentEnv == null || !compareEnvironment(currentEnv, aggregationInfo.getEnvInfo())) {
         currentArtifactList = Lists.newArrayList();
-        currentEnv = getInstanceStatsByEnvironment(aggregationInfo, currentArtifactList);
+        currentEnv = getInstanceStatsByEnvironment(currentService.getServiceSummary().getAppSummary().getId(),
+            currentService.getServiceSummary().getId(), aggregationInfo, currentArtifactList);
         currentEnvList.add(currentEnv);
       }
 
@@ -401,11 +414,11 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       AggregationInfo instanceInfo, InstanceStats instanceStats) {
     ArtifactInfo newArtifactInfo = instanceInfo.getArtifactInfo();
     ArtifactSummary.Builder builder = ArtifactSummary.Builder.anArtifactSummary();
-    builder.withBuildNo(newArtifactInfo.buildNo)
-        .withArtifactSourceName(newArtifactInfo.sourceName)
-        .withName(newArtifactInfo.getName())
-        .withType(EntityType.ARTIFACT.name())
-        .withId(newArtifactInfo.getId());
+    builder.buildNo(newArtifactInfo.buildNo)
+        .artifactSourceName(newArtifactInfo.sourceName)
+        .name(newArtifactInfo.getName())
+        .type(ARTIFACT.name())
+        .id(newArtifactInfo.getId());
     ArtifactSummary artifactSummary = builder.build();
 
     InstanceStatsByArtifact.Builder artifactBuilder = InstanceStatsByArtifact.Builder.anInstanceStatsByArtifact();
@@ -415,17 +428,30 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   }
 
   private InstanceStatsByEnvironment getInstanceStatsByEnvironment(
-      AggregationInfo instanceInfo, List<InstanceStatsByArtifact> currentArtifactList) {
+      String appId, String serviceId, AggregationInfo instanceInfo, List<InstanceStatsByArtifact> currentArtifactList) {
     EnvironmentSummary.Builder builder = EnvironmentSummary.Builder.anEnvironmentSummary();
     AggregationInfo.EnvInfo envInfo = instanceInfo.getEnvInfo();
-    builder.withProd("PROD".equals(envInfo.getType()))
-        .withId(envInfo.getId())
-        .withType(EntityType.ENVIRONMENT.name())
-        .withName(envInfo.getName());
-    return InstanceStatsByEnvironment.Builder.anInstanceStatsByEnvironment()
-        .withEnvironmentSummary(builder.build())
-        .withInstanceStatsByArtifactList(currentArtifactList)
-        .build();
+    builder.prod("PROD".equals(envInfo.getType()))
+        .id(envInfo.getId())
+        .type(EntityType.ENVIRONMENT.name())
+        .name(envInfo.getName());
+    List<SyncStatus> syncStatusList = instanceService.getSyncStatus(appId, serviceId, envInfo.getId());
+    InstanceStatsByEnvironment.Builder instanceStatsByEnvironmentBuilder =
+        InstanceStatsByEnvironment.Builder.anInstanceStatsByEnvironment()
+            .environmentSummary(builder.build())
+            .instanceStatsByArtifactList(currentArtifactList);
+    if (isNotEmpty(syncStatusList)) {
+      boolean hasSyncIssues = hasSyncIssues(syncStatusList);
+      instanceStatsByEnvironmentBuilder.infraMappingSyncStatusList(syncStatusList);
+      instanceStatsByEnvironmentBuilder.hasSyncIssues(hasSyncIssues);
+    }
+
+    return instanceStatsByEnvironmentBuilder.build();
+  }
+
+  private boolean hasSyncIssues(List<SyncStatus> syncStatusList) {
+    return syncStatusList.stream().anyMatch(
+        syncStatus -> syncStatus.getLastSyncedAt() != syncStatus.getLastSuccessfullySyncedAt());
   }
 
   private InstanceStatsByService getInstanceStatsByService(AggregationInfo instanceInfo,
@@ -433,16 +459,16 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     ServiceSummary.Builder serviceBuilder = ServiceSummary.Builder.aServiceSummary();
     EntitySummary serviceInfo = instanceInfo.getServiceInfo();
     EntitySummary appInfo = instanceInfo.getAppInfo();
-    EntitySummary appSummary = anEntitySummary()
-                                   .withName(appInfo.getName())
-                                   .withId(appInfo.getId())
-                                   .withType(EntityType.APPLICATION.name())
+    EntitySummary appSummary = EntitySummary.Builder.anEntitySummary()
+                                   .name(appInfo.getName())
+                                   .id(appInfo.getId())
+                                   .type(APPLICATION.name())
                                    .build();
 
-    serviceBuilder.withAppSummary(appSummary)
-        .withId(serviceInfo.getId())
-        .withType(EntityType.SERVICE.name())
-        .withName(serviceInfo.getName());
+    serviceBuilder.appSummary(appSummary)
+        .id(serviceInfo.getId())
+        .type(EntityType.SERVICE.name())
+        .name(serviceInfo.getName());
 
     return InstanceStatsByService.Builder.anInstanceStatsByService()
         .withServiceSummary(serviceBuilder.build())
@@ -753,14 +779,13 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   }
 
   private EntitySummary getEntitySummary(String name, String id, String type) {
-    return anEntitySummary().withType(type).withId(id).withName(name).build();
+    return EntitySummary.Builder.anEntitySummary().type(type).id(id).name(name).build();
   }
 
   private ArtifactSummary getArtifactSummary(String name, String id, String buildNum, String artifactSourceName) {
     ArtifactSummary.Builder builder =
-        ArtifactSummary.Builder.anArtifactSummary().withBuildNo(buildNum).withArtifactSourceName(artifactSourceName);
-    builder.withType(EntityType.ARTIFACT.name()).withId(id).withName(name).build();
-    return builder.build();
+        ArtifactSummary.Builder.anArtifactSummary().buildNo(buildNum).artifactSourceName(artifactSourceName);
+    return builder.type(ARTIFACT.name()).id(id).name(name).build();
   }
 
   private Query<Instance> getQuery(List<String> appIds) throws HarnessException {

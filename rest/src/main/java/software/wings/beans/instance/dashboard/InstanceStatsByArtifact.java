@@ -12,7 +12,7 @@ public class InstanceStatsByArtifact extends InstanceStatsByEntity {
   }
 
   @Override
-  protected void setEntitySummary(EntitySummary entitySummary) {
+  protected void setEntitySummary(AbstractEntitySummary entitySummary) {
     if (!(entitySummary instanceof ArtifactSummary)) {
       throw new WingsException("EntitySummary is not instance of type ArtifactSummary");
     }
@@ -27,7 +27,7 @@ public class InstanceStatsByArtifact extends InstanceStatsByEntity {
     }
 
     @Override
-    public Builder withEntitySummary(EntitySummary entitySummary) {
+    public Builder withEntitySummary(AbstractEntitySummary entitySummary) {
       if (!(entitySummary instanceof ArtifactSummary)) {
         throw new WingsException("EntitySummary is not instance of type ArtifactSummary");
       }

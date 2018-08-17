@@ -33,25 +33,21 @@ public class EntitySummaryStats {
       return new Builder();
     }
 
-    public Builder withEntitySummary(EntitySummary entitySummary) {
+    public Builder entitySummary(EntitySummary entitySummary) {
       this.entitySummary = entitySummary;
       return this;
     }
 
-    public Builder withCount(long count) {
+    public Builder count(long count) {
       this.count = count;
       return this;
     }
 
-    public Builder but() {
-      return anEntitySummaryStats().withEntitySummary(entitySummary).withCount(count);
-    }
-
     public EntitySummaryStats build() {
-      EntitySummaryStats entitySummaryWithCount = new EntitySummaryStats();
-      entitySummaryWithCount.setCount(count);
-      entitySummaryWithCount.setEntitySummary(entitySummary);
-      return entitySummaryWithCount;
+      EntitySummaryStats entitySummaryStats = new EntitySummaryStats();
+      entitySummaryStats.setEntitySummary(entitySummary);
+      entitySummaryStats.setCount(count);
+      return entitySummaryStats;
     }
   }
 }
