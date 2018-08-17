@@ -68,7 +68,6 @@ import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.security.UserRequestContext;
-import software.wings.security.UserRequestInfo;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.AggregationInfo.ArtifactInfo;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.AggregationInfo.EnvInfo;
@@ -795,34 +794,16 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     } else {
       User user = UserThreadLocal.get();
       if (user != null) {
-        if (user.isUseNewRbac()) {
-          UserRequestContext userRequestContext = user.getUserRequestContext();
-          if (userRequestContext.isAppIdFilterRequired()) {
-            Set<String> allowedAppIds = userRequestContext.getAppIds();
-            if (isNotEmpty(allowedAppIds)) {
-              query.field("appId").in(allowedAppIds);
-            } else {
-              throw new HarnessException(NO_APPS_ASSIGNED);
-            }
-          }
-        } else {
-          UserRequestInfo userRequestInfo = user.getUserRequestInfo();
-          if (userRequestInfo == null) {
-            throw new HarnessException(NO_APPS_ASSIGNED);
-          }
-
-          if (userRequestInfo.isAllAppsAllowed()) {
-            appIds = userRequestInfo.getAllowedAppIds();
-          } else {
-            appIds = appService.getAppIdsByAccountId(userRequestInfo.getAccountId());
-          }
-
-          if (isNotEmpty(appIds)) {
-            query.field("appId").in(appIds);
+        UserRequestContext userRequestContext = user.getUserRequestContext();
+        if (userRequestContext.isAppIdFilterRequired()) {
+          Set<String> allowedAppIds = userRequestContext.getAppIds();
+          if (isNotEmpty(allowedAppIds)) {
+            query.field("appId").in(allowedAppIds);
           } else {
             throw new HarnessException(NO_APPS_ASSIGNED);
           }
         }
+
       } else {
         throw new HarnessException(NO_APPS_ASSIGNED);
       }

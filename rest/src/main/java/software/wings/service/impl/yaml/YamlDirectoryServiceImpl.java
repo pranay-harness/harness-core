@@ -41,7 +41,6 @@ import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.LambdaSpecification;
@@ -323,18 +322,15 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   @Override
   public DirectoryNode getDirectory(@NotEmpty String accountId) {
-    boolean enabled = featureFlagService.isEnabled(FeatureName.RBAC, accountId);
     UserPermissionInfo userPermissionInfo = null;
-    if (enabled) {
-      User user = UserThreadLocal.get();
-      if (user != null) {
-        UserRequestContext userRequestContext = user.getUserRequestContext();
-        if (userRequestContext != null) {
-          userPermissionInfo = userRequestContext.getUserPermissionInfo();
-        }
+    User user = UserThreadLocal.get();
+    if (user != null) {
+      UserRequestContext userRequestContext = user.getUserRequestContext();
+      if (userRequestContext != null) {
+        userPermissionInfo = userRequestContext.getUserPermissionInfo();
       }
     }
-    return getDirectory(accountId, accountId, enabled, userPermissionInfo);
+    return getDirectory(accountId, accountId, true, userPermissionInfo);
   }
 
   @Override

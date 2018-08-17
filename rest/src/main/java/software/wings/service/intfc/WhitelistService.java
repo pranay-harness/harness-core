@@ -64,11 +64,4 @@ public interface WhitelistService {
    * @return
    */
   boolean delete(String accountId, String whitelistId);
-
-  /**
-   * Check if the whitelist feature is enabled for account
-   * @param accountId
-   * @return
-   */
-  boolean isEnabled(String accountId);
 }
