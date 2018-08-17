@@ -374,7 +374,9 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
 
     apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
     delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
-    throw new WingsException(ErrorCode.NEWRELIC_ERROR, response.errorBody().string(), USER);
+    String errMsg = "Unsuccessful response from NewRelic. Response Code " + response.code()
+        + " Error: " + response.errorBody().string();
+    throw new WingsException(ErrorCode.NEWRELIC_ERROR, errMsg, USER);
   }
 
   @Override
@@ -404,8 +406,9 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
 
     apiCallLog.addFieldToResponse(response.code(), response.errorBody(), FieldType.TEXT);
     delegateLogService.save(config.getAccountId(), apiCallLog);
-    throw new WingsException(
-        ErrorCode.NEWRELIC_ERROR, response.errorBody().string(), EnumSet.of(ReportTarget.UNIVERSAL));
+    String errMsg = "Unsuccessful response from NewRelic. Response Code " + response.code()
+        + " Error: " + response.errorBody().string();
+    throw new WingsException(ErrorCode.NEWRELIC_ERROR, errMsg, EnumSet.of(ReportTarget.UNIVERSAL));
   }
 
   @Override

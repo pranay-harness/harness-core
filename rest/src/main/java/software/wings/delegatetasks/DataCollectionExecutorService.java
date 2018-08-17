@@ -6,9 +6,8 @@ import com.google.inject.name.Named;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.utils.Misc;
+import software.wings.exception.WingsException;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -30,7 +29,7 @@ public class DataCollectionExecutorService {
 
   @Inject @Named("verificationDataCollector") protected ExecutorService dataCollectionService;
 
-  public <T> List<Optional<T>> executeParrallel(List<Callable<T>> callables) throws IOException {
+  public <T> List<Optional<T>> executeParrallel(List<Callable<T>> callables) {
     CompletionService<T> completionService = new ExecutorCompletionService<>(dataCollectionService);
     logger.info("Parallelizing callables {} ", callables.size());
     for (Callable<T> callable : callables) {
@@ -49,9 +48,9 @@ public class DataCollectionExecutorService {
           throw new TimeoutException("Timeout. Execution took longer than 3 minutes ");
         }
       } catch (ExecutionException ee) {
-        throw new IOException("error executing parallel task " + ee.getCause().getMessage(), ee.getCause());
+        throw new WingsException("Error executing task " + ee.getMessage());
       } catch (Exception e) {
-        throw new IOException("error executing parallel task " + Misc.getMessage(e), e);
+        throw new WingsException("Error executing task " + e.getMessage());
       }
     }
     logger.info("Done parallelizing callables {} ", callables.size());
