@@ -5,6 +5,7 @@ import static junit.framework.TestCase.fail;
 import com.google.inject.Inject;
 
 import org.junit.Test;
+import software.wings.exception.WingsException;
 import software.wings.sm.states.APMStateVerificationTestBase;
 
 import java.io.IOException;
@@ -15,7 +16,7 @@ import java.util.concurrent.Callable;
 public class DataCollectionExecutorServiceTest extends APMStateVerificationTestBase {
   @Inject private DataCollectionExecutorService executorService;
 
-  @Test(expected = IOException.class)
+  @Test(expected = WingsException.class)
   public void executeParallelWithException() throws IOException {
     List<Callable<Boolean>> callables = new ArrayList<>();
     callables.add(() -> true);
@@ -24,14 +25,14 @@ public class DataCollectionExecutorServiceTest extends APMStateVerificationTestB
   }
 
   @Test
-  public void executeParallel() throws IOException {
+  public void executeParallel() throws WingsException {
     List<Callable<Boolean>> callables = new ArrayList<>();
     callables.add(() -> true);
     callables.add(() -> { throw new RuntimeException("fail on purpose"); });
     try {
       executorService.executeParrallel(callables);
       fail();
-    } catch (IOException ignore) {
+    } catch (WingsException ex) {
       // do nothing
     }
     callables.remove(1);
