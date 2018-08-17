@@ -20,6 +20,8 @@ import com.github.reinert.jjschema.Attributes;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Getter;
 import lombok.Setter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.api.HelmDeployContextElement;
 import software.wings.api.HelmDeployStateExecutionData;
 import software.wings.api.InstanceElement;
@@ -97,6 +99,8 @@ import java.util.stream.Collectors;
  * Created by anubhaw on 3/25/18.
  */
 public class HelmDeployState extends State {
+  private static final Logger logger = LoggerFactory.getLogger(HelmDeployState.class);
+
   @Inject private transient AppService appService;
   @Inject private transient ServiceResourceService serviceResourceService;
   @Inject private transient InfrastructureMappingService infrastructureMappingService;
@@ -376,21 +380,27 @@ public class HelmDeployState extends State {
                                            .withErrorMessage(executionResponse.getErrorMessage())
                                            .withStateExecutionData(stateExecutionData);
 
-    HelmInstallCommandResponse helmInstallCommandResponse =
-        (HelmInstallCommandResponse) executionResponse.getHelmCommandResponse();
+    if (CommandExecutionStatus.SUCCESS.equals(executionResponse.getHelmCommandResponse().getCommandExecutionStatus())) {
+      HelmInstallCommandResponse helmInstallCommandResponse =
+          (HelmInstallCommandResponse) executionResponse.getHelmCommandResponse();
 
-    if (helmInstallCommandResponse != null) {
-      List<InstanceStatusSummary> instanceStatusSummaries = containerDeploymentHelper.getInstanceStatusSummaries(
-          context, helmInstallCommandResponse.getContainerInfoList());
-      stateExecutionData.setNewInstanceStatusSummaries(instanceStatusSummaries);
+      if (helmInstallCommandResponse != null) {
+        List<InstanceStatusSummary> instanceStatusSummaries = containerDeploymentHelper.getInstanceStatusSummaries(
+            context, helmInstallCommandResponse.getContainerInfoList());
+        stateExecutionData.setNewInstanceStatusSummaries(instanceStatusSummaries);
 
-      List<InstanceElement> instanceElements =
-          instanceStatusSummaries.stream().map(InstanceStatusSummary::getInstanceElement).collect(toList());
-      InstanceElementListParam instanceElementListParam =
-          InstanceElementListParamBuilder.anInstanceElementListParam().withInstanceElements(instanceElements).build();
+        List<InstanceElement> instanceElements =
+            instanceStatusSummaries.stream().map(InstanceStatusSummary::getInstanceElement).collect(toList());
+        InstanceElementListParam instanceElementListParam =
+            InstanceElementListParamBuilder.anInstanceElementListParam().withInstanceElements(instanceElements).build();
 
-      executionResponseBuilder.addContextElement(instanceElementListParam);
-      executionResponseBuilder.addNotifyElement(instanceElementListParam);
+        executionResponseBuilder.addContextElement(instanceElementListParam);
+        executionResponseBuilder.addNotifyElement(instanceElementListParam);
+      }
+    } else {
+      logger.info("Got helm execution response with status "
+          + executionResponse.getHelmCommandResponse().getCommandExecutionStatus().toString() + " with output "
+          + executionResponse.getHelmCommandResponse().getOutput());
     }
 
     return executionResponseBuilder.build();
