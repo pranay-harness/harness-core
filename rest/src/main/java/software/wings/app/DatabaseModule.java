@@ -327,9 +327,9 @@ public class DatabaseModule extends AbstractModule {
                   + "Create a migration to align the data with expectation or delete the uniqueness criteria from index",
               exception);
         }
-
-        checkForUnusedIndexes(collection);
       });
+
+      checkForUnusedIndexes(collection);
     });
 
     Set<String> whitelistCollections = ImmutableSet.<String>of(
