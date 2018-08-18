@@ -111,7 +111,13 @@ else
   fi
 fi
 
-export MULTI_VERSION=_multiVersion_
+DEPLOY_MODE=_deployMode_
+
+if [[ $DEPLOY_MODE != "ONPREM" ]]; then
+  export MULTI_VERSION="true"
+else
+  export MULTI_VERSION="false"
+fi
 
 if [[ $MULTI_VERSION != "true" ]]
 then
