@@ -54,6 +54,7 @@ import software.wings.exception.WingsException;
 import software.wings.security.EncryptionType;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserRequestContext.EntityInfo;
+import software.wings.security.UserRequestInfo;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
@@ -479,34 +480,58 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
       return true;
     }
 
-    UserRequestContext userRequestContext = user.getUserRequestContext();
+    if (user.isUseNewRbac()) {
+      UserRequestContext userRequestContext = user.getUserRequestContext();
 
-    // No user request context set by the filter.
-    if (userRequestContext == null) {
-      return true;
-    }
-
-    if (userRequestContext.isAppIdFilterRequired()) {
-      if (CollectionUtils.isNotEmpty(userRequestContext.getAppIds())) {
-        pageRequest.addFilter("appId", Operator.IN, userRequestContext.getAppIds().toArray());
-      } else {
-        return false;
-      }
-    }
-
-    if (userRequestContext.isEntityIdFilterRequired()) {
-      String beanClassName = beanClass.getName();
-
-      EntityInfo entityInfo = userRequestContext.getEntityInfoMap().get(beanClassName);
-
-      if (entityInfo == null) {
+      // No user request context set by the filter.
+      if (userRequestContext == null) {
         return true;
       }
 
-      if (CollectionUtils.isNotEmpty(entityInfo.getEntityIds())) {
-        pageRequest.addFilter(entityInfo.getEntityFieldName(), Operator.IN, entityInfo.getEntityIds().toArray());
-      } else {
-        return false;
+      if (userRequestContext.isAppIdFilterRequired()) {
+        if (CollectionUtils.isNotEmpty(userRequestContext.getAppIds())) {
+          pageRequest.addFilter("appId", Operator.IN, userRequestContext.getAppIds().toArray());
+        } else {
+          return false;
+        }
+      }
+
+      if (userRequestContext.isEntityIdFilterRequired()) {
+        String beanClassName = beanClass.getName();
+
+        EntityInfo entityInfo = userRequestContext.getEntityInfoMap().get(beanClassName);
+
+        if (entityInfo == null) {
+          return true;
+        }
+
+        if (CollectionUtils.isNotEmpty(entityInfo.getEntityIds())) {
+          pageRequest.addFilter(entityInfo.getEntityFieldName(), Operator.IN, entityInfo.getEntityIds().toArray());
+        } else {
+          return false;
+        }
+      }
+
+    } else {
+      UserRequestInfo userRequestInfo = user.getUserRequestInfo();
+
+      // No user request info set by the filter.
+      if (userRequestInfo == null) {
+        return true;
+      }
+
+      if (userRequestInfo.isAppIdFilterRequired()) {
+        // TODO: field name should be dynamic
+        boolean emptyAppIdsInUserReq = isEmpty(userRequestInfo.getAppIds());
+        if (emptyAppIdsInUserReq) {
+          if (isEmpty(userRequestInfo.getAllowedAppIds())) {
+            return false;
+          } else {
+            pageRequest.addFilter("appId", Operator.IN, userRequestInfo.getAllowedAppIds().toArray());
+          }
+        } else {
+          pageRequest.addFilter("appId", Operator.IN, userRequestInfo.getAppIds().toArray());
+        }
       }
     }
 
@@ -520,35 +545,56 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
       return true;
     }
 
-    UserRequestContext userRequestContext = user.getUserRequestContext();
+    if (user.isUseNewRbac()) {
+      UserRequestContext userRequestContext = user.getUserRequestContext();
 
-    // No user request context set by the filter.
-    if (userRequestContext == null) {
-      return true;
-    }
-
-    if (userRequestContext.isAppIdFilterRequired()) {
-      if (CollectionUtils.isNotEmpty(userRequestContext.getAppIds())) {
-        query.field("appId").in(userRequestContext.getAppIds());
-      }
-    }
-
-    if (userRequestContext.isEntityIdFilterRequired()) {
-      String beanClassName = beanClass.getName();
-
-      EntityInfo entityInfo = userRequestContext.getEntityInfoMap().get(beanClassName);
-
-      if (entityInfo == null) {
+      // No user request context set by the filter.
+      if (userRequestContext == null) {
         return true;
       }
 
-      if (CollectionUtils.isNotEmpty(entityInfo.getEntityIds())) {
-        query.field(entityInfo.getEntityFieldName()).in(entityInfo.getEntityIds());
-      } else {
-        return false;
+      if (userRequestContext.isAppIdFilterRequired()) {
+        if (CollectionUtils.isNotEmpty(userRequestContext.getAppIds())) {
+          query.field("appId").in(userRequestContext.getAppIds());
+        }
+      }
+
+      if (userRequestContext.isEntityIdFilterRequired()) {
+        String beanClassName = beanClass.getName();
+
+        EntityInfo entityInfo = userRequestContext.getEntityInfoMap().get(beanClassName);
+
+        if (entityInfo == null) {
+          return true;
+        }
+
+        if (CollectionUtils.isNotEmpty(entityInfo.getEntityIds())) {
+          query.field(entityInfo.getEntityFieldName()).in(entityInfo.getEntityIds());
+        } else {
+          return false;
+        }
+      }
+
+    } else {
+      if (user.getUserRequestInfo() == null) {
+        return true;
+      }
+      UserRequestInfo userRequestInfo = UserThreadLocal.get().getUserRequestInfo();
+      if (userRequestInfo.isAppIdFilterRequired()) {
+        // TODO: field name should be dynamic
+        boolean emptyAppIdsInUserReq = isEmpty(userRequestInfo.getAppIds());
+
+        if (emptyAppIdsInUserReq) {
+          if (isEmpty(userRequestInfo.getAllowedAppIds())) {
+            return false;
+          } else {
+            query.field("appId").in(userRequestInfo.getAllowedAppIds());
+          }
+        } else {
+          query.field("appId").in(userRequestInfo.getAppIds());
+        }
       }
     }
-
     return true;
   }
 

@@ -515,8 +515,11 @@ public class SettingsServiceImplTest extends WingsBaseTest {
 
       appPermissionsMap.put(APP_ID_1, appPermissionSummaryForUI);
 
-      UserPermissionInfo userPermissionInfo =
-          UserPermissionInfo.builder().accountId(ACCOUNT_ID).appPermissionMap(appPermissionsMap).build();
+      UserPermissionInfo userPermissionInfo = UserPermissionInfo.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .isRbacEnabled(true)
+                                                  .appPermissionMap(appPermissionsMap)
+                                                  .build();
 
       user.setUserRequestContext(
           UserRequestContext.builder().accountId(ACCOUNT_ID).userPermissionInfo(userPermissionInfo).build());

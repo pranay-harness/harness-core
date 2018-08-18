@@ -96,7 +96,7 @@ public class WhitelistResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Boolean> isEnabled(@QueryParam("accountId") String accountId) {
-    return new RestResponse<>(true);
+    return new RestResponse<>(whitelistService.isEnabled(accountId));
   }
 
   /**

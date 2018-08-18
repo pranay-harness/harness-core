@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.FeatureName;
 import software.wings.beans.security.access.GlobalWhitelistConfig;
 import software.wings.beans.security.access.Whitelist;
 import software.wings.beans.security.access.WhitelistConfig;
@@ -232,5 +233,10 @@ public class WhitelistServiceImpl implements WhitelistService {
       evictWhitelistConfigCache(whitelist.getAccountId());
     }
     return delete;
+  }
+
+  @Override
+  public boolean isEnabled(String accountId) {
+    return featureFlagService.isEnabled(FeatureName.WHITELIST, accountId);
   }
 }
