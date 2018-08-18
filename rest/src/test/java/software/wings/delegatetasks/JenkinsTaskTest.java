@@ -16,6 +16,7 @@ import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.BuildResult;
 import com.offbytwo.jenkins.model.BuildWithDetails;
 import com.offbytwo.jenkins.model.QueueReference;
+import org.apache.http.client.HttpResponseException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -133,6 +134,26 @@ public class JenkinsTaskTest extends WingsBaseTest {
     verify(jenkins).trigger(jobName, Collections.emptyMap());
     verify(jenkins).getBuild(any(QueueReference.class));
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+  }
+
+  @Test
+  public void shouldFailWhenNoJobFound() throws Exception {
+    when(build.details()).thenThrow(new HttpResponseException(404, "Job Not found"));
+    JenkinsTaskParams params = JenkinsTaskParams.builder()
+                                   .jenkinsConfig(jenkinsConfig)
+                                   .encryptedDataDetails(emptyList())
+                                   .jobName(jobName)
+                                   .parameters(parameters)
+                                   .filePathsForAssertion(assertions)
+                                   .activityId(activityId)
+                                   .unitName(stateName)
+                                   .build();
+    JenkinsState.JenkinsExecutionResponse response = jenkinsTask.run(params);
+    verify(jenkinsFactory).create(jenkinsUrl, userName, password);
+    verify(jenkins).trigger(jobName, Collections.emptyMap());
+    verify(jenkins).getBuild(any(QueueReference.class));
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+    assertThat(response.getErrorMessage()).isNotEmpty();
   }
 
   @Test
