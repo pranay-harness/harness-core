@@ -4,6 +4,7 @@ import static io.harness.threading.Morpheus.sleep;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
+import static software.wings.exception.WingsException.ExecutionContext.DELEGATE;
 import static software.wings.service.impl.LogServiceImpl.NUM_OF_LOGS_TO_KEEP;
 
 import com.google.inject.Inject;
@@ -22,6 +23,7 @@ import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.JenkinsTaskParams;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsExceptionMapper;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.service.impl.jenkins.JenkinsUtil;
 import software.wings.service.intfc.security.EncryptionService;
@@ -97,6 +99,10 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
           && (buildResult != BuildResult.UNSTABLE || !jenkinsTaskParams.isUnstableSuccess())) {
         executionStatus = ExecutionStatus.FAILED;
       }
+    } catch (WingsException e) {
+      WingsExceptionMapper.logProcessedMessages(e, DELEGATE, logger);
+      executionStatus = ExecutionStatus.FAILED;
+      jenkinsExecutionResponse.setErrorMessage(Misc.getMessage(e));
     } catch (Exception e) {
       logger.error("Error occurred while running Jenkins task", e);
       executionStatus = ExecutionStatus.FAILED;
@@ -116,7 +122,14 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
         jenkinsBuildWithDetails = jenkinsBuild.details();
         saveConsoleLogs(jenkinsBuildWithDetails, consoleLogsSent, activityId, unitName, RUNNING);
       } catch (IOException e) {
-        logger.error("Error occurred while waiting for Job to start execution. Retrying. {}", Misc.getMessage(e));
+        if (e instanceof HttpResponseException) {
+          if (((HttpResponseException) e).getStatusCode() == 404) {
+            throw new WingsException("Job [" + jenkinsBuild.getUrl()
+                + "] not found. Job might have been deleted from Jenkins Server between polling intervals");
+          }
+        }
+        logger.error("Error occurred while waiting for Job {} to finish execution. Reasonn {}. Retrying.",
+            jenkinsBuild.getUrl(), Misc.getMessage(e));
       }
 
     } while (jenkinsBuildWithDetails == null || jenkinsBuildWithDetails.isBuilding());
