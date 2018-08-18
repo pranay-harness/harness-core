@@ -134,6 +134,7 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
           AppEnvRestriction.builder().appFilter(appFilterFromPermissions).envFilter(envFilterForPermissions).build();
       UsageRestrictions usageRestrictionsFromPermissions = new UsageRestrictions();
       usageRestrictionsFromPermissions.setAppEnvRestrictions(newHashSet(appEnvRestrictionForPermissions));
+      usageRestrictionsFromPermissions.setEditable(true);
 
       Map<String, Set<String>> appEnvMap = Maps.newHashMap();
       appEnvMap.put(APP_ID_1, newHashSet(ENV_ID_1));
@@ -151,18 +152,18 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       AppEnvRestriction appEnvRestriction =
           AppEnvRestriction.builder().appFilter(appFilter).envFilter(envFilter).build();
       UsageRestrictions expected =
-          UsageRestrictions.builder().appEnvRestrictions(newHashSet(appEnvRestriction)).build();
+          UsageRestrictions.builder().isEditable(true).appEnvRestrictions(newHashSet(appEnvRestriction)).build();
 
       UsageRestrictions defaultUsageRestrictions =
           usageRestrictionsService.getDefaultUsageRestrictions(ACCOUNT_ID, APP_ID, ENV_ID);
-      assertEquals(defaultUsageRestrictions, expected);
+      assertEquals(expected, defaultUsageRestrictions);
 
       // Scenario 2 admin
       setPermissions(asList(APP_ID_1), asList(ENV_ID_1), allActions, true, usageRestrictionsFromPermissions, appEnvMap);
       expected = null;
 
       defaultUsageRestrictions = usageRestrictionsService.getDefaultUsageRestrictions(ACCOUNT_ID, APP_ID, null);
-      assertEquals(defaultUsageRestrictions, expected);
+      assertEquals(expected, defaultUsageRestrictions);
 
       // Scenario 3
       setPermissions(asList(APP_ID_1, APP_ID_2, APP_ID_3), asList(ENV_ID_1, ENV_ID_2, ENV_ID_3), allActions, true,
@@ -198,7 +199,7 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
 
       // Scenario 5
       defaultUsageRestrictions = usageRestrictionsService.getDefaultUsageRestrictions(ACCOUNT_ID, null, null);
-      assertEquals(defaultUsageRestrictions, expected);
+      assertEquals(expected, defaultUsageRestrictions);
 
       // Scenario 6
       setPermissions(
@@ -239,6 +240,7 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
           AppEnvRestriction.builder().appFilter(appFilterFromPermissions).envFilter(envFilterForPermissions).build();
       usageRestrictionsFromPermissions = new UsageRestrictions();
       usageRestrictionsFromPermissions.setAppEnvRestrictions(newHashSet(appEnvRestrictionForPermissions));
+      usageRestrictionsFromPermissions.setEditable(true);
 
       appEnvMap.clear();
       appEnvMap.put(APP_ID_1, newHashSet(ENV_ID_1));
@@ -250,10 +252,10 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       envFilters = newHashSet(SELECTED);
       envFilter = EnvFilter.builder().filterTypes(envFilters).ids(newHashSet(ENV_ID)).build();
       appEnvRestriction = AppEnvRestriction.builder().appFilter(appFilter).envFilter(envFilter).build();
-      expected = UsageRestrictions.builder().appEnvRestrictions(newHashSet(appEnvRestriction)).build();
+      expected = UsageRestrictions.builder().isEditable(true).appEnvRestrictions(newHashSet(appEnvRestriction)).build();
 
       defaultUsageRestrictions = usageRestrictionsService.getDefaultUsageRestrictions(ACCOUNT_ID, null, null);
-      assertEquals(defaultUsageRestrictions, expected);
+      assertEquals(expected, defaultUsageRestrictions);
 
       when(authHandler.getAppIdsByFilter(anyString(), any(GenericEntityFilter.class)))
           .thenReturn(newHashSet(APP_ID_1, APP_ID_2, APP_ID_3));
@@ -284,10 +286,10 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       appFilter = GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(APP_ID_1)).build();
       envFilter = EnvFilter.builder().filterTypes(newHashSet(SELECTED)).ids(newHashSet(ENV_ID_1)).build();
       appEnvRestriction = AppEnvRestriction.builder().appFilter(appFilter).envFilter(envFilter).build();
-      expected = UsageRestrictions.builder().appEnvRestrictions(newHashSet(appEnvRestriction)).build();
+      expected = UsageRestrictions.builder().isEditable(true).appEnvRestrictions(newHashSet(appEnvRestriction)).build();
 
       defaultUsageRestrictions = usageRestrictionsService.getDefaultUsageRestrictions(ACCOUNT_ID, APP_ID_1, null);
-      assertEquals(defaultUsageRestrictions, expected);
+      assertEquals(expected, defaultUsageRestrictions);
 
     } finally {
       UserThreadLocal.unset();
@@ -701,7 +703,8 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       when(authHandler.getEnvIdsByFilter(anyString(), any(EnvFilter.class)))
           .thenReturn(newHashSet(ENV_ID, ENV_ID_1, ENV_ID_2, ENV_ID_3));
 
-      UsageRestrictions usageRestrictions1 = UsageRestrictions.builder().appEnvRestrictions(newHashSet()).build();
+      UsageRestrictions usageRestrictions1 =
+          UsageRestrictions.builder().isEditable(true).appEnvRestrictions(newHashSet()).build();
       doReturn(usageRestrictions1)
           .when(usageRestrictionsService)
           .getUsageRestrictionsFromUserPermissions(any(), any(), any(), Action.UPDATE);
@@ -725,7 +728,8 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       AppEnvRestriction appEnvRestriction1 =
           AppEnvRestriction.builder().appFilter(appFilter1).envFilter(envFilter1).build();
 
-      usageRestrictions1 = UsageRestrictions.builder().appEnvRestrictions(newHashSet(appEnvRestriction1)).build();
+      usageRestrictions1 =
+          UsageRestrictions.builder().isEditable(true).appEnvRestrictions(newHashSet(appEnvRestriction1)).build();
       doReturn(usageRestrictions1)
           .when(usageRestrictionsService)
           .getUsageRestrictionsFromUserPermissions(any(), any(), any(), Action.UPDATE);
@@ -745,7 +749,8 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       envFilter1 = EnvFilter.builder().filterTypes(envFilters1).ids(newHashSet(ENV_ID_1, ENV_ID_2, ENV_ID_3)).build();
       appEnvRestriction1 = AppEnvRestriction.builder().appFilter(appFilter1).envFilter(envFilter1).build();
 
-      usageRestrictions1 = UsageRestrictions.builder().appEnvRestrictions(newHashSet(appEnvRestriction1)).build();
+      usageRestrictions1 =
+          UsageRestrictions.builder().isEditable(true).appEnvRestrictions(newHashSet(appEnvRestriction1)).build();
       doReturn(usageRestrictions1)
           .when(usageRestrictionsService)
           .getUsageRestrictionsFromUserPermissions(any(), any(), any(), Action.UPDATE);
@@ -779,7 +784,8 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       envFilter1 = EnvFilter.builder().filterTypes(envFilters1).ids(newHashSet(ENV_ID_1)).build();
       appEnvRestriction1 = AppEnvRestriction.builder().appFilter(appFilter1).envFilter(envFilter1).build();
 
-      usageRestrictions1 = UsageRestrictions.builder().appEnvRestrictions(newHashSet(appEnvRestriction1)).build();
+      usageRestrictions1 =
+          UsageRestrictions.builder().isEditable(true).appEnvRestrictions(newHashSet(appEnvRestriction1)).build();
       doReturn(usageRestrictions1)
           .when(usageRestrictionsService)
           .getUsageRestrictionsFromUserPermissions(any(), any(), any(), Action.UPDATE);
@@ -813,7 +819,8 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       envFilter1 = EnvFilter.builder().filterTypes(envFilters1).ids(newHashSet(ENV_ID_1, ENV_ID_2, ENV_ID_3)).build();
       appEnvRestriction1 = AppEnvRestriction.builder().appFilter(appFilter1).envFilter(envFilter1).build();
 
-      usageRestrictions1 = UsageRestrictions.builder().appEnvRestrictions(newHashSet(appEnvRestriction1)).build();
+      usageRestrictions1 =
+          UsageRestrictions.builder().isEditable(true).appEnvRestrictions(newHashSet(appEnvRestriction1)).build();
       doReturn(usageRestrictions1)
           .when(usageRestrictionsService)
           .getUsageRestrictionsFromUserPermissions(any(), any(), any(), Action.UPDATE);

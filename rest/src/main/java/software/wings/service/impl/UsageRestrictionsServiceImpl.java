@@ -400,7 +400,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       return null;
     }
 
-    return UsageRestrictions.builder().appEnvRestrictions(appEnvRestrictions).build();
+    return UsageRestrictions.builder().isEditable(true).appEnvRestrictions(appEnvRestrictions).build();
   }
 
   public Set<EnvFilter> getEnvFilterForApp(String accountId, String appId) {
