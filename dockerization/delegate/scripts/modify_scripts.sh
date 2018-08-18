@@ -40,12 +40,6 @@ then
     sed -i "s|_delegateCheckLocation_|${DELEGATE_CHECK_LOCATION}|" /opt/harness-delegate/delegate.sh
 fi
 
-if [[ -v "MULTI_VERSION" ]]
-then
-    sed -i "s|_multiVersion_|${MULTI_VERSION}|" /opt/harness-delegate/start.sh
-    sed -i "s|_multiVersion_|${MULTI_VERSION}|" /opt/harness-delegate/delegate.sh
-fi
-
 if [[ -v "DESCRIPTION" ]]
 then
     sed -i "s|_description_|${DESCRIPTION}|" /opt/harness-delegate/delegate.sh
@@ -83,8 +77,10 @@ fi
 
 if [[ -v "DEPLOY_MODE" ]]
 then
+    sed -i "s|_deployMode_|${DEPLOY_MODE}|" /opt/harness-delegate/start.sh
     sed -i "s|_deployMode_|${DEPLOY_MODE}|" /opt/harness-delegate/delegate.sh
 else
+    sed -i "s|_deployMode_|AWS|" /opt/harness-delegate/start.sh
     sed -i "s|_deployMode_|AWS|" /opt/harness-delegate/delegate.sh
 fi
 

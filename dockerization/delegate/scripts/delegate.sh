@@ -68,7 +68,13 @@ then
   ln -s $JRE_DIR jre
 fi
 
-export MULTI_VERSION=_multiVersion_
+DEPLOY_MODE=_deployMode_
+
+if [[ $DEPLOY_MODE != "ONPREM" ]]; then
+  export MULTI_VERSION="true"
+else
+  export MULTI_VERSION="false"
+fi
 
 if [[ $MULTI_VERSION != "true" ]]
 then
@@ -77,7 +83,6 @@ then
   REMOTE_DELEGATE_LATEST=$(curl $PROXY_CURL -#k $DELEGATE_STORAGE_URL/_delegateCheckLocation_)
   REMOTE_DELEGATE_URL=$DELEGATE_STORAGE_URL/$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f2)
   REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f1)
-  DEPLOY_MODE=_deployMode_
 
   if [ ! -e delegate.jar ]
   then
