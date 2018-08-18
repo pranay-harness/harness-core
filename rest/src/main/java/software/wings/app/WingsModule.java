@@ -174,8 +174,6 @@ import software.wings.service.impl.security.ManagerDecryptionServiceImpl;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.impl.security.SecretManagerImpl;
 import software.wings.service.impl.security.VaultServiceImpl;
-import software.wings.service.impl.security.auth.AuthHandler;
-import software.wings.service.impl.security.auth.AuthHandlerImpl;
 import software.wings.service.impl.trigger.TriggerServiceImpl;
 import software.wings.service.impl.workflow.WorkflowServiceImpl;
 import software.wings.service.impl.yaml.AppYamlResourceServiceImpl;
@@ -462,7 +460,6 @@ public class WingsModule extends AbstractModule {
     bind(AwsCodeDeployHelperServiceManager.class).to(AwsCodeDeployHelperServiceManagerImpl.class);
     bind(AwsLambdaHelperServiceManager.class).to(AwsLambdaHelperServiceManagerImpl.class);
     bind(DelegateProfileService.class).to(DelegateProfileServiceImpl.class);
-    bind(AuthHandler.class).to(AuthHandlerImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);

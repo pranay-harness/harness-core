@@ -1,14 +1,10 @@
 package software.wings.resources;
 
-import static com.google.common.collect.Sets.newHashSet;
 import static java.util.Arrays.asList;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.AccountRole.AccountRoleBuilder.anAccountRole;
@@ -24,6 +20,8 @@ import static software.wings.beans.User.Builder.anUser;
 import static software.wings.security.PermissionAttribute.Action.ALL;
 import static software.wings.security.PermissionAttribute.Action.CREATE;
 import static software.wings.security.PermissionAttribute.Action.READ;
+import static software.wings.security.PermissionAttribute.Action.UPDATE;
+import static software.wings.security.PermissionAttribute.PermissionType.APP;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -32,15 +30,12 @@ import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.PASSWORD;
 import static software.wings.utils.WingsTestConstants.ROLE_ID;
 import static software.wings.utils.WingsTestConstants.ROLE_NAME;
-import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.USER_EMAIL;
 import static software.wings.utils.WingsTestConstants.USER_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 import com.nimbusds.jose.EncryptionMethod;
 import com.nimbusds.jose.JOSEException;
@@ -73,28 +68,16 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.User;
-import software.wings.beans.security.AppPermission;
-import software.wings.beans.security.UserGroup;
 import software.wings.common.AuditHelper;
 import software.wings.dl.GenericDbCache;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.security.AppPermissionSummary;
-import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.AuthRuleFilter;
-import software.wings.security.EnvFilter;
-import software.wings.security.GenericEntityFilter;
-import software.wings.security.GenericEntityFilter.FilterType;
-import software.wings.security.PermissionAttribute.Action;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.SecretManager;
-import software.wings.security.UserPermissionInfo;
-import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.AuthServiceImpl;
 import software.wings.service.impl.security.auth.AuthHandler;
-import software.wings.service.impl.security.auth.AuthHandlerImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuditService;
@@ -102,10 +85,7 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessUserGroupService;
-import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.LearningEngineService;
-import software.wings.service.intfc.PipelineService;
-import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
@@ -115,8 +95,6 @@ import software.wings.utils.CacheHelper;
 import software.wings.utils.ResourceTestRule;
 
 import java.util.Date;
-import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import javax.cache.Cache;
@@ -160,21 +138,15 @@ public class SecureResourceTest {
   private static EnvironmentService envService = mock(EnvironmentService.class);
   private static LearningEngineService learningEngineService = mock(LearningEngineService.class);
   private static MainConfiguration configuration = mock(MainConfiguration.class);
+  private static AuthHandler authHandler = mock(AuthHandler.class);
   private static FeatureFlagService featureFlagService = mock(FeatureFlagService.class);
   private static WhitelistService whitelistService = mock(WhitelistService.class);
   private static HarnessUserGroupService harnessUserGroupService = mock(HarnessUserGroupService.class);
   private static SecretManager secretManager = mock(SecretManager.class);
-  private static PipelineService pipelineService = mock(PipelineService.class);
-  private static ServiceResourceService serviceResourceService = mock(ServiceResourceService.class);
-  private static InfrastructureProvisionerService infrastructureProvisionerService =
-      mock(InfrastructureProvisionerService.class);
 
-  private static AuthHandler authHandler = new AuthHandlerImpl(pipelineService, appService, serviceResourceService,
-      infrastructureProvisionerService, envService, workflowService, userGroupService, null);
-
-  private static AuthService authService = spy(new AuthServiceImpl(genericDbCache, wingsPersistence, userService,
+  private static AuthService authService = new AuthServiceImpl(genericDbCache, wingsPersistence, userService,
       userGroupService, usageRestrictionsService, workflowService, envService, cacheHelper, configuration,
-      learningEngineService, authHandler, featureFlagService, harnessUserGroupService, secretManager));
+      learningEngineService, authHandler, featureFlagService, harnessUserGroupService, secretManager);
 
   private static AuthRuleFilter authRuleFilter = new AuthRuleFilter(auditService, auditHelper, authService, authHandler,
       appService, userService, featureFlagService, whitelistService, harnessUserGroupService);
@@ -189,8 +161,80 @@ public class SecureResourceTest {
       ResourceTestRule.builder().addResource(new SecureResource()).addProvider(authRuleFilter).build();
 
   private String accountKey = "2f6b0988b6fb3370073c3d0505baee59";
-  private final Account account = Account.Builder.anAccount().withUuid(ACCOUNT_ID).build();
 
+  private final Role appAllResourceReadActionRole =
+      aRole()
+          .withAppId(GLOBAL_APP_ID)
+          .withName(ROLE_NAME)
+          .withUuid(ROLE_ID)
+          .withAccountId(ACCOUNT_ID)
+          .withPermissions(asList(aPermission()
+                                      .withAppId(APP_ID)
+                                      .withEnvId(ENV_ID)
+                                      .withPermissionScope(APP)
+                                      .withResourceType(ResourceType.APPLICATION)
+                                      .withAction(READ)
+                                      .build()))
+          .build();
+  private final Role appAllResourceCreateActionRole =
+      aRole()
+          .withAppId(GLOBAL_APP_ID)
+          .withName(ROLE_NAME)
+          .withUuid(ROLE_ID)
+          .withAccountId(ACCOUNT_ID)
+          .withPermissions(asList(aPermission()
+                                      .withAppId(APP_ID)
+                                      .withEnvId(ENV_ID)
+                                      .withPermissionScope(APP)
+                                      .withResourceType(ResourceType.APPLICATION)
+                                      .withAction(CREATE)
+                                      .build()))
+          .build();
+  private final Role appAllResourceWriteActionRole =
+      aRole()
+          .withAppId(GLOBAL_APP_ID)
+          .withName(ROLE_NAME)
+          .withUuid(ROLE_ID)
+          .withAccountId(ACCOUNT_ID)
+          .withPermissions(asList(aPermission()
+                                      .withAppId(APP_ID)
+                                      .withEnvId(ENV_ID)
+                                      .withPermissionScope(APP)
+                                      .withResourceType(ResourceType.APPLICATION)
+                                      .withAction(UPDATE)
+                                      .build()))
+          .build();
+
+  private final Role envAllResourceReadActionRole =
+      aRole()
+          .withAppId(GLOBAL_APP_ID)
+          .withName(ROLE_NAME)
+          .withUuid(ROLE_ID)
+          .withAccountId(ACCOUNT_ID)
+          .withPermissions(asList(aPermission()
+                                      .withAppId(APP_ID)
+                                      .withEnvId(ENV_ID)
+                                      .withPermissionScope(ENV)
+                                      .withResourceType(ResourceType.ENVIRONMENT)
+                                      .withAction(READ)
+                                      .build()))
+          .build();
+  private final Role envAllResourceWriteActionRole =
+      aRole()
+          .withAppId(GLOBAL_APP_ID)
+          .withName(ROLE_NAME)
+          .withUuid(ROLE_ID)
+          .withAccountId(ACCOUNT_ID)
+          .withPermissions(asList(aPermission()
+                                      .withAppId(APP_ID)
+                                      .withEnvId(ENV_ID)
+                                      .withPermissionScope(ENV)
+                                      .withResourceType(ResourceType.ENVIRONMENT)
+                                      .withAction(UPDATE)
+                                      .build()))
+          .build();
+
+  private final Account account = Account.Builder.anAccount().withUuid(ACCOUNT_ID).build();
   private User user =
       anUser()
           .withUuid(USER_ID)
@@ -202,86 +246,6 @@ public class SecureResourceTest {
           .withRoles(asList(aRole().withAccountId(ACCOUNT_ID).withRoleType(RoleType.ACCOUNT_ADMIN).build()))
           .build();
 
-  private final UserGroup appServiceReadActionUserGroup =
-      UserGroup.builder()
-          .appId(GLOBAL_APP_ID)
-          .name(ROLE_NAME)
-          .uuid(ROLE_ID)
-          .accountId(ACCOUNT_ID)
-          .appPermissions(newHashSet(AppPermission.builder()
-                                         .permissionType(PermissionType.SERVICE)
-                                         .appFilter(GenericEntityFilter.builder()
-                                                        .ids(newHashSet(GLOBAL_APP_ID))
-                                                        .filterType(FilterType.SELECTED)
-                                                        .build())
-                                         .entityFilter(EnvFilter.builder()
-                                                           .ids(newHashSet(SERVICE_ID))
-                                                           .filterTypes(newHashSet(EnvFilter.FilterType.SELECTED))
-                                                           .build())
-                                         .actions(newHashSet(READ))
-                                         .build()))
-          .memberIds(Lists.newArrayList(user.getUuid()))
-          .build();
-
-  private final UserGroup appAllResourceCreateActionUserGroup =
-      UserGroup.builder()
-          .appId(GLOBAL_APP_ID)
-          .name(ROLE_NAME)
-          .uuid(ROLE_ID)
-          .accountId(ACCOUNT_ID)
-          .appPermissions(newHashSet(AppPermission.builder()
-                                         .permissionType(PermissionType.ALL_APP_ENTITIES)
-                                         .appFilter(GenericEntityFilter.builder()
-                                                        .ids(newHashSet(GLOBAL_APP_ID))
-                                                        .filterType(FilterType.SELECTED)
-                                                        .build())
-                                         .actions(newHashSet(CREATE))
-                                         .build()))
-          .memberIds(Lists.newArrayList(user.getUuid()))
-          .build();
-
-  private final UserGroup appAllResourceReadActionUserGroup =
-      UserGroup.builder()
-          .appId(GLOBAL_APP_ID)
-          .name(ROLE_NAME)
-          .uuid(ROLE_ID)
-          .accountId(ACCOUNT_ID)
-          .appPermissions(newHashSet(AppPermission.builder()
-                                         .permissionType(PermissionType.ENV)
-                                         .appFilter(GenericEntityFilter.builder()
-                                                        .ids(newHashSet(GLOBAL_APP_ID))
-                                                        .filterType(FilterType.SELECTED)
-                                                        .build())
-                                         .entityFilter(EnvFilter.builder()
-                                                           .ids(newHashSet(ENV_ID))
-                                                           .filterTypes(newHashSet(EnvFilter.FilterType.SELECTED))
-                                                           .build())
-                                         .actions(newHashSet(READ))
-                                         .build()))
-          .memberIds(Lists.newArrayList(user.getUuid()))
-          .build();
-
-  private final UserGroup envAllResourceReadActionUserGroup =
-      UserGroup.builder()
-          .appId(GLOBAL_APP_ID)
-          .name(ROLE_NAME)
-          .uuid(ROLE_ID)
-          .accountId(ACCOUNT_ID)
-          .appPermissions(newHashSet(
-              AppPermission.builder()
-                  .permissionType(PermissionType.ENV)
-                  .appFilter(GenericEntityFilter.builder()
-                                 .ids(newHashSet(GLOBAL_APP_ID))
-                                 .filterType(FilterType.SELECTED)
-                                 .build())
-                  .entityFilter(EnvFilter.builder()
-                                    .filterTypes(newHashSet(EnvFilter.FilterType.NON_PROD, EnvFilter.FilterType.PROD))
-                                    .build())
-                  .actions(newHashSet(READ))
-                  .build()))
-          .memberIds(Lists.newArrayList(user.getUuid()))
-          .build();
-
   /**
    * Sets up.
    *
@@ -289,7 +253,6 @@ public class SecureResourceTest {
    */
   @Before
   public void setUp() throws Exception {
-    UserThreadLocal.unset();
     when(cacheHelper.getUserCache()).thenReturn(cache);
     when(cache.get(USER_ID)).thenReturn(user);
 
@@ -303,7 +266,6 @@ public class SecureResourceTest {
             anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withEnvironmentType(EnvironmentType.NON_PROD).build());
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withUuid(ACCOUNT_ID).withAccountKey(accountKey).build());
-    when(appService.getAppIdsByAccountId(ACCOUNT_ID)).thenReturn(Lists.newArrayList(APP_ID));
     when(appService.get(APP_ID))
         .thenReturn(anApplication().withUuid(APP_ID).withAppId(APP_ID).withAccountId(ACCOUNT_ID).build());
     when(userService.getUserAccountRole(USER_ID, ACCOUNT_ID))
@@ -321,10 +283,6 @@ public class SecureResourceTest {
                                                                    .build()))
                         .build());
     when(userService.isUserAssignedToAccount(user, ACCOUNT_ID)).thenReturn(true);
-
-    when(usageRestrictionsService.getAppEnvMapFromUserPermissions(any(), any(), any())).thenReturn(null);
-    when(usageRestrictionsService.getUsageRestrictionsFromUserPermissions(any(), any(), any(), any())).thenReturn(null);
-
     UserThreadLocal.set(user);
   }
 
@@ -375,19 +333,7 @@ public class SecureResourceTest {
    */
   @Test
   public void shouldAuthorizeAppScopeResourceReadRequestForUserWithRequiredPermission() {
-    user.setUserGroups(asList(appAllResourceReadActionUserGroup));
-
-    Map<Action, Set<EnvInfo>> envPermissions = Maps.newHashMap();
-    envPermissions.put(
-        Action.READ, Sets.newHashSet(EnvInfo.builder().envId(ENV_ID).envType(EnvironmentType.PROD.name()).build()));
-    AppPermissionSummary appPermissionSummary = AppPermissionSummary.builder().envPermissions(envPermissions).build();
-    Map<String, AppPermissionSummary> appPermissionSummaryMap = Maps.newHashMap();
-    appPermissionSummaryMap.put(APP_ID, appPermissionSummary);
-    UserPermissionInfo userPermissionInfo =
-        UserPermissionInfo.builder().appPermissionMapInternal(appPermissionSummaryMap).build();
-    UserRequestContext userRequestContext =
-        UserRequestContext.builder().accountId(ACCOUNT_ID).userPermissionInfo(userPermissionInfo).build();
-    user.setUserRequestContext(userRequestContext);
+    user.setRoles(asList(appAllResourceReadActionRole));
 
     RestResponse<User> response = resources.client()
                                       .target("/secure-resources/appResourceReadActionOnAppScope?appId=APP_ID")
@@ -401,22 +347,11 @@ public class SecureResourceTest {
    * Should authorize app scope resource write request for user with required permission.
    */
   @Test
-  public void shouldAuthorizeAppScopeResourceCreateRequestForUserWithRequiredPermission() {
-    user.setUserGroups(asList(appAllResourceCreateActionUserGroup));
-
-    Map<Action, Set<EnvInfo>> envPermissions = Maps.newHashMap();
-    envPermissions.put(
-        Action.READ, Sets.newHashSet(EnvInfo.builder().envId(ENV_ID).envType(EnvironmentType.PROD.name()).build()));
-    AppPermissionSummary appPermissionSummary = AppPermissionSummary.builder().canCreateEnvironment(true).build();
-    Map<String, AppPermissionSummary> appPermissionSummaryMap = Maps.newHashMap();
-    appPermissionSummaryMap.put(APP_ID, appPermissionSummary);
-    UserPermissionInfo userPermissionInfo =
-        UserPermissionInfo.builder().appPermissionMapInternal(appPermissionSummaryMap).build();
-
-    doReturn(userPermissionInfo).when(authService).getUserPermissionInfo(ACCOUNT_ID, user);
+  public void shouldAuthorizeAppScopeResourceWriteRequestForUserWithRequiredPermission() {
+    user.setRoles(asList(appAllResourceCreateActionRole));
 
     RestResponse<User> response = resources.client()
-                                      .target("/secure-resources/appResourceCreateActionOnAppScope?appId=APP_ID")
+                                      .target("/secure-resources/appResourceWriteActionOnAppScope?appId=APP_ID")
                                       .request()
                                       .header(HttpHeaders.AUTHORIZATION, "Bearer VALID_TOKEN")
                                       .post(ENTITY, new GenericType<RestResponse<User>>() {});
@@ -428,24 +363,15 @@ public class SecureResourceTest {
    */
   @Test
   public void shouldDenyAppScopeResourceReadRequestForUserWithoutRequiredPermission() {
-    user.setUserGroups(asList(appServiceReadActionUserGroup));
-
-    AppPermissionSummary appPermissionSummary = AppPermissionSummary.builder().build();
-    Map<String, AppPermissionSummary> appPermissionSummaryMap = Maps.newHashMap();
-    appPermissionSummaryMap.put(APP_ID, appPermissionSummary);
-    UserPermissionInfo userPermissionInfo =
-        UserPermissionInfo.builder().appPermissionMapInternal(appPermissionSummaryMap).build();
-
-    doReturn(userPermissionInfo).when(authService).getUserPermissionInfo(ACCOUNT_ID, user);
+    user.setRoles(asList());
 
     Assertions
-        .assertThatThrownBy(
-            ()
-                -> resources.client()
-                       .target("/secure-resources/appResourceReadActionOnAppScope?appId=APP_ID&envId=nonExistentEnv")
-                       .request()
-                       .header(HttpHeaders.AUTHORIZATION, "Bearer VALID_TOKEN")
-                       .get())
+        .assertThatThrownBy(()
+                                -> resources.client()
+                                       .target("/secure-resources/appResourceReadActionOnAppScope?appId=APP_ID")
+                                       .request()
+                                       .header(HttpHeaders.AUTHORIZATION, "Bearer VALID_TOKEN")
+                                       .get())
         .hasCauseInstanceOf(WingsException.class)
         .hasStackTraceContaining(ErrorCode.ACCESS_DENIED.name());
   }
@@ -455,21 +381,12 @@ public class SecureResourceTest {
    */
   @Test
   public void shouldDenyAppScopeResourceWriteRequestForUserWithoutRequiredPermission() {
-    user.setUserGroups(asList());
-    Map<Action, Set<EnvInfo>> envPermissions = Maps.newHashMap();
-    envPermissions.put(
-        Action.READ, Sets.newHashSet(EnvInfo.builder().envId(ENV_ID).envType(EnvironmentType.PROD.name()).build()));
-    AppPermissionSummary appPermissionSummary = AppPermissionSummary.builder().envPermissions(envPermissions).build();
-    Map<String, AppPermissionSummary> appPermissionSummaryMap = Maps.newHashMap();
-    appPermissionSummaryMap.put(APP_ID, appPermissionSummary);
-    UserPermissionInfo userPermissionInfo =
-        UserPermissionInfo.builder().appPermissionMapInternal(appPermissionSummaryMap).build();
+    user.setRoles(asList());
 
-    doReturn(userPermissionInfo).when(authService).getUserPermissionInfo(ACCOUNT_ID, user);
     Assertions
         .assertThatThrownBy(()
                                 -> resources.client()
-                                       .target("/secure-resources/appResourceCreateActionOnAppScope?appId=APP_ID")
+                                       .target("/secure-resources/appResourceWriteActionOnAppScope?appId=APP_ID")
                                        .request()
                                        .header(HttpHeaders.AUTHORIZATION, "Bearer VALID_TOKEN")
                                        .post(ENTITY))
@@ -482,17 +399,7 @@ public class SecureResourceTest {
    */
   @Test
   public void shouldAuthorizeEnvScopeResourceReadRequestForUserWithRequiredPermission() {
-    user.setUserGroups(asList(envAllResourceReadActionUserGroup));
-
-    Map<Action, Set<EnvInfo>> envPermissions = Maps.newHashMap();
-    envPermissions.put(
-        Action.READ, Sets.newHashSet(EnvInfo.builder().envId(ENV_ID).envType(EnvironmentType.PROD.name()).build()));
-    AppPermissionSummary appPermissionSummary = AppPermissionSummary.builder().envPermissions(envPermissions).build();
-    Map<String, AppPermissionSummary> appPermissionSummaryMap = Maps.newHashMap();
-    appPermissionSummaryMap.put(APP_ID, appPermissionSummary);
-    UserPermissionInfo userPermissionInfo =
-        UserPermissionInfo.builder().appPermissionMapInternal(appPermissionSummaryMap).build();
-    doReturn(userPermissionInfo).when(authService).getUserPermissionInfo(ACCOUNT_ID, user);
+    user.setRoles(asList(envAllResourceReadActionRole));
 
     RestResponse<User> response =
         resources.client()
@@ -508,17 +415,7 @@ public class SecureResourceTest {
    */
   @Test
   public void shouldAuthorizeEnvScopeResourceWriteRequestForUserWithRequiredPermission() {
-    user.setUserGroups(asList(appAllResourceCreateActionUserGroup));
-    Map<Action, Set<EnvInfo>> envPermissions = Maps.newHashMap();
-    envPermissions.put(
-        Action.UPDATE, Sets.newHashSet(EnvInfo.builder().envId(ENV_ID).envType(EnvironmentType.PROD.name()).build()));
-    AppPermissionSummary appPermissionSummary =
-        AppPermissionSummary.builder().canCreateEnvironment(true).envPermissions(envPermissions).build();
-    Map<String, AppPermissionSummary> appPermissionSummaryMap = Maps.newHashMap();
-    appPermissionSummaryMap.put(APP_ID, appPermissionSummary);
-    UserPermissionInfo userPermissionInfo =
-        UserPermissionInfo.builder().appPermissionMapInternal(appPermissionSummaryMap).build();
-    doReturn(userPermissionInfo).when(authService).getUserPermissionInfo(ACCOUNT_ID, user);
+    user.setRoles(asList(appAllResourceCreateActionRole));
 
     RestResponse<User> response =
         resources.client()
@@ -534,7 +431,7 @@ public class SecureResourceTest {
    */
   @Test
   public void shouldDenyEnvScopeResourceReadRequestForUserWithoutRequiredPermission() {
-    user.setUserGroups(asList());
+    user.setRoles(asList());
 
     Assertions
         .assertThatThrownBy(
@@ -553,7 +450,8 @@ public class SecureResourceTest {
    */
   @Test
   public void shouldDenyEnvScopeResourceWriteRequestForUserWithoutRequiredPermission() {
-    user.setUserGroups(asList());
+    user.setRoles(asList());
+
     Assertions
         .assertThatThrownBy(
             ()

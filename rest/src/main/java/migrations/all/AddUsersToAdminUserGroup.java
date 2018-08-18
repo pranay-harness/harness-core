@@ -1,6 +1,7 @@
 package migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static software.wings.beans.FeatureName.RBAC;
 import static software.wings.common.Constants.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
@@ -17,6 +18,8 @@ import software.wings.beans.User;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.service.impl.security.auth.AuthHandler;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 
@@ -32,8 +35,10 @@ import java.util.Optional;
 public class AddUsersToAdminUserGroup implements Migration {
   private static final Logger logger = LoggerFactory.getLogger(AddUsersToAdminUserGroup.class);
 
+  @Inject private AuthHandler authHandler;
   @Inject private UserService userService;
   @Inject private UserGroupService userGroupService;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Override
   public void migrate() {
@@ -50,7 +55,7 @@ public class AddUsersToAdminUserGroup implements Migration {
         }
 
         accounts.forEach(account -> {
-          boolean rbacEnabled = true;
+          boolean rbacEnabled = featureFlagService.isEnabled(RBAC, account.getUuid());
           List<UserGroup> userGroupList = userGroupService.getUserGroupsByAccountId(account.getUuid(), user);
           if (!rbacEnabled && isEmpty(userGroupList)) {
             PageResponse<UserGroup> pageResponse =

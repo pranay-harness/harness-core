@@ -16,19 +16,20 @@ import java.util.Set;
 @Data
 public class UserPermissionInfo {
   private String accountId;
+  private boolean isRbacEnabled;
   private AccountPermissionSummary accountPermissionSummary;
   // Key - appId, Value - app permission summary
   private Map<String, AppPermissionSummaryForUI> appPermissionMap = new HashMap<>();
-
-  // Key - appId, Value - app permission summary
-  // This structure is optimized for AuthRuleFilter for faster lookup
-  @JsonIgnore private Map<String, AppPermissionSummary> appPermissionMapInternal = new HashMap<>();
 
   private UsageRestrictions usageRestrictionsForUpdateAction;
   private Map<String, Set<String>> appEnvMapForUpdateAction;
 
   private UsageRestrictions usageRestrictionsForReadAction;
   private Map<String, Set<String>> appEnvMapForReadAction;
+
+  // Key - appId, Value - app permission summary
+  // This structure is optimized for AuthRuleFilter for faster lookup
+  @JsonIgnore private Map<String, AppPermissionSummary> appPermissionMapInternal = new HashMap<>();
 
   @JsonIgnore
   public Map<String, AppPermissionSummary> getAppPermissionMapInternal() {

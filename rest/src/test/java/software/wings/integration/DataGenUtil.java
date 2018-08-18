@@ -79,6 +79,8 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.Base;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.FeatureFlag;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.License;
@@ -272,6 +274,7 @@ public class DataGenUtil extends BaseIntegrationTest {
           addServices(application.getAccountId(), application.getUuid(), containers.get(GLOBAL_APP_ID)));
     }
     featureFlagService.initializeFeatureFlags();
+    enableRbac();
     learningEngineService.initializeServiceSecretKeys();
 
     createTestApplication(account);
@@ -433,6 +436,19 @@ public class DataGenUtil extends BaseIntegrationTest {
     wingsPersistence.updateFields(User.class, newUser.getUuid(), ImmutableMap.of("emailVerified", true));
 
     return wingsPersistence.get(User.class, newUser.getUuid());
+  }
+
+  private void enableRbac() {
+    FeatureFlag featureFlag =
+        wingsPersistence.createQuery(FeatureFlag.class).filter("name", FeatureName.RBAC.name()).get();
+
+    if (featureFlag == null) {
+      featureFlag = FeatureFlag.builder().name(FeatureName.RBAC.name()).enabled(true).obsolete(false).build();
+    } else {
+      featureFlag.setEnabled(true);
+      featureFlag.setObsolete(false);
+    }
+    wingsPersistence.save(featureFlag);
   }
 
   private void createGlobalSettings(Account account) {
