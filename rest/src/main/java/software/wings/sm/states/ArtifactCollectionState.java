@@ -100,15 +100,17 @@ public class ArtifactCollectionState extends State {
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
-    ArtifactCollectionExecutionData artifactCollectionExecutionData =
-        (ArtifactCollectionExecutionData) response.values().iterator().next();
-
     ArtifactStream artifactStream = artifactStreamService.get(context.getAppId(), artifactStreamId);
     notNullCheck("ArtifactStream was deleted", artifactStream);
 
     String evaluatedBuildNo = getEvaluatedBuildNo(context);
+
     Artifact lastCollectedArtifact =
         getLastCollectedArtifact(context, artifactStream.getUuid(), artifactStream.getSourceName(), evaluatedBuildNo);
+
+    ArtifactCollectionExecutionData artifactCollectionExecutionData =
+        ArtifactCollectionExecutionData.builder().artifactStreamId(artifactStreamId).build();
+
     if (getTimeoutMillis() != null) {
       artifactCollectionExecutionData.setTimeout(valueOf(getTimeoutMillis()));
     }
