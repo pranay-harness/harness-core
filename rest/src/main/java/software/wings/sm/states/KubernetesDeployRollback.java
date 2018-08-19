@@ -4,7 +4,6 @@ import static software.wings.beans.command.KubernetesResizeParams.KubernetesResi
 import static software.wings.sm.StateType.KUBERNETES_DEPLOY_ROLLBACK;
 
 import com.github.reinert.jjschema.Attributes;
-import software.wings.beans.FeatureName;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.command.ContainerResizeParams;
 import software.wings.sm.ExecutionContext;
@@ -60,9 +59,6 @@ public class KubernetesDeployRollback extends ContainerServiceDeploy {
 
   @Override
   protected ContainerResizeParams buildContainerResizeParams(ExecutionContext context, ContextData contextData) {
-    boolean useDashInHostName =
-        featureFlagService.isEnabled(FeatureName.USE_DASH_IN_HOSTNAME, contextData.app.getAccountId());
-
     return aKubernetesResizeParams()
         .withClusterName(contextData.containerElement.getClusterName())
         .withNamespace(contextData.containerElement.getNamespace())
@@ -82,7 +78,6 @@ public class KubernetesDeployRollback extends ContainerServiceDeploy {
         .withOriginalTrafficWeights(contextData.containerElement.getTrafficWeights())
         .withRollback(true)
         .withRollbackAllPhases(rollbackAllPhases)
-        .withUseDashInHostName(useDashInHostName)
         .build();
   }
 }

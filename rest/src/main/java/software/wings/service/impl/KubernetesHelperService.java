@@ -10,7 +10,6 @@ import static java.util.Arrays.asList;
 import static okhttp3.ConnectionSpec.CLEARTEXT;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.utils.KubernetesConvention.DASH;
-import static software.wings.utils.KubernetesConvention.DOT;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -149,8 +148,8 @@ public class KubernetesHelperService {
     return new IstioClient(new KubernetesAdapter(getKubernetesClient(kubernetesConfig, encryptedDataDetails)));
   }
 
-  public static void printVirtualServiceRouteWeights(IstioResource virtualService, String controllerPrefix,
-      boolean useDashInHostName, ExecutionLogCallback executionLogCallback) {
+  public static void printVirtualServiceRouteWeights(
+      IstioResource virtualService, String controllerPrefix, ExecutionLogCallback executionLogCallback) {
     VirtualService virtualServiceSpec = (VirtualService) virtualService.getSpec();
     if (isNotEmpty(virtualServiceSpec.getHttp().get(0).getRoute())) {
       List<DestinationWeight> sorted = virtualServiceSpec.getHttp().get(0).getRoute();
@@ -158,8 +157,7 @@ public class KubernetesHelperService {
       for (DestinationWeight destinationWeight : sorted) {
         int weight = destinationWeight.getWeight();
         String rev = destinationWeight.getDestination().getSubset();
-        executionLogCallback.saveExecutionLog(
-            format("   %s%s%s: %d%%", controllerPrefix, useDashInHostName ? DASH : DOT, rev, weight));
+        executionLogCallback.saveExecutionLog(format("   %s%s%s: %d%%", controllerPrefix, DASH, rev, weight));
       }
     } else {
       executionLogCallback.saveExecutionLog("   None specified");

@@ -21,7 +21,6 @@ public class KubernetesResizeParams extends ContainerResizeParams {
   private String resourceGroup;
   private boolean useIstioRouteRule;
   private Integer trafficPercent;
-  private boolean useDashInHostName;
 
   public static final class KubernetesResizeParamsBuilder {
     private String clusterName;
@@ -50,7 +49,6 @@ public class KubernetesResizeParams extends ContainerResizeParams {
     private InstanceUnitType downsizeInstanceUnitType;
     private List<String[]> originalServiceCounts;
     private List<String[]> originalTrafficWeights;
-    private boolean useDashInHostName;
 
     private KubernetesResizeParamsBuilder() {}
 
@@ -188,11 +186,6 @@ public class KubernetesResizeParams extends ContainerResizeParams {
       return this;
     }
 
-    public KubernetesResizeParamsBuilder withUseDashInHostName(boolean useDashInHostName) {
-      this.useDashInHostName = useDashInHostName;
-      return this;
-    }
-
     public KubernetesResizeParamsBuilder but() {
       return aKubernetesResizeParams()
           .withClusterName(clusterName)
@@ -220,8 +213,7 @@ public class KubernetesResizeParams extends ContainerResizeParams {
           .withDownsizeInstanceCount(downsizeInstanceCount)
           .withDownsizeInstanceUnitType(downsizeInstanceUnitType)
           .withOriginalServiceCounts(originalServiceCounts)
-          .withOriginalTrafficWeights(originalTrafficWeights)
-          .withUseDashInHostName(useDashInHostName);
+          .withOriginalTrafficWeights(originalTrafficWeights);
     }
 
     public KubernetesResizeParams build() {
@@ -252,7 +244,6 @@ public class KubernetesResizeParams extends ContainerResizeParams {
       kubernetesResizeParams.setDownsizeInstanceUnitType(downsizeInstanceUnitType);
       kubernetesResizeParams.setOriginalServiceCounts(originalServiceCounts);
       kubernetesResizeParams.setOriginalTrafficWeights(originalTrafficWeights);
-      kubernetesResizeParams.setUseDashInHostName(useDashInHostName);
       return kubernetesResizeParams;
     }
   }

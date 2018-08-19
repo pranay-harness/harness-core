@@ -246,7 +246,6 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       boolean isStatefulSet = kubernetesContainerTask.checkStatefulSet();
       boolean isDaemonSet = kubernetesContainerTask.checkDaemonSet();
       isNotVersioned = isDaemonSet || isStatefulSet;
-      boolean useDashInHostname = setupParams.isUseDashInHostname();
       currentNamePrefix = setupParams.getControllerNamePrefix();
 
       String lastCtrlName;
@@ -255,16 +254,14 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         currentRevision = isNotVersioned ? 0 : getRevisionNumber(lastDeployment) + 1;
         lastCtrlName = lastDeployment != null ? lastDeployment.getMetadata().getName() : null;
       } else {
-        lastCtrlName = lastController(
-            kubernetesConfig, encryptedDataDetails, setupParams.getControllerNamePrefix(), useDashInHostname);
-        currentRevision = getRevisionFromControllerName(lastCtrlName, useDashInHostname).orElse(-1) + 1;
+        lastCtrlName = lastController(kubernetesConfig, encryptedDataDetails, setupParams.getControllerNamePrefix());
+        currentRevision = getRevisionFromControllerName(lastCtrlName).orElse(-1) + 1;
       }
 
       String containerServiceName = isNotVersioned
           ? isStatefulSet ? KubernetesConvention.getKubernetesServiceName(setupParams.getControllerNamePrefix())
                           : setupParams.getControllerNamePrefix()
-          : KubernetesConvention.getControllerName(
-                setupParams.getControllerNamePrefix(), currentRevision, useDashInHostname);
+          : KubernetesConvention.getControllerName(setupParams.getControllerNamePrefix(), currentRevision);
 
       Map<String, String> controllerLabels = isNotVersioned
           ? getLabels(setupParams)
@@ -299,8 +296,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
         validateBlueGreenConfig(setupParams);
 
-        cleanupStageDeployment(
-            kubernetesConfig, encryptedDataDetails, setupParams, executionLogCallback, useDashInHostname);
+        cleanupStageDeployment(kubernetesConfig, encryptedDataDetails, setupParams, executionLogCallback);
       }
 
       String registrySecretName = getKubernetesRegistrySecretName(setupParams.getImageDetails());
@@ -332,14 +328,14 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
               kubernetesConfig, encryptedDataDetails, lookupLabels);
         } else {
           activeServiceCounts = kubernetesContainerService.getActiveServiceCounts(
-              kubernetesConfig, encryptedDataDetails, containerServiceName, useDashInHostname);
+              kubernetesConfig, encryptedDataDetails, containerServiceName);
         }
 
-        trafficWeights = kubernetesContainerService.getTrafficWeights(
-            kubernetesConfig, encryptedDataDetails, containerServiceName, useDashInHostname);
+        trafficWeights =
+            kubernetesContainerService.getTrafficWeights(kubernetesConfig, encryptedDataDetails, containerServiceName);
         if (isNotBlank(lastCtrlName)) {
-          String previousAutoscalerName = lastAutoscaler(
-              kubernetesConfig, encryptedDataDetails, setupParams.getControllerNamePrefix(), useDashInHostname);
+          String previousAutoscalerName =
+              lastAutoscaler(kubernetesConfig, encryptedDataDetails, setupParams.getControllerNamePrefix());
           if (isNotBlank(previousAutoscalerName)) {
             previousAutoscalerYaml = getAutoscalerYaml(kubernetesConfig, encryptedDataDetails, previousAutoscalerName);
             if (isNotBlank(previousAutoscalerYaml)) {
@@ -438,8 +434,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       } else {
         try {
           // This should not halt workflow execution.
-          downsizeOldOrUnhealthy(kubernetesConfig, encryptedDataDetails, containerServiceName, setupParams,
-              executionLogCallback, useDashInHostname);
+          downsizeOldOrUnhealthy(
+              kubernetesConfig, encryptedDataDetails, containerServiceName, setupParams, executionLogCallback);
         } catch (Exception e) {
           logger.warn("Cleaning up of old or unhealthy instances failed while setting up Kubernetes service: ", e);
         }
@@ -447,8 +443,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           cleanupWithLabels(kubernetesConfig, encryptedDataDetails, executionLogCallback);
 
         } else {
-          cleanup(
-              kubernetesConfig, encryptedDataDetails, containerServiceName, executionLogCallback, useDashInHostname);
+          cleanup(kubernetesConfig, encryptedDataDetails, containerServiceName, executionLogCallback);
         }
       }
 
@@ -460,7 +455,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
               kubernetesConfig, encryptedDataDetails, lookupLabels);
         } else {
           newActiveCounts = kubernetesContainerService.getActiveServiceCounts(
-              kubernetesConfig, encryptedDataDetails, containerServiceName, useDashInHostname);
+              kubernetesConfig, encryptedDataDetails, containerServiceName);
         }
       }
 
@@ -815,9 +810,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         kubernetesContainerService.createOrReplaceIstioResource(kubernetesConfig, encryptedDataDetails, r);
         summaryOutput.append(format("%nIstio %s: %s", r.getKind(), r.getMetadata().getName()));
         if (StringUtils.equals(r.getKind(), "VirtualService")) {
-          printVirtualServiceRouteWeights(r,
-              getPrefixFromControllerName(containerServiceName, setupParams.isUseDashInHostname()),
-              setupParams.isUseDashInHostname(), executionLogCallback);
+          printVirtualServiceRouteWeights(r, getPrefixFromControllerName(containerServiceName), executionLogCallback);
         }
       }
     } else {
@@ -1184,7 +1177,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     } else {
       int totalInstances = activeControllers.values().stream().mapToInt(Integer::intValue).sum();
       for (Entry<String, Integer> entry : activeControllers.entrySet()) {
-        Optional<Integer> revision = getRevisionFromControllerName(entry.getKey(), setupParams.isUseDashInHostname());
+        Optional<Integer> revision = getRevisionFromControllerName(entry.getKey());
         if (revision.isPresent()) {
           int weight = (int) Math.round((entry.getValue() * 100.0) / totalInstances);
           if (weight > 0) {
@@ -1463,8 +1456,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     return loadBalancerEndpoint;
   }
 
-  private String lastController(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      String controllerNamePrefix, boolean useDashInHostName) {
+  private String lastController(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String controllerNamePrefix) {
     final AtomicReference<HasMetadata> lastController = new AtomicReference<>();
     final AtomicInteger lastRevision = new AtomicInteger();
     kubernetesContainerService.listControllers(kubernetesConfig, encryptedDataDetails)
@@ -1472,7 +1465,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         .filter(ctrl -> ctrl.getMetadata().getName().startsWith(controllerNamePrefix))
         .filter(ctrl -> !(ctrl.getKind().equals("ReplicaSet") && ctrl.getMetadata().getOwnerReferences() != null))
         .forEach(ctrl -> {
-          Optional<Integer> revision = getRevisionFromControllerName(ctrl.getMetadata().getName(), useDashInHostName);
+          Optional<Integer> revision = getRevisionFromControllerName(ctrl.getMetadata().getName());
           if (revision.isPresent() && (lastController.get() == null || revision.get() > lastRevision.get())) {
             lastController.set(ctrl);
             lastRevision.set(revision.get());
@@ -1502,8 +1495,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         : Integer.parseInt(kubernetesResource.getMetadata().getLabels().get(HARNESS_KUBERNETES_REVISION_LABEL_KEY));
   }
 
-  private String lastAutoscaler(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      String controllerNamePrefix, boolean useDashInHostName) {
+  private String lastAutoscaler(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String controllerNamePrefix) {
     final AtomicReference<HorizontalPodAutoscaler> lastHpa = new AtomicReference<>();
     final AtomicInteger lastRevision = new AtomicInteger();
     kubernetesContainerService.listControllers(kubernetesConfig, encryptedDataDetails)
@@ -1513,7 +1506,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         .forEach(ctrl -> {
           HorizontalPodAutoscaler hpa = kubernetesContainerService.getAutoscaler(
               kubernetesConfig, encryptedDataDetails, ctrl.getMetadata().getName(), KUBERNETES_V1.getVersionName());
-          Optional<Integer> revision = getRevisionFromControllerName(ctrl.getMetadata().getName(), useDashInHostName);
+          Optional<Integer> revision = getRevisionFromControllerName(ctrl.getMetadata().getName());
           if (hpa != null && revision.isPresent() && (lastHpa.get() == null || revision.get() > lastRevision.get())) {
             lastHpa.set(hpa);
             lastRevision.set(revision.get());
@@ -1725,8 +1718,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   }
 
   private void downsizeOldOrUnhealthy(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      String containerServiceName, KubernetesSetupParams setupParams, ExecutionLogCallback executionLogCallback,
-      boolean useDashInHostname) {
+      String containerServiceName, KubernetesSetupParams setupParams, ExecutionLogCallback executionLogCallback) {
     Map<String, Integer> activeCounts;
 
     if (setupParams.isUseNewLabelMechanism()) {
@@ -1734,7 +1726,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           kubernetesConfig, encryptedDataDetails, lookupLabels);
     } else {
       activeCounts = kubernetesContainerService.getActiveServiceCounts(
-          kubernetesConfig, encryptedDataDetails, containerServiceName, useDashInHostname);
+          kubernetesConfig, encryptedDataDetails, containerServiceName);
     }
 
     String latestHealthyController = null;
@@ -1766,11 +1758,11 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   }
 
   private void cleanup(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      String containerServiceName, ExecutionLogCallback executionLogCallback, boolean useDashInHostname) {
+      String containerServiceName, ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog("\nRemoving versions with no pods");
-    Optional<Integer> revision = getRevisionFromControllerName(containerServiceName, useDashInHostname);
+    Optional<Integer> revision = getRevisionFromControllerName(containerServiceName);
     if (revision.isPresent()) {
-      String controllerNamePrefix = getPrefixFromControllerName(containerServiceName, useDashInHostname);
+      String controllerNamePrefix = getPrefixFromControllerName(containerServiceName);
       kubernetesContainerService.listControllers(kubernetesConfig, encryptedDataDetails)
           .stream()
           .filter(ctrl -> ctrl.getMetadata().getName().startsWith(controllerNamePrefix))
@@ -1779,7 +1771,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           .filter(ctrl -> kubernetesContainerService.getControllerPodCount(ctrl) == 0)
           .forEach(ctrl -> {
             String controllerName = ctrl.getMetadata().getName();
-            Optional<Integer> ctrlRevision = getRevisionFromControllerName(controllerName, useDashInHostname);
+            Optional<Integer> ctrlRevision = getRevisionFromControllerName(controllerName);
             if (ctrlRevision.isPresent()) {
               logger.info("Deleting old version: " + controllerName);
               executionLogCallback.saveExecutionLog("Deleting old version: " + controllerName);
@@ -1851,7 +1843,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   }
 
   private void cleanupStageDeployment(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      KubernetesSetupParams setupParams, ExecutionLogCallback executionLogCallback, boolean useDashInHostname) {
+      KubernetesSetupParams setupParams, ExecutionLogCallback executionLogCallback) {
     String primaryServiceName = getPrimaryServiceName(getKubernetesServiceName(setupParams.getControllerNamePrefix()));
     String stageServiceName = getStageServiceName(getKubernetesServiceName(setupParams.getControllerNamePrefix()));
 
@@ -1881,7 +1873,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     if (!StringUtils.equals(primaryRevision, stageRevision)) {
       executionLogCallback.saveExecutionLog("\nScaling down Stage Deployment [Revision: " + stageRevision + "] to 0");
       String controllerName = KubernetesConvention.getControllerName(
-          setupParams.getControllerNamePrefix(), Integer.parseInt(stageRevision), useDashInHostname);
+          setupParams.getControllerNamePrefix(), Integer.parseInt(stageRevision));
 
       Optional<Integer> podCount =
           kubernetesContainerService.getControllerPodCount(kubernetesConfig, encryptedDataDetails, controllerName);

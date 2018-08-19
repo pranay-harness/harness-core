@@ -130,7 +130,6 @@ public class KubernetesSetup extends ContainerServiceSetup {
       configMapYamlEvaluated = context.renderExpression(configMapYaml);
     }
 
-    boolean useDashInHostName = featureFlagService.isEnabled(FeatureName.USE_DASH_IN_HOSTNAME, app.getAccountId());
     boolean useNewLabelMechanism =
         featureFlagService.isEnabled(FeatureName.USE_NEW_K8S_LABEL_MECHANISM, app.getAccountId());
 
@@ -150,7 +149,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
 
     String controllerNamePrefix = isNotBlank(replicationControllerName)
         ? KubernetesConvention.normalize(context.renderExpression(replicationControllerName))
-        : KubernetesConvention.getControllerNamePrefix(app.getName(), serviceName, env.getName(), useDashInHostName);
+        : KubernetesConvention.getControllerNamePrefix(app.getName(), serviceName, env.getName());
 
     String ingressYamlEvaluated = null;
     if (isNotBlank(ingressYaml)) {
@@ -225,7 +224,6 @@ public class KubernetesSetup extends ContainerServiceSetup {
         .withPlainConfigFiles(plainConfigFiles)
         .withEncryptedConfigFiles(encryptedConfigFiles)
         .withConfigMapYaml(configMapYamlEvaluated)
-        .withUseDashInHostname(useDashInHostName)
         .withUseNewLabelMechanism(useNewLabelMechanism)
         .build();
   }

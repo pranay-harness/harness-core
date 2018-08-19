@@ -143,9 +143,8 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     // Edit weights for Istio route rule if applicable
     if (resizeParams.isUseIstioRouteRule()) {
       String controllerName = resizeParams.getContainerServiceName();
-      String kubernetesServiceName =
-          getServiceNameFromControllerName(controllerName, resizeParams.isUseDashInHostName());
-      String controllerPrefix = getPrefixFromControllerName(controllerName, resizeParams.isUseDashInHostName());
+      String kubernetesServiceName = getServiceNameFromControllerName(controllerName);
+      String controllerPrefix = getPrefixFromControllerName(controllerName);
       IstioResource existingVirtualService = kubernetesContainerService.getIstioResource(
           kubernetesConfig, encryptedDataDetails, "VirtualService", kubernetesServiceName);
 
@@ -154,14 +153,12 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
 
       if (!virtualServiceHttpRouteMatchesExisting(existingVirtualService, virtualServiceDefinition)) {
         executionLogCallback.saveExecutionLog("Setting Istio VirtualService Route destination weights:");
-        printVirtualServiceRouteWeights(
-            virtualServiceDefinition, controllerPrefix, resizeParams.isUseDashInHostName(), executionLogCallback);
+        printVirtualServiceRouteWeights(virtualServiceDefinition, controllerPrefix, executionLogCallback);
         kubernetesContainerService.createOrReplaceIstioResource(
             kubernetesConfig, encryptedDataDetails, virtualServiceDefinition);
       } else {
         executionLogCallback.saveExecutionLog("No change to Istio VirtualService Route rules :");
-        printVirtualServiceRouteWeights(
-            existingVirtualService, controllerPrefix, resizeParams.isUseDashInHostName(), executionLogCallback);
+        printVirtualServiceRouteWeights(existingVirtualService, controllerPrefix, executionLogCallback);
       }
       executionLogCallback.saveExecutionLog("");
       executedSomething = true;
@@ -246,8 +243,7 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
     KubernetesResizeParams resizeParams = (KubernetesResizeParams) contextData.resizeParams;
     String controllerName = resizeParams.getContainerServiceName();
-    return kubernetesContainerService.getActiveServiceCounts(
-        kubernetesConfig, encryptedDataDetails, controllerName, resizeParams.isUseDashInHostName());
+    return kubernetesContainerService.getActiveServiceCounts(kubernetesConfig, encryptedDataDetails, controllerName);
   }
 
   @Override
@@ -258,7 +254,7 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     String controllerName = resizeParams.getContainerServiceName();
     String imagePrefix = substringBefore(contextData.resizeParams.getImage(), ":");
     return kubernetesContainerService.getActiveServiceImages(
-        kubernetesConfig, encryptedDataDetails, controllerName, imagePrefix, resizeParams.isUseDashInHostName());
+        kubernetesConfig, encryptedDataDetails, controllerName, imagePrefix);
   }
 
   @Override
@@ -275,8 +271,7 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
     KubernetesResizeParams resizeParams = (KubernetesResizeParams) contextData.resizeParams;
     String controllerName = resizeParams.getContainerServiceName();
-    return kubernetesContainerService.getTrafficWeights(
-        kubernetesConfig, encryptedDataDetails, controllerName, resizeParams.isUseDashInHostName());
+    return kubernetesContainerService.getTrafficWeights(kubernetesConfig, encryptedDataDetails, controllerName);
   }
 
   @Override
@@ -285,8 +280,7 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
     KubernetesResizeParams resizeParams = (KubernetesResizeParams) contextData.resizeParams;
     String controllerName = resizeParams.getContainerServiceName();
-    return kubernetesContainerService.getTrafficPercent(
-        kubernetesConfig, encryptedDataDetails, controllerName, resizeParams.isUseDashInHostName());
+    return kubernetesContainerService.getTrafficPercent(kubernetesConfig, encryptedDataDetails, controllerName);
   }
 
   @Override
@@ -318,7 +312,7 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
 
     for (ContainerServiceData containerServiceData : allData) {
       String controllerName = containerServiceData.getName();
-      Optional<Integer> revision = getRevisionFromControllerName(controllerName, resizeParams.isUseDashInHostName());
+      Optional<Integer> revision = getRevisionFromControllerName(controllerName);
       if (revision.isPresent()) {
         int weight = containerServiceData.getDesiredTraffic();
         if (weight > 0) {

@@ -18,7 +18,6 @@ import software.wings.api.ClusterElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Application;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
@@ -26,7 +25,6 @@ import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.common.Constants;
 import software.wings.exception.InvalidRequestException;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
@@ -55,7 +53,6 @@ public class GcpClusterSetup extends State {
   @Inject @Transient private transient SettingsService settingsService;
   @Inject @Transient private transient ServiceResourceService serviceResourceService;
   @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
-  @Inject @Transient private transient FeatureFlagService featureFlagService;
 
   @Inject @Transient private transient SecretManager secretManager;
 
@@ -95,10 +92,9 @@ public class GcpClusterSetup extends State {
       machineType = "n1-standard-2";
     }
 
-    boolean useDashInHostName = featureFlagService.isEnabled(FeatureName.USE_DASH_IN_HOSTNAME, app.getAccountId());
     String clusterName = "harness-"
         + KubernetesConvention.getKubernetesServiceName(
-              KubernetesConvention.getControllerNamePrefix(app.getName(), serviceName, env, useDashInHostName));
+              KubernetesConvention.getControllerNamePrefix(app.getName(), serviceName, env));
     String zoneCluster = zone + "/" + clusterName;
 
     gkeClusterService.createCluster(computeProviderSetting, encryptionDetails, zoneCluster,
