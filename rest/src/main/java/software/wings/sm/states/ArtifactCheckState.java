@@ -2,12 +2,15 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
+import static software.wings.beans.FeatureName.USE_DELAY_QUEUE;
 import static software.wings.beans.artifact.Artifact.ContentStatus;
 import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADED;
 import static software.wings.beans.artifact.Artifact.ContentStatus.FAILED;
 import static software.wings.beans.artifact.Artifact.ContentStatus.METADATA_ONLY;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import org.slf4j.Logger;
@@ -15,7 +18,10 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.Status;
 import software.wings.scheduler.ReminderNotifyResponse;
+import software.wings.service.impl.DelayEventHelper;
+import software.wings.service.impl.DelayEventNotifyData;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -29,13 +35,15 @@ import software.wings.waitnotify.NotifyResponseData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class ArtifactCheckState extends State {
   private static final Logger logger = LoggerFactory.getLogger(ArtifactCheckState.class);
 
-  @Inject private ArtifactService artifactService;
-
-  @Inject private CronUtil cronUtil;
+  @Inject private transient ArtifactService artifactService;
+  @Inject private transient CronUtil cronUtil;
+  @Inject private transient DelayEventHelper delayEventHelper;
+  @Inject private transient FeatureFlagService featureFlagService;
 
   public ArtifactCheckState(String name) {
     super(name, StateType.ARTIFACT_CHECK.name());
@@ -81,7 +89,7 @@ public class ArtifactCheckState extends State {
       }
       // Artifact needs to be downloaded now
       artifactService.startArtifactCollection(context.getAppId(), artifact.getUuid());
-      correlationIds.add(cronUtil.scheduleReminder(60 * 1000, "artifactId", artifact.getUuid()));
+      correlationIds.add(scheduleWaitNotify(artifact.getUuid()));
       artifactNamesForDownload.add(artifact.getDisplayName());
     });
 
@@ -106,6 +114,16 @@ public class ArtifactCheckState extends State {
         .build();
   }
 
+  private String scheduleWaitNotify(String artifactId) {
+    boolean useDelayQueue = featureFlagService.isEnabled(USE_DELAY_QUEUE, GLOBAL_ACCOUNT_ID);
+    int delayTimeInSec = 60; // every minute
+    if (useDelayQueue) {
+      return delayEventHelper.delay(delayTimeInSec, ImmutableMap.of("artifactId", artifactId));
+    } else {
+      return cronUtil.scheduleReminder(TimeUnit.SECONDS.toMillis(delayTimeInSec), "artifactId", artifactId);
+    }
+  }
+
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
     List<String> artifactNamesForDownload = new ArrayList<>();
@@ -114,8 +132,15 @@ public class ArtifactCheckState extends State {
 
     logger.info("Received handleAsyncResponse - response: {}", response);
     response.values().forEach(notifyResponseData -> {
-      ReminderNotifyResponse reminderNotifyResponse = (ReminderNotifyResponse) notifyResponseData;
-      String artifactId = reminderNotifyResponse.getParameters().get("artifactId");
+      String artifactId = "";
+      if (notifyResponseData instanceof ReminderNotifyResponse) {
+        ReminderNotifyResponse reminderNotifyResponse = (ReminderNotifyResponse) notifyResponseData;
+        artifactId = reminderNotifyResponse.getParameters().get("artifactId");
+      } else if (notifyResponseData instanceof DelayEventNotifyData) {
+        DelayEventNotifyData delayEventNotifyData = (DelayEventNotifyData) notifyResponseData;
+        artifactId = delayEventNotifyData.getContext().get("artifactId");
+      }
+
       Artifact artifact = artifactService.get(context.getAppId(), artifactId);
       if (artifact.getContentStatus() == DOWNLOADED) {
         return;
@@ -125,7 +150,7 @@ public class ArtifactCheckState extends State {
         return;
       }
 
-      correlationIds.add(cronUtil.scheduleReminder(60 * 1000, "artifactId", artifact.getUuid()));
+      correlationIds.add(scheduleWaitNotify(artifact.getUuid()));
       artifactNamesForDownload.add(artifact.getDisplayName());
     });
 

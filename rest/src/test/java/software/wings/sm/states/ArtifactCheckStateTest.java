@@ -1,6 +1,8 @@
 package software.wings.sm.states;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -20,7 +22,9 @@ import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.DelayEventHelper;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -38,6 +42,8 @@ public class ArtifactCheckStateTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
   @Mock private CronUtil cronUtil;
   @Mock private ExecutionContext context;
+  @Mock FeatureFlagService featureFlagService;
+  @Mock DelayEventHelper delayEventHelper;
 
   private String accountId;
   private String appId;
@@ -53,8 +59,11 @@ public class ArtifactCheckStateTest extends WingsBaseTest {
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
     when(context.getAppId()).thenReturn(appId);
     when(cronUtil.scheduleReminder(anyLong(), anyString(), anyString())).thenReturn(UUID.randomUUID().toString());
+    when(delayEventHelper.delay(anyInt(), any())).thenReturn("anyGUID");
     setInternalState(artifactCheckState, "artifactService", artifactService);
     setInternalState(artifactCheckState, "cronUtil", cronUtil);
+    setInternalState(artifactCheckState, "delayEventHelper", delayEventHelper);
+    setInternalState(artifactCheckState, "featureFlagService", featureFlagService);
   }
 
   @Test

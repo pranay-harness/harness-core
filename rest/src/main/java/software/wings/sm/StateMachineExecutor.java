@@ -11,9 +11,11 @@ import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.STATE_NOT_FOR_TYPE;
 import static software.wings.beans.ExecutionScope.WORKFLOW;
+import static software.wings.beans.FeatureName.USE_DELAY_QUEUE;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.ReadPref.CRITICAL;
 import static software.wings.beans.ReadPref.NORMAL;
@@ -87,10 +89,12 @@ import software.wings.exception.WingsException;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.scheduler.NotifyJob;
 import software.wings.scheduler.QuartzScheduler;
+import software.wings.service.impl.DelayEventHelper;
 import software.wings.service.impl.ExecutionLogContext;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
@@ -110,6 +114,7 @@ import software.wings.waitnotify.WaitNotifyEngine;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -144,6 +149,8 @@ public class StateMachineExecutor {
   @Inject private NotificationService notificationService;
   @Inject private NotificationMessageResolver notificationMessageResolver;
   @Inject private WorkflowNotificationHelper workflowNotificationHelper;
+  @Inject private DelayEventHelper delayEventHelper;
+  @Inject private FeatureFlagService featureFlagService;
 
   /**
    * Execute.
@@ -697,22 +704,28 @@ public class StateMachineExecutor {
   }
 
   private String scheduleWaitNotify(int waitInterval) {
-    String resumeId = generateUuid();
-    long wakeupTs = System.currentTimeMillis() + (waitInterval * 1000);
-    JobDetail job = JobBuilder.newJob(NotifyJob.class)
-                        .withIdentity(resumeId, Constants.WAIT_RESUME_GROUP)
-                        .usingJobData("correlationId", resumeId)
-                        .usingJobData("executionStatus", SUCCESS.name())
-                        .build();
-    Trigger trigger = TriggerBuilder.newTrigger()
-                          .withIdentity(resumeId, Constants.WAIT_RESUME_GROUP)
-                          .startAt(new Date(wakeupTs))
-                          .forJob(job)
-                          .build();
-    jobScheduler.scheduleJob(job, trigger);
+    boolean useDelayQueue = featureFlagService.isEnabled(USE_DELAY_QUEUE, GLOBAL_ACCOUNT_ID);
 
-    logger.info("ExecutionWaitCallback job scheduled - waitInterval: {}", waitInterval);
-    return resumeId;
+    if (useDelayQueue) {
+      return delayEventHelper.delay(waitInterval, Collections.emptyMap());
+    } else {
+      String resumeId = generateUuid();
+      long wakeupTs = System.currentTimeMillis() + (waitInterval * 1000);
+      JobDetail job = JobBuilder.newJob(NotifyJob.class)
+                          .withIdentity(resumeId, Constants.WAIT_RESUME_GROUP)
+                          .usingJobData("correlationId", resumeId)
+                          .usingJobData("executionStatus", SUCCESS.name())
+                          .build();
+      Trigger trigger = TriggerBuilder.newTrigger()
+                            .withIdentity(resumeId, Constants.WAIT_RESUME_GROUP)
+                            .startAt(new Date(wakeupTs))
+                            .forJob(job)
+                            .build();
+      jobScheduler.scheduleJob(job, trigger);
+
+      logger.info("ExecutionWaitCallback job scheduled - waitInterval: {}", waitInterval);
+      return resumeId;
+    }
   }
 
   private StateExecutionInstance executionEventAdviceTransition(
