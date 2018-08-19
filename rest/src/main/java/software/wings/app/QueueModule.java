@@ -13,6 +13,8 @@ import software.wings.core.queue.MongoQueueImpl;
 import software.wings.core.queue.Queue;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.notification.EmailNotificationListener;
+import software.wings.service.impl.DelayEvent;
+import software.wings.service.impl.DelayEventListener;
 import software.wings.service.impl.ExecutionEvent;
 import software.wings.service.impl.ExecutionEventListener;
 import software.wings.service.impl.instance.DeploymentEventListener;
@@ -52,6 +54,8 @@ public class QueueModule extends AbstractModule {
         .toInstance(new MongoQueueImpl<>(KmsTransitionEvent.class, datastore, 30));
     bind(new TypeLiteral<Queue<ExecutionEvent>>() {})
         .toInstance(new MongoQueueImpl<>(ExecutionEvent.class, datastore, 30, filterWithVersion));
+    bind(new TypeLiteral<Queue<DelayEvent>>() {})
+        .toInstance(new MongoQueueImpl<>(DelayEvent.class, datastore, 5, filterWithVersion));
 
     bind(new TypeLiteral<AbstractQueueListener<EmailData>>() {}).to(EmailNotificationListener.class);
     bind(new TypeLiteral<AbstractQueueListener<CollectEvent>>() {}).to(ArtifactCollectEventListener.class);
@@ -59,5 +63,6 @@ public class QueueModule extends AbstractModule {
     bind(new TypeLiteral<AbstractQueueListener<KmsTransitionEvent>>() {}).to(KmsTransitionEventListener.class);
     bind(new TypeLiteral<AbstractQueueListener<DeploymentEvent>>() {}).to(DeploymentEventListener.class);
     bind(new TypeLiteral<AbstractQueueListener<ExecutionEvent>>() {}).to(ExecutionEventListener.class);
+    bind(new TypeLiteral<AbstractQueueListener<DelayEvent>>() {}).to(DelayEventListener.class);
   }
 }

@@ -36,6 +36,10 @@ public abstract class Queuable {
    */
   protected Queuable() {}
 
+  protected Queuable(Date earliestGet) {
+    this.earliestGet = earliestGet;
+  }
+
   /**
    * Instantiates a new queuable.
    *

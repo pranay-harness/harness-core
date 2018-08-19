@@ -4,6 +4,8 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.lang.String.valueOf;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
+import static software.wings.beans.FeatureName.USE_DELAY_QUEUE;
 import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.common.Constants.DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS;
 import static software.wings.common.Constants.URL;
@@ -32,8 +34,10 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.scheduler.ArtifactCollectionStateNotifyJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.ArtifactSourceProvider;
+import software.wings.service.impl.DelayEventHelper;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -42,9 +46,11 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.waitnotify.NotifyResponseData;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by sgurubelli on 11/13/17.
@@ -62,7 +68,9 @@ public class ArtifactCollectionState extends State {
   @Transient @Inject private ArtifactStreamService artifactStreamService;
   @Transient @Inject private ArtifactService artifactService;
   @Transient @Inject private WorkflowExecutionService workflowExecutionService;
-  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Inject @Named("JobScheduler") private transient QuartzScheduler jobScheduler;
+  @Inject private transient DelayEventHelper delayEventHelper;
+  @Inject private transient FeatureFlagService featureFlagService;
 
   public ArtifactCollectionState(String name) {
     super(name, ARTIFACT_COLLECTION.name());
@@ -181,21 +189,30 @@ public class ArtifactCollectionState extends State {
   }
 
   private String scheduleWaitNotify() {
-    String resumeId = generateUuid();
-    long wakeupTs = System.currentTimeMillis() + (60 * 1000); // every minute
-    JobDetail job = JobBuilder.newJob(ArtifactCollectionStateNotifyJob.class)
-                        .withIdentity(resumeId, WAIT_RESUME_GROUP)
-                        .usingJobData("correlationId", resumeId)
-                        .usingJobData("artifactStreamId", artifactStreamId)
-                        .build();
-    Trigger trigger = TriggerBuilder.newTrigger()
-                          .withIdentity(resumeId, WAIT_RESUME_GROUP)
-                          .startAt(new Date(wakeupTs))
-                          .forJob(job)
-                          .build();
-    jobScheduler.scheduleJob(job, trigger);
+    boolean useDelayQueue = featureFlagService.isEnabled(USE_DELAY_QUEUE, GLOBAL_ACCOUNT_ID);
 
-    return resumeId;
+    int delayTimeInSec = 60; // every minute
+
+    if (useDelayQueue) {
+      return delayEventHelper.delay(delayTimeInSec, Collections.emptyMap());
+    } else {
+      String resumeId = generateUuid();
+      long wakeupTs = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(delayTimeInSec);
+
+      JobDetail job = JobBuilder.newJob(ArtifactCollectionStateNotifyJob.class)
+                          .withIdentity(resumeId, WAIT_RESUME_GROUP)
+                          .usingJobData("correlationId", resumeId)
+                          .usingJobData("artifactStreamId", artifactStreamId)
+                          .build();
+      Trigger trigger = TriggerBuilder.newTrigger()
+                            .withIdentity(resumeId, WAIT_RESUME_GROUP)
+                            .startAt(new Date(wakeupTs))
+                            .forJob(job)
+                            .build();
+      jobScheduler.scheduleJob(job, trigger);
+
+      return resumeId;
+    }
   }
 
   @Override

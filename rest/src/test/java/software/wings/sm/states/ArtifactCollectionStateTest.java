@@ -3,10 +3,13 @@ package software.wings.sm.states;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
+import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
+import static software.wings.beans.FeatureName.USE_DELAY_QUEUE;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.common.Constants.DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS;
@@ -42,9 +45,11 @@ import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ExpressionEvaluator;
 import software.wings.scheduler.JobScheduler;
+import software.wings.service.impl.DelayEventHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -68,6 +73,9 @@ public class ArtifactCollectionStateTest {
   @Mock MainConfiguration configuration;
   @Mock PortalConfig portalConfig;
   @Mock VariableProcessor variableProcessor;
+  @Mock FeatureFlagService featureFlagService;
+  @Mock DelayEventHelper delayEventHelper;
+
   private ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
 
   @InjectMocks
@@ -117,6 +125,7 @@ public class ArtifactCollectionStateTest {
     when(artifactService.fetchLastCollectedApprovedArtifactForArtifactStream(
              APP_ID, ARTIFACT_STREAM_ID, ARTIFACT_SOURCE_NAME))
         .thenReturn(anArtifact().withAppId(APP_ID).withStatus(Status.APPROVED).build());
+    when(delayEventHelper.delay(anyInt(), any())).thenReturn("anyGUID");
   }
 
   @Test
@@ -125,6 +134,16 @@ public class ArtifactCollectionStateTest {
     assertThat(executionResponse).isNotNull().hasFieldOrPropertyWithValue("async", true);
     verify(artifactStreamService).get(APP_ID, ARTIFACT_STREAM_ID);
     verify(jobScheduler).scheduleJob(any(JobDetail.class), any(Trigger.class));
+  }
+
+  @Test
+  public void shouldExecuteWithDelayQueue() {
+    when(featureFlagService.isEnabled(USE_DELAY_QUEUE, GLOBAL_ACCOUNT_ID)).thenReturn(true);
+
+    ExecutionResponse executionResponse = artifactCollectionState.execute(executionContext);
+    assertThat(executionResponse).isNotNull().hasFieldOrPropertyWithValue("async", true);
+    verify(artifactStreamService).get(APP_ID, ARTIFACT_STREAM_ID);
+    verify(delayEventHelper).delay(anyInt(), any());
   }
 
   @Test
