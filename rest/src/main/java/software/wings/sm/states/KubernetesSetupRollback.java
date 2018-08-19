@@ -62,7 +62,6 @@ public class KubernetesSetupRollback extends ContainerServiceSetup {
 
     int serviceSteadyStateTimeout =
         getServiceSteadyStateTimeout() > 0 ? getServiceSteadyStateTimeout() : DEFAULT_STEADY_STATE_TIMEOUT;
-    boolean useDashInHostname = featureFlagService.isEnabled(FeatureName.USE_DASH_IN_HOSTNAME, app.getAccountId());
     boolean useNewLabelMechanism =
         featureFlagService.isEnabled(FeatureName.USE_NEW_K8S_LABEL_MECHANISM, app.getAccountId());
 
@@ -81,7 +80,6 @@ public class KubernetesSetupRollback extends ContainerServiceSetup {
         .withRollback(true)
         .withSubscriptionId(subscriptionId)
         .withResourceGroup(resourceGroup)
-        .withUseDashInHostname(useDashInHostname)
         .withUseNewLabelMechanism(useNewLabelMechanism)
         .build();
   }

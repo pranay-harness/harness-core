@@ -191,7 +191,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
         new ReplicationControllerBuilder()
             .withNewMetadata()
             .withName(KubernetesConvention.getControllerName(
-                KubernetesConvention.getControllerNamePrefix("app", "service", "env", false), 1, false))
+                KubernetesConvention.getControllerNamePrefix("app", "service", "env"), 1))
             .withCreationTimestamp(new Date().toString())
             .endMetadata()
             .build();
@@ -312,15 +312,15 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
 
     horizontalPodAutoscaler =
         (HorizontalPodAutoscaler) MethodUtils.invokeMethod(kubernetesSetupCommandUnit, true, "createAutoscaler",
-            new Object[] {"abaris.hpanormal.prod.0", "Deployment", "extensions/v1beta1", "default", labels, setupParams,
+            new Object[] {"abaris.hpanormal.prod-0", "Deployment", "extensions/v1beta1", "default", labels, setupParams,
                 executionLogCallback});
 
     assertEquals("autoscaling/v1", horizontalPodAutoscaler.getApiVersion());
     assertNotNull(horizontalPodAutoscaler.getSpec());
-    assertEquals("abaris.hpanormal.prod.0", horizontalPodAutoscaler.getSpec().getScaleTargetRef().getName());
+    assertEquals("abaris.hpanormal.prod-0", horizontalPodAutoscaler.getSpec().getScaleTargetRef().getName());
     assertEquals("Deployment", horizontalPodAutoscaler.getSpec().getScaleTargetRef().getKind());
     assertNotNull(horizontalPodAutoscaler.getMetadata());
-    assertEquals("abaris.hpanormal.prod.0", horizontalPodAutoscaler.getMetadata().getName());
+    assertEquals("abaris.hpanormal.prod-0", horizontalPodAutoscaler.getMetadata().getName());
     assertEquals("default", horizontalPodAutoscaler.getMetadata().getNamespace());
     assertNotNull(horizontalPodAutoscaler.getMetadata().getLabels());
     assertTrue(horizontalPodAutoscaler.getMetadata().getLabels().containsKey("app"));

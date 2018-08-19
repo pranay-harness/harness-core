@@ -16,7 +16,6 @@ import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.common.Constants.HARNESS_KUBERNETES_REVISION_LABEL_KEY;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.KubernetesConvention.DASH;
-import static software.wings.utils.KubernetesConvention.DOT;
 import static software.wings.utils.KubernetesConvention.getPrefixFromControllerName;
 import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
 import static software.wings.utils.KubernetesConvention.getServiceNameFromControllerName;
@@ -433,19 +432,16 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public LinkedHashMap<String, Integer> getActiveServiceCounts(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, boolean useDashInHostname) {
+  public LinkedHashMap<String, Integer> getActiveServiceCounts(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName) {
     LinkedHashMap<String, Integer> result = new LinkedHashMap<>();
-    String controllerNamePrefix = getPrefixFromControllerName(containerServiceName, useDashInHostname);
+    String controllerNamePrefix = getPrefixFromControllerName(containerServiceName);
     listControllers(kubernetesConfig, encryptedDataDetails)
         .stream()
-        .filter(ctrl
-            -> controllerNamePrefix.equals(
-                getPrefixFromControllerName(ctrl.getMetadata().getName(), useDashInHostname)))
+        .filter(ctrl -> controllerNamePrefix.equals(getPrefixFromControllerName(ctrl.getMetadata().getName())))
         .filter(ctrl -> !(ctrl.getKind().equals("ReplicaSet") && ctrl.getMetadata().getOwnerReferences() != null))
         .filter(ctrl -> getControllerPodCount(ctrl) > 0)
-        .sorted(comparingInt(
-            ctrl -> getRevisionFromControllerName(ctrl.getMetadata().getName(), useDashInHostname).orElse(-1)))
+        .sorted(comparingInt(ctrl -> getRevisionFromControllerName(ctrl.getMetadata().getName()).orElse(-1)))
         .forEach(ctrl -> result.put(ctrl.getMetadata().getName(), getControllerPodCount(ctrl)));
     return result;
   }
@@ -466,16 +462,15 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public Map<String, String> getActiveServiceImages(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, String imagePrefix,
-      boolean useDashInHostname) {
+      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, String imagePrefix) {
     Map<String, String> result = new HashMap<>();
-    String controllerNamePrefix = getPrefixFromControllerName(containerServiceName, useDashInHostname);
+    String controllerNamePrefix = getPrefixFromControllerName(containerServiceName);
     listControllers(kubernetesConfig, encryptedDataDetails)
         .stream()
         .filter(ctrl -> !(ctrl.getKind().equals("ReplicaSet") && ctrl.getMetadata().getOwnerReferences() != null))
         .filter(ctrl -> ctrl.getMetadata().getName().startsWith(controllerNamePrefix))
         .filter(ctrl -> getControllerPodCount(ctrl) > 0)
-        .filter(ctrl -> getRevisionFromControllerName(ctrl.getMetadata().getName(), useDashInHostname).isPresent())
+        .filter(ctrl -> getRevisionFromControllerName(ctrl.getMetadata().getName()).isPresent())
         .forEach(ctrl
             -> result.put(ctrl.getMetadata().getName(),
                 getPodTemplateSpec(ctrl)
@@ -818,12 +813,12 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public int getTrafficPercent(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      String controllerName, boolean useDashInHostname) {
-    String serviceName = getServiceNameFromControllerName(controllerName, useDashInHostname);
+  public int getTrafficPercent(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String controllerName) {
+    String serviceName = getServiceNameFromControllerName(controllerName);
     IstioResource virtualService =
         getIstioResource(kubernetesConfig, encryptedDataDetails, "VirtualService", serviceName);
-    Optional<Integer> revision = getRevisionFromControllerName(controllerName, useDashInHostname);
+    Optional<Integer> revision = getRevisionFromControllerName(controllerName);
     if (virtualService == null || !revision.isPresent()) {
       return 0;
     }
@@ -842,10 +837,10 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public Map<String, Integer> getTrafficWeights(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String controllerName, boolean useDashInHostName) {
-    String serviceName = getServiceNameFromControllerName(controllerName, useDashInHostName);
-    String controllerNamePrefix = getPrefixFromControllerName(controllerName, useDashInHostName);
+  public Map<String, Integer> getTrafficWeights(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String controllerName) {
+    String serviceName = getServiceNameFromControllerName(controllerName);
+    String controllerNamePrefix = getPrefixFromControllerName(controllerName);
     IstioResource virtualService =
         getIstioResource(kubernetesConfig, encryptedDataDetails, "VirtualService", serviceName);
     if (virtualService == null) {
@@ -856,9 +851,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       return new HashMap<>();
     }
     List<DestinationWeight> destinationWeights = virtualServiceSpec.getHttp().get(0).getRoute();
-    return destinationWeights.stream().collect(toMap(dw
-        -> controllerNamePrefix + (useDashInHostName ? DASH : DOT) + dw.getDestination().getSubset(),
-        DestinationWeight::getWeight));
+    return destinationWeights.stream().collect(
+        toMap(dw -> controllerNamePrefix + DASH + dw.getDestination().getSubset(), DestinationWeight::getWeight));
   }
 
   @Override

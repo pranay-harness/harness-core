@@ -61,13 +61,12 @@ public class ContainerServiceImpl implements ContainerService {
   }
 
   @Override
-  public LinkedHashMap<String, Integer> getActiveServiceCounts(
-      ContainerServiceParams containerServiceParams, boolean useDashInHostname) {
+  public LinkedHashMap<String, Integer> getActiveServiceCounts(ContainerServiceParams containerServiceParams) {
     SettingValue value = containerServiceParams.getSettingAttribute().getValue();
     String controllerName = containerServiceParams.getContainerServiceName();
     if (isKubernetesClusterConfig(value)) {
-      return kubernetesContainerService.getActiveServiceCounts(getKubernetesConfig(containerServiceParams),
-          containerServiceParams.getEncryptionDetails(), controllerName, useDashInHostname);
+      return kubernetesContainerService.getActiveServiceCounts(
+          getKubernetesConfig(containerServiceParams), containerServiceParams.getEncryptionDetails(), controllerName);
     } else if (value instanceof AwsConfig) {
       return awsClusterService.getActiveServiceCounts(containerServiceParams.getRegion(),
           containerServiceParams.getSettingAttribute(), containerServiceParams.getEncryptionDetails(),

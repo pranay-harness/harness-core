@@ -65,15 +65,14 @@ public interface KubernetesContainerService {
 
   PodTemplateSpec getPodTemplateSpec(HasMetadata controller);
 
-  LinkedHashMap<String, Integer> getActiveServiceCounts(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, boolean useDashInHostName);
+  LinkedHashMap<String, Integer> getActiveServiceCounts(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName);
 
   LinkedHashMap<String, Integer> getActiveServiceCountsWithLabels(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> labels);
 
   Map<String, String> getActiveServiceImages(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, String imagePrefix,
-      boolean useDashInHostName);
+      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, String imagePrefix);
 
   Service createOrReplaceService(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Service definition);
@@ -111,11 +110,11 @@ public interface KubernetesContainerService {
   void deleteIstioResource(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String kind, String name);
 
-  int getTrafficPercent(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      String controllerName, boolean useDashInHostname);
+  int getTrafficPercent(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String controllerName);
 
-  Map<String, Integer> getTrafficWeights(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, boolean useDashInHostname);
+  Map<String, Integer> getTrafficWeights(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName);
 
   void createNamespaceIfNotExist(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails);
 

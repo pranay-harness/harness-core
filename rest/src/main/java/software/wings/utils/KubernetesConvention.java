@@ -31,23 +31,19 @@ public class KubernetesConvention {
   private static final int MAX_REVISIONS = 100000;
   private static Pattern wildCharPattern = Pattern.compile("[_+*/\\\\ &@$|\"':]");
 
-  public static String getControllerName(String prefix, int revision, boolean useDashInHostname) {
-    String separator = useDashInHostname ? DASH : DOT;
-    return normalize(prefix) + separator + revision;
+  public static String getControllerName(String prefix, int revision) {
+    return normalize(prefix) + DASH + revision;
   }
 
-  public static String getControllerNamePrefix(
-      String appName, String serviceName, String envName, boolean useDashInHostname) {
-    String separator = useDashInHostname ? DASH : DOT;
-    return normalize(appName + separator + serviceName + separator + envName);
+  public static String getControllerNamePrefix(String appName, String serviceName, String envName) {
+    return normalize(appName + DASH + serviceName + DASH + envName);
   }
 
-  public static String getPrefixFromControllerName(String controllerName, boolean useDashInHostname) {
-    String separator = useDashInHostname ? DASH : DOT;
-    int index = controllerName.lastIndexOf(separator);
+  public static String getPrefixFromControllerName(String controllerName) {
+    int index = controllerName.lastIndexOf(DASH);
     if (index > 0) {
       try {
-        Integer.parseInt(controllerName.substring(index + separator.length()));
+        Integer.parseInt(controllerName.substring(index + DASH.length()));
         return controllerName.substring(0, index);
       } catch (NumberFormatException e) {
         // Not versioned
@@ -56,12 +52,11 @@ public class KubernetesConvention {
     return controllerName;
   }
 
-  public static String getServiceNameFromControllerName(String controllerName, boolean useDashInHostname) {
-    String separator = useDashInHostname ? DASH : DOT;
-    int index = controllerName.lastIndexOf(separator);
+  public static String getServiceNameFromControllerName(String controllerName) {
+    int index = controllerName.lastIndexOf(DASH);
     if (index > 0) {
       try {
-        Integer.parseInt(controllerName.substring(index + separator.length()));
+        Integer.parseInt(controllerName.substring(index + DASH.length()));
         return noDot(controllerName.substring(0, index));
       } catch (NumberFormatException e) {
         // Not versioned
@@ -100,33 +95,13 @@ public class KubernetesConvention {
     return SECRET_PREFIX + name + SECRET_SUFFIX;
   }
 
-  public static Optional<Integer> getRevisionFromControllerName(String name, boolean useDashInHostname) {
-    if (useDashInHostname) {
-      return getRevisionFromControllerName(name);
-    }
-    String versionSeparator = DOT;
+  public static Optional<Integer> getRevisionFromControllerName(String name) {
     if (name != null) {
-      int index = name.lastIndexOf(versionSeparator);
-      if (index >= 0) {
-        try {
-          String version = name.substring(index + versionSeparator.length());
-          return version.contains(DASH) ? Optional.empty() : Optional.of(Integer.parseInt(version));
-        } catch (NumberFormatException e) {
-          logger.error("Couldn't get version from controller name {}", name, e);
-        }
-      }
-    }
-    return Optional.empty();
-  }
-
-  private static Optional<Integer> getRevisionFromControllerName(String name) {
-    String versionSeparator = DASH;
-    if (name != null) {
-      int index = name.lastIndexOf(versionSeparator);
+      int index = name.lastIndexOf(DASH);
       if (index >= 0) {
         String version = "";
         try {
-          version = name.substring(index + versionSeparator.length());
+          version = name.substring(index + DASH.length());
           Optional<Integer> revision =
               version.contains(DASH) ? Optional.empty() : Optional.of(Integer.parseInt(version));
 

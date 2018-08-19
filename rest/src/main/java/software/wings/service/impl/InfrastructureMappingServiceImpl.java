@@ -32,7 +32,6 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 import static software.wings.utils.KubernetesConvention.DASH;
-import static software.wings.utils.KubernetesConvention.DOT;
 import static software.wings.utils.Validator.duplicateCheck;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -1469,7 +1468,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     String resourceGroup = null;
     ContainerInfrastructureMapping containerInfraMapping = (ContainerInfrastructureMapping) infrastructureMapping;
     boolean isStatefulSet = false;
-    boolean useDashInHostName = featureFlagService.isEnabled(FeatureName.USE_DASH_IN_HOSTNAME, app.getAccountId());
 
     ContainerTask containerTask = serviceResourceService.getContainerTaskByDeploymentType(
         app.getUuid(), service.getUuid(), infrastructureMapping.getDeploymentType());
@@ -1483,11 +1481,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (isNotBlank(serviceNameExpression)) {
       controllerNamePrefix = KubernetesConvention.normalize(evaluator.substitute(serviceNameExpression, context));
     } else {
-      controllerNamePrefix = KubernetesConvention.getControllerNamePrefix(
-          app.getName(), service.getName(), env.getName(), useDashInHostName);
+      controllerNamePrefix =
+          KubernetesConvention.getControllerNamePrefix(app.getName(), service.getName(), env.getName());
     }
     kubernetesName = isStatefulSet ? KubernetesConvention.getKubernetesServiceName(controllerNamePrefix)
-                                   : controllerNamePrefix + (useDashInHostName ? DASH : DOT + "0");
+                                   : (controllerNamePrefix + DASH + "0");
 
     if (containerInfraMapping instanceof DirectKubernetesInfrastructureMapping) {
       DirectKubernetesInfrastructureMapping directInfraMapping =
@@ -1541,7 +1539,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                                         .build();
     try {
       Map<String, Integer> activeServiceCounts = delegateProxyFactory.get(ContainerService.class, syncTaskContext)
-                                                     .getActiveServiceCounts(containerServiceParams, useDashInHostName);
+                                                     .getActiveServiceCounts(containerServiceParams);
       return Integer.toString(activeServiceCounts.values().stream().mapToInt(Integer::intValue).sum());
     } catch (Exception e) {
       logger.warn(Misc.getMessage(e), e);
