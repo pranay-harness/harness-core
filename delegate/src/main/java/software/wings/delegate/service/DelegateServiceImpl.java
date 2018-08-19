@@ -145,6 +145,7 @@ public class DelegateServiceImpl implements DelegateService {
   private static final int MAX_CONNECT_ATTEMPTS = 50;
   private static final int RECONNECT_INTERVAL_SECONDS = 10;
   private static final int POLL_INTERVAL_SECONDS = 3;
+  private static final int BACKUP_POLL_INTERVAL_SECONDS = 15;
   private static final long UPGRADE_TIMEOUT = TimeUnit.HOURS.toMillis(2);
   private static final long HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(15);
   private static final long WATCHER_HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(10);
@@ -324,7 +325,7 @@ public class DelegateServiceImpl implements DelegateService {
       sslContext.init(null, TRUST_ALL_CERTS, new java.security.SecureRandom());
 
       if (delegateConfiguration.isPollForTasks()) {
-        startTaskPolling();
+        startTaskPolling(POLL_INTERVAL_SECONDS);
         startHeartbeat();
       } else {
         Client client = ClientFactory.getDefault().newClient();
@@ -392,6 +393,7 @@ public class DelegateServiceImpl implements DelegateService {
         socket.open(request.build());
 
         startHeartbeat(builder, socket);
+        startTaskPolling(BACKUP_POLL_INTERVAL_SECONDS);
       }
 
       if (!multiVersion) {
@@ -777,8 +779,8 @@ public class DelegateServiceImpl implements DelegateService {
     }, 0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
   }
 
-  private void startTaskPolling() {
-    taskPollExecutor.scheduleAtFixedRate(this ::pollForTask, 0, POLL_INTERVAL_SECONDS, TimeUnit.SECONDS);
+  private void startTaskPolling(int pollInterval) {
+    taskPollExecutor.scheduleAtFixedRate(this ::pollForTask, 0, pollInterval, TimeUnit.SECONDS);
   }
 
   private void pollForTask() {
