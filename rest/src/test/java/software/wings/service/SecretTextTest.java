@@ -83,6 +83,7 @@ import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.UsageRestrictions;
 import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
@@ -230,10 +231,13 @@ public class SecretTextTest extends WingsBaseTest {
 
   @Test
   public void saveAndUpdateSecret() throws IllegalAccessException {
+    UsageRestrictions usageRestrictions = UsageRestrictions.builder().isEditable(true).build();
     String secretName = generateUuid();
     String secretValue = generateUuid();
     String secretId =
-        secretManagementResource.saveSecret(accountId, SecretText.builder().name(secretName).value(secretValue).build())
+        secretManagementResource
+            .saveSecret(accountId,
+                SecretText.builder().name(secretName).value(secretValue).usageRestrictions(usageRestrictions).build())
             .getResource();
     List<SecretChangeLog> changeLogs =
         secretManagementResource.getChangeLogs(accountId, secretId, SECRET_TEXT).getResource();
@@ -244,6 +248,7 @@ public class SecretTextTest extends WingsBaseTest {
     assertEquals(secretId, secretChangeLog.getEncryptedDataId());
     assertEquals(userName, secretChangeLog.getUser().getName());
     assertEquals(userEmail, secretChangeLog.getUser().getEmail());
+    assertEquals(usageRestrictions, wingsPersistence.get(EncryptedData.class, secretId).getUsageRestrictions());
 
     final ServiceVariable serviceVariable = ServiceVariable.builder()
                                                 .templateId(generateUuid())
@@ -270,12 +275,19 @@ public class SecretTextTest extends WingsBaseTest {
         savedVariable, secretManager.getEncryptionDetails(savedVariable, appId, workflowExecutionId));
     assertEquals(secretValue, String.valueOf(savedVariable.getValue()));
 
-    // check no change in values do not trigger a change log
-    secretManagementResource.updateSecret(
-        accountId, secretId, SecretText.builder().name(secretName).value(Constants.SECRET_MASK).build());
+    // check only change in usage restrictions triggers change logs
+    secretManagementResource.updateSecret(accountId, secretId,
+        SecretText.builder()
+            .name(secretName)
+            .value(Constants.SECRET_MASK)
+            .usageRestrictions(usageRestrictions)
+            .build());
     changeLogs = secretManagementResource.getChangeLogs(accountId, secretId, SECRET_TEXT).getResource();
-    assertEquals(1, changeLogs.size());
+    assertEquals(2, changeLogs.size());
     secretChangeLog = changeLogs.get(0);
+    assertEquals(accountId, secretChangeLog.getAccountId());
+    assertEquals("Changed name & usage restrictions", secretChangeLog.getDescription());
+    secretChangeLog = changeLogs.get(1);
     assertEquals(accountId, secretChangeLog.getAccountId());
     assertEquals("Created", secretChangeLog.getDescription());
 
@@ -293,9 +305,10 @@ public class SecretTextTest extends WingsBaseTest {
     assertEquals(secretValue, String.valueOf(savedVariable.getValue()));
 
     changeLogs = secretManagementResource.getChangeLogs(accountId, secretId, SECRET_TEXT).getResource();
-    assertEquals(2, changeLogs.size());
+    assertEquals(3, changeLogs.size());
     assertEquals("Changed name", changeLogs.get(0).getDescription());
-    assertEquals("Created", changeLogs.get(1).getDescription());
+    assertEquals("Changed name & usage restrictions", changeLogs.get(1).getDescription());
+    assertEquals("Created", changeLogs.get(2).getDescription());
 
     // change both name and value and test
     newSecretName = generateUuid();
@@ -303,10 +316,11 @@ public class SecretTextTest extends WingsBaseTest {
     secretManagementResource.updateSecret(
         accountId, secretId, SecretText.builder().name(newSecretName).value(newSecretValue).build());
     changeLogs = secretManagementResource.getChangeLogs(accountId, secretId, SECRET_TEXT).getResource();
-    assertEquals(3, changeLogs.size());
+    assertEquals(4, changeLogs.size());
     assertEquals("Changed name & value", changeLogs.get(0).getDescription());
     assertEquals("Changed name", changeLogs.get(1).getDescription());
-    assertEquals("Created", changeLogs.get(2).getDescription());
+    assertEquals("Changed name & usage restrictions", changeLogs.get(2).getDescription());
+    assertEquals("Created", changeLogs.get(3).getDescription());
 
     savedVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
     assertNull(savedVariable.getValue());

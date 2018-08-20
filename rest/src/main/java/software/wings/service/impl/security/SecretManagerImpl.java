@@ -654,13 +654,13 @@ public class SecretManagerImpl implements SecretManager {
       return false;
     }
 
-    if (savedData.getName().equals(name) && value.equals(SECRET_MASK)) {
-      return true;
-    }
     usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
         accountId, savedData.getUsageRestrictions(), usageRestrictions);
 
     String description = value.equals(SECRET_MASK) ? "Changed name" : "Changed name & value";
+    if (usageRestrictions != null) {
+      description += " & usage restrictions";
+    }
     savedData.setName(name);
     if (!value.equals(SECRET_MASK)) {
       EncryptedData encryptedData = encrypt(getEncryptionType(accountId), accountId, SettingVariableTypes.SECRET_TEXT,
