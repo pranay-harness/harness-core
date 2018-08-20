@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import io.harness.validation.Create;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.metrics.TimeSeriesMetricDefinition;
+import software.wings.service.impl.analysis.ExperimentalMetricAnalysisRecord;
 import software.wings.service.impl.analysis.MetricAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLScores;
 import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds;
@@ -38,6 +39,9 @@ public interface MetricDataAnalysisService {
       String baseLineExecutionId, @Valid MetricAnalysisRecord mlAnalysisResponse);
 
   @ValidationGroups(Create.class) void saveTimeSeriesMLScores(TimeSeriesMLScores scores);
+
+  List<ExperimentalMetricAnalysisRecord> getExperimentalAnalysisRecordsByNaturalKey(
+      String appId, String stateExecutionId, String workflowExecutionId);
 
   List<TimeSeriesMLScores> getTimeSeriesMLScores(String appId, String workflowId, int analysisMinute, int limit);
 
