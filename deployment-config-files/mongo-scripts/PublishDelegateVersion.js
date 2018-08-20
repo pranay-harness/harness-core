@@ -4,7 +4,8 @@ const primaryVersion = managerConfig.next().primaryVersion;
 print("Manager primary version is");
 printjson(primaryVersion);
 
-const delegateVersions = primaryVersion === '*' ?  [_version_] : [primaryVersion, _version_];
+const delegateVersionSet = primaryVersion === '*' ?  new Set([_version_]) : new Set([primaryVersion, _version_]);
+const delegateVersions = Array.from(delegateVersionSet)
 
 const accountQuery = { _id: _accountId_ };
 const newValues = {
