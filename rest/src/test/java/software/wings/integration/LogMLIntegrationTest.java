@@ -118,6 +118,8 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
   private String serviceId;
   private String delegateTaskId;
 
+  private static final StateType[] logAnalysisStates = new StateType[] {StateType.SPLUNKV2, StateType.ELK};
+
   @Before
   public void setUp() throws Exception {
     super.setUp();
@@ -485,7 +487,7 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
         workFlowToExecution.put(workFlowId, workFlowExecutionId);
         final String stateExecutionId = workFlowExecutionId + "-state-execution-" + executionNum;
         workFlowToStateExecution.put(workFlowId, stateExecutionId);
-        for (StateType stateType : AnalysisServiceImpl.logAnalysisStates) {
+        for (StateType stateType : logAnalysisStates) {
           for (String host : hosts) {
             Map<Integer, List<LogElement>> recordsByMinute = generateLogElements(host, numOfMinutes, numOfLogs);
             WebTarget target = client.target(API_BASE + "/" + AbstractLogAnalysisState.getStateBaseUrl(stateType)
@@ -512,8 +514,7 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
     logDataRecordQuery = wingsPersistence.createQuery(LogDataRecord.class);
     List<LogDataRecord> logDataRecords = logDataRecordQuery.asList();
     assertEquals(
-        numOfMinutes * numOfLogs * hosts.size() * AnalysisServiceImpl.logAnalysisStates.length * numOfWorkFlows,
-        logDataRecords.size());
+        numOfMinutes * numOfLogs * hosts.size() * logAnalysisStates.length * numOfWorkFlows, logDataRecords.size());
 
     for (LogDataRecord logDataRecord : logDataRecords) {
       assertEquals(workFlowToExecution.get(logDataRecord.getWorkflowId()), logDataRecord.getWorkflowExecutionId());

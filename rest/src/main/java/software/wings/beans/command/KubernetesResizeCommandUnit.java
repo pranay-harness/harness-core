@@ -290,8 +290,6 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
 
   private IstioResource createVirtualServiceDefinition(ContextData contextData, List<ContainerServiceData> allData,
       IstioResource existingVirtualService, String kubernetesServiceName) {
-    KubernetesResizeParams resizeParams = (KubernetesResizeParams) contextData.resizeParams;
-
     VirtualService existingVirtualServiceSpec = (VirtualService) existingVirtualService.getSpec();
 
     VirtualServiceSpecNested<IstioResourceBuilder> virtualServiceSpecNested =

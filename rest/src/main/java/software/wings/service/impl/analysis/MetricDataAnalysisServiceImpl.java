@@ -15,13 +15,13 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SortOrder.OrderType;
@@ -75,8 +75,8 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   @Inject protected SettingsService settingsService;
 
   @Override
-  public boolean saveMetricData(String accountId, String appId, String stateExecutionId, String delegateTaskId,
-      List<NewRelicMetricDataRecord> metricData) throws IOException {
+  public boolean saveMetricData(final String accountId, final String appId, final String stateExecutionId,
+      String delegateTaskId, List<NewRelicMetricDataRecord> metricData) throws IOException {
     if (!isStateValid(appId, stateExecutionId)) {
       logger.warn("State is no longer active " + metricData.get(0).getStateExecutionId()
           + ". Sending delegate abort request " + delegateTaskId);
@@ -94,7 +94,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   }
 
   @Override
-  public boolean saveAnalysisRecords(NewRelicMetricAnalysisRecord metricAnalysisRecord) {
+  public boolean saveAnalysisRecords(final NewRelicMetricAnalysisRecord metricAnalysisRecord) {
     wingsPersistence.delete(wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class)
                                 .filter("workflowExecutionId", metricAnalysisRecord.getWorkflowExecutionId())
                                 .filter("stateExecutionId", metricAnalysisRecord.getStateExecutionId())
@@ -153,7 +153,6 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                                 .stateType(stateType)
                                                 .scoresMap(new HashMap<>())
                                                 .build();
-
     int txnId = 0;
     int metricId;
     for (TimeSeriesMLTxnSummary txnSummary : mlAnalysisResponse.getTransactions().values()) {
@@ -170,10 +169,11 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                                         .build();
           txnScores.getScoresMap().put(String.valueOf(metricId), mlMetricScores);
 
-          Iterator<Entry<String, TimeSeriesMLHostSummary>> it = mlMetricSummary.getResults().entrySet().iterator();
+          Iterator<Entry<String, TimeSeriesMLHostSummary>> resultsItr =
+              mlMetricSummary.getResults().entrySet().iterator();
           Map<String, TimeSeriesMLHostSummary> timeSeriesMLHostSummaryMap = new HashMap<>();
-          while (it.hasNext()) {
-            Entry<String, TimeSeriesMLHostSummary> pair = it.next();
+          while (resultsItr.hasNext()) {
+            Entry<String, TimeSeriesMLHostSummary> pair = resultsItr.next();
             timeSeriesMLHostSummaryMap.put(pair.getKey().replaceAll("\\.", "-"), pair.getValue());
             mlMetricScores.getScores().add(pair.getValue().getScore());
           }
@@ -189,12 +189,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
         stateType, appId, stateExecutionId, workflowExecutionId, serviceId, groupName, analysisMinute);
     learningEngineService.markCompleted(taskId);
 
-    wingsPersistence.delete(wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
-                                .filter("appId", appId)
-                                .filter("workflowExecutionId", workflowExecutionId)
-                                .filter("stateExecutionId", stateExecutionId)
-                                .filter("groupName", groupName));
-
+    deleteExistingAnalysisRecord(mlAnalysisResponse, appId, workflowExecutionId, stateExecutionId, groupName);
     wingsPersistence.delete(wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class)
                                 .filter("appId", appId)
                                 .filter("workflowExecutionId", workflowExecutionId)
@@ -202,11 +197,9 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                 .filter("groupName", groupName));
 
     wingsPersistence.save(mlAnalysisResponse);
-    if (logger.isDebugEnabled()) {
-      logger.debug("inserted NewRelicMetricAnalysisRecord to persistence layer for "
-              + "stateType: {}, workflowExecutionId: {} StateExecutionInstanceId: {}",
-          stateType, workflowExecutionId, stateExecutionId);
-    }
+    logger.info("inserted MetricAnalysisRecord to persistence layer for "
+            + "stateType: {}, workflowExecutionId: {} StateExecutionInstanceId: {}",
+        stateType, workflowExecutionId, stateExecutionId);
     return true;
   }
 
@@ -227,6 +220,23 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   @Override
   public void saveTimeSeriesMLScores(TimeSeriesMLScores scores) {
     wingsPersistence.save(scores);
+  }
+
+  /**
+   * Method to fetch Experimental Analysis Record for timeseries data.
+   * @param appId
+   * @param stateExecutionId
+   * @param workflowExecutionId
+   * @return
+   */
+  @Override
+  public List<ExperimentalMetricAnalysisRecord> getExperimentalAnalysisRecordsByNaturalKey(
+      String appId, String stateExecutionId, String workflowExecutionId) {
+    return wingsPersistence.createQuery(ExperimentalMetricAnalysisRecord.class)
+        .filter("appId", appId)
+        .filter("stateExecutionId", stateExecutionId)
+        .filter("workflowExecutionId", workflowExecutionId)
+        .asList();
   }
 
   @Override
@@ -374,7 +384,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
         riskLevel = RiskLevel.HIGH;
         break;
       default:
-        throw new RuntimeException("Unknown risk level " + risk);
+        throw new IllegalArgumentException("Unknown risk level " + risk);
     }
     return riskLevel;
   }
@@ -384,12 +394,11 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       int analysisMinute, String transactionName, String metricName, String groupName) {
     /* Ignore analysisMinutue. Leaving it as a parameter since UI sends it.
        Fetch the latest */
-    groupName = isEmpty(groupName) ? NewRelicMetricDataRecord.DEFAULT_GROUP_NAME : groupName;
     TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
         wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
             .filter("stateExecutionId", stateExecutionId)
             .filter("workflowExecutionId", workflowExecutionId)
-            .filter("groupName", groupName)
+            .filter("groupName", isEmpty(groupName) ? NewRelicMetricDataRecord.DEFAULT_GROUP_NAME : groupName)
             .order("-analysisMinute")
             .get();
     if (timeSeriesMLAnalysisRecord == null) {
@@ -521,15 +530,14 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     return result;
   }
 
-  @SuppressFBWarnings("NP_LOAD_OF_KNOWN_NULL_VALUE")
   public List<NewRelicMetricAnalysisRecord> getMetricsAnalysisForDemo(
-      String appId, String stateExecutionId, String workflowExecutionId) {
+      final String appId, final String stateExecutionId, final String workflowExecutionId) {
     logger.info("Creating analysis summary for demo {}", stateExecutionId);
     StateExecutionInstance stateExecutionInstance =
         wingsPersistence.createQuery(StateExecutionInstance.class).field("_id").equal(stateExecutionId).get();
-    if (stateExecutionId == null) {
+    if (stateExecutionInstance == null) {
       logger.error("State execution instance not found for {}", stateExecutionId);
-      return null;
+      throw new WingsException(ErrorCode.STATE_EXECUTION_INSTANCE_NOT_FOUND, stateExecutionId);
     }
 
     SettingAttribute settingAttribute = settingsService.get(
@@ -553,7 +561,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
 
   @Override
   public List<NewRelicMetricAnalysisRecord> getMetricsAnalysis(
-      String appId, String stateExecutionId, String workflowExecutionId) {
+      final String appId, final String stateExecutionId, final String workflowExecutionId) {
     List<NewRelicMetricAnalysisRecord> analysisRecords = new ArrayList<>();
     List<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecords =
         wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
@@ -654,16 +662,17 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
         if (highRisk == 0 && mediumRisk == 0) {
           analysisRecord.setMessage("No problems found");
         } else {
-          String message = "";
+          StringBuffer message = new StringBuffer(20);
           if (highRisk > 0) {
-            message = highRisk + " high risk " + (highRisk > 1 ? "transactions" : "transaction") + " found. ";
+            message.append(highRisk + " high risk " + (highRisk > 1 ? "transactions" : "transaction") + " found. ");
           }
 
           if (mediumRisk > 0) {
-            message += mediumRisk + " medium risk " + (mediumRisk > 1 ? "transactions" : "transaction") + " found.";
+            message.append(
+                mediumRisk + " medium risk " + (mediumRisk > 1 ? "transactions" : "transaction") + " found.");
           }
 
-          analysisRecord.setMessage(message);
+          analysisRecord.setMessage(message.toString());
         }
 
         if (highRisk > 0) {
@@ -908,5 +917,22 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     // delete learning engine tasks
     wingsPersistence.delete(
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class).filter("state_execution_id", stateExecutionId));
+  }
+
+  private void deleteExistingAnalysisRecord(MetricAnalysisRecord mlAnalysisResponse, String appId,
+      String workflowExecutionId, String stateExecutionId, String groupName) {
+    if (mlAnalysisResponse instanceof ExperimentalMetricAnalysisRecord) {
+      wingsPersistence.delete(wingsPersistence.createQuery(ExperimentalMetricAnalysisRecord.class)
+                                  .filter("appId", appId)
+                                  .filter("workflowExecutionId", workflowExecutionId)
+                                  .filter("stateExecutionId", stateExecutionId)
+                                  .filter("groupName", groupName));
+    } else {
+      wingsPersistence.delete(wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
+                                  .filter("appId", appId)
+                                  .filter("workflowExecutionId", workflowExecutionId)
+                                  .filter("stateExecutionId", stateExecutionId)
+                                  .filter("groupName", groupName));
+    }
   }
 }

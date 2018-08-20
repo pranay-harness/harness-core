@@ -221,64 +221,12 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
 
   @Test
   public void testNewRelicSorting() throws IOException {
-    NewRelicMetricAnalysisValue requestsPerMinute = NewRelicMetricAnalysisValue.builder()
-                                                        .name("requestsPerMinute")
-                                                        .riskLevel(RiskLevel.LOW)
-                                                        .controlValue(100)
-                                                        .testValue(2000)
-                                                        .build();
-
-    NewRelicMetricAnalysisValue appdex = NewRelicMetricAnalysisValue.builder()
-                                             .name("appdex")
-                                             .riskLevel(RiskLevel.LOW)
-                                             .controlValue(100)
-                                             .testValue(2000)
-                                             .build();
-    NewRelicMetricAnalysis indexAnalysis = NewRelicMetricAnalysis.builder()
-                                               .metricName("index.jsp")
-                                               .metricValues(Lists.newArrayList(requestsPerMinute, appdex))
-                                               .riskLevel(RiskLevel.LOW)
-                                               .build();
-
-    requestsPerMinute = NewRelicMetricAnalysisValue.builder()
-                            .name("requestsPerMinute")
-                            .riskLevel(RiskLevel.LOW)
-                            .controlValue(100)
-                            .testValue(3000)
-                            .build();
-
-    appdex = NewRelicMetricAnalysisValue.builder()
-                 .name("appdex")
-                 .riskLevel(RiskLevel.LOW)
-                 .controlValue(100)
-                 .testValue(423)
-                 .build();
-
-    NewRelicMetricAnalysis accountAnalyis = NewRelicMetricAnalysis.builder()
-                                                .metricName("account")
-                                                .metricValues(Lists.newArrayList(requestsPerMinute, appdex))
-                                                .riskLevel(RiskLevel.LOW)
-                                                .build();
-
-    requestsPerMinute = NewRelicMetricAnalysisValue.builder()
-                            .name("requestsPerMinute")
-                            .riskLevel(RiskLevel.LOW)
-                            .controlValue(100)
-                            .testValue(2500)
-                            .build();
-
-    appdex = NewRelicMetricAnalysisValue.builder()
-                 .name("appdex")
-                 .riskLevel(RiskLevel.LOW)
-                 .controlValue(100)
-                 .testValue(8000)
-                 .build();
-
-    NewRelicMetricAnalysis loginAnalysis = NewRelicMetricAnalysis.builder()
-                                               .metricName("login")
-                                               .metricValues(Lists.newArrayList(requestsPerMinute, appdex))
-                                               .riskLevel(RiskLevel.LOW)
-                                               .build();
+    NewRelicMetricAnalysis indexAnalysis = getMetricAnalysis(
+        "requestsPerMiniute", RiskLevel.LOW, 100, 2000, "appdex", RiskLevel.LOW, 100, 2000, "index.jsp");
+    NewRelicMetricAnalysis accountAnalyis =
+        getMetricAnalysis("requestsPerMiniute", RiskLevel.LOW, 100, 3000, "appdex", RiskLevel.LOW, 100, 423, "account");
+    NewRelicMetricAnalysis loginAnalysis =
+        getMetricAnalysis("requestsPerMiniute", RiskLevel.LOW, 100, 2500, "appdex", RiskLevel.LOW, 100, 8000, "login");
 
     NewRelicMetricAnalysisRecord newRelicMetricAnalysisRecord =
         NewRelicMetricAnalysisRecord.builder()
@@ -300,70 +248,20 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
     NewRelicMetricAnalysisRecord analysisRecord = analysisRecords.get(0);
     assertEquals(3, analysisRecord.getMetricAnalyses().size());
     assertEquals("account", analysisRecord.getMetricAnalyses().get(0).getMetricName());
-    assertEquals("login", analysisRecord.getMetricAnalyses().get(1).getMetricName());
-    assertEquals("index.jsp", analysisRecord.getMetricAnalyses().get(2).getMetricName());
+    assertEquals("index.jsp", analysisRecord.getMetricAnalyses().get(1).getMetricName());
+    assertEquals("login", analysisRecord.getMetricAnalyses().get(2).getMetricName());
   }
 
   @Test
   public void testAppDSorting() throws IOException {
-    NewRelicMetricAnalysisValue requestsPerMinute = NewRelicMetricAnalysisValue.builder()
-                                                        .name("response95th")
-                                                        .riskLevel(RiskLevel.LOW)
-                                                        .controlValue(100)
-                                                        .testValue(2000)
-                                                        .build();
+    NewRelicMetricAnalysis indexAnalysis =
+        getMetricAnalysis("response95th", RiskLevel.LOW, 100, 2500, "stalls", RiskLevel.LOW, 100, 2000, "index.jsp");
 
-    NewRelicMetricAnalysisValue appdex = NewRelicMetricAnalysisValue.builder()
-                                             .name("stalls")
-                                             .riskLevel(RiskLevel.LOW)
-                                             .controlValue(100)
-                                             .testValue(2000)
-                                             .build();
-    NewRelicMetricAnalysis indexAnalysis = NewRelicMetricAnalysis.builder()
-                                               .metricName("index.jsp")
-                                               .metricValues(Lists.newArrayList(requestsPerMinute, appdex))
-                                               .riskLevel(RiskLevel.LOW)
-                                               .build();
+    NewRelicMetricAnalysis accountAnalyis =
+        getMetricAnalysis("response95th", RiskLevel.LOW, 100, 3000, "stalls", RiskLevel.LOW, 100, 423, "account");
 
-    requestsPerMinute = NewRelicMetricAnalysisValue.builder()
-                            .name("response95th")
-                            .riskLevel(RiskLevel.LOW)
-                            .controlValue(100)
-                            .testValue(3000)
-                            .build();
-
-    appdex = NewRelicMetricAnalysisValue.builder()
-                 .name("stalls")
-                 .riskLevel(RiskLevel.LOW)
-                 .controlValue(100)
-                 .testValue(423)
-                 .build();
-
-    NewRelicMetricAnalysis accountAnalyis = NewRelicMetricAnalysis.builder()
-                                                .metricName("account")
-                                                .metricValues(Lists.newArrayList(requestsPerMinute, appdex))
-                                                .riskLevel(RiskLevel.LOW)
-                                                .build();
-
-    requestsPerMinute = NewRelicMetricAnalysisValue.builder()
-                            .name("response95th")
-                            .riskLevel(RiskLevel.LOW)
-                            .controlValue(100)
-                            .testValue(2500)
-                            .build();
-
-    appdex = NewRelicMetricAnalysisValue.builder()
-                 .name("stalls")
-                 .riskLevel(RiskLevel.LOW)
-                 .controlValue(100)
-                 .testValue(8000)
-                 .build();
-
-    NewRelicMetricAnalysis loginAnalysis = NewRelicMetricAnalysis.builder()
-                                               .metricName("login")
-                                               .metricValues(Lists.newArrayList(requestsPerMinute, appdex))
-                                               .riskLevel(RiskLevel.LOW)
-                                               .build();
+    NewRelicMetricAnalysis loginAnalysis =
+        getMetricAnalysis("response95th", RiskLevel.LOW, 100, 2500, "stalls", RiskLevel.LOW, 100, 8000, "login");
 
     NewRelicMetricAnalysisRecord newRelicMetricAnalysisRecord =
         NewRelicMetricAnalysisRecord.builder()
@@ -385,70 +283,20 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
     NewRelicMetricAnalysisRecord analysisRecord = analysisRecords.get(0);
     assertEquals(3, analysisRecord.getMetricAnalyses().size());
     assertEquals("account", analysisRecord.getMetricAnalyses().get(0).getMetricName());
-    assertEquals("login", analysisRecord.getMetricAnalyses().get(1).getMetricName());
-    assertEquals("index.jsp", analysisRecord.getMetricAnalyses().get(2).getMetricName());
+    assertEquals("index.jsp", analysisRecord.getMetricAnalyses().get(1).getMetricName());
+    assertEquals("login", analysisRecord.getMetricAnalyses().get(2).getMetricName());
   }
 
   @Test
   public void testDynaTraceSorting() throws IOException {
-    NewRelicMetricAnalysisValue requestsPerMinute = NewRelicMetricAnalysisValue.builder()
-                                                        .name("requestsPerMin")
-                                                        .riskLevel(RiskLevel.LOW)
-                                                        .controlValue(100)
-                                                        .testValue(2000)
-                                                        .build();
+    NewRelicMetricAnalysis indexAnalysis = getMetricAnalysis(
+        "requestsPerMin", RiskLevel.LOW, 100, 2000, "serverSideError", RiskLevel.LOW, 100, 2000, "index.jsp");
 
-    NewRelicMetricAnalysisValue appdex = NewRelicMetricAnalysisValue.builder()
-                                             .name("serverSideError")
-                                             .riskLevel(RiskLevel.LOW)
-                                             .controlValue(100)
-                                             .testValue(2000)
-                                             .build();
-    NewRelicMetricAnalysis indexAnalysis = NewRelicMetricAnalysis.builder()
-                                               .metricName("index.jsp")
-                                               .metricValues(Lists.newArrayList(requestsPerMinute, appdex))
-                                               .riskLevel(RiskLevel.LOW)
-                                               .build();
+    NewRelicMetricAnalysis accountAnalyis =
+        getMetricAnalysis("requestsPerMin", RiskLevel.LOW, 100, 3000, "stalls", RiskLevel.LOW, 100, 423, "account");
 
-    requestsPerMinute = NewRelicMetricAnalysisValue.builder()
-                            .name("requestsPerMin")
-                            .riskLevel(RiskLevel.LOW)
-                            .controlValue(100)
-                            .testValue(3000)
-                            .build();
-
-    appdex = NewRelicMetricAnalysisValue.builder()
-                 .name("stalls")
-                 .riskLevel(RiskLevel.LOW)
-                 .controlValue(100)
-                 .testValue(423)
-                 .build();
-
-    NewRelicMetricAnalysis accountAnalyis = NewRelicMetricAnalysis.builder()
-                                                .metricName("account")
-                                                .metricValues(Lists.newArrayList(requestsPerMinute, appdex))
-                                                .riskLevel(RiskLevel.LOW)
-                                                .build();
-
-    requestsPerMinute = NewRelicMetricAnalysisValue.builder()
-                            .name("requestsPerMin")
-                            .riskLevel(RiskLevel.LOW)
-                            .controlValue(100)
-                            .testValue(2500)
-                            .build();
-
-    appdex = NewRelicMetricAnalysisValue.builder()
-                 .name("clientSideError")
-                 .riskLevel(RiskLevel.LOW)
-                 .controlValue(100)
-                 .testValue(8000)
-                 .build();
-
-    NewRelicMetricAnalysis loginAnalysis = NewRelicMetricAnalysis.builder()
-                                               .metricName("login")
-                                               .metricValues(Lists.newArrayList(requestsPerMinute, appdex))
-                                               .riskLevel(RiskLevel.LOW)
-                                               .build();
+    NewRelicMetricAnalysis loginAnalysis =
+        getMetricAnalysis("requestsPerMin", RiskLevel.LOW, 100, 2500, "stalls", RiskLevel.LOW, 100, 8000, "login");
 
     NewRelicMetricAnalysisRecord newRelicMetricAnalysisRecord =
         NewRelicMetricAnalysisRecord.builder()
@@ -574,6 +422,28 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
             .getResource();
 
     assertEquals(results.size(), controlRecords.size());
+  }
+
+  private NewRelicMetricAnalysis getMetricAnalysis(String metricAnalysisValueName1, RiskLevel riskLevel1,
+      double controlValue1, double testValue1, String metricAnalysisValueName2, RiskLevel riskLevel2,
+      double controlValue2, double testValue2, String metricName) {
+    NewRelicMetricAnalysisValue requestsPerMinute = NewRelicMetricAnalysisValue.builder()
+                                                        .name(metricAnalysisValueName1)
+                                                        .riskLevel(riskLevel1)
+                                                        .controlValue(controlValue1)
+                                                        .testValue(testValue1)
+                                                        .build();
+    NewRelicMetricAnalysisValue appdex = NewRelicMetricAnalysisValue.builder()
+                                             .name(metricAnalysisValueName2)
+                                             .riskLevel(riskLevel2)
+                                             .controlValue(controlValue2)
+                                             .testValue(testValue2)
+                                             .build();
+    return NewRelicMetricAnalysis.builder()
+        .metricName(metricName)
+        .metricValues(Lists.newArrayList(requestsPerMinute, appdex))
+        .riskLevel(RiskLevel.LOW)
+        .build();
   }
 
   //  @Test
