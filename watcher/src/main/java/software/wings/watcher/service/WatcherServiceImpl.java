@@ -24,6 +24,7 @@ import static software.wings.utils.message.MessageConstants.DELEGATE_HEARTBEAT;
 import static software.wings.utils.message.MessageConstants.DELEGATE_IS_NEW;
 import static software.wings.utils.message.MessageConstants.DELEGATE_RESTART_NEEDED;
 import static software.wings.utils.message.MessageConstants.DELEGATE_RESUME;
+import static software.wings.utils.message.MessageConstants.DELEGATE_SEND_VERSION_HEADER;
 import static software.wings.utils.message.MessageConstants.DELEGATE_SHUTDOWN_PENDING;
 import static software.wings.utils.message.MessageConstants.DELEGATE_SHUTDOWN_STARTED;
 import static software.wings.utils.message.MessageConstants.DELEGATE_STARTED;
@@ -352,6 +353,11 @@ public class WatcherServiceImpl implements WatcherService {
 
               if (multiVersion) {
                 if (!expectedVersions.contains(delegateVersion) && !shutdownPending) {
+                  messageService.writeMessageToChannel(
+                      DELEGATE, delegateProcess, DELEGATE_SEND_VERSION_HEADER, Boolean.FALSE.toString());
+                  logger.info(
+                      "Delegate version {} ({}) is not a published version. Future requests will go to primary.",
+                      delegateVersion, delegateProcess);
                   drainingNeededList.add(delegateProcess);
                 }
               }

@@ -36,6 +36,7 @@ public interface MessageConstants {
   String DELEGATE_STOP_ACQUIRING = "stop-acquiring";
   String DELEGATE_GO_AHEAD = "go-ahead";
   String DELEGATE_RESUME = "resume";
+  String DELEGATE_SEND_VERSION_HEADER = "send-version-header";
 
   // Messages received by watcher from delegate processes
   String NEW_DELEGATE = "new-delegate";

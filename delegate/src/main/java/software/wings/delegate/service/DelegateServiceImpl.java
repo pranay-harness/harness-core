@@ -30,6 +30,7 @@ import static software.wings.utils.message.MessageConstants.DELEGATE_HEARTBEAT;
 import static software.wings.utils.message.MessageConstants.DELEGATE_IS_NEW;
 import static software.wings.utils.message.MessageConstants.DELEGATE_RESTART_NEEDED;
 import static software.wings.utils.message.MessageConstants.DELEGATE_RESUME;
+import static software.wings.utils.message.MessageConstants.DELEGATE_SEND_VERSION_HEADER;
 import static software.wings.utils.message.MessageConstants.DELEGATE_SHUTDOWN_PENDING;
 import static software.wings.utils.message.MessageConstants.DELEGATE_SHUTDOWN_STARTED;
 import static software.wings.utils.message.MessageConstants.DELEGATE_STARTED;
@@ -102,6 +103,7 @@ import software.wings.delegatetasks.TaskLogContext;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.delegatetasks.validation.DelegateValidateTask;
 import software.wings.managerclient.ManagerClient;
+import software.wings.managerclient.ManagerClientFactory;
 import software.wings.security.TokenGenerator;
 import software.wings.utils.JsonUtils;
 import software.wings.utils.message.Message;
@@ -699,6 +701,9 @@ public class DelegateServiceImpl implements DelegateService {
             handleStopAcquiringMessage(message.getFromProcess());
           } else if (DELEGATE_RESUME.equals(message.getMessage())) {
             resume();
+          } else if (DELEGATE_SEND_VERSION_HEADER.equals(message.getMessage())) {
+            ManagerClientFactory.setSendVersionHeader(Boolean.valueOf(message.getParams().get(0)));
+            managerClient = injector.getInstance(ManagerClient.class);
           }
         }), 0, 1, TimeUnit.SECONDS);
   }
