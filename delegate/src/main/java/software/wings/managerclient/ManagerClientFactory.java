@@ -13,8 +13,7 @@ import io.harness.network.Http;
 import io.harness.version.VersionInfoManager;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import okhttp3.Request.Builder;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.security.TokenGenerator;
@@ -42,13 +41,18 @@ public class ManagerClientFactory implements Provider<ManagerClient> {
   @SuppressFBWarnings("MS_MUTABLE_ARRAY")
   public static final TrustManager[] TRUST_ALL_CERTS = new X509TrustManager[] {new ManagerClientX509TrustManager()};
 
+  private static boolean sendVersionHeader = true;
+
   @Inject private VersionInfoManager versionInfoManager;
 
-  private static final Logger logger = LoggerFactory.getLogger("http");
   private String baseUrl;
   private TokenGenerator tokenGenerator;
 
-  public ManagerClientFactory(String baseUrl, TokenGenerator tokenGenerator) {
+  public static void setSendVersionHeader(boolean send) {
+    sendVersionHeader = send;
+  }
+
+  ManagerClientFactory(String baseUrl, TokenGenerator tokenGenerator) {
     this.baseUrl = baseUrl;
     this.tokenGenerator = tokenGenerator;
   }
@@ -81,13 +85,14 @@ public class ManagerClientFactory implements Provider<ManagerClient> {
           .retryOnConnectionFailure(true)
           .addInterceptor(new DelegateAuthInterceptor(tokenGenerator))
           .sslSocketFactory(sslSocketFactory, (X509TrustManager) TRUST_ALL_CERTS[0])
-          .addInterceptor(chain
-              -> chain.proceed(
-                  chain.request()
-                      .newBuilder()
-                      .addHeader("User-Agent", "delegate/" + versionInfoManager.getVersionInfo().getVersion())
-                      .addHeader("Version", versionInfoManager.getVersionInfo().getVersion())
-                      .build()))
+          .addInterceptor(chain -> {
+            Builder request = chain.request().newBuilder().addHeader(
+                "User-Agent", "delegate/" + versionInfoManager.getVersionInfo().getVersion());
+            if (sendVersionHeader) {
+              request.addHeader("Version", versionInfoManager.getVersionInfo().getVersion());
+            }
+            return chain.proceed(request.build());
+          })
           .addInterceptor(chain -> FibonacciBackOff.executeForEver(() -> chain.proceed(chain.request())))
           .hostnameVerifier((hostname, session) -> true)
           .build();
