@@ -43,6 +43,6 @@ compile:
 dist: compile
 	pwd
 	echo $(version)
-	rm -rf dist; mkdir -p dist/splunk_pyml; cp -L service_version.properties dist/splunk_pyml; cp Dockerfile dist/splunk_pyml; cp Dockerfile-onprem dist/splunk_pyml; cp Makefile dist/splunk_pyml; cp *.ini dist/splunk_pyml; cp *.sh dist/splunk_pyml; cp requirements.txt dist/splunk_pyml; cp requirements-onprem.txt dist/splunk_pyml
+	rm -rf dist; mkdir -p dist/splunk_pyml; mkdir -p dist/splunk_pyml/logs; cp -L service_version.properties dist/splunk_pyml; cp Dockerfile dist/splunk_pyml; cp Dockerfile-onprem dist/splunk_pyml; cp Makefile dist/splunk_pyml; cp *.ini dist/splunk_pyml; cp *.sh dist/splunk_pyml; cp requirements.txt dist/splunk_pyml; cp requirements-onprem.txt dist/splunk_pyml
 	ln -s ../../.pyenv dist/splunk_pyml/.pyenv
 	cd src; find . -name '*.pyc' | cpio -updm ../dist/splunk_pyml; cd ../dist; pwd; tar --exclude='splunk_pyml/.pyenv' -cvf $(dist_file) *
