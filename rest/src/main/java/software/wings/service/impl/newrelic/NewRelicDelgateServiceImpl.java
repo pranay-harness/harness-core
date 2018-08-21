@@ -67,7 +67,7 @@ import javax.servlet.http.HttpServletResponse;
  */
 
 public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
-  private static final int METRIC_DATA_QUERY_BATCH_SIZE = 50;
+  private static final int METRIC_DATA_QUERY_BATCH_SIZE = 30;
   private static final int MIN_RPM = 1;
   private static final String NEW_RELIC_DATE_FORMAT = "YYYY-MM-dd'T'HH:mm:ssZ";
   private static final String NAMES_PARAM = "names[]=";

@@ -65,8 +65,6 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
   private static final String OVERALL_APDEX_TXN_NAME = "Apdex";
   private static final int INITIAL_DELAY_MINUTES = 2;
   private static final int PERIOD_MINS = 1;
-  private static final int METRIC_DATA_QUERY_BATCH_SIZE = 50;
-  private static final int MIN_RPM = 1;
 
   @Inject private NewRelicDelegateService newRelicDelegateService;
   @Inject private MetricDataStoreService metricStoreService;
