@@ -50,6 +50,7 @@ import static software.wings.watcher.app.WatcherApplication.getProcessId;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
@@ -451,7 +452,7 @@ public class WatcherServiceImpl implements WatcherService {
                 .map(version -> version + " (" + Joiner.on(", ").join(runningVersions.get(version)) + ")")
                 .collect(toList()));
 
-        for (String version : expectedVersions) {
+        for (String version : Lists.reverse(expectedVersions)) {
           if (shutdownPendingList.containsAll(runningVersions.get(version)) && working.compareAndSet(false, true)) {
             logger.info("New delegate process for version {} will be started", version);
             try {
