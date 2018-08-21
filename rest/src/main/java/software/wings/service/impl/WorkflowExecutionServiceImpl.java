@@ -1969,22 +1969,21 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       StateMachine sm =
           wingsPersistence.get(StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
 
-      Map<String, ExecutionStatus> stateExecutionStatuses = new HashMap<>();
-      try (HIterator<StateExecutionInstance> iterator =
-               new HIterator<>(wingsPersistence.createQuery(StateExecutionInstance.class)
-                                   .filter(StateExecutionInstance.APP_ID_KEY, workflowExecution.getAppId())
-                                   .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflowExecution.getUuid())
-                                   .project(StateExecutionInstance.CONTEXT_ELEMENT_KEY, true)
-                                   .project(StateExecutionInstance.DISPLAY_NAME_KEY, true)
-                                   .project(StateExecutionInstance.ID_KEY, true)
-                                   .project(StateExecutionInstance.PARENT_INSTANCE_ID_KEY, true)
-                                   .project(StateExecutionInstance.STATUS_KEY, true)
-                                   .fetch())) {
-        stateMachineExecutionSimulator.prepareStateExecutionInstanceMap(iterator, stateExecutionStatuses);
-      }
+      List<StateExecutionInstance> allStateExecutionInstances =
+          wingsPersistence.createQuery(StateExecutionInstance.class)
+              .filter(StateExecutionInstance.APP_ID_KEY, workflowExecution.getAppId())
+              .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflowExecution.getUuid())
+              .field(StateExecutionInstance.CREATED_AT_KEY)
+              .greaterThanOrEq(workflowExecution.getCreatedAt())
+              .project(StateExecutionInstance.CONTEXT_ELEMENT_KEY, true)
+              .project(StateExecutionInstance.DISPLAY_NAME_KEY, true)
+              .project(StateExecutionInstance.ID_KEY, true)
+              .project(StateExecutionInstance.PARENT_INSTANCE_ID_KEY, true)
+              .project(StateExecutionInstance.STATUS_KEY, true)
+              .asList();
 
       breakdown = stateMachineExecutionSimulator.getStatusBreakdown(
-          workflowExecution.getAppId(), workflowExecution.getEnvId(), sm, stateExecutionStatuses);
+          workflowExecution.getAppId(), workflowExecution.getEnvId(), sm, allStateExecutionInstances);
       total = breakdown.getFailed() + breakdown.getSuccess() + breakdown.getInprogress() + breakdown.getQueued();
     }
 
