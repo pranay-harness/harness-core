@@ -211,6 +211,14 @@ public class DatabaseModule extends AbstractModule {
         .stream()
         .filter(entry -> entry.getValue().getOperations() == 0)
         .filter(entry -> entry.getValue().getSince().compareTo(tooNew) < 0)
+        // Exclude ttl indexes, Ttl monitoring is not tracked as operations
+        .filter(entry -> !entry.getKey().startsWith("validUntil"))
+        // Temporary exclude indexes that coming from Base class. Currently we have no flexibility to enable/disable
+        // such for different objects.
+        .filter(entry -> !entry.getKey().startsWith("appId"))
+        .filter(entry -> !entry.getKey().startsWith("keywords"))
+        .filter(entry -> !entry.getKey().startsWith("createdAt"))
+        // Alert for every index that left:
         .forEach(entry
             -> logger.error(format("(work in progress alert): Index %s.%s is not used at all for more than 7 days",
                 collection.getName(), entry.getKey())));
