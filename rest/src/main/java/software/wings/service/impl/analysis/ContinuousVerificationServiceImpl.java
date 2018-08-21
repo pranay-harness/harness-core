@@ -15,6 +15,7 @@ import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.User;
 import software.wings.common.VerificationConstants;
 import software.wings.dl.PageRequest;
+import software.wings.dl.PageRequest.PageRequestBuilder;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.AppPermissionSummary;
@@ -78,17 +79,26 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       logger.warn("Returning empty results from getCVExecutionMetaData since user was null");
       return results;
     }
-    List<ContinuousVerificationExecutionMetaData> continuousVerificationExecutionMetaData =
-        wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class)
-            .filter("accountId", accountId)
-            .field("workflowStartTs")
-            .greaterThanOrEq(beginEpochTs)
-            .field("workflowStartTs")
-            .lessThan(endEpochTs)
-            .field("applicationId")
-            .in(getAllowedApplicationsForUser(user, accountId))
-            .order("-workflowStartTs, stateStartTs")
-            .asList();
+    PageRequest<ContinuousVerificationExecutionMetaData> request = PageRequestBuilder.aPageRequest()
+                                                                       .addFilter("accountId", Operator.EQ, accountId)
+                                                                       .addOrder("workflowStartTs", OrderType.DESC)
+                                                                       .addOrder("stateStartTs", OrderType.ASC)
+                                                                       .withLimit("500")
+                                                                       .withOffset("0")
+                                                                       .build();
+    request.addFilter("workflowStartTs", Operator.GE, beginEpochTs);
+    request.addFilter("workflowStartTs", Operator.LT, endEpochTs);
+    request.addFilter("applicationId", Operator.IN, getAllowedApplicationsForUser(user, accountId).toArray());
+    int previousOffSet = 0;
+    List<ContinuousVerificationExecutionMetaData> continuousVerificationExecutionMetaData = new ArrayList<>();
+    PageResponse<ContinuousVerificationExecutionMetaData> response =
+        wingsPersistence.query(ContinuousVerificationExecutionMetaData.class, request);
+    while (!response.isEmpty()) {
+      continuousVerificationExecutionMetaData.addAll(response.getResponse());
+      previousOffSet += response.size();
+      request.setOffset(String.valueOf(previousOffSet));
+      response = wingsPersistence.query(ContinuousVerificationExecutionMetaData.class, request);
+    }
 
     Map<String, Long> pipelineTimeStampMap = new HashMap<>();
 

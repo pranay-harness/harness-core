@@ -2,8 +2,7 @@ package software.wings.service.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Sets;
@@ -12,11 +11,12 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mongodb.morphia.query.FieldEnd;
-import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.User;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
+import software.wings.dl.PageResponse.PageResponseBuilder;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
@@ -51,8 +51,6 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
 
   @Mock private AuthService mockAuthService;
   @Mock private WingsPersistence mockWingsPersistence;
-  @Mock private FieldEnd mockField;
-  @Mock private Query<ContinuousVerificationExecutionMetaData> mockQuery;
   @Mock private UserPermissionInfo mockUserPermissionInfo;
   @InjectMocks private ContinuousVerificationServiceImpl cvService;
 
@@ -68,14 +66,10 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
 
     MockitoAnnotations.initMocks(this);
 
-    when(mockWingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class)).thenReturn(mockQuery);
-    when(mockQuery.filter(anyString(), anyObject())).thenReturn(mockQuery);
-    when(mockQuery.order(anyString())).thenReturn(mockQuery);
-    when(mockQuery.field(anyString())).thenReturn(mockField);
-    when(mockField.greaterThanOrEq(anyObject())).thenReturn(mockQuery);
-    when(mockField.lessThan(anyObject())).thenReturn(mockQuery);
-    when(mockField.in(anyObject())).thenReturn(mockQuery);
-    when(mockQuery.asList()).thenReturn(Arrays.asList(getExecutionMetadata()));
+    PageResponse<ContinuousVerificationExecutionMetaData> r =
+        PageResponseBuilder.aPageResponse().withResponse(Arrays.asList(getExecutionMetadata())).build();
+    PageResponse<ContinuousVerificationExecutionMetaData> rEmpty = PageResponseBuilder.aPageResponse().build();
+    when(mockWingsPersistence.query(any(), any(PageRequest.class))).thenReturn(r).thenReturn(rEmpty);
 
     when(mockUserPermissionInfo.getAppPermissionMapInternal()).thenReturn(new HashMap<String, AppPermissionSummary>() {
       { put(appId, buildAppPermissionSummary()); }
