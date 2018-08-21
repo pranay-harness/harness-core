@@ -380,6 +380,13 @@ public class HelmDeployState extends State {
                                            .withErrorMessage(executionResponse.getErrorMessage())
                                            .withStateExecutionData(stateExecutionData);
 
+    if (executionResponse.getHelmCommandResponse() == null) {
+      logger.info("Helm command task failed with status " + executionResponse.getCommandExecutionStatus().toString()
+          + "with error message " + executionResponse.getErrorMessage());
+
+      return executionResponseBuilder.build();
+    }
+
     if (CommandExecutionStatus.SUCCESS.equals(executionResponse.getHelmCommandResponse().getCommandExecutionStatus())) {
       HelmInstallCommandResponse helmInstallCommandResponse =
           (HelmInstallCommandResponse) executionResponse.getHelmCommandResponse();
