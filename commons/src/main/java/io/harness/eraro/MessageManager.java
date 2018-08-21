@@ -39,7 +39,7 @@ public class MessageManager {
   private String prepareMessage(String message, Map<String, Object> params) {
     message = StrSubstitutor.replace(message, params);
     if (message.matches(".*(\\$\\$)*\\$\\{.*")) {
-      logger.error(MessageFormat.format(
+      logger.info(MessageFormat.format(
           "Insufficient parameter from [{0}] in message \"{1}\"", String.join(", ", params.keySet()), message));
     }
     return message;
