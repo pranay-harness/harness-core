@@ -17,6 +17,6 @@ public interface ConstraintRegistry {
     boolean check(List<Consumer> constraintConsumers, Consumer consumer);
   }
 
-  boolean consumerUnblocked(ConstraintId id, ConsumerId consumerId, ExtraCheck extraCheck) throws InvalidStateException;
-  boolean consumerFinished(ConstraintId id, ConsumerId consumerId) throws InvalidStateException;
+  boolean consumerUnblocked(ConstraintId id, ConsumerId consumerId, ExtraCheck extraCheck);
+  boolean consumerFinished(ConstraintId id, ConsumerId consumerId);
 }

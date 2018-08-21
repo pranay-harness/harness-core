@@ -54,18 +54,17 @@ public class InprocConstraintRegistry implements ConstraintRegistry {
   }
 
   @Override
-  public boolean consumerFinished(ConstraintId id, ConsumerId consumerId) throws InvalidStateException {
+  public boolean consumerFinished(ConstraintId id, ConsumerId consumerId) {
     return consumerStateChange(id, consumerId, FINISHED, RUNNING, null);
   }
 
   @Override
-  public boolean consumerUnblocked(ConstraintId id, ConsumerId consumerId, ExtraCheck extraCheck)
-      throws InvalidStateException {
+  public boolean consumerUnblocked(ConstraintId id, ConsumerId consumerId, ExtraCheck extraCheck) {
     return consumerStateChange(id, consumerId, RUNNING, BLOCKED, extraCheck);
   }
 
-  private boolean consumerStateChange(ConstraintId id, ConsumerId consumerId, State newState, State expected,
-      ExtraCheck extraCheck) throws InvalidStateException {
+  private boolean consumerStateChange(
+      ConstraintId id, ConsumerId consumerId, State newState, State expected, ExtraCheck extraCheck) {
     synchronized (consumers) {
       final List<Consumer> constraintConsumers = this.consumers.get(id);
 
@@ -74,8 +73,7 @@ public class InprocConstraintRegistry implements ConstraintRegistry {
         Consumer consumer = iterator.next();
         if (consumer.getId().equals(consumerId)) {
           if (consumer.getState() != expected) {
-            throw new InvalidStateException(String.format(
-                "The consumer %s is not in the expected %s state", consumerId.getValue(), expected.name()));
+            return false;
           }
           if (extraCheck != null && !extraCheck.check(constraintConsumers, consumer)) {
             return false;
