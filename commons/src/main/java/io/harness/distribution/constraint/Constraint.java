@@ -1,17 +1,20 @@
 package io.harness.distribution.constraint;
 
 import static io.harness.distribution.constraint.Constraint.Strategy.ASAP;
+import static io.harness.distribution.constraint.Constraint.Strategy.FIFO;
 import static io.harness.distribution.constraint.Consumer.State.BLOCKED;
 import static io.harness.distribution.constraint.Consumer.State.RUNNING;
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 
 import io.harness.distribution.constraint.Consumer.State;
+import io.harness.distribution.constraint.RunnableConsumers.RunnableConsumersBuilder;
 import io.harness.threading.Morpheus;
 import lombok.Builder;
 import lombok.Value;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -120,15 +123,45 @@ public class Constraint {
     throw new RuntimeException("Unable to update the constraint after 10 attempts.");
   }
 
-  boolean consumerUnblocked(ConsumerId consumerId, int currentlyRunning, ConstraintRegistry registry)
-      throws InvalidStateException {
+  boolean consumerUnblocked(ConsumerId consumerId, int currentlyRunning, ConstraintRegistry registry) {
     return registry.consumerUnblocked(id, consumerId,
         (constraintConsumers, consumer)
             -> enoughPermits(consumer.getPermits(), currentlyRunning)
             && Constraint.getUsedPermits(constraintConsumers) == currentlyRunning);
   }
 
-  boolean consumerFinished(ConsumerId consumerId, ConstraintRegistry registry) throws InvalidStateException {
+  boolean consumerFinished(ConsumerId consumerId, ConstraintRegistry registry) {
     return registry.consumerFinished(id, consumerId);
+  }
+
+  RunnableConsumers runnableConsumers(ConstraintRegistry registry) {
+    final List<Consumer> consumers = registry.loadConsumers(id);
+    int usedPermits = getUsedPermits(consumers);
+
+    final RunnableConsumersBuilder builder = RunnableConsumers.builder().usedPermits(usedPermits);
+
+    List<ConsumerId> consumerIds = new ArrayList<>();
+
+    for (Consumer consumer : consumers) {
+      if (consumer.getState() != BLOCKED) {
+        continue;
+      }
+
+      if (!enoughPermits(consumer.getPermits(), usedPermits)) {
+        final Strategy strategy = getSpec().getStrategy();
+        if (strategy == FIFO) {
+          break;
+        } else if (strategy == ASAP) {
+          continue;
+        } else {
+          unhandled(strategy);
+        }
+      }
+
+      consumerIds.add(consumer.getId());
+      usedPermits += consumer.getPermits();
+    }
+
+    return builder.consumerIds(consumerIds).build();
   }
 }
