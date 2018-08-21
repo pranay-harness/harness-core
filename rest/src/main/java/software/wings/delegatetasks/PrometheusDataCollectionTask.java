@@ -197,7 +197,7 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
             }
           });
         } catch (IOException e) {
-          throw new WingsException("Error fetching metrics", e);
+          throw new WingsException("Exception occured while fetching metrics from Prometheus.", e);
         }
       });
       rv.put(HARNESS_HEARTBEAT_METRIC_NAME, 0L,

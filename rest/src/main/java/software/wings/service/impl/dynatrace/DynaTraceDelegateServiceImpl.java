@@ -79,7 +79,8 @@ public class DynaTraceDelegateServiceImpl implements DynaTraceDelegateService {
       logger.error("Request not successful. Reason: {}, request: {}", response, dataRequest);
       apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
       delegateLogService.save(dynaTraceConfig.getAccountId(), apiCallLog);
-      throw new WingsException(response.errorBody().string());
+      throw new WingsException("Unsuccessful response while fetching data from Dynatrace. Error code: "
+          + response.code() + ". Error: " + response.errorBody());
     }
   }
 

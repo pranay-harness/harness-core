@@ -68,7 +68,8 @@ public class PrometheusDelegateServiceImpl implements PrometheusDelegateService 
       logger.error("Request not successful. Reason: {}, url: {}", response, url);
       apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
       delegateLogService.save(prometheusConfig.getAccountId(), apiCallLog);
-      throw new WingsException(response.errorBody().string());
+      throw new WingsException("Unsuccessful response while fetching data from Prometheus. Error code: "
+          + response.code() + ". Error: " + response.errorBody());
     }
   }
 
