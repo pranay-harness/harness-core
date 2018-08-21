@@ -43,9 +43,7 @@ import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * The type State machine execution simulator test.
@@ -110,9 +108,8 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
     stateMachineExecutionSimulator.setExecutionContextFactory(
         new ExecutionContextFactoryTest(app, env, service, instances));
 
-    Map<String, ExecutionStatus> stateExecutionStatuses = new HashMap<>();
     CountsByStatuses breakdown =
-        stateMachineExecutionSimulator.getStatusBreakdown(app.getUuid(), env.getUuid(), sm, stateExecutionStatuses);
+        stateMachineExecutionSimulator.getStatusBreakdown(app.getUuid(), env.getUuid(), sm, null);
     assertThat(breakdown)
         .isNotNull()
         .extracting("success", "failed", "inprogress", "queued")
@@ -200,11 +197,8 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
                                      .build();
 
     List<StateExecutionInstance> stateMachineExecutionInstances = newArrayList(si1, si2, si3, si4, si5);
-    Map<String, ExecutionStatus> stateExecutionStatuses = new HashMap<>();
-    stateMachineExecutionSimulator.prepareStateExecutionInstanceMap(
-        stateMachineExecutionInstances.iterator(), stateExecutionStatuses);
-    CountsByStatuses breakdown =
-        stateMachineExecutionSimulator.getStatusBreakdown(app.getUuid(), env.getUuid(), sm, stateExecutionStatuses);
+    CountsByStatuses breakdown = stateMachineExecutionSimulator.getStatusBreakdown(
+        app.getUuid(), env.getUuid(), sm, stateMachineExecutionInstances);
     assertThat(breakdown)
         .isNotNull()
         .extracting("success", "failed", "inprogress", "queued")
@@ -311,11 +305,8 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
                                       .build();
 
     List<StateExecutionInstance> stateMachineExecutionInstances = newArrayList(si1, si2, si3, si4, si6, si42, si52);
-    Map<String, ExecutionStatus> stateExecutionStatuses = new HashMap<>();
-    stateMachineExecutionSimulator.prepareStateExecutionInstanceMap(
-        stateMachineExecutionInstances.iterator(), stateExecutionStatuses);
-    CountsByStatuses breakdown =
-        stateMachineExecutionSimulator.getStatusBreakdown(app.getUuid(), env.getUuid(), sm, stateExecutionStatuses);
+    CountsByStatuses breakdown = stateMachineExecutionSimulator.getStatusBreakdown(
+        app.getUuid(), env.getUuid(), sm, stateMachineExecutionInstances);
     assertThat(breakdown)
         .isNotNull()
         .extracting("success", "failed", "inprogress", "queued")
