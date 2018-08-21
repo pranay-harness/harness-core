@@ -2,8 +2,6 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
-import static software.wings.beans.FeatureName.USE_DELAY_QUEUE;
 import static software.wings.beans.artifact.Artifact.ContentStatus;
 import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADED;
 import static software.wings.beans.artifact.Artifact.ContentStatus.FAILED;
@@ -35,7 +33,6 @@ import software.wings.waitnotify.NotifyResponseData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 public class ArtifactCheckState extends State {
   private static final Logger logger = LoggerFactory.getLogger(ArtifactCheckState.class);
@@ -44,6 +41,8 @@ public class ArtifactCheckState extends State {
   @Inject private transient CronUtil cronUtil;
   @Inject private transient DelayEventHelper delayEventHelper;
   @Inject private transient FeatureFlagService featureFlagService;
+
+  private static int DELAY_TIME_IN_SEC = 60;
 
   public ArtifactCheckState(String name) {
     super(name, StateType.ARTIFACT_CHECK.name());
@@ -89,7 +88,8 @@ public class ArtifactCheckState extends State {
       }
       // Artifact needs to be downloaded now
       artifactService.startArtifactCollection(context.getAppId(), artifact.getUuid());
-      correlationIds.add(scheduleWaitNotify(artifact.getUuid()));
+      String resumeId = delayEventHelper.delay(DELAY_TIME_IN_SEC, ImmutableMap.of("artifactId", artifact.getUuid()));
+      correlationIds.add(resumeId);
       artifactNamesForDownload.add(artifact.getDisplayName());
     });
 
@@ -112,16 +112,6 @@ public class ArtifactCheckState extends State {
         .withErrorMessage(
             "All artifacts: " + artifacts.stream().map(Artifact::getDisplayName).collect(toList()) + " are available.")
         .build();
-  }
-
-  private String scheduleWaitNotify(String artifactId) {
-    boolean useDelayQueue = featureFlagService.isEnabled(USE_DELAY_QUEUE, GLOBAL_ACCOUNT_ID);
-    int delayTimeInSec = 60; // every minute
-    if (useDelayQueue) {
-      return delayEventHelper.delay(delayTimeInSec, ImmutableMap.of("artifactId", artifactId));
-    } else {
-      return cronUtil.scheduleReminder(TimeUnit.SECONDS.toMillis(delayTimeInSec), "artifactId", artifactId);
-    }
   }
 
   @Override
@@ -150,7 +140,8 @@ public class ArtifactCheckState extends State {
         return;
       }
 
-      correlationIds.add(scheduleWaitNotify(artifact.getUuid()));
+      String resumeId = delayEventHelper.delay(DELAY_TIME_IN_SEC, ImmutableMap.of("artifactId", artifact.getUuid()));
+      correlationIds.add(resumeId);
       artifactNamesForDownload.add(artifact.getDisplayName());
     });
 

@@ -8,8 +8,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
-import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
-import static software.wings.beans.FeatureName.USE_DELAY_QUEUE;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.common.Constants.DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS;
@@ -33,8 +31,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import org.quartz.JobDetail;
-import org.quartz.Trigger;
 import software.wings.api.ArtifactCollectionExecutionData;
 import software.wings.api.WorkflowElement;
 import software.wings.app.MainConfiguration;
@@ -49,7 +45,6 @@ import software.wings.service.impl.DelayEventHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -73,7 +68,6 @@ public class ArtifactCollectionStateTest {
   @Mock MainConfiguration configuration;
   @Mock PortalConfig portalConfig;
   @Mock VariableProcessor variableProcessor;
-  @Mock FeatureFlagService featureFlagService;
   @Mock DelayEventHelper delayEventHelper;
 
   private ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
@@ -129,17 +123,7 @@ public class ArtifactCollectionStateTest {
   }
 
   @Test
-  public void shouldExecute() {
-    ExecutionResponse executionResponse = artifactCollectionState.execute(executionContext);
-    assertThat(executionResponse).isNotNull().hasFieldOrPropertyWithValue("async", true);
-    verify(artifactStreamService).get(APP_ID, ARTIFACT_STREAM_ID);
-    verify(jobScheduler).scheduleJob(any(JobDetail.class), any(Trigger.class));
-  }
-
-  @Test
   public void shouldExecuteWithDelayQueue() {
-    when(featureFlagService.isEnabled(USE_DELAY_QUEUE, GLOBAL_ACCOUNT_ID)).thenReturn(true);
-
     ExecutionResponse executionResponse = artifactCollectionState.execute(executionContext);
     assertThat(executionResponse).isNotNull().hasFieldOrPropertyWithValue("async", true);
     verify(artifactStreamService).get(APP_ID, ARTIFACT_STREAM_ID);
