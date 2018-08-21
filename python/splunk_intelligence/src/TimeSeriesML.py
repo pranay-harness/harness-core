@@ -132,9 +132,11 @@ class TSAnomlyDetector(object):
                 if metric_template.get_metric_type(metric_name) == MetricType.RESP_TIME\
                          and metric_template.get_metric_name(MetricType.THROUGHPUT) is not None:
                     throughput_metric_name = metric_template.get_metric_name(MetricType.THROUGHPUT)
-                    for host, metric_host_data_dict in metric_data_dict.items():
-                        metric_host_data_dict['data'][np.where(txn_data_dict[throughput_metric_name][host]['data'] == 0)[0]] \
-                            = np.nan
+                    if txn_data_dict.get(throughput_metric_name) is not None:
+                        for host, metric_host_data_dict in metric_data_dict.items():
+                            if txn_data_dict[throughput_metric_name].get(host) is not None:
+                                metric_host_data_dict['data'][np.where(txn_data_dict[throughput_metric_name][host]
+                                                                       ['data'] == 0)[0]] = np.nan
                 if metric_template.get_metric_type(metric_name) == MetricType.THROUGHPUT:
                     for host, metric_host_data_dict in metric_data_dict.items():
                         if np.nansum(metric_host_data_dict['data']) < min_rpm_threshold:
