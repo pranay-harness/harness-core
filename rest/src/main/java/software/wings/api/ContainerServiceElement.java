@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.ResizeStrategy;
 import software.wings.beans.command.KubernetesYamlConfig;
+import software.wings.beans.container.Label;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -44,6 +45,7 @@ public class ContainerServiceElement implements ContextElement {
   private List<String[]> activeServiceCounts;
   private List<String[]> trafficWeights;
   private String controllerNamePrefix;
+  private List<Label> lookupLabels;
 
   @Override
   public ContextElementType getElementType() {
