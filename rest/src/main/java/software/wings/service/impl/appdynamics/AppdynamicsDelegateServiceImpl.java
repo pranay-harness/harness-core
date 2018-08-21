@@ -201,7 +201,9 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
       delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
       logger.info("Request not successful. Reason: {}", tierBTResponse);
       throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
-          .addParam("reason", "could not fetch Appdynamics tier BTs : " + tierBTResponse);
+          .addParam("reason",
+              "Unsuccessful response while fetching tier BTs from AppDynamics. Error code: " + tierBTResponse.code()
+                  + ". Error:" + tierBTResponse.errorBody());
     }
 
     apiCallLog.addFieldToResponse(tierBTResponse.code(), tierBTResponse.body(), FieldType.JSON);
@@ -252,7 +254,9 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
       apiCallLog.addFieldToResponse(tierBTMResponse.code(), tierBTMResponse.errorBody().string(), FieldType.TEXT);
       delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
       throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
-          .addParam("reason", "could not fetch Appdynamics metric data : " + tierBTMResponse);
+          .addParam("reason",
+              "Unsuccessful response while fetching data from AppDynamics. Error code: " + tierBTMResponse.code()
+                  + ". Error message: " + tierBTMResponse.errorBody());
     }
   }
 
@@ -265,7 +269,9 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     if (!tierResponse.isSuccessful()) {
       logger.info("Request not successful. Reason: {}", tierResponse);
       throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
-          .addParam("reason", "could not fetch Appdynamics tier details : " + tierResponse);
+          .addParam("reason",
+              "Unsuccessful response while fetching data from AppDynamics. Error code: " + tierResponse.code()
+                  + ". Error message: " + tierResponse.errorBody());
     }
 
     return tierResponse.body().get(0);
@@ -328,7 +334,8 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
       logger.info("Request not successful. Reason: {}", response);
       apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
       delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
-      throw new WingsException("could not get appdynami's metrics : " + response);
+      throw new WingsException("Unsuccessful response while fetching data from AppDynamics. Error code: "
+          + response.code() + ". Error message: " + response.errorBody());
     }
   }
 
@@ -375,7 +382,8 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
       logger.info("Request not successful. Reason: {}", response);
       apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
       delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
-      throw new WingsException("could not get appdynami's metrics : " + response);
+      throw new WingsException("Unsuccessful response while fetching data from AppDynamics. Error code: "
+          + response.code() + ". Error message: " + response.errorBody());
     }
   }
 

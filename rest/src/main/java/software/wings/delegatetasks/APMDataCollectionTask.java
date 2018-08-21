@@ -263,10 +263,11 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
               response.message());
           apiCallLog.addFieldToResponse(response.code(), response.errorBody(), FieldType.TEXT);
           delegateLogService.save(getAccountId(), apiCallLog);
-          throw new WingsException(response.errorBody().string());
+          throw new WingsException("Unsuccessful response while fetching data from APM Provider. Error code: "
+              + response.code() + ". Error: " + response.errorBody());
         }
       } catch (Exception e) {
-        throw new WingsException("Unable to collect data " + Misc.getMessage(e), e);
+        throw new WingsException("Error while fetching data. " + Misc.getMessage(e), e);
       }
     }
 
