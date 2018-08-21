@@ -382,13 +382,13 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
           if (!(entityFilter instanceof EnvFilter)) {
             return;
           }
+
+          if (entityFilter instanceof WorkflowFilter) {
+            entityFilter = getEnvFilterFromWorkflowFilter((WorkflowFilter) entityFilter);
+          }
         }
 
         GenericEntityFilter appFilter = appPermission.getAppFilter();
-
-        if (entityFilter instanceof WorkflowFilter) {
-          entityFilter = getEnvFilterFromWorkflowFilter((WorkflowFilter) entityFilter);
-        }
 
         AppEnvRestriction appEnvRestriction =
             AppEnvRestriction.builder().appFilter(appFilter).envFilter((EnvFilter) entityFilter).build();
@@ -463,6 +463,10 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   private EnvFilter getEnvFilterFromWorkflowFilter(WorkflowFilter workflowFilter) {
     EnvFilterBuilder envFilterBuilder = EnvFilter.builder();
     Set<String> envFilterTypes = Sets.newHashSet();
+
+    if (isEmpty(workflowFilter.getFilterTypes())) {
+      return envFilterBuilder.build();
+    }
 
     workflowFilter.getFilterTypes().forEach(filterType -> {
       if (filterType.equals(WorkflowFilter.FilterType.TEMPLATES)) {
