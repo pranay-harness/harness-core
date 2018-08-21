@@ -718,6 +718,9 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   @Override
   public NewRelicMetricDataRecord getLastHeartBeat(StateType stateType, String appId, String stateExecutionId,
       String workflowExecutionId, String serviceId, String groupName) {
+    logger.info(
+        "Querying for getLastHeartBeat. Params are: stateType {}, appId {}, stateExecutionId: {}, workflowExecutionId: {} serviceId {}, groupName: {} ",
+        stateType, appId, stateExecutionId, workflowExecutionId, serviceId, groupName);
     NewRelicMetricDataRecord newRelicMetricDataRecord = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
                                                             .filter("stateType", stateType)
                                                             .filter("appId", appId)
@@ -736,14 +739,16 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
           ClusterLevel.HF, stateExecutionId, workflowExecutionId, serviceId);
       return null;
     }
-
+    logger.info("Returning the record {} from getLastHeartBeat", newRelicMetricDataRecord);
     return newRelicMetricDataRecord;
   }
 
   @Override
   public NewRelicMetricDataRecord getAnalysisMinute(StateType stateType, String appId, String stateExecutionId,
       String workflowExecutionId, String serviceId, String groupName) {
-    logger.info("getAnalysisMinute.Get latest analysis minute for record with stateExecutionId {}", stateExecutionId);
+    logger.info(
+        "Querying for getLastHeartBeat. Params are: stateType {}, appId {}, stateExecutionId: {}, workflowExecutionId: {} serviceId {}, groupName: {} ",
+        stateType, appId, stateExecutionId, workflowExecutionId, serviceId, groupName);
     NewRelicMetricDataRecord newRelicMetricDataRecord = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
                                                             .filter("stateType", stateType)
                                                             .filter("appId", appId)
@@ -762,7 +767,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
           ClusterLevel.H0, stateExecutionId, workflowExecutionId, serviceId);
       return null;
     }
-
+    logger.info("Returning the record: {} from getAnalysisMinute", newRelicMetricDataRecord);
     return newRelicMetricDataRecord;
   }
 
