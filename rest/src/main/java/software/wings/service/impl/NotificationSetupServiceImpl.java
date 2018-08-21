@@ -42,6 +42,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -227,6 +228,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
 
     notificationGroups = notificationGroups.stream()
                              .map(notificationGroup -> readNotificationGroup(accountId, notificationGroup.getUuid()))
+                             .filter(Objects::nonNull)
                              .filter(notificationGroup -> notificationGroup.getAddressesByChannelType() != null)
                              .collect(toList());
 

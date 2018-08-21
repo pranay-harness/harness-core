@@ -47,6 +47,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
+
 /**
  * Created by rishi on 10/30/16.
  */
@@ -79,6 +81,7 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
         notificationGroups.stream()
             .map(
                 notificationGroup -> notificationSetupService.readNotificationGroup(appId, notificationGroup.getUuid()))
+            .filter(Objects::nonNull)
             .filter(notificationGroup -> notificationGroup.getAddressesByChannelType() != null)
             .collect(toList());
 
