@@ -27,6 +27,8 @@ import software.wings.utils.BoundedInputStream;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.List;
+import java.util.Map.Entry;
 import javax.annotation.Priority;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -139,10 +141,11 @@ public class AuditRequestFilter implements ContainerRequestFilter {
     return headerStr;
   }
 
-  @SuppressFBWarnings({"SBSC_USE_STRINGBUFFER_CONCATENATION", "WMI_WRONG_MAP_ITERATOR"})
+  @SuppressFBWarnings({"SBSC_USE_STRINGBUFFER_CONCATENATION"})
   private String getQueryParams(MultivaluedMap<String, String> queryParameters) {
     String queryParams = "";
-    for (String key : queryParameters.keySet()) {
+    for (Entry<String, List<String>> entry : queryParameters.entrySet()) {
+      String key = entry.getKey();
       String temp = "";
       for (String value : queryParameters.get(key)) {
         temp += "&" + key + "=" + value;

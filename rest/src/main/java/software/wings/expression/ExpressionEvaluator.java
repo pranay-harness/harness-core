@@ -6,7 +6,6 @@ import static software.wings.exception.WingsException.USER;
 
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.data.algorithm.IdentifierName;
 import org.apache.commons.collections.map.SingletonMap;
 import org.apache.commons.jexl3.JexlBuilder;
@@ -21,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.exception.WingsException;
 
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -179,12 +179,11 @@ public class ExpressionEvaluator {
     return expression;
   }
 
-  @SuppressFBWarnings("WMI_WRONG_MAP_ITERATOR")
   private JexlContext prepareContext(Map<String, Object> context) {
     JexlContext jc = new MapContext();
     if (context != null) {
-      for (String key : context.keySet()) {
-        jc.set(key, context.get(key));
+      for (Entry<String, Object> entry : context.entrySet()) {
+        jc.set(entry.getKey(), entry.getValue());
       }
     }
 

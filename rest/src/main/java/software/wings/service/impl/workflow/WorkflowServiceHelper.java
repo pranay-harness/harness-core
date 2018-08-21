@@ -76,7 +76,6 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import org.slf4j.Logger;
@@ -125,8 +124,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Set;
 
 @Singleton
 public class WorkflowServiceHelper {
@@ -1301,12 +1300,11 @@ public class WorkflowServiceHelper {
     }
   }
 
-  @SuppressFBWarnings("WMI_WRONG_MAP_ITERATOR")
   private List<String> getTemplatizedIds(Map<String, String> workflowVariables, List<String> entityNames) {
     List<String> entityIds = new ArrayList<>();
     if (workflowVariables != null) {
-      Set<String> workflowVariableNames = workflowVariables.keySet();
-      for (String variableName : workflowVariableNames) {
+      for (Entry<String, String> entry : workflowVariables.entrySet()) {
+        String variableName = entry.getKey();
         if (entityNames.contains(variableName)) {
           entityIds.add(workflowVariables.get(variableName));
         }
