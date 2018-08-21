@@ -18,9 +18,9 @@ public class EntityNameValidator implements ConstraintValidator<EntityName, Stri
       Sets.newHashSet(Lists.charactersOf(ALLOWED_CHARS_STRING_DEFAULT));
 
   public static final String ALLOWED_CHARS_SERVICE_VARIABLE_STRING =
-      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
+      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_";
   public static final String ALLOWED_CHARS_SERVICE_VARIABLE_MESSAGE =
-      "Service Variable name can only have a-z, A-Z, 0-9 and _";
+      "Service Variable name can only have a-z, A-Z, 0-9, - and _";
 
   @Override
   public void initialize(EntityName constraintAnnotation) {}
