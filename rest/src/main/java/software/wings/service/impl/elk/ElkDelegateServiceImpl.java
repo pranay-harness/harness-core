@@ -123,7 +123,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
 
     apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
     delegateLogService.save(elkConfig.getAccountId(), apiCallLog);
-    throw new WingsException(response.errorBody().string());
+    throw new WingsException("Unable to get search response - " + response.errorBody().string());
   }
 
   @Override
