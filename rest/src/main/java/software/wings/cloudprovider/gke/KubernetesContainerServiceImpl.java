@@ -757,12 +757,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     String kind = definition.getKind();
     logger.info("Registering {} [{}]", kind, name);
     IstioClient istioClient = kubernetesHelperService.getIstioClient(kubernetesConfig, encryptedDataDetails);
-    try {
-      return istioClient.registerOrUpdateCustomResource(definition);
-    } catch (Exception e) {
-      // Do nothing
-      return null;
-    }
+    return istioClient.registerOrUpdateCustomResource(definition);
   }
 
   @Override
