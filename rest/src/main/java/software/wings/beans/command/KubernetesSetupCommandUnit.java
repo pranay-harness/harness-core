@@ -18,6 +18,7 @@ import static software.wings.beans.command.ContainerResizeCommandUnit.DASH_STRIN
 import static software.wings.beans.container.KubernetesContainerTask.CONFIG_MAP_NAME_PLACEHOLDER_REGEX;
 import static software.wings.beans.container.KubernetesContainerTask.SECRET_MAP_NAME_PLACEHOLDER_REGEX;
 import static software.wings.beans.container.KubernetesServiceType.None;
+import static software.wings.beans.container.Label.Builder.aLabel;
 import static software.wings.common.Constants.HARNESS_APP;
 import static software.wings.common.Constants.HARNESS_ENV;
 import static software.wings.common.Constants.HARNESS_KUBERNETES_APP_LABEL_KEY;
@@ -122,6 +123,7 @@ import software.wings.beans.container.ImageDetails;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.KubernetesServiceSpecification;
 import software.wings.beans.container.KubernetesServiceType;
+import software.wings.beans.container.Label;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
@@ -349,10 +351,16 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
       KubernetesYamlConfig yamlConfig = yamlConfigBuilder.build();
 
+      List<Label> labelArray = new ArrayList<>();
+      for (Map.Entry<String, String> mapEntry : lookupLabels.entrySet()) {
+        labelArray.add(aLabel().withName(mapEntry.getKey()).withValue(mapEntry.getValue()).build());
+      }
+
       commandExecutionDataBuilder.containerServiceName(containerServiceName)
           .previousYamlConfig(yamlConfig)
           .activeServiceCounts(integerMapToListOfStringArray(activeServiceCounts))
-          .trafficWeights(integerMapToListOfStringArray(trafficWeights));
+          .trafficWeights(integerMapToListOfStringArray(trafficWeights))
+          .lookupLabels(labelArray);
 
       // Setup config map
       ConfigMap configMap = prepareConfigMap(kubernetesConfig, encryptedDataDetails, setupParams, containerServiceName,

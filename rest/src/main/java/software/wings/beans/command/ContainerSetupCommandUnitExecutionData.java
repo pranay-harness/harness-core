@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import software.wings.beans.container.Label;
 
 import java.util.List;
 
@@ -20,4 +21,5 @@ public class ContainerSetupCommandUnitExecutionData extends CommandExecutionData
   private List<String[]> trafficWeights;
   private KubernetesYamlConfig previousYamlConfig;
   private String autoscalerYaml;
+  private List<Label> lookupLabels;
 }

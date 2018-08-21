@@ -5,11 +5,15 @@ import static software.wings.beans.command.KubernetesResizeParams.KubernetesResi
 import static software.wings.sm.StateType.KUBERNETES_DEPLOY;
 
 import org.apache.commons.lang3.StringUtils;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.command.ContainerApiVersions;
 import software.wings.beans.command.ContainerResizeParams;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
+
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Created by brett on 3/1/17
@@ -84,6 +88,14 @@ public class KubernetesDeploy extends ContainerServiceDeploy {
     Integer trafficPercent =
         isNotBlank(getTrafficPercent()) ? Integer.valueOf(context.renderExpression(getTrafficPercent())) : null;
 
+    boolean useNewLabelMechanism =
+        featureFlagService.isEnabled(FeatureName.USE_NEW_K8S_LABEL_MECHANISM, contextData.app.getAccountId());
+
+    Map<String, String> labelMap = (contextData.containerElement.getLookupLabels() != null)
+        ? contextData.containerElement.getLookupLabels().stream().collect(
+              Collectors.toMap(label -> label.getName(), label -> label.getValue()))
+        : null;
+
     return aKubernetesResizeParams()
         .withClusterName(contextData.containerElement.getClusterName())
         .withNamespace(contextData.containerElement.getNamespace())
@@ -108,6 +120,8 @@ public class KubernetesDeploy extends ContainerServiceDeploy {
         .withDownsizeInstanceCount(contextData.downsizeInstanceCount)
         .withDownsizeInstanceUnitType(getDownsizeInstanceUnitType())
         .withTrafficPercent(trafficPercent)
+        .withUseNewLabelMechanism(useNewLabelMechanism)
+        .withLookupLabels(labelMap)
         .build();
   }
 
