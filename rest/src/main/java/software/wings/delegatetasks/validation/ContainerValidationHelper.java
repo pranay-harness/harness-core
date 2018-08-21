@@ -72,7 +72,8 @@ public class ContainerValidationHelper {
     SettingValue value = containerServiceParams.getSettingAttribute().getValue();
     if (value instanceof AwsConfig) {
       String region = containerServiceParams.getRegion();
-      return region == null ? ALWAYS_TRUE_CRITERIA : "AWS:" + region;
+      String cluster = containerServiceParams.getClusterName();
+      return "ECS Cluster: " + cluster + ", " + getAwsRegionCriteria(region);
     } else if (value instanceof KubernetesClusterConfig) {
       KubernetesClusterConfig kubernetesClusterConfig = (KubernetesClusterConfig) value;
       if (kubernetesClusterConfig.isUseKubernetesDelegate()) {
@@ -119,5 +120,9 @@ public class ContainerValidationHelper {
       }
     }
     return kubernetesConfig.getMasterUrl();
+  }
+
+  private String getAwsRegionCriteria(String region) {
+    return region == null ? ALWAYS_TRUE_CRITERIA : "AWS Region: " + region;
   }
 }
