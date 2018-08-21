@@ -22,7 +22,7 @@ public interface ElkDelegateService {
 
   @DelegateTaskType(TaskType.ELK_GET_HOST_RECORDS)
   Object search(@NotNull ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      ElkLogFetchRequest logFetchRequest, ThirdPartyApiCallLog apiCallLog) throws IOException;
+      ElkLogFetchRequest logFetchRequest, ThirdPartyApiCallLog apiCallLog, int maxRecords) throws IOException;
 
   @DelegateTaskType(TaskType.ELK_COLLECT_INDICES)
   Map<String, ElkIndexTemplate> getIndices(ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails,

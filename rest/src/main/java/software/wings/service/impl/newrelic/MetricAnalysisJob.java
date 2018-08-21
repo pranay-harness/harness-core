@@ -241,31 +241,12 @@ public class MetricAnalysisJob implements Job {
             + context.getStateExecutionId() + ". Please contact the Harness support team. ");
       }
       int analysisStartMin = getAnalysisStartMinute(analysisMinute, mlAnalysisType);
-      String testInputUrl = "/api/" + MetricDataAnalysisService.RESOURCE_URL
-          + "/get-metrics?accountId=" + context.getAccountId() + "&appId=" + context.getAppId()
-          + "&stateType=" + context.getStateType() + "&workflowExecutionId=" + context.getWorkflowExecutionId()
-          + "&groupName=" + groupName + "&compareCurrent=true";
-      String controlInputUrl = "/api/" + MetricDataAnalysisService.RESOURCE_URL
-          + "/get-metrics?accountId=" + context.getAccountId() + "&appId=" + context.getAppId()
-          + "&stateType=" + context.getStateType() + "&groupName=" + groupName + "&compareCurrent=";
-      if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
-        controlInputUrl = controlInputUrl + true + "&workflowExecutionId=" + context.getWorkflowExecutionId();
-      } else {
-        controlInputUrl = controlInputUrl + false + "&workflowExecutionId=" + context.getPrevWorkflowExecutionId();
-      }
 
+      String testInputUrl = getTestInputUrl(groupName);
+      String controlInputUrl = getControlInputUrl(groupName);
       String uuid = generateUuid();
-
-      String metricAnalysisSaveUrl = "/api/" + MetricDataAnalysisService.RESOURCE_URL
-          + "/save-analysis?accountId=" + context.getAccountId() + "&stateType=" + context.getStateType()
-          + "&applicationId=" + context.getAppId() + "&workflowExecutionId=" + context.getWorkflowExecutionId()
-          + "&stateExecutionId=" + context.getStateExecutionId() + "&analysisMinute=" + analysisMinute
-          + "&taskId=" + uuid + "&serviceId=" + context.getServiceId() + "&workflowId=" + context.getWorkflowId()
-          + "&groupName=" + groupName;
-
-      if (!isEmpty(context.getPrevWorkflowExecutionId())) {
-        metricAnalysisSaveUrl += "&baseLineExecutionId=" + context.getPrevWorkflowExecutionId();
-      }
+      String metricAnalysisSaveUrl = getMetricAnalysisSaveUrl(
+          MetricDataAnalysisService.RESOURCE_URL, "/save-analysis", uuid, groupName, analysisMinute);
 
       LearningEngineAnalysisTask learningEngineAnalysisTask =
           LearningEngineAnalysisTask.builder()
@@ -500,29 +481,15 @@ public class MetricAnalysisJob implements Job {
      */
     private void createExperimentalTask(int analysisMinute, String groupName, TimeSeriesMlAnalysisType mlAnalysisType) {
       String uuid = generateUuid();
-      String testInputUrl = "/api/" + MetricDataAnalysisService.RESOURCE_URL
-          + "/get-metrics?accountId=" + context.getAccountId() + "&appId=" + context.getAppId()
-          + "&stateType=" + context.getStateType() + "&workflowExecutionId=" + context.getWorkflowExecutionId()
-          + "&groupName=" + groupName + "&compareCurrent=true";
-      String controlInputUrl = "/api/" + MetricDataAnalysisService.RESOURCE_URL
-          + "/get-metrics?accountId=" + context.getAccountId() + "&appId=" + context.getAppId()
-          + "&stateType=" + context.getStateType() + "&groupName=" + groupName + "&compareCurrent=";
-      if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
-        controlInputUrl = controlInputUrl + true + "&workflowExecutionId=" + context.getWorkflowExecutionId();
-      } else {
-        controlInputUrl = controlInputUrl + false + "&workflowExecutionId=" + context.getPrevWorkflowExecutionId();
-      }
+      String testInputUrl = getTestInputUrl(groupName);
+      String controlInputUrl = getControlInputUrl(groupName);
 
       int analysisStartMin =
           analysisMinute > COMPARATIVE_ANALYSIS_DURATION ? analysisMinute - COMPARATIVE_ANALYSIS_DURATION : 0;
 
-      String experimentalMetricAnalysisSaveUrl = "/api/" + ExperimentalMetricAnalysisResource.LEARNING_EXP_URL
-          + ExperimentalMetricAnalysisResource.ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL
-          + "?accountId=" + context.getAccountId() + "&stateType=" + context.getStateType()
-          + "&applicationId=" + context.getAppId() + "&workflowExecutionId=" + context.getWorkflowExecutionId()
-          + "&stateExecutionId=" + context.getStateExecutionId() + "&analysisMinute=" + analysisMinute
-          + "&taskId=" + uuid + "&serviceId=" + context.getServiceId() + "&workflowId=" + context.getWorkflowId()
-          + "&groupName=" + groupName;
+      String experimentalMetricAnalysisSaveUrl = getMetricAnalysisSaveUrl(
+          ExperimentalMetricAnalysisResource.LEARNING_EXP_URL,
+          ExperimentalMetricAnalysisResource.ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL, uuid, groupName, analysisMinute);
 
       if (!isEmpty(context.getPrevWorkflowExecutionId())) {
         experimentalMetricAnalysisSaveUrl += "&baseLineExecutionId=" + context.getPrevWorkflowExecutionId();
@@ -623,6 +590,39 @@ public class MetricAnalysisJob implements Job {
         }
       });
       return rv;
+    }
+
+    private String getMetricAnalysisSaveUrl(
+        String resourceUrl, String saveApiName, String uuid, String groupName, int analysisMinute) {
+      String metricAnalysisSaveUrl = "/api/" + resourceUrl + saveApiName + "?accountId=" + context.getAccountId()
+          + "&stateType=" + context.getStateType() + "&applicationId=" + context.getAppId() + "&workflowExecutionId="
+          + context.getWorkflowExecutionId() + "&stateExecutionId=" + context.getStateExecutionId()
+          + "&analysisMinute=" + analysisMinute + "&taskId=" + uuid + "&serviceId=" + context.getServiceId()
+          + "&workflowId=" + context.getWorkflowId() + "&groupName=" + groupName;
+
+      if (!isEmpty(context.getPrevWorkflowExecutionId())) {
+        metricAnalysisSaveUrl += "&baseLineExecutionId=" + context.getPrevWorkflowExecutionId();
+      }
+      return metricAnalysisSaveUrl;
+    }
+
+    private String getControlInputUrl(String groupName) {
+      String controlInputUrl = "/api/" + MetricDataAnalysisService.RESOURCE_URL
+          + "/get-metrics?accountId=" + context.getAccountId() + "&appId=" + context.getAppId()
+          + "&stateType=" + context.getStateType() + "&groupName=" + groupName + "&compareCurrent=";
+      if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
+        controlInputUrl = controlInputUrl + true + "&workflowExecutionId=" + context.getWorkflowExecutionId();
+      } else {
+        controlInputUrl = controlInputUrl + false + "&workflowExecutionId=" + context.getPrevWorkflowExecutionId();
+      }
+
+      return controlInputUrl;
+    }
+
+    private String getTestInputUrl(String groupName) {
+      return "/api/" + MetricDataAnalysisService.RESOURCE_URL + "/get-metrics?accountId=" + context.getAccountId()
+          + "&appId=" + context.getAppId() + "&stateType=" + context.getStateType() + "&workflowExecutionId="
+          + context.getWorkflowExecutionId() + "&groupName=" + groupName + "&compareCurrent=true";
     }
   }
 }

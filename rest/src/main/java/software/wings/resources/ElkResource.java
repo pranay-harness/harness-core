@@ -12,11 +12,14 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.RestResponse;
 import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
+import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.elk.ElkIndexTemplate;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
 import software.wings.service.impl.elk.ElkQueryType;
+import software.wings.service.impl.elk.ElkSetupTestNodeData;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.sm.StateType;
@@ -26,7 +29,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import javax.validation.Valid;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -115,5 +120,24 @@ public class ElkResource implements LogAnalysisResource {
     } catch (Exception ex) {
       throw new WingsException(ErrorCode.ELK_CONFIGURATION_ERROR).addParam("reason", Misc.getMessage(ex));
     }
+  }
+
+  /**
+   * API to get log Records based on provided node data.
+   *
+   * @param accountId : account id.
+   * @param elkSetupTestNodeData : configuration details for test node.
+   * @return {@link VerificationNodeDataSetupResponse}
+   */
+  @POST
+  @Path(LogAnalysisResource.TEST_NODE_DATA)
+  @Timed
+  @DelegateAuth
+  @ExceptionMetered
+  public RestResponse<VerificationNodeDataSetupResponse> getLogRecords(
+      @QueryParam("accountId") String accountId, @Valid ElkSetupTestNodeData elkSetupTestNodeData) {
+    logger.info("Fetching log Records for verification for accountId : " + accountId
+        + " and ElkSetupTestNodeData :" + elkSetupTestNodeData);
+    return new RestResponse<>(analysisService.getLogDataByHost(accountId, elkSetupTestNodeData));
   }
 }

@@ -59,6 +59,8 @@ import javax.net.ssl.X509TrustManager;
  * Created by rsingh on 8/01/17.
  */
 public class ElkDelegateServiceImpl implements ElkDelegateService {
+  public static final int MAX_RECORDS = 10000;
+
   private static final Logger logger = LoggerFactory.getLogger(ElkDelegateServiceImpl.class);
 
   @Inject private EncryptionService encryptionService;
@@ -83,7 +85,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
 
   @Override
   public Object search(ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      ElkLogFetchRequest logFetchRequest, ThirdPartyApiCallLog apiCallLog) throws IOException {
+      ElkLogFetchRequest logFetchRequest, ThirdPartyApiCallLog apiCallLog, int maxRecords) throws IOException {
     if (apiCallLog == null) {
       apiCallLog = apiCallLogWithDummyStateExecution(elkConfig.getAccountId());
     }
@@ -112,7 +114,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
               .getLogSample(format(KibanaRestClient.searchPathPattern, logFetchRequest.getIndices(), 10000),
                   KibanaRestClient.searchMethod, logFetchRequest.toElasticSearchJsonObject())
         : getElkRestClient(elkConfig, encryptedDataDetails)
-              .search(logFetchRequest.getIndices(), logFetchRequest.toElasticSearchJsonObject());
+              .search(logFetchRequest.getIndices(), logFetchRequest.toElasticSearchJsonObject(), maxRecords);
     final Response<Object> response = request.execute();
     apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     if (response.isSuccessful()) {

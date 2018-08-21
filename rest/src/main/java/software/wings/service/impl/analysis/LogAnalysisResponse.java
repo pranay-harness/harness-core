@@ -1,13 +1,13 @@
 package software.wings.service.impl.analysis;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.ExecutionStatusData;
+
+import java.util.Objects;
 
 /**
  * Created by rsingh on 5/26/17.
  */
-@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 public class LogAnalysisResponse extends ExecutionStatusData {
   private LogAnalysisExecutionData logAnalysisExecutionData;
 
@@ -17,6 +17,23 @@ public class LogAnalysisResponse extends ExecutionStatusData {
 
   public void setLogAnalysisExecutionData(LogAnalysisExecutionData logAnalysisExecutionData) {
     this.logAnalysisExecutionData = logAnalysisExecutionData;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(logAnalysisExecutionData);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    final LogAnalysisResponse other = (LogAnalysisResponse) obj;
+    return Objects.equals(this.logAnalysisExecutionData, other.logAnalysisExecutionData);
   }
 
   public static final class Builder {

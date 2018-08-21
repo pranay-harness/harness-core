@@ -19,6 +19,7 @@ import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollect
 import software.wings.service.impl.analysis.LogDataCollectionInfo;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
+import software.wings.service.impl.elk.ElkDelegateServiceImpl;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
 import software.wings.service.impl.logz.LogzDataCollectionInfo;
 import software.wings.service.intfc.elk.ElkDelegateService;
@@ -127,7 +128,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                   logger.info("running elk query: " + JsonUtils.asJson(elkFetchRequest.toElasticSearchJsonObject()));
                   searchResponse = elkDelegateService.search(elkDataCollectionInfo.getElkConfig(),
                       elkDataCollectionInfo.getEncryptedDataDetails(), elkFetchRequest,
-                      createApiCallLog(dataCollectionInfo.getStateExecutionId()));
+                      createApiCallLog(dataCollectionInfo.getStateExecutionId()), ElkDelegateServiceImpl.MAX_RECORDS);
                   hostnameField = elkDataCollectionInfo.getHostnameField();
                   messageField = elkDataCollectionInfo.getMessageField();
                   timestampField = elkDataCollectionInfo.getTimestampField();

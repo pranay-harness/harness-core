@@ -65,4 +65,9 @@ public interface LogAnalysisResource {
   String ELK_VALIDATE_QUERY = "/validate-query";
 
   String LAST_EXECUTION_NODES = "/last-execution-nodes";
+
+  /**
+   * url to Test configuration. fetches host and without host data
+   */
+  String TEST_NODE_DATA = "/node-data";
 }

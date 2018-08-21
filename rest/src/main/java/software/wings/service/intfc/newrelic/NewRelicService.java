@@ -27,7 +27,6 @@ public interface NewRelicService {
   List<NewRelicMetric> getTxnsWithData(String settingId, long applicationId, long instanceId);
   VerificationNodeDataSetupResponse getMetricsWithDataForNode(
       @NotNull String settingId, long newRelicApplicationId, long instanceId, long fromTime, long toTime);
-
   RestResponse<VerificationNodeDataSetupResponse> getMetricsWithDataForNode(
       NewRelicSetupTestNodeData newRelicSetupTestNodeData);
 }
