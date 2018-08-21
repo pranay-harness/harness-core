@@ -172,6 +172,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                     timestampFieldFormat, hostnameField, hostName, messageField, logCollectionMinute, true);
               } catch (Exception pe) {
                 retry = RETRIES;
+                taskResult.setErrorMessage(Misc.getMessage(pe));
                 throw pe;
               }
               /**
