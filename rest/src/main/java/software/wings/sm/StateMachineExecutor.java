@@ -2,7 +2,6 @@ package software.wings.sm;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.threading.Morpheus.quietSleep;
 import static java.lang.String.format;
@@ -11,11 +10,9 @@ import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.STATE_NOT_FOR_TYPE;
 import static software.wings.beans.ExecutionScope.WORKFLOW;
-import static software.wings.beans.FeatureName.USE_DELAY_QUEUE;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.ReadPref.CRITICAL;
 import static software.wings.beans.ReadPref.NORMAL;
@@ -63,10 +60,6 @@ import lombok.Getter;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
-import org.quartz.JobBuilder;
-import org.quartz.JobDetail;
-import org.quartz.Trigger;
-import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
@@ -87,7 +80,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.exception.WingsExceptionMapper;
-import software.wings.scheduler.NotifyJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.DelayEventHelper;
 import software.wings.service.impl.ExecutionLogContext;
@@ -432,7 +424,7 @@ public class StateMachineExecutor {
       if (!updated) {
         throw new WingsException("updateStateExecutionData failed");
       }
-      String resumeId = scheduleWaitNotify(currentState.getWaitInterval());
+      String resumeId = delayEventHelper.delay(currentState.getWaitInterval(), Collections.emptyMap());
       waitNotifyEngine.waitForAll(new ExecutionWaitCallback(stateExecutionInstance.getAppId(),
                                       stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getUuid()),
           resumeId);
@@ -622,7 +614,7 @@ public class StateMachineExecutor {
       case RETRY: {
         if (executionEventAdvice.getWaitInterval() != null && executionEventAdvice.getWaitInterval() > 0) {
           logger.info("Retry Wait Interval : {}", executionEventAdvice.getWaitInterval());
-          String resumeId = scheduleWaitNotify(executionEventAdvice.getWaitInterval());
+          String resumeId = delayEventHelper.delay(executionEventAdvice.getWaitInterval(), Collections.emptyMap());
           waitNotifyEngine.waitForAll(new ExecutionWaitRetryCallback(stateExecutionInstance.getAppId(),
                                           stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getUuid()),
               resumeId);
@@ -700,31 +692,6 @@ public class StateMachineExecutor {
     } catch (Exception e) {
       logger.warn("Failed to open ManualInterventionNeeded alarm for executionId {} and name {}",
           context.getWorkflowExecutionId(), context.getWorkflowExecutionName(), e);
-    }
-  }
-
-  private String scheduleWaitNotify(int waitInterval) {
-    boolean useDelayQueue = featureFlagService.isEnabled(USE_DELAY_QUEUE, GLOBAL_ACCOUNT_ID);
-
-    if (useDelayQueue) {
-      return delayEventHelper.delay(waitInterval, Collections.emptyMap());
-    } else {
-      String resumeId = generateUuid();
-      long wakeupTs = System.currentTimeMillis() + (waitInterval * 1000);
-      JobDetail job = JobBuilder.newJob(NotifyJob.class)
-                          .withIdentity(resumeId, Constants.WAIT_RESUME_GROUP)
-                          .usingJobData("correlationId", resumeId)
-                          .usingJobData("executionStatus", SUCCESS.name())
-                          .build();
-      Trigger trigger = TriggerBuilder.newTrigger()
-                            .withIdentity(resumeId, Constants.WAIT_RESUME_GROUP)
-                            .startAt(new Date(wakeupTs))
-                            .forJob(job)
-                            .build();
-      jobScheduler.scheduleJob(job, trigger);
-
-      logger.info("ExecutionWaitCallback job scheduled - waitInterval: {}", waitInterval);
-      return resumeId;
     }
   }
 
