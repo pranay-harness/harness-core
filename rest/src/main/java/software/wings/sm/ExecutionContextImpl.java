@@ -11,7 +11,6 @@ import static software.wings.sm.ContextElement.SERVICE_VARIABLE;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -42,6 +41,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Random;
 import java.util.regex.Matcher;
@@ -385,11 +385,11 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     return evaluate(sb.toString(), normalizedExpressionMap, context, defaultObjectPrefix);
   }
 
-  @SuppressFBWarnings("WMI_WRONG_MAP_ITERATOR")
   private Object evaluate(String expr, Map<String, String> normalizedExpressionMap, Map<String, Object> context,
       String defaultObjectPrefix) {
     Map<String, Object> evaluatedValueMap = new HashMap<>();
-    for (String key : normalizedExpressionMap.keySet()) {
+    for (Entry<String, String> entry : normalizedExpressionMap.entrySet()) {
+      String key = entry.getKey();
       Object val = evaluator.evaluate(normalizedExpressionMap.get(key), context);
       if (val instanceof String) {
         String valStr = (String) val;

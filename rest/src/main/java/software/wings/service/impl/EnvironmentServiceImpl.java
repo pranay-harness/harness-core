@@ -89,8 +89,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.Set;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 /**
@@ -669,9 +669,9 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @SuppressFBWarnings("WMI_WRONG_MAP_ITERATOR") // TODO
   private void validateServiceMapping(String appId, String targetAppId, Map<String, String> serviceMapping) {
     if (serviceMapping != null) {
-      Set<String> serviceIds = serviceMapping.keySet();
-      for (String serviceId : serviceIds) {
-        String targetServiceId = serviceMapping.get(serviceId);
+      for (Entry<String, String> entry : serviceMapping.entrySet()) {
+        String serviceId = entry.getKey();
+        String targetServiceId = entry.getValue();
         if (serviceId != null && targetServiceId != null) {
           Service oldService = serviceResourceService.get(appId, serviceId, false);
           notNullCheck("service", oldService, USER);
