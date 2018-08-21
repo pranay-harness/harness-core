@@ -48,6 +48,7 @@ import software.wings.exception.WingsException;
 import software.wings.metrics.RiskLevel;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.DelegateServiceImpl;
+import software.wings.service.impl.elk.ElkDelegateServiceImpl;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
 import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
@@ -981,7 +982,7 @@ public class AnalysisServiceImpl implements AnalysisService {
           SyncTaskContext elkTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
           searchResponse = delegateProxyFactory.get(ElkDelegateService.class, elkTaskContext)
                                .search((ElkConfig) settingAttribute.getValue(), encryptedDataDetails, elkFetchRequest,
-                                   apiCallLogWithDummyStateExecution(accountId));
+                                   apiCallLogWithDummyStateExecution(accountId), ElkDelegateServiceImpl.MAX_RECORDS);
           break;
         case LOGZ:
           errorCode = ErrorCode.LOGZ_CONFIGURATION_ERROR;

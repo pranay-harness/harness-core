@@ -1,14 +1,10 @@
 package software.wings.service.impl.newrelic;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
-import static software.wings.sm.ExecutionStatus.SUCCESS;
 
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import org.mongodb.morphia.query.Sort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.APMFetchConfig;
@@ -24,7 +20,6 @@ import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.WorkflowExecution;
 import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
@@ -32,6 +27,7 @@ import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.APMDelegateService;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
+import software.wings.service.impl.apm.MLServiceUtil;
 import software.wings.service.impl.newrelic.NewRelicApplication.NewRelicApplications;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
@@ -40,9 +36,7 @@ import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.service.intfc.prometheus.PrometheusDelegateService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextFactory;
-import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.utils.CacheHelper;
 import software.wings.utils.Misc;
@@ -63,6 +57,8 @@ public class NewRelicServiceImpl implements NewRelicService {
   @Inject private CacheHelper cacheHelper;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutionContextFactory executionContextFactory;
+  @Inject private MLServiceUtil mlServiceUtil;
+
   @Override
   public void validateAPMConfig(SettingAttribute settingAttribute, APMValidateCollectorConfig config) {
     try {
@@ -250,30 +246,7 @@ public class NewRelicServiceImpl implements NewRelicService {
   @Override
   public RestResponse<VerificationNodeDataSetupResponse> getMetricsWithDataForNode(
       NewRelicSetupTestNodeData setupTestNodeData) {
-    WorkflowExecution workflowExecution = wingsPersistence.createQuery(WorkflowExecution.class)
-                                              .filter("appId", setupTestNodeData.getAppId())
-                                              .filter("workflowId", setupTestNodeData.getWorkflowId())
-                                              .filter("status", SUCCESS)
-                                              .order(Sort.descending("createdAt"))
-                                              .get();
-
-    if (workflowExecution == null) {
-      throw new WingsException(ErrorCode.APM_CONFIGURATION_ERROR)
-          .addParam("reason", "No successful execution exists for the workflow.");
-    }
-
-    StateExecutionInstance stateExecutionInstance = wingsPersistence.createQuery(StateExecutionInstance.class)
-                                                        .filter("executionUuid", workflowExecution.getUuid())
-                                                        .filter("stateType", StateType.PHASE)
-                                                        .order(Sort.descending("createdAt"))
-                                                        .get();
-    ExecutionContext executionContext = executionContextFactory.createExecutionContext(stateExecutionInstance, null);
-    String hostName = isEmpty(setupTestNodeData.getHostExpression())
-        ? setupTestNodeData.getInstanceName()
-        : executionContext.renderExpression(
-              setupTestNodeData.getHostExpression(), Lists.newArrayList(setupTestNodeData.getInstanceElement()));
-    logger.info("rendered host is {}", hostName);
-
+    String hostName = mlServiceUtil.getHostNameFromExpression(setupTestNodeData);
     List<NewRelicApplicationInstance> applicationInstances = getApplicationInstances(
         setupTestNodeData.getSettingId(), setupTestNodeData.getNewRelicAppId(), StateType.NEW_RELIC);
     long instanceId = -1;
