@@ -43,10 +43,12 @@ import software.wings.exception.InvalidRequestException;
 import software.wings.expression.ExpressionEvaluator;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
+import software.wings.service.impl.aws.model.AwsCFTemplateParamsData;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.aws.manager.AwsCFHelperServiceManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.utils.Misc;
@@ -68,6 +70,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @Inject InfrastructureMappingService infrastructureMappingService;
   @Inject ServiceResourceService serviceResourceService;
   @Inject SettingsService settingService;
+  @Inject AwsCFHelperServiceManager awsCFHelperServiceManager;
 
   @Inject private WingsPersistence wingsPersistence;
 
@@ -325,5 +328,11 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
             });
       }
     }
+  }
+
+  @Override
+  public List<AwsCFTemplateParamsData> getCFTemplateParamKeys(
+      String type, String region, String awsConfigId, String data) {
+    return awsCFHelperServiceManager.getParamsData(type, data, awsConfigId, region);
   }
 }
