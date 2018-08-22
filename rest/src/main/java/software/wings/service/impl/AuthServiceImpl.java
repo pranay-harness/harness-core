@@ -37,7 +37,6 @@ import com.nimbusds.jose.JWEDecrypter;
 import com.nimbusds.jose.KeyLengthException;
 import com.nimbusds.jose.crypto.DirectDecrypter;
 import com.nimbusds.jwt.EncryptedJWT;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
@@ -312,7 +311,6 @@ public class AuthServiceImpl implements AuthService {
     }
   }
 
-  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   @Override
   public void validateDelegateToken(String accountId, String tokenString) {
     logger.info("Delegate token validation, account id [{}] token requested", accountId);
@@ -330,7 +328,7 @@ public class AuthServiceImpl implements AuthService {
       throw new WingsException(INVALID_TOKEN);
     }
 
-    byte[] encodedKey = new byte[0];
+    byte[] encodedKey;
     try {
       encodedKey = Hex.decodeHex(account.getAccountKey().toCharArray());
     } catch (DecoderException e) {
@@ -338,7 +336,7 @@ public class AuthServiceImpl implements AuthService {
       throw new WingsException(DEFAULT_ERROR_CODE); // ShouldNotHappen
     }
 
-    JWEDecrypter decrypter = null;
+    JWEDecrypter decrypter;
     try {
       decrypter = new DirectDecrypter(new SecretKeySpec(encodedKey, 0, encodedKey.length, "AES"));
     } catch (KeyLengthException e) {

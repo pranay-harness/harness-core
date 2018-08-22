@@ -14,7 +14,6 @@ import static software.wings.exception.WingsException.USER;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Account;
@@ -31,6 +30,7 @@ import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.Validator;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -77,8 +77,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     return res;
   }
 
-  @SuppressFBWarnings("SIC_INNER_SHOULD_BE_STATIC")
-  private class UserGroupComparator implements Comparator<UserGroup> {
+  private static class UserGroupComparator implements Comparator<UserGroup>, Serializable {
     @Override
     public int compare(UserGroup lhs, UserGroup rhs) {
       return lhs.getName().compareToIgnoreCase(rhs.getName());

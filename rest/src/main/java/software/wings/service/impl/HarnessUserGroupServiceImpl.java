@@ -12,7 +12,6 @@ import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -28,6 +27,7 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.HarnessUserGroupService;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -101,8 +101,7 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
     return Collections.emptyList();
   }
 
-  @SuppressFBWarnings("SIC_INNER_SHOULD_BE_STATIC")
-  private class AccountComparator implements Comparator<Account> {
+  private static class AccountComparator implements Comparator<Account>, Serializable {
     @Override
     public int compare(Account lhs, Account rhs) {
       return lhs.getAccountName().compareToIgnoreCase(rhs.getAccountName());

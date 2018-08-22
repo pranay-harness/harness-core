@@ -53,7 +53,6 @@ import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.exceptions.SignatureVerificationException;
-import com.auth0.jwt.interfaces.DecodedJWT;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSObject;
@@ -70,7 +69,6 @@ import org.apache.http.client.utils.URIBuilder;
 import org.mindrot.jbcrypt.BCrypt;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
@@ -560,7 +558,6 @@ public class UserServiceImpl implements UserService {
         UserInvite.class, aPageRequest().addFilter("accountId", EQ, accountId).addFilter("uuid", EQ, inviteId).build());
   }
 
-  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   @Override
   public UserInvite completeInvite(UserInvite userInvite) {
     UserInvite existingInvite = getInvite(userInvite.getAccountId(), userInvite.getUuid());
@@ -628,7 +625,6 @@ public class UserServiceImpl implements UserService {
     return true;
   }
 
-  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   @Override
   public boolean updatePassword(String resetPasswordToken, char[] password) {
     String jwtPasswordSecret = configuration.getPortal().getJwtPasswordSecret();
@@ -639,7 +635,7 @@ public class UserServiceImpl implements UserService {
     try {
       Algorithm algorithm = Algorithm.HMAC256(jwtPasswordSecret);
       JWTVerifier verifier = JWT.require(algorithm).withIssuer("Harness Inc").build();
-      DecodedJWT jwt = verifier.verify(resetPasswordToken);
+      verifier.verify(resetPasswordToken);
       JWT decode = JWT.decode(resetPasswordToken);
       String email = decode.getClaim("email").asString();
       resetUserPassword(email, password, decode.getIssuedAt().getTime());
@@ -1116,18 +1112,16 @@ public class UserServiceImpl implements UserService {
         existingUser, account, Lists.newArrayList(roleService.getAccountAdminRole(account.getUuid())));
   }
 
-  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   private User addAccountRoles(User existingUser, Account account, List<Role> roles) {
-    UpdateResults updated = wingsPersistence.update(wingsPersistence.createQuery(User.class)
-                                                        .filter("email", existingUser.getEmail())
-                                                        .filter("appId", existingUser.getAppId()),
+    wingsPersistence.update(wingsPersistence.createQuery(User.class)
+                                .filter("email", existingUser.getEmail())
+                                .filter("appId", existingUser.getAppId()),
         wingsPersistence.createUpdateOperations(User.class).addToSet("accounts", account).addToSet("roles", roles));
     return existingUser;
   }
 
-  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   private User addRoles(User user, List<Role> roles) {
-    UpdateResults updated = wingsPersistence.update(
+    wingsPersistence.update(
         wingsPersistence.createQuery(User.class).filter("email", user.getEmail()).filter("appId", user.getAppId()),
         wingsPersistence.createUpdateOperations(User.class).addToSet("roles", roles));
     return user;

@@ -43,7 +43,6 @@ import com.google.inject.name.Named;
 
 import de.danielbechler.diff.ObjectDifferBuilder;
 import de.danielbechler.diff.node.DiffNode;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.validator.EntityNameValidator;
 import io.harness.validation.Create;
@@ -1109,19 +1108,15 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   /**
    * {@inheritDoc}
    */
-  @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
   @Override
   public ServiceCommand getCommandByName(
       @NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName) {
     Service service = getServiceWithServiceCommands(appId, serviceId);
-    if (service != null) {
-      return service.getServiceCommands()
-          .stream()
-          .filter(command -> equalsIgnoreCase(commandName, command.getName()))
-          .findFirst()
-          .orElse(null);
-    }
-    return null;
+    return service.getServiceCommands()
+        .stream()
+        .filter(command -> equalsIgnoreCase(commandName, command.getName()))
+        .findFirst()
+        .orElse(null);
   }
 
   @Override
@@ -1167,6 +1162,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public Service getServiceWithServiceCommands(String appId, String serviceId) {
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
+    notNullCheck("service", service);
     service.setServiceCommands(getServiceCommands(appId, serviceId));
     service.getServiceCommands().forEach(serviceCommand
         -> serviceCommand.setCommand(

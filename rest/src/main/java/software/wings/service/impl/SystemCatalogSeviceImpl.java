@@ -5,7 +5,6 @@ import static com.google.common.collect.ImmutableMap.of;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import software.wings.beans.Base;
 import software.wings.beans.SystemCatalog;
 import software.wings.dl.PageRequest;
@@ -55,8 +54,7 @@ public class SystemCatalogSeviceImpl implements SystemCatalogService {
     return get(systemCatalog.getUuid());
   }
 
-  @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_BAD_PRACTICE")
-  private void uploadSystemCatalogFile(SystemCatalog systemCatalog, String url, FileBucket fileBucket, long size) {
+  private boolean uploadSystemCatalogFile(SystemCatalog systemCatalog, String url, FileBucket fileBucket, long size) {
     BufferedInputStream in = new BufferedInputStream(BoundedInputStream.getBoundedStreamForUrl(url, size));
 
     String fileId = fileService.saveFile(systemCatalog, in, fileBucket);
@@ -75,7 +73,7 @@ public class SystemCatalogSeviceImpl implements SystemCatalogService {
       }
     });
 
-    tempFile.delete();
+    return tempFile.delete();
   }
 
   @Override

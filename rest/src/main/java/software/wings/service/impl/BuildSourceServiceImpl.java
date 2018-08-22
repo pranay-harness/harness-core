@@ -12,7 +12,6 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
@@ -25,6 +24,7 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.exception.InvalidRequestException;
+import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -105,12 +105,12 @@ public class BuildSourceServiceImpl implements BuildSourceService {
                                .getArtifactPaths(jobName, groupId, value, encryptedDataDetails));
   }
 
-  @SuppressFBWarnings("NP_GUARANTEED_DEREF")
   @Override
   public List<BuildDetails> getBuilds(String appId, String artifactStreamId, String settingId) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     if (settingAttribute == null) {
       logger.warn("Artifact Server {} was deleted of artifactStreamId {}", settingId, artifactStreamId);
+      throw new WingsException("Artifact Server " + settingId + " was deleted of artifactStreamId " + artifactStreamId);
     }
     SettingValue settingValue = getSettingValue(settingAttribute);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((Encryptable) settingValue);
