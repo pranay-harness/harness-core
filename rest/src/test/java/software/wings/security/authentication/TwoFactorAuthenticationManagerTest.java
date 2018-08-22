@@ -23,6 +23,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.User;
 import software.wings.exception.WingsException;
 import software.wings.security.SecretManager.JWT_CATEGORY;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserService;
 
@@ -35,6 +36,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   @Inject @InjectMocks TOTPAuthHandler totpAuthHandler;
   @Inject @InjectMocks TwoFactorAuthenticationManager twoFactorAuthenticationManager;
   @Mock AuthenticationUtil authenticationUtil;
+  @Mock AccountService accountService;
 
   @Test
   @Repeat(times = 5, successes = 1)
@@ -102,5 +104,20 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
     assertThat(settings.isTwoFactorAuthenticationEnabled()).isFalse();
     assertThat(settings.getTotpSecretKey()).isNotEmpty();
     assertThat(settings.getTotpqrurl()).isNotEmpty();
+  }
+
+  @Test
+  public void testOverrideTwoFactorAuthentication() {
+    Account account = mock(Account.class);
+    User user = spy(new User());
+    TwoFactorAdminOverrideSettings twoFactorAdminOverrideSettings = new TwoFactorAdminOverrideSettings(true);
+    accountService.updateTwoFactorEnforceInfo(
+        account.getUuid(), user, twoFactorAdminOverrideSettings.isAdminOverrideTwoFactorEnabled());
+    when(userService.overrideTwoFactorforAccount(
+             account.getUuid(), user, twoFactorAdminOverrideSettings.isAdminOverrideTwoFactorEnabled()))
+        .thenReturn(true);
+    assertThat(twoFactorAuthenticationManager.overrideTwoFactorAuthentication(
+                   account.getUuid(), user, twoFactorAdminOverrideSettings))
+        .isTrue();
   }
 }

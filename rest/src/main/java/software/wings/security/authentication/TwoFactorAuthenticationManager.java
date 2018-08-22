@@ -71,14 +71,25 @@ public class TwoFactorAuthenticationManager {
   }
 
   public User disableTwoFactorAuthentication(User user) {
-    if (user.isTwoFactorAuthenticationEnabled() && user.getTwoFactorAuthenticationMechanism() != null) {
-      return getTwoFactorAuthHandler(user.getTwoFactorAuthenticationMechanism()).disableTwoFactorAuthentication(user);
+    // disable 2FA only if admin has not enforced 2FA.
+    if (isAllowed2FADisable(user)) {
+      if (user.isTwoFactorAuthenticationEnabled() && user.getTwoFactorAuthenticationMechanism() != null) {
+        logger.info("Disabling 2FA for User={}, tfEnabled={}, tfMechanism={}", user.getEmail(),
+            user.isTwoFactorAuthenticationEnabled(), user.getTwoFactorAuthenticationMechanism());
+        return getTwoFactorAuthHandler(user.getTwoFactorAuthenticationMechanism()).disableTwoFactorAuthentication(user);
+      }
     } else {
-      logger.info("Disabling 2FA for User={}, tfEnabled={}, tfMechanism={}", user.getEmail(),
+      logger.info("Could not disable 2FA for User={}, tfEnabled={}, tfMechanism={}", user.getEmail(),
           user.isTwoFactorAuthenticationEnabled(), user.getTwoFactorAuthenticationMechanism());
-      user.setTwoFactorAuthenticationMechanism(null);
-      user.setTwoFactorAuthenticationEnabled(false);
-      return userService.update(user);
+    }
+    return user;
+  }
+
+  private boolean isAllowed2FADisable(User user) {
+    if (user.getAccounts() != null) {
+      return !(user.getAccounts().size() == 1 && user.getAccounts().get(0).isTwoFactorAdminEnforced());
+    } else {
+      return false;
     }
   }
 
@@ -97,13 +108,13 @@ public class TwoFactorAuthenticationManager {
   public boolean overrideTwoFactorAuthentication(String accountId, User user, TwoFactorAdminOverrideSettings settings) {
     try {
       if (settings != null) {
-        // Enable 2FA for user if admin enforce is enabled
+        // Update 2FA enforce flag
+        accountService.updateTwoFactorEnforceInfo(accountId, user, settings.isAdminOverrideTwoFactorEnabled());
+
+        // Enable 2FA for all users if admin enforced
         if (settings.isAdminOverrideTwoFactorEnabled()) {
           logger.info("Enabling 2FA for all users in the account who have 2FA disabled ={}", accountId);
           return userService.overrideTwoFactorforAccount(accountId, user, settings.isAdminOverrideTwoFactorEnabled());
-        } else {
-          // disable override
-          accountService.updateTwoFactorEnforceInfo(accountId, user, settings.isAdminOverrideTwoFactorEnabled());
         }
       }
     } catch (Exception ex) {

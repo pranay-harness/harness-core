@@ -458,6 +458,7 @@ public class UserResource {
   @Path("disable-two-factor-auth")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.LOGGED_IN)
   public RestResponse<User> disableTwoFactorAuth() {
     return new RestResponse(twoFactorAuthenticationManager.disableTwoFactorAuthentication(UserThreadLocal.get()));
   }
@@ -466,6 +467,7 @@ public class UserResource {
   @Path("enable-two-factor-auth")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.LOGGED_IN)
   public RestResponse<User> enableTwoFactorAuth(TwoFactorAuthenticationSettings settings) {
     return new RestResponse(
         twoFactorAuthenticationManager.enableTwoFactorAuthenticationSettings(UserThreadLocal.get(), settings));
