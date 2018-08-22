@@ -10,10 +10,12 @@ import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.InfrastructureProvisionerDetails;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.service.impl.aws.model.AwsCFTemplateParamsData;
 import software.wings.service.intfc.ownership.OwnedByApplication;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.validation.Valid;
@@ -44,4 +46,6 @@ public interface InfrastructureProvisionerService extends OwnedByApplication {
 
   void regenerateInfrastructureMappings(String provisionerId, ExecutionContext context, Map<String, Object> outputs,
       Optional<ManagerExecutionLogCallback> executionLogCallback, Optional<String> region);
+
+  List<AwsCFTemplateParamsData> getCFTemplateParamKeys(String type, String region, String awsConfigId, String data);
 }

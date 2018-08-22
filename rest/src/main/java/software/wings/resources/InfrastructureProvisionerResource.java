@@ -26,8 +26,10 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.ListAPI;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.aws.model.AwsCFTemplateParamsData;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 
+import java.util.List;
 import java.util.Map;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
@@ -128,6 +130,16 @@ public class InfrastructureProvisionerResource {
   public RestResponse<InfrastructureProvisioner> get(
       @QueryParam("appId") String appId, @PathParam("infraProvisionerId") String infraProvisionerId) {
     return new RestResponse<>(infrastructureProvisionerService.get(appId, infraProvisionerId));
+  }
+
+  @POST
+  @Path("get-params")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PROVISIONER, action = READ)
+  public RestResponse<List<AwsCFTemplateParamsData>> getParamsKeys(@QueryParam("type") String type,
+      @QueryParam("region") String region, @QueryParam("awsConfigId") String awsConfigId, String data) {
+    return new RestResponse<>(infrastructureProvisionerService.getCFTemplateParamKeys(type, region, awsConfigId, data));
   }
 
   @DELETE

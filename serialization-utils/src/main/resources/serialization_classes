@@ -510,3 +510,8 @@ software.wings.beans.yaml.GitFetchFilesRequest, 5470
 software.wings.beans.yaml.GitFetchFilesResult, 5471
 software.wings.beans.GitFileConfig, 5472
 software.wings.api.cloudformation.CloudFormationOutputInfoElement, 5473
+software.wings.service.impl.aws.model.AwsCFRequest, 5474
+software.wings.service.impl.aws.model.AwsCFRequest$AwsCFRequestType, 5475
+software.wings.service.impl.aws.model.AwsCFGetTemplateParamsRequest, 5476
+software.wings.service.impl.aws.model.AwsCFGetTemplateParamsResponse, 5477
+software.wings.service.impl.aws.model.AwsCFTemplateParamsData, 5478

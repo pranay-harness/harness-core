@@ -151,6 +151,7 @@ import software.wings.service.impl.appdynamics.AppdynamicsServiceImpl;
 import software.wings.service.impl.artifact.ArtifactCollectionServiceImpl;
 import software.wings.service.impl.artifact.ArtifactServiceImpl;
 import software.wings.service.impl.aws.manager.AwsAsgHelperServiceManagerImpl;
+import software.wings.service.impl.aws.manager.AwsCFHelperServiceManagerImpl;
 import software.wings.service.impl.aws.manager.AwsCodeDeployHelperServiceManagerImpl;
 import software.wings.service.impl.aws.manager.AwsEc2HelperServiceManagerImpl;
 import software.wings.service.impl.aws.manager.AwsEcrHelperServiceManagerImpl;
@@ -268,6 +269,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.service.intfc.aws.manager.AwsAsgHelperServiceManager;
+import software.wings.service.intfc.aws.manager.AwsCFHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsCodeDeployHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsEc2HelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsEcrHelperServiceManager;
@@ -460,6 +462,7 @@ public class WingsModule extends AbstractModule {
     bind(AwsCodeDeployHelperServiceManager.class).to(AwsCodeDeployHelperServiceManagerImpl.class);
     bind(AwsLambdaHelperServiceManager.class).to(AwsLambdaHelperServiceManagerImpl.class);
     bind(DelegateProfileService.class).to(DelegateProfileServiceImpl.class);
+    bind(AwsCFHelperServiceManager.class).to(AwsCFHelperServiceManagerImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);

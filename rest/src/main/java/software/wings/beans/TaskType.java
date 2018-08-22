@@ -29,6 +29,7 @@ import software.wings.delegatetasks.SumoDataCollectionTask;
 import software.wings.delegatetasks.TerraformProvisionTask;
 import software.wings.delegatetasks.aws.AwsAmiAsyncTask;
 import software.wings.delegatetasks.aws.AwsAsgTask;
+import software.wings.delegatetasks.aws.AwsCFTask;
 import software.wings.delegatetasks.aws.AwsCodeDeployTask;
 import software.wings.delegatetasks.aws.AwsEc2Task;
 import software.wings.delegatetasks.aws.AwsEcrTask;
@@ -226,7 +227,8 @@ public enum TaskType {
   AWS_CODE_DEPLOY_TASK(TaskGroup.AWS, AwsCodeDeployTask.class, AwsConnectionValidation.class),
   AWS_LAMBDA_TASK(TaskGroup.AWS, AwsLambdaTask.class, AwsConnectionValidation.class),
   AWS_LAMBDA_ASYNC_TASK(TaskGroup.AWS, AwsLambdaAsyncTask.class, AwsConnectionValidation.class),
-  AWS_AMI_ASYNC_TASK(TaskGroup.AWS, AwsAmiAsyncTask.class, AwsConnectionValidation.class);
+  AWS_AMI_ASYNC_TASK(TaskGroup.AWS, AwsAmiAsyncTask.class, AwsConnectionValidation.class),
+  AWS_CF_TASK(TaskGroup.AWS, AwsCFTask.class, AwsConnectionValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;
