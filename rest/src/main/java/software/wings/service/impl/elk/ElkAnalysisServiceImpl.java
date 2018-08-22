@@ -6,7 +6,6 @@ import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDum
 
 import com.google.inject.Inject;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
@@ -14,7 +13,6 @@ import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
@@ -22,7 +20,6 @@ import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse.VerificationLoadResponse;
 import software.wings.service.impl.apm.MLServiceUtil;
-import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.service.intfc.elk.ElkDelegateService;
@@ -38,12 +35,9 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by rsingh on 8/23/17.
  */
-@SuppressFBWarnings("MF_CLASS_MASKS_FIELD")
 public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAnalysisService {
   private static final Logger logger = LoggerFactory.getLogger(ElkAnalysisServiceImpl.class);
 
-  @Inject protected SettingsService settingsService;
-  @Inject protected DelegateProxyFactory delegateProxyFactory;
   @Inject private MLServiceUtil mlServiceUtil;
   @Inject private AnalysisService analysisService;
 

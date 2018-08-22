@@ -11,7 +11,6 @@ import static software.wings.exception.WingsException.USER;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.net.util.SubnetUtils;
 import org.apache.commons.validator.routines.InetAddressValidator;
 import org.mongodb.morphia.query.Query;
@@ -100,7 +99,6 @@ public class WhitelistServiceImpl implements WhitelistService {
     return isValidIPAddress(ipAddress, whitelistConfigList);
   }
 
-  @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
   public List<Whitelist> getWhitelistConfig(String accountId) {
     Cache<String, WhitelistConfig> cache = cacheHelper.getWhitelistConfigCache();
     WhitelistConfig value;
@@ -108,9 +106,6 @@ public class WhitelistServiceImpl implements WhitelistService {
     // Cache should never be null, but just in case
     if (cache == null) {
       value = getWhitelistConfigFromDB(accountId);
-      if (value == null) {
-        return null;
-      }
       return value.getWhitelistList();
     }
 

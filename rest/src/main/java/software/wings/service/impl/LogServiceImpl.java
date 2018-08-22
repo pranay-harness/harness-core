@@ -15,8 +15,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.DBObject;
-import com.mongodb.WriteResult;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.DatastoreImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,7 +105,6 @@ public class LogServiceImpl implements LogService {
         wingsPersistence.createQuery(Log.class).filter("appId", appId).filter("activityId", activityId));
   }
 
-  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   @Override
   public void batchedSave(List<Log> logs) {
     if (isNotEmpty(logs)) {
@@ -123,7 +120,7 @@ public class LogServiceImpl implements LogService {
           logger.error("Exception in saving log [{}]", log, e);
         }
       }
-      WriteResult writeResult = wingsPersistence.getCollection("commandLogs").insert(dbObjects);
+      wingsPersistence.getCollection("commandLogs").insert(dbObjects);
 
       // Map of [ActivityId -> [CommandUnitName -> LastLogLineStatus]]
 

@@ -203,7 +203,6 @@ import com.amazonaws.services.s3.model.ListObjectsV2Request;
 import com.amazonaws.services.s3.model.ListObjectsV2Result;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
@@ -1053,7 +1052,6 @@ public class AwsHelperService {
     return new ListServicesResult();
   }
 
-  @SuppressFBWarnings("REC_CATCH_EXCEPTION")
   public DescribeServicesResult describeServices(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, DescribeServicesRequest describeServicesRequest) {
     try {
@@ -2051,7 +2049,6 @@ public class AwsHelperService {
     return null;
   }
 
-  @SuppressFBWarnings("REC_CATCH_EXCEPTION")
   public static boolean isInAwsRegion(String region) {
     try {
       HttpEntity entity =
@@ -2063,7 +2060,7 @@ public class AwsHelperService {
       String availabilityZone =
           entity != null ? EntityUtils.toString(entity, ContentType.getOrDefault(entity).getCharset()) : "none";
       return startsWith(availabilityZone, region);
-    } catch (Exception e) {
+    } catch (IOException e) {
       return false;
     }
   }

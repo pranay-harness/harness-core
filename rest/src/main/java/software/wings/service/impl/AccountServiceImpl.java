@@ -26,7 +26,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
@@ -196,12 +195,10 @@ public class AccountServiceImpl implements AccountService {
     update(account);
   }
 
-  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   @Override
   public String suggestAccountName(String accountName) {
     String suggestedAccountName = accountName;
     Random rand = new Random();
-    int i = rand.nextInt(1000);
     do {
       Account res = wingsPersistence.get(
           Account.class, aPageRequest().addFilter("accountName", Operator.EQ, suggestedAccountName).build());

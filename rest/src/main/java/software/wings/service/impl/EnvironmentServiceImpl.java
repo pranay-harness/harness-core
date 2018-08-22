@@ -295,14 +295,10 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     delete(environment);
   }
 
-  @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE") // TODO
   @Override
   public List<Service> getServicesWithOverrides(String appId, String envId) {
     List<Service> services = new ArrayList<>();
     Environment environment = get(appId, envId, true);
-    if (environment == null) {
-      return services;
-    }
     List<ServiceTemplate> serviceTemplates = environment.getServiceTemplates();
     if (isEmpty(serviceTemplates)) {
       return services;
@@ -666,7 +662,6 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
    *
    * @param serviceMapping
    */
-  @SuppressFBWarnings("WMI_WRONG_MAP_ITERATOR") // TODO
   private void validateServiceMapping(String appId, String targetAppId, Map<String, String> serviceMapping) {
     if (serviceMapping != null) {
       for (Entry<String, String> entry : serviceMapping.entrySet()) {
