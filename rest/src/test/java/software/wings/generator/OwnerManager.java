@@ -87,12 +87,44 @@ public class OwnerManager {
       return application;
     }
 
+    interface Generator<T> {
+      T generate();
+    }
+
+    public Application obtainApplication(Generator<Application> generator) {
+      Application application = obtainApplication();
+      if (application != null) {
+        return application;
+      }
+
+      application = generator.generate();
+      if (application != null) {
+        add(application);
+      }
+
+      return application;
+    }
+
     public Environment obtainEnvironment() {
       return objects.stream()
           .filter(obj -> obj instanceof Environment)
           .findFirst()
           .map(obj -> (Environment) obj)
           .orElse(null);
+    }
+
+    public Environment obtainEnvironment(Generator<Environment> generator) {
+      Environment environment = obtainEnvironment();
+      if (environment != null) {
+        return environment;
+      }
+
+      environment = generator.generate();
+      if (environment != null) {
+        add(environment);
+      }
+
+      return environment;
     }
 
     public Service obtainService() {

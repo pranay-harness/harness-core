@@ -39,10 +39,8 @@ public class EnvironmentGenerator {
   }
 
   private Environment ensureGenericTest(Randomizer.Seed seed, Owners owners) {
-    Application application = owners.obtainApplication();
-    if (application == null) {
-      application = applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST);
-    }
+    final Application application =
+        owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
     return ensureEnvironment(seed, owners,
         anEnvironment()
             .withAppId(application.getUuid())
