@@ -1,7 +1,5 @@
 package software.wings.api.cloudformation;
 
-import com.google.common.collect.Maps;
-
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -14,12 +12,18 @@ import java.util.Map;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
-public class CloudFormationOutputInfoElement extends CloudFormationElement {
-  private Map<String, Object> newStackOutputs;
+public class CloudFormationRollbackInfoElement extends CloudFormationElement {
+  private String awsConfigId;
+  private String region;
+  private boolean stackExisted;
+  private String oldStackBody;
+  private String stackNameSuffix;
+  private String provisionerId;
+  private Map<String, String> oldStackParameters;
 
   @Override
   public ContextElementType getElementType() {
-    return ContextElementType.CLOUD_FORMATION_PROVISION;
+    return ContextElementType.CLOUD_FORMATION_ROLLBACK;
   }
 
   @Override
@@ -34,17 +38,11 @@ public class CloudFormationOutputInfoElement extends CloudFormationElement {
 
   @Override
   public Map<String, Object> paramMap(ExecutionContext context) {
-    Map<String, Object> map = Maps.newHashMap();
-    map.put("cloudformation", newStackOutputs);
-    return map;
+    return null;
   }
 
   @Override
   public ContextElement cloneMin() {
     return null;
-  }
-
-  public void mergeOutputs(Map<String, Object> newMap) {
-    newStackOutputs.putAll(newMap);
   }
 }

@@ -515,3 +515,5 @@ software.wings.service.impl.aws.model.AwsCFRequest$AwsCFRequestType, 5475
 software.wings.service.impl.aws.model.AwsCFGetTemplateParamsRequest, 5476
 software.wings.service.impl.aws.model.AwsCFGetTemplateParamsResponse, 5477
 software.wings.service.impl.aws.model.AwsCFTemplateParamsData, 5478
+software.wings.helpers.ext.cloudformation.response.ExistingStackInfo, 5479
+software.wings.api.cloudformation.CloudFormationRollbackInfoElement, 5480

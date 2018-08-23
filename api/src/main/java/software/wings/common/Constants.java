@@ -152,6 +152,10 @@ public interface Constants {
    */
   String PRE_DEPLOYMENT = "Pre-Deployment";
   /**
+   * The constant PRE_DEPLOYMENT.
+   */
+  String ROLLBACK_PROVISIONERS = "Rollback Provisioners";
+  /**
    * The constant POST_DEPLOYMENT.
    */
   String POST_DEPLOYMENT = "Post-Deployment";
@@ -448,6 +452,7 @@ public interface Constants {
 
   String PROVISION_CLOUD_FORMATION = "Cloud Formation Create Stack";
   String DE_PROVISION_CLOUD_FORMATION = "Cloud Formation Delete Stack";
+  String ROLLBACK_CLOUD_FORMATION = "Cloud Formation Rollback Stack";
 
   /**
    * The constant DELEGATE_DIR.

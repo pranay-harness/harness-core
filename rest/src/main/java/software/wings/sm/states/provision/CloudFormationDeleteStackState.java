@@ -31,16 +31,17 @@ public class CloudFormationDeleteStackState extends CloudFormationState {
 
   protected DelegateTask getDelegateTask(ExecutionContextImpl executionContext,
       CloudFormationInfrastructureProvisioner provisioner, AwsConfig awsConfig, String activityId) {
-    CloudFormationDeleteStackRequest request = CloudFormationDeleteStackRequest.builder()
-                                                   .region(region)
-                                                   .stackNameSuffix(getStackNameSuffix(executionContext, provisioner))
-                                                   .commandType(CloudFormationCommandType.DELETE_STACK)
-                                                   .accountId(executionContext.getApp().getAccountId())
-                                                   .appId(executionContext.getApp().getUuid())
-                                                   .activityId(activityId)
-                                                   .commandName(commandUnit())
-                                                   .awsConfig(awsConfig)
-                                                   .build();
+    CloudFormationDeleteStackRequest request =
+        CloudFormationDeleteStackRequest.builder()
+            .region(region)
+            .stackNameSuffix(getStackNameSuffix(executionContext, provisioner.getUuid()))
+            .commandType(CloudFormationCommandType.DELETE_STACK)
+            .accountId(executionContext.getApp().getAccountId())
+            .appId(executionContext.getApp().getUuid())
+            .activityId(activityId)
+            .commandName(commandUnit())
+            .awsConfig(awsConfig)
+            .build();
     return aDelegateTask()
         .withTaskType(CLOUD_FORMATION_TASK)
         .withAccountId(executionContext.getApp().getAccountId())

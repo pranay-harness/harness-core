@@ -22,6 +22,7 @@ import software.wings.service.impl.ArtifactoryBuildServiceImpl;
 import software.wings.service.impl.ContainerServiceImpl;
 import software.wings.service.impl.EcrBuildServiceImpl;
 import software.wings.service.impl.appdynamics.AppdynamicsDelegateServiceImpl;
+import software.wings.service.impl.aws.delegate.AwsCFHelperServiceDelegateImpl;
 import software.wings.service.impl.elk.ElkDelegateServiceImpl;
 import software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl;
 import software.wings.service.impl.security.EncryptionServiceImpl;
@@ -35,6 +36,7 @@ import software.wings.service.intfc.ArtifactoryBuildService;
 import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.EcrBuildService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
+import software.wings.service.intfc.aws.delegate.AwsCFHelperServiceDelegate;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -70,6 +72,7 @@ public class WingsTestModule extends AbstractModule {
     bind(DelegateLogService.class).toInstance(mockDelegateLogService);
     GitClientHelper gitClientHelper = mock(GitClientHelper.class);
     bind(GitClientImpl.class);
+    bind(AwsCFHelperServiceDelegate.class).to(AwsCFHelperServiceDelegateImpl.class);
 
     bind(ExecutorService.class)
         .annotatedWith(Names.named("verificationDataCollector"))

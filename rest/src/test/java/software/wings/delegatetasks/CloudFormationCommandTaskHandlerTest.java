@@ -1,6 +1,8 @@
 package software.wings.delegatetasks;
 
+import static org.joor.Reflect.on;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
@@ -19,6 +21,7 @@ import com.amazonaws.services.cloudformation.model.CreateStackResult;
 import com.amazonaws.services.cloudformation.model.DescribeStacksRequest;
 import com.amazonaws.services.cloudformation.model.Output;
 import com.amazonaws.services.cloudformation.model.Stack;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -36,8 +39,10 @@ import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandE
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationListStacksResponse;
+import software.wings.helpers.ext.cloudformation.response.ExistingStackInfo;
 import software.wings.helpers.ext.cloudformation.response.StackSummaryInfo;
 import software.wings.service.impl.AwsHelperService;
+import software.wings.service.intfc.aws.delegate.AwsCFHelperServiceDelegate;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.util.Arrays;
@@ -48,9 +53,17 @@ import java.util.Map;
 public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
   @Mock private EncryptionService mockEncryptionService;
   @Mock private AwsHelperService mockAwsHelperService;
+  @Mock private AwsCFHelperServiceDelegate mockAwsCFHelperServiceDelegate;
   @InjectMocks @Inject private CloudFormationCreateStackHandler createStackHandler;
   @InjectMocks @Inject private CloudFormationDeleteStackHandler deleteStackHandler;
   @InjectMocks @Inject private CloudFormationListStacksHandler listStacksHandler;
+
+  @Before
+  public void setUp() throws Exception {
+    on(createStackHandler).set("awsCFHelperServiceDelegate", mockAwsCFHelperServiceDelegate);
+    on(listStacksHandler).set("awsCFHelperServiceDelegate", mockAwsCFHelperServiceDelegate);
+    on(deleteStackHandler).set("awsCFHelperServiceDelegate", mockAwsCFHelperServiceDelegate);
+  }
 
   @Test
   public void testCreateStack() {
@@ -105,6 +118,9 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
     validateMapContents(outputMap, "vpcs", "vpcs");
     validateMapContents(outputMap, "subnets", "subnets");
     validateMapContents(outputMap, "securityGroups", "sgs");
+    ExistingStackInfo existingStackInfo = createStackResponse.getExistingStackInfo();
+    assertNotNull(existingStackInfo);
+    assertFalse(existingStackInfo.isStackExisted());
   }
 
   private void validateMapContents(Map<String, Object> map, String key, String value) {
@@ -141,6 +157,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
         .doReturn(updateCompleteList)
         .when(mockAwsHelperService)
         .getAllStacks(anyString(), anyString(), any(), any());
+    doReturn("Body").when(mockAwsCFHelperServiceDelegate).getStackBody(any(), anyString(), anyString());
 
     CloudFormationCommandExecutionResponse response = createStackHandler.execute(request, null);
     assertNotNull(response);
@@ -148,6 +165,12 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
     CloudFormationCommandResponse formationCommandResponse = response.getCommandResponse();
     assertNotNull(formationCommandResponse);
     assertTrue(formationCommandResponse instanceof CloudFormationCreateStackResponse);
+    CloudFormationCreateStackResponse createStackResponse =
+        (CloudFormationCreateStackResponse) formationCommandResponse;
+    ExistingStackInfo existingStackInfo = createStackResponse.getExistingStackInfo();
+    assertNotNull(existingStackInfo);
+    assertTrue(existingStackInfo.isStackExisted());
+    assertEquals(existingStackInfo.getOldStackBody(), "Body");
   }
 
   @Test

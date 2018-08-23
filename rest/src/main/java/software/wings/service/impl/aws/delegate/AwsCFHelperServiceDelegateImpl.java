@@ -13,9 +13,12 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.cloudformation.AmazonCloudFormationClient;
 import com.amazonaws.services.cloudformation.AmazonCloudFormationClientBuilder;
+import com.amazonaws.services.cloudformation.model.GetTemplateRequest;
+import com.amazonaws.services.cloudformation.model.GetTemplateResult;
 import com.amazonaws.services.cloudformation.model.GetTemplateSummaryRequest;
 import com.amazonaws.services.cloudformation.model.GetTemplateSummaryResult;
 import com.amazonaws.services.cloudformation.model.ParameterDeclaration;
+import com.amazonaws.services.ec2.model.AmazonEC2Exception;
 import software.wings.beans.AwsConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.aws.model.AwsCFTemplateParamsData;
@@ -62,5 +65,19 @@ public class AwsCFHelperServiceDelegateImpl extends AwsHelperServiceDelegateBase
       handleAmazonServiceException(amazonServiceException);
     }
     return emptyList();
+  }
+
+  @Override
+  public String getStackBody(AwsConfig awsConfig, String region, String stackId) {
+    try {
+      AmazonCloudFormationClient client =
+          getAmazonCloudFormationClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      GetTemplateRequest getTemplateRequest = new GetTemplateRequest().withStackName(stackId);
+      GetTemplateResult getTemplateResult = client.getTemplate(getTemplateRequest);
+      return getTemplateResult.getTemplateBody();
+    } catch (AmazonEC2Exception amazonEC2Exception) {
+      handleAmazonServiceException(amazonEC2Exception);
+    }
+    return "";
   }
 }

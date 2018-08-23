@@ -24,6 +24,8 @@ import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandE
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandExecutionResponse.CloudFormationCommandExecutionResponseBuilder;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse.CloudFormationCreateStackResponseBuilder;
+import software.wings.helpers.ext.cloudformation.response.ExistingStackInfo;
+import software.wings.helpers.ext.cloudformation.response.ExistingStackInfo.ExistingStackInfoBuilder;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.Misc;
 
@@ -165,7 +167,8 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
       switch (stack.getStackStatus()) {
         case "CREATE_COMPLETE": {
           executionLogCallback.saveExecutionLog("# Stack creation Successful");
-          populateInfraMappingPropertiesFromStack(builder, stack);
+          populateInfraMappingPropertiesFromStack(
+              builder, stack, ExistingStackInfo.builder().stackExisted(false).build());
           return;
         }
         case "CREATE_FAILED": {
@@ -209,9 +212,20 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
     builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
   }
 
+  private ExistingStackInfo getExistingStackInfo(AwsConfig awsConfig, String region, Stack originalStack) {
+    ExistingStackInfoBuilder builder = ExistingStackInfo.builder();
+    builder.stackExisted(true);
+    builder.oldStackParameters(originalStack.getParameters().stream().collect(
+        toMap(Parameter::getParameterKey, Parameter::getParameterValue)));
+    builder.oldStackBody(awsCFHelperServiceDelegate.getStackBody(awsConfig, region, originalStack.getStackId()));
+    return builder.build();
+  }
+
   private void updateStackAndWaitWithEvents(CloudFormationCreateStackRequest request,
       UpdateStackRequest updateStackRequest, CloudFormationCommandExecutionResponseBuilder builder,
       Stack originalStack) {
+    ExistingStackInfo existingStackInfo =
+        getExistingStackInfo(request.getAwsConfig(), request.getRegion(), originalStack);
     executionLogCallback.saveExecutionLog(
         String.format("# Calling Aws API to Update stack: %s", originalStack.getStackName()));
     long stackEventsTs = System.currentTimeMillis();
@@ -237,7 +251,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
         case "CREATE_COMPLETE":
         case "UPDATE_COMPLETE": {
           executionLogCallback.saveExecutionLog("# Update Successful for stack");
-          populateInfraMappingPropertiesFromStack(builder, stack);
+          populateInfraMappingPropertiesFromStack(builder, stack, existingStackInfo);
           return;
         }
         case "UPDATE_COMPLETE_CLEANUP_IN_PROGRESS": {
@@ -287,8 +301,9 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
   }
 
   private void populateInfraMappingPropertiesFromStack(
-      CloudFormationCommandExecutionResponseBuilder builder, Stack stack) {
+      CloudFormationCommandExecutionResponseBuilder builder, Stack stack, ExistingStackInfo existingStackInfo) {
     CloudFormationCreateStackResponseBuilder createBuilder = CloudFormationCreateStackResponse.builder();
+    createBuilder.existingStackInfo(existingStackInfo);
     createBuilder.stackId(stack.getStackId());
     List<Output> outputs = stack.getOutputs();
     if (isNotEmpty(outputs)) {

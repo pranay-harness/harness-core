@@ -27,6 +27,7 @@ import static software.wings.common.Constants.PHASE_NAME_PREFIX;
 import static software.wings.common.Constants.POST_DEPLOYMENT;
 import static software.wings.common.Constants.PRE_DEPLOYMENT;
 import static software.wings.common.Constants.ROLLBACK_PREFIX;
+import static software.wings.common.Constants.ROLLBACK_PROVISIONERS;
 import static software.wings.common.Constants.WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE;
 import static software.wings.common.Constants.WORKFLOW_VALIDATION_MESSAGE;
 import static software.wings.common.Constants.phaseNamePattern;
@@ -45,6 +46,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 /**
  * Created by rishi on 12/21/16.
  */
@@ -58,6 +60,8 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
   private static final Logger logger = LoggerFactory.getLogger(CanaryOrchestrationWorkflow.class);
 
   private PhaseStep preDeploymentSteps = new PhaseStep(PhaseStepType.PRE_DEPLOYMENT, PRE_DEPLOYMENT);
+
+  private PhaseStep rollbackProvisioners = new PhaseStep(PhaseStepType.ROLLBACK_PROVISIONERS, ROLLBACK_PROVISIONERS);
 
   @JsonIgnore private List<String> workflowPhaseIds = new ArrayList<>();
 
@@ -89,6 +93,14 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   public void setPreDeploymentSteps(PhaseStep preDeploymentSteps) {
     this.preDeploymentSteps = preDeploymentSteps;
+  }
+
+  public PhaseStep getRollbackProvisioners() {
+    return rollbackProvisioners;
+  }
+
+  public void setRollbackProvisioners(PhaseStep rollbackProvisioners) {
+    this.rollbackProvisioners = rollbackProvisioners;
   }
 
   public List<WorkflowPhase> getWorkflowPhases() {
@@ -251,6 +263,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
   @Override
   public void onSave() {
     populatePhaseStepIds(preDeploymentSteps);
+    populatePhaseStepIds(rollbackProvisioners);
     if (workflowPhases != null) {
       workflowPhaseIds = new ArrayList<>();
       workflowPhaseIdMap = new HashMap<>();
@@ -284,6 +297,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
   @Override
   public void onLoad() {
     populatePhaseSteps(preDeploymentSteps, getGraph());
+    populatePhaseSteps(rollbackProvisioners, getGraph());
 
     workflowPhases = new ArrayList<>();
     for (String workflowPhaseId : workflowPhaseIds) {
@@ -509,6 +523,10 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     Builder graphBuilder =
         aGraph().addNodes(preDeploymentNode).addSubworkflow(id1, preDeploymentSteps.generateSubworkflow(null));
 
+    GraphNode rollbackProvisionersNode = rollbackProvisioners.generatePhaseStepNode();
+    graphBuilder.addNodes(rollbackProvisionersNode)
+        .addSubworkflow(rollbackProvisioners.getUuid(), rollbackProvisioners.generateSubworkflow(null));
+
     if (workflowPhases != null) {
       for (WorkflowPhase workflowPhase : workflowPhases) {
         id2 = workflowPhase.getUuid();
@@ -536,6 +554,10 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         .addSubworkflow(id2, postDeploymentSteps.generateSubworkflow(null));
 
     return graphBuilder.build();
+  }
+
+  private Graph generateRollbackProvisionersSubworkflow(PhaseStep preDeploymentSteps) {
+    return null;
   }
 
   @Override

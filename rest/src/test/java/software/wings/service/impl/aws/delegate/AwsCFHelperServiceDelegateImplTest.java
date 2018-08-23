@@ -9,6 +9,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 import com.amazonaws.services.cloudformation.AmazonCloudFormationClient;
+import com.amazonaws.services.cloudformation.model.GetTemplateResult;
 import com.amazonaws.services.cloudformation.model.GetTemplateSummaryResult;
 import com.amazonaws.services.cloudformation.model.ParameterDeclaration;
 import org.junit.Test;
@@ -49,5 +50,14 @@ public class AwsCFHelperServiceDelegateImplTest extends WingsBaseTest {
     assertThat(data.getParamKey()).isEqualTo(key);
     assertThat(data.getParamType()).isEqualTo(type);
     assertThat(data.getDefaultValue()).isEqualTo(defaultVal);
+  }
+
+  @Test
+  public void testGetStackBody() {
+    AmazonCloudFormationClient mockClient = mock(AmazonCloudFormationClient.class);
+    doReturn(mockClient).when(awsCFHelperServiceDelegate).getAmazonCloudFormationClient(any(), anyString(), any());
+    doReturn(new GetTemplateResult().withTemplateBody("body")).when(mockClient).getTemplate(any());
+    String body = awsCFHelperServiceDelegate.getStackBody(AwsConfig.builder().build(), "us-east-1", "stackId");
+    assertThat(body).isEqualTo("body");
   }
 }

@@ -18,6 +18,7 @@ import software.wings.helpers.ext.cloudformation.request.CloudFormationCommandRe
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandExecutionResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
+import software.wings.service.intfc.aws.delegate.AwsCFHelperServiceDelegate;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.util.List;
@@ -27,6 +28,7 @@ public abstract class CloudFormationCommandTaskHandler {
   @Inject protected DelegateFileManager delegateFileManager;
   @Inject protected EncryptionService encryptionService;
   @Inject protected AwsHelperService awsHelperService;
+  @Inject protected AwsCFHelperServiceDelegate awsCFHelperServiceDelegate;
   @Inject private DelegateLogService delegateLogService;
 
   protected ExecutionLogCallback executionLogCallback;

@@ -118,6 +118,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       PhaseSubWorkflow phaseSubWorkflow = null;
       PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
 
+      boolean rollbackProvisioners = false;
       if (state.getStateType().equals(StateType.PHASE.name()) && state instanceof PhaseSubWorkflow) {
         phaseSubWorkflow = (PhaseSubWorkflow) state;
 
@@ -176,6 +177,11 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         if (phaseSubWorkflow.isRollback() && executionEvent.getExecutionStatus() != SUCCESS) {
           return null;
         }
+      } else if (state.getStateType().equals(StateType.PHASE_STEP.name()) && state instanceof PhaseStepSubWorkflow
+          && ((PhaseStepSubWorkflow) state).getPhaseStepType().equals(PhaseStepType.ROLLBACK_PROVISIONERS)
+          && executionEvent.getExecutionStatus() == SUCCESS) {
+        rollbackProvisioners = true;
+
       } else if (!(executionEvent.getExecutionStatus() == FAILED || executionEvent.getExecutionStatus() == ERROR)) {
         return null;
       }
@@ -198,6 +204,38 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       if (phaseSubWorkflow != null && executionInterrupts != null
           && executionInterrupts.stream().anyMatch(ex -> ex.getExecutionInterruptType() == ROLLBACK)) {
         return phaseSubWorkflowAdvice(orchestrationWorkflow, phaseSubWorkflow, stateExecutionInstance);
+      } else if (rollbackProvisioners) {
+        List<String> phaseNames =
+            orchestrationWorkflow.getWorkflowPhases().stream().map(WorkflowPhase::getName).collect(toList());
+
+        String lastExecutedPhaseName = null;
+        for (String phaseName : phaseNames) {
+          if (stateExecutionInstance.getStateExecutionMap().containsKey(phaseName)) {
+            lastExecutedPhaseName = phaseName;
+          } else {
+            break;
+          }
+        }
+
+        if (lastExecutedPhaseName == null) {
+          return null;
+        }
+        String finalLastExecutedPhaseName = lastExecutedPhaseName;
+        Optional<WorkflowPhase> lastExecutedPhase =
+            orchestrationWorkflow.getWorkflowPhases()
+                .stream()
+                .filter(phase -> phase.getName().equals(finalLastExecutedPhaseName))
+                .findFirst();
+
+        if (!lastExecutedPhase.isPresent()
+            || !orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().containsKey(lastExecutedPhase.get().getUuid())) {
+          return null;
+        }
+        return anExecutionEventAdvice()
+            .withNextStateName(
+                orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(lastExecutedPhase.get().getUuid()).getName())
+            .withExecutionInterruptType(ROLLBACK)
+            .build();
       }
 
       if (state.getParentId() != null) {
@@ -423,6 +461,16 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
   private ExecutionEventAdvice phaseSubWorkflowAdviceForOthers(CanaryOrchestrationWorkflow orchestrationWorkflow,
       PhaseSubWorkflow phaseSubWorkflow, StateExecutionInstance stateExecutionInstance) {
     if (!phaseSubWorkflow.isRollback()) {
+      if (orchestrationWorkflow.getPreDeploymentSteps() != null
+          && orchestrationWorkflow.getPreDeploymentSteps().getSteps() != null
+          && orchestrationWorkflow.getPreDeploymentSteps().getSteps().stream().anyMatch(
+                 step -> step.getType().equals(StateType.CLOUD_FORMATION_CREATE_STACK.name()))) {
+        return anExecutionEventAdvice()
+            .withNextStateName(Constants.ROLLBACK_PROVISIONERS)
+            .withExecutionInterruptType(ROLLBACK)
+            .build();
+      }
+
       return anExecutionEventAdvice()
           .withNextStateName(
               orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(phaseSubWorkflow.getId()).getName())
