@@ -11,6 +11,9 @@ import static software.wings.dl.PageRequest.UNLIMITED;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.data.structure.EmptyPredicate;
+
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -46,6 +49,11 @@ public class EnvironmentExpressionBuilder extends ExpressionBuilder {
 
   public Set<String> getServiceTemplateVariableExpressions(String appId, String envId, String serviceId) {
     List<String> serviceIds = serviceExpressionBuilder.getServiceIds(appId, serviceId);
+
+    if (EmptyPredicate.isEmpty(serviceIds)) {
+      return Collections.emptySet();
+    }
+
     return getServiceVariablesOfTemplates(appId,
         aPageRequest()
             .withLimit(UNLIMITED)
