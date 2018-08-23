@@ -13,10 +13,13 @@ import software.wings.service.impl.newrelic.NewRelicApplicationsResponse;
 import software.wings.service.impl.newrelic.NewRelicMetricDataResponse;
 import software.wings.service.impl.newrelic.NewRelicMetricResponse;
 
+import java.util.Collection;
+
 /**
  * Created by rsingh on 8/28/17.
  */
 public interface NewRelicRestClient {
+  String NAMES_PARAM = "names[]";
   /**
    * Lists all the applications of new relic
    *
@@ -28,9 +31,14 @@ public interface NewRelicRestClient {
   Call<NewRelicApplicationInstancesResponse> listAppInstances(
       @Path("applicationId") long newRelicAppId, @Query("page") int pageCount);
 
-  @GET()
-  Call<NewRelicMetricDataResponse> getRawMetricData(
-      @Url String url, @Query("from") String fromTime, @Query("to") String toTime);
+  @GET("v2/applications/{applicationId}/metrics/data.json?summarize=true")
+  Call<NewRelicMetricDataResponse> getApplicationMetricData(@Path("applicationId") long applicationId,
+      @Query("from") String fromTime, @Query("to") String toTime, @Query(NAMES_PARAM) Collection<String> metricNames);
+
+  @GET("v2/applications/{applicationId}/instances/{instanceId}/metrics/data.json")
+  Call<NewRelicMetricDataResponse> getInstanceMetricData(@Path("applicationId") long applicationId,
+      @Path("instanceId") long instanceId, @Query("from") String fromTime, @Query("to") String toTime,
+      @Query(NAMES_PARAM) Collection<String> metricNames);
 
   @GET("v2/applications/{applicationId}/metrics.json?name=WebTransaction")
   Call<NewRelicMetricResponse> listMetricNames(@Path("applicationId") long newRelicAppId);

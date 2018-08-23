@@ -17,7 +17,6 @@ import com.google.inject.Inject;
 import io.harness.network.Http;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Call;
@@ -43,7 +42,6 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
-import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -59,6 +57,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletResponse;
 
@@ -70,8 +69,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   private static final int METRIC_DATA_QUERY_BATCH_SIZE = 30;
   private static final int MIN_RPM = 1;
   private static final String NEW_RELIC_DATE_FORMAT = "YYYY-MM-dd'T'HH:mm:ssZ";
-  private static final String NAMES_PARAM = "names[]=";
-  private static final String AMPERSAND = "&";
+  private static final Pattern METRIC_NAME_PATTERN_NO_SPECIAL_CHAR = Pattern.compile("[a-zA-Z0-9_\\-\\+\\s/]*");
 
   private static final Logger logger = LoggerFactory.getLogger(NewRelicDelgateServiceImpl.class);
   @Inject private EncryptionService encryptionService;
@@ -315,55 +313,49 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   public NewRelicMetricData getMetricDataApplication(NewRelicConfig newRelicConfig,
       List<EncryptedDataDetail> encryptedDataDetails, long newRelicApplicationId, Collection<String> metricNames,
       long fromTime, long toTime, boolean summarize, ThirdPartyApiCallLog apiCallLog) throws IOException {
-    String baseUrl = newRelicConfig.getNewRelicUrl().endsWith("/") ? newRelicConfig.getNewRelicUrl()
-                                                                   : newRelicConfig.getNewRelicUrl() + "/";
-    baseUrl += "v2/applications/" + newRelicApplicationId + "/metrics/data.json?summarize=" + summarize + "&";
-    return getMetricData(newRelicConfig, encryptedDataDetails, baseUrl, metricNames, fromTime, toTime, apiCallLog);
+    return getMetricData(
+        newRelicConfig, encryptedDataDetails, newRelicApplicationId, -1, metricNames, fromTime, toTime, apiCallLog);
   }
 
   @Override
   public NewRelicMetricData getMetricDataApplicationInstance(NewRelicConfig newRelicConfig,
       List<EncryptedDataDetail> encryptedDataDetails, long newRelicApplicationId, long instanceId,
       Collection<String> metricNames, long fromTime, long toTime, ThirdPartyApiCallLog apiCallLog) throws IOException {
-    String baseUrl = newRelicConfig.getNewRelicUrl().endsWith("/") ? newRelicConfig.getNewRelicUrl()
-                                                                   : newRelicConfig.getNewRelicUrl() + "/";
-    baseUrl += "v2/applications/" + newRelicApplicationId + "/instances/" + instanceId + "/metrics/data.json?";
-    return getMetricData(newRelicConfig, encryptedDataDetails, baseUrl, metricNames, fromTime, toTime, apiCallLog);
+    return getMetricData(newRelicConfig, encryptedDataDetails, newRelicApplicationId, instanceId, metricNames, fromTime,
+        toTime, apiCallLog);
   }
 
   private NewRelicMetricData getMetricData(NewRelicConfig newRelicConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String baseUrl, Collection<String> metricNames, long fromTime,
-      long toTime, ThirdPartyApiCallLog apiCallLog) throws IOException {
+      List<EncryptedDataDetail> encryptedDataDetails, long applicationId, long instanceId,
+      Collection<String> metricNames, long fromTime, long toTime, ThirdPartyApiCallLog apiCallLog) throws IOException {
     if (apiCallLog == null) {
       apiCallLog = apiCallLogWithDummyStateExecution(newRelicConfig.getAccountId());
     }
-    String metricsToCollectString = "";
 
-    StringBuffer sBuf = new StringBuffer();
-    for (String metricName : metricNames) {
-      sBuf.append(NAMES_PARAM);
-      sBuf.append(URLEncoder.encode(metricName, "UTF-8"));
-      sBuf.append(AMPERSAND);
-    }
-    metricsToCollectString = sBuf.toString();
-
-    metricsToCollectString = StringUtils.removeEnd(metricsToCollectString, "&");
-
-    final String url = baseUrl + metricsToCollectString;
-    apiCallLog.setTitle(
-        "Fetching metric data for " + metricNames.size() + " transactions from " + newRelicConfig.getNewRelicUrl());
-    apiCallLog.addFieldToRequest(
-        ThirdPartyApiCallField.builder().name(URL_STRING).value(baseUrl).type(FieldType.URL).build());
+    String urlToCall = instanceId > 0
+        ? "/v2/applications/" + applicationId + "/instances/" + instanceId + "/metrics/data.json"
+        : "/v2/applications/" + applicationId + "/metrics/data.json";
+    apiCallLog.setTitle("Fetching " + (instanceId > 0 ? "instance" : "application") + " metric data for "
+        + metricNames.size() + " transactions from " + newRelicConfig.getNewRelicUrl() + urlToCall);
+    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                     .name(URL_STRING)
+                                     .value(newRelicConfig.getNewRelicUrl() + urlToCall)
+                                     .type(FieldType.URL)
+                                     .build());
     apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
                                      .name("Metric Names")
-                                     .value(metricsToCollectString)
+                                     .value(JsonUtils.asJson(metricNames))
                                      .type(FieldType.URL)
                                      .build());
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     final SimpleDateFormat dateFormatter = new SimpleDateFormat(NEW_RELIC_DATE_FORMAT);
-    final Call<NewRelicMetricDataResponse> request =
-        getNewRelicRestClient(newRelicConfig, encryptedDataDetails)
-            .getRawMetricData(url, dateFormatter.format(new Date(fromTime)), dateFormatter.format(new Date(toTime)));
+    final Call<NewRelicMetricDataResponse> request = instanceId > 0
+        ? getNewRelicRestClient(newRelicConfig, encryptedDataDetails)
+              .getInstanceMetricData(applicationId, instanceId, dateFormatter.format(new Date(fromTime)),
+                  dateFormatter.format(new Date(toTime)), metricNames)
+        : getNewRelicRestClient(newRelicConfig, encryptedDataDetails)
+              .getApplicationMetricData(applicationId, dateFormatter.format(new Date(fromTime)),
+                  dateFormatter.format(new Date(toTime)), metricNames);
     final Response<NewRelicMetricDataResponse> response = request.execute();
     apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     if (response.isSuccessful()) {
@@ -425,11 +417,8 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
             .build();
       }
       Set<String> metricNames = txnsWithData.stream().map(NewRelicMetric::getName).collect(Collectors.toSet());
-      String baseUrl = newRelicConfig.getNewRelicUrl().endsWith("/") ? newRelicConfig.getNewRelicUrl()
-                                                                     : newRelicConfig.getNewRelicUrl() + "/";
-      baseUrl += "v2/applications/" + newRelicApplicationId + "/instances/" + instanceId + "/metrics/data.json?";
-      NewRelicMetricData newRelicMetricData =
-          getMetricData(newRelicConfig, encryptedDataDetails, baseUrl, metricNames, fromTime, toTime, apiCallLog);
+      NewRelicMetricData newRelicMetricData = getMetricData(newRelicConfig, encryptedDataDetails, newRelicApplicationId,
+          instanceId, metricNames, fromTime, toTime, apiCallLog);
       return VerificationNodeDataSetupResponse.builder()
           .providerReachable(true)
           .dataForNode(newRelicMetricData)
@@ -471,18 +460,32 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   public static List<Set<String>> batchMetricsToCollect(Collection<NewRelicMetric> metrics) {
     List<Set<String>> rv = new ArrayList<>();
 
-    Set<String> batchedMetrics = new HashSet<>();
+    Set<String> batchedNonSpecialCharMetrics = new HashSet<>();
+    Set<String> batchedSpecialCharMetrics = new HashSet<>();
     for (NewRelicMetric metric : metrics) {
-      batchedMetrics.add(metric.getName());
+      if (METRIC_NAME_PATTERN_NO_SPECIAL_CHAR.matcher(metric.getName()).matches()) {
+        batchedNonSpecialCharMetrics.add(metric.getName());
+      } else {
+        batchedSpecialCharMetrics.add(metric.getName());
+      }
 
-      if (batchedMetrics.size() == METRIC_DATA_QUERY_BATCH_SIZE) {
-        rv.add(batchedMetrics);
-        batchedMetrics = new HashSet<>();
+      if (batchedNonSpecialCharMetrics.size() == METRIC_DATA_QUERY_BATCH_SIZE) {
+        rv.add(batchedNonSpecialCharMetrics);
+        batchedNonSpecialCharMetrics = new HashSet<>();
+      }
+
+      if (batchedSpecialCharMetrics.size() == METRIC_DATA_QUERY_BATCH_SIZE) {
+        rv.add(batchedSpecialCharMetrics);
+        batchedSpecialCharMetrics = new HashSet<>();
       }
     }
 
-    if (!batchedMetrics.isEmpty()) {
-      rv.add(batchedMetrics);
+    if (!batchedNonSpecialCharMetrics.isEmpty()) {
+      rv.add(batchedNonSpecialCharMetrics);
+    }
+
+    if (!batchedSpecialCharMetrics.isEmpty()) {
+      rv.add(batchedSpecialCharMetrics);
     }
 
     return rv;

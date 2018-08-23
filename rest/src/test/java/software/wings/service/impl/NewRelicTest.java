@@ -1,16 +1,17 @@
 package software.wings.service.impl;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.time.Timestamp;
-
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-
 import software.wings.WingsBaseTest;
 import software.wings.beans.FeatureName;
 import software.wings.beans.NewRelicConfig;
@@ -18,6 +19,7 @@ import software.wings.generator.SecretGenerator;
 import software.wings.generator.SecretGenerator.SecretName;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicApplicationInstance;
+import software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl;
 import software.wings.service.impl.newrelic.NewRelicMetric;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 
@@ -27,6 +29,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -99,5 +102,26 @@ public class NewRelicTest extends WingsBaseTest {
   public void testTimeStampCreations() {
     final SimpleDateFormat dateFormatter = new SimpleDateFormat(NEW_RELIC_DATE_FORMAT);
     dateFormatter.format(new Date(Timestamp.minuteBoundary(1513463100000L))).equals("2017-12-16T14:25:00-0800");
+  }
+
+  @Test
+  public void testMetricsBatching() throws Exception {
+    Set<NewRelicMetric> metricNames =
+        Sets.newHashSet(NewRelicMetric.builder().name("WebTransaction/456/load+test-some/with_under_score1").build(),
+            NewRelicMetric.builder().name("WebTransaction/456/load+test-some/with_under_score2").build(),
+            NewRelicMetric.builder().name("1292Name/456/load test-some/with space_and_underscore").build(),
+            NewRelicMetric.builder().name("WebTransaction/special char %?name=s1&value=v1").build(),
+            NewRelicMetric.builder().name("WebTransaction/special char %?name=s2&value=v2").build());
+
+    List<Set<String>> batchMetricsToCollect = NewRelicDelgateServiceImpl.batchMetricsToCollect(metricNames);
+    assertEquals(2, batchMetricsToCollect.size());
+    assertEquals(3, batchMetricsToCollect.get(0).size());
+    assertTrue(batchMetricsToCollect.get(0).contains("WebTransaction/456/load+test-some/with_under_score1"));
+    assertTrue(batchMetricsToCollect.get(0).contains("WebTransaction/456/load+test-some/with_under_score2"));
+    assertTrue(batchMetricsToCollect.get(0).contains("1292Name/456/load test-some/with space_and_underscore"));
+
+    assertEquals(2, batchMetricsToCollect.get(1).size());
+    assertTrue(batchMetricsToCollect.get(1).contains("WebTransaction/special char %?name=s1&value=v1"));
+    assertTrue(batchMetricsToCollect.get(1).contains("WebTransaction/special char %?name=s2&value=v2"));
   }
 }
