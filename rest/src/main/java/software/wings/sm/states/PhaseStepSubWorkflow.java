@@ -107,6 +107,8 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     if (!isRollback()) {
       validatePreRequisites(contextIntf, phaseElement);
       response = super.execute(contextIntf);
+    } else if (phaseStepType == PhaseStepType.ROLLBACK_PROVISIONERS) {
+      response = (SpawningExecutionResponse) super.execute(contextIntf);
     } else {
       List<ContextElement> rollbackRequiredParams = getRollbackRequiredParam(phaseStepType, phaseElement, contextIntf);
       if (rollbackRequiredParams == null) {

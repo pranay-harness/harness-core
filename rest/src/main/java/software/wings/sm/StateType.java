@@ -4,6 +4,7 @@ import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.joor.Reflect.on;
@@ -34,6 +35,7 @@ import static software.wings.common.Constants.PROVISION_CLOUD_FORMATION;
 import static software.wings.common.Constants.ROLLBACK_AWS_AMI_CLUSTER;
 import static software.wings.common.Constants.ROLLBACK_AWS_CODE_DEPLOY;
 import static software.wings.common.Constants.ROLLBACK_AWS_LAMBDA;
+import static software.wings.common.Constants.ROLLBACK_CLOUD_FORMATION;
 import static software.wings.common.Constants.ROLLBACK_CONTAINERS;
 import static software.wings.common.Constants.ROLLBACK_KUBERNETES_SETUP;
 import static software.wings.common.Constants.SELECT_NODE_NAME;
@@ -130,6 +132,7 @@ import software.wings.sm.states.pcf.UnmapRouteState;
 import software.wings.sm.states.provision.ApplyTerraformProvisionState;
 import software.wings.sm.states.provision.CloudFormationCreateStackState;
 import software.wings.sm.states.provision.CloudFormationDeleteStackState;
+import software.wings.sm.states.provision.CloudFormationRollbackStackState;
 import software.wings.sm.states.provision.DestroyTerraformProvisionState;
 import software.wings.stencils.OverridingStencil;
 import software.wings.stencils.StencilCategory;
@@ -433,7 +436,10 @@ public enum StateType implements StateTypeDescriptor {
       Constants.KUBERNETES_SWAP_SERVICE_SELECTORS,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.AZURE_KUBERNETES,
           InfrastructureMappingType.GCP_KUBERNETES),
-      asList(CONTAINER_DEPLOY, ROUTE_UPDATE, WRAP_UP), ORCHESTRATION_STENCILS);
+      asList(CONTAINER_DEPLOY, ROUTE_UPDATE, WRAP_UP), ORCHESTRATION_STENCILS),
+
+  CLOUD_FORMATION_ROLLBACK_STACK(CloudFormationRollbackStackState.class, PROVISIONERS, ROLLBACK_CLOUD_FORMATION,
+      singletonList(InfrastructureMappingType.AWS_SSH), singletonList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS);
 
   private static final String stencilsPath = "/templates/stencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";

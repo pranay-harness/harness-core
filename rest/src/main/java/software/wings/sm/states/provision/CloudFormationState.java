@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
+import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
@@ -21,12 +22,15 @@ import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.cloudformation.CloudFormationElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
+import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureProvisioner;
+import software.wings.beans.Log;
+import software.wings.beans.Log.LogLevel;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.Command.Builder;
@@ -35,6 +39,7 @@ import software.wings.beans.command.CommandType;
 import software.wings.exception.InvalidRequestException;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandExecutionResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandResponse;
+import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
@@ -49,6 +54,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.Validator;
 import software.wings.waitnotify.NotifyResponseData;
@@ -57,11 +63,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 public abstract class CloudFormationState extends State {
   @Inject @Transient private transient ActivityService activityService;
-  @Inject @Transient private transient DelegateService delegateService;
+  @Inject @Transient protected transient DelegateService delegateService;
   @Inject @Transient private transient SettingsService settingsService;
   @Inject @Transient private transient AppService appService;
   @Inject @Transient protected transient SecretManager secretManager;
@@ -70,7 +77,7 @@ public abstract class CloudFormationState extends State {
 
   @Attributes(title = "Provisioner") @Getter @Setter protected String provisionerId;
   @Attributes(title = "Region") @DefaultValue("us-east-1") @Getter @Setter protected String region = "us-east-1";
-  @Attributes(title = "AwsConfigId") @Getter @Setter private String awsConfigId;
+  @Attributes(title = "AwsConfigId") @Getter @Setter protected String awsConfigId;
   @Attributes(title = "Variables") @Getter @Setter private List<NameValuePair> variables;
 
   private static final int IDSIZE = 8;
@@ -134,17 +141,21 @@ public abstract class CloudFormationState extends State {
     return (CloudFormationInfrastructureProvisioner) infrastructureProvisioner;
   }
 
-  private ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
-    CloudFormationInfrastructureProvisioner cloudFormationInfrastructureProvisioner = getProvisioner(context);
+  protected AwsConfig getAwsConfig(String awsConfigId) {
     SettingAttribute awsSettingAttribute = settingsService.get(awsConfigId);
     Validator.notNullCheck("awsSettingAttribute", awsSettingAttribute);
     if (!(awsSettingAttribute.getValue() instanceof AwsConfig)) {
       throw new InvalidRequestException("");
     }
-    AwsConfig awsConfig = (AwsConfig) awsSettingAttribute.getValue();
+    return (AwsConfig) awsSettingAttribute.getValue();
+  }
+
+  protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
+    CloudFormationInfrastructureProvisioner cloudFormationInfrastructureProvisioner = getProvisioner(context);
+
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
-    DelegateTask delegateTask =
-        getDelegateTask(executionContext, cloudFormationInfrastructureProvisioner, awsConfig, activityId);
+    DelegateTask delegateTask = getDelegateTask(
+        executionContext, cloudFormationInfrastructureProvisioner, getAwsConfig(awsConfigId), activityId);
     if (getTimeoutMillis() != null) {
       delegateTask.setTimeout(getTimeoutMillis());
     }
@@ -156,6 +167,27 @@ public abstract class CloudFormationState extends State {
         .withDelegateTaskId(delegateTaskId)
         .withStateExecutionData(ScriptStateExecutionData.builder().activityId(activityId).build())
         .build();
+  }
+
+  protected void updateInfraMappings(
+      CloudFormationCommandResponse commandResponse, ExecutionContext context, String provisionerId) {
+    CloudFormationCreateStackResponse createStackResponse = (CloudFormationCreateStackResponse) commandResponse;
+    ScriptStateExecutionData scriptStateExecutionData = (ScriptStateExecutionData) context.getStateExecutionData();
+    Log.Builder logBuilder = aLog()
+                                 .withAppId(context.getAppId())
+                                 .withActivityId(scriptStateExecutionData.getActivityId())
+                                 .withLogLevel(LogLevel.INFO)
+                                 .withCommandUnitName(commandUnit())
+                                 .withExecutionResult(CommandExecutionStatus.RUNNING);
+
+    ManagerExecutionLogCallback executionLogCallback =
+        new ManagerExecutionLogCallback(logService, logBuilder, scriptStateExecutionData.getActivityId());
+
+    if (CommandExecutionStatus.SUCCESS.equals(commandResponse.getCommandExecutionStatus())) {
+      Map<String, Object> outputs = createStackResponse.getCloudFormationOutputMap();
+      infrastructureProvisionerService.regenerateInfrastructureMappings(
+          provisionerId, context, outputs, Optional.of(executionLogCallback), Optional.of(region));
+    }
   }
 
   protected Map<String, String> getVariableMap(
@@ -184,7 +216,7 @@ public abstract class CloudFormationState extends State {
         Activity.builder()
             .applicationName(app.getName())
             .commandName(getName())
-            .type(Activity.Type.Verification)
+            .type(Type.Command)
             .workflowType(executionContext.getWorkflowType())
             .workflowExecutionName(executionContext.getWorkflowExecutionName())
             .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
@@ -210,11 +242,10 @@ public abstract class CloudFormationState extends State {
     return activityService.save(activity).getUuid();
   }
 
-  protected String getStackNameSuffix(
-      ExecutionContextImpl executionContext, CloudFormationInfrastructureProvisioner provisioner) {
+  protected String getStackNameSuffix(ExecutionContextImpl executionContext, String provisionerId) {
     WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
     Environment env = workflowStandardParams.getEnv();
-    return getNormalizedId(env.getUuid()) + getNormalizedId(provisioner.getUuid());
+    return getNormalizedId(env.getUuid()) + getNormalizedId(provisionerId);
   }
 
   private String getNormalizedId(String id) {

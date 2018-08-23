@@ -40,6 +40,7 @@ import static software.wings.beans.PhaseStepType.PREPARE_STEPS;
 import static software.wings.beans.PhaseStepType.WRAP_UP;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
+import static software.wings.common.Constants.ROLLBACK_PROVISIONERS;
 import static software.wings.common.Constants.WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
@@ -49,10 +50,13 @@ import static software.wings.exception.WingsException.USER_SRE;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.StateMachineExecutionSimulator.populateRequiredEntityTypesByAccessType;
 import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
+import static software.wings.sm.StateType.CLOUD_FORMATION_ROLLBACK_STACK;
 import static software.wings.sm.StateType.values;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -94,6 +98,7 @@ import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.PhaseStep;
+import software.wings.beans.PhaseStepType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.RepairActionCode;
 import software.wings.beans.RoleType;
@@ -975,6 +980,32 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return workflows.stream().collect(toMap(Workflow::getUuid, o -> o.getName()));
   }
 
+  private PhaseStep generateRollbackProvisioners(PhaseStep preDeploymentSteps) {
+    PhaseStep rollbackProvisionerStep = new PhaseStep(PhaseStepType.ROLLBACK_PROVISIONERS, ROLLBACK_PROVISIONERS);
+    List<GraphNode> provisionerSteps =
+        preDeploymentSteps.getSteps()
+            .stream()
+            .filter(step -> StateType.CLOUD_FORMATION_CREATE_STACK.name().equals(step.getType()))
+            .collect(Collectors.toList());
+    List<GraphNode> rollbackProvisionerNodes = Lists.newArrayList();
+    if (isNotEmpty(provisionerSteps)) {
+      provisionerSteps.forEach(step -> {
+        Map<String, Object> propertiesMap = Maps.newHashMap();
+        propertiesMap.put("provisionerId", step.getProperties().get("provisionerId"));
+        propertiesMap.put("timeoutMillis", step.getProperties().get("timeoutMillis"));
+        rollbackProvisionerNodes.add(aGraphNode()
+                                         .withType(CLOUD_FORMATION_ROLLBACK_STACK.name())
+                                         .withRollback(true)
+                                         .withName("Rollback " + step.getName())
+                                         .withProperties(propertiesMap)
+                                         .build());
+      });
+    }
+    rollbackProvisionerStep.setRollback(true);
+    rollbackProvisionerStep.setSteps(rollbackProvisionerNodes);
+    return rollbackProvisionerStep;
+  }
+
   @Override
   public PhaseStep updatePreDeployment(String appId, String workflowId, PhaseStep phaseStep) {
     Workflow workflow = readWorkflow(appId, workflowId);
@@ -987,6 +1018,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     workflowServiceTemplateHelper.updateLinkedPhaseStepTemplate(
         phaseStep, orchestrationWorkflow.getPreDeploymentSteps());
     orchestrationWorkflow.setPreDeploymentSteps(phaseStep);
+    orchestrationWorkflow.setRollbackProvisioners(generateRollbackProvisioners(phaseStep));
 
     orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow).getOrchestrationWorkflow();
