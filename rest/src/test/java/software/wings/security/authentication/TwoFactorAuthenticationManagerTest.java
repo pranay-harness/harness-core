@@ -9,6 +9,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Account.Builder.anAccount;
 
 import com.google.inject.Inject;
 
@@ -28,6 +29,7 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserService;
 
 import java.security.GeneralSecurityException;
+import java.util.Arrays;
 import java.util.Base64;
 
 public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
@@ -40,7 +42,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
 
   @Test
   @Repeat(times = 5, successes = 1)
-  public void testTwoFactorAuthenticationUsingTOTP() {
+  public void shouldTwoFactorAuthenticationUsingTOTP() {
     try {
       TwoFactorAuthHandler handler =
           twoFactorAuthenticationManager.getTwoFactorAuthHandler(TwoFactorAuthenticationMechanism.TOTP);
@@ -92,7 +94,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   }
 
   @Test
-  public void testCreateTwoFactorAuthenticationSettingsTotp() {
+  public void shouldCreateTwoFactorAuthenticationSettingsTotp() {
     User user = spy(new User());
     Account account = mock(Account.class);
     when(account.getCompanyName()).thenReturn("TestCompany");
@@ -107,8 +109,8 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   }
 
   @Test
-  public void testOverrideTwoFactorAuthentication() {
-    Account account = mock(Account.class);
+  public void shouldOverrideTwoFactorAuthentication() {
+    Account account = getAccount(true);
     User user = spy(new User());
     TwoFactorAdminOverrideSettings twoFactorAdminOverrideSettings = new TwoFactorAdminOverrideSettings(true);
     accountService.updateTwoFactorEnforceInfo(
@@ -119,5 +121,70 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
     assertThat(twoFactorAuthenticationManager.overrideTwoFactorAuthentication(
                    account.getUuid(), user, twoFactorAdminOverrideSettings))
         .isTrue();
+  }
+
+  @Test
+  public void shouldDisableTwoFactorAuthenticationForNoAdminEnforce() {
+    Account account = getAccount(false);
+
+    // Original user object
+    User user = getUser(true);
+    user.setAccounts(Arrays.asList(account));
+
+    // Updated user object
+    User updatedUser = getUser(false);
+    updatedUser.setAccounts(Arrays.asList(account));
+
+    // Should allow disable
+    twoFactorAuthenticationManager.disableTwoFactorAuthentication(user);
+    assertThat(updatedUser.isTwoFactorAuthenticationEnabled()).isFalse();
+  }
+
+  @Test
+  public void shouldDisableTwoFactorAuthenticationForAdminEnforce() {
+    Account account = getAccount(true);
+
+    User user = getUser(true);
+    user.setAccounts(Arrays.asList(account));
+
+    // Should not allow disable
+    twoFactorAuthenticationManager.disableTwoFactorAuthentication(user);
+    assertThat(user.isTwoFactorAuthenticationEnabled()).isTrue();
+  }
+
+  @Test
+  public void shouldDisableTwoFactorAuthenticationForMultiAccounts() {
+    Account account1 = getAccount(false);
+    Account account2 = getAccount(false);
+
+    User user = getUser(true);
+    user.setAccounts(Arrays.asList(account1, account2));
+
+    // Should allow disable
+    twoFactorAuthenticationManager.disableTwoFactorAuthentication(user);
+    assertThat(user.isTwoFactorAuthenticationEnabled()).isFalse();
+  }
+
+  @Test
+  public void shouldDisableTwoFactorAuthenticationForNoAccounts() {
+    User user = getUser(true);
+    user.setAccounts(null);
+
+    // Should allow disable
+    twoFactorAuthenticationManager.disableTwoFactorAuthentication(user);
+    assertThat(user.isTwoFactorAuthenticationEnabled()).isTrue();
+  }
+
+  private Account getAccount(boolean twoFactorAdminEnforced) {
+    Account account = anAccount().withAccountName("Harness").build();
+    account.setTwoFactorAdminEnforced(twoFactorAdminEnforced);
+    return account;
+  }
+
+  private User getUser(boolean twoFactorEnabled) {
+    User user = spy(new User());
+    user.setTwoFactorAuthenticationEnabled(twoFactorEnabled);
+    user.setTwoFactorAuthenticationMechanism(TwoFactorAuthenticationMechanism.TOTP);
+    return user;
   }
 }
