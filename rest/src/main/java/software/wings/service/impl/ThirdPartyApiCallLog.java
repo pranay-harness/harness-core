@@ -34,7 +34,7 @@ import java.util.List;
 @ToString(exclude = {"validUntil"})
 public class ThirdPartyApiCallLog extends Base {
   private static final String NO_STATE_EXECUTION_ID = "NO_STATE_EXECUTION";
-  private static final int MAX_JSON_RESPONSE_LENGTH = 4096;
+  private static final int MAX_JSON_RESPONSE_LENGTH = 16384;
   private @NotEmpty @Indexed String stateExecutionId;
   private @NotEmpty @Indexed String accountId;
   private @NotEmpty String delegateId;
