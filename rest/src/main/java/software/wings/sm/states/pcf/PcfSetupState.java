@@ -239,7 +239,7 @@ public class PcfSetupState extends State {
             .space(pcfInfrastructureMapping.getSpace())
             .pcfConfig(pcfConfig)
             .pcfCommandType(PcfCommandType.SETUP)
-            .manifestYaml(pcfServiceSpecification.getManifestYaml())
+            .manifestYaml(context.renderExpression(pcfServiceSpecification.getManifestYaml()))
             .workflowExecutionId(context.getWorkflowExecutionId())
             .artifactFiles(artifact.getArtifactFiles())
             .routeMaps(isOriginalRoute ? routeMaps : tempRouteMaps)
