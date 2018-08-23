@@ -47,17 +47,21 @@ public class MLServiceUtil {
           .addParam("reason", "No successful execution exists for the workflow.");
     }
 
-    StateExecutionInstance stateExecutionInstance = wingsPersistence.createQuery(StateExecutionInstance.class)
-                                                        .filter("executionUuid", workflowExecution.getUuid())
-                                                        .filter("stateType", StateType.PHASE)
-                                                        .order(Sort.descending("createdAt"))
-                                                        .get();
-    ExecutionContext executionContext = executionContextFactory.createExecutionContext(stateExecutionInstance, null);
-    String hostName = isEmpty(nodeData.getHostExpression())
-        ? nodeData.getInstanceName()
-        : executionContext.renderExpression(
-              nodeData.getHostExpression(), Lists.newArrayList(nodeData.getInstanceElement()));
-    logger.info("rendered host is {}", hostName);
-    return hostName;
+    try {
+      StateExecutionInstance stateExecutionInstance = wingsPersistence.createQuery(StateExecutionInstance.class)
+                                                          .filter("executionUuid", workflowExecution.getUuid())
+                                                          .filter("stateType", StateType.PHASE)
+                                                          .order(Sort.descending("createdAt"))
+                                                          .get();
+      ExecutionContext executionContext = executionContextFactory.createExecutionContext(stateExecutionInstance, null);
+      String hostName = isEmpty(nodeData.getHostExpression())
+          ? nodeData.getInstanceName()
+          : executionContext.renderExpression(
+                nodeData.getHostExpression(), Lists.newArrayList(nodeData.getInstanceElement()));
+      logger.info("rendered host is {}", hostName);
+      return hostName;
+    } catch (RuntimeException e) {
+      throw new WingsException(e).addContext(SetupTestNodeData.class, nodeData);
+    }
   }
 }
