@@ -82,7 +82,7 @@ if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
     echo "Downloading Delegate $REMOTE_DELEGATE_VERSION ..."
     curl $PROXY_CURL -#k $REMOTE_DELEGATE_URL -o delegate.jar
   else
-    CURRENT_VERSION=$(tar -xf delegate.jar META-INF/MANIFEST.MF && cat META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n" && rm -rf META-INF)
+    CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
     if [[ $REMOTE_DELEGATE_VERSION != $CURRENT_VERSION ]]
     then
       echo "Downloading Delegate $REMOTE_DELEGATE_VERSION ..."

@@ -117,7 +117,7 @@ then
   echo "Downloading Watcher $REMOTE_WATCHER_VERSION ..."
   curl $PROXY_CURL -#k $REMOTE_WATCHER_URL -o watcher.jar
 else
-  WATCHER_CURRENT_VERSION=$(tar -xf watcher.jar META-INF/MANIFEST.MF && cat META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n" && rm -rf META-INF)
+  WATCHER_CURRENT_VERSION=$(unzip -c watcher.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
   if [[ $REMOTE_WATCHER_VERSION != $WATCHER_CURRENT_VERSION ]]
   then
     echo "Downloading Watcher $REMOTE_WATCHER_VERSION ..."
@@ -141,7 +141,7 @@ if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
     echo "Downloading Delegate $REMOTE_DELEGATE_VERSION ..."
     curl $PROXY_CURL -#k $REMOTE_DELEGATE_URL -o delegate.jar
   else
-    DELEGATE_CURRENT_VERSION=$(tar -xf delegate.jar META-INF/MANIFEST.MF && cat META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n" && rm -rf META-INF)
+    DELEGATE_CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
     if [[ $REMOTE_DELEGATE_VERSION != $DELEGATE_CURRENT_VERSION ]]
     then
       echo "Downloading Delegate $REMOTE_DELEGATE_VERSION ..."
@@ -182,7 +182,7 @@ export CAPSULE_CACHE_DIR="$DIR/.cache"
 if [[ $1 == "upgrade" ]]
 then
   echo "Upgrade"
-  CURRENT_VERSION=$(tar -xf watcher.jar META-INF/MANIFEST.MF && cat META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n" && rm -rf META-INF)
+  CURRENT_VERSION=$(unzip -c watcher.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
   mkdir -p watcherBackup.$CURRENT_VERSION
   cp watcher.jar watcherBackup.$CURRENT_VERSION
   $JRE_BINARY $PROXY_SYS_PROPS -Dwatchersourcedir="$DIR" -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar watcher.jar config-watcher.yml upgrade $2
