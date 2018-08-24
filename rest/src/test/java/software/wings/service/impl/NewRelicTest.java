@@ -111,7 +111,13 @@ public class NewRelicTest extends WingsBaseTest {
             NewRelicMetric.builder().name("WebTransaction/456/load+test-some/with_under_score2").build(),
             NewRelicMetric.builder().name("1292Name/456/load test-some/with space_and_underscore").build(),
             NewRelicMetric.builder().name("WebTransaction/special char %?name=s1&value=v1").build(),
-            NewRelicMetric.builder().name("WebTransaction/special char %?name=s2&value=v2").build());
+            NewRelicMetric.builder().name("WebTransaction/special char %?name=s2&value=v2").build(),
+            NewRelicMetric.builder()
+                .name("WebTransaction/SpringController/${server.error.path:${error.path:/error (GET)")
+                .build(),
+            NewRelicMetric.builder()
+                .name("WebTransaction/SpringController/$server.error.path:$error.path:/error}} (GET)")
+                .build());
 
     List<Set<String>> batchMetricsToCollect = NewRelicDelgateServiceImpl.batchMetricsToCollect(metricNames);
     assertEquals(2, batchMetricsToCollect.size());

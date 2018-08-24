@@ -70,6 +70,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   private static final int MIN_RPM = 1;
   private static final String NEW_RELIC_DATE_FORMAT = "YYYY-MM-dd'T'HH:mm:ssZ";
   private static final Pattern METRIC_NAME_PATTERN_NO_SPECIAL_CHAR = Pattern.compile("[a-zA-Z0-9_\\-\\+\\s/]*");
+  private static final List<String> NOT_ALLOWED_STRINGS = Lists.newArrayList("{", "}");
 
   private static final Logger logger = LoggerFactory.getLogger(NewRelicDelgateServiceImpl.class);
   @Inject private EncryptionService encryptionService;
@@ -463,6 +464,11 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     Set<String> batchedNonSpecialCharMetrics = new HashSet<>();
     Set<String> batchedSpecialCharMetrics = new HashSet<>();
     for (NewRelicMetric metric : metrics) {
+      if (containsNotAllowedChars(metric.getName())) {
+        logger.info("metric {} contains not allowed characters {}. This will skip analysis", metric.getName(),
+            NOT_ALLOWED_STRINGS);
+        continue;
+      }
       if (METRIC_NAME_PATTERN_NO_SPECIAL_CHAR.matcher(metric.getName()).matches()) {
         batchedNonSpecialCharMetrics.add(metric.getName());
       } else {
@@ -489,6 +495,15 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     }
 
     return rv;
+  }
+
+  private static boolean containsNotAllowedChars(String name) {
+    for (String str : NOT_ALLOWED_STRINGS) {
+      if (name.contains(str)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public static Set<String> getApdexMetricNames(Collection<String> metricNames) {
