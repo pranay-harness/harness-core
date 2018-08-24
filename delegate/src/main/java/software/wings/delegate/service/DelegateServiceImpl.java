@@ -85,6 +85,7 @@ import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.LogOutputStream;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 import retrofit2.Response;
+import software.wings.app.DeployMode;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Builder;
 import software.wings.beans.Delegate.Status;
@@ -233,7 +234,8 @@ public class DelegateServiceImpl implements DelegateService {
   private final String delegateConnectionId = generateUuid();
   private DelegateConnectionHeartbeat connectionHeartbeat;
 
-  private final boolean multiVersion = TRUE.toString().equals(System.getenv().get("MULTI_VERSION"));
+  private final boolean multiVersion = DeployMode.KUBERNETES.name().equals(System.getenv().get("DEPLOY_MODE"))
+      || TRUE.toString().equals(System.getenv().get("MULTI_VERSION"));
 
   public static String getHostName() {
     return hostName;

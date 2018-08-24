@@ -6,6 +6,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.head;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
@@ -66,6 +67,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.rules.Cache;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.EventEmitter.Channel;
+import software.wings.service.impl.infra.InfraDownloadService;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateProfileService;
@@ -104,6 +106,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private Broadcaster broadcaster;
   @Mock private AssignDelegateService assignDelegateService;
   @Mock private DelegateProfileService delegateProfileService;
+  @Mock private InfraDownloadService infraDownloadService;
 
   @Rule public WireMockRule wireMockRule = new WireMockRule(8888);
 
@@ -114,14 +117,18 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Before
   public void setUp() {
     when(mainConfiguration.getDelegateMetadataUrl()).thenReturn("http://localhost:8888/delegateci.txt");
-    when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.AWS);
+    when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.KUBERNETES);
+    when(accountService.getDelegateConfiguration(anyString()))
+        .thenReturn(DelegateConfiguration.builder().delegateVersions(singletonList("0.0.0")).build());
+    when(infraDownloadService.getDownloadUrlForDelegate(anyString()))
+        .thenReturn("http://localhost:8888/builds/9/delegate.jar");
     wireMockRule.stubFor(get(urlEqualTo("/delegateci.txt"))
                              .willReturn(aResponse()
                                              .withStatus(200)
                                              .withBody("9.9.9 jobs/delegateci/9/delegate.jar")
                                              .withHeader("Content-Type", "text/plain")));
 
-    wireMockRule.stubFor(head(urlEqualTo("/jobs/delegateci/9/delegate.jar")).willReturn(aResponse().withStatus(200)));
+    wireMockRule.stubFor(head(urlEqualTo("/builds/9/delegate.jar")).willReturn(aResponse().withStatus(200)));
 
     when(mainConfiguration.getWatcherMetadataUrl()).thenReturn("http://localhost:8888/watcherci.txt");
     wireMockRule.stubFor(get(urlEqualTo("/watcherci.txt"))
@@ -427,6 +434,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldNotSignalForDelegateUpgradeWhenDelegateIsLatest() throws IOException, TemplateException {
+    when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.AWS);
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
     wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());

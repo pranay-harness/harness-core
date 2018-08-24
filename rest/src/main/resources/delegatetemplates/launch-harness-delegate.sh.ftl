@@ -11,7 +11,6 @@ sudo docker run -d --restart unless-stopped --hostname=$(hostname -f) \
 -e DELEGATE_STORAGE_URL=${delegateStorageUrl} \
 -e DELEGATE_CHECK_LOCATION=${delegateCheckLocation} \
 -e DEPLOY_MODE=${deployMode} \
--e MULTI_VERSION=${multiVersion} \
 -e PROXY_HOST= \
 -e PROXY_PORT= \
 -e PROXY_SCHEME= \

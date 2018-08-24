@@ -141,7 +141,8 @@ public class WatcherServiceImpl implements WatcherService {
   private HttpHost httpProxyHost;
   private long startTime;
 
-  private final boolean multiVersion = TRUE.toString().equals(System.getenv().get("MULTI_VERSION"));
+  private final boolean multiVersion = "KUBERNETES".equals(System.getenv().get("DEPLOY_MODE"))
+      || TRUE.toString().equals(System.getenv().get("MULTI_VERSION"));
   private static final Pattern VERSION_PATTERN = Pattern.compile("^[1-9]\\.[0-9]\\.[0-9]*$");
 
   @SuppressFBWarnings({"UW_UNCOND_WAIT", "WA_NOT_IN_LOOP"})

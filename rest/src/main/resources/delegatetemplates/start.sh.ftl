@@ -80,10 +80,9 @@ else
   fi
 fi
 
-export MULTI_VERSION=${multiVersion}
+export DEPLOY_MODE=${deployMode}
 
-if [[ $MULTI_VERSION != "true" ]]
-then
+if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
   echo "Checking Delegate latest version..."
   DELEGATE_STORAGE_URL=${delegateStorageUrl}
   REMOTE_DELEGATE_LATEST=$(curl $PROXY_CURL -#k $DELEGATE_STORAGE_URL/${delegateCheckLocation})

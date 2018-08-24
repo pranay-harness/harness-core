@@ -152,7 +152,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   @Test
   public void testFeatureFlagEnabledInConfigSaas() {
     when(mainConfiguration.getFeatureNames()).thenReturn(FEATURE.name());
-    when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.AWS);
+    when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.KUBERNETES);
 
     featureFlagService.initializeFeatureFlags();
 

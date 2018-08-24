@@ -111,16 +111,9 @@ else
   fi
 fi
 
-DEPLOY_MODE=_deployMode_
+export DEPLOY_MODE=_deployMode_
 
-if [[ $DEPLOY_MODE != "ONPREM" ]]; then
-  export MULTI_VERSION="true"
-else
-  export MULTI_VERSION="false"
-fi
-
-if [[ $MULTI_VERSION != "true" ]]
-then
+if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
   echo "Checking Delegate latest version..."
   DELEGATE_STORAGE_URL=_delegateStorageUrl_
   REMOTE_DELEGATE_LATEST=$(curl $PROXY_CURL -#k $DELEGATE_STORAGE_URL/_delegateCheckLocation_)

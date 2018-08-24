@@ -102,16 +102,14 @@ then
   ln -s $JRE_DIR jre
 fi
 
-export MULTI_VERSION=false
+export DEPLOY_MODE=KUBERNETES
 
-if [[ $MULTI_VERSION != "true" ]]
-then
+if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
   echo "Checking Delegate latest version..."
   DELEGATE_STORAGE_URL=http://localhost:8888
   REMOTE_DELEGATE_LATEST=$(curl $PROXY_CURL -#k $DELEGATE_STORAGE_URL/delegateci.txt)
   REMOTE_DELEGATE_URL=$DELEGATE_STORAGE_URL/$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f2)
   REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f1)
-  DEPLOY_MODE=AWS
 
   if [ ! -e delegate.jar ]
   then
@@ -167,8 +165,7 @@ fi
 export HOSTNAME
 export CAPSULE_CACHE_DIR="$DIR/.cache"
 
-if [[ $MULTI_VERSION == "true" ]]
-then
+if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
   echo "Starting delegate - version $2"
   $JRE_BINARY $PROXY_SYS_PROPS -Ddelegatesourcedir="$DIR" -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar $2/delegate.jar config-delegate.yml watched $1
 else
