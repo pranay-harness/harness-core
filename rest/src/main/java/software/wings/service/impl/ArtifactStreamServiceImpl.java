@@ -344,6 +344,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
           .put(ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.BAMBOO.name())
           .put(GCS.name(), GCS.name())
           .put(AMAZON_S3.name(), AMAZON_S3.name())
+          .put(AMI.name(), AMI.name())
           .build();
     }
 
@@ -354,6 +355,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         .put(ArtifactStreamType.NEXUS.name(), ArtifactStreamType.NEXUS.name())
         .put(ArtifactStreamType.ARTIFACTORY.name(), ArtifactStreamType.ARTIFACTORY.name())
         .put(AMAZON_S3.name(), AMAZON_S3.name())
+        .put(AMI.name(), AMI.name())
         .build();
   }
 
