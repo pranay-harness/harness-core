@@ -758,8 +758,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     Map<String, StateExecutionInstance> allInstancesIdMap =
         stateExecutionService.executionStatesMap(appId, workflowExecutionId);
 
-    Long lastUpdate =
-        allInstancesIdMap.values().stream().map(StateExecutionInstance::getLastUpdatedAt).max(Long::compare).get();
+    Long lastUpdate = allInstancesIdMap.values()
+                          .stream()
+                          .map(StateExecutionInstance::getLastUpdatedAt)
+                          .max(Long::compare)
+                          .orElseGet(() -> Long.valueOf(0));
 
     Tree tree = mongoStore.get(GraphRenderer.algorithmId, Tree.structureHash, workflowExecutionId);
     if (tree != null && tree.getContextOrder() >= lastUpdate) {
