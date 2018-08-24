@@ -344,7 +344,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
                                      .build());
     apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
                                      .name("Metric Names")
-                                     .value(JsonUtils.asJson(metricNames))
+                                     .value(metricNames.toString())
                                      .type(FieldType.URL)
                                      .build());
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
