@@ -1915,12 +1915,12 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     Graph graph = orchestrationWorkflow3.getGraph();
     assertThat(graph).isNotNull();
-    assertThat(graph.getNodes()).isNotNull().hasSize(7).doesNotContainNull();
+    assertThat(graph.getNodes()).isNotNull().hasSize(6).doesNotContainNull();
     assertThat(graph.getLinks()).isNotNull().hasSize(3).doesNotContainNull();
     assertThat(graph.getNodes().get(0).getId()).isEqualTo(orchestrationWorkflow3.getPreDeploymentSteps().getUuid());
-    assertThat(graph.getNodes().get(2).getId()).isEqualTo(orchestrationWorkflow3.getWorkflowPhaseIds().get(0));
-    assertThat(graph.getNodes().get(4).getId()).isEqualTo(orchestrationWorkflow3.getWorkflowPhaseIds().get(1));
-    assertThat(graph.getNodes().get(6).getId()).isEqualTo(orchestrationWorkflow3.getPostDeploymentSteps().getUuid());
+    assertThat(graph.getNodes().get(1).getId()).isEqualTo(orchestrationWorkflow3.getWorkflowPhaseIds().get(0));
+    assertThat(graph.getNodes().get(3).getId()).isEqualTo(orchestrationWorkflow3.getWorkflowPhaseIds().get(1));
+    assertThat(graph.getNodes().get(5).getId()).isEqualTo(orchestrationWorkflow3.getPostDeploymentSteps().getUuid());
     logger.info("Graph Nodes: {}", graph.getNodes());
     assertThat(graph.getSubworkflows())
         .isNotNull()

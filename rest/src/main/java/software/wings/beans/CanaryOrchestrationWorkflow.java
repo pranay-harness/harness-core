@@ -27,7 +27,6 @@ import static software.wings.common.Constants.PHASE_NAME_PREFIX;
 import static software.wings.common.Constants.POST_DEPLOYMENT;
 import static software.wings.common.Constants.PRE_DEPLOYMENT;
 import static software.wings.common.Constants.ROLLBACK_PREFIX;
-import static software.wings.common.Constants.ROLLBACK_PROVISIONERS;
 import static software.wings.common.Constants.WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE;
 import static software.wings.common.Constants.WORKFLOW_VALIDATION_MESSAGE;
 import static software.wings.common.Constants.phaseNamePattern;
@@ -61,7 +60,8 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   private PhaseStep preDeploymentSteps = new PhaseStep(PhaseStepType.PRE_DEPLOYMENT, PRE_DEPLOYMENT);
 
-  private PhaseStep rollbackProvisioners = new PhaseStep(PhaseStepType.ROLLBACK_PROVISIONERS, ROLLBACK_PROVISIONERS);
+  // This is a nullable field
+  private PhaseStep rollbackProvisioners;
 
   @JsonIgnore private List<String> workflowPhaseIds = new ArrayList<>();
 
@@ -263,7 +263,9 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
   @Override
   public void onSave() {
     populatePhaseStepIds(preDeploymentSteps);
-    populatePhaseStepIds(rollbackProvisioners);
+    if (rollbackProvisioners != null) {
+      populatePhaseStepIds(rollbackProvisioners);
+    }
     if (workflowPhases != null) {
       workflowPhaseIds = new ArrayList<>();
       workflowPhaseIdMap = new HashMap<>();
@@ -297,7 +299,9 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
   @Override
   public void onLoad() {
     populatePhaseSteps(preDeploymentSteps, getGraph());
-    populatePhaseSteps(rollbackProvisioners, getGraph());
+    if (rollbackProvisioners != null) {
+      populatePhaseSteps(rollbackProvisioners, getGraph());
+    }
 
     workflowPhases = new ArrayList<>();
     for (String workflowPhaseId : workflowPhaseIds) {
@@ -523,10 +527,11 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     Builder graphBuilder =
         aGraph().addNodes(preDeploymentNode).addSubworkflow(id1, preDeploymentSteps.generateSubworkflow(null));
 
-    GraphNode rollbackProvisionersNode = rollbackProvisioners.generatePhaseStepNode();
-    graphBuilder.addNodes(rollbackProvisionersNode)
-        .addSubworkflow(rollbackProvisioners.getUuid(), rollbackProvisioners.generateSubworkflow(null));
-
+    if (rollbackProvisioners != null) {
+      GraphNode rollbackProvisionersNode = rollbackProvisioners.generatePhaseStepNode();
+      graphBuilder.addNodes(rollbackProvisionersNode)
+          .addSubworkflow(rollbackProvisioners.getUuid(), rollbackProvisioners.generateSubworkflow(null));
+    }
     if (workflowPhases != null) {
       for (WorkflowPhase workflowPhase : workflowPhases) {
         id2 = workflowPhase.getUuid();

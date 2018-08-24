@@ -981,26 +981,28 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   private PhaseStep generateRollbackProvisioners(PhaseStep preDeploymentSteps) {
-    PhaseStep rollbackProvisionerStep = new PhaseStep(PhaseStepType.ROLLBACK_PROVISIONERS, ROLLBACK_PROVISIONERS);
     List<GraphNode> provisionerSteps =
         preDeploymentSteps.getSteps()
             .stream()
             .filter(step -> StateType.CLOUD_FORMATION_CREATE_STACK.name().equals(step.getType()))
             .collect(Collectors.toList());
-    List<GraphNode> rollbackProvisionerNodes = Lists.newArrayList();
-    if (isNotEmpty(provisionerSteps)) {
-      provisionerSteps.forEach(step -> {
-        Map<String, Object> propertiesMap = Maps.newHashMap();
-        propertiesMap.put("provisionerId", step.getProperties().get("provisionerId"));
-        propertiesMap.put("timeoutMillis", step.getProperties().get("timeoutMillis"));
-        rollbackProvisionerNodes.add(aGraphNode()
-                                         .withType(CLOUD_FORMATION_ROLLBACK_STACK.name())
-                                         .withRollback(true)
-                                         .withName("Rollback " + step.getName())
-                                         .withProperties(propertiesMap)
-                                         .build());
-      });
+    if (isEmpty(provisionerSteps)) {
+      return null;
     }
+    List<GraphNode> rollbackProvisionerNodes = Lists.newArrayList();
+    PhaseStep rollbackProvisionerStep = new PhaseStep(PhaseStepType.ROLLBACK_PROVISIONERS, ROLLBACK_PROVISIONERS);
+    rollbackProvisionerStep.setUuid(generateUuid());
+    provisionerSteps.forEach(step -> {
+      Map<String, Object> propertiesMap = Maps.newHashMap();
+      propertiesMap.put("provisionerId", step.getProperties().get("provisionerId"));
+      propertiesMap.put("timeoutMillis", step.getProperties().get("timeoutMillis"));
+      rollbackProvisionerNodes.add(aGraphNode()
+                                       .withType(CLOUD_FORMATION_ROLLBACK_STACK.name())
+                                       .withRollback(true)
+                                       .withName("Rollback " + step.getName())
+                                       .withProperties(propertiesMap)
+                                       .build());
+    });
     rollbackProvisionerStep.setRollback(true);
     rollbackProvisionerStep.setSteps(rollbackProvisionerNodes);
     return rollbackProvisionerStep;
