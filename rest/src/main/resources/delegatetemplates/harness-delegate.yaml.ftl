@@ -69,8 +69,6 @@ spec:
           value: ${delegateCheckLocation}
         - name: DEPLOY_MODE
           value: ${deployMode}
-        - name: MULTI_VERSION
-          value: "${multiVersion}"
         - name: DELEGATE_NAME
           value: ${delegateName}
         - name: DELEGATE_PROFILE

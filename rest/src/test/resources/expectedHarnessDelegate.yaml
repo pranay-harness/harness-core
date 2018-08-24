@@ -68,9 +68,7 @@ spec:
         - name: DELEGATE_CHECK_LOCATION
           value: delegateci.txt
         - name: DEPLOY_MODE
-          value: AWS
-        - name: MULTI_VERSION
-          value: "false"
+          value: KUBERNETES
         - name: DELEGATE_NAME
           value: harness-delegate
         - name: DELEGATE_PROFILE

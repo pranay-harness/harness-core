@@ -68,16 +68,9 @@ then
   ln -s $JRE_DIR jre
 fi
 
-DEPLOY_MODE=_deployMode_
+export DEPLOY_MODE=_deployMode_
 
-if [[ $DEPLOY_MODE != "ONPREM" ]]; then
-  export MULTI_VERSION="true"
-else
-  export MULTI_VERSION="false"
-fi
-
-if [[ $MULTI_VERSION != "true" ]]
-then
+if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
   echo "Checking Delegate latest version..."
   DELEGATE_STORAGE_URL=_delegateStorageUrl_
   REMOTE_DELEGATE_LATEST=$(curl $PROXY_CURL -#k $DELEGATE_STORAGE_URL/_delegateCheckLocation_)
@@ -141,8 +134,7 @@ fi
 export HOSTNAME
 export CAPSULE_CACHE_DIR="$DIR/.cache"
 
-if [[ $MULTI_VERSION != "true" ]]
-then
+if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
   echo "Starting delegate - version $REMOTE_DELEGATE_VERSION"
   $JRE_BINARY $PROXY_SYS_PROPS -Ddelegatesourcedir="$DIR" -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar delegate.jar config-delegate.yml watched $1
 fi

@@ -29,7 +29,6 @@ import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskRes
 import static software.wings.beans.ErrorCode.UNAVAILABLE_DELEGATES;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.FeatureName.DELEGATE_TASK_VERSIONING;
-import static software.wings.beans.FeatureName.MULTI_VERSION_DELEGATE;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
@@ -78,6 +77,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.app.DeployMode;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Delegate;
@@ -435,8 +435,6 @@ public class DelegateServiceImpl implements DelegateService {
     boolean jarFileExists = false;
     boolean versionChanged = false;
 
-    boolean multiVersion = featureFlagService.isEnabled(MULTI_VERSION_DELEGATE, accountId);
-
     try {
       String delegateMetadataUrl = mainConfiguration.getDelegateMetadataUrl().trim();
       delegateStorageUrl = delegateMetadataUrl.substring(0, delegateMetadataUrl.lastIndexOf('/'));
@@ -444,7 +442,7 @@ public class DelegateServiceImpl implements DelegateService {
       jarRelativePath = substringAfter(delegateMatadata, " ").trim();
       delegateCheckLocation = delegateMetadataUrl.substring(delegateMetadataUrl.lastIndexOf('/') + 1);
 
-      if (multiVersion) {
+      if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
         logger.info("Multi-Version is enabled");
         latestVersion = version;
         String minorVersion = getMinorVersion(version).toString();
@@ -494,8 +492,7 @@ public class DelegateServiceImpl implements DelegateService {
                                                         .put("delegateStorageUrl", delegateStorageUrl)
                                                         .put("delegateCheckLocation", delegateCheckLocation)
                                                         .put("deployMode", mainConfiguration.getDeployMode().name())
-                                                        .put("kubernetesAccountLabel", getAccountIdentifier(accountId))
-                                                        .put("multiVersion", Boolean.toString(multiVersion));
+                                                        .put("kubernetesAccountLabel", getAccountIdentifier(accountId));
       if (isNotBlank(delegateName)) {
         params.put("delegateName", delegateName);
       }
@@ -531,7 +528,7 @@ public class DelegateServiceImpl implements DelegateService {
       out.closeArchiveEntry();
 
       String version;
-      if (featureFlagService.isEnabled(MULTI_VERSION_DELEGATE, accountId)) {
+      if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
         List<String> delegateVersions = accountService.getDelegateConfiguration(accountId).getDelegateVersions();
         version = delegateVersions.get(delegateVersions.size() - 1);
       } else {
@@ -641,7 +638,7 @@ public class DelegateServiceImpl implements DelegateService {
       out.closeArchiveEntry();
 
       String version;
-      if (featureFlagService.isEnabled(MULTI_VERSION_DELEGATE, accountId)) {
+      if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
         List<String> delegateVersions = accountService.getDelegateConfiguration(accountId).getDelegateVersions();
         version = delegateVersions.get(delegateVersions.size() - 1);
       } else {
@@ -696,7 +693,7 @@ public class DelegateServiceImpl implements DelegateService {
       out.closeArchiveEntry();
 
       String version;
-      if (featureFlagService.isEnabled(MULTI_VERSION_DELEGATE, accountId)) {
+      if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
         List<String> delegateVersions = accountService.getDelegateConfiguration(accountId).getDelegateVersions();
         version = delegateVersions.get(delegateVersions.size() - 1);
       } else {
