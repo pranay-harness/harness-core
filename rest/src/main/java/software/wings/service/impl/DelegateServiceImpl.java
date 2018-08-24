@@ -1194,6 +1194,11 @@ public class DelegateServiceImpl implements DelegateService {
     DelegateTask delegateTask = taskQuery.get();
 
     if (delegateTask != null) {
+      if (!StringUtils.equals(delegateTask.getVersion(), getVersion())) {
+        logger.warn("Version mismatch for task {} in account {}. [managerVersion {}, taskVersion {}]",
+            delegateTask.getUuid(), delegateTask.getAccountId(), getVersion(), delegateTask.getVersion());
+      }
+
       if (delegateTask.isAsync()) {
         String waitId = delegateTask.getWaitId();
         if (waitId != null) {
