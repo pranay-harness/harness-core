@@ -459,6 +459,7 @@ public class WatcherServiceImpl implements WatcherService {
                 .map(version -> version + " (" + Joiner.on(", ").join(runningVersions.get(version)) + ")")
                 .collect(toList()));
 
+        // Make sure at least one of each expected version is acquiring
         for (String version : Lists.reverse(expectedVersions)) {
           if (shutdownPendingList.containsAll(runningVersions.get(version)) && working.compareAndSet(false, true)) {
             logger.info("New delegate process for version {} will be started", version);
@@ -471,6 +472,17 @@ public class WatcherServiceImpl implements WatcherService {
               logger.error("Error downloading or starting delegate version {}", version, e);
               working.set(false);
             }
+          }
+        }
+
+        // Make sure no more than one of each running version is acquiring
+        for (String version : runningVersions.keySet()) {
+          List<String> acquiring = runningVersions.get(version)
+                                       .stream()
+                                       .filter(proc -> !shutdownPendingList.contains(proc))
+                                       .collect(toList());
+          for (int i = acquiring.size() - 1; i > 0; i--) {
+            drainDelegateProcess(acquiring.get(i));
           }
         }
       }
