@@ -116,6 +116,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                   final ElkLogFetchRequest elkFetchRequest =
                       ElkLogFetchRequest.builder()
                           .query(dataCollectionInfo.getQuery())
+                          .formattedQuery(elkDataCollectionInfo.isFormattedQuery())
                           .indices(elkDataCollectionInfo.getIndices())
                           .hostnameField(elkDataCollectionInfo.getHostnameField())
                           .messageField(elkDataCollectionInfo.getMessageField())
@@ -256,7 +257,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
       return logElements;
     }
 
-    DateTimeFormatter df = DateTimeFormatter.ofPattern(timestampFieldFormat);
+    DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern(timestampFieldFormat);
     JSONArray logHits = hits.getJSONArray("hits");
 
     for (int i = 0; i < logHits.length(); i++) {
@@ -297,7 +298,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
           : timeStampObject.getString(timeStampPaths[timeStampPaths.length - 1]);
       long timeStampValue;
       try {
-        timeStampValue = Instant.from(df.parse(timeStamp)).toEpochMilli();
+        timeStampValue = Instant.from(timeFormatter.parse(timeStamp)).toEpochMilli();
       } catch (Exception pe) {
         throw new WingsException(
             "Failed to parse time stamp : " + timeStamp + ", with format: " + timestampFieldFormat, pe);

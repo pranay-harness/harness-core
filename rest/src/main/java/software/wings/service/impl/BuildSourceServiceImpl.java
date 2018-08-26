@@ -24,7 +24,6 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.exception.InvalidRequestException;
-import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -38,6 +37,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -110,7 +110,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     if (settingAttribute == null) {
       logger.warn("Artifact Server {} was deleted of artifactStreamId {}", settingId, artifactStreamId);
-      throw new WingsException("Artifact Server " + settingId + " was deleted of artifactStreamId " + artifactStreamId);
+      return new ArrayList<>();
     }
     SettingValue settingValue = getSettingValue(settingAttribute);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((Encryptable) settingValue);
