@@ -73,6 +73,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
   private static final String BATCH_TEXT = "$harness_batch";
   private static final int MAX_HOSTS_PER_BATCH = 15;
   private static Pattern pattern = Pattern.compile("\\$\\{(.*?)\\}");
+  private static final String URL_BODY_APPENDER = "__harness-body__";
 
   @Inject private NewRelicDelegateService newRelicDelegateService;
   @Inject private MetricDataStoreService metricStoreService;
@@ -286,6 +287,12 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
         Map<String, String> options, String initialUrl, List<APMMetricInfo> metricInfos,
         AnalysisComparisonStrategy strategy) throws IOException {
       // OkHttp seems to have issues encoding backtick, so explictly encoding it.
+      String[] urlAndBody = initialUrl.split(URL_BODY_APPENDER);
+      String body = "";
+      initialUrl = urlAndBody[0];
+      if (urlAndBody.length > 1) {
+        body = urlAndBody[1];
+      }
       if (initialUrl.contains("`")) {
         try {
           initialUrl = initialUrl.replaceAll("`", URLEncoder.encode("`", "UTF-8"));
@@ -317,13 +324,25 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
           // This is not a batch query
           for (String host : dataCollectionInfo.getHosts().keySet()) {
             List<String> curUrls = resolveDollarReferences(initialUrl, host, strategy);
-            curUrls.forEach(curUrl
-                -> callabels.add(
-                    ()
-                        -> new APMResponseParser.APMResponseData(host, dataCollectionInfo.getHosts().get(host),
-                            collect(getAPMRestClient(baseUrl).collect(curUrl, headersBiMap, optionsBiMap),
-                                baseUrl + curUrl),
-                            metricInfos)));
+            if (!isEmpty(body)) {
+              String resolvedBody = resolvedUrl(body, host, lastEndTime, System.currentTimeMillis());
+              curUrls.forEach(curUrl
+                  -> callabels.add(
+                      ()
+                          -> new APMResponseParser.APMResponseData(host, dataCollectionInfo.getHosts().get(host),
+                              collect(getAPMRestClient(baseUrl).putCollect(
+                                          curUrl, headersBiMap, optionsBiMap, resolvedBody),
+                                  baseUrl + curUrl),
+                              metricInfos)));
+            } else {
+              curUrls.forEach(curUrl
+                  -> callabels.add(
+                      ()
+                          -> new APMResponseParser.APMResponseData(host, dataCollectionInfo.getHosts().get(host),
+                              collect(getAPMRestClient(baseUrl).collect(curUrl, headersBiMap, optionsBiMap),
+                                  baseUrl + curUrl),
+                              metricInfos)));
+            }
           }
         }
 

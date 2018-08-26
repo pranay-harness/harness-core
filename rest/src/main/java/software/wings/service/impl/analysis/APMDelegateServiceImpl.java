@@ -16,6 +16,7 @@ import software.wings.exception.WingsException;
 import software.wings.helpers.ext.apm.APMRestClient;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.sm.states.APMVerificationState.Method;
 import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
@@ -81,8 +82,15 @@ public class APMDelegateServiceImpl implements APMDelegateService {
       }
     }
 
-    final Call<Object> request = getAPMRestClient(config).collect(
-        config.getUrl(), resolveDollarReferences(config.getHeaders()), resolveDollarReferences(config.getOptions()));
+    Call<Object> request;
+    if (config.getCollectionMethod() != null && config.getCollectionMethod().equals(Method.POST)) {
+      request = getAPMRestClient(config).putCollect(config.getUrl(), resolveDollarReferences(config.getHeaders()),
+          resolveDollarReferences(config.getOptions()), config.getBody());
+    } else {
+      request = getAPMRestClient(config).collect(
+          config.getUrl(), resolveDollarReferences(config.getHeaders()), resolveDollarReferences(config.getOptions()));
+    }
+
     final Response<Object> response;
     try {
       response = request.execute();

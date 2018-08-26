@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.sm.states.APMVerificationState.Method;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -15,6 +16,8 @@ import java.util.Map;
 public class APMValidateCollectorConfig {
   private String baseUrl;
   private String url;
+  private String body;
+  private Method collectionMethod;
   private Map<String, String> headers;
   private Map<String, String> options;
   List<EncryptedDataDetail> encryptedDataDetails;

@@ -7,4 +7,5 @@ import lombok.Data;
 @Builder
 public class APMFetchConfig {
   String url;
+  String body;
 }

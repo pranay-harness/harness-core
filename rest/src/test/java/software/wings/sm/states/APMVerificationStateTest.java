@@ -7,6 +7,7 @@ import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
+import static software.wings.sm.states.APMVerificationState.URL_BODY_APPENDER;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -30,6 +31,7 @@ import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.APMVerificationState.Method;
 
 import java.io.IOException;
 import java.util.List;
@@ -71,10 +73,16 @@ public class APMVerificationStateTest extends WingsBaseTest {
         yamlUtils.read(yamlStr, new TypeReference<List<APMVerificationState.MetricCollectionInfo>>() {});
     apmVerificationState.setMetricCollectionInfos(mcInfo);
     Map<String, List<APMMetricInfo>> apmMetricInfos = apmVerificationState.apmMetricInfos(context);
-    assertEquals(2, apmMetricInfos.size());
+    assertEquals(3, apmMetricInfos.size());
     assertEquals(2, apmMetricInfos.get("query").size());
     assertNotNull(apmMetricInfos.get("query").get(0).getResponseMappers().get("txnName").getFieldValue());
     assertNotNull(apmMetricInfos.get("query").get(1).getResponseMappers().get("txnName").getJsonPath());
+    String body = "this is a dummy collection body";
+    assertEquals("One metric with body", 1, apmMetricInfos.get("queryWithHost" + URL_BODY_APPENDER + body).size());
+    assertEquals("Body should be present", body,
+        apmMetricInfos.get("queryWithHost" + URL_BODY_APPENDER + body).get(0).getBody());
+    assertEquals("Method should be post", Method.POST,
+        apmMetricInfos.get("queryWithHost" + URL_BODY_APPENDER + body).get(0).getMethod());
 
     assertEquals("There should be one query with host", 1, apmMetricInfos.get("queryWithHost").size());
     APMMetricInfo metricWithHost = apmMetricInfos.get("queryWithHost").get(0);

@@ -82,6 +82,7 @@ public class NewRelicServiceImpl implements NewRelicService {
               .headers(apmVerificationConfig.collectionHeaders())
               .options(apmVerificationConfig.collectionParams())
               .url(fetchConfig.getUrl())
+              .body(fetchConfig.getBody())
               .encryptedDataDetails(apmVerificationConfig.encryptedDataDetails(secretManager))
               .build();
       SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
