@@ -954,7 +954,7 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   public Object getHostLogRecords(String accountId, String analysisServerConfigId, String index, ElkQueryType queryType,
       String query, String timeStampField, String timeStampFieldFormat, String messageField, String hostNameField,
-      String hostName, StateType stateType) {
+      String hostName, StateType stateType, boolean formattedQuery) {
     final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
     if (settingAttribute == null) {
       throw new WingsException("No " + stateType + " setting with id: " + analysisServerConfigId + " found");
@@ -965,6 +965,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     final ElkLogFetchRequest elkFetchRequest =
         ElkLogFetchRequest.builder()
             .query(query)
+            .formattedQuery(formattedQuery)
             .indices(index)
             .hostnameField(hostNameField)
             .messageField(messageField)

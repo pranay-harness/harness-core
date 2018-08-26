@@ -5,7 +5,10 @@ import static java.util.Arrays.asList;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Builder;
 import lombok.Data;
+import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.exception.WingsException;
 import software.wings.utils.JsonUtils;
 
@@ -31,7 +34,9 @@ public class ElkLogFetchRequest {
   private final Set<String> hosts;
   private final long startTime;
   private final long endTime;
+  @Builder.Default private final boolean formattedQuery = false;
   @Builder.Default private ElkQueryType queryType = ElkQueryType.TERM;
+  private static final Logger logger = LoggerFactory.getLogger(ElkLogFetchRequest.class);
 
   public Object toElasticSearchJsonObject() {
     List<JSONObject> hostJsonObjects = new ArrayList<>();
@@ -50,7 +55,8 @@ public class ElkLogFetchRequest {
 
     Map<String, List<JSONObject>> mustArrayObjects = new HashMap<>();
     mustArrayObjects.put("filter",
-        asList(new JSONObject().put("bool", new JSONObject().put("should", hostJsonObjects)), rangeObject, eval()));
+        asList(new JSONObject().put("bool", new JSONObject().put("should", hostJsonObjects)), rangeObject,
+            formattedQuery ? getJSONQuery() : eval()));
 
     JSONObject queryObject =
         new JSONObject().put("query", new JSONObject().put("bool", mustArrayObjects)).put("size", 10000);
@@ -139,6 +145,15 @@ public class ElkLogFetchRequest {
     } catch (Exception ex) {
       throw new WingsException(
           "Malformed Query. Braces should be matching. Only supported operators are 'or' and 'and' ");
+    }
+  }
+
+  private JSONObject getJSONQuery() {
+    try {
+      return new JSONObject(query);
+    } catch (JSONException ex) {
+      logger.error("Given query is not json formatted");
+      throw new WingsException("Invalid JSON Query Passed : " + query);
     }
   }
 

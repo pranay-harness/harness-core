@@ -20,7 +20,6 @@ import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse.VerificationLoadResponse;
 import software.wings.service.impl.apm.MLServiceUtil;
-import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.sm.StateType;
@@ -39,7 +38,6 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
   private static final Logger logger = LoggerFactory.getLogger(ElkAnalysisServiceImpl.class);
 
   @Inject private MLServiceUtil mlServiceUtil;
-  @Inject private AnalysisService analysisService;
 
   @Override
   public Map<String, ElkIndexTemplate> getIndices(String accountId, String analysisServerConfigId) throws IOException {
@@ -82,6 +80,7 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
     final ElkLogFetchRequest elkFetchRequestWithoutHost =
         ElkLogFetchRequest.builder()
             .query(elkSetupTestNodeData.getQuery())
+            .formattedQuery(elkSetupTestNodeData.isFormattedQuery())
             .indices(elkSetupTestNodeData.getIndices())
             .hosts(Collections.EMPTY_SET)
             .hostnameField(elkSetupTestNodeData.getHostNameField())
@@ -120,6 +119,7 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
     final ElkLogFetchRequest elkFetchRequestWithHost =
         ElkLogFetchRequest.builder()
             .query(elkSetupTestNodeData.getQuery())
+            .formattedQuery(elkSetupTestNodeData.isFormattedQuery())
             .indices(elkSetupTestNodeData.getIndices())
             .hostnameField(hostName)
             .hosts(Collections.singleton(elkSetupTestNodeData.getInstanceElement().getHostName()))

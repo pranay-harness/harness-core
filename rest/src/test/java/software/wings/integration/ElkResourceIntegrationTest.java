@@ -109,8 +109,8 @@ public class ElkResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  public void testGetLogRecords() {
-    ElkSetupTestNodeData elkSetupTestNodeData = getElkSetupTestNodedata();
+  public void testGetLogRecordsWithNormalQuery() {
+    ElkSetupTestNodeData elkSetupTestNodeData = getElkSetupTestNodedata("error", false);
     WebTarget target = client.target(API_BASE + "/" + LogAnalysisResource.ELK_RESOURCE_BASE_URL
         + LogAnalysisResource.TEST_NODE_DATA + "?accountId=" + accountId);
     Response restResponse =
@@ -123,9 +123,42 @@ public class ElkResourceIntegrationTest extends BaseIntegrationTest {
     assertTrue("provider is not reachable", Boolean.valueOf(response.get("providerReachable").toString()));
   }
 
-  private ElkSetupTestNodeData getElkSetupTestNodedata() {
+  @Test
+  public void testGetLogRecordsWithFormattedQuery() {
+    String query = "{\"bool\":{\"must\":[{\"query_string\":{\"query\":\"log:error\",\"analyze_wildcard\":true,"
+        + "\"default_field\":\"*\"}},{\"range\":{\"@timestamp\":{\"gte\":1535049542943,\"lte\":1535050442943,"
+        + "\"format\":\"epoch_millis\"}}}],\"filter\":[],\"should\":[],\"must_not\":[]}}";
+    ElkSetupTestNodeData elkSetupTestNodeData = getElkSetupTestNodedata(query, true);
+    WebTarget target = client.target(API_BASE + "/" + LogAnalysisResource.ELK_RESOURCE_BASE_URL
+        + LogAnalysisResource.TEST_NODE_DATA + "?accountId=" + accountId);
+    Response restResponse =
+        getRequestBuilderWithAuthHeader(target).post(entity(elkSetupTestNodeData, MediaType.APPLICATION_JSON));
+    String responseString = restResponse.readEntity(String.class);
+    JSONObject jsonResponseObject = new JSONObject(responseString);
+
+    JSONObject response = jsonResponseObject.getJSONObject("resource");
+    assertEquals("Request failed", restResponse.getStatus(), HttpStatus.SC_OK);
+    assertTrue("provider is not reachable", Boolean.valueOf(response.get("providerReachable").toString()));
+  }
+
+  @Test
+  public void testGetLogRecordsWithInvalidFormattedQuery() {
+    // doesnt start with '{' its an invalid query String
+    String query = "must\":[{\"query_string\":{\"query\":\"log:error\",\"analyze_wildcard\":true,"
+        + "\"default_field\":\"*\"}},{\"range\":{\"@timestamp\":{\"gte\":1535049542943,\"lte\":1535050442943,"
+        + "\"format\":\"epoch_millis\"}}}],\"filter\":[],\"should\":[],\"must_not\":[]}";
+    ElkSetupTestNodeData elkSetupTestNodeData = getElkSetupTestNodedata(query, true);
+    WebTarget target = client.target(API_BASE + "/" + LogAnalysisResource.ELK_RESOURCE_BASE_URL
+        + LogAnalysisResource.TEST_NODE_DATA + "?accountId=" + accountId);
+    Response restResponse =
+        getRequestBuilderWithAuthHeader(target).post(entity(elkSetupTestNodeData, MediaType.APPLICATION_JSON));
+
+    assertEquals(restResponse.getStatus(), HttpStatus.SC_BAD_REQUEST);
+  }
+
+  private ElkSetupTestNodeData getElkSetupTestNodedata(String query, Boolean formattedQuery) {
     return ElkSetupTestNodeData.builder()
-        .query("info")
+        .query(query)
         .indices("logstash-*")
         .messageField("log")
         .timeStampField("@timestamp")
@@ -135,6 +168,7 @@ public class ElkResourceIntegrationTest extends BaseIntegrationTest {
         .appId(appId)
         .settingId(elkSettingId)
         .instanceName("testHost")
+        .formattedQuery(formattedQuery)
         .instanceElement(
             anInstanceElement()
                 .withUuid("8cec1e1b0d16")

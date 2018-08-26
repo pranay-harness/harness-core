@@ -77,10 +77,11 @@ public class ElkResource implements LogAnalysisResource {
       @QueryParam("hostNameField") String hostNameField, @QueryParam("hostName") String hostName,
       @QueryParam("queryType") ElkQueryType queryType, @QueryParam("query") String query,
       @QueryParam("timeStampField") String timeStampField,
-      @QueryParam("timeStampFieldFormat") String timeStampFieldFormat,
-      @QueryParam("messageField") String messageField) {
-    return new RestResponse<>(analysisService.getHostLogRecords(accountId, analysisServerConfigId, index, queryType,
-        query, timeStampField, timeStampFieldFormat, messageField, hostNameField, hostName, StateType.ELK));
+      @QueryParam("timeStampFieldFormat") String timeStampFieldFormat, @QueryParam("messageField") String messageField,
+      @QueryParam("isFormatedQuery") boolean isFormatedQuery) {
+    return new RestResponse<>(
+        analysisService.getHostLogRecords(accountId, analysisServerConfigId, index, queryType, query, timeStampField,
+            timeStampFieldFormat, messageField, hostNameField, hostName, StateType.ELK, isFormatedQuery));
   }
 
   @GET

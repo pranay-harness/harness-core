@@ -24,12 +24,13 @@ public class ElkSetupTestNodeData extends SetupTestNodeData {
   private String timeStampFieldFormat;
   private ElkQueryType queryType;
   private String hostNameField;
+  private boolean formattedQuery;
 
   @Builder
   public ElkSetupTestNodeData(String appId, String settingId, String instanceName, InstanceElement instanceElement,
       String hostExpression, String workflowId, long fromTime, long toTime, String query, String indices,
       String messageField, String timeStampField, String timeStampFieldFormat, ElkQueryType queryType,
-      String hostNameField) {
+      String hostNameField, boolean formattedQuery) {
     super(appId, settingId, instanceName, instanceElement, hostExpression, workflowId, fromTime, toTime);
     this.query = query;
     this.indices = indices;
@@ -38,5 +39,6 @@ public class ElkSetupTestNodeData extends SetupTestNodeData {
     this.timeStampFieldFormat = timeStampFieldFormat;
     this.queryType = queryType;
     this.hostNameField = hostNameField;
+    this.formattedQuery = formattedQuery;
   }
 }

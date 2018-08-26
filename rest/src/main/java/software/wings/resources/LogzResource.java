@@ -49,7 +49,8 @@ public class LogzResource implements LogAnalysisResource {
       @QueryParam("timeStampField") String timeStampField,
       @QueryParam("timeStampFieldFormat") String timeStampFieldFormat,
       @QueryParam("messageField") String messageField) {
+    // todo: Pranjal Start taking Query Formatted Flag as query param instead of passing directly
     return new RestResponse<>(analysisService.getHostLogRecords(accountId, analysisServerConfigId, index, queryType,
-        query, timeStampField, timeStampFieldFormat, messageField, hostNameField, hostName, StateType.LOGZ));
+        query, timeStampField, timeStampFieldFormat, messageField, hostNameField, hostName, StateType.LOGZ, false));
   }
 }

@@ -13,11 +13,14 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.time.Timestamp;
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.ElkConfig;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.TemplateExpression;
@@ -81,6 +84,34 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
 
   @Attributes(required = true, title = "Query Type") @DefaultValue("TERM") private String queryType;
 
+  @Attributes(required = true, title = "Is Formatted Query") @DefaultValue("false") private boolean formattedQuery;
+
+  @Override
+  public void setQuery(String query) {
+    try {
+      new JSONObject(query);
+      if (!getFormattedQuery()) {
+        logger.error("Given query is a json formatted : " + query);
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+            .addParam("args", "JSON Query passed. Please select Formatted option");
+      }
+    } catch (JSONException ex) {
+      if (getFormattedQuery()) {
+        logger.error("Given query is not json formatted");
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Invalid JSON Query Passed");
+      }
+    }
+    this.query = query.trim();
+  }
+
+  @Attributes(
+      required = true, title = "Search Keywords", description = "Wildcarded queries with '*' can affect cluster health")
+  @DefaultValue("error")
+  public String
+  getQuery() {
+    return query;
+  }
+
   public ElkAnalysisState(String name) {
     super(name, StateType.ELK.getType());
   }
@@ -113,6 +144,14 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
     this.messageField = messageField;
   }
 
+  public boolean getFormattedQuery() {
+    return formattedQuery;
+  }
+
+  public void setFormattedQuery(boolean formattedQuery) {
+    this.formattedQuery = formattedQuery;
+  }
+
   @EnumData(enumDataProvider = AnalysisComparisonStrategyProvider.class)
   @Attributes(required = true, title = "Baseline for Risk Analysis")
   @DefaultValue("COMPARE_WITH_PREVIOUS")
@@ -140,14 +179,6 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
       return AnalysisTolerance.LOW;
     }
     return AnalysisTolerance.valueOf(tolerance);
-  }
-
-  @Attributes(
-      required = true, title = "Search Keywords", description = "Wildcarded queries with '*' can affect cluster health")
-  @DefaultValue("error")
-  public String
-  getQuery() {
-    return query;
   }
 
   @EnumData(enumDataProvider = ElkQueryTypeProvider.class)
@@ -243,6 +274,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
               .workflowExecutionId(context.getWorkflowExecutionId())
               .serviceId(getPhaseServiceId(context))
               .query(query)
+              .formattedQuery(Boolean.valueOf(context.renderExpression(Boolean.toString(getFormattedQuery()))))
               .indices(finalIndices)
               .hostnameField(context.renderExpression(hostnameField))
               .messageField(context.renderExpression(messageField))
@@ -294,6 +326,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
     try {
       ElkLogFetchRequest.builder()
           .query(query)
+          .formattedQuery(formattedQuery)
           .indices("logstash-*")
           .hostnameField("beat.hostname")
           .messageField("message")
