@@ -3,6 +3,7 @@ package software.wings.service.impl.apm;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.metrics.MetricType;
+import software.wings.sm.states.APMVerificationState.Method;
 
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,8 @@ public class APMMetricInfo {
   private Map<String, ResponseMapper> responseMappers;
   private MetricType metricType;
   private String tag;
+  private Method method;
+  private String body;
 
   @Data
   @Builder

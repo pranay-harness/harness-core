@@ -62,6 +62,7 @@ import java.util.concurrent.TimeUnit;
 
 public class APMVerificationState extends AbstractMetricAnalysisState {
   @Transient @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(APMVerificationState.class);
+  @Transient @SchemaIgnore protected static final String URL_BODY_APPENDER = "__harness-body__";
 
   public APMVerificationState(String name) {
     super(name, StateType.APM_VERIFICATION);
@@ -268,12 +269,18 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     for (MetricCollectionInfo metricCollectionInfo : metricCollectionInfos) {
       String evaluatedUrl = context.renderExpression(metricCollectionInfo.getCollectionUrl());
 
+      if (metricCollectionInfo.getMethod() != null && metricCollectionInfo.getMethod().equals(Method.POST)) {
+        evaluatedUrl += URL_BODY_APPENDER + metricCollectionInfo.getCollectionBody();
+      }
+
       if (!metricInfoMap.containsKey(evaluatedUrl)) {
         metricInfoMap.put(evaluatedUrl, new ArrayList<>());
       }
       APMMetricInfo metricInfo = APMMetricInfo.builder()
                                      .metricName(metricCollectionInfo.getMetricName())
                                      .metricType(metricCollectionInfo.getMetricType())
+                                     .method(metricCollectionInfo.getMethod())
+                                     .body(metricCollectionInfo.getCollectionBody())
                                      .tag(metricCollectionInfo.getTag())
                                      .responseMappers(getResponseMappers(metricCollectionInfo))
                                      .build();
@@ -326,6 +333,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     private MetricType metricType;
     private String tag;
     private String collectionUrl;
+    private String collectionBody;
     private ResponseType responseType;
     private ResponseMapping responseMapping;
     private Method method;
