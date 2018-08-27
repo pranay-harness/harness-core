@@ -1,5 +1,6 @@
 package software.wings.service.impl.newrelic;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
 
@@ -337,7 +338,7 @@ public class NewRelicServiceImpl implements NewRelicService {
         return metricMap;
       }
 
-      Set<String> metricNamesSet = Sets.newHashSet(metricNames);
+      Set<String> metricNamesSet = metricNames == null ? new HashSet<>() : Sets.newHashSet(metricNames);
 
       // Iterate over the metrics present in the YAML file
       for (Map.Entry<String, List<Metric>> entry : metrics.entrySet()) {
@@ -350,7 +351,7 @@ public class NewRelicServiceImpl implements NewRelicService {
             1. metricNames is empty - we add all metrics present in the YAML to the metricMap in this case
             2. metricNames is non-empty - we only add metrics which are present in the list
              */
-            if (metric != null && (metricNames.isEmpty() || metricNamesSet.contains(metric.getMetricName()))) {
+            if (metric != null && (isEmpty(metricNames) || metricNamesSet.contains(metric.getMetricName()))) {
               if (metric.getTags() == null) {
                 metric.setTags(new HashSet<>());
               }
@@ -366,7 +367,7 @@ public class NewRelicServiceImpl implements NewRelicService {
       If metricNames is non-empty but metricMap is, it means that all
       metric names were spelt incorrectly.
        */
-      if (!metricNames.isEmpty() && metricMap.isEmpty()) {
+      if (!isEmpty(metricNames) && metricMap.isEmpty()) {
         logger.warn("Incorrect set of metric names received. Maybe the UI is sending incorrect metric names.");
         throw new WingsException("Incorrect Metric Names received.");
       }
