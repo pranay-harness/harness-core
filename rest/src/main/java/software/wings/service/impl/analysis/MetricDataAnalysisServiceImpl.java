@@ -17,6 +17,7 @@ import com.google.inject.Inject;
 
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
@@ -266,21 +267,27 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   public List<NewRelicMetricDataRecord> getPreviousSuccessfulRecords(StateType stateType, String appId,
       String workflowId, String workflowExecutionID, String serviceId, String groupName, int analysisMinute,
       int analysisStartMinute) {
-    Query<NewRelicMetricDataRecord> query = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
-                                                .filter("stateType", stateType)
-                                                .filter("appId", appId)
-                                                .filter("workflowId", workflowId)
-                                                .filter("workflowExecutionId", workflowExecutionID)
-                                                .filter("serviceId", serviceId)
-                                                .field("groupName")
-                                                .in(asList(groupName, NewRelicMetricDataRecord.DEFAULT_GROUP_NAME))
-                                                .field("level")
-                                                .notIn(asList(ClusterLevel.H0, ClusterLevel.HF))
-                                                .field("dataCollectionMinute")
-                                                .lessThanOrEq(analysisMinute)
-                                                .field("dataCollectionMinute")
-                                                .greaterThanOrEq(analysisStartMinute);
-    return query.asList();
+    MorphiaIterator<NewRelicMetricDataRecord, NewRelicMetricDataRecord> iterator =
+        wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
+            .filter("stateType", stateType)
+            .filter("appId", appId)
+            .filter("workflowId", workflowId)
+            .filter("workflowExecutionId", workflowExecutionID)
+            .filter("serviceId", serviceId)
+            .field("groupName")
+            .in(asList(groupName, NewRelicMetricDataRecord.DEFAULT_GROUP_NAME))
+            .field("level")
+            .notIn(asList(ClusterLevel.H0, ClusterLevel.HF))
+            .field("dataCollectionMinute")
+            .lessThanOrEq(analysisMinute)
+            .field("dataCollectionMinute")
+            .greaterThanOrEq(analysisStartMinute)
+            .fetch();
+    List<NewRelicMetricDataRecord> records = new ArrayList<>();
+    while (iterator.hasNext()) {
+      records.add(iterator.next());
+    }
+    return records;
   }
 
   @Override
