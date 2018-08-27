@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 
 import software.wings.beans.AwsConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.exception.InvalidRequestException;
 import software.wings.helpers.ext.amazons3.AmazonS3Service;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
@@ -75,5 +76,11 @@ public class AmazonS3BuildServiceImpl implements AmazonS3BuildService {
   public boolean validateArtifactSource(AwsConfig config, List<EncryptedDataDetail> encryptionDetails,
       ArtifactStreamAttributes artifactStreamAttributes) {
     return false;
+  }
+
+  @Override
+  public Map<String, String> getBuckets(
+      AwsConfig config, String projectId, List<EncryptedDataDetail> encryptionDetails) {
+    throw new InvalidRequestException("Operation not supported by Amazon S3 Build Service");
   }
 }

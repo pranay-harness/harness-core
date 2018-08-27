@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
+import static software.wings.beans.ErrorCode.GENERAL_ERROR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
@@ -16,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
 import software.wings.beans.DelegateTask.SyncTaskContext;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
@@ -24,6 +26,8 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.exception.InvalidRequestException;
+import software.wings.exception.WingsException;
+import software.wings.helpers.ext.gcs.GcsService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -59,6 +63,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   @Inject private ServiceClassLocator serviceLocator;
   @Inject private SecretManager secretManager;
   @Inject private ArtifactCollectionService artifactCollectionService;
+  @Inject private GcsService gcsService;
   private static final Logger logger = LoggerFactory.getLogger(BuildSourceServiceImpl.class);
 
   @Override
@@ -73,6 +78,28 @@ public class BuildSourceServiceImpl implements BuildSourceService {
         Sets.newTreeSet(Comparator.comparing(JobDetails::getJobName, String::compareToIgnoreCase));
     jobDetailsSet.addAll(jobs);
     return jobDetailsSet;
+  }
+
+  @Override
+  public String getProject(String appId, String settingId) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    if (settingAttribute == null) {
+      throw new WingsException(GENERAL_ERROR, USER)
+          .addParam("message", "GCP Cloud provider Settings Attribute is null");
+    }
+    SettingValue settingValue = settingAttribute.getValue();
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((Encryptable) settingValue);
+
+    GcpConfig gcpConfig = (GcpConfig) settingValue;
+    return gcsService.getProject(gcpConfig, encryptedDataDetails);
+  }
+
+  @Override
+  public Map<String, String> getBuckets(String appId, String projectId, String settingId) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    return getBuildService(settingAttribute, appId, ArtifactStreamType.GCS.name())
+        .getBuckets(getSettingValue(settingAttribute), projectId, getEncryptedDataDetails((Encryptable) settingValue));
   }
 
   @Override

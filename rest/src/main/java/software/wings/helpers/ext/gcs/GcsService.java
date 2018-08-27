@@ -1,7 +1,6 @@
 package software.wings.helpers.ext.gcs;
 
 import software.wings.beans.GcpConfig;
-import software.wings.beans.SettingAttribute;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 
@@ -10,13 +9,24 @@ import java.util.Map;
 
 public interface GcsService {
   /**
-   * Validate Settings Attribute and get Credentials
+   * List buckets
    *
-   * @return GCP config
+   * @param gcpConfig GCP Config
+   * @param projectId GCS Project Id
+   * @param encryptedDataDetails Encryption details
+   * @return List of buckets
    */
-  GcpConfig validateAndGetCredentials(SettingAttribute settingAttribute);
+  Map<String, String> listBuckets(
+      GcpConfig gcpConfig, String projectId, List<EncryptedDataDetail> encryptedDataDetails);
 
-  Map<String, String> listBuckets(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails);
+  /**
+   * Get GCS project Id
+   *
+   * @param gcpConfig GCP Config
+   * @param encryptedDataDetails Encryption details
+   * @return GCS project
+   */
+  String getProject(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails);
 
   /**
    * Get artifact paths for a given repo from the given bucket.
@@ -38,7 +48,7 @@ public interface GcsService {
       String bucketName, String artifactPath, boolean isExpression, boolean versioningEnabledForBucket);
 
   /**
-   * Gets the artifact related information
+   * Get the artifact related information
    *
    * @param gcpConfig     GCS cloud provider config
    * @param bucketName bucket name

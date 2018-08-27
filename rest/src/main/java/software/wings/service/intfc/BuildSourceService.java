@@ -37,6 +37,25 @@ public interface BuildSourceService {
   Map<String, String> getPlans(@NotEmpty String appId, @NotEmpty String settingId, String artifactStreamType);
 
   /**
+   * Get project.
+   *
+   * @param appId     the app id
+   * @param settingId the setting id
+   * @return the project (now GCS only)
+   */
+  String getProject(String appId, String settingId);
+
+  /**
+   * Get buckets.
+   *
+   * @param appId     the app id
+   * @param projectId the project id
+   * @param settingId the setting id
+   * @return the project (now GCS only)
+   */
+  Map<String, String> getBuckets(String appId, String projectId, String settingId);
+
+  /**
    * Gets plans.
    *
    * @param appId     the app id

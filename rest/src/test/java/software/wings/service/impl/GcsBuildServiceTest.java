@@ -60,11 +60,11 @@ public class GcsBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldGetPlans() {
-    when(gcsService.listBuckets(gcpConfig, null))
+  public void shouldGetBuckets() {
+    when(gcsService.listBuckets(gcpConfig, null, null))
         .thenReturn(ImmutableMap.of("bucket1", "bucket1", "bucket2", "bucket2"));
-    Map<String, String> plans = gcsBuildService.getPlans(gcpConfig, null);
-    assertThat(plans).hasSize(2).containsKeys("bucket1", "bucket2");
+    Map<String, String> buckets = gcsBuildService.getBuckets(gcpConfig, null, null);
+    assertThat(buckets).hasSize(2).containsKeys("bucket1", "bucket2");
   }
 
   @Test

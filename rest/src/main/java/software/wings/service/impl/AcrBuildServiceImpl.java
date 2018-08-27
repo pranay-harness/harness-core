@@ -79,4 +79,10 @@ public class AcrBuildServiceImpl implements AcrBuildService {
   public boolean validateArtifactServer(AzureConfig config) {
     return true;
   }
+
+  @Override
+  public Map<String, String> getBuckets(
+      AzureConfig config, String projectId, List<EncryptedDataDetail> encryptionDetails) {
+    throw new InvalidRequestException("Operation not supported by ACR Artifact Stream");
+  }
 }

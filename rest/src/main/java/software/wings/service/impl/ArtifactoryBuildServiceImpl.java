@@ -18,6 +18,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.artifactory.ArtifactoryService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -147,5 +148,11 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
           artifactStreamAttributes.getArtifactPattern(), artifactStreamAttributes.getRepositoryType());
     }
     return true;
+  }
+
+  @Override
+  public Map<String, String> getBuckets(
+      ArtifactoryConfig config, String projectId, List<EncryptedDataDetail> encryptionDetails) {
+    throw new InvalidRequestException("Operation not supported by Artifactory");
   }
 }

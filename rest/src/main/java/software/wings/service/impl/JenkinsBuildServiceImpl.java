@@ -247,4 +247,10 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
       ArtifactStreamAttributes artifactStreamAttributes) {
     return true;
   }
+
+  @Override
+  public Map<String, String> getBuckets(
+      JenkinsConfig jenkinsConfig, String projectId, List<EncryptedDataDetail> encryptionDetails) {
+    throw new InvalidRequestException("Operation not supported by Jenkins Artifact Stream");
+  }
 }

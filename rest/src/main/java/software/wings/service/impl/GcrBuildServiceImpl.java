@@ -83,4 +83,10 @@ public class GcrBuildServiceImpl implements GcrBuildService {
   public boolean validateArtifactServer(GcpConfig config) {
     return true;
   }
+
+  @Override
+  public Map<String, String> getBuckets(
+      GcpConfig config, String projectId, List<EncryptedDataDetail> encryptionDetails) {
+    throw new InvalidRequestException("Operation not supported by GCR Artifact Stream", USER);
+  }
 }
