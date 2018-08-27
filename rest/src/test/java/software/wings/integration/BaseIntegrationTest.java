@@ -55,6 +55,8 @@ import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceSecretKey;
+import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.beans.User;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
@@ -302,7 +304,10 @@ public abstract class BaseIntegrationTest extends WingsBaseTest implements Wings
 
   private String getLearningToken() {
     try {
-      String learningServiceSecret = System.getenv("LEARNING_SERVICE_SECRET");
+      String learningServiceSecret = wingsPersistence.createQuery(ServiceSecretKey.class)
+                                         .filter("serviceType", ServiceType.LEARNING_ENGINE)
+                                         .get()
+                                         .getServiceSecret();
       logger.info("learningServiceSecret: " + learningServiceSecret);
       Algorithm algorithm = Algorithm.HMAC256(learningServiceSecret);
       return JWT.create()

@@ -1,5 +1,7 @@
 package software.wings.service.impl.analysis;
 
+import static io.harness.data.compression.CompressionUtils.compressString;
+import static io.harness.data.compression.CompressionUtils.deCompressString;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.noop;
@@ -71,8 +73,10 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
+import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 
+import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -495,29 +499,31 @@ public class AnalysisServiceImpl implements AnalysisService {
   public Boolean saveLogAnalysisRecords(
       LogMLAnalysisRecord mlAnalysisResponse, StateType stateType, Optional<String> taskId) {
     mlAnalysisResponse.setStateType(stateType);
-
-    // replace dots in test cluster
-    if (mlAnalysisResponse.getControl_clusters() != null) {
-      mlAnalysisResponse.setControl_clusters(getClustersWithDotsReplaced(mlAnalysisResponse.getControl_clusters()));
+    LogMLAnalysisRecord logAnalysisDetails = LogMLAnalysisRecord.builder()
+                                                 .unknown_events(mlAnalysisResponse.getUnknown_events())
+                                                 .test_events(mlAnalysisResponse.getTest_events())
+                                                 .control_events(mlAnalysisResponse.getControl_events())
+                                                 .control_clusters(mlAnalysisResponse.getControl_clusters())
+                                                 .unknown_clusters(mlAnalysisResponse.getUnknown_clusters())
+                                                 .test_clusters(mlAnalysisResponse.getTest_clusters())
+                                                 .ignore_clusters(mlAnalysisResponse.getIgnore_clusters())
+                                                 .build();
+    try {
+      mlAnalysisResponse.setAnalysisDetailsCompressedJson(compressString(JsonUtils.asJson(logAnalysisDetails)));
+    } catch (IOException e) {
+      throw new WingsException("failed to compress analysis details", e);
     }
 
-    // replace dots in test cluster
-    if (mlAnalysisResponse.getTest_clusters() != null) {
-      mlAnalysisResponse.setTest_clusters(getClustersWithDotsReplaced(mlAnalysisResponse.getTest_clusters()));
-    }
+    mlAnalysisResponse.setUnknown_events(null);
+    mlAnalysisResponse.setTest_events(null);
+    mlAnalysisResponse.setControl_events(null);
+    mlAnalysisResponse.setControl_clusters(null);
+    mlAnalysisResponse.setUnknown_clusters(null);
+    mlAnalysisResponse.setTest_clusters(null);
+    mlAnalysisResponse.setIgnore_clusters(null);
 
-    // replace dots in unknown cluster
-    if (mlAnalysisResponse.getUnknown_clusters() != null) {
-      mlAnalysisResponse.setUnknown_clusters(getClustersWithDotsReplaced(mlAnalysisResponse.getUnknown_clusters()));
-    }
-
-    // replace dots in ignored cluster
-    if (mlAnalysisResponse.getIgnore_clusters() != null) {
-      mlAnalysisResponse.setIgnore_clusters(getClustersWithDotsReplaced(mlAnalysisResponse.getIgnore_clusters()));
-    }
-
-    if (mlAnalysisResponse.getLogCollectionMinute() == -1 || !isEmpty(mlAnalysisResponse.getControl_events())
-        || !isEmpty(mlAnalysisResponse.getTest_events())) {
+    if (mlAnalysisResponse.getLogCollectionMinute() == -1 || !isEmpty(logAnalysisDetails.getControl_events())
+        || !isEmpty(logAnalysisDetails.getTest_events())) {
       wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(mlAnalysisResponse));
     }
     if (logger.isDebugEnabled()) {
@@ -582,6 +588,9 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   private Map<String, Map<String, SplunkAnalysisCluster>> getClustersWithDotsReplaced(
       Map<String, Map<String, SplunkAnalysisCluster>> inputCluster) {
+    if (inputCluster == null) {
+      return null;
+    }
     Map<String, Map<String, SplunkAnalysisCluster>> rv = new HashMap<>();
     for (Entry<String, Map<String, SplunkAnalysisCluster>> clusterEntry : inputCluster.entrySet()) {
       rv.put(clusterEntry.getKey(), new HashMap<>());
@@ -593,17 +602,39 @@ public class AnalysisServiceImpl implements AnalysisService {
   }
 
   @Override
-  public LogMLAnalysisRecord getLogAnalysisRecords(
-      String appId, String stateExecutionId, String query, StateType stateType, Integer logCollectionMinute) {
-    return wingsPersistence.createQuery(LogMLAnalysisRecord.class)
-        .filter("stateExecutionId", stateExecutionId)
-        .filter("appId", appId)
-        .filter("query", query)
-        .filter("stateType", stateType)
-        .field("logCollectionMinute")
-        .lessThanOrEq(logCollectionMinute)
-        .order("-logCollectionMinute")
-        .get();
+  public LogMLAnalysisRecord getLogAnalysisRecords(String appId, String stateExecutionId, String query,
+      StateType stateType, Integer logCollectionMinute) throws IOException {
+    LogMLAnalysisRecord logMLAnalysisRecord = wingsPersistence.createQuery(LogMLAnalysisRecord.class)
+                                                  .filter("stateExecutionId", stateExecutionId)
+                                                  .filter("appId", appId)
+                                                  .filter("query", query)
+                                                  .filter("stateType", stateType)
+                                                  .field("logCollectionMinute")
+                                                  .lessThanOrEq(logCollectionMinute)
+                                                  .order("-logCollectionMinute")
+                                                  .get();
+    decompressLogAnalysisRecord(logMLAnalysisRecord);
+    return logMLAnalysisRecord;
+  }
+
+  private void decompressLogAnalysisRecord(LogMLAnalysisRecord logMLAnalysisRecord) {
+    if (isNotEmpty(logMLAnalysisRecord.getAnalysisDetailsCompressedJson())) {
+      try {
+        String decompressedAnalysisDetailsJson =
+            deCompressString(logMLAnalysisRecord.getAnalysisDetailsCompressedJson());
+        LogMLAnalysisRecord logAnalysisDetails =
+            JsonUtils.asObject(decompressedAnalysisDetailsJson, LogMLAnalysisRecord.class);
+        logMLAnalysisRecord.setUnknown_events(logAnalysisDetails.getUnknown_events());
+        logMLAnalysisRecord.setTest_events(logAnalysisDetails.getTest_events());
+        logMLAnalysisRecord.setControl_events(logAnalysisDetails.getControl_events());
+        logMLAnalysisRecord.setControl_clusters(logAnalysisDetails.getControl_clusters());
+        logMLAnalysisRecord.setUnknown_clusters(logAnalysisDetails.getUnknown_clusters());
+        logMLAnalysisRecord.setTest_clusters(logAnalysisDetails.getTest_clusters());
+        logMLAnalysisRecord.setIgnore_clusters(logAnalysisDetails.getIgnore_clusters());
+      } catch (IOException e) {
+        throw new WingsException(e);
+      }
+    }
   }
 
   @Override
@@ -799,6 +830,7 @@ public class AnalysisServiceImpl implements AnalysisService {
       return null;
     }
 
+    decompressLogAnalysisRecord(analysisRecord);
     Map<CLUSTER_TYPE, Map<Integer, LogMLFeedbackRecord>> mlUserFeedbacks = getMLUserFeedbacks(stateExecutionId, appId);
 
     final LogMLAnalysisSummary analysisSummary = new LogMLAnalysisSummary();
@@ -1191,15 +1223,16 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Override
   public void createAndSaveSummary(
       StateType stateType, String appId, String stateExecutionId, String query, String message) {
-    final LogMLAnalysisRecord analysisRecord = new LogMLAnalysisRecord();
-    analysisRecord.setLogCollectionMinute(-1);
-    analysisRecord.setStateType(stateType);
-    analysisRecord.setAppId(appId);
-    analysisRecord.setStateExecutionId(stateExecutionId);
-    analysisRecord.setQuery(query);
-    analysisRecord.setAnalysisSummaryMessage(message);
-    analysisRecord.setControl_events(Collections.emptyMap());
-    analysisRecord.setTest_events(Collections.emptyMap());
+    final LogMLAnalysisRecord analysisRecord = LogMLAnalysisRecord.builder()
+                                                   .logCollectionMinute(-1)
+                                                   .stateType(stateType)
+                                                   .appId(appId)
+                                                   .stateExecutionId(stateExecutionId)
+                                                   .query(query)
+                                                   .analysisSummaryMessage(message)
+                                                   .control_events(Collections.emptyMap())
+                                                   .test_events(Collections.emptyMap())
+                                                   .build();
     saveLogAnalysisRecords(analysisRecord, stateType, Optional.empty());
   }
 

@@ -43,8 +43,8 @@ public interface AnalysisService {
 
   Boolean saveLogAnalysisRecords(LogMLAnalysisRecord mlAnalysisResponse, StateType stateType, Optional<String> taskId);
 
-  LogMLAnalysisRecord getLogAnalysisRecords(
-      String appId, String stateExecutionId, String query, StateType stateType, Integer logCollectionMinute);
+  LogMLAnalysisRecord getLogAnalysisRecords(String appId, String stateExecutionId, String query, StateType stateType,
+      Integer logCollectionMinute) throws IOException;
 
   LogMLAnalysisSummary getAnalysisSummary(String stateExecutionId, String appId, StateType stateType);
   LogMLAnalysisSummary getExperimentalAnalysisSummary(
