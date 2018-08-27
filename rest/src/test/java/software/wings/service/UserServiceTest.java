@@ -295,6 +295,22 @@ public class UserServiceTest extends WingsBaseTest {
   }
 
   /**
+   * Should update user profile.
+   */
+  @Test
+  public void shouldUpdateUserProfile() {
+    User user = anUser().withAppId(APP_ID).withUuid(USER_ID).withEmail(USER_EMAIL).withName("test").build();
+    UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
+    updateOperations.set("name", "test");
+
+    userService.update(user);
+    verify(wingsPersistence).update(user, updateOperations);
+    verify(wingsPersistence).get(User.class, APP_ID, USER_ID);
+    assertThat(user.getName().equals("test"));
+    verify(cache).remove(USER_ID);
+  }
+
+  /**
    * Should list users.
    */
   @Test
