@@ -66,14 +66,15 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     }
     return (isEmpty(delegate.getIncludeScopes())
                || delegate.getIncludeScopes().stream().anyMatch(
-                      scope -> scopeMatch(scope, appId, envId, infraMappingId, taskGroup, tags)))
+                      scope -> scopeMatch(scope, appId, envId, infraMappingId, taskGroup)))
         && (isEmpty(delegate.getExcludeScopes())
                || delegate.getExcludeScopes().stream().noneMatch(
-                      scope -> scopeMatch(scope, appId, envId, infraMappingId, taskGroup, tags)));
+                      scope -> scopeMatch(scope, appId, envId, infraMappingId, taskGroup)))
+        && (isEmpty(tags) || (isNotEmpty(delegate.getTags()) && delegate.getTags().containsAll(tags)));
   }
 
   private boolean scopeMatch(
-      DelegateScope scope, String appId, String envId, String infraMappingId, TaskGroup taskGroup, List<String> tags) {
+      DelegateScope scope, String appId, String envId, String infraMappingId, TaskGroup taskGroup) {
     if (!scope.isValid()) {
       logger.error("Delegate scope cannot be empty.");
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Delegate scope cannot be empty.");
@@ -96,12 +97,6 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     if (match && isNotEmpty(scope.getServiceInfrastructures())) {
       match = isNotBlank(infraMappingId) && scope.getServiceInfrastructures().contains(infraMappingId);
     }
-    if (match && isNotEmpty(scope.getTags())) {
-      // Match any tag. If it needs to match all tags change to:
-      // match = isNotEmpty(tags) && scope.getTags().containsAll(tags);
-      match = isNotEmpty(tags) && tags.stream().anyMatch(tag -> scope.getTags().contains(tag));
-    }
-
     return match;
   }
 

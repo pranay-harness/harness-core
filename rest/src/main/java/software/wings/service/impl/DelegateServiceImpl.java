@@ -260,6 +260,7 @@ public class DelegateServiceImpl implements DelegateService {
                                   .delegateProfileId(delegate.getDelegateProfileId())
                                   .excludeScopes(delegate.getExcludeScopes())
                                   .includeScopes(delegate.getIncludeScopes())
+                                  .tags(delegate.getTags())
                                   .connections(delegateConnections.stream()
                                                    .filter(delegateConnection
                                                        -> StringUtils.equals(
@@ -317,6 +318,19 @@ public class DelegateServiceImpl implements DelegateService {
             .set("lastHeartBeat", System.currentTimeMillis())
             .set("connected", true));
     return get(accountId, delegateId);
+  }
+
+  @Override
+  public Delegate updateTags(Delegate delegate) {
+    UpdateOperations<Delegate> updateOperations = wingsPersistence.createUpdateOperations(Delegate.class);
+    setUnset(updateOperations, "tags", delegate.getTags());
+    logger.info("Updating delegate tags : Delegate:{} tags:{}", delegate.getUuid(), delegate.getTags());
+
+    Delegate updatedDelegate = updateDelegate(delegate, updateOperations);
+    if (System.currentTimeMillis() - updatedDelegate.getLastHeartBeat() < 2 * 60 * 1000) {
+      alertService.activeDelegateUpdated(updatedDelegate.getAccountId(), updatedDelegate.getUuid());
+    }
+    return updatedDelegate;
   }
 
   @Override

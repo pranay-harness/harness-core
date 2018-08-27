@@ -37,6 +37,7 @@ public class Delegate extends Base {
 
   private List<DelegateScope> includeScopes;
   private List<DelegateScope> excludeScopes;
+  private List<String> tags;
 
   public enum Status { ENABLED, DISABLED }
 
@@ -60,6 +61,7 @@ public class Delegate extends Base {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
+    private List<String> tags;
 
     private Builder() {}
 
@@ -162,6 +164,11 @@ public class Delegate extends Base {
       return this;
     }
 
+    public Builder withTags(List<String> tags) {
+      this.tags = tags;
+      return this;
+    }
+
     public Builder but() {
       return aDelegate()
           .withAccountId(accountId)
@@ -176,6 +183,7 @@ public class Delegate extends Base {
           .withVersion(version)
           .withIncludeScopes(includeScopes)
           .withExcludeScopes(excludeScopes)
+          .withTags(tags)
           .withCurrentlyExecutingDelegateTasks(currentlyExecutingDelegateTasks)
           .withUuid(uuid)
           .withAppId(appId)
@@ -199,6 +207,7 @@ public class Delegate extends Base {
       delegate.setVersion(version);
       delegate.setIncludeScopes(includeScopes);
       delegate.setExcludeScopes(excludeScopes);
+      delegate.setTags(tags);
       delegate.setCurrentlyExecutingDelegateTasks(currentlyExecutingDelegateTasks);
       delegate.setUuid(uuid);
       delegate.setAppId(appId);
