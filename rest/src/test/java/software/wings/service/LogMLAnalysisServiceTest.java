@@ -1,5 +1,7 @@
 package software.wings.service;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -79,14 +81,12 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
-import java.util.regex.Pattern;
 
 /**
  * Created by rsingh on 9/27/17.
  */
 public class LogMLAnalysisServiceTest extends WingsBaseTest {
   private static final Logger logger = LoggerFactory.getLogger(LogMLAnalysisServiceTest.class);
-  static Pattern p = Pattern.compile("\\[(.*?)\\]");
 
   private String accountId;
   private String appId;
@@ -670,6 +670,57 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
+  public void testAnalysisSummaryCompression() throws Exception {
+    ArrayList<List<SplunkAnalysisCluster>> unknownEvents = Lists.newArrayList(getEvents(r.nextInt(10)).values());
+    Map<String, List<SplunkAnalysisCluster>> testEvents = getEvents(r.nextInt(10));
+    Map<String, List<SplunkAnalysisCluster>> controlEvents = getEvents(r.nextInt(10));
+
+    Map<String, Map<String, SplunkAnalysisCluster>> controlClusters = createClusters(r.nextInt(10));
+    Map<String, Map<String, SplunkAnalysisCluster>> unknownClusters = createClusters(r.nextInt(10));
+    Map<String, Map<String, SplunkAnalysisCluster>> testClusters = createClusters(r.nextInt(10));
+    Map<String, Map<String, SplunkAnalysisCluster>> ignoreClusters = createClusters(r.nextInt(10));
+    LogMLAnalysisRecord record = new LogMLAnalysisRecord();
+    record.setStateExecutionId(stateExecutionId);
+    record.setAppId(appId);
+    record.setStateType(StateType.SPLUNKV2);
+    record.setLogCollectionMinute(0);
+    record.setQuery(UUID.randomUUID().toString());
+    record.setUnknown_events(unknownEvents);
+    record.setTest_events(testEvents);
+    record.setControl_events(controlEvents);
+    record.setControl_clusters(controlClusters);
+    record.setUnknown_clusters(unknownClusters);
+    record.setTest_clusters(testClusters);
+    record.setIgnore_clusters(ignoreClusters);
+
+    analysisService.saveLogAnalysisRecords(record, StateType.SPLUNKV2, Optional.empty());
+
+    LogMLAnalysisRecord logMLAnalysisRecord = wingsPersistence.createQuery(LogMLAnalysisRecord.class)
+                                                  .filter("appId", appId)
+                                                  .filter("stateExecutionId", stateExecutionId)
+                                                  .get();
+    assertNull(logMLAnalysisRecord.getUnknown_events());
+    assertNull(logMLAnalysisRecord.getTest_events());
+    assertNull(logMLAnalysisRecord.getControl_events());
+    assertNull(logMLAnalysisRecord.getControl_clusters());
+    assertNull(logMLAnalysisRecord.getUnknown_clusters());
+    assertNull(logMLAnalysisRecord.getTest_clusters());
+    assertNull(logMLAnalysisRecord.getIgnore_clusters());
+    assertTrue(isNotEmpty(logMLAnalysisRecord.getAnalysisDetailsCompressedJson()));
+
+    LogMLAnalysisRecord logAnalysisRecord = analysisService.getLogAnalysisRecords(
+        appId, stateExecutionId, record.getQuery(), record.getStateType(), record.getLogCollectionMinute());
+
+    assertEquals(unknownEvents, logAnalysisRecord.getUnknown_events());
+    assertEquals(testEvents, logAnalysisRecord.getTest_events());
+    assertEquals(controlEvents, logAnalysisRecord.getControl_events());
+    assertEquals(controlClusters, logAnalysisRecord.getControl_clusters());
+    assertEquals(unknownClusters, logAnalysisRecord.getUnknown_clusters());
+    assertEquals(testClusters, logAnalysisRecord.getTest_clusters());
+    assertEquals(ignoreClusters, logAnalysisRecord.getIgnore_clusters());
+  }
+
+  @Test
   public void testAnalysisSummaryTestClusters() throws Exception {
     int numOfTestClusters = 1 + r.nextInt(10);
     List<SplunkAnalysisCluster> clusterEvents = new ArrayList<>();
@@ -756,6 +807,18 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     record.setControl_clusters(controlClusters);
     record.setControl_events(controlEvents);
     analysisService.saveLogAnalysisRecords(record, StateType.SPLUNKV2, Optional.empty());
+    LogMLAnalysisRecord logMLAnalysisRecord = wingsPersistence.createQuery(LogMLAnalysisRecord.class)
+                                                  .filter("appId", appId)
+                                                  .filter("stateExecutionId", stateExecutionId)
+                                                  .get();
+    assertNotNull(logMLAnalysisRecord);
+    assertNull(logMLAnalysisRecord.getUnknown_events());
+    assertNull(logMLAnalysisRecord.getTest_events());
+    assertNull(logMLAnalysisRecord.getControl_events());
+    assertNull(logMLAnalysisRecord.getControl_clusters());
+    assertNull(logMLAnalysisRecord.getUnknown_clusters());
+    assertNull(logMLAnalysisRecord.getTest_clusters());
+    assertNull(logMLAnalysisRecord.getIgnore_clusters());
 
     LogMLAnalysisSummary analysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
@@ -1065,5 +1128,26 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
 
     DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSSXXX");
     logger.info("" + Instant.from(df.parse("2018-05-03T00:15:12.618905414+00:00")).toEpochMilli());
+  }
+
+  private Map<String, Map<String, SplunkAnalysisCluster>> createClusters(int numOfClusters) {
+    Map<String, Map<String, SplunkAnalysisCluster>> rv = new HashMap<>();
+    for (int i = 0; i < numOfClusters; i++) {
+      SplunkAnalysisCluster cluster = getRandomClusterEvent();
+      Map<String, SplunkAnalysisCluster> hostMap = new HashMap<>();
+      String host = UUID.randomUUID().toString() + ".harness.com";
+      hostMap.put(host, cluster);
+      rv.put(UUID.randomUUID().toString(), hostMap);
+    }
+    return rv;
+  }
+
+  private Map<String, List<SplunkAnalysisCluster>> getEvents(int numOfEvents) {
+    Map<String, List<SplunkAnalysisCluster>> rv = new HashMap<>();
+    for (int i = 0; i < numOfEvents; i++) {
+      rv.put(generateUuid(),
+          Lists.newArrayList(getRandomClusterEvent(), getRandomClusterEvent(), getRandomClusterEvent()));
+    }
+    return rv;
   }
 }

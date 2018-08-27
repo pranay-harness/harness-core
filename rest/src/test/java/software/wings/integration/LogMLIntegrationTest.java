@@ -1,5 +1,6 @@
 package software.wings.integration;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -775,8 +776,8 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
         analysisService.getLogAnalysisRecords(appId, stateExecutionId, query, StateType.SUMO, logCollectionMinute);
     assertFalse(logAnalysisRecord.isBaseLineCreated());
     assertEquals(1, logAnalysisRecord.getControl_clusters().size());
-    assertNull(logAnalysisRecord.getTest_clusters());
-    assertNull(logAnalysisRecord.getTest_events());
+    assertTrue(isEmpty(logAnalysisRecord.getTest_clusters()));
+    assertTrue(isEmpty(logAnalysisRecord.getTest_events()));
 
     LogMLFeedback mlFeedback = LogMLFeedback.builder()
                                    .stateExecutionId(stateExecutionId)
