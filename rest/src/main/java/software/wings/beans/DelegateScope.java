@@ -28,10 +28,9 @@ public class DelegateScope extends Base {
   private List<String> applications;
   private List<String> environments;
   private List<String> serviceInfrastructures;
-  private List<String> tags;
 
   public boolean isValid() {
     return (isNotEmpty(taskTypes)) || (isNotEmpty(environmentTypes)) || (isNotEmpty(applications))
-        || (isNotEmpty(environments)) || (isNotEmpty(serviceInfrastructures) || (isNotEmpty(tags)));
+        || (isNotEmpty(environments)) || (isNotEmpty(serviceInfrastructures));
   }
 }

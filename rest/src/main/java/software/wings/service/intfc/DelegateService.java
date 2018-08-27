@@ -40,6 +40,8 @@ public interface DelegateService {
 
   Delegate updateScopes(@Valid Delegate delegate);
 
+  Delegate updateTags(@Valid Delegate delegate);
+
   DelegateScripts getDelegateScripts(String accountId, String version, String managerHost)
       throws IOException, TemplateException;
 
