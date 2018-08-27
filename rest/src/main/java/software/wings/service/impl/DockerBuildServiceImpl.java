@@ -89,4 +89,10 @@ public class DockerBuildServiceImpl implements DockerBuildService {
       ArtifactStreamAttributes artifactStreamAttributes) {
     return dockerRegistryService.verifyImageName(config, encryptionDetails, artifactStreamAttributes.getImageName());
   }
+
+  @Override
+  public Map<String, String> getBuckets(
+      DockerConfig config, String projectId, List<EncryptedDataDetail> encryptionDetails) {
+    throw new InvalidRequestException("Operation not supported by Docker Artifact Stream", USER);
+  }
 }

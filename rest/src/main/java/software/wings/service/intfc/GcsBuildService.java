@@ -11,8 +11,8 @@ import java.util.List;
 import java.util.Map;
 
 public interface GcsBuildService extends BuildService<GcpConfig> {
-  @DelegateTaskType(TaskType.GCS_GET_PLANS)
-  Map<String, String> getPlans(GcpConfig config, List<EncryptedDataDetail> encryptionDetails);
+  @DelegateTaskType(TaskType.GCS_GET_BUCKETS)
+  Map<String, String> getBuckets(GcpConfig config, String projectId, List<EncryptedDataDetail> encryptionDetails);
 
   @DelegateTaskType(TaskType.GCS_GET_ARTIFACT_PATHS)
   List<String> getArtifactPaths(

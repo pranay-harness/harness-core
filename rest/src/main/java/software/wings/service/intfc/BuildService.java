@@ -84,6 +84,15 @@ public interface BuildService<T> {
   Map<String, String> getPlans(T config, List<EncryptedDataDetail> encryptionDetails);
 
   /**
+   * Get buckets
+   *
+   * @param config the  config
+   * @param projectId GCS project id
+   * @return the buckets
+   */
+  Map<String, String> getBuckets(T config, String projectId, List<EncryptedDataDetail> encryptionDetails);
+
+  /**
    * Gets plans.
    *
    * @param config the  config

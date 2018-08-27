@@ -90,4 +90,10 @@ public class EcrClassicBuildServiceImpl implements EcrClassicBuildService {
       ArtifactStreamAttributes artifactStreamAttributes) {
     return ecrClassicService.verifyRepository(config, encryptionDetails, artifactStreamAttributes.getImageName());
   }
+
+  @Override
+  public Map<String, String> getBuckets(
+      EcrConfig config, String projectId, List<EncryptedDataDetail> encryptionDetails) {
+    throw new InvalidRequestException("Operation not supported by ECR");
+  }
 }

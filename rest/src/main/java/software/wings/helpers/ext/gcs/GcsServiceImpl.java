@@ -1,8 +1,8 @@
 package software.wings.helpers.ext.gcs;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static software.wings.common.Constants.ARTIFACT_PATH;
 import static software.wings.common.Constants.BUCKET_NAME;
@@ -26,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpConfig;
-import software.wings.beans.SettingAttribute;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -189,19 +188,16 @@ public class GcsServiceImpl implements GcsService {
   }
 
   @Override
-  public GcpConfig validateAndGetCredentials(SettingAttribute settingAttribute) {
-    if (settingAttribute == null || !(settingAttribute.getValue() instanceof GcpConfig)) {
-      throw new WingsException(INVALID_ARGUMENT).addParam("args", "InvalidConfiguration");
+  public String getProject(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+    if (isNotEmpty(encryptedDataDetails)) {
+      encryptionService.decrypt(gcpConfig, encryptedDataDetails);
     }
-    return (GcpConfig) settingAttribute.getValue();
-  }
-
-  private String getProject(char[] serviceAccountFileContent) {
-    return new JSONObject(new String(serviceAccountFileContent)).get("project_id").toString();
+    return new JSONObject(new String(gcpConfig.getServiceAccountKeyFileContent())).get("project_id").toString();
   }
 
   @Override
-  public Map<String, String> listBuckets(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+  public Map<String, String> listBuckets(
+      GcpConfig gcpConfig, String projectId, List<EncryptedDataDetail> encryptedDataDetails) {
     Storage.Buckets bucketsObj;
     Buckets listOfBuckets;
     Map<String, String> bucketList = new HashMap<>();
@@ -209,7 +205,10 @@ public class GcsServiceImpl implements GcsService {
       encryptionService.decrypt(gcpConfig, encryptedDataDetails);
     }
 
-    String projectId = getProject(gcpConfig.getServiceAccountKeyFileContent());
+    // List buckets for current project in service account if project is empty
+    if (isEmpty(projectId)) {
+      projectId = new JSONObject(new String(gcpConfig.getServiceAccountKeyFileContent())).get("project_id").toString();
+    }
 
     try {
       Storage gcsStorageService = gcpHelperService.getGcsStorageService(gcpConfig, encryptedDataDetails);

@@ -79,4 +79,10 @@ public class AmiBuildServiceImpl implements AmiBuildService {
       ArtifactStreamAttributes artifactStreamAttributes) {
     return true;
   }
+
+  @Override
+  public Map<String, String> getBuckets(
+      AwsConfig config, String projectId, List<EncryptedDataDetail> encryptionDetails) {
+    throw new InvalidRequestException("Operation not supported by Ami Artifact Stream");
+  }
 }

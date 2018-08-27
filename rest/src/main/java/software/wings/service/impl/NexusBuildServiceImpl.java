@@ -13,6 +13,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.NexusConfig;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
@@ -100,5 +101,11 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   public boolean validateArtifactSource(NexusConfig config, List<EncryptedDataDetail> encryptionDetails,
       ArtifactStreamAttributes artifactStreamAttributes) {
     return true;
+  }
+
+  @Override
+  public Map<String, String> getBuckets(
+      NexusConfig config, String projectId, List<EncryptedDataDetail> encryptionDetails) {
+    throw new InvalidRequestException("Operation not supported by Nexus Artifact Stream");
   }
 }

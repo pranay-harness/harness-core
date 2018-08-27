@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 
 import software.wings.beans.GcpConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.exception.InvalidRequestException;
 import software.wings.helpers.ext.gcs.GcsService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
@@ -22,8 +23,9 @@ public class GcsBuildServiceImpl implements GcsBuildService {
   @Inject private GcsService gcsService;
 
   @Override
-  public Map<String, String> getPlans(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails) {
-    return gcsService.listBuckets(gcpConfig, encryptionDetails);
+  public Map<String, String> getBuckets(
+      GcpConfig gcpConfig, String projectId, List<EncryptedDataDetail> encryptionDetails) {
+    return gcsService.listBuckets(gcpConfig, projectId, encryptionDetails);
   }
 
   @Override
@@ -53,12 +55,6 @@ public class GcsBuildServiceImpl implements GcsBuildService {
   }
 
   @Override
-  public Map<String, String> getPlans(
-      GcpConfig config, List<EncryptedDataDetail> encryptionDetails, ArtifactType artifactType, String repositoryType) {
-    return null;
-  }
-
-  @Override
   public List<String> getGroupIds(String repoType, GcpConfig config, List<EncryptedDataDetail> encryptionDetails) {
     return null;
   }
@@ -72,5 +68,16 @@ public class GcsBuildServiceImpl implements GcsBuildService {
   public boolean validateArtifactSource(GcpConfig config, List<EncryptedDataDetail> encryptionDetails,
       ArtifactStreamAttributes artifactStreamAttributes) {
     return false;
+  }
+
+  @Override
+  public Map<String, String> getPlans(GcpConfig config, List<EncryptedDataDetail> encryptionDetails) {
+    throw new InvalidRequestException("Operation not supported by GCS Artifact Stream");
+  }
+
+  @Override
+  public Map<String, String> getPlans(
+      GcpConfig config, List<EncryptedDataDetail> encryptionDetails, ArtifactType artifactType, String repositoryType) {
+    throw new InvalidRequestException("Operation not supported by GCS Artifact Stream");
   }
 }

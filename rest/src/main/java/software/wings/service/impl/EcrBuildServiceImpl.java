@@ -86,4 +86,10 @@ public class EcrBuildServiceImpl implements EcrBuildService {
     return ecrService.verifyRepository(
         config, encryptionDetails, artifactStreamAttributes.getRegion(), artifactStreamAttributes.getImageName());
   }
+
+  @Override
+  public Map<String, String> getBuckets(
+      AwsConfig config, String projectId, List<EncryptedDataDetail> encryptionDetails) {
+    throw new InvalidRequestException("Operation not supported by ECR Artifact Stream", USER);
+  }
 }

@@ -9,9 +9,11 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.RestResponse;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.BuildDetailsComparator;
+import software.wings.helpers.ext.gcs.GcsService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.security.annotations.Scope;
@@ -38,6 +40,7 @@ import javax.ws.rs.QueryParam;
 @Scope(APPLICATION)
 public class BuildSourceResource {
   @Inject private BuildSourceService buildSourceService;
+  @Inject private GcsService gcsService;
 
   /**
    * Gets jobs.
@@ -71,6 +74,37 @@ public class BuildSourceResource {
       return new RestResponse<>(buildSourceService.getPlans(appId, settingId, streamType));
     }
     return new RestResponse<>(buildSourceService.getPlans(appId, settingId, serviceId, streamType, repositoryType));
+  }
+
+  /**
+   * Get GCS projects
+   *
+   * @param settingId the setting id
+   * @return the project for the service account
+   */
+  @GET
+  @Path("project")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<String> getProject(@QueryParam("appId") String appId, @QueryParam("settingId") String settingId) {
+    return new RestResponse<>(buildSourceService.getProject(appId, settingId));
+  }
+
+  /**
+   * Get GCS buckets
+   *
+   * @param appId  the app Id
+   * @param projectId GCS project Id
+   * @param settingId the setting id
+   * @return list of buckets
+   */
+  @GET
+  @Path("buckets")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Map<String, String>> getBuckets(@QueryParam("appId") String appId,
+      @QueryParam("projectId") @NotEmpty String projectId, @QueryParam("settingId") String settingId) {
+    return new RestResponse<>(buildSourceService.getBuckets(appId, projectId, settingId));
   }
 
   /**

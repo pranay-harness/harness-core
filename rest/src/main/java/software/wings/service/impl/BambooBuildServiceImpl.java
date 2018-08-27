@@ -93,4 +93,10 @@ public class BambooBuildServiceImpl implements BambooBuildService {
       ArtifactStreamAttributes artifactStreamAttributes) {
     return true;
   }
+
+  @Override
+  public Map<String, String> getBuckets(
+      BambooConfig bambooConfig, String projectId, List<EncryptedDataDetail> encryptionDetails) {
+    throw new InvalidRequestException("Operation not supported by Bamboo Artifact Stream");
+  }
 }

@@ -1,45 +1,39 @@
 package software.wings.helpers.ext.gcs;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
+import com.google.api.client.util.Maps;
+import com.google.api.services.storage.Storage;
+import com.google.api.services.storage.model.Bucket;
+import com.google.api.services.storage.model.Buckets;
 import com.google.inject.Inject;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.GcpConfig;
-import software.wings.beans.SettingAttribute;
-import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.service.impl.GcpHelperService;
 
-import java.util.Map;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
 
-@Ignore("Unit tests should not depend on external resources")
 public class GcsServiceTest extends WingsBaseTest {
-  @Mock GcpHelperService gcpHelperService;
+  @Mock private GcpHelperService gcpHelperService;
+  @Mock private Storage gcsStorageService;
+  @Mock private Storage.Buckets bucketsObj;
+  @Mock private Storage.Buckets.List listRequest;
   @Inject private GcsService gcsService;
-  @Inject @InjectMocks private DelegateFileManager delegateFileManager;
-  private static final String TEST_ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
-  private static final String TEST_APP_ID = "qhG0adpZSbyb1RWyhm3qMQ";
-  private static String serviceAccountFileContent = "";
+  private static final String TEST_PROJECT_ID = "test";
+  private static String serviceAccountFileContent = "{\"project_id\":\"test\"}";
 
-  private static final GcpConfig gcpConfig = GcpConfig.builder().accountId("accountId").build();
-
-  private static SettingAttribute GCP_PROVIDER_SETTING =
-      aSettingAttribute()
-          .withUuid("GCP_ID")
-          .withAccountId(TEST_ACCOUNT_ID)
-          .withAppId(TEST_APP_ID)
-          .withValue(GcpConfig.builder()
-                         .accountId(TEST_ACCOUNT_ID)
-                         .serviceAccountKeyFileContent(serviceAccountFileContent.toCharArray())
-                         .build())
-          .build();
+  private static final GcpConfig gcpConfig = GcpConfig.builder()
+                                                 .accountId("accountId")
+                                                 .serviceAccountKeyFileContent(serviceAccountFileContent.toCharArray())
+                                                 .build();
 
   @Before
   public void setUp() {
@@ -47,9 +41,23 @@ public class GcsServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Ignore
-  public void shouldListBuckets() {
-    when(gcsService.listBuckets(gcpConfig, null)).thenReturn(null);
-    Map<String, String> buckets = gcsService.listBuckets(gcpConfig, null);
+  public void shouldGetProject() {
+    assertThat(gcsService.getProject(gcpConfig, null)).isNotNull().isEqualTo(TEST_PROJECT_ID);
+  }
+
+  @Test
+  public void shouldListBuckets() throws IOException {
+    HashMap<String, String> bucketList = Maps.newHashMap();
+    bucketList.put("bucket", "bucketId");
+    Buckets buckets = new Buckets();
+    Bucket bucket = new Bucket();
+    bucket.setName("bucket");
+    bucket.setId("bucketId");
+    buckets.setItems(Arrays.asList(bucket));
+    when(gcpHelperService.getGcsStorageService(gcpConfig, null)).thenReturn(gcsStorageService);
+    when(gcsStorageService.buckets()).thenReturn(bucketsObj);
+    when(bucketsObj.list(TEST_PROJECT_ID)).thenReturn(listRequest);
+    when(listRequest.execute()).thenReturn(buckets);
+    assertThat(gcsService.listBuckets(gcpConfig, TEST_PROJECT_ID, null)).isNotNull().hasSize(1).containsKeys("bucket");
   }
 }
