@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static com.google.common.collect.ImmutableMap.of;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.exception.WingsException.ReportTarget.REST_API;
@@ -190,7 +191,7 @@ public class UserResource {
   }
 
   /**
-   * Update.
+   * Update User group
    *
    * @param userId the user id
    * @param user   the user
@@ -205,6 +206,31 @@ public class UserResource {
   public RestResponse<User> updateUserGroupsOfUser(
       @QueryParam("accountId") @NotEmpty String accountId, @PathParam("userId") String userId, User user) {
     return new RestResponse<>(userService.updateUserGroupsOfUser(userId, user.getUserGroups(), accountId));
+  }
+
+  /**
+   * Update User profile
+   *
+   * @param userId the user id
+   * @param user   the user
+   * @return the rest response
+   */
+  @PUT
+  @Path("profile/{userId}")
+  @Scope(value = ResourceType.USER, scope = PermissionType.LOGGED_IN)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<User> updateUserProfile(
+      @QueryParam("accountId") @NotEmpty String accountId, @PathParam("userId") String userId, @NotNull User user) {
+    User authUser = UserThreadLocal.get();
+    if (!authUser.getUuid().equals(userId)) {
+      throw new WingsException(ErrorCode.ACCESS_DENIED);
+    }
+    user.setUuid(userId);
+    if (isEmpty(user.getAppId())) {
+      user.setAppId(GLOBAL_APP_ID);
+    }
+    return new RestResponse<>(userService.update(user));
   }
 
   /**

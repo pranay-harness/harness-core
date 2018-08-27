@@ -757,6 +757,12 @@ public class UserServiceImpl implements UserService {
       updateOperations.set("roles", user.getRoles());
     }
 
+    if (user.getName() != null) {
+      updateOperations.set("name", user.getName());
+    } else {
+      updateOperations.unset("name");
+    }
+
     updateOperations.set("twoFactorAuthenticationEnabled", user.isTwoFactorAuthenticationEnabled());
     if (user.getTwoFactorAuthenticationMechanism() != null) {
       updateOperations.set("twoFactorAuthenticationMechanism", user.getTwoFactorAuthenticationMechanism());
