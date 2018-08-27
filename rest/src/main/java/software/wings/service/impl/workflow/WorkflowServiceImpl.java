@@ -1516,11 +1516,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public Set<EntityType> fetchRequiredEntityTypes(String appId, OrchestrationWorkflow orchestrationWorkflow) {
     notNullCheck("orchestrationWorkflow", orchestrationWorkflow, USER);
     if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
-      Set<EntityType> requiredEntityTypes = ((CanaryOrchestrationWorkflow) orchestrationWorkflow)
-                                                .getWorkflowPhases()
+      CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
+      Set<EntityType> requiredEntityTypes = canaryOrchestrationWorkflow.getWorkflowPhases()
                                                 .stream()
                                                 .flatMap(phase -> updateRequiredEntityTypes(appId, phase).stream())
                                                 .collect(Collectors.toSet());
+
+      updateRequiredEntityTypes(appId, null, canaryOrchestrationWorkflow.getPreDeploymentSteps(), requiredEntityTypes);
 
       Set<EntityType> rollbackRequiredEntityTypes =
           ((CanaryOrchestrationWorkflow) orchestrationWorkflow)
@@ -1587,34 +1589,52 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       if (phaseStep.getSteps() == null) {
         continue;
       }
-      boolean artifactNeeded = false;
-      for (GraphNode step : phaseStep.getSteps()) {
-        if ("COMMAND".equals(step.getType())) {
-          if (serviceId != null) {
-            ServiceCommand command = serviceResourceService.getCommandByName(
-                appId, serviceId, (String) step.getProperties().get("commandName"));
-            if (command != null && command.getCommand() != null && command.getCommand().isArtifactNeeded()) {
-              artifactNeeded = true;
-              break;
-            }
-          }
-        } else if (StateType.HTTP.name().equals(step.getType())
-            && (isArtifactNeeded(step.getProperties().get("url"), step.getProperties().get("body"),
-                   step.getProperties().get("assertion")))) {
-          artifactNeeded = true;
-          break;
-        } else if (StateType.SHELL_SCRIPT.name().equals(step.getType())
-            && (isArtifactNeeded(step.getProperties().get("scriptString")))) {
-          artifactNeeded = true;
-          break;
-        }
-      }
-      if (artifactNeeded) {
-        requiredEntityTypes.add(ARTIFACT);
-        phaseStep.setArtifactNeeded(true);
-      }
+      updateRequiredEntityTypes(appId, serviceId, phaseStep, requiredEntityTypes);
     }
     return requiredEntityTypes;
+  }
+
+  private void updateRequiredEntityTypes(
+      String appId, String serviceId, PhaseStep phaseStep, Set<EntityType> requiredEntityTypes) {
+    boolean artifactNeeded = false;
+
+    for (GraphNode step : phaseStep.getSteps()) {
+      if ("COMMAND".equals(step.getType())) {
+        if (serviceId != null) {
+          ServiceCommand command = serviceResourceService.getCommandByName(
+              appId, serviceId, (String) step.getProperties().get("commandName"));
+          if (command != null && command.getCommand() != null && command.getCommand().isArtifactNeeded()) {
+            artifactNeeded = true;
+            break;
+          }
+        }
+      } else if (StateType.HTTP.name().equals(step.getType())
+          && (isArtifactNeeded(step.getProperties().get("url"), step.getProperties().get("body"),
+                 step.getProperties().get("assertion")))) {
+        artifactNeeded = true;
+        break;
+      } else if (StateType.SHELL_SCRIPT.name().equals(step.getType())
+          && (isArtifactNeeded(step.getProperties().get("scriptString")))) {
+        artifactNeeded = true;
+        break;
+      } else if (StateType.CLOUD_FORMATION_CREATE_STACK.name().equals(step.getType())) {
+        List<Map> variables = (List<Map>) step.getProperties().get("variables");
+        if (variables != null) {
+          List<String> values = (List<String>) variables.stream()
+                                    .flatMap(element -> element.values().stream())
+                                    .collect(Collectors.toList());
+          if (isArtifactNeeded(values.toArray())) {
+            artifactNeeded = true;
+          }
+        }
+        break;
+      }
+    }
+
+    if (artifactNeeded) {
+      requiredEntityTypes.add(ARTIFACT);
+      phaseStep.setArtifactNeeded(true);
+    }
   }
 
   private boolean isArtifactNeeded(Object... args) {
