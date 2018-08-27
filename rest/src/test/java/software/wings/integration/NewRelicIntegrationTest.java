@@ -32,6 +32,8 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.http.client.utils.URIBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.mongodb.morphia.query.Query;
@@ -86,6 +88,7 @@ import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -991,6 +994,10 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
             .build();
     String prevWorkFlowExecutionId = wingsPersistence.save(workflowExecution);
 
+    List<String> metricNames = new ArrayList<>();
+    metricDataAnalysisService.saveMetricTemplates(appId, StateType.NEW_RELIC, stateExecutionId,
+        newRelicService.metricDefinitions(newRelicService.getMetricsCorrespondingToMetricNames(metricNames).values()));
+
     NewRelicMetricDataRecord record = new NewRelicMetricDataRecord();
     record.setName("New Relic Heartbeat");
     record.setAppId(appId);
@@ -1124,14 +1131,32 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     assertEquals(1, metricsAnalysis.getMetricAnalyses().size());
   }
 
+  private URIBuilder getURIBuilder(String path) {
+    URIBuilder uriBuilder = new URIBuilder();
+    String scheme = StringUtils.isBlank(System.getenv().get("BASE_HTTP")) ? "https" : "http";
+    uriBuilder.setScheme(scheme);
+    uriBuilder.setHost("localhost");
+    uriBuilder.setPort(9090);
+    uriBuilder.setPath(path);
+    return uriBuilder;
+  }
+
+  private Map<String, String> getParamsForMetricTemplate(String appId, String stateExecutionId, String serviceId) {
+    Map<String, String> params = new HashMap<>();
+    params.put("accountId", accountId);
+    params.put("appId", appId);
+    params.put("stateType", "NEW_RELIC");
+    params.put("stateExecutionId", stateExecutionId);
+    params.put("serviceId", serviceId);
+    params.put("groupName", "default");
+    return params;
+  }
+
   @Test
   public void getMetricTemplate() throws IOException, InterruptedException {
-    final String workflowId = UUID.randomUUID().toString();
-    final String workflowExecutionId = UUID.randomUUID().toString();
     final String serviceId = UUID.randomUUID().toString();
     final String stateExecutionId = UUID.randomUUID().toString();
-    final String appId = UUID.randomUUID().toString();
-    final String delegateTaskId = UUID.randomUUID().toString();
+    String appId = wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUuid()).build());
 
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     String prevStateExecutionId = UUID.randomUUID().toString();
@@ -1140,16 +1165,28 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
     wingsPersistence.save(stateExecutionInstance);
 
-    WebTarget target = client.target(API_BASE + "/timeseries/get-metric-template?accountId=" + accountId
-        + "&stateType=NEW_RELIC&stateExecutionId=" + stateExecutionId + "&serviceId=" + serviceId
-        + "&groupName=default");
-    RestResponse<Map<String, Map<String, TimeSeriesMetricDefinition>>> restResponse =
-        getRequestBuilderWithAuthHeader(target).post(entity("{}", APPLICATION_JSON),
-            new GenericType<RestResponse<Map<String, Map<String, TimeSeriesMetricDefinition>>>>() {});
+    List<String> metricNames = new ArrayList<>();
+    metricDataAnalysisService.saveMetricTemplates(appId, StateType.NEW_RELIC, stateExecutionId,
+        newRelicService.metricDefinitions(newRelicService.getMetricsCorrespondingToMetricNames(metricNames).values()));
 
-    String expectedTemplate = Resources.toString(
-        APMVerificationStateTest.class.getResource("/apm/NewRelicMetricTemplate.json"), Charsets.UTF_8);
-    assertEquals(expectedTemplate, JsonUtils.asJson(restResponse.getResource()));
+    String metricTemplateUrl;
+    URIBuilder metricTemplateUriBuilder = getURIBuilder("/api/timeseries/get-metric-template");
+    Map<String, String> params = getParamsForMetricTemplate(appId, stateExecutionId, serviceId);
+    params.forEach((name, value) -> metricTemplateUriBuilder.addParameter(name, value));
+
+    try {
+      metricTemplateUrl = metricTemplateUriBuilder.build().toString();
+      WebTarget target = client.target(metricTemplateUrl);
+      RestResponse<Map<String, Map<String, TimeSeriesMetricDefinition>>> restResponse =
+          getRequestBuilderWithAuthHeader(target).post(entity("{}", APPLICATION_JSON),
+              new GenericType<RestResponse<Map<String, Map<String, TimeSeriesMetricDefinition>>>>() {});
+
+      String expectedTemplate = Resources.toString(
+          APMVerificationStateTest.class.getResource("/apm/NewRelicMetricTemplate.json"), Charsets.UTF_8);
+      assertEquals(expectedTemplate, JsonUtils.asJson(restResponse.getResource()));
+    } catch (URISyntaxException uriSyntaxException) {
+      logger.error("Failed to build URL correctly.");
+    }
   }
 
   @Test

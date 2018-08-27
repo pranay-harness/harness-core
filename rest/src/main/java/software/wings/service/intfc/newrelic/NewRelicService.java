@@ -4,14 +4,18 @@ import software.wings.APMFetchConfig;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
+import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicApplicationInstance;
 import software.wings.service.impl.newrelic.NewRelicMetric;
 import software.wings.service.impl.newrelic.NewRelicSetupTestNodeData;
 import software.wings.sm.StateType;
+import software.wings.sm.states.NewRelicState.Metric;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -29,4 +33,8 @@ public interface NewRelicService {
       @NotNull String settingId, long newRelicApplicationId, long instanceId, long fromTime, long toTime);
   RestResponse<VerificationNodeDataSetupResponse> getMetricsWithDataForNode(
       NewRelicSetupTestNodeData newRelicSetupTestNodeData);
+
+  Map<String, TimeSeriesMetricDefinition> metricDefinitions(Collection<Metric> metrics);
+  Map<String, Metric> getMetricsCorrespondingToMetricNames(List<String> metricNames);
+  List<Metric> getListOfMetrics();
 }

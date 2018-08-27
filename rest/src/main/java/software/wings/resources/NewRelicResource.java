@@ -21,6 +21,7 @@ import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.sm.StateType;
+import software.wings.sm.states.NewRelicState;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -144,5 +145,13 @@ public class NewRelicResource {
   public RestResponse<VerificationNodeDataSetupResponse> getMetricsWithDataForNode(
       @QueryParam("accountId") final String accountId, @Valid NewRelicSetupTestNodeData newRelicSetupTestNodeData) {
     return newRelicService.getMetricsWithDataForNode(newRelicSetupTestNodeData);
+  }
+
+  @GET
+  @Path("/metric-names")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<NewRelicState.Metric>> getAllMetricNames(@QueryParam("accountId") String accountId) {
+    return new RestResponse<>(newRelicService.getListOfMetrics());
   }
 }

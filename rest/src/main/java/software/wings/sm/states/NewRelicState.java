@@ -5,9 +5,13 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
+import com.google.inject.Inject;
+
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.time.Timestamp;
+import lombok.Builder;
+import lombok.Data;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +24,8 @@ import software.wings.beans.TemplateExpression;
 import software.wings.common.Constants;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.exception.WingsException;
+import software.wings.metrics.MetricType;
+import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.AnalysisContext;
@@ -28,6 +34,7 @@ import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
+import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
@@ -35,8 +42,11 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
+import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -48,6 +58,10 @@ public class NewRelicState extends AbstractMetricAnalysisState {
   @Attributes(required = true, title = "New Relic Server") private String analysisServerConfigId;
 
   @Attributes(required = true, title = "Application Name") private String applicationId;
+
+  @Attributes(required = true, title = "Metrics") private List<String> metrics;
+
+  @Inject @SchemaIgnore private transient NewRelicService newRelicService;
 
   public NewRelicState(String name) {
     super(name, StateType.NEW_RELIC);
@@ -113,6 +127,12 @@ public class NewRelicState extends AbstractMetricAnalysisState {
   @Override
   protected String triggerAnalysisDataCollection(ExecutionContext context, AnalysisContext analysisContext,
       MetricAnalysisExecutionData executionData, Map<String, String> hosts) {
+    final Collection<Metric> metricNameToObjectMap =
+        newRelicService.getMetricsCorrespondingToMetricNames(metrics).values();
+    final Map<String, TimeSeriesMetricDefinition> metricTemplate =
+        newRelicService.metricDefinitions(metricNameToObjectMap);
+    metricAnalysisService.saveMetricTemplates(
+        context.getAppId(), StateType.NEW_RELIC, context.getStateExecutionInstanceId(), metricTemplate);
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
     SettingAttribute settingAttribute = null;
@@ -197,5 +217,22 @@ public class NewRelicState extends AbstractMetricAnalysisState {
 
   private boolean configIdTemplatized() {
     return TemplateExpressionProcessor.checkFieldTemplatized("analysisServerConfigId", getTemplateExpressions());
+  }
+
+  public List<String> getMetrics() {
+    return metrics;
+  }
+
+  public void setMetrics(List<String> metrics) {
+    this.metrics = metrics;
+  }
+
+  @Data
+  @Builder
+  public static class Metric {
+    private String metricName;
+    private MetricType mlMetricType;
+    private String displayName;
+    private Set<String> tags;
   }
 }
