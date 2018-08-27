@@ -55,7 +55,7 @@ public class NewRelicStateTest extends WingsBaseTest {
   }
 
   @Test
-  public void metrics() {
+  public void testMetricsCorrespondingToMetricNames() {
     /*
     Case 1: metricNames is an empty list
     Expected output: Metric Map should contain all metrics present in the YAML file
@@ -77,6 +77,13 @@ public class NewRelicStateTest extends WingsBaseTest {
     assertTrue(metrics.get("apdexScore").getTags().size() >= 1);
     assertEquals(Sets.newHashSet("WebTransactions"), metrics.get("apdexScore").getTags());
 
+    metricNames = Arrays.asList("apdexScore", "averageResponseTime", "requestsPerMinute");
+    metrics = newRelicService.getMetricsCorrespondingToMetricNames(metricNames);
+    assertTrue(metrics.containsKey("apdexScore"));
+    assertTrue(metrics.containsKey("averageResponseTime"));
+    assertTrue(metrics.containsKey("requestsPerMinute"));
+    assertEquals(3, metrics.size());
+
     /*
     Case 3: metricNames contains a list in which are metric names are incorrect
     Expected output: Empty map
@@ -84,6 +91,17 @@ public class NewRelicStateTest extends WingsBaseTest {
     metricNames = Arrays.asList("ApdexScore");
     metrics = newRelicService.getMetricsCorrespondingToMetricNames(metricNames);
     assertEquals(new HashMap<>(), metrics);
+
+    /*
+    Case 4: metricNames is null
+    Expected output:
+     */
+    metricNames = null;
+    metrics = newRelicService.getMetricsCorrespondingToMetricNames(metricNames);
+    assertTrue(metrics.containsKey("requestsPerMinute"));
+    assertTrue(metrics.containsKey("averageResponseTime"));
+    assertTrue(metrics.containsKey("error"));
+    assertTrue(metrics.containsKey("apdexScore"));
   }
 
   @Test
