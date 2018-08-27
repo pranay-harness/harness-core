@@ -1,0 +1,17 @@
+WebTransactions:
+-
+  metricName: requestsPerMinute
+  mlMetricType: THROUGHPUT
+  displayName: Requests per Minute
+-
+  metricName: averageResponseTime
+  mlMetricType: RESP_TIME
+  displayName: Response Time
+-
+  metricName: error
+  mlMetricType: ERROR
+  displayName: ERROR
+-
+  metricName: apdexScore
+  mlMetricType: VALUE
+  displayName: Apdex Score
