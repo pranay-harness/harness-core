@@ -32,7 +32,6 @@ public class DelegateStatus {
     private String delegateProfileId;
     private List<DelegateScope> includeScopes;
     private List<DelegateScope> excludeScopes;
-    private List<String> tags;
     List<DelegateConnectionInner> connections;
 
     @JsonInclude(Include.NON_NULL)
