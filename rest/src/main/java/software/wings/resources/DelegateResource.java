@@ -241,9 +241,7 @@ public class DelegateResource {
   public RestResponse<Delegate> updateTags(@PathParam("delegateId") @NotEmpty String delegateId,
       @QueryParam("accountId") @NotEmpty String accountId, DelegateTags delegateTags) {
     Delegate delegate = delegateService.get(accountId, delegateId);
-    if (isNotEmpty(delegateTags.getTags())) {
-      delegate.setTags(delegateTags.getTags());
-    }
+    delegate.setTags(delegateTags.getTags());
     return new RestResponse<>(delegateService.updateTags(delegate));
   }
   private static class DelegateTags {
