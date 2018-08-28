@@ -1130,12 +1130,48 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     logger.info("" + Instant.from(df.parse("2018-05-03T00:15:12.618905414+00:00")).toEpochMilli());
   }
 
+  @Test
+  public void testReadLogMLRecordFromDB() throws Exception {
+    ArrayList<List<SplunkAnalysisCluster>> unknownEvents = Lists.newArrayList(getEvents(1 + r.nextInt(10)).values());
+    Map<String, List<SplunkAnalysisCluster>> testEvents = getEvents(1 + r.nextInt(10));
+    Map<String, List<SplunkAnalysisCluster>> controlEvents = getEvents(1 + r.nextInt(10));
+
+    Map<String, Map<String, SplunkAnalysisCluster>> controlClusters = createClusters(1 + r.nextInt(10));
+    Map<String, Map<String, SplunkAnalysisCluster>> unknownClusters = createClusters(1 + r.nextInt(10));
+    Map<String, Map<String, SplunkAnalysisCluster>> testClusters = createClusters(1 + r.nextInt(10));
+    Map<String, Map<String, SplunkAnalysisCluster>> ignoreClusters = createClusters(1 + r.nextInt(10));
+    LogMLAnalysisRecord record = LogMLAnalysisRecord.builder()
+                                     .stateExecutionId(stateExecutionId)
+                                     .appId(appId)
+                                     .stateType(StateType.SPLUNKV2)
+                                     .logCollectionMinute(0)
+                                     .query(UUID.randomUUID().toString())
+                                     .unknown_events(unknownEvents)
+                                     .test_events(testEvents)
+                                     .control_events(controlEvents)
+                                     .control_clusters(controlClusters)
+                                     .unknown_clusters(unknownClusters)
+                                     .test_clusters(testClusters)
+                                     .ignore_clusters(ignoreClusters)
+                                     .build();
+    String logAnalysisRecordId = wingsPersistence.save(record);
+    LogMLAnalysisRecord savedRecord = wingsPersistence.get(LogMLAnalysisRecord.class, logAnalysisRecordId);
+
+    assertEquals(unknownEvents, savedRecord.getUnknown_events());
+    assertEquals(testEvents, savedRecord.getTest_events());
+    assertEquals(controlEvents, savedRecord.getControl_events());
+    assertEquals(controlClusters, savedRecord.getControl_clusters());
+    assertEquals(unknownClusters, savedRecord.getUnknown_clusters());
+    assertEquals(testClusters, savedRecord.getTest_clusters());
+    assertEquals(ignoreClusters, savedRecord.getIgnore_clusters());
+  }
+
   private Map<String, Map<String, SplunkAnalysisCluster>> createClusters(int numOfClusters) {
     Map<String, Map<String, SplunkAnalysisCluster>> rv = new HashMap<>();
     for (int i = 0; i < numOfClusters; i++) {
       SplunkAnalysisCluster cluster = getRandomClusterEvent();
       Map<String, SplunkAnalysisCluster> hostMap = new HashMap<>();
-      String host = UUID.randomUUID().toString() + ".harness.com";
+      String host = UUID.randomUUID().toString();
       hostMap.put(host, cluster);
       rv.put(UUID.randomUUID().toString(), hostMap);
     }
